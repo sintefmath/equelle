@@ -1,0 +1,49 @@
+module Equelle
+
+imports Common
+
+exports
+
+    sorts
+
+        Exp ExpList Array Arguments Equation Statement Start
+
+    context-free start-symbols
+
+        Start
+
+    context-free syntax
+
+        ID                           -> Exp {cons("Var")}
+        INT                          -> Exp {cons("Int")}
+        Exp "*" Exp                  -> Exp {cons("Mul"), left}
+        Exp "/" Exp                  -> Exp {cons("Div"), left}
+        Exp "+" Exp                  -> Exp {cons("Add"), left}
+        Exp "-" Exp                  -> Exp {cons("Sub"), left}
+        Exp "^" Exp                  -> Exp {cons("Pow"), right}
+        "(" Exp ")"                  -> Exp {cons("Par"), bracket}
+        ID "[" Exp "]"               -> Exp {cons("ArrayAccess")}
+
+        {Exp ","}+                   -> ExpList {cons("ExpList")}
+
+        "[" ExpList "]"              -> Array {cons("Array")}
+
+        "(" ExpList ")"              -> Arguments {cons("Arguments")}
+
+        Exp "=" Exp                  -> Equation {cons("Equation")}
+
+        "print" Arguments            -> Statement {cons("Print")}
+
+        Equation*Statement*          -> Start {cons("Start")}
+
+    context-free priorities
+
+        Exp "^" Exp -> Exp >
+        { left:
+            Exp "*" Exp -> Exp
+            Exp "/" Exp -> Exp
+        } >
+        { left:
+            Exp "+" Exp -> Exp
+            Exp "-" Exp -> Exp
+        }

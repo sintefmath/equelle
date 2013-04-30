@@ -1,0 +1,10 @@
+module names
+
+imports
+	
+	include/Equelle
+	
+namespaces
+	
+rules
+

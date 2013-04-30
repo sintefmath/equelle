@@ -1,0 +1,16 @@
+module Equelle.main
+
+imports Equelle-Builders Equelle-Refactorings Equelle-Colorer Equelle-Completions Equelle-Folding Equelle-Outliner Equelle-References Equelle-Syntax
+
+language General properties
+                  
+  name          : Equelle
+  id            : no.sintef.stwt.equelle
+  extends       : Root
+                  
+  description   : "Spoofax/IMP-generated editor for the Equelle language"
+  url           : http://strategoxt.org
+                  
+  extensions    : equ
+  table         : include/Equelle.tbl
+  start symbols : Start
