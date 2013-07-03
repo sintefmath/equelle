@@ -11,3 +11,6 @@
 *.lai
 *.la
 *.a
+
+# Files left by ipython on Linux
+libpeerconnection.log
