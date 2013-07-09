@@ -14,3 +14,7 @@
 
 # Files left by ipython on Linux
 libpeerconnection.log
+
+# Various other generated files
+gmon.out
+*~
