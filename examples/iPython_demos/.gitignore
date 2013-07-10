@@ -1,0 +1,8 @@
+# Files produced by notebooks that shall not be stored in the repo
+
+# From 1D_heat_implicit.ipynb:
+1D_heat_implicit.txt
+EB3_sample_linSystemSolver.cpp
+generated_1D_heat_implicit.cpp
+simtest.cpp
+simtest
