@@ -15,88 +15,100 @@ dt = ... # Set by outside considerations.
 
 
 # u0 should be given initial values (ignored for now)
-u0 : field(cells(grid))
-u : field(cells(grid))
+u0 : scalar(cells(grid))
+u : scalar(cells(grid))
+
+### u : scalar on cells(grid)
 
 
 
 ## Alternative 1
 
-centroid_distances : field(faces(grid))
-for (f in faces(grid)):
+centroid_distances : scalar(faces(grid))
+for f in faces(grid):
     centroid_distances[f] = length(centroid(first(f)) - centroid(second(f)))
+    ### length(f.first.centroid - f.second.centroid)
 
-residual: field(cells(grid))
-for (c in cells(grid)):
+residual: scalar(cells(grid))
+for c in cells(grid):
     residual[c] = u[c] - u0[c]
-    for (f in faces(c)): # Note that as written, this loop cannot be parallel, due to accumulation in residual[c].
+    for f in faces(c): # Note that as written, this loop cannot be parallel, due to accumulation in residual[c].
         neighbour_cell = cell(f, c) # Meaning: the neighbour cell of f that is not c.
+        ### neighbour_cell = f.cellMate(c)
         residual[c] += (dt / volume(c)) * k * area(f) * (u[neighbour_cell] - u[c]) / centroid_distances[f]
 
 
 
 ## Alternative 2
 
-fluxes : field(faces(grid))
-for (f in faces(grid)):
+fluxes : scalar(faces(grid))
+for f in faces(grid):
     centroid_distance = length(centroid(first(f)) - centroid(second(f)))
     fluxes[f] = k * area(f) * (u[first(f)] - u[second(f)]) / centroid_distance
 
-residual: field(cells(grid))
-for (c in cells(grid)):
+residual: scalar(cells(grid))
+for c in cells(grid):
     residual[c] = u[c] - u0[c]
     for (f in faces(c)): # Note that as written, this loop cannot be parallel, due to accumulation in residual[c].
         residual[c] += (dt / volume(c)) * fluxes[f] * orientationsign(c, f)
+        ### orientationsign -> osign || f.neighboursign(c) || f.dir(c) || dir(c, f)
 
 
 
 ## Alternative 3
 
-fluxes : field(faces(grid))
-for (f in faces(grid)):
+fluxes : scalar(faces(grid))
+for f in faces(grid):
     centroid_distance = length(centroid(first(f)) - centroid(second(f)))
     fluxes[f] = k * area(f) * (u[first(f)] - u[second(f)]) / centroid_distance
 
-residual: field(cells(grid))
-for (c in cells(grid)):
+residual: scalar(cells(grid))
+for c in cells(grid):
     residual[c] = u[c] - u0[c] + (dt / volume(c)) * div(fluxes, c)
+    ### div -> c.div(fluxes) || c.fsum(fluxes) || c.divergence(fluxes) || c.nabla(fluxes)
 
 
 
 ## Alternative 4
 
-fluxes : field(faces(grid))
-for (f in faces(grid)):
+fluxes : scalar(faces(grid))
+for f in faces(grid):
     centroid_distance = length(centroid(first(f)) - centroid(second(f)))
     fluxes[f] = k * area(f) * (u[first(f)] - u[second(f)]) / centroid_distance
 
-vol : field(cells(grid))
-for (c in cells(grid)):
+vol : scalar(cells(grid))
+for c in cells(grid):
     vol[c] = volume(c)
 
-residual: field(cells(grid))
+residual: scalar(cells(grid))
 residual = u - u0 + (dt / vol) * div(fluxes)
 
 
 
 ## Alternative 5
 
-fluxes : field(faces(grid)) =  - k * area(faces(grid)) * diff(u) / length(diff(centroid(cells(grid))))
+trans : scalar(faces(grid)) = k * area(faces(grid)) / length(diff(centroid(cells(grid))))
 
-vol : field(cells(grid)) = volume(cells(grid))
+fluxes : scalar(faces(grid)) = - trans * grad(u)
 
-residual : field(cells(grid)) = u - u0 + (dt / vol) * div(fluxes)
+vol : scalar(cells(grid)) = volume(cells(grid))
+
+residual : scalar(cells(grid)) = u - u0 + (dt / vol) * div(fluxes)
 
 
 
 
 ## Alternative 6
 
-fluxes : field(faces(grid)) =  k * area * (u[first] - u[second]) / length(centroid(first) - centroid(second))
+trans : scalar(faces(grid)) = k * area / length(centroid(first) - centroid(second))
+### centroid(faces.first) - centroid(faces.second)
 
-vol : field(cells(grid)) = volume
+fluxes : scalar(faces(grid)) =  trans * (u[first] - u[second])
+### - trans * grad(u)
 
-residual : field(cells(grid)) = u - u0 + (dt / vol) * div(fluxes)
+vol : scalar(cells(grid)) = volume
+
+residual : scalar(cells(grid)) = u - u0 + (dt / vol) * div(fluxes)
 
 # Now the residual has been created. AD should also have made a Jacobian matrix.
 # The following went into residual: grid, u, u0, k, dt.
