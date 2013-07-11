@@ -1,43 +1,24 @@
-# afr: commented out, since grid can be assumed to exist already.
-# The grid details should be input to the DSL program
-# grid.type = RegularCartesian1D
-# grid.x0 = 0.0
-# grid.x1 = 1.0
-# grid.n = 6
-
-# Physics that requires specification
-physics.diffusion_constant = 0.3 # Heat diffusion constant. Or should this rather be an input parameter to the generated simulator?
-
 # @afr: Boundary and initial conditions are hard to generalize...
 # Dirichlet boundary conditions require values on all boundaries, and the values should not be specified in the DSL.
 # Also, which variable do we apply the boundary condition to?
-# For now, assume that 
-# boundary.condition_type = Dirichlet
-# boundary.val0 = 0.5
-# boundary.val1 = 1.5
-# initial.value = 0 # Or should this rather be an input parameter to the generated simulator?
-# initial.boundary = BoundaryConditions # Overriding the initial value specified above, for the boundaries
+# For now, we ignore this.
 
-# What kind of simulator should be generated?
-# simulator.type = Implicit # Explicit or Implicit
-# @afr: We do not specify a basis (that is very FE-ish though), instead we specify fields over grid entities.
-# simulator.basis = Constant # Temperatures averaged over cells
+
+
+## Parts common to all alternatives
+
+# Physics that requires specification
+k = ... # Heat diffusion constant. Or should this rather be an input parameter to the generated simulator?
+
+# @afr: time step strategy assumed given outside.
+dt = ... # Set by outside considerations.
+
+
+# u0 should be given initial values (ignored for now)
 u0 : field(cells(grid))
 u : field(cells(grid))
 
-# @afr: time step strategy assumed given outside.
-dt = MaxStableTimeStep # "Special" value for a variable ("Local variables" in the DSL program...)
-# @afr: dx and s does not generalize to more general grids.
-# dx = grid.getSpacing() # (x1-x0)/n for 1D grid
-# s = physics.diffusion_constant * dt / (dx*dx) # Think "Python name" more than "variable". The stencil-specification below makes use of this 's'...
-# simulator.stencil = (-s, 1+2s, -s) # -s(u_{i-1}^n - u_i^n) + u_i^n +s(u_i^n - u_{i+1}^n) = u_i^{n-1},
-# Hmm. Does it make more sense not to specify this, but instead let this be generated from "flux considerations"?
-# If the extremas consist of either telling the generator "solve for heat" or actually feeding it detailed C++-code, where in between should we define our sweet spot?!
 
-k = physics.diffusion_constant # Just an alias.
-
-# abl is the area of each face divided by the distance of
-# the adjacent cell centroids.
 
 ## Alternative 1
 
@@ -51,6 +32,7 @@ for (c in cells(grid)):
     for (f in faces(c)): # Note that as written, this loop cannot be parallel, due to accumulation in residual[c].
         neighbour_cell = cell(f, c) # Meaning: the neighbour cell of f that is not c.
         residual[c] += (dt / volume(c)) * k * area(f) * (u[neighbour_cell] - u[c]) / centroid_distances[f]
+
 
 
 ## Alternative 2
@@ -80,6 +62,7 @@ for (c in cells(grid)):
     residual[c] = u[c] - u0[c] + (dt / volume(c)) * div(fluxes, c)
 
 
+
 ## Alternative 4
 
 fluxes : field(faces(grid))
@@ -94,6 +77,8 @@ for (c in cells(grid)):
 residual: field(cells(grid))
 residual = u - u0 + (dt / vol) * div(fluxes)
 
+
+
 ## Alternative 5
 
 fluxes : field(faces(grid)) =  - k * area(faces(grid)) * diff(u) / length(diff(centroid(cells(grid))))
@@ -101,6 +86,9 @@ fluxes : field(faces(grid)) =  - k * area(faces(grid)) * diff(u) / length(diff(c
 vol : field(cells(grid)) = volume(cells(grid))
 
 residual : field(cells(grid)) = u - u0 + (dt / vol) * div(fluxes)
+
+
+
 
 ## Alternative 6
 
