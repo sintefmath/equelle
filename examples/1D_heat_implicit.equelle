@@ -8,16 +8,16 @@
 ## Parts common to all alternatives
 
 # Physics that requires specification
-k = ... # Heat diffusion constant. Or should this rather be an input parameter to the generated simulator?
+k = userSpecified # Heat diffusion constant. Or should this rather be an input parameter to the generated simulator?
 
 # @afr: time step strategy assumed given outside.
-dt = ... # Set by outside considerations.
+dt = userSpecified # Set by outside considerations.
 
 
 # u0 should be given initial values (ignored for now)
+# meaning: u0 is a variable with type: one scalar per cell of the whole grid
 u0 : scalar(cells(grid))
 u : scalar(cells(grid))
-
 ### u : scalar on cells(grid)
 
 
@@ -25,14 +25,18 @@ u : scalar(cells(grid))
 ## Alternative 1
 
 centroid_distances : scalar(faces(grid))
+# meaning: centroid_distances is a variable with type: one scalar per face of the whole grid
 for f in faces(grid):
+    # faces(grid) means: all faces in the grid
     centroid_distances[f] = length(centroid(first(f)) - centroid(second(f)))
     ### length(f.first.centroid - f.second.centroid)
 
 residual: scalar(cells(grid))
 for c in cells(grid):
+    # cells(grid) means: all cells in the grid
     residual[c] = u[c] - u0[c]
     for f in faces(c): # Note that as written, this loop cannot be parallel, due to accumulation in residual[c].
+        # faces(c) means: all faces adjacent to c
         neighbour_cell = cell(f, c) # Meaning: the neighbour cell of f that is not c.
         ### neighbour_cell = f.cellMate(c)
         residual[c] += (dt / volume(c)) * k * area(f) * (u[neighbour_cell] - u[c]) / centroid_distances[f]
