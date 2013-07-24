@@ -1,0 +1,90 @@
+# @afr: Boundary and initial conditions are hard to generalize...
+# Dirichlet boundary conditions require values on all boundaries, and the values should not be specified in the DSL.
+# Also, which variable do we apply the boundary condition to?
+# For now, we ignore this.
+
+
+
+
+## Parts common to all alternatives
+
+# Physics that requires specification
+k = userSpecified # Heat diffusion constant. Or should this rather be an input parameter to the generated simulator?
+
+# @afr: time step strategy assumed given outside.
+dt = userSpecified # Set by outside considerations.
+
+# u0 should be given initial values (ignored for now)
+# meaning: u0 is a variable with type: one scalar per cell of the whole grid
+u0 : scalar(cells(grid))
+u : scalar(cells(grid))
+### u : scalar on cells(grid)
+
+# @jny: Note that similar Equelle-statements give rise to two different C++-types, V and ADB, for u0 and u.
+# We should probably either make this explicit, or figure out how it can be deduced...
+# Or use ADB for both of these?!
+
+
+
+
+## Alternative 4
+
+fluxes : scalar(faces(grid))
+for f in faces(grid):
+    centroid_distance = length(centroid(first(f)) - centroid(second(f)))
+    fluxes[f] = k * area(f) * (u[first(f)] - u[second(f)]) / centroid_distance
+
+vol : scalar(cells(grid))
+for c in cells(grid):
+    vol[c] = volume(c)
+
+residual: scalar(cells(grid))
+residual = u - u0 + (dt / vol) * div(fluxes)
+
+
+
+
+
+
+
+
+
+# Now the residual has been created. AD should also have made a Jacobian matrix.
+# The following went into residual: grid, u, u0, k, dt.
+
+# solve takes a residual, unknown. Actually, we should peek at this to know how to set up
+# our AD variables
+newtonsolve(residual, u)
+#output(u, fluxes)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
