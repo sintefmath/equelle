@@ -1,0 +1,75 @@
+# Heat conduction with no boundary conditions or source terms.
+
+# Equelle note:
+# Allowed primitive types:
+#   Scalar, Vector (numeric types)
+#   Cell, Face, Edge, Vertex (topological types)
+# Allowed compound type: only sets of primitive types, associated with sets of topological entities.
+# Declaration syntax for sets: <primitive type> On <set of topological type>
+#
+# Use type deduction by default, optional type declarations used to improve readability and detect errors.
+# UserSpecified is special: cannot use to deduce type, so type must be specified.
+
+# Physics that requires specification
+k : Scalar = UserSpecified # Heat diffusion constant.
+
+# @afr: time step strategy assumed given outside.
+dt : Scalar = UserSpecified # Time step length.
+
+# u0 should be given initial values (ignored for now)
+u0 : Scalar On Cells(Grid) = UserSpecified
+u : Scalar On Cells(Grid) = u0
+
+# Constants
+vol = Volume(Cells(Grid))                                  # Deduced type: Scalar On Cells(Grid)
+internal_faces = InternalFaces(Grid)                       # Deduced type: Face On InternalFaces(Grid)
+first = FirstCell(internal_faces)                          # Deduced type: Cell On internal_faces
+second = SecondCell(internal_faces)                        # Deduced type: Cell On internal_faces
+trans : Scalar On internal_faces = k * Area(internal_faces) / Length(Centroid(first) - Centroid(second))    # Deduced (and declared) type: Scalar On internal_faces
+
+# Variable quantities
+fluxes : Scalar On internal_faces = - trans * Gradient(u)                     # Deduced (and declared) type: Scalar On internal_faces
+residual : Scalar On Cells(Grid) = u - u0 + (dt / vol) * Divergence(fluxes)   # Deduced (and declared) type: Scalar On Cells(Grid)
+
+
+# solve takes a residual and the primary variable. The primary variable decides which objects need to be AD objects in
+# the back-end, the rule is the following:
+#  1. The primary variable must be AD.
+#  2. All objects that depend on an AD variable must be AD.
+# In this concrete case, { u, fluxes, residual } must be AD.
+NewtonSolve(residual, u)
+
+Output(u)
+Output(fluxes)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
