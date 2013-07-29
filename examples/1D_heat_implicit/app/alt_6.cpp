@@ -77,8 +77,8 @@ public:
         const DataBlock face_centroid_diffs = ops_.ngrad * cell_centroids.matrix(); // We get "first centroid" - "second centroid" this way. (Second column to be discarded!)
 
         // A bit more explicit, but maybe more true to the Equelle-code
-        const M first_faces  =   pick_elements(ops_.ngrad, 1);
-        const M second_faces =   pick_elements(ops_.ngrad, -1);
+        const M first_faces  =   pick_elements(ops_.ngrad, 1.0);
+        const M second_faces =   pick_elements(ops_.ngrad, -1.0);
         const DataBlock cell_centroids2 = Eigen::Map<DataBlock>(grid_.cell_centroids, nc, dim);
         const DataBlock first_centroids  = first_faces  * cell_centroids2.matrix();
         const DataBlock second_centroids = second_faces * cell_centroids2.matrix();
@@ -187,18 +187,8 @@ int main(int argc, char** argv)
 #else
         // @jny Or is this better? (Of course, no apparent change for a linear problem...)
         const V du = solve(linsolver, residual);
-        const ADB new_u = u - du;
-        // @jny If rescomp.compute could take and ADB as type for the second parameter, we could just call it directly now,
-        //      but this seems not to work, I don't quite see why.
-        {
-            // "Casting" u from V to ADB in order to call rescomp.compute with u as second parameter
-            V uv = V::Zero( u.size() );
-            for (int i=0; i<u.size(); i++)
-                uv[i] = u.value().data()[i];
-            residual = rescomp.compute(new_u, uv); // ============= Generated code in here ================
-        }
-        // And this step was the one missing from the section above:
-        u = new_u;
+        u = u - du;
+        residual = rescomp.compute(u, u0); // ============= Generated code in here ================
 #endif
 
         print_vec("\tu:\t", u);
