@@ -170,25 +170,33 @@ int main(int argc, char** argv)
     Opm::GridManager gm(n, 1);
     const UnstructuredGrid& grid = *gm.c_grid();
 
+    // Initialize residual computations.
+    ResidualComputer rescomp(grid, param);
+
     // Initial values. Must be worked on...
     V u0 = V::Zero(n);
     u0[0] = 0.5;
     u0[n-1] = 1.5;
 
-    // Create unknowns.
-    ADB u = ADB::variable(0, u0, { n } );
+    // Main loop.
+    const int num_steps = 20;
+    for (int step = 0; step < num_steps; ++step) {
 
-    ResidualComputer rescomp(grid, param);
-
-    // Set up Newton loop.
-    ADB residual = rescomp.compute(u, u0);
-    const int max_iter = 10;
-    const double tol = 1e-6;
-    int iter = 0;
-    while (norm(residual) > tol && iter < max_iter) {
-        u = solve(linsolver, residual, u);
-        residual = rescomp.compute(u, u0);
-        std::copy(u.value().data(), u.value().data() + n, std::ostream_iterator<double>(std::cout, " "));
-        std::cout << std::endl;
+        // Create unknowns.
+        ADB u = ADB::variable(0, u0, { n } );
+        // Set up Newton loop.
+        ADB residual = rescomp.compute(u, u0);
+        const int max_iter = 10;
+        const double tol = 1e-6;
+        int iter = 0;
+        while (norm(residual) > tol && iter < max_iter) {
+            u = solve(linsolver, residual, u);
+            residual = rescomp.compute(u, u0);
+            std::cout << "Timestep: " << step << "  Newton step: " << iter << "   ";
+            std::copy(u.value().data(), u.value().data() + n, std::ostream_iterator<double>(std::cout, " "));
+            std::cout << std::endl;
+        }
+        // Update initial values for next timestep.
+        u0 = u.value();
     }
 }
