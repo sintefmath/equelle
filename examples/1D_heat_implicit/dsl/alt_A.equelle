@@ -11,13 +11,13 @@
 # UserSpecified is special: cannot use to deduce type, so type must be specified.
 
 # Physics that requires specification
-k : Scalar = UserSpecified # Heat diffusion constant.
+k : Scalar = UserSpecifiedScalarWithDefault(0.3) # Heat diffusion constant.
 
 # @afr: time step strategy assumed given outside.
-dt : Scalar = UserSpecified # Time step length.
+dt : Scalar = UserSpecifiedScalarWithDefault(0.5) # Time step length.
 
-# u0 should be given initial values (ignored for now)
-u0 : Scalar On Cells(Grid) = UserSpecified
+# u0 should be given initial values (in user input)
+u0 : Scalar On Cells(Grid) = UserSpecifiedScalars()
 u : Scalar On Cells(Grid) = u0
 
 # Constants
