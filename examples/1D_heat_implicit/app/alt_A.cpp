@@ -74,9 +74,9 @@ public:
         // first = FirstCell(internal_faces)      # Deduced type: Cell On internal_faces
         // second = SecondCell(internal_faces)    # Deduced type: Cell On internal_faces
         // --------------------------------------------------------------------------------
-        std::vector<Face> internal_faces = er_.internalFaces();
-        std::vector<Cell> first = er_.firstCell(internal_faces);
-        std::vector<Cell> second = er_.secondCell(internal_faces);
+        const Faces internal_faces = er_.internalFaces();
+        const Cells first = er_.firstCell(internal_faces);
+        const Cells second = er_.secondCell(internal_faces);
 
         // --------------------------------------------------------------------------------
         // trans : Scalar On internal_faces = k * Area(internal_faces) / Length(Centroid(first) - Centroid(second))
@@ -87,6 +87,7 @@ public:
         const Scalars term2 = er_.area(internal_faces);
         const Scalars term3 = er_.length(er_.centroid(first) - er_.centroid(second));
         const Scalars trans = term1 * term2 / term3;
+        // const Scalars trans = up_.k * er_.area(internal_faces) / er_.length(er_.centroid(first) - er_.centroid(second));
 
         // --------------------------------------------------------------------------------
         // fluxes : Scalar On internal_faces = - trans * Gradient(u)
