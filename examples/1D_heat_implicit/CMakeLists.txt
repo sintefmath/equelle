@@ -46,25 +46,6 @@ file( GLOB app_sources "app/*.cpp" )
 file( GLOB headers     "include/*.hpp" )
 file( GLOB DSL_sources "dsl/*.equelle" )
 
-set( optional_libs 
-  lapack
-  blas
-)
-
-set( afr_libs 
-  /usr/local/lib/libumfpack.a
-  /usr/local/lib/libcholmod.a
-  /usr/local/lib/libamd.a
-  /usr/local/lib/libcolamd.a
-  /usr/local/lib/libcamd.a
-  /usr/local/lib/libecl.dylib
-  /usr/local/lib/libert_geometry.dylib
-  /usr/local/lib/libert_util.dylib
-  /usr/lib/libz.dylib
-  /usr/lib/libm.dylib
-  /usr/local/lib/libdunecommon.a
-  /Users/atgeirr/install/SuperLU_4.3/lib/libsuperlu_4.3.a
-)
 
 foreach( app ${app_sources} )
   get_filename_component( target ${app} NAME_WE )
@@ -79,8 +60,7 @@ foreach( app ${app_sources} )
     "dunecommon"
     ${SUPERLU_LIB}
     "umfpack"
-#    ${afr_libs}
-#    ${optional_libs}
+    ${EXTRA_LIBS_FOR_OPM}
   )
 endforeach()
 
