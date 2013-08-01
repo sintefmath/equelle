@@ -40,12 +40,15 @@ typedef ScalarsAD::V Scalars;
 typedef Eigen::Array<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Vectors;
 
 
+
 /// Interface for residual computer class.
 class ResidualComputerInterface
 {
 public:
     virtual ScalarsAD compute(const ScalarsAD& u) const = 0;
 };
+
+
 
 /// The Equelle runtime class.
 /// Contains methods corresponding to Equelle built-ins to make
