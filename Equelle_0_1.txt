@@ -1,0 +1,27 @@
+The purpose of this document is to describe and specify Equelle
+sufficiently accurate and complete that a first version of a compiler can
+be produced. This is not a definitive specification, recent example
+programs will have to be consulted for a more complete picture.
+
+Since this document is not meant to be used as input for a
+compiler-generator, parser, etc., it is written in natural language.
+
+At the time of writing (2013.08.02) this will actually be in the form of
+an example collection.
+
+
+
+
+1. Syntax
+---------
+
+
+
+
+
+
+
+
+
+2. Semantics
+------------

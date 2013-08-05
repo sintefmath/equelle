@@ -83,11 +83,7 @@ public:
         //    # Deduced (and declared) type: Scalar On internal_faces
         // --------------------------------------------------------------------------------
         // trans is a Scalars and not a ScalarsAD since it does not depend on u.
-        const Scalars term1 = Scalars::Constant(internal_faces.size(), up_.k);
-        const Scalars term2 = er_.area(internal_faces);
-        const Scalars term3 = er_.length(er_.centroid(first) - er_.centroid(second));
-        const Scalars trans = term1 * term2 / term3;
-        // const Scalars trans = up_.k * er_.area(internal_faces) / er_.length(er_.centroid(first) - er_.centroid(second));
+        const Scalars trans = up_.k * er_.area(internal_faces) / er_.length(er_.centroid(first) - er_.centroid(second));
 
         // --------------------------------------------------------------------------------
         // fluxes : Scalar On internal_faces = - trans * Gradient(u)
