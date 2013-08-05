@@ -25,12 +25,25 @@ p : Scalar On Cells(Grid) = 0
 # Constants
 vol = Volume(Cells(Grid))                                  # Deduced type: Scalar On Cells(Grid)
 
+# EntitySet : Collection Of <Entity> On <XXX>
+# Collection Of <Type> On <Entityset> == Collection Of <Type> On <XXX>
 
-computeTransmissibilities : Function() -> Scalar On InternalFaces(Grid)
+# computeTransmissibilities : Function() -> Collection Of Scalar On InternalFaces(Grid)
 computeTransmissibilities() = {
-    internal_faces = InternalFaces(Grid)                       # Deduced type: Face On InternalFaces(Grid)
-    first = FirstCell(internal_faces)                          # Deduced type: Cell On internal_faces
-    second = SecondCell(internal_faces)                        # Deduced type: Cell On internal_faces
+    # InternalFaces : Function() -> Collection Of Face
+    # internal_faces : Collection Of Face
+    internal_faces = InternalFaces(Grid)
+    # FirstCell : Function(facecoll : Collection Of Face) -> Collection Of Cell On facecoll
+    # first : Collection Of Cell On internal_faces
+    first = FirstCell(internal_faces)
+    # SecondCell : Function(facecoll : Collection Of Face) -> Collection Of Cell On facecoll
+    # second : Collection Of Cell On internal_faces
+    second = SecondCell(internal_faces)
+    # Centroid : Function(cellcoll : Collection Of Cell) -> Collection of Vector On cellcoll
+    # Centroid : Function(facecoll : Collection Of Face) -> Collection of Vector On facecoll
+    # Centroid(first) : Collection of Vector On first
+    # Centroid(internal_faces) : Collection of Vector On internal_faces
+    # cdiff1 : Collection of Vector On internal_faces (since first is 'On' internal_faces)
     cdiff1 = Centroid(first) - Centroid(internal_faces)        # Deduced type: Vector On internal_faces
     cdiff2 = Centroid(second) - Centroid(internal_faces)       # Deduced type: Vector On internal_faces
     p1 = perm(first)                                           # Deduced type: Scalar On internal_faces
