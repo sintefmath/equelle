@@ -12,16 +12,135 @@ an example collection.
 
 
 
-1. Syntax
----------
+1. Types
+--------
+
+The following types exist in Equelle:
+
+a. Basic numeric types.
+   Scalar    --   a single number, typically a double-precision floating-point number
+   Vector    --   a (geometric) vector, with one number for each dimension (typically 2 or 3)
+
+b. Entities (basic topological, grid-related types).
+   Cell      --   a single cell of the computational grid (entity of dimension == world dimension)
+   Face      --   a single face (entity of dimension == world dimension - 1)
+   Edge      --   a single edge (entity of dimension == world dimension - 2, minimum 0)
+   Vertex    --   a single vertex (entity of dimension == world dimension - 3, minimum 0)
+So for 2d grids, Edge == Vertex. For 1d grids, Face == Edge == Vertex.
+
+c. Entity collections.
+   Collection Of <Entity>  --  contains zero or more elements that are instances of <Entity>
+   Collection Of <Entity> Subset Of (Collection Of <Entity> 1, Collection Of <Entity> 2, ...)
+   --  this collection is a subset of one or more indicated collections
+Single entities (a single Face for example) are also collections and can be treated as such.
+
+d. Collections mapped to entity collections.
+   Collection Of <Type> On <Collection Of Entity>
+   --  contains zero or more elements that are instances of <Type>,
+       one for each element in <Collection Of Entity>.
+Note that mapped collections can also contain entities.
+Also, there can be a whole chain of mappings: A On B On C On D.
+A Collection Of <Entity> On <X> is also a Collection Of <Entity> and can be treated as such.
+We propose that user code mostly manipulates mapped collections, since that facilitates correctness checks.
+
+e. Functions.
+   Function(arg1 : Type1, arg2 : Type2, ...) -> Return type
+Note that a function given without explicit type declaration should be treated as a
+template, and its types deduced at the instantiation point if possible.
+
+f. Boolean type
+   Bool      --   a flag, which is True or False
 
 
 
 
+2. Notation for type declarations and examples of types
+-------------------------------------------------------
+
+General notation is "variable_name : Type".
+
+a_constant : Scalar
+start_point : Vector
+acceleration : Vector
+a_cell : Cell
+all_faces : Collection Of Face
+some_faces : Collection Of Face Subset Of (all_faces)
+a_value_per_face_in_some_faces : Collection Of Scalar On some_faces
+computeTransmissibilities : Function(faces_arg : Collection Of Face) -> Collection Of Scalar On faces_arg
 
 
 
 
+3. Built-in functions
+---------------------
 
-2. Semantics
-------------
+
+a. User specified quantities
+UserSpecifiedScalar : Function() -> Scalar
+UserSpecifiedScalarWithDefault : Function(default : Scalar) -> Scalar
+UserSpecifiedCollectionOfScalar : Function(entities : Collection Of <Entity>) -> Collection Of Scalar On entities
+
+
+b. Grid related
+AllCells : Function() -> Collection Of Cell
+BoundaryCells : Function() -> Collection Of Cell Subset Of AllCells()
+InteriorCells : Function() -> Collection Of Cell Subset Of AllCells()
+AllFaces : Function() -> Collection Of Face
+BoundaryFaces : Function() -> Collection Of Face Subset Of AllFaces()
+InteriorFaces : Function() -> Collection Of Face Subset Of AllFaces()
+AllEdges : Function() -> Collection Of Edge
+BoundaryEdges : Function() -> Collection Of Edge Subset Of AllEdges()
+InteriorEdges : Function() -> Collection Of Edge Subset Of AllEdges()
+AllVertices : Function() -> Collection Of Vertex
+BoundaryVertices : Function() -> Collection Of Vertex Subset Of AllVertices()
+InteriorVertices : Function() -> Collection Of Vertex Subset Of AllVertices()
+FirstCell : Function(f : Collection Of Face) -> Collection Of Cell On f
+SecondCell : Function(f : Collection Of Face) -> Collection Of Cell On f
+Centroid : Function(e : Collection Of <Entity>) -> Collection Of Vector On e
+Normal : Function(f : Collection Of Face) -> Collection Of Vector On f
+Volume : Function(e : Collection Of <Entity>) -> Collection Of Scalar On e
+Area : Function(f : Collection Of Face) -> Collection Of Scalar On f
+Length : Function(e : Collection Of Edge) -> Collection Of Scalar On e
+
+
+c. Discrete operators
+Gradient : Function(values : Collection Of Scalar On AllCells()) -> Collection Of Scalar On InteriorFaces()
+Divergence : Function(values : Collection Of Scalar On InteriorFaces()) -> Collection Of Scalar On AllCells()
+Divergence : Function(values : Collection Of Scalar On AllFaces()) -> Collection Of Scalar On AllCells()
+
+
+d. Other functions
+Dot : Function(v1 : Collection Of Vectors On <X>, v2 : Collection Of Vectors On <X>) -> Collection Of Scalar On <X>
+EuclideanLength : Function(v : Collection Of Vectors On <X>) -> Collection Of Scalar On <X>
+
+
+e. Arithmetic operators.
++
+-
+*
+/
+All of these share the signature:
+op : Function(v1 : Collection Of Scalar On <X>, v2 : Collection Of Scalar On <X>) -> Collection Of Scalar On <X>
+Some additional overloads for ease of use with Vector and Scalar types:
++ : Function(v1 : Collection Of Vector On <X>, v2 : Collection Of Vector On <X>) -> Collection Of Vector On <X>
+- : Function(v1 : Collection Of Vector On <X>, v2 : Collection Of Vector On <X>) -> Collection Of Vector On <X>
+* : Function(v1 : Collection Of Vector On <X>, v2 : Collection Of Scalar On <X>) -> Collection Of Vector On <X>
+* : Function(v1 : Collection Of Scalar On <X>, v2 : Collection Of Vector On <X>) -> Collection Of Vector On <X>
+/ : Function(v1 : Collection Of Vector On <X>, v2 : Collection Of Scalar On <X>) -> Collection Of Vector On <X>
+^ : Function(v1 : Collection Of Scalar On <X>, exponent : Scalar) -> Collection Of Scalar On <X>
+Unary negation:
+- : Function(v : Collection Of Scalar On <X>) -> Collection Of Scalar On <X>
+- : Function(v : Collection Of Vector On <X>) -> Collection Of Vector On <X>
+"? :" : Function(predicate : Collection Of Bool On <X>, iftrue : Collection Of Scalar On <X>, iffalse : Collection Of Scalar On <X>) -> Collection Of Scalar On <X>
+"? :" : Function(predicate : Collection Of Bool On <X>, iftrue : Collection Of Vector On <X>, iffalse : Collection Of Vector On <X>) -> Collection Of Vector On <X>
+> : Function(v1 : Collection Of Scalar On <X>, v2 : Collection Of Scalar On <X>) -> Collection Of Bool On <X>
+< : Function(v1 : Collection Of Scalar On <X>, v2 : Collection Of Scalar On <X>) -> Collection Of Bool On <X>
+And : Function(v1 : Collection Of Bool On <X>, v2 : Collection Of Bool On <X>) -> Collection Of Bool On <X>
+Or : Function(v1 : Collection Of Bool On <X>, v2 : Collection Of Bool On <X>) -> Collection Of Bool On <X>
+Not : Function(v : Collection Of Bool On <X>) -> Collection Of Bool On <X>
+
+
+f. Specially treated constructs
+NewtonSolve
+Output
+
