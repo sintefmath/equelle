@@ -144,3 +144,43 @@ f. Specially treated constructs
 NewtonSolve
 Output
 
+
+
+
+4. Notation for assignment/construction
+---------------------------------------
+
+a. Variables.
+
+<variable name> = <expression>
+
+or
+
+<variable name> : <type specification> = <expression>
+
+or
+
+<variable name> : <type specification>
+<variable name> = <expression>
+
+
+b. Functions
+
+<function name> = {
+   ...
+}
+
+(such a function is treated as a template and is typechecked at instantiation)
+
+or
+
+<function name> : <type specification> = {
+   ...
+}
+
+or
+
+<function name> : <type specification>
+<function name> = {
+   ...
+}
