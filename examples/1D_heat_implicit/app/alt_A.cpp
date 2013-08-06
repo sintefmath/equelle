@@ -31,9 +31,6 @@ struct UserParameters
     // u0 : Collection Of Scalar On AllCells() = UserSpecifiedCollectionOfScalar( AllCells() )
     CollOfScalars u0;
 
-    // It could be that we want generated code to bind information about which "collection" these variables live, to the actual variable.
-    // One way to do this: Instead of double: class Scalar, with some sort of Scalar::DomainInfo.
-
     // ============= Generated code ends here ================
 
     UserParameters(const Opm::parameter::ParameterGroup& param,
