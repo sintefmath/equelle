@@ -77,9 +77,9 @@ public:
 	//                                        # Equivalent to: Collection Of Cell On InteriorFaces()
 	// second = SecondCell(interior_faces)    # Deduced type:  Same as for 'first'.
         // --------------------------------------------------------------------------------
-        const Faces interior_faces = er_.interiorFaces();
-        const Cells first = er_.firstCell( interior_faces );
-        const Cells second = er_.secondCell( interior_faces );
+        const CollOfFaces interior_faces = er_.interiorFaces();
+        const CollOfCells first = er_.firstCell( interior_faces );
+        const CollOfCells second = er_.secondCell( interior_faces );
 
         // --------------------------------------------------------------------------------
         // trans : Collection Of Scalar On interior_faces = k * Area(interior_faces) / Length(Centroid(first) - Centroid(second))

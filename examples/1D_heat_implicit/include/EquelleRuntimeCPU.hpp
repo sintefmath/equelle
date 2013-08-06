@@ -18,20 +18,22 @@
 /// Topological entity for cell.
 struct Cell
 {
-    int index;
+    Cell(void): index_(-1) {}
+    Cell(const int index): index_(index) {}
+    int index_;
 };
 
 
 /// Topological entity for cell.
 struct Face
 {
-    int index;
+    int index_;
 };
 
 
 /// Topological collections.
-typedef std::vector<Cell> Cells;
-typedef std::vector<Face> Faces;
+typedef std::vector<Cell> CollOfCells;
+typedef std::vector<Face> CollOfFaces;
 
 
 /// Types from opm-autodiff and Eigen.
@@ -60,16 +62,19 @@ public:
     EquelleRuntimeCPU(const Opm::parameter::ParameterGroup& param);
 
     /// Topology and geometry related.
-    Cells allCells() const;
-    Faces allFaces() const;
-    Faces interiorFaces() const;
-    Cells firstCell(const Faces& faces) const;
-    Cells secondCell(const Faces& faces) const;
-    CollOfScalars area(const Faces& faces) const;
-    CollOfScalars volume(const Cells& cells) const;
+    CollOfCells allCells() const;
+    CollOfCells boundaryCells() const;
+    CollOfCells interiorCells() const;
+    CollOfFaces allFaces() const;
+    CollOfFaces boundaryFaces() const;
+    CollOfFaces interiorFaces() const;
+    CollOfCells firstCell(const CollOfFaces& faces) const;
+    CollOfCells secondCell(const CollOfFaces& faces) const;
+    CollOfScalars area(const CollOfFaces& faces) const;
+    CollOfScalars volume(const CollOfCells& cells) const;
     CollOfScalars length(const CollOfVectors& vectors) const;
-    CollOfVectors centroid(const Faces& faces) const;
-    CollOfVectors centroid(const Cells& cells) const;
+    CollOfVectors centroid(const CollOfFaces& faces) const;
+    CollOfVectors centroid(const CollOfCells& cells) const;
 
     /// Operators.
     CollOfScalarsAD negGradient(const CollOfScalarsAD& cell_scalarfield) const;
@@ -93,6 +98,9 @@ public:
     static CollOfScalarsAD singlePrimaryVariable(const CollOfScalars& initial_values);
 
 private:
+    /// Topology helpers
+    bool boundaryCell(const int cell_index) const;
+
     /// Solver helper.
     CollOfScalars solveForUpdate(const CollOfScalarsAD& residual) const;
     /// Norms.
