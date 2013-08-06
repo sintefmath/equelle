@@ -22,12 +22,18 @@
 struct UserParameters
 {
     // ============= Generated code starts here ================
+    // k : Collection Of Scalar On AllCells() = UserSpecifiedScalarWithDefault(0.3) # Heat diffusion constant.
+    // Scalars k // This would make 'k' contain separate values for all cells.
     // k : Scalar = UserSpecifiedScalarWithDefault(0.3) # Heat diffusion constant.
     double k;
     // dt : Scalar = UserSpecifiedScalarWithDefault(0.5) # Time step length.
     double dt;
-    // u0 : Scalar On Cells(Grid) = UserSpecifiedScalars
-    Scalars u0;
+    // u0 : Collection Of Scalar On AllCells() = UserSpecifiedCollectionOfScalar( AllCells() )
+    CollOfScalars u0;
+
+    // It could be that we want generated code to bind information about which "collection" these variables live, to the actual variable.
+    // One way to do this: Instead of double: class Scalar, with some sort of Scalar::DomainInfo.
+
     // ============= Generated code ends here ================
 
     UserParameters(const Opm::parameter::ParameterGroup& param,
@@ -38,8 +44,8 @@ struct UserParameters
         k = param.getDefault("k", 0.3);
         // dt : Scalar = UserSpecifiedScalarWithDefault(0.5) # Time step length.
         dt = param.getDefault("dt", 0.5);
-        // u0 : Scalar On Cells(Grid) = UserSpecifiedScalars
-        u0 = EquelleRuntimeCPU::getUserSpecifiedScalars(param, "u0", er.allCells().size());
+        // u0 : Collection Of Scalar On AllCells() = UserSpecifiedCollectionOfScalar( AllCells() )
+        u0 = er.getUserSpecifiedCollectionOfScalar(param, "u0", er.allCells().size());
         // ============= Generated code ends here ================
     }
 };
@@ -52,52 +58,52 @@ class ResidualComputer : public ResidualComputerInterface
 {
 public:
     /// Initialization.
-    ResidualComputer(const EquelleRuntimeCPU& er,
-                     const UserParameters& up)
+    ResidualComputer(const EquelleRuntimeCPU& er, const UserParameters& up)
         : er_(er), up_(up)
     {
     }
 
     // Compute the (possibly nonlinear) residual with derivative information.
     // This is the most important generated function.
-    ScalarsAD compute(const ScalarsAD& u) const
+    CollOfScalarsAD compute(const CollOfScalarsAD& u) const
     {
         // ============= Generated code starts here ================
 
         // --------------------------------------------------------------------------------
-        // vol = Volume(Cells(Grid))    # Deduced type: Scalar On Cells(Grid)
+        // vol = Volume( AllCells() )    # Deduced type: Scalar On AllCells()
         // --------------------------------------------------------------------------------
-        const Scalars vol = er_.volume(er_.allCells());
+        const CollOfScalars vol = er_.volume( er_.allCells() );
 
         // --------------------------------------------------------------------------------
-        // internal_faces = InternalFaces(Grid)   # Deduced type: Face On InternalFaces(Grid)
-        // first = FirstCell(internal_faces)      # Deduced type: Cell On internal_faces
-        // second = SecondCell(internal_faces)    # Deduced type: Cell On internal_faces
+	// interior_faces = InteriorFaces()       # Deduced type:  Collection Of Face Subset Of AllFaces()
+	// first = FirstCell(interior_faces)      # Deduced type:  Collection Of Cell On interior_faces
+	//                                        # Equivalent to: Collection Of Cell On InteriorFaces()
+	// second = SecondCell(interior_faces)    # Deduced type:  Same as for 'first'.
         // --------------------------------------------------------------------------------
-        const Faces internal_faces = er_.internalFaces();
-        const Cells first = er_.firstCell(internal_faces);
-        const Cells second = er_.secondCell(internal_faces);
+        const Faces interior_faces = er_.interiorFaces();
+        const Cells first = er_.firstCell( interior_faces );
+        const Cells second = er_.secondCell( interior_faces );
 
         // --------------------------------------------------------------------------------
-        // trans : Scalar On internal_faces = k * Area(internal_faces) / Length(Centroid(first) - Centroid(second))
-        //    # Deduced (and declared) type: Scalar On internal_faces
+        // trans : Collection Of Scalar On interior_faces = k * Area(interior_faces) / Length(Centroid(first) - Centroid(second))
+        //    # Deduced (and declared) type: Collection Of Scalar On interior_faces
         // --------------------------------------------------------------------------------
-        // trans is a Scalars and not a ScalarsAD since it does not depend on u.
-        const Scalars trans = up_.k * er_.area(internal_faces) / er_.length(er_.centroid(first) - er_.centroid(second));
+        // trans is a CollOfScalars and not a CollOfScalarsAD since it does not depend on u.
+        const CollOfScalars trans = up_.k * er_.area(interior_faces) / er_.length(er_.centroid(first) - er_.centroid(second));
 
         // --------------------------------------------------------------------------------
-        // fluxes : Scalar On internal_faces = - trans * Gradient(u)
-        //    # Deduced (and declared) type: Scalar On internal_faces
+        // fluxes : Collection Of Scalar On interior_faces = - trans * Gradient(u)
+        //    # Deduced (and declared) type: Scalar On interior_faces
         // --------------------------------------------------------------------------------
-        // fluxes is a ScalarsAD since it depends on u.
-        const ScalarsAD fluxes = trans * (er_.negGradient(u));
+        // fluxes is a CollOfScalarsAD since it depends on u.
+        const CollOfScalarsAD fluxes = trans * (er_.negGradient(u));
 
         // --------------------------------------------------------------------------------
-        // residual : Scalar On Cells(Grid) = u - u0 + (dt / vol) * Divergence(fluxes) 
-        //    # Deduced (and declared) type: Scalar On Cells(Grid)
+        // residual : Collection Of Scalar On AllCells() = u - u0 + (dt / vol) * Divergence(fluxes) 
+        //    # Deduced (and declared) type: Scalar On AllCells()
         // --------------------------------------------------------------------------------
-        // residual is a ScalarsAD since it depends on u and fluxes.
-        const ScalarsAD residual = u - up_.u0 + (up_.dt / vol) * (er_.divergence(fluxes));
+        // residual is a CollOfScalarsAD since it depends on u and fluxes.
+        const CollOfScalarsAD residual = u - up_.u0 + (up_.dt / vol) * (er_.divergence(fluxes));
 
         // ============= Hopefully generated code ends here ================
 
@@ -130,7 +136,7 @@ int main(int argc, char** argv)
     // --------------------------------------------------------------------------------
     // u : Scalar On Cells(Grid) = u0
     // --------------------------------------------------------------------------------
-    ScalarsAD u = EquelleRuntimeCPU::singlePrimaryVariable(up.u0);
+    CollOfScalarsAD u = er.singlePrimaryVariable(up.u0);
 
     // --------------------------------------------------------------------------------
     // NewtonSolve(residual, u)
@@ -143,7 +149,7 @@ int main(int argc, char** argv)
     // Output(fluxes)
     // --------------------------------------------------------------------------------
     // Not handling output of fluxes currently, since they are not in scope here.
-    EquelleRuntimeCPU::output("Final u is equal to: ", u);
+    er.output("Final u is equal to: ", u);
 
     // ============= Generated code ends here ================
 
