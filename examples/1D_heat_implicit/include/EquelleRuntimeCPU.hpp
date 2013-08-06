@@ -35,9 +35,9 @@ typedef std::vector<Face> Faces;
 
 
 /// Types from opm-autodiff and Eigen.
-typedef AutoDiff::ForwardBlock<double> ScalarsAD;
-typedef ScalarsAD::V Scalars;
-typedef Eigen::Array<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Vectors;
+typedef AutoDiff::ForwardBlock<double> CollOfScalarsAD;
+typedef CollOfScalarsAD::V CollOfScalars;
+typedef Eigen::Array<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> CollOfVectors;
 
 
 
@@ -45,7 +45,7 @@ typedef Eigen::Array<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Ve
 class ResidualComputerInterface
 {
 public:
-    virtual ScalarsAD compute(const ScalarsAD& u) const = 0;
+    virtual CollOfScalarsAD compute(const CollOfScalarsAD& u) const = 0;
 };
 
 
@@ -62,42 +62,42 @@ public:
     /// Topology and geometry related.
     Cells allCells() const;
     Faces allFaces() const;
-    Faces internalFaces() const;
+    Faces interiorFaces() const;
     Cells firstCell(const Faces& faces) const;
     Cells secondCell(const Faces& faces) const;
-    Scalars area(const Faces& faces) const;
-    Scalars volume(const Cells& cells) const;
-    Scalars length(const Vectors& vectors) const;
-    Vectors centroid(const Faces& faces) const;
-    Vectors centroid(const Cells& cells) const;
+    CollOfScalars area(const Faces& faces) const;
+    CollOfScalars volume(const Cells& cells) const;
+    CollOfScalars length(const CollOfVectors& vectors) const;
+    CollOfVectors centroid(const Faces& faces) const;
+    CollOfVectors centroid(const Cells& cells) const;
 
     /// Operators.
-    ScalarsAD negGradient(const ScalarsAD& cell_scalarfield) const;
-    ScalarsAD divergence(const ScalarsAD& face_fluxes) const;
+    CollOfScalarsAD negGradient(const CollOfScalarsAD& cell_scalarfield) const;
+    CollOfScalarsAD divergence(const CollOfScalarsAD& face_fluxes) const;
 
     /// Solver function.
-    ScalarsAD newtonSolve(const ResidualComputerInterface& rescomp,
-                          const ScalarsAD& u_initialguess) const;
+    CollOfScalarsAD newtonSolve(const ResidualComputerInterface& rescomp,
+                          const CollOfScalarsAD& u_initialguess) const;
 
     /// Output.
     static void output(const std::string& tag, double val);
-    static void output(const std::string& tag, const Scalars& vals);
-    static void output(const std::string& tag, const ScalarsAD& vals);
+    static void output(const std::string& tag, const CollOfScalars& vals);
+    static void output(const std::string& tag, const CollOfScalarsAD& vals);
 
     /// Input.
-    static Scalars getUserSpecifiedScalars(const Opm::parameter::ParameterGroup& param,
-                                           const std::string& name,
-                                           const int size);
+    static CollOfScalars getUserSpecifiedCollectionOfScalar(const Opm::parameter::ParameterGroup& param,
+						      const std::string& name,
+						      const int size);
 
     /// Creating primary variables.
-    static ScalarsAD singlePrimaryVariable(const Scalars& initial_values);
+    static CollOfScalarsAD singlePrimaryVariable(const CollOfScalars& initial_values);
 
 private:
     /// Solver helper.
-    Scalars solveForUpdate(const ScalarsAD& residual) const;
+    CollOfScalars solveForUpdate(const CollOfScalarsAD& residual) const;
     /// Norms.
-    double norm(const Scalars& vals) const;
-    double norm(const ScalarsAD& vals) const;
+    double norm(const CollOfScalars& vals) const;
+    double norm(const CollOfScalarsAD& vals) const;
 
     Opm::GridManager grid_manager_;
     const UnstructuredGrid& grid_;

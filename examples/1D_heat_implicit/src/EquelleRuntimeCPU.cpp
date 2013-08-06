@@ -40,7 +40,7 @@ Faces EquelleRuntimeCPU::allFaces() const
 }
 
 
-Faces EquelleRuntimeCPU::internalFaces() const
+Faces EquelleRuntimeCPU::interiorFaces() const
 {
     const int nif = ops_.internal_faces.size();
     Faces ifaces(nif);
@@ -74,10 +74,10 @@ Cells EquelleRuntimeCPU::secondCell(const Faces& faces) const
 
 
 
-Scalars EquelleRuntimeCPU::area(const Faces& faces) const
+CollOfScalars EquelleRuntimeCPU::area(const Faces& faces) const
 {
     const int n = faces.size();
-    Scalars areas(n);
+    CollOfScalars areas(n);
     for (int i = 0; i < n; ++i) {
         areas[i] = grid_.face_areas[faces[i].index];
     }
@@ -85,10 +85,10 @@ Scalars EquelleRuntimeCPU::area(const Faces& faces) const
 }
 
 
-Scalars EquelleRuntimeCPU::volume(const Cells& cells) const
+CollOfScalars EquelleRuntimeCPU::volume(const Cells& cells) const
 {
     const int n = cells.size();
-    Scalars volumes(n);
+    CollOfScalars volumes(n);
     for (int i = 0; i < n; ++i) {
         volumes[i] = grid_.cell_volumes[cells[i].index];
     }
@@ -96,17 +96,17 @@ Scalars EquelleRuntimeCPU::volume(const Cells& cells) const
 }
 
 
-Scalars EquelleRuntimeCPU::length(const Vectors& vectors) const
+CollOfScalars EquelleRuntimeCPU::length(const CollOfVectors& vectors) const
 {
     return vectors.matrix().rowwise().norm();
 }
 
 
-Vectors EquelleRuntimeCPU::centroid(const Faces& faces) const
+CollOfVectors EquelleRuntimeCPU::centroid(const Faces& faces) const
 {
     const int n = faces.size();
     const int dim = grid_.dimensions;
-    Vectors centroids(n, dim);
+    CollOfVectors centroids(n, dim);
     for (int i = 0; i < n; ++i) {
         const double* fc = grid_.face_centroids + dim * faces[i].index;
         for (int d = 0; d < dim; ++d) {
@@ -117,11 +117,11 @@ Vectors EquelleRuntimeCPU::centroid(const Faces& faces) const
 }
 
 
-Vectors EquelleRuntimeCPU::centroid(const Cells& cells) const
+CollOfVectors EquelleRuntimeCPU::centroid(const Cells& cells) const
 {
     const int n = cells.size();
     const int dim = grid_.dimensions;
-    Vectors centroids(n, dim);
+    CollOfVectors centroids(n, dim);
     for (int i = 0; i < n; ++i) {
         const double* fc = grid_.cell_centroids + dim * cells[i].index;
         for (int d = 0; d < dim; ++d) {
@@ -131,23 +131,23 @@ Vectors EquelleRuntimeCPU::centroid(const Cells& cells) const
     return centroids;
 }
 
-ScalarsAD EquelleRuntimeCPU::negGradient(const ScalarsAD& cell_scalarfield) const
+CollOfScalarsAD EquelleRuntimeCPU::negGradient(const CollOfScalarsAD& cell_scalarfield) const
 {
     return ops_.ngrad * cell_scalarfield;
 }
 
 
-ScalarsAD EquelleRuntimeCPU::divergence(const ScalarsAD& face_fluxes) const
+CollOfScalarsAD EquelleRuntimeCPU::divergence(const CollOfScalarsAD& face_fluxes) const
 {
     return ops_.div * face_fluxes;
 }
 
 
-Scalars EquelleRuntimeCPU::solveForUpdate(const ScalarsAD& residual) const
+CollOfScalars EquelleRuntimeCPU::solveForUpdate(const CollOfScalarsAD& residual) const
 {
     Eigen::SparseMatrix<double, Eigen::RowMajor> matr = residual.derivative()[0];
 
-    Scalars du = Scalars::Zero(residual.size());
+    CollOfScalars du = CollOfScalars::Zero(residual.size());
 
     // solve(n, # nonzero values ("val"), ptr to col indices
     // ("col_ind"), ptr to row locations in val array ("row_ind")
@@ -165,15 +165,15 @@ Scalars EquelleRuntimeCPU::solveForUpdate(const ScalarsAD& residual) const
 }
 
 
-ScalarsAD EquelleRuntimeCPU::newtonSolve(const ResidualComputerInterface& rescomp,
-                                         const ScalarsAD& u_initialguess) const
+CollOfScalarsAD EquelleRuntimeCPU::newtonSolve(const ResidualComputerInterface& rescomp,
+                                         const CollOfScalarsAD& u_initialguess) const
 {
 
     // Set up Newton loop.
-    ScalarsAD u = u_initialguess;
+    CollOfScalarsAD u = u_initialguess;
     output("Initial u:\t\t", u);
     output("\tnorm = ", norm(u));
-    ScalarsAD residual = rescomp.compute(u); //  Generated code in here
+    CollOfScalarsAD residual = rescomp.compute(u); //  Generated code in here
     output("Initial residual:\t", residual);
     output("\tnorm = ", norm(residual));
     const int max_iter = 10;
@@ -188,7 +188,7 @@ ScalarsAD EquelleRuntimeCPU::newtonSolve(const ResidualComputerInterface& rescom
                   << " (tol = " << tol << ")" << std::endl;
 
         // Solve linear equations for du, apply update.
-        const Scalars du = solveForUpdate(residual);
+        const CollOfScalars du = solveForUpdate(residual);
         u = u - du;
 
         // Recompute residual.
@@ -206,13 +206,13 @@ ScalarsAD EquelleRuntimeCPU::newtonSolve(const ResidualComputerInterface& rescom
 }
 
 
-double EquelleRuntimeCPU::norm(const Scalars& vals) const
+double EquelleRuntimeCPU::norm(const CollOfScalars& vals) const
 {
     return vals.matrix().norm();
 }
 
 
-double EquelleRuntimeCPU::norm(const ScalarsAD& vals) const
+double EquelleRuntimeCPU::norm(const CollOfScalarsAD& vals) const
 {
     return norm(vals.value());
 }
@@ -224,7 +224,7 @@ void EquelleRuntimeCPU::output(const std::string& tag, const double val)
 }
 
 
-void EquelleRuntimeCPU::output(const std::string& tag, const Scalars& vals)
+void EquelleRuntimeCPU::output(const std::string& tag, const CollOfScalars& vals)
 {
     std::cout << tag;
     for (int i = 0; i < vals.size(); ++i) {
@@ -234,15 +234,15 @@ void EquelleRuntimeCPU::output(const std::string& tag, const Scalars& vals)
 }
 
 
-void EquelleRuntimeCPU::output(const std::string& tag, const ScalarsAD& vals)
+void EquelleRuntimeCPU::output(const std::string& tag, const CollOfScalarsAD& vals)
 {
     output(tag, vals.value());
 }
 
 
-Scalars EquelleRuntimeCPU::getUserSpecifiedScalars(const Opm::parameter::ParameterGroup& param,
-                                                   const std::string& name,
-                                                   const int size)
+CollOfScalars EquelleRuntimeCPU::getUserSpecifiedCollectionOfScalar(const Opm::parameter::ParameterGroup& param,
+							      const std::string& name,
+							      const int size)
 {
     const bool from_file = param.getDefault(name + "_from_file", false);
     if (from_file) {
@@ -257,18 +257,18 @@ Scalars EquelleRuntimeCPU::getUserSpecifiedScalars(const Opm::parameter::Paramet
         if (int(data.size()) != size) {
             THROW("Unexpected size of input data for " << name << " in file " << filename);
         }
-        return Scalars(Eigen::Map<Scalars>(&data[0], size));
+        return CollOfScalars(Eigen::Map<CollOfScalars>(&data[0], size));
     } else {
         // Uniform values.
-        return Scalars::Constant(size, param.get<double>(name));
+        return CollOfScalars::Constant(size, param.get<double>(name));
     }
 }
 
 
-ScalarsAD EquelleRuntimeCPU::singlePrimaryVariable(const Scalars& initial_values)
+CollOfScalarsAD EquelleRuntimeCPU::singlePrimaryVariable(const CollOfScalars& initial_values)
 {
     std::vector<int> block_pattern;
     block_pattern.push_back(initial_values.size());
-    // Syntax below is: ScalarsAD::variable(block index, initialized from, block structure)
-    return ScalarsAD::variable(0, initial_values, block_pattern);
+    // Syntax below is: CollOfScalarsAD::variable(block index, initialized from, block structure)
+    return CollOfScalarsAD::variable(0, initial_values, block_pattern);
 }
