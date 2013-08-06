@@ -73,7 +73,6 @@ Cells EquelleRuntimeCPU::secondCell(const Faces& faces) const
 }
 
 
-
 CollOfScalars EquelleRuntimeCPU::area(const Faces& faces) const
 {
     const int n = faces.size();
@@ -131,6 +130,7 @@ CollOfVectors EquelleRuntimeCPU::centroid(const Cells& cells) const
     return centroids;
 }
 
+
 CollOfScalarsAD EquelleRuntimeCPU::negGradient(const CollOfScalarsAD& cell_scalarfield) const
 {
     return ops_.ngrad * cell_scalarfield;
@@ -166,9 +166,8 @@ CollOfScalars EquelleRuntimeCPU::solveForUpdate(const CollOfScalarsAD& residual)
 
 
 CollOfScalarsAD EquelleRuntimeCPU::newtonSolve(const ResidualComputerInterface& rescomp,
-                                         const CollOfScalarsAD& u_initialguess) const
+					       const CollOfScalarsAD& u_initialguess) const
 {
-
     // Set up Newton loop.
     CollOfScalarsAD u = u_initialguess;
     output("Initial u:\t\t", u);
@@ -241,8 +240,8 @@ void EquelleRuntimeCPU::output(const std::string& tag, const CollOfScalarsAD& va
 
 
 CollOfScalars EquelleRuntimeCPU::getUserSpecifiedCollectionOfScalar(const Opm::parameter::ParameterGroup& param,
-							      const std::string& name,
-							      const int size)
+								    const std::string& name,
+								    const int size)
 {
     const bool from_file = param.getDefault(name + "_from_file", false);
     if (from_file) {

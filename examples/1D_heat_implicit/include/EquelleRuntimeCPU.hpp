@@ -77,7 +77,7 @@ public:
 
     /// Solver function.
     CollOfScalarsAD newtonSolve(const ResidualComputerInterface& rescomp,
-                          const CollOfScalarsAD& u_initialguess) const;
+				const CollOfScalarsAD& u_initialguess) const;
 
     /// Output.
     static void output(const std::string& tag, double val);
@@ -86,8 +86,8 @@ public:
 
     /// Input.
     static CollOfScalars getUserSpecifiedCollectionOfScalar(const Opm::parameter::ParameterGroup& param,
-						      const std::string& name,
-						      const int size);
+							    const std::string& name,
+							    const int size);
 
     /// Creating primary variables.
     static CollOfScalarsAD singlePrimaryVariable(const CollOfScalars& initial_values);
