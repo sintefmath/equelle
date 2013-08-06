@@ -1,3 +1,4 @@
+#! -*-sh-*-
 # Heat conduction with no boundary conditions or source terms.
 
 # Equelle note:
@@ -11,25 +12,31 @@
 # UserSpecified is special: cannot use to deduce type, so type must be specified.
 
 # Physics that requires specification
-k : Scalar On Grid = UserSpecifiedScalarWithDefault(0.3) # Heat diffusion constant.
+k : Collection of Scalar On AllCells() = UserSpecifiedScalarWithDefault(0.3) # Heat diffusion constant.
+# Here, "On AllCells()" could be omitted, but including it indicates that k could vary over the grid, one could envision e.g., this statement:
+k_not_in_use : Scalar On AllCells() = UserSpecifiedCollectionOfScalar( AllCells() ) # Heat diffusion constant.
 
 # @afr: time step strategy assumed given outside.
 dt : Scalar = UserSpecifiedScalarWithDefault(0.5) # Time step length.
 
 # u0 should be given initial values (in user input)
-u0 : Scalar On Cells(Grid) = UserSpecifiedScalars(Cells(Grid))
-u : Scalar On Cells(Grid) = u0
+u0 : Scalar On AllCells() = UserSpecifiedCollectionOfScalar( AllCells() )
+u : Scalar On AllCells() = u0
 
 # Constants
-vol = Volume(Cells(Grid))                                  # Deduced type: Scalar On Cells(Grid)
-internal_faces = InternalFaces(Grid)                       # Deduced type: Face On InternalFaces(Grid)
-first = FirstCell(internal_faces)                          # Deduced type: Cell On internal_faces
-second = SecondCell(internal_faces)                        # Deduced type: Cell On internal_faces
-trans : Scalar On internal_faces = k * Area(internal_faces) / Length(Centroid(first) - Centroid(second))    # Deduced (and declared) type: Scalar On internal_faces
+vol = Volume( AllCells() )                                 # Deduced type:  Collection Of Scalar On AllCells()
+interior_faces = InteriorFaces()                           # Deduced type:  Collection Of Face On InteriorFaces()
+first = FirstCell(interior_faces)                          # Deduced type:  Collection Of Cell On interior_faces
+							   # Equivalent to: Collection Of Cell On InteriorFaces()
+second = SecondCell(interior_faces)                        # Deduced type:  Same as for 'first'.
+trans : Collection Of Scalar On interior_faces = k * Area(interior_faces) / Length(Centroid(first) - Centroid(second)) 
+							   # Deduced (and declared) type: Collection Of Scalar On interior_faces
+
+# @jny Should we put the two next ones into a function definition instead?
 
 # Variable quantities
-fluxes : Scalar On internal_faces = - trans * Gradient(u)                     # Deduced (and declared) type: Scalar On internal_faces
-residual : Scalar On Cells(Grid) = u - u0 + (dt / vol) * Divergence(fluxes)   # Deduced (and declared) type: Scalar On Cells(Grid)
+fluxes : Collection Of Scalar On interior_faces = - trans * Gradient(u)                    # Deduced (and declared) type: Collection Of Scalar On interior_faces
+residual : Collection Of Scalar On AllCells() = u - u0 + (dt / vol) * Divergence(fluxes)   # Deduced (and declared) type: Collection Of Scalar On AllCells()
 
 
 # solve takes a residual and the primary variable. The primary variable decides which objects need to be AD objects in
