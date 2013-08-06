@@ -131,7 +131,7 @@ int main(int argc, char** argv)
 
     // Create unknowns.
     // --------------------------------------------------------------------------------
-    // u : Scalar On Cells(Grid) = u0
+    // u : Collection Of Scalar On AllCells() = u0
     // --------------------------------------------------------------------------------
     CollOfScalarsAD u = er.singlePrimaryVariable(up.u0);
 
