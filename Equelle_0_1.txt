@@ -17,39 +17,90 @@ an example collection.
 
 The following types exist in Equelle:
 
+
 a. Basic numeric types.
+
    Scalar    --   a single number, typically a double-precision floating-point number
    Vector    --   a (geometric) vector, with one number for each dimension (typically 2 or 3)
 
+
 b. Entities (basic topological, grid-related types).
+
    Cell      --   a single cell of the computational grid (entity of dimension == world dimension)
    Face      --   a single face (entity of dimension == world dimension - 1)
    Edge      --   a single edge (entity of dimension == world dimension - 2, minimum 0)
    Vertex    --   a single vertex (entity of dimension == world dimension - 3, minimum 0)
+
 So for 2d grids, Edge == Vertex. For 1d grids, Face == Edge == Vertex.
 
+
 c. Entity collections.
+
    Collection Of <Entity>  --  contains zero or more elements that are instances of <Entity>
    Collection Of <Entity> Subset Of (Collection Of <Entity> 1, Collection Of <Entity> 2, ...)
    --  this collection is a subset of one or more indicated collections
+
 Single entities (a single Face for example) are also collections and can be treated as such.
 
+
 d. Collections mapped to entity collections.
+
    Collection Of <Type> On <Collection Of Entity>
    --  contains zero or more elements that are instances of <Type>,
        one for each element in <Collection Of Entity>.
-Note that mapped collections can also contain entities.
-Also, there can be a whole chain of mappings: A On B On C On D.
-A Collection Of <Entity> On <X> is also a Collection Of <Entity> and can be treated as such.
-We propose that user code mostly manipulates mapped collections, since that facilitates correctness checks.
+
+Note that mapped collections can also contain entities.  Also, there can be a whole chain of
+mappings: A On B On C On D.  A Collection Of <Entity> On <X> is also a Collection Of <Entity> and
+can be treated as such.  We propose that user code mostly manipulates mapped collections, since that
+facilitates correctness checks.
+
+Note that a type '<Entity|Basic numeric type> On Collection ...' is not allowed.  If one intend to
+have one element shared among all members of a collection, one should use '<Entity|Basic numeric
+type>'. If one intend to have one element associated 1-1 on all members of a collection, one should
+use 'Collection Of <Entity|Basic numeric type> On Collection ...'. In this version, a collection
+mapped to each element of a collection is not supported. A probable future syntax for this would be
+'Collection Of (Collection Of ...) On ...'
+
+Note that a "deduced type" is the most restrictive, if more than one are possible types. (@jny How
+to best express this?) E.g.: The deduced type of InteriorFaces() is 'Collection Of Face On
+InteriorFaces()', and not 'Collection Of Face on AllFaces()', even though a variable of the latter
+type can be assigned the value of InteriorFaces() with the help of the Super function, see below.
+
 
 e. Functions.
+
    Function(arg1 : Type1, arg2 : Type2, ...) -> Return type
+
 Note that a function given without explicit type declaration should be treated as a
 template, and its types deduced at the instantiation point if possible.
 
+
 f. Boolean type
+
    Bool      --   a flag, which is True or False
+
+
+g. Type conversions
+
+No automatic type promotion is done, e.g.,
+
+   c1 : Collection Of Vector On AllFaces() = Centroid(FirstCell(interior_faces))
+
+is not allowed. Correct explicit declarations are,
+
+   c2 : Collection Of Vector On interior_faces = Centroid(FirstCell(interior_faces))
+   c3 : Collection Of Vector On InteriorFaces() = Centroid(FirstCell(interior_faces))
+
+assuming that interior_faces = InteriorFaces(). Note that one can write
+
+   c4 : Collection Of Vector On AllFaces() = Centroid(FirstCell(interior_faces)) On AllFaces()
+   c5 : Collection Of Vector On AllFaces() = Extend( Centroid(FirstCell(interior_faces)),
+						     AllFaces(), Vector(0) )
+
+where c4 and c5 are equal, but it is of course still invalid to do 'c1 = c2', while 'c1 = c4' is
+allowed.
+
+@jny: Hvor skal 'On' og/eller 'Extend' inn? "Special functions" nedenfor?
 
 
 
