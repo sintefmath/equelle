@@ -45,12 +45,13 @@ file( GLOB sources     "src/*.cpp" )
 file( GLOB app_sources "app/*.cpp" )
 file( GLOB headers     "include/*.hpp" )
 file( GLOB DSL_sources "dsl/*.equelle" )
+file( GLOB other_files "../../Equelle_0_1.txt" "../../README.txt")
 
 
 foreach( app ${app_sources} )
   get_filename_component( target ${app} NAME_WE )
   add_executable( ${target}
-    ${app} ${sources} ${headers} ${DSL_sources}
+    ${app} ${sources} ${headers} ${DSL_sources} ${other_files}
     )
   target_link_libraries( ${target}
     "libopmautodiff.a"
