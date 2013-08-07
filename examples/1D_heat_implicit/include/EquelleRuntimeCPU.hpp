@@ -39,6 +39,36 @@ typedef std::vector<Face> CollOfFaces;
 /// Types from opm-autodiff and Eigen.
 typedef AutoDiff::ForwardBlock<double> CollOfScalarsAD;
 typedef CollOfScalarsAD::V CollOfScalars;
+
+class CollOfScalarsOnColl
+{
+public:
+    template<typename ONCOLL>
+    CollOfScalarsOnColl(const CollOfScalars &c, const ONCOLL &oncoll)
+    {
+        coll_ = c;
+        on_collection_ = &oncoll;
+    }
+    CollOfScalarsOnColl operator-(const CollOfScalarsOnColl &rhs) const
+    {
+        if ( on_collection_ != rhs.getOnColl() ) {
+            std::cout << "\n\nKABOOM!!! This should not be allowed... Trying to subtract Collection Of Scalar *On* different Collections!\n\n" << std::endl;
+        }
+        return CollOfScalarsOnColl( coll_ - rhs.coll_, 0 );
+    }
+    CollOfScalars getColl(void) const
+    {
+        return coll_;
+    }
+    const void *getOnColl(void) const
+    {
+        return on_collection_;
+    }
+private:
+    CollOfScalars coll_;
+    const void *on_collection_;
+};
+
 typedef Eigen::Array<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> CollOfVectors;
 
 
@@ -87,6 +117,7 @@ public:
     /// Output.
     static void output(const std::string& tag, double val);
     static void output(const std::string& tag, const CollOfScalars& vals);
+    static void output(const std::string& tag, const CollOfScalarsOnColl& vals);
     static void output(const std::string& tag, const CollOfScalarsAD& vals);
 
     /// Input.
