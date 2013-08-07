@@ -34,17 +34,18 @@ int main(int argc, char** argv)
     CollOfCells boundary_cells = er.boundaryCells();
 
     // EQUELLE: all_vol : Collection Of Scalar On all_cells = Volume(all_cells)
-    CollOfScalars all_vol = er.volume( all_cells );
+    CollOfScalars       all_vol   = er.volume( all_cells );
     CollOfScalarsOnColl all_vol_2 = CollOfScalarsOnColl( er.volume(all_cells), all_cells );
 
-    // If something like this is the way to go, EquelleRuntimeCPU::volume() etc. should be modified instead of this way of using the constructor
+    // If something like this is the way to go, EquelleRuntimeCPU::volume() etc. should be modified instead of using the constructor with
+    // two arguments above. (That was only done to avoid modifying the 'er' for now...)
 
     // EQUELLE: boundary_vol : Collection Of Scalar On boundary_cells = Volume(boundary_cells)
-    CollOfScalars boundary_vol = er.volume( boundary_cells );
+    CollOfScalars       boundary_vol   = er.volume( boundary_cells );
     CollOfScalarsOnColl boundary_vol_2 = CollOfScalarsOnColl( er.volume(boundary_cells), boundary_cells );
 
     // EQUELLE: vol_diff : Collection Of Scalar On AllCells() = all_vol - boundary_vol # NB! Should fail, preferably in the Equelle compiler
-    CollOfScalars vol_diff = all_vol - boundary_vol;
+    CollOfScalars       vol_diff   = all_vol - boundary_vol;
     CollOfScalarsOnColl vol_diff_2 = all_vol_2 - boundary_vol_2;
 
     // EQUELLE: Output(vol_diff)

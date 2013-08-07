@@ -43,6 +43,12 @@ typedef CollOfScalarsAD::V CollOfScalars;
 class CollOfScalarsOnColl
 {
 public:
+    // This constructor makes this class operate exactly like the old one, as a fallback solution if we do not want to be strict about the "On-ness".
+    CollOfScalarsOnColl(const CollOfScalars &c)
+    {
+        coll_ = c;
+        on_collection_ = 0;
+    }
     template<typename ONCOLL>
     CollOfScalarsOnColl(const CollOfScalars &c, const ONCOLL &oncoll)
     {
