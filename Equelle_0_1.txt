@@ -33,6 +33,8 @@ b. Entities (basic topological, grid-related types).
 
 So for 2d grids, Edge == Vertex. For 1d grids, Face == Edge == Vertex.
 
+### Edges in 2d should not be vertices etc.
+
 
 c. Entity collections.
 
@@ -41,7 +43,7 @@ c. Entity collections.
    --  this collection is a subset of one or more indicated collections
 
 Single entities (a single Face for example) are also collections and can be treated as such.
-
+### No implicit conversion
 
 d. Collections mapped to entity collections.
 
@@ -115,9 +117,9 @@ start_point : Vector
 acceleration : Vector
 a_cell : Cell
 all_faces : Collection Of Face
-some_faces : Collection Of Face Subset Of (all_faces)
-a_value_per_face_in_some_faces : Collection Of Scalar On some_faces
-computeTransmissibilities : Function(faces_arg : Collection Of Face) -> Collection Of Scalar On faces_arg
+some_faces : Collection Of Face # Subset Of (all_faces)
+a_value_per_face_in_some_faces : Collection Of Scalar # On some_faces
+computeTransmissibilities : Function(faces_arg : Collection Of Face) -> Collection Of Scalar # On faces_arg
 
 
 
@@ -149,10 +151,11 @@ FirstCell : Function(f : Collection Of Face) -> Collection Of Cell On f
 SecondCell : Function(f : Collection Of Face) -> Collection Of Cell On f
 Centroid : Function(e : Collection Of <Entity>) -> Collection Of Vector On e
 Normal : Function(f : Collection Of Face) -> Collection Of Vector On f
-Volume : Function(e : Collection Of <Entity>) -> Collection Of Scalar On e
+Measure : Function(e : Collection Of <Entity>) -> Collection Of Scalar On e
+Volume : Function(c : Collection Of Cell) -> Collection Of Scalar On c
 Area : Function(f : Collection Of Face) -> Collection Of Scalar On f
 Length : Function(e : Collection Of Edge) -> Collection Of Scalar On e
-
+### We need to discuss dimensionality issues
 
 c. Discrete operators
 Gradient : Function(values : Collection Of Scalar On AllCells()) -> Collection Of Scalar On InteriorFaces()
@@ -189,10 +192,13 @@ Unary negation:
 And : Function(v1 : Collection Of Bool On <X>, v2 : Collection Of Bool On <X>) -> Collection Of Bool On <X>
 Or : Function(v1 : Collection Of Bool On <X>, v2 : Collection Of Bool On <X>) -> Collection Of Bool On <X>
 Not : Function(v : Collection Of Bool On <X>) -> Collection Of Bool On <X>
-
+### Forgotten: ops with Scalar and Collection Of Scalar etc.
+### Min, Max, Abs, CloseTo, Round, Ceil, Floor, Integer type, modulus and integer ops.
 
 f. Specially treated constructs
-NewtonSolve
+NewtonSolve : Function( compute_residual : Function(u : Collection Of Scalar On <X>) -> Collection Of Scalar On <X>,
+                        initial_guess    : Collection Of Scalar On <X>)
+                        -> Collection Of Scalar On <X>
 Output
 
 
