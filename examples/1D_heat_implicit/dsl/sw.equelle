@@ -1,0 +1,124 @@
+#! -*-sh-*-
+# Shallow water...
+
+cfl : Scalar = UserSpecifiedScalarWithDefault(0.9) # Courant number <= 1
+g : Scalar = UserSpecifiedScalarWithDefault(9.81) 
+
+# initial values (in user input)
+h0 : Collection Of Scalar On AllCells() = UserSpecifiedCollectionOfScalar( AllCells() )
+hu0 : Collection Of Scalar On AllCells() = UserSpecifiedCollectionOfScalar( AllCells() )
+hv0 : Collection Of Scalar On AllCells() = UserSpecifiedCollectionOfScalar( AllCells() )
+q0 : Tuple of (Collection Of Scalar On AllCells()) = (h0, hu0, hv0) #What kind of parenthesis do we need here?
+
+# Constants
+#vol = Volume( AllCells() )                                 # Deduced type:  Collection Of Scalar On AllCells()
+
+if = InteriorFaces()
+first = FirstCell(if)
+second = SecondCell(if)
+
+#trans : Collection Of Scalar On interior_faces = k * Area(interior_faces) / EuclideanLength(Centroid(first) - Centroid(second)) 
+
+# Copy initial conditions
+q = q0
+
+# Create aliases for h, hu, hv
+h = q[0]
+hu = q[1]
+hv = q[2]
+
+# u is the wave speed for each cell (be ware of small h for certain calculations: not handled yet)
+u = hu / h
+
+# u1 and u2 is u from the first and second sides of a face
+u1 = u On first
+u2 = u On second
+
+# c is the gravitational potential leading to wave speeds
+c = Sqrt(g*h) 
+c1 = c On first
+c2 = c On second
+
+# am and ap are the min / max eigenvalues (wave speeds) for a face (or integration point...)
+am = Min(Min(u1-c1, u2-c2), 0)
+ap = Max(Max(u1+c1, u2+c2), 0)
+
+# What about scope etc...
+# To implicitly include from parent scope is dangerous (and should be prohibited?)
+# Case in point, define aliases in the following changes the function
+f(q) = {
+	h = q[0]
+	hu = q[1]
+	hv = q[2]
+	
+	return (hu, ...
+		hu*hu/h + (1/2)*g*h*h, ...
+		hu*hv/h)
+}
+
+
+flux(f, q) = {
+	qf = q On first
+	qs = q On second
+	
+	# This function does not properly handle the ordering of firstcell / secondcell
+	# May need to get ql and qr (left and right state vectors) which are derived
+	# from qf and qs, but take into account the orientation of the edge...
+	
+	return (ap * f(qf) - am * f(qs)) / (ap-am) ...
+			ap*am*(qs-qf) / (ap-am)
+}
+							   
+							   
+# compute_residual : Function(u : Collection Of Scalar On AllCells()) -> Collection Of Scalar On AllCells()
+compute_residual(u) = {
+    # Deduced (and declared) type: Collection Of Scalar On interior_faces
+    fluxes : Collection Of Scalar On interior_faces = - trans * Gradient(u)
+    # Deduced (and declared) type: Collection Of Scalar On AllCells()
+    residual : Collection Of Scalar On AllCells() = u - u0 + (dt / vol) * Divergence(fluxes)
+    return residual
+}
+
+# NewtonSolve takes a function (that should accept the primary variable as input) and the initial guess for the primary variable.
+# The primary variable decides which objects need to be AD objects in
+# the back-end, the rule is the following:
+#  1. The primary variable must be AD.
+#  2. All objects that depend on an AD variable must be AD.
+# In this concrete case, { u, fluxes, residual } must be AD.
+explicitu = u0 + compute_residual(u0)
+u = NewtonSolve(compute_residual, u0)
+
+Output(u)
+Output(fluxes)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
