@@ -36,7 +36,7 @@ g(q) = {
 }
 
 
-# The central upwind flux function for an integration point on an oriented face
+# The central upwind flux function for an integration point with a normal direction
 # We use classical Riemann problem notation with a right and left state
 # The function takes the state on the left hand side, right hand side, and the normal as input
 compute_flux(ql, qr, n) = {	
@@ -75,14 +75,48 @@ compute_flux(ql, qr, n) = {
 	return flux - central_upwind_correction
 }
 
-# Get all faces
+
+
+# Reconstructs a plane for each cell in the grid, with a slope limiter
+reconstruct_plane(q) = {
+	# forward_diff_x = (q_right - q) / dx
+	# backward_diff_x = (q - q_left) / dx
+	# centered_diff_x = (q_right - q_left) / (2*dx)
+	
+	# forward_diff_y = (q_up - q) / dy
+	# backward_diff_y = (q - q_down) / dy
+	# centered_diff_y = (q_up - q_down) / (2*dy)
+
+	# x_slope = minmod (forward_diff_x, backward_diff_x, centered_diff_x)
+	# y_slope = minmod (forward_diff_y, backward_diff_y, centered_diff_y)
+	
+	# return (x_slope, y_slope)
+}
+
+# Get all cells and faces, which will be used later
 if = InteriorFaces()
 first = FirstCell(if)
 second = SecondCell(if)
 
-q1 = q On first
-q2 = q On second
+# Reconstruct a higher-order approximation to the physical quantities within each cell.
+# In this case, we reconstruct a plane, but for higher order, we typically reconstruct
+# a higher-order polynomial
+slopes = reconstruct_plane(AllCells())
+
+#Find the normal and tangent for the interface
 n = Normal(if)
+t = (n[1] / n[0], -1)
+t = t / EuclideanLength(t)
+
+# Find the length from the cell center to the integration point
+first_to_ip = EuclideanLength(Centroid(first), Centroid(if)) # +- t*Length(if)/(2*Sqrt(3)) for a two point gauss quadrature
+second_to_ip = EuclideanLength(Centroid(second), Centroid(if))
+
+# Evaluate the reconstructed variables at the integration point
+q1 = q On first + first_to_ip*Dot(slopes On first, n)
+q2 = q On second + second_to_ip*Dot(slopes On first, n)
+
+# Compute the flux at the integration point
 fluxes = compute_flux(q1, q2, n)
 
 # Constants
