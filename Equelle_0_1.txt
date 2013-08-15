@@ -166,7 +166,10 @@ Divergence : Function(values : Collection Of Scalar On AllFaces()) -> Collection
 d. Other functions
 Dot : Function(v1 : Collection Of Vectors On <X>, v2 : Collection Of Vectors On <X>) -> Collection Of Scalar On <X>
 EuclideanLength : Function(v : Collection Of Vectors On <X>) -> Collection Of Scalar On <X>
-
+|<X>|: Function(v1 : Collection of <Entity>) ->  Collection of Scalar on <Entity>
+### The |...| notation is intended to solve the dimensionality issue by giving
+### a notation for "natural size" of elements. Length of vectors, area of faces,
+### volume of cells etc. 
 
 e. Arithmetic operators.
 +
