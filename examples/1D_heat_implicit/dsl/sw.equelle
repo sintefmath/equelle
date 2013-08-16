@@ -38,8 +38,12 @@ g(q) = {
 
 # The central upwind flux function for an integration point with a normal direction
 # We use classical Riemann problem notation with a right and left state
-# The function takes the state on the left hand side, right hand side, and the normal as input
-compute_flux(ql, qr, n) = {	
+# The function takes the state on the left hand side, right hand side, edge length, and the normal as input
+# @param ql State vector on "left" side of interface
+# @param qr State vector on "right" side of interface
+# @param n Normal of interface
+# @param l Interface length
+compute_flux(ql, qr, l, n) = {	
 	# Create aliases for h and hu for the left and right hand side of the integration point
 	hl = ql[0]
 	hul = ql[1]
@@ -65,20 +69,24 @@ compute_flux(ql, qr, n) = {
 	f_flux = (ap * f(ql) - am * f(qr)) / (ap-am)
 	g_flux = (ap * f(ql) - am * f(qr)) / (ap-am)
 	
-	# Find the flux in the normal direction
-	flux = Dot((f_flux, g_flux), n)
-
 	#Stabilization term in the central upwind function
 	central_upwind_correction = ap*am*(ql - qr) / (ap-am)
 	
-	# Find the flux for the given integration point
-	return flux - central_upwind_correction
+	# Find the flux in the normal direction
+	flux = l*(Dot((f_flux, g_flux), n) - central_upwind_correction)
+	
+	# Compute the maximum absolute wave speed (needed to compute the time step size based on the CFL condition)
+	max_wave_speed = Max(ap, -am)
+
+	# Return the flux for the given integration point
+	return (flux, max_wave_speed)
 }
 
 
 
 # Reconstructs a plane for each cell in the grid, with a slope limiter
 reconstruct_plane(q) = {
+	# The following would typically be used in a cartesian setting:
 	# forward_diff_x = (q_right - q) / dx
 	# backward_diff_x = (q - q_left) / dx
 	# centered_diff_x = (q_right - q_left) / (2*dx)
@@ -91,6 +99,9 @@ reconstruct_plane(q) = {
 	# y_slope = minmod (forward_diff_y, backward_diff_y, centered_diff_y)
 	
 	# return (x_slope, y_slope)
+	
+	# But for now, let's return a zero-slope (flat)
+	return (0, 0)
 }
 
 # Get all cells and faces, which will be used later
@@ -103,45 +114,33 @@ second = SecondCell(if)
 # a higher-order polynomial
 slopes = reconstruct_plane(AllCells())
 
-#Find the normal and tangent for the interface
+# Find the normal and tangent for the interface
+# Tangent is only needed for integration points that are not on the edge midpoint
 n = Normal(if)
 t = (n[1] / n[0], -1)
 t = t / EuclideanLength(t)
 
-# Find the length from the cell center to the integration point
-first_to_ip = EuclideanLength(Centroid(first), Centroid(if)) # +- t*Length(if)/(2*Sqrt(3)) for a two point gauss quadrature
-second_to_ip = EuclideanLength(Centroid(second), Centroid(if))
+# Find the vector from the cell center to the integration point
+ip = Centroid(if) # for a two point gauss quadrature add/subtract t*Length(if)/(2*Sqrt(3)) here
+first_to_ip = ip - Centroid(first)
+second_to_ip = ip - Centroid(second)
 
 # Evaluate the reconstructed variables at the integration point
-q1 = q On first + first_to_ip*Dot(slopes On first, n)
-q2 = q On second + second_to_ip*Dot(slopes On first, n)
+q1 = q On first + Dot(slopes On first, ip) # double check this, should be correct
+q2 = q On second + Dot(slopes On second, ip)
 
-# Compute the flux at the integration point
-fluxes = compute_flux(q1, q2, n)
+# Compute the flux (and maximum wave speeds) at the integration point
+(fluxes, max_wave_speeds) = compute_flux(q1, q2, n)
 
-# Constants
-#vol = Volume( AllCells() )                                 # Deduced type:  Collection Of Scalar On AllCells()				   
-#trans : Collection Of Scalar On interior_faces = k * Area(interior_faces) / EuclideanLength(Centroid(first) - Centroid(second)) 
-							   
-# compute_residual : Function(u : Collection Of Scalar On AllCells()) -> Collection Of Scalar On AllCells()
-compute_residual(u) = {
-    # Deduced (and declared) type: Collection Of Scalar On interior_faces
-    fluxes : Collection Of Scalar On interior_faces = - trans * Gradient(u)
-    # Deduced (and declared) type: Collection Of Scalar On AllCells()
-    residual : Collection Of Scalar On AllCells() = u - u0 + (dt / vol) * Divergence(fluxes)
-    return residual
-}
+# Compute dt according to the CFL
+min_area = Min(Area(AllCells()))
+max_wave_speed = Max(max_wave_speeds)
+dt = cfl*min_area / (6*max_wave_speed)
 
-# NewtonSolve takes a function (that should accept the primary variable as input) and the initial guess for the primary variable.
-# The primary variable decides which objects need to be AD objects in
-# the back-end, the rule is the following:
-#  1. The primary variable must be AD.
-#  2. All objects that depend on an AD variable must be AD.
-# In this concrete case, { u, fluxes, residual } must be AD.
-explicitu = u0 + compute_residual(u0)
-u = NewtonSolve(compute_residual, u0)
+# Evolve the solution one time step
+q = q + dt*Divergence(fluxes) / Volume(AllCells())
 
-Output(u)
+Output(q)
 Output(fluxes)
 
 
