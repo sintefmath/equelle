@@ -125,12 +125,15 @@ ip = Centroid(if) # for a two point gauss quadrature add/subtract t*Length(if)/(
 first_to_ip = ip - Centroid(first)
 second_to_ip = ip - Centroid(second)
 
+# Find the length of the edges
+l = Length(if) #Check dimensionality here.... Lenght / Area / Volume....
+
 # Evaluate the reconstructed variables at the integration point
 q1 = q On first + Dot(slopes On first, ip) # double check this, should be correct
 q2 = q On second + Dot(slopes On second, ip)
 
 # Compute the flux (and maximum wave speeds) at the integration point
-(fluxes, max_wave_speeds) = compute_flux(q1, q2, n)
+(fluxes, max_wave_speeds) = compute_flux(q1, q2, l, n)
 
 # Compute dt according to the CFL
 min_area = Min(Area(AllCells()))
