@@ -27,13 +27,11 @@ a. Basic numeric types.
 b. Entities (basic topological, grid-related types).
 
    Cell      --   a single cell of the computational grid (entity of dimension == world dimension)
-   Face      --   a single face (entity of dimension == world dimension - 1)
-   Edge      --   a single edge (entity of dimension == world dimension - 2, minimum 0)
-   Vertex    --   a single vertex (entity of dimension == world dimension - 3, minimum 0)
+   Face      --   a single face
+   Edge      --   a single edge
+   Vertex    --   a single vertex
 
-So for 2d grids, Edge == Vertex. For 1d grids, Face == Edge == Vertex.
-
-### Edges in 2d should not be vertices etc.
+For 2d grids, Face == Edge. For 1d grids, Face == Edge == Vertex.
 
 
 c. Entity collections.
@@ -42,8 +40,6 @@ c. Entity collections.
    Collection Of <Entity> Subset Of (Collection Of <Entity> 1, Collection Of <Entity> 2, ...)
    --  this collection is a subset of one or more indicated collections
 
-Single entities (a single Face for example) are also collections and can be treated as such.
-### No implicit conversion
 
 d. Collections mapped to entity collections.
 
@@ -93,18 +89,33 @@ is not allowed. Correct explicit declarations are,
    c2 : Collection Of Vector On interior_faces = Centroid(FirstCell(interior_faces))
    c3 : Collection Of Vector On InteriorFaces() = Centroid(FirstCell(interior_faces))
 
-assuming that interior_faces = InteriorFaces(). Note that one can write
+assuming that interior_faces = InteriorFaces().
 
-   c4 : Collection Of Vector On AllFaces() = Centroid(FirstCell(interior_faces)) On AllFaces()
-   c5 : Collection Of Vector On AllFaces() = Extend( Centroid(FirstCell(interior_faces)),
-						     AllFaces(), Vector(0) )
+For collections of basic numeric types, the collection can be extended
+(with zero values) to a larger set using On, as follows:
 
-where c4 and c5 are equal, but it is of course still invalid to do 'c1 = c2', while 'c1 = c4' is
-allowed.
+   c4 : Collection Of Vector On AllFaces() = c3 On AllFaces()
 
-@jny: Hvor skal 'On' og/eller 'Extend' inn? "Special functions" nedenfor?
+This requires that the argument to On is a superset of the set c2 is On.
+The converse subset operation is also written using On:
+
+   c5 : Collection Of Vector On InteriorFaces() = c4 On InteriorFaces()
+
+After this, c5 is identical to c3. This operation require that the
+argument to On is a subset of the set c4 is On.
+
+It is also allowed to convert a scalar or vector to a collection using On:
+   x : Scalar = 1.234
+   c6 : Collection Of Scalar On BoundaryCells() = x On BoundaryCells()
+However, the need for this should be minor, since this behaviour is implicit
+with all operators that take scalars and collections.
 
 
+h. Tuples
+
+Tuples of homogenous type can be created as follows.
+   t : Tuple Of (Collection Of Vector On InteriorFaces()) = (c2, c3, c5)
+Then the individual parts can be (read-only) accessed as t[0], t[1], t[2].
 
 
 2. Notation for type declarations and examples of types
@@ -151,11 +162,7 @@ FirstCell : Function(f : Collection Of Face) -> Collection Of Cell On f
 SecondCell : Function(f : Collection Of Face) -> Collection Of Cell On f
 Centroid : Function(e : Collection Of <Entity>) -> Collection Of Vector On e
 Normal : Function(f : Collection Of Face) -> Collection Of Vector On f
-Measure : Function(e : Collection Of <Entity>) -> Collection Of Scalar On e
-Volume : Function(c : Collection Of Cell) -> Collection Of Scalar On c
-Area : Function(f : Collection Of Face) -> Collection Of Scalar On f
-Length : Function(e : Collection Of Edge) -> Collection Of Scalar On e
-### We need to discuss dimensionality issues
+
 
 c. Discrete operators
 Gradient : Function(values : Collection Of Scalar On AllCells()) -> Collection Of Scalar On InteriorFaces()
@@ -166,7 +173,7 @@ Divergence : Function(values : Collection Of Scalar On AllFaces()) -> Collection
 d. Other functions
 Dot : Function(v1 : Collection Of Vectors On <X>, v2 : Collection Of Vectors On <X>) -> Collection Of Scalar On <X>
 EuclideanLength : Function(v : Collection Of Vectors On <X>) -> Collection Of Scalar On <X>
-|<X>|: Function(v1 : Collection of <Entity>) ->  Collection of Scalar on <Entity>
+|<X>|: Function(entities : Collection of <Entity>) ->  Collection of Scalar on entities
 ### The |...| notation is intended to solve the dimensionality issue by giving
 ### a notation for "natural size" of elements. Length of vectors, area of faces,
 ### volume of cells etc. 
