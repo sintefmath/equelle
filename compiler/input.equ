@@ -1,0 +1,34 @@
+pf0 : Collection Of Face = AllFaces(Grid)		# works
+# pf0a : Collection Of Face = AllFaces(Grid)		# doesn't work
+pf0a : Collection Of Face = InteriorFaces(Grid)		# works
+
+ps = Areas(InteriorFaces(Grid)) 
+ps1 = Lengths(AllEdges(Grid))
+
+ps2 = Areas(InteriorFaces(Grid)) 
+# ps3 = Volumes(FirstCells(BoundaryFaces(Grid)))		# works
+# ps4 = Volumes(FirstCells(AllFaces(Grid)))		# doesn't work
+
+s1 = (4 + 5)
+
+ps11 = Volumes(AllCells(Grid)) ^ 2
+
+pv0 = Centroids(AllCells(Grid))
+pv1 = pv0					# doesn't work
+
+sc0 = Max(4,5,6)				# works
+# sc1 = Min(4,5,6,Areas(AllFaces(Grid)))	# doesn't work
+
+
+pb12 = (1,2,3) > (4,5,6) Xor (1,1,1)>(2,2,2)	# works
+
+# min = Min(1,2,3,4,5)
+
+v = Centroids(AllCells(Grid)) + Centroids(BoundaryCells(Grid))
+
+
+
+b1 = True And False Or (True And 1 > 2 Xor (3 < 4))  # works
+lpb = ((1,2,3) > (2,3,4)) Xor pb12
+
+#g : Function(s :: Scalar) -> Vector   # syntax error?
