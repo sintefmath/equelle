@@ -22,8 +22,6 @@
 struct UserParameters
 {
     // ============= Generated code starts here ================
-    // k : Collection Of Scalar On AllCells() = UserSpecifiedScalarWithDefault(0.3) # Heat diffusion constant.
-    // Scalars k // This would make 'k' contain separate values for all cells.
     // k : Scalar = UserSpecifiedScalarWithDefault(0.3) # Heat diffusion constant.
     double k;
     // dt : Scalar = UserSpecifiedScalarWithDefault(0.5) # Time step length.
@@ -69,7 +67,7 @@ public:
         // --------------------------------------------------------------------------------
         // vol = Volume( AllCells() )    # Deduced type: Scalar On AllCells()
         // --------------------------------------------------------------------------------
-        const CollOfScalars vol = er_.volume( er_.allCells() );
+        const CollOfScalars vol = er_.norm( er_.allCells() );
 
         // --------------------------------------------------------------------------------
 	// interior_faces = InteriorFaces()       # Deduced type:  Collection Of Face Subset Of AllFaces()
@@ -86,7 +84,7 @@ public:
         //    # Deduced (and declared) type: Collection Of Scalar On interior_faces
         // --------------------------------------------------------------------------------
         // trans is a CollOfScalars and not a CollOfScalarsAD since it does not depend on u.
-        const CollOfScalars trans = up_.k * er_.area(interior_faces) / er_.length(er_.centroid(first) - er_.centroid(second));
+        const CollOfScalars trans = up_.k * er_.norm(interior_faces) / er_.norm(er_.centroid(first) - er_.centroid(second));
 
         // --------------------------------------------------------------------------------
         // fluxes : Collection Of Scalar On interior_faces = - trans * Gradient(u)
@@ -138,8 +136,8 @@ int main(int argc, char** argv)
     // --------------------------------------------------------------------------------
     // NewtonSolve(residual, u)
     // --------------------------------------------------------------------------------
-    ResidualComputer rescomp(er, up);
-    u = er.newtonSolve(rescomp, u);
+    ResidualComputer compute_residual(er, up);
+    u = er.newtonSolve(compute_residual, u);
 
     // --------------------------------------------------------------------------------
     // Output(u)

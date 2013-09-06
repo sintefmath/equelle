@@ -162,7 +162,7 @@ CollOfCells EquelleRuntimeCPU::secondCell(const CollOfFaces& faces) const
 }
 
 
-CollOfScalars EquelleRuntimeCPU::area(const CollOfFaces& faces) const
+CollOfScalars EquelleRuntimeCPU::norm(const CollOfFaces& faces) const
 {
     const int n = faces.size();
     CollOfScalars areas(n);
@@ -173,7 +173,7 @@ CollOfScalars EquelleRuntimeCPU::area(const CollOfFaces& faces) const
 }
 
 
-CollOfScalars EquelleRuntimeCPU::volume(const CollOfCells& cells) const
+CollOfScalars EquelleRuntimeCPU::norm(const CollOfCells& cells) const
 {
     const int n = cells.size();
     CollOfScalars volumes(n);
@@ -184,7 +184,7 @@ CollOfScalars EquelleRuntimeCPU::volume(const CollOfCells& cells) const
 }
 
 
-CollOfScalars EquelleRuntimeCPU::length(const CollOfVectors& vectors) const
+CollOfScalars EquelleRuntimeCPU::norm(const CollOfVectors& vectors) const
 {
     return vectors.matrix().rowwise().norm();
 }
@@ -260,19 +260,19 @@ CollOfScalarsAD EquelleRuntimeCPU::newtonSolve(const ResidualComputerInterface& 
     // Set up Newton loop.
     CollOfScalarsAD u = u_initialguess;
     output("Initial u:\t\t", u);
-    output("\tnorm = ", norm(u));
+    output("\tnorm = ", twoNorm(u));
     CollOfScalarsAD residual = rescomp.compute(u); //  Generated code in here
     output("Initial residual:\t", residual);
-    output("\tnorm = ", norm(residual));
+    output("\tnorm = ", twoNorm(residual));
     const int max_iter = 10;
     const double tol = 1e-6;
     int iter = 0;
 
     // Execute newton loop until residual is small or we have used too many iterations.
-    while ( (norm(residual) > tol) && (iter < max_iter) ) {
+    while ( (twoNorm(residual) > tol) && (iter < max_iter) ) {
         // Debugging output not specified in Equelle.
         std::cout << "\niter = " << iter << " (max = " << max_iter
-                  << "), norm(residual) = " << norm(residual)
+                  << "), norm(residual) = " << twoNorm(residual)
                   << " (tol = " << tol << ")" << std::endl;
 
         // Solve linear equations for du, apply update.
@@ -284,9 +284,9 @@ CollOfScalarsAD EquelleRuntimeCPU::newtonSolve(const ResidualComputerInterface& 
 
         // Debugging output not specified in Equelle.
         output("\tu:\t", u);
-        output("\tnorm = ", norm(u));
+        output("\tnorm = ", twoNorm(u));
         output("\tresidual:\t", residual);
-        output("\tnorm = ", norm(residual));
+        output("\tnorm = ", twoNorm(residual));
 
         ++iter;
     }
@@ -294,15 +294,15 @@ CollOfScalarsAD EquelleRuntimeCPU::newtonSolve(const ResidualComputerInterface& 
 }
 
 
-double EquelleRuntimeCPU::norm(const CollOfScalars& vals) const
+double EquelleRuntimeCPU::twoNorm(const CollOfScalars& vals) const
 {
     return vals.matrix().norm();
 }
 
 
-double EquelleRuntimeCPU::norm(const CollOfScalarsAD& vals) const
+double EquelleRuntimeCPU::twoNorm(const CollOfScalarsAD& vals) const
 {
-    return norm(vals.value());
+    return twoNorm(vals.value());
 }
 
 

@@ -106,9 +106,9 @@ public:
     CollOfFaces interiorFaces() const;
     CollOfCells firstCell(const CollOfFaces& faces) const;
     CollOfCells secondCell(const CollOfFaces& faces) const;
-    CollOfScalars area(const CollOfFaces& faces) const;
-    CollOfScalars volume(const CollOfCells& cells) const;
-    CollOfScalars length(const CollOfVectors& vectors) const;
+    CollOfScalars norm(const CollOfFaces& faces) const;
+    CollOfScalars norm(const CollOfCells& cells) const;
+    CollOfScalars norm(const CollOfVectors& vectors) const;
     CollOfVectors centroid(const CollOfFaces& faces) const;
     CollOfVectors centroid(const CollOfCells& cells) const;
 
@@ -141,8 +141,8 @@ private:
     /// Solver helper.
     CollOfScalars solveForUpdate(const CollOfScalarsAD& residual) const;
     /// Norms.
-    double norm(const CollOfScalars& vals) const;
-    double norm(const CollOfScalarsAD& vals) const;
+    double twoNorm(const CollOfScalars& vals) const;
+    double twoNorm(const CollOfScalarsAD& vals) const;
 
     Opm::GridManager grid_manager_;
     const UnstructuredGrid& grid_;
