@@ -1215,7 +1215,11 @@ plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' scalar
                                   | VARIABLE ':' COLLECTION OF VECTOR '=' vector_exprs        {char *st = structureToString($7.str); $$ = plural_declaration_with_assignment_function($1, "vectors", st, "CollOfVectors", $7.size);}
                                   | VARIABLE ':' COLLECTION OF VERTEX '=' vertices            {char *st = structureToString($7.str); $$ = plural_declaration_with_assignment_function($1, "vertices", st, "CollOfVertices", $7.size);}
                                   | VARIABLE ':' COLLECTION OF EDGE '=' edges                 {char *st = structureToString($7.str); $$ = plural_declaration_with_assignment_function($1, "edges", st, "CollOfEdges", $7.size);}
-                                  | VARIABLE ':' COLLECTION OF FACE '=' faces                 {char *st = structureToString($7.str); $$ = plural_declaration_with_assignment_function($1, "faces", st, "CollOfFaces", $7.size);}
+                                  | VARIABLE ':' COLLECTION OF FACE '=' faces                 {
+									  char *st = structureToString($7.str); 
+									  char* out = plural_declaration_with_assignment_function($1, "faces", st, "CollOfFaces", $7.size);
+									  $$ = out;
+								  }
                                   | VARIABLE ':' COLLECTION OF CELL '=' cells                 {char *st = structureToString($7.str); $$ = plural_declaration_with_assignment_function($1, "cells", st, "CollOfCells", $7.size);}
                                   | VARIABLE ':' COLLECTION OF ADB '=' adbs                   {char *st = structureToString($7.str); $$ = plural_declaration_with_assignment_function($1, "scalarsAD", st, "CollOfScalarsAD", $7.size);}
                                   | VARIABLE ':' COLLECTION OF BOOLEAN '=' boolean_exprs      {char *st = structureToString($7.str); $$ = plural_declaration_with_assignment_function($1, "bools", st, "CollOfBools", $7.size);}
@@ -1234,7 +1238,9 @@ extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR O
 
 
  declaration_with_assignment: singular_declaration_with_assignment          {$$ = strdup($1);}
-                            | plural_declaration_with_assignment            {$$ = strdup($1);}
+                            | plural_declaration_with_assignment            {
+	   char* out = strdup($1);
+	   $$ = out;}
                             | extended_plural_declaration_with_assignment   {$$ = strdup($1);}
                             ;
 
@@ -1244,12 +1250,18 @@ extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR O
 // instructions which can be used in the program and in a function's body
 command: declaration                    {$$ = strdup($1);}
        | assignment                     {$$ = strdup($1);}
-       | declaration_with_assignment    {$$ = strdup($1);}
+       | declaration_with_assignment    {
+		char* out = strdup($1);
+		$$ = out;
+	   }
        ;
 
 
 // instructions which can be used in the program, but not in a function's body (since we must not allow inner functions)
-command2: command                                    {$$ = strdup($1);}
+command2: command                                    {
+	   char* out = strdup($1);
+	   $$ = out;
+		}
     //  | function_declaration                       {$$ = strdup($1);}
     //  | function_assignment                        {$$ = strdup($1);}
     //  | function_declaration_with_assignment       {$$ = strdup($1);}
@@ -1303,15 +1315,9 @@ char* append1(char *s1, char s2, char *s3)
 {
   HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s3)+3));
-  int i;
-  for(i = 0; i < strlen(s1); i++)
-    str[i] = s1[i];
-  str[strlen(s1)] = ' ';
-  str[strlen(s1)+1] = s2;
-  str[strlen(s1)+2] = ' ';
-  for(i = 0; i < strlen(s3); i++)
-    str[3+strlen(s1)+i] = s3[i];
-  str[strlen(s1)+strlen(s3)+3] = '\0';
+
+  sprintf(str, "%s%c%s", s1, s2, s3);
+
   HEAP_CHECK();
   return str;
 }
@@ -1321,12 +1327,9 @@ char* append2(char s1, char *s2, char s3)
 {
   HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(strlen(s2)+2));
-  str[0] = s1;
-  int i;
-  for(i = 0; i < strlen(s2); i++)
-    str[i+1] = s2[i];
-  str[strlen(s2)+1] = s3;
-  str[strlen(s2)+2] = '\0';
+  
+  sprintf(str, "%c%s%c", s1, s2, s3);
+
   HEAP_CHECK();
   return str;
 }
@@ -1336,14 +1339,9 @@ char* append3(char *s1, char s2, char *s3, char s4)
 {
   HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s3)+2));
-  int i;
-  for(i = 0; i < strlen(s1); i++)
-    str[i] = s1[i];
-  str[strlen(s1)] = s2;
-  for(i = 0; i < strlen(s3); i++)
-    str[1+strlen(s1)+i] = s3[i];
-  str[strlen(s1)+strlen(s3)+1] = s4;
-  str[strlen(s1)+strlen(s3)+2] = '\0';
+  
+  sprintf(str, "%s%c%s%c", s1, s2, s3, s4);
+
   HEAP_CHECK();
   return str;
 }
@@ -1353,18 +1351,9 @@ char* append4(char *s1, char s2, char *s3, char s4, char *s5, char s6)
 {
   HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s3)+strlen(s5)+4));
-  int i;
-  for(i = 0; i < strlen(s1); i++)
-    str[i] = s1[i];
-  str[strlen(s1)] = s2;
-  for(i = 0; i < strlen(s3); i++)
-    str[1+strlen(s1)+i] = s3[i];
-  str[strlen(s1)+strlen(s3)+1] = s4;
-  str[strlen(s1)+strlen(s3)+2] = ' ';
-  for(i = 0; i < strlen(s5); i++)
-    str[strlen(s1)+strlen(s3)+3+i] = s5[i];
-  str[strlen(s1)+strlen(s3)+strlen(s5)+3] = s6;
-  str[strlen(s1)+strlen(s3)+strlen(s5)+4] = '\0';
+
+  sprintf(str, "%s%c%s%c%s%c", s1, s2, s3, s4, s5, s6);
+
   HEAP_CHECK();
   return str;
 }
@@ -1374,14 +1363,9 @@ char* append5(char *s1, char s2, char *s3)
 {
   HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s3)+2));
-  int i;
-  for(i = 0; i < strlen(s1); i++)
-    str[i] = s1[i];
-  str[strlen(s1)] = s2;
-  str[strlen(s1)+1] = ' ';
-  for(i = 0; i < strlen(s3); i++)
-    str[2+strlen(s1)+i] = s3[i];
-  str[strlen(s1)+strlen(s3)+2] = '\0';
+
+  sprintf(str, "%s%c%s", s1, s2, s3);
+
   HEAP_CHECK();
   return str;
 }
@@ -1391,16 +1375,9 @@ char *append6(char *s1, char *s2, char *s3)
 {
   HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s2)+strlen(s3)+2));
-  int i;
-  for(i = 0; i < strlen(s1); i++)
-    str[i] = s1[i];
-  str[strlen(s1)] = ' ';
-  for(i = 0; i < strlen(s2); i++)
-    str[1+strlen(s1)+i] = s2[i];
-  str[strlen(s1)+strlen(s2)+1] = ' ';
-  for(i = 0; i < strlen(s3); i++)
-    str[2+strlen(s1)+strlen(s2)+i] = s3[i];
-  str[strlen(s1)+strlen(s2)+strlen(s3)+2] = '\0';
+  
+  sprintf(str, "%s%s%s", s1, s2, s3);
+
   HEAP_CHECK();
   return str;
 }
@@ -1410,11 +1387,9 @@ char* append7(char s1, char *s2)
 {
   HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(strlen(s2)+1));
-  str[0] = s1;
-  int i;
-  for(i = 0; i < strlen(s2); i++)
-    str[i+1] = s2[i];
-  str[strlen(s2)+1] = '\0';
+
+  sprintf(str, "%c%s", s1, s2);
+
   HEAP_CHECK();
   return str;
 }
@@ -1424,13 +1399,9 @@ char* append8(char s1, char s2, char *s3, char s4)
 {
   HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(strlen(s3)+3));
-  str[0] = s1;
-  str[1] = s2;
-  int i;
-  for(i = 0; i < strlen(s3); i++)
-    str[i+2] = s3[i];
-  str[strlen(s3)+2] = s4;
-  str[strlen(s3)+3] = '\0';
+  
+  sprintf(str, "%c%c%s%c", s1, s2, s3, s4);
+
   HEAP_CHECK();
   return str;
 }
@@ -1440,13 +1411,9 @@ char* append9(char *s1, char s2, char *s3)
 {
   HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s3)+1));
-  int i;
-  for(i = 0; i < strlen(s1); i++)
-    str[i] = s1[i];
-  str[strlen(s1)] = s2;
-  for(i = 0; i < strlen(s3); i++)
-    str[1+strlen(s1)+i] = s3[i];
-  str[strlen(s1)+strlen(s3)+1] = '\0';
+  
+  sprintf(str, "%s%c%s", s1, s2, s3);
+
   HEAP_CHECK();
   return str;
 }
@@ -1456,38 +1423,9 @@ char* append10(char *s1, char *s2)   // function which returns the C++ code for 
 {
   HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(2*(strlen(s1)+strlen(s2))+22));
-  str[0] = '(';
-  int i;
-  for(i = 0; i < strlen(s1); i++)
-    str[i+1] = s1[i];
-  str[1+strlen(s1)] = ' ';
-  str[2+strlen(s1)] = '&';
-  str[3+strlen(s1)] = '&';
-  str[4+strlen(s1)] = ' ';
-  str[5+strlen(s1)] = '(';
-  str[6+strlen(s1)] = '!';
-  for(i = 0; i < strlen(s2); i++)
-    str[strlen(s1)+i+7] = s2[i];
-  str[7+strlen(s1)+strlen(s2)] = ')';
-  str[8+strlen(s1)+strlen(s2)] = ')';
-  str[9+strlen(s1)+strlen(s2)] = ' ';
-  str[10+strlen(s1)+strlen(s2)] = '|';
-  str[11+strlen(s1)+strlen(s2)] = '|';
-  str[12+strlen(s1)+strlen(s2)] = ' ';
-  str[13+strlen(s1)+strlen(s2)] = '(';
-  for(i = 0; i < strlen(s2); i++)
-    str[strlen(s1)+strlen(s2)+i+14] = s2[i];
-  str[strlen(s1)+2*strlen(s2)+14] = ' ';
-  str[strlen(s1)+2*strlen(s2)+15] = '&';
-  str[strlen(s1)+2*strlen(s2)+16] = '&';
-  str[strlen(s1)+2*strlen(s2)+17] = ' ';
-  str[strlen(s1)+2*strlen(s2)+18] = '(';
-  str[strlen(s1)+2*strlen(s2)+19] = '!';
-  for(i = 0; i < strlen(s1); i++)
-    str[strlen(s1)+2*strlen(s2)+i+20] = s1[i];
-  str[2*(strlen(s1)+strlen(s2))+20] = ')';
-  str[2*(strlen(s1)+strlen(s2))+21] = ')';
-  str[2*(strlen(s1)+strlen(s2))+22] = '\0';
+
+  sprintf(str, "(%s && (!%s)) || (%s && (!%s))", s1, s2, s2, s1);
+
   HEAP_CHECK();
   return str;
 }
@@ -1497,17 +1435,9 @@ char* append11(char *s1, char *s2, char s3, char *s4, char s5)
 {
   HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s2)+strlen(s4)+3));
-  int i;
-  for(i = 0; i < strlen(s1); i++)
-    str[i] = s1[i];
-  str[strlen(s1)] = ' ';
-  for(i = 0; i < strlen(s2); i++)
-    str[strlen(s1)+1+i] = s2[i];
-  str[strlen(s1)+strlen(s2)+1] = s3;
-  for(i = 0; i < strlen(s4); i++)
-    str[2+strlen(s1)+strlen(s2)+i] = s4[i];
-  str[2+strlen(s1)+strlen(s2)+strlen(s4)+2] = s5;
-  str[2+strlen(s1)+strlen(s2)+strlen(s4)+3] = '\0';
+  
+  sprintf(str, "%s%s%c%s%c", s1, s2, s3, s4, s5);
+
   HEAP_CHECK();
   return str;
 }
@@ -1517,16 +1447,9 @@ char* append12(char *s1, char s2, char *s3, char s4)
 {
   HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s3)+4));
-  int i;
-  for(i = 0; i < strlen(s1); i++)
-    str[i] = s1[i];
-  str[strlen(s1)] = ' ';
-  str[strlen(s1)+1] = s2;
-  str[strlen(s1)+2] = ' ';
-  for(i = 0; i < strlen(s3); i++)
-    str[strlen(s1)+3+i] = s3[i];
-  str[strlen(s1)+strlen(s3)+3] = s4;
-  str[strlen(s1)+strlen(s3)+4] = '\0';
+  
+  sprintf(str, "%s%c%s%c", s1, s2, s3, s4);
+
   HEAP_CHECK();
   return str;
 }
@@ -1536,21 +1459,9 @@ char* append13(char *s1, char *s2, char *s3, char *s4, char *s5, char *s6, char 
 {
   HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s2)+strlen(s3)+strlen(s4)+strlen(s5)+strlen(s6)+1));
-  int i;
-  for(i = 0; i < strlen(s1); i++)
-    str[i] = s1[i];
-  for(i = 0; i < strlen(s2); i++)
-    str[strlen(s1)+i] = s2[i];
-  for(i = 0; i < strlen(s3); i++)
-    str[strlen(s1)+strlen(s2)+i] = s3[i];
-  for(i = 0; i < strlen(s4); i++)
-    str[strlen(s1)+strlen(s2)+strlen(s3)+i] = s4[i];
-  for(i = 0; i < strlen(s5); i++)
-    str[strlen(s1)+strlen(s2)+strlen(s3)+strlen(s4)+i] = s5[i];
-  for(i = 0; i < strlen(s6); i++)
-    str[strlen(s1)+strlen(s2)+strlen(s3)+strlen(s4)+strlen(s5)+i] = s6[i];
-  str[strlen(s1)+strlen(s2)+strlen(s3)+strlen(s4)+strlen(s5)+strlen(s6)] = s7;
-  str[strlen(s1)+strlen(s2)+strlen(s3)+strlen(s4)+strlen(s5)+strlen(s6)+1] = '\0';
+  
+  sprintf(str, "%s%s%s%s%s%s%c", s1, s2, s3, s4, s5, s6, s7);
+
   HEAP_CHECK();
   return str;
 }
@@ -1560,19 +1471,9 @@ char* append14(char s1, char *s2, char s3, char s4, char s5, char *s6, char s7)
 {
   HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(strlen(s2)+strlen(s6)+7));
-  int i;
-  str[0] = s1;
-  for(i = 0; i < strlen(s2); i++)
-    str[1+i] = s2[i];
-  str[1+strlen(s2)] = s3;
-  str[2+strlen(s2)] = ' ';
-  str[3+strlen(s2)] = s4;
-  str[4+strlen(s2)] = ' ';
-  str[5+strlen(s2)] = s5;
-  for(i = 0; i < strlen(s6); i++)
-    str[6+strlen(s2)+i] = s6[i];
-  str[6+strlen(s2)+strlen(s6)] = s7;
-  str[7+strlen(s2)+strlen(s6)] = '\0';
+
+  sprintf(str, "%c%s%c%c%c%s%c", s1, s2, s3, s4, s5, s6, s7);
+
   HEAP_CHECK();
   return str;
 }
@@ -1582,20 +1483,9 @@ char* append15(char s1, char *s2, char s3, char *s4, char s5, char *s6, char s7)
 {
   HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(strlen(s2)+strlen(s4)+strlen(s6)+6));
-  int i;
-  str[0] = s1;
-  for(i = 0; i < strlen(s2); i++)
-    str[1+i] = s2[i];
-  str[1+strlen(s2)] = s3;
-  str[2+strlen(s2)] = ' ';
-  for(i = 0; i < strlen(s4); i++)
-    str[3+strlen(s2)+i] = s4[i];
-  str[3+strlen(s2)+strlen(s4)] = ' ';
-  str[4+strlen(s2)+strlen(s4)] = s5;
-  for(i = 0; i < strlen(s6); i++)
-    str[5+strlen(s2)+strlen(s4)+i] = s6[i];
-  str[5+strlen(s2)+strlen(s4)+strlen(s6)] = s7;
-  str[6+strlen(s2)+strlen(s4)+strlen(s6)] = '\0';
+  
+  sprintf(str, "%c%s%c%s%c%s%c", s1, s2, s3, s4, s5, s6, s7);
+
   HEAP_CHECK();
   return str;
 }
@@ -2117,10 +2007,7 @@ char *structureToString(char *st)     // function used to transfer a string with
   HEAP_CHECK();
   int a = strlen(st);
     char *strA = (char*)malloc(sizeof(char)*strlen(st)+1);
-    int i;
-    for(i = 0; i < strlen(st); i++)
-        strA[i] = st[i];
-    strA[strlen(st)] = '\0';
+	strcpy(strA, st);
   HEAP_CHECK();
     return strA;
 }
@@ -2145,7 +2032,7 @@ char *structureToString(char *st)     // function used to transfer a string with
 char* singular_declaration_function(char *st1, char *st2)
 {
   HEAP_CHECK();
-    char finalString[1024];
+    char* finalString = (char*) malloc(1024*sizeof(char));
     if(insideFunction == true)
     {
         int i;
@@ -2213,7 +2100,7 @@ char* singular_declaration_function(char *st1, char *st2)
 char* plural_declaration_function(char *st1, char *st2)
 {
   HEAP_CHECK();
-    char finalString[1024];
+    char* finalString = (char*) malloc(1024*sizeof(char));
     if(insideFunction == true)
     {
         int i;
@@ -2281,7 +2168,7 @@ char* plural_declaration_function(char *st1, char *st2)
 char* extended_plural_declaration_function(char *st1, char *st2, char *st3, double d1)
 {
   HEAP_CHECK();
-    char finalString[1024];
+    char* finalString = (char*) malloc(1024*sizeof(char));
     if(insideFunction == true)
     {
         int i;
@@ -2379,7 +2266,7 @@ char* extended_plural_declaration_function(char *st1, char *st2, char *st3, doub
 char* singular_assignment_function(char *st1, char *st2, char *st3, char *st4)
 {
   HEAP_CHECK();
-    char finalString[1024];
+    char* finalString = (char*) malloc(1024*sizeof(char));
     if(insideFunction == true)
     {
         int i;
@@ -2559,7 +2446,7 @@ char* singular_assignment_function(char *st1, char *st2, char *st3, char *st4)
 char* plural_assignment_function(char *st1, char *st2, char *st3, char *st4, double d1)
 {
   HEAP_CHECK();
-    char finalString[1024];
+    char* finalString = (char*) malloc(1024*sizeof(char));
     if(insideFunction == true)
     {
         int i;
@@ -2763,7 +2650,7 @@ char* plural_assignment_function(char *st1, char *st2, char *st3, char *st4, dou
 char* singular_declaration_with_assignment_function(char *st1, char *st2, char *st3, char *st4)
 {
   HEAP_CHECK();
-    char finalString[1024];
+    char* finalString = (char*) malloc(1024*sizeof(char));
     if(insideFunction == true)
     {
         int i;
@@ -2881,7 +2768,7 @@ char* singular_declaration_with_assignment_function(char *st1, char *st2, char *
 char* plural_declaration_with_assignment_function(char *st1, char *st2, char *st3, char *st4, double d1)
 {
   HEAP_CHECK();
-    char finalString[1024];
+    char* finalString = (char*) malloc(1024*sizeof(char));
     if(insideFunction == true)
     {
         int i;
@@ -2999,7 +2886,7 @@ char* plural_declaration_with_assignment_function(char *st1, char *st2, char *st
 char* extended_plural_declaration_with_assignment_function(char *st1, char *st2, char *st3, char *st4, char *st5, double d1, double d2)
 {
   HEAP_CHECK();
-    char finalString[1024];
+    char* finalString = (char*) malloc(1024*sizeof(char));
     if(insideFunction == true)
     {
         int i;
