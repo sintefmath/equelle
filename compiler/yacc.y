@@ -96,6 +96,10 @@
 #include <string.h>
 #ifndef _MSC_VER
 #include <stdbool.h>
+#define HEAP_CHECK()
+#else
+#include <crtdbg.h>
+#define HEAP_CHECK() _ASSERTE( _CrtCheckMemory( ) )
 #endif
 
 void yyerror(const char* s);
@@ -1252,9 +1256,22 @@ command2: command                                    {$$ = strdup($1);}
         ;
 
 
-pr: pr command2 '\n'                  {printf("%s", $2); printf("\n"); currentLineNumber++;}
-  | pr command2 COMMENT '\n'          {printf("%s", $2); printf(" //"); int i; for(i = 1; i < strlen($3); i++) printf("%c", $3[i]); printf("\n"); currentLineNumber++;}
-  | pr COMMENT '\n'                   {printf("//"); int i; for(i = 1; i < strlen($2); i++) printf("%c", $2[i]); printf("\n"); currentLineNumber++;}
+pr: pr command2 '\n'                  {
+		  char* out = $2; 
+		  printf("%s\n", out); 
+		  currentLineNumber++;
+	}
+  | pr command2 COMMENT '\n'          {
+	  char* out1 = $2; 
+	  char* out2 = $3; 
+	  printf("%s // %s \n", out1, (out2+1)); //+1 to skip comment sign (#)
+	  currentLineNumber++;
+  }
+  | pr COMMENT '\n'                   {
+	  char* out = $2; 
+	  printf("// %s\n", (out+1)); //+1 to skip comment sign (#)
+	  currentLineNumber++;
+  }
   | pr '\n'                           {printf("\n"); currentLineNumber++;}
   |                                   {}
   ;
@@ -1266,20 +1283,25 @@ extern int yylex();
 extern int yyparse();
 int main()
 {
+  HEAP_CHECK();
 printf("Opm::parameter::ParameterGroup param(argc, argv, false);\nEquelleRuntimeCPU er(param);\nUserParameters up(param, er);\n\n");
+  HEAP_CHECK();
 yyparse();
+  HEAP_CHECK();
 return 0;
 }
 
 
 void yyerror(const char* s)
 {
+  HEAP_CHECK();
 printf("%s",s);
 }
 
 
 char* append1(char *s1, char s2, char *s3)
 {
+  HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s3)+3));
   int i;
   for(i = 0; i < strlen(s1); i++)
@@ -1290,12 +1312,14 @@ char* append1(char *s1, char s2, char *s3)
   for(i = 0; i < strlen(s3); i++)
     str[3+strlen(s1)+i] = s3[i];
   str[strlen(s1)+strlen(s3)+3] = '\0';
+  HEAP_CHECK();
   return str;
 }
 
 
 char* append2(char s1, char *s2, char s3)
 {
+  HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(strlen(s2)+2));
   str[0] = s1;
   int i;
@@ -1303,12 +1327,14 @@ char* append2(char s1, char *s2, char s3)
     str[i+1] = s2[i];
   str[strlen(s2)+1] = s3;
   str[strlen(s2)+2] = '\0';
+  HEAP_CHECK();
   return str;
 }
 
 
 char* append3(char *s1, char s2, char *s3, char s4)
 {
+  HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s3)+2));
   int i;
   for(i = 0; i < strlen(s1); i++)
@@ -1318,12 +1344,14 @@ char* append3(char *s1, char s2, char *s3, char s4)
     str[1+strlen(s1)+i] = s3[i];
   str[strlen(s1)+strlen(s3)+1] = s4;
   str[strlen(s1)+strlen(s3)+2] = '\0';
+  HEAP_CHECK();
   return str;
 }
 
 
 char* append4(char *s1, char s2, char *s3, char s4, char *s5, char s6)
 {
+  HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s3)+strlen(s5)+4));
   int i;
   for(i = 0; i < strlen(s1); i++)
@@ -1337,12 +1365,14 @@ char* append4(char *s1, char s2, char *s3, char s4, char *s5, char s6)
     str[strlen(s1)+strlen(s3)+3+i] = s5[i];
   str[strlen(s1)+strlen(s3)+strlen(s5)+3] = s6;
   str[strlen(s1)+strlen(s3)+strlen(s5)+4] = '\0';
+  HEAP_CHECK();
   return str;
 }
 
 
 char* append5(char *s1, char s2, char *s3)
 {
+  HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s3)+2));
   int i;
   for(i = 0; i < strlen(s1); i++)
@@ -1352,12 +1382,14 @@ char* append5(char *s1, char s2, char *s3)
   for(i = 0; i < strlen(s3); i++)
     str[2+strlen(s1)+i] = s3[i];
   str[strlen(s1)+strlen(s3)+2] = '\0';
+  HEAP_CHECK();
   return str;
 }
 
 
 char *append6(char *s1, char *s2, char *s3)
 {
+  HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s2)+strlen(s3)+2));
   int i;
   for(i = 0; i < strlen(s1); i++)
@@ -1369,24 +1401,28 @@ char *append6(char *s1, char *s2, char *s3)
   for(i = 0; i < strlen(s3); i++)
     str[2+strlen(s1)+strlen(s2)+i] = s3[i];
   str[strlen(s1)+strlen(s2)+strlen(s3)+2] = '\0';
+  HEAP_CHECK();
   return str;
 }
 
 
 char* append7(char s1, char *s2)
 {
+  HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(strlen(s2)+1));
   str[0] = s1;
   int i;
   for(i = 0; i < strlen(s2); i++)
     str[i+1] = s2[i];
   str[strlen(s2)+1] = '\0';
+  HEAP_CHECK();
   return str;
 }
 
 
 char* append8(char s1, char s2, char *s3, char s4)
 {
+  HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(strlen(s3)+3));
   str[0] = s1;
   str[1] = s2;
@@ -1395,12 +1431,14 @@ char* append8(char s1, char s2, char *s3, char s4)
     str[i+2] = s3[i];
   str[strlen(s3)+2] = s4;
   str[strlen(s3)+3] = '\0';
+  HEAP_CHECK();
   return str;
 }
 
 
 char* append9(char *s1, char s2, char *s3)
 {
+  HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s3)+1));
   int i;
   for(i = 0; i < strlen(s1); i++)
@@ -1409,12 +1447,14 @@ char* append9(char *s1, char s2, char *s3)
   for(i = 0; i < strlen(s3); i++)
     str[1+strlen(s1)+i] = s3[i];
   str[strlen(s1)+strlen(s3)+1] = '\0';
+  HEAP_CHECK();
   return str;
 }
 
 
 char* append10(char *s1, char *s2)   // function which returns the C++ code for the XOR between the two given variables: (s1 && (!s2)) || (s2 && (!s1))
 {
+  HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(2*(strlen(s1)+strlen(s2))+22));
   str[0] = '(';
   int i;
@@ -1448,12 +1488,14 @@ char* append10(char *s1, char *s2)   // function which returns the C++ code for 
   str[2*(strlen(s1)+strlen(s2))+20] = ')';
   str[2*(strlen(s1)+strlen(s2))+21] = ')';
   str[2*(strlen(s1)+strlen(s2))+22] = '\0';
+  HEAP_CHECK();
   return str;
 }
 
 
 char* append11(char *s1, char *s2, char s3, char *s4, char s5)
 {
+  HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s2)+strlen(s4)+3));
   int i;
   for(i = 0; i < strlen(s1); i++)
@@ -1466,12 +1508,14 @@ char* append11(char *s1, char *s2, char s3, char *s4, char s5)
     str[2+strlen(s1)+strlen(s2)+i] = s4[i];
   str[2+strlen(s1)+strlen(s2)+strlen(s4)+2] = s5;
   str[2+strlen(s1)+strlen(s2)+strlen(s4)+3] = '\0';
+  HEAP_CHECK();
   return str;
 }
 
 
 char* append12(char *s1, char s2, char *s3, char s4)
 {
+  HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s3)+4));
   int i;
   for(i = 0; i < strlen(s1); i++)
@@ -1483,12 +1527,14 @@ char* append12(char *s1, char s2, char *s3, char s4)
     str[strlen(s1)+3+i] = s3[i];
   str[strlen(s1)+strlen(s3)+3] = s4;
   str[strlen(s1)+strlen(s3)+4] = '\0';
+  HEAP_CHECK();
   return str;
 }
 
 
 char* append13(char *s1, char *s2, char *s3, char *s4, char *s5, char *s6, char s7)
 {
+  HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s2)+strlen(s3)+strlen(s4)+strlen(s5)+strlen(s6)+1));
   int i;
   for(i = 0; i < strlen(s1); i++)
@@ -1505,12 +1551,14 @@ char* append13(char *s1, char *s2, char *s3, char *s4, char *s5, char *s6, char 
     str[strlen(s1)+strlen(s2)+strlen(s3)+strlen(s4)+strlen(s5)+i] = s6[i];
   str[strlen(s1)+strlen(s2)+strlen(s3)+strlen(s4)+strlen(s5)+strlen(s6)] = s7;
   str[strlen(s1)+strlen(s2)+strlen(s3)+strlen(s4)+strlen(s5)+strlen(s6)+1] = '\0';
+  HEAP_CHECK();
   return str;
 }
 
 
 char* append14(char s1, char *s2, char s3, char s4, char s5, char *s6, char s7)
 {
+  HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(strlen(s2)+strlen(s6)+7));
   int i;
   str[0] = s1;
@@ -1525,12 +1573,14 @@ char* append14(char s1, char *s2, char s3, char s4, char s5, char *s6, char s7)
     str[6+strlen(s2)+i] = s6[i];
   str[6+strlen(s2)+strlen(s6)] = s7;
   str[7+strlen(s2)+strlen(s6)] = '\0';
+  HEAP_CHECK();
   return str;
 }
 
 
 char* append15(char s1, char *s2, char s3, char *s4, char s5, char *s6, char s7)
 {
+  HEAP_CHECK();
   char *str = (char*)malloc(5*sizeof(char)*(strlen(s2)+strlen(s4)+strlen(s6)+6));
   int i;
   str[0] = s1;
@@ -1546,27 +1596,33 @@ char* append15(char s1, char *s2, char s3, char *s4, char s5, char *s6, char s7)
     str[5+strlen(s2)+strlen(s4)+i] = s6[i];
   str[5+strlen(s2)+strlen(s4)+strlen(s6)] = s7;
   str[6+strlen(s2)+strlen(s4)+strlen(s6)] = '\0';
+  HEAP_CHECK();
   return str;
 }
 
 
 bool find1(char *s1, char *s2)     // function which returns true if s2 is contained in s1
 {
+  HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
   char *pch;
   pch = strtok(cs1, " -+*/()<>!=,");
   while(pch != NULL)
   {
-      if(strcmp(pch, s2) == 0)
+      if(strcmp(pch, s2) == 0) {
+		  HEAP_CHECK();
           return true;
+	  }
       pch = strtok (NULL, " -+*/()<>!=,");
   }
+  HEAP_CHECK();
   return false;
 }
 
 
 char* find2(char *s1)   // function which returns the first undeclared variable from a given expression (this function is called after the function "check1" returns false)
 {
+  HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
   char *pch;
   pch = strtok(cs1, " -+*/()<>!=,");
@@ -1588,19 +1644,23 @@ char* find2(char *s1)   // function which returns the first undeclared variable 
                       break;
                     }
                 }
-                if(found == false)
+                if(found == false) {
+				  HEAP_CHECK();
                   return pch;
+				}
             }
         }
       }
       pch = strtok (NULL, " -+*/()<>!=,");
   }
+  HEAP_CHECK();
   return strdup("InvalidCall");
 }
 
 
 char* find3(char *s1)     // function which returns the first unassigned variable from a given expression (this function is called after the function "check2" returns false)
 {
+  HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
   char *pch;
   pch = strtok(cs1, " -+*/()<>!=,");
@@ -1611,19 +1671,23 @@ char* find3(char *s1)     // function which returns the first unassigned variabl
       {
           if(strcmp(pch, var[i].name) == 0)
           {
-              if(var[i].assigned == false)
+              if(var[i].assigned == false) {
+				HEAP_CHECK();
                 return pch;
+			  }
               break;
           }
       }
       pch = strtok (NULL, " -+*/()<>!=,");
   }
+  HEAP_CHECK();
   return strdup("InvalidCall");
 }
 
 
 int find4(char *s1)       // function which returns the number of parameters from a given parameters list
 {
+  HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
   char *pch;
   pch = strtok(cs1, " ,");
@@ -1633,12 +1697,14 @@ int find4(char *s1)       // function which returns the number of parameters fro
       counter++;
       pch = strtok (NULL, " ,");
   }
+  HEAP_CHECK();
   return counter;
 }
 
 
 char* find5(char *s1)   // function which returns the first undeclared variable from a given expression inside a function (this function is called after the function "check3" returns false)
 {
+  HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
   char *pch;
   pch = strtok(cs1, " -+*/()<>!=,");
@@ -1667,19 +1733,23 @@ char* find5(char *s1)   // function which returns the first undeclared variable 
                           break;
                         }
 
-                if(found == false)
+                if(found == false) {
+				  HEAP_CHECK();
                   return pch;
+				}
             }
         }
       }
       pch = strtok (NULL, " -+*/()<>!=,");
   }
+  HEAP_CHECK();
   return strdup("InvalidCall");
 }
 
 
 char* find6(char *s1)     // function which returns the first unassigned variable from a given expression inside a function (this function is called after the function "check4" returns false)
 {
+  HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
   char *pch;
   pch = strtok(cs1, " -+*/()<>!=,");
@@ -1690,19 +1760,23 @@ char* find6(char *s1)     // function which returns the first unassigned variabl
       {
           if(strcmp(pch, fun[currentFunctionIndex].localVariables[i].name) == 0)
           {
-              if(fun[currentFunctionIndex].localVariables[i].assigned == false)
+              if(fun[currentFunctionIndex].localVariables[i].assigned == false) {
+				HEAP_CHECK();
                 return pch;
+			  }
               break;
           }
       }
       pch = strtok (NULL, " -+*/()<>!=,");
   }
+  HEAP_CHECK();
   return strdup("InvalidCall");
 }
 
 
 bool check1(char *s1)   // function which checks if each variable (one that begins with a small letter and it's not a function) from a given expression was declared
 {
+  HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
   char *pch;
   pch = strtok(cs1, " -+*/()<>!=^,");
@@ -1724,19 +1798,23 @@ bool check1(char *s1)   // function which checks if each variable (one that begi
                       break;
                     }
                 }
-                if(found == false)
+                if(found == false) {
+				  HEAP_CHECK();
                   return false;
+				}
             }
         }
       }
       pch = strtok (NULL, " -+*/()<>!=^,");
   }
+  HEAP_CHECK();
   return true;
 }
 
 
 bool check2(char *s1)     // function which checks if each variable from a given expression was assigned to a value, and returns false if not
 {
+  HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
   char *pch;
   pch = strtok(cs1, " -+*/()<>!=,");
@@ -1747,19 +1825,23 @@ bool check2(char *s1)     // function which checks if each variable from a given
       {
           if(strcmp(pch, var[i].name) == 0)
           {
-              if(var[i].assigned == false)
+              if(var[i].assigned == false) {
+				HEAP_CHECK();
                 return false;
+			  }
               break;
           }
       }
       pch = strtok (NULL, " -+*/()<>!=,");
   }
+  HEAP_CHECK();
   return true;
 }
 
 
 bool check3(char *s1)     // function which checks if each variable from a given expression (which is inside a function) is declared as a header or local variable in the current function (indicated by a global index)
 {
+  HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
   char *pch;
   pch = strtok(cs1, " -+*/()<>!=,");
@@ -1786,20 +1868,24 @@ bool check3(char *s1)     // function which checks if each variable from a given
                             taken = true;
                             break;
                         }
-                if(taken == false)
+                if(taken == false) {
+					HEAP_CHECK();
                     return false;   // the given variable doesn't exist among the header and local variables of the current function
+				}
             }
         }
       }
 
       pch = strtok (NULL, " -+*/()<>!=,");
   }
+  HEAP_CHECK();
   return true;    // all the variables from the given expression are declared inside the current function
 }
 
 
 bool check4(char *s1)     // function which checks if each variable from a given expression (which is inside a function) is assigned as a header or local variable in the current function (indicated by a global index)
 {
+  HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
   char *pch;
   pch = strtok(cs1, " -+*/()<>!=,");
@@ -1817,19 +1903,23 @@ bool check4(char *s1)     // function which checks if each variable from a given
           for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
               if(strcmp(fun[currentFunctionIndex].localVariables[i].name, pch) == 0)
               {
-                  if(fun[currentFunctionIndex].localVariables[i].assigned == false)
+                  if(fun[currentFunctionIndex].localVariables[i].assigned == false) {
+					  HEAP_CHECK();
                       return false;
+				  }
                   break;
               }
 
       pch = strtok (NULL, " -+*/()<>!=,");
   }
+  HEAP_CHECK();
   return true;    // all the variables from the given expression are assigned inside the current function
 }
 
 
 bool check5(char *s1)     // function which checks if the given variable corresponds to a header/local variable of the current function and if its type is the same as the current function's return type
 {
+  HEAP_CHECK();
   bool found = false;
   int i;
   for(i = 0; i < fun[currentFunctionIndex].noParam; i++)
@@ -1840,8 +1930,11 @@ bool check5(char *s1)     // function which checks if the given variable corresp
     }
   if(found == true)
   {
-    if(strcmp(fun[currentFunctionIndex].headerVariables[i].type, fun[currentFunctionIndex].returnType) != 0 || fun[currentFunctionIndex].headerVariables[i].length != fun[currentFunctionIndex].returnSize)
+    if(strcmp(fun[currentFunctionIndex].headerVariables[i].type, fun[currentFunctionIndex].returnType) != 0 || fun[currentFunctionIndex].headerVariables[i].length != fun[currentFunctionIndex].returnSize) {
+	  HEAP_CHECK();
       return false;
+	}
+	HEAP_CHECK();
     return true;
   }
 
@@ -1853,139 +1946,182 @@ bool check5(char *s1)     // function which checks if the given variable corresp
     }
   if(found == true)
   {
-    if(strcmp(fun[currentFunctionIndex].localVariables[i].type, fun[currentFunctionIndex].returnType) != 0 || fun[currentFunctionIndex].localVariables[i].length != fun[currentFunctionIndex].returnSize)
+    if(strcmp(fun[currentFunctionIndex].localVariables[i].type, fun[currentFunctionIndex].returnType) != 0 || fun[currentFunctionIndex].localVariables[i].length != fun[currentFunctionIndex].returnSize) {
+	  HEAP_CHECK();
       return false;
+	}
+	HEAP_CHECK();
     return true;
   }
-
+  
+  HEAP_CHECK();
   return false;
 }
 
 
 bool check6(char *s1)     // function which checks if the phrase "length_mismatch_error" is found within a string (for error checking of length mismatch operations)
 {
+  HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
   char *pch;
   pch = strtok(cs1, " -+*/()<>!=,");
   while(pch != NULL)
   {
-      if(strcmp(pch, "length_mismatch_error") == 0)
+      if(strcmp(pch, "length_mismatch_error") == 0) {
+		  HEAP_CHECK();
           return true;
+	  }
       pch = strtok (NULL, " -+*/()<>!=,");
   }
+  HEAP_CHECK();
   return false;    // there is no length mismatch error contained in the given expression
 }
 
 
 bool check7(char *s1)    // function which checks if the phrase "wrong_type_error" is found within a string (for error checking of operations between variables)
 {
+  HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
   char *pch;
   pch = strtok(cs1, " -+*/()<>!=,");
   while(pch != NULL)
   {
       int i;
-      if(strcmp(pch, "wrong_type_error") == 0)
+      if(strcmp(pch, "wrong_type_error") == 0) {
+		  HEAP_CHECK();
           return true;
+	  }
       pch = strtok (NULL, " -+*/()<>!=,");
   }
+  HEAP_CHECK();
   return false;
 }
 
 
 char* getType(char *s1)     // function which returns the type of a variable, based on its name
 {
+  HEAP_CHECK();
   int i;
   for(i = 0; i < varNo; i++)
   {
-      if(strcmp(s1, var[i].name) == 0)
+      if(strcmp(s1, var[i].name) == 0) {
+		HEAP_CHECK();
         return var[i].type;
+	  }
   }
+  HEAP_CHECK();
   return strdup("NoType");
 }
 
 
 int getIndex1(char *s1)     // function which returns the index of a variable, based on its name
 {
+  HEAP_CHECK();
   int i;
   for(i = 0; i < varNo; i++)
   {
-      if(strcmp(s1, var[i].name) == 0)
+      if(strcmp(s1, var[i].name) == 0) {
+		HEAP_CHECK();
         return i;
+	  }
   }
+  HEAP_CHECK();
   return -1;
 }
 
 
 int getIndex2(char *s1)     // function which returns the index of a function, based on its name
 {
+  HEAP_CHECK();
   int i;
   for(i = 0; i < funNo; i++)
   {
-      if(strcmp(s1, fun[i].name) == 0)
+      if(strcmp(s1, fun[i].name) == 0) {
+		HEAP_CHECK();
         return i;
+	  }
   }
+  HEAP_CHECK();
   return -1;
 }
 
 
 double getSize1(char *s1)     // function which returns the size of a variable, based on its name
 {
+  HEAP_CHECK();
   int i;
   for(i = 0; i < varNo; i++)
   {
-      if(strcmp(s1, var[i].name) == 0)
+      if(strcmp(s1, var[i].name) == 0) {
+		HEAP_CHECK();
         return var[i].length;
+	  }
   }
+  HEAP_CHECK();
   return -1;
 }
 
 
 double getSize2(char *s1)     // function which returns the return size of a function, based on its name
 {
+  HEAP_CHECK();
   int i;
   for(i = 0; i < funNo; i++)
   {
-      if(strcmp(s1, fun[i].name) == 0)
+      if(strcmp(s1, fun[i].name) == 0) {
+		HEAP_CHECK();
         return fun[i].returnSize;
+	  }
   }
+  HEAP_CHECK();
   return -1;
 }
 
 
 double getSize3(char *s1)     // function which returns the size of a header/local variable inside the current function, based on its name
 {
+  HEAP_CHECK();
   int i;
   for(i = 0; i < fun[currentFunctionIndex].noParam; i++)
   {
-      if(strcmp(s1, fun[currentFunctionIndex].headerVariables[i].name) == 0)
+      if(strcmp(s1, fun[currentFunctionIndex].headerVariables[i].name) == 0) {
+		HEAP_CHECK();
         return fun[currentFunctionIndex].headerVariables[i].length;
+	  }
   }
   for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
   {
-      if(strcmp(s1, fun[currentFunctionIndex].localVariables[i].name) == 0)
+      if(strcmp(s1, fun[currentFunctionIndex].localVariables[i].name) == 0) {
+		HEAP_CHECK();
         return fun[currentFunctionIndex].localVariables[i].length;
+	  }
   }
+  HEAP_CHECK();
   return -1;
 }
 
 
 char* extract(char *s1)   // function which receives the start of a function declaration and returns its name
 {
+  HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
   char *pch;
   pch = strtok(cs1, " =");
+  HEAP_CHECK();
   return pch;
 }
 
 
 char *structureToString(char *st)     // function used to transfer a string within a structure to a separate memory address (of its own)
 {
-    char *strA = (char*)malloc(sizeof(char)*strlen(st));
+  HEAP_CHECK();
+  int a = strlen(st);
+    char *strA = (char*)malloc(sizeof(char)*strlen(st)+1);
     int i;
     for(i = 0; i < strlen(st); i++)
         strA[i] = st[i];
     strA[strlen(st)] = '\0';
+  HEAP_CHECK();
     return strA;
 }
 
@@ -2008,6 +2144,7 @@ char *structureToString(char *st)     // function used to transfer a string with
 
 char* singular_declaration_function(char *st1, char *st2)
 {
+  HEAP_CHECK();
     char finalString[1024];
     if(insideFunction == true)
     {
@@ -2067,13 +2204,15 @@ char* singular_declaration_function(char *st1, char *st2)
                 finalString[0] = '\0';
         }
     }
-
+	
+  HEAP_CHECK();
     return finalString;
 }
 
 
 char* plural_declaration_function(char *st1, char *st2)
 {
+  HEAP_CHECK();
     char finalString[1024];
     if(insideFunction == true)
     {
@@ -2133,13 +2272,15 @@ char* plural_declaration_function(char *st1, char *st2)
               finalString[0] = '\0';
         }
     }
-
+	
+  HEAP_CHECK();
     return finalString;
 }
 
 
 char* extended_plural_declaration_function(char *st1, char *st2, char *st3, double d1)
 {
+  HEAP_CHECK();
     char finalString[1024];
     if(insideFunction == true)
     {
@@ -2229,13 +2370,15 @@ char* extended_plural_declaration_function(char *st1, char *st2, char *st3, doub
               }
         }
     }
-
+	
+  HEAP_CHECK();
     return finalString;
 }
 
 
 char* singular_assignment_function(char *st1, char *st2, char *st3, char *st4)
 {
+  HEAP_CHECK();
     char finalString[1024];
     if(insideFunction == true)
     {
@@ -2407,13 +2550,15 @@ char* singular_assignment_function(char *st1, char *st2, char *st3, char *st4)
             }
         }
     }
-
+	
+  HEAP_CHECK();
     return finalString;
 }
 
 
 char* plural_assignment_function(char *st1, char *st2, char *st3, char *st4, double d1)
 {
+  HEAP_CHECK();
     char finalString[1024];
     if(insideFunction == true)
     {
@@ -2609,13 +2754,15 @@ char* plural_assignment_function(char *st1, char *st2, char *st3, char *st4, dou
             }
         }
     }
-
+	
+  HEAP_CHECK();
     return finalString;
 }
 
 
 char* singular_declaration_with_assignment_function(char *st1, char *st2, char *st3, char *st4)
 {
+  HEAP_CHECK();
     char finalString[1024];
     if(insideFunction == true)
     {
@@ -2725,13 +2872,15 @@ char* singular_declaration_with_assignment_function(char *st1, char *st2, char *
             }
         }
     }
-
+	
+  HEAP_CHECK();
     return finalString;
 }
 
 
 char* plural_declaration_with_assignment_function(char *st1, char *st2, char *st3, char *st4, double d1)
 {
+  HEAP_CHECK();
     char finalString[1024];
     if(insideFunction == true)
     {
@@ -2841,13 +2990,15 @@ char* plural_declaration_with_assignment_function(char *st1, char *st2, char *st
             }
         }
     }
-
+	
+  HEAP_CHECK();
     return finalString;
 }
 
 
 char* extended_plural_declaration_with_assignment_function(char *st1, char *st2, char *st3, char *st4, char *st5, double d1, double d2)
 {
+  HEAP_CHECK();
     char finalString[1024];
     if(insideFunction == true)
     {
@@ -2987,6 +3138,7 @@ char* extended_plural_declaration_with_assignment_function(char *st1, char *st2,
             }
         }
     }
-
+	
+  HEAP_CHECK();
     return finalString;
 }

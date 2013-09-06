@@ -39,3 +39,5 @@ compiler/msvc11/eq_compiler/Debug/link-rc.write.1.tlog
 compiler/msvc11/eq_compiler/Debug/link.command.1.tlog
 compiler/msvc11/eq_compiler/Debug/link.read.1.tlog
 compiler/msvc11/eq_compiler/Debug/link.write.1.tlog
+*.tlog
+*.lastbuildstate
