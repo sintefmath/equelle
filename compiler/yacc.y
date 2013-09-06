@@ -1280,7 +1280,7 @@ printf("%s",s);
 
 char* append1(char *s1, char s2, char *s3)
 {
-  char *str = (char*)malloc(sizeof(char)*(strlen(s1)+strlen(s3)+3));
+  char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s3)+3));
   int i;
   for(i = 0; i < strlen(s1); i++)
     str[i] = s1[i];
@@ -1296,7 +1296,7 @@ char* append1(char *s1, char s2, char *s3)
 
 char* append2(char s1, char *s2, char s3)
 {
-  char *str = (char*)malloc(sizeof(char)*(strlen(s2)+2));
+  char *str = (char*)malloc(5*sizeof(char)*(strlen(s2)+2));
   str[0] = s1;
   int i;
   for(i = 0; i < strlen(s2); i++)
@@ -1309,7 +1309,7 @@ char* append2(char s1, char *s2, char s3)
 
 char* append3(char *s1, char s2, char *s3, char s4)
 {
-  char *str = (char*)malloc(sizeof(char)*(strlen(s1)+strlen(s3)+2));
+  char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s3)+2));
   int i;
   for(i = 0; i < strlen(s1); i++)
     str[i] = s1[i];
@@ -1324,7 +1324,7 @@ char* append3(char *s1, char s2, char *s3, char s4)
 
 char* append4(char *s1, char s2, char *s3, char s4, char *s5, char s6)
 {
-  char *str = (char*)malloc(sizeof(char)*(strlen(s1)+strlen(s3)+strlen(s5)+4));
+  char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s3)+strlen(s5)+4));
   int i;
   for(i = 0; i < strlen(s1); i++)
     str[i] = s1[i];
@@ -1343,7 +1343,7 @@ char* append4(char *s1, char s2, char *s3, char s4, char *s5, char s6)
 
 char* append5(char *s1, char s2, char *s3)
 {
-  char *str = (char*)malloc(sizeof(char)*(strlen(s1)+strlen(s3)+2));
+  char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s3)+2));
   int i;
   for(i = 0; i < strlen(s1); i++)
     str[i] = s1[i];
@@ -1358,7 +1358,7 @@ char* append5(char *s1, char s2, char *s3)
 
 char *append6(char *s1, char *s2, char *s3)
 {
-  char *str = (char*)malloc(sizeof(char)*(strlen(s1)+strlen(s2)+strlen(s3)+2));
+  char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s2)+strlen(s3)+2));
   int i;
   for(i = 0; i < strlen(s1); i++)
     str[i] = s1[i];
@@ -1375,7 +1375,7 @@ char *append6(char *s1, char *s2, char *s3)
 
 char* append7(char s1, char *s2)
 {
-  char *str = (char*)malloc(sizeof(char)*(strlen(s2)+1));
+  char *str = (char*)malloc(5*sizeof(char)*(strlen(s2)+1));
   str[0] = s1;
   int i;
   for(i = 0; i < strlen(s2); i++)
@@ -1387,7 +1387,7 @@ char* append7(char s1, char *s2)
 
 char* append8(char s1, char s2, char *s3, char s4)
 {
-  char *str = (char*)malloc(sizeof(char)*(strlen(s3)+3));
+  char *str = (char*)malloc(5*sizeof(char)*(strlen(s3)+3));
   str[0] = s1;
   str[1] = s2;
   int i;
@@ -1401,7 +1401,7 @@ char* append8(char s1, char s2, char *s3, char s4)
 
 char* append9(char *s1, char s2, char *s3)
 {
-  char *str = (char*)malloc(sizeof(char)*(strlen(s1)+strlen(s3)+1));
+  char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s3)+1));
   int i;
   for(i = 0; i < strlen(s1); i++)
     str[i] = s1[i];
@@ -1415,7 +1415,7 @@ char* append9(char *s1, char s2, char *s3)
 
 char* append10(char *s1, char *s2)   // function which returns the C++ code for the XOR between the two given variables: (s1 && (!s2)) || (s2 && (!s1))
 {
-  char *str = (char*)malloc(sizeof(char)*(2*(strlen(s1)+strlen(s2))+22));
+  char *str = (char*)malloc(5*sizeof(char)*(2*(strlen(s1)+strlen(s2))+22));
   str[0] = '(';
   int i;
   for(i = 0; i < strlen(s1); i++)
@@ -1454,7 +1454,7 @@ char* append10(char *s1, char *s2)   // function which returns the C++ code for 
 
 char* append11(char *s1, char *s2, char s3, char *s4, char s5)
 {
-  char *str = (char*)malloc(sizeof(char)*(strlen(s1)+strlen(s2)+strlen(s4)+3));
+  char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s2)+strlen(s4)+3));
   int i;
   for(i = 0; i < strlen(s1); i++)
     str[i] = s1[i];
@@ -1472,7 +1472,7 @@ char* append11(char *s1, char *s2, char s3, char *s4, char s5)
 
 char* append12(char *s1, char s2, char *s3, char s4)
 {
-  char *str = (char*)malloc(sizeof(char)*(strlen(s1)+strlen(s3)+4));
+  char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s3)+4));
   int i;
   for(i = 0; i < strlen(s1); i++)
     str[i] = s1[i];
@@ -1489,7 +1489,7 @@ char* append12(char *s1, char s2, char *s3, char s4)
 
 char* append13(char *s1, char *s2, char *s3, char *s4, char *s5, char *s6, char s7)
 {
-  char *str = (char*)malloc(sizeof(char)*(strlen(s1)+strlen(s2)+strlen(s3)+strlen(s4)+strlen(s5)+strlen(s6)+1));
+  char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s2)+strlen(s3)+strlen(s4)+strlen(s5)+strlen(s6)+1));
   int i;
   for(i = 0; i < strlen(s1); i++)
     str[i] = s1[i];
@@ -1511,7 +1511,7 @@ char* append13(char *s1, char *s2, char *s3, char *s4, char *s5, char *s6, char 
 
 char* append14(char s1, char *s2, char s3, char s4, char s5, char *s6, char s7)
 {
-  char *str = (char*)malloc(sizeof(char)*(strlen(s2)+strlen(s6)+7));
+  char *str = (char*)malloc(5*sizeof(char)*(strlen(s2)+strlen(s6)+7));
   int i;
   str[0] = s1;
   for(i = 0; i < strlen(s2); i++)
@@ -1531,7 +1531,7 @@ char* append14(char s1, char *s2, char s3, char s4, char s5, char *s6, char s7)
 
 char* append15(char s1, char *s2, char s3, char *s4, char s5, char *s6, char s7)
 {
-  char *str = (char*)malloc(sizeof(char)*(strlen(s2)+strlen(s4)+strlen(s6)+6));
+  char *str = (char*)malloc(5*sizeof(char)*(strlen(s2)+strlen(s4)+strlen(s6)+6));
   int i;
   str[0] = s1;
   for(i = 0; i < strlen(s2); i++)
@@ -2008,7 +2008,7 @@ char *structureToString(char *st)     // function used to transfer a string with
 
 char* singular_declaration_function(char *st1, char *st2)
 {
-    char *finalString;
+    char finalString[1024];
     if(insideFunction == true)
     {
         int i;
@@ -2040,7 +2040,7 @@ char* singular_declaration_function(char *st1, char *st2)
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = strdup(st2);
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = 1;
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = false;
-                    finalString = strdup("");
+                    finalString[0] = '\0';
               }
         }
     }
@@ -2064,7 +2064,7 @@ char* singular_declaration_function(char *st1, char *st2)
                 var[varNo-1].type = strdup(st2);
                 var[varNo-1].length = 1;
                 var[varNo-1].assigned = false;
-                finalString = strdup("");
+                finalString[0] = '\0';
         }
     }
 
@@ -2074,7 +2074,7 @@ char* singular_declaration_function(char *st1, char *st2)
 
 char* plural_declaration_function(char *st1, char *st2)
 {
-    char *finalString;
+    char finalString[1024];
     if(insideFunction == true)
     {
         int i;
@@ -2106,7 +2106,7 @@ char* plural_declaration_function(char *st1, char *st2)
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = strdup(st2);
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = ANY;
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = false;
-                    finalString = strdup("");
+                    finalString[0] = '\0';
               }
         }
     }
@@ -2130,7 +2130,7 @@ char* plural_declaration_function(char *st1, char *st2)
               var[varNo-1].type = strdup(st2);
               var[varNo-1].length = ANY;
               var[varNo-1].assigned = false;
-              finalString = strdup("");
+              finalString[0] = '\0';
         }
     }
 
@@ -2140,7 +2140,7 @@ char* plural_declaration_function(char *st1, char *st2)
 
 char* extended_plural_declaration_function(char *st1, char *st2, char *st3, double d1)
 {
-    char *finalString;
+    char finalString[1024];
     if(insideFunction == true)
     {
         int i;
@@ -2184,7 +2184,7 @@ char* extended_plural_declaration_function(char *st1, char *st2, char *st3, doub
                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = strdup(st2);
                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = d1;
                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = false;
-                              finalString = strdup("");
+                              finalString[0] = '\0';
                           }
                       }
                   }
@@ -2223,7 +2223,7 @@ char* extended_plural_declaration_function(char *st1, char *st2, char *st3, doub
                           var[varNo-1].type = strdup(st2);
                           var[varNo-1].length = d1;
                           var[varNo-1].assigned = false;
-                          finalString = strdup("");
+                          finalString[0] = '\0';
                       }
                   }
               }
@@ -2236,7 +2236,7 @@ char* extended_plural_declaration_function(char *st1, char *st2, char *st3, doub
 
 char* singular_assignment_function(char *st1, char *st2, char *st3, char *st4)
 {
-    char *finalString;
+    char finalString[1024];
     if(insideFunction == true)
     {
         int i;
@@ -2414,7 +2414,7 @@ char* singular_assignment_function(char *st1, char *st2, char *st3, char *st4)
 
 char* plural_assignment_function(char *st1, char *st2, char *st3, char *st4, double d1)
 {
-    char *finalString;
+    char finalString[1024];
     if(insideFunction == true)
     {
         int i;
@@ -2616,7 +2616,7 @@ char* plural_assignment_function(char *st1, char *st2, char *st3, char *st4, dou
 
 char* singular_declaration_with_assignment_function(char *st1, char *st2, char *st3, char *st4)
 {
-    char *finalString;
+    char finalString[1024];
     if(insideFunction == true)
     {
         int i;
@@ -2732,7 +2732,7 @@ char* singular_declaration_with_assignment_function(char *st1, char *st2, char *
 
 char* plural_declaration_with_assignment_function(char *st1, char *st2, char *st3, char *st4, double d1)
 {
-    char *finalString;
+    char finalString[1024];
     if(insideFunction == true)
     {
         int i;
@@ -2848,7 +2848,7 @@ char* plural_declaration_with_assignment_function(char *st1, char *st2, char *st
 
 char* extended_plural_declaration_with_assignment_function(char *st1, char *st2, char *st3, char *st4, char *st5, double d1, double d2)
 {
-    char *finalString;
+    char finalString[1024];
     if(insideFunction == true)
     {
         int i;
