@@ -11,7 +11,8 @@ dt : Scalar = UserSpecifiedScalarWithDefault(0.5) # Time step length.
 u0 : Collection Of Scalar On AllCells() = UserSpecifiedCollectionOfScalar( AllCells() )
 
 # Trying to add support for Dirichlet boundaries
-dirichlet_boundary : Collection Of Face On BoundaryFaces() = UserSpecifiedCollectionOfFace( BoundaryFaces() )
+dirichlet_boundary : Collection Of Face Subset Of (BoundaryFaces())
+dirichlet_boundary = UserSpecifiedCollectionOfFaceSubsetOf( BoundaryFaces() )
 dirichlet_val : Collection Of Scalar On dirichlet_boundary = UserSpecifiedCollectionOfScalar( dirichlet_boundary )
 
 # Compute interior transmissibilities.
