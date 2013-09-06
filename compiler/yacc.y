@@ -94,7 +94,9 @@
 
 #include <stdio.h>
 #include <string.h>
+#ifndef _MSC_VER
 #include <stdbool.h>
+#endif
 
 void yyerror(const char* s);
 char* append1(char *s1, char s2, char *s3);

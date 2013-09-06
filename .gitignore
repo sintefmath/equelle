@@ -18,3 +18,24 @@ libpeerconnection.log
 # Various other generated files
 gmon.out
 *~
+compiler/msvc11/eq_compiler.opensdf
+compiler/msvc11/eq_compiler.sdf
+compiler/msvc11/eq_compiler/Debug/CL.read.1.tlog
+compiler/msvc11/eq_compiler/Debug/CL.write.1.tlog
+compiler/msvc11/eq_compiler/Debug/cl.command.1.tlog
+compiler/msvc11/eq_compiler/Debug/custombuild.command.1.tlog
+compiler/msvc11/eq_compiler/Debug/custombuild.read.1.tlog
+compiler/msvc11/eq_compiler/Debug/custombuild.write.1.tlog
+compiler/msvc11/eq_compiler/Debug/eq_compiler.lastbuildstate
+compiler/msvc11/eq_compiler/Debug/eq_compiler.unsuccessfulbuild
+compiler/msvc11/eq_compiler/Debug/vc110.idb
+compiler/msvc11/eq_compiler/lex.yy.c
+compiler/msvc11/eq_compiler/y.tab.c
+compiler/msvc11/eq_compiler/y.tab.h
+compiler/msvc11/eq_compiler/Debug/link-cvtres.read.1.tlog
+compiler/msvc11/eq_compiler/Debug/link-cvtres.write.1.tlog
+compiler/msvc11/eq_compiler/Debug/link-rc.read.1.tlog
+compiler/msvc11/eq_compiler/Debug/link-rc.write.1.tlog
+compiler/msvc11/eq_compiler/Debug/link.command.1.tlog
+compiler/msvc11/eq_compiler/Debug/link.read.1.tlog
+compiler/msvc11/eq_compiler/Debug/link.write.1.tlog
