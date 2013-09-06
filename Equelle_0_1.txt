@@ -32,6 +32,7 @@ b. Entities (basic topological, grid-related types).
    Vertex    --   a single vertex
 
 For 2d grids, Face == Edge. For 1d grids, Face == Edge == Vertex.
+An entity can be Empty.
 
 
 c. Entity collections.
@@ -158,10 +159,13 @@ InteriorEdges : Function() -> Collection Of Edge Subset Of AllEdges()
 AllVertices : Function() -> Collection Of Vertex
 BoundaryVertices : Function() -> Collection Of Vertex Subset Of AllVertices()
 InteriorVertices : Function() -> Collection Of Vertex Subset Of AllVertices()
+# Each face has an orientation from its FirstCell to its SecondCell.
+# If a face is on the boundary, either FirstCell or SecondCell is Empty.
 FirstCell : Function(f : Collection Of Face) -> Collection Of Cell On f
 SecondCell : Function(f : Collection Of Face) -> Collection Of Cell On f
 Centroid : Function(e : Collection Of <Entity>) -> Collection Of Vector On e
 Normal : Function(f : Collection Of Face) -> Collection Of Vector On f
+IsEmpty : Function(e : Collection Of <Entity>) -> Collection Of Boolean On e
 
 
 c. Discrete operators
