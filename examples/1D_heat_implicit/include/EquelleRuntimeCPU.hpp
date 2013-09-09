@@ -15,21 +15,22 @@
 #include <string>
 
 
-/// Topological entity for cell.
-struct Cell
+/// Topological entities.
+template <int Codim>
+struct TopologicalEntity
 {
-    Cell(void): index_(-1) {}
-    Cell(const int index): index_(index) {}
-    int index_;
+    TopologicalEntity() : index(-1) {}
+    explicit TopologicalEntity(const int ind) : index(ind) {}
+    int index;
+    bool operator<(const TopologicalEntity& t) const { return index < t.index; }
+    bool operator==(const TopologicalEntity& t) const { return index == t.index; }
 };
 
+/// Topological entity for cell.
+typedef TopologicalEntity<0> Cell;
 
 /// Topological entity for cell.
-struct Face
-{
-    int index_;
-};
-
+typedef TopologicalEntity<1> Face;
 
 /// Topological collections.
 typedef std::vector<Cell> CollOfCells;
@@ -76,6 +77,7 @@ private:
 };
 
 typedef Eigen::Array<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> CollOfVectors;
+typedef Eigen::Array<bool, Eigen::Dynamic, 1> CollOfBooleans;
 
 
 
@@ -113,12 +115,30 @@ public:
     CollOfVectors centroid(const CollOfCells& cells) const;
 
     /// Operators.
+    CollOfScalars gradient(const CollOfScalars& cell_scalarfield) const;
+    CollOfScalarsAD gradient(const CollOfScalarsAD& cell_scalarfield) const;
+    CollOfScalars negGradient(const CollOfScalars& cell_scalarfield) const;
     CollOfScalarsAD negGradient(const CollOfScalarsAD& cell_scalarfield) const;
+    CollOfScalars divergence(const CollOfScalars& face_fluxes) const;
     CollOfScalarsAD divergence(const CollOfScalarsAD& face_fluxes) const;
+    CollOfScalars interiorDivergence(const CollOfScalars& face_fluxes) const;
+    CollOfScalarsAD interiorDivergence(const CollOfScalarsAD& face_fluxes) const;
+    CollOfBooleans isEmpty(const CollOfCells& cells) const;
+    CollOfBooleans isEmpty(const CollOfFaces& faces) const;
+    template <class EntityCollection>
+    CollOfScalars operatorOn(const double data, const EntityCollection& to_set);
+    template <class SomeCollection, class EntityCollection>
+    SomeCollection operatorOn(const SomeCollection& data, const EntityCollection& from_set, const EntityCollection& to_set);
+
+    template <class SomeCollection>
+    SomeCollection trinaryIf(const CollOfBooleans& predicate,
+                             const SomeCollection& iftrue,
+                             const SomeCollection& iffalse) const;
 
     /// Solver function.
-    CollOfScalarsAD newtonSolve(const ResidualComputerInterface& rescomp,
-				const CollOfScalarsAD& u_initialguess) const;
+    template <class ResidualFunctor>
+    CollOfScalarsAD newtonSolve(const ResidualFunctor& rescomp,
+				const CollOfScalars& u_initialguess) const;
 
     /// Output.
     static void output(const std::string& tag, double val);
@@ -127,27 +147,36 @@ public:
     static void output(const std::string& tag, const CollOfScalarsAD& vals);
 
     /// Input.
+    static CollOfFaces getUserSpecifiedCollectionOfFaceSubsetOf(const Opm::parameter::ParameterGroup& param,
+                                                                const std::string& name,
+                                                                const CollOfFaces& superset);
     static CollOfScalars getUserSpecifiedCollectionOfScalar(const Opm::parameter::ParameterGroup& param,
 							    const std::string& name,
 							    const int size);
 
-    /// Creating primary variables.
-    static CollOfScalarsAD singlePrimaryVariable(const CollOfScalars& initial_values);
 
 private:
     /// Topology helpers
     bool boundaryCell(const int cell_index) const;
 
+    /// Creating primary variables.
+    static CollOfScalarsAD singlePrimaryVariable(const CollOfScalars& initial_values);
+
     /// Solver helper.
     CollOfScalars solveForUpdate(const CollOfScalarsAD& residual) const;
+
     /// Norms.
     double twoNorm(const CollOfScalars& vals) const;
     double twoNorm(const CollOfScalarsAD& vals) const;
 
+    /// Data members.
     Opm::GridManager grid_manager_;
     const UnstructuredGrid& grid_;
     HelperOps ops_;
     Opm::LinearSolverFactory linsolver_;
 };
+
+// Include the implementations of template members.
+#include "EquelleRuntimeCPU_impl.hpp"
 
 #endif // EQUELLERUNTIMECPU_HEADER_INCLUDED

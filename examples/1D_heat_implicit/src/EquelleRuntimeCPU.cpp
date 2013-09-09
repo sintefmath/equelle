@@ -4,9 +4,12 @@
 
 
 #include "EquelleRuntimeCPU.hpp"
+#include <opm/core/utility/ErrorMacros.hpp>
 #include <iomanip>
 #include <fstream>
 #include <iterator>
+#include <stdexcept>
+#include <set>
 
 
 EquelleRuntimeCPU::EquelleRuntimeCPU(const Opm::parameter::ParameterGroup& param)
@@ -23,7 +26,7 @@ CollOfCells EquelleRuntimeCPU::allCells() const
     const int nc = grid_.number_of_cells;
     CollOfCells cells(nc);
     for (int c = 0; c < nc; ++c) {
-        cells[c].index_ = c;
+        cells[c].index = c;
     }
     return cells;
 }
@@ -94,7 +97,7 @@ CollOfFaces EquelleRuntimeCPU::allFaces() const
     const int nf = grid_.number_of_faces;
     CollOfFaces faces(nf);
     for (int f = 0; f < nf; ++f) {
-        faces[f].index_ = f;
+        faces[f].index = f;
     }
     return faces;
 }
@@ -113,18 +116,19 @@ CollOfFaces EquelleRuntimeCPU::boundaryFaces() const
     // This works as long as ops_.internal_faces(i)<ops_.internal_faces(i+1), which it currently is.
     // Would be better to extend HelperOps to support this functionality.
 
-    for (int i=0; i<grid_.number_of_faces; ++i) {
+    for (int i = 0; i < grid_.number_of_faces; ++i) {
         // Advance if_cursor so that the next internal face to look out for has larger or equal index to i
-        while ( (if_cursor<nif) && (i>ops_.internal_faces[if_cursor]) ) {
+        while ( (if_cursor < nif) && (i > ops_.internal_faces[if_cursor]) ) {
             ++if_cursor;
         }
         // Now if_cursor points beyond the last internal face, or internal_face[if_cursor]>=i.
         // If (if_cursor points beyond the last internal face) or (internal_face[if_cursor] is truly > i), we surely have a boundary face...
-        if ( (if_cursor==nif) || (ops_.internal_faces[if_cursor]>i) ) {
-            bfaces[bf_cursor].index_ = i;
+        if ( (if_cursor == nif) || (ops_.internal_faces[if_cursor] > i) ) {
+            bfaces[bf_cursor].index = i;
             ++bf_cursor;
         }
     }
+    
     return bfaces;
 }
 
@@ -134,7 +138,7 @@ CollOfFaces EquelleRuntimeCPU::interiorFaces() const
     const int nif = ops_.internal_faces.size();
     CollOfFaces ifaces(nif);
     for (int i = 0; i < nif; ++i) {
-        ifaces[i].index_ = ops_.internal_faces(i);
+        ifaces[i].index = ops_.internal_faces(i);
     }
     return ifaces;
 }
@@ -145,7 +149,7 @@ CollOfCells EquelleRuntimeCPU::firstCell(const CollOfFaces& faces) const
     const int n = faces.size();
     CollOfCells fcells(n);
     for (int i = 0; i < n; ++i) {
-        fcells[i].index_ = grid_.face_cells[2*faces[i].index_];
+        fcells[i].index = grid_.face_cells[2*faces[i].index];
     }
     return fcells;
 }
@@ -156,7 +160,7 @@ CollOfCells EquelleRuntimeCPU::secondCell(const CollOfFaces& faces) const
     const int n = faces.size();
     CollOfCells fcells(n);
     for (int i = 0; i < n; ++i) {
-        fcells[i].index_ = grid_.face_cells[2*faces[i].index_ + 1];
+        fcells[i].index = grid_.face_cells[2*faces[i].index + 1];
     }
     return fcells;
 }
@@ -167,7 +171,7 @@ CollOfScalars EquelleRuntimeCPU::norm(const CollOfFaces& faces) const
     const int n = faces.size();
     CollOfScalars areas(n);
     for (int i = 0; i < n; ++i) {
-        areas[i] = grid_.face_areas[faces[i].index_];
+        areas[i] = grid_.face_areas[faces[i].index];
     }
     return areas;
 }
@@ -178,7 +182,7 @@ CollOfScalars EquelleRuntimeCPU::norm(const CollOfCells& cells) const
     const int n = cells.size();
     CollOfScalars volumes(n);
     for (int i = 0; i < n; ++i) {
-        volumes[i] = grid_.cell_volumes[cells[i].index_];
+        volumes[i] = grid_.cell_volumes[cells[i].index];
     }
     return volumes;
 }
@@ -196,7 +200,7 @@ CollOfVectors EquelleRuntimeCPU::centroid(const CollOfFaces& faces) const
     const int dim = grid_.dimensions;
     CollOfVectors centroids(n, dim);
     for (int i = 0; i < n; ++i) {
-        const double* fc = grid_.face_centroids + dim * faces[i].index_;
+        const double* fc = grid_.face_centroids + dim * faces[i].index;
         for (int d = 0; d < dim; ++d) {
             centroids(i, d) = fc[d];
         }
@@ -211,12 +215,30 @@ CollOfVectors EquelleRuntimeCPU::centroid(const CollOfCells& cells) const
     const int dim = grid_.dimensions;
     CollOfVectors centroids(n, dim);
     for (int i = 0; i < n; ++i) {
-        const double* fc = grid_.cell_centroids + dim * cells[i].index_;
+        const double* fc = grid_.cell_centroids + dim * cells[i].index;
         for (int d = 0; d < dim; ++d) {
             centroids(i, d) = fc[d];
         }
     }
     return centroids;
+}
+
+
+CollOfScalars EquelleRuntimeCPU::gradient(const CollOfScalars& cell_scalarfield) const
+{
+    return ops_.grad * cell_scalarfield.matrix();
+}
+
+
+CollOfScalarsAD EquelleRuntimeCPU::gradient(const CollOfScalarsAD& cell_scalarfield) const
+{
+    return ops_.ngrad * cell_scalarfield;
+}
+
+
+CollOfScalars EquelleRuntimeCPU::negGradient(const CollOfScalars& cell_scalarfield) const
+{
+    return ops_.ngrad * cell_scalarfield.matrix();
 }
 
 
@@ -226,9 +248,53 @@ CollOfScalarsAD EquelleRuntimeCPU::negGradient(const CollOfScalarsAD& cell_scala
 }
 
 
+CollOfScalars EquelleRuntimeCPU::divergence(const CollOfScalars& face_fluxes) const
+{
+    return ops_.fulldiv * face_fluxes.matrix();
+}
+
+
 CollOfScalarsAD EquelleRuntimeCPU::divergence(const CollOfScalarsAD& face_fluxes) const
 {
+    return ops_.fulldiv * face_fluxes;
+}
+
+
+CollOfScalars EquelleRuntimeCPU::interiorDivergence(const CollOfScalars& face_fluxes) const
+{
+    return ops_.div * face_fluxes.matrix();
+}
+
+
+CollOfScalarsAD EquelleRuntimeCPU::interiorDivergence(const CollOfScalarsAD& face_fluxes) const
+{
     return ops_.div * face_fluxes;
+}
+
+
+CollOfBooleans EquelleRuntimeCPU::isEmpty(const CollOfCells& cells) const
+{
+    const size_t sz = cells.size();
+    CollOfBooleans retval = CollOfBooleans::Constant(sz, false);
+    for (size_t i = 0; i < sz; ++i) {
+        if (cells[i].index < 0) {
+            retval[i] = true;
+        }
+    }
+    return retval;
+}
+
+
+CollOfBooleans EquelleRuntimeCPU::isEmpty(const CollOfFaces& faces) const
+{
+    const size_t sz = faces.size();
+    CollOfBooleans retval = CollOfBooleans::Constant(sz, false);
+    for (size_t i = 0; i < sz; ++i) {
+        if (faces[i].index < 0) {
+            retval[i] = true;
+        }
+    }
+    return retval;
 }
 
 
@@ -251,46 +317,6 @@ CollOfScalars EquelleRuntimeCPU::solveForUpdate(const CollOfScalarsAD& residual)
         THROW("Linear solver convergence failure.");
     }
     return du;
-}
-
-
-CollOfScalarsAD EquelleRuntimeCPU::newtonSolve(const ResidualComputerInterface& rescomp,
-					       const CollOfScalarsAD& u_initialguess) const
-{
-    // Set up Newton loop.
-    CollOfScalarsAD u = u_initialguess;
-    output("Initial u:\t\t", u);
-    output("\tnorm = ", twoNorm(u));
-    CollOfScalarsAD residual = rescomp.compute(u); //  Generated code in here
-    output("Initial residual:\t", residual);
-    output("\tnorm = ", twoNorm(residual));
-    const int max_iter = 10;
-    const double tol = 1e-6;
-    int iter = 0;
-
-    // Execute newton loop until residual is small or we have used too many iterations.
-    while ( (twoNorm(residual) > tol) && (iter < max_iter) ) {
-        // Debugging output not specified in Equelle.
-        std::cout << "\niter = " << iter << " (max = " << max_iter
-                  << "), norm(residual) = " << twoNorm(residual)
-                  << " (tol = " << tol << ")" << std::endl;
-
-        // Solve linear equations for du, apply update.
-        const CollOfScalars du = solveForUpdate(residual);
-        u = u - du;
-
-        // Recompute residual.
-        residual = rescomp.compute(u);
-
-        // Debugging output not specified in Equelle.
-        output("\tu:\t", u);
-        output("\tnorm = ", twoNorm(u));
-        output("\tresidual:\t", residual);
-        output("\tnorm = ", twoNorm(residual));
-
-        ++iter;
-    }
-    return u;
 }
 
 
@@ -357,6 +383,31 @@ CollOfScalars EquelleRuntimeCPU::getUserSpecifiedCollectionOfScalar(const Opm::p
         // Uniform values.
         return CollOfScalars::Constant(size, param.get<double>(name));
     }
+}
+
+
+CollOfFaces EquelleRuntimeCPU::getUserSpecifiedCollectionOfFaceSubsetOf(const Opm::parameter::ParameterGroup& param,
+                                                                        const std::string& name,
+                                                                        const CollOfFaces& face_superset)
+{
+    const std::string filename = param.get<std::string>(name + "_filename");
+    std::ifstream is(filename.c_str());
+    if (!is) {
+        THROW("Could not find file " << filename);
+    }
+    std::istream_iterator<int> beg(is);
+    std::istream_iterator<int> end;
+    CollOfFaces data;
+    for (auto it = beg; it != end; ++it) {
+        data.push_back(Face(*it));
+    }
+    if (!is_sorted(data.begin(), data.end())) {
+        THROW("Input set of faces was not sorted in ascending order.");
+    }
+    if (!includes(face_superset.begin(), face_superset.end(), data.begin(), data.end())) {
+        THROW("Given faces are not in the assumed subset.");
+    }
+    return data;
 }
 
 

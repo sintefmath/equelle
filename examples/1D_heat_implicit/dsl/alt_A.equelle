@@ -13,7 +13,8 @@ u0 : Collection Of Scalar On AllCells() = UserSpecifiedCollectionOfScalar( AllCe
 # Trying to add support for Dirichlet boundaries
 dirichlet_boundary : Collection Of Face Subset Of (BoundaryFaces())
 dirichlet_boundary = UserSpecifiedCollectionOfFaceSubsetOf( BoundaryFaces() )
-dirichlet_val : Collection Of Scalar On dirichlet_boundary = UserSpecifiedCollectionOfScalar( dirichlet_boundary )
+dirichlet_val : Collection Of Scalar On dirichlet_boundary
+dirichlet_val = UserSpecifiedCollectionOfScalar( dirichlet_boundary )
 
 # Compute interior transmissibilities.
 vol = |AllCells()|                                         # Deduced type:  Collection Of Scalar On AllCells()
@@ -26,8 +27,11 @@ itrans : Collection Of Scalar On interior_faces = k * |interior_faces| / |Centro
 # Compute boundary transmissibilities.
 bf = BoundaryFaces()
 bf_cells = IsEmpty(FirstCell(bf)) ? SecondCell(bf) : FirstCell(bf)
-bf_sign = IsEmpty(FirstCell(bf))) ? (-1 On bf_cells) : (1 On bf_cells)
+bf_sign = IsEmpty(FirstCell(bf))) ? (-1 On bf) : (1 On bf)
 btrans = k * |bf| / |Centroid(bf) - Centroid(bf_cells)|
+
+# Compute quantities needed for boundary conditions.
+dir_sign = bf_sign On dirichlet_boundary
 
 # Compute flux for interior faces.
 computeInteriorFlux : Function(u : Collection Of Scalar On AllCells()) -> Collection Of Scalar On InteriorFaces()
@@ -39,16 +43,15 @@ computeInteriorFlux(u) = {
 computeBoundaryFlux : Function(u : Collection Of Scalar On AllCells()) -> Collection Of Scalar On BoundaryFaces()
 computeBoundaryFlux(u) = {
     # Compute flux at Dirichlet boundaries.
-    dir_sign = bf_sign On dirichlet_boundary
     u_dirbdycells = u On (bf_cells On dirichlet_boundary)
-    dir_fluxes = dir_sign * (u_dirbdycells - dirichlet_val)
+    dir_fluxes = btrans * dir_sign * (u_dirbdycells - dirichlet_val)
     # Extending with zero away from Dirichlet boundaries (i.e. assuming no-flow elsewhere).
     return dir_fluxes On BoundaryFaces()
 }
 
 # Compute the residual for the heat equation.
-compute_residual : Function(u : Collection Of Scalar On AllCells()) -> Collection Of Scalar On AllCells()
-compute_residual(u) = {
+computeResidual : Function(u : Collection Of Scalar On AllCells()) -> Collection Of Scalar On AllCells()
+computeResidual(u) = {
     ifluxes = computeInteriorFlux(u)
     bfluxes = computeBoundaryFlux(u)
     # Extend both ifluxes and bfluxes to AllFaces() and add to get all fluxes.
@@ -59,13 +62,8 @@ compute_residual(u) = {
 }
 
 # NewtonSolve takes a function (that should accept the primary variable as input) and the initial guess for the primary variable.
-# The primary variable decides which objects need to be AD objects in
-# the back-end, the rule is the following:
-#  1. The primary variable must be AD.
-#  2. All objects that depend on an AD variable must be AD.
-# In this concrete case, { u, fluxes, residual } must be AD.
-explicitu = u0 + compute_residual(u0)
-u = NewtonSolve(compute_residual, u0)
+explicitu = u0 + computeResidual(u0)
+u = NewtonSolve(computeResidual, u0)
 
 Output(u)
 Output(fluxes)
