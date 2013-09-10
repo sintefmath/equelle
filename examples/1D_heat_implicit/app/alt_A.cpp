@@ -55,7 +55,7 @@ int main(int argc, char** argv)
     const auto interior_faces = er.interiorFaces();
     const auto first = er.firstCell(interior_faces);
     const auto second = er.secondCell(interior_faces);
-    const auto itrans = k * er.norm(interior_faces) / er.norm(er.centroid(first) - er.centroid(second));
+    const CollOfScalars itrans = k * er.norm(interior_faces) / er.norm(er.centroid(first) - er.centroid(second));
 
     // --------------------------------------------------------------------------------
     // # Compute boundary transmissibilities.
@@ -67,7 +67,7 @@ int main(int argc, char** argv)
     const auto bf = er.boundaryFaces();
     const auto bf_cells = er.trinaryIf(er.isEmpty(er.firstCell(bf)), er.secondCell(bf), er.firstCell(bf));
     const auto bf_sign = er.trinaryIf(er.isEmpty(er.firstCell(bf)), er.operatorOn(double(-1), bf_cells), er.operatorOn(double(1), bf_cells));
-    const auto btrans = k * er.norm(bf) / er.norm(er.centroid(bf) - er.centroid(bf_cells));
+    const CollOfScalars btrans = k * er.norm(bf) / er.norm(er.centroid(bf) - er.centroid(bf_cells));
 
     // --------------------------------------------------------------------------------
     // # Compute quantities needed for boundary conditions.
@@ -100,12 +100,12 @@ int main(int argc, char** argv)
     // }
     // --------------------------------------------------------------------------------
     auto computeBoundaryFlux = [&](const CollOfScalars u) -> CollOfScalars {
-        const auto u_dirbdycells = er.operatorOn(u, er.allCells(), er.operatorOn(bf_cells, bf, dirichlet_boundary));
-        const CollOfScalars dir_fluxes = dir_sign * (u_dirbdycells - dirichlet_val);
+        const CollOfScalars u_dirbdycells = er.operatorOn(u, er.allCells(), er.operatorOn(bf_cells, bf, dirichlet_boundary));
+        const CollOfScalars dir_fluxes = btrans * dir_sign * (u_dirbdycells - dirichlet_val);
         return er.operatorOn(dir_fluxes, dirichlet_boundary, er.boundaryFaces());
     };
     auto computeBoundaryFluxAD = [&](const CollOfScalarsAD u) -> CollOfScalarsAD {
-        const auto u_dirbdycells = er.operatorOn(u, er.allCells(), er.operatorOn(bf_cells, bf, dirichlet_boundary));
+        const CollOfScalarsAD u_dirbdycells = er.operatorOn(u, er.allCells(), er.operatorOn(bf_cells, bf, dirichlet_boundary));
         const CollOfScalarsAD dir_fluxes = btrans * dir_sign * (u_dirbdycells - dirichlet_val);
         return er.operatorOn(dir_fluxes, dirichlet_boundary, er.boundaryFaces());
     };
@@ -124,26 +124,26 @@ int main(int argc, char** argv)
     // }
     // --------------------------------------------------------------------------------
     auto computeResidual = [&](const CollOfScalars u) -> CollOfScalars {
-        const auto ifluxes = computeInteriorFlux(u);
-        const auto bfluxes = computeBoundaryFlux(u);
-        const auto fluxes = er.operatorOn(ifluxes, er.interiorFaces(), er.allFaces()) + er.operatorOn(bfluxes, er.boundaryFaces(), er.allFaces());
-        const auto residual = u - u0 + (dt / vol) * er.divergence(fluxes);
+        const CollOfScalars ifluxes = computeInteriorFlux(u);
+        const CollOfScalars bfluxes = computeBoundaryFlux(u);
+        const CollOfScalars fluxes = er.operatorOn(ifluxes, er.interiorFaces(), er.allFaces()) + er.operatorOn(bfluxes, er.boundaryFaces(), er.allFaces());
+        const CollOfScalars residual = u - u0 + (dt / vol) * er.divergence(fluxes);
         return residual;
     };
     auto computeResidualAD = [&](const CollOfScalarsAD u) -> CollOfScalarsAD {
         const auto ifluxes = computeInteriorFluxAD(u);
         const auto bfluxes = computeBoundaryFluxAD(u);
         const auto fluxes = er.operatorOn(ifluxes, er.interiorFaces(), er.allFaces()) + er.operatorOn(bfluxes, er.boundaryFaces(), er.allFaces());
-        const auto residual = u - u0 + (dt / vol) * er.divergence(fluxes);
+        const CollOfScalarsAD residual = u - u0 + (dt / vol) * er.divergence(fluxes);
         return residual;
     };
 
     // --------------------------------------------------------------------------------
-    // explicitu = u0 + computeResidual(u0)
+    // explicitu = u0 - computeResidual(u0)
     // u = NewtonSolve(computeResidual, u0)
     // --------------------------------------------------------------------------------
-    const auto explicitu = u0 + computeResidual(u0);
-    const auto u = er.newtonSolve(computeResidualAD, u0);
+    const CollOfScalars explicitu = u0 - computeResidual(u0);
+    const CollOfScalarsAD u = er.newtonSolve(computeResidualAD, u0);
 
     // --------------------------------------------------------------------------------
     // Output(u)
