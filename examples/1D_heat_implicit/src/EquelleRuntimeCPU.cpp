@@ -232,7 +232,7 @@ CollOfScalars EquelleRuntimeCPU::gradient(const CollOfScalars& cell_scalarfield)
 
 CollOfScalarsAD EquelleRuntimeCPU::gradient(const CollOfScalarsAD& cell_scalarfield) const
 {
-    return ops_.ngrad * cell_scalarfield;
+    return ops_.grad * cell_scalarfield;
 }
 
 
