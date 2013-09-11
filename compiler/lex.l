@@ -53,26 +53,15 @@
 "InteriorVertices"		return INTERIOR_VERTICES;
 "FirstCell"				return FIRST_CELL;
 "SecondCell"			return SECOND_CELL;
-"FirstCells"			return FIRST_CELLS;
-"SecondCells"			return SECOND_CELLS;
 "Area"					return AREA;
-"Areas"					return AREAS;
 "Volume"				return VOLUME;
-"Volumes"				return VOLUMES;
 "Normal"				return NORMAL;
-"Normals"				return NORMALS;
 "Dot"					return DOT;
-"Dots"					return DOTS;
 "Length"				return LENGTH;
-"Lengths"				return LENGTHS;
 "EuclideanLength"		return EUCLIDEAN_LENGTH;
-"EuclideanLengths"		return EUCLIDEAN_LENGTHS;
 "Centroid"				return CENTROID;
-"Centroids"				return CENTROIDS;
 "Gradient"				return GRADIENT;
-"Gradients"				return GRADIENTS;
 "Divergence"			return DIVERGENCE;
-"Divergences"			return DIVERGENCES;
 "True"					return TRUE;
 "False"					return FALSE;
 "And"					return AND;
@@ -82,9 +71,6 @@
 "Ceil"					return CEIL;
 "Floor"					return FLOOR;
 "Abs"					return ABS;
-"Ceils"					return CEILS;
-"Floors"				return FLOORS;
-"Abses"					return ABSES;
 "Function"				return FUNCTION;
 "return"				return RETURN;
 "Min"					return MIN;
@@ -96,7 +82,6 @@
 "0"					{yylval.str = strdup(yytext); return NUMBER;}
 [1-9][0-9]*		 	{yylval.str = strdup(yytext); return NUMBER;}
 [a-z][a-zA-Z0-9_]*	{yylval.str = strdup(yytext); return VARIABLE;}
-  /* [g][a-zA-Z0-9_]*	{yylval.str = strdup(yytext); return FUNCTION_VARIABLE;}		*/
 
 
 [#][^\n]*			{yylval.str = strdup(yytext); return COMMENT;}
