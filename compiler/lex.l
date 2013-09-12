@@ -1,6 +1,8 @@
 %{
+#include <string>
+using namespace std;
 #include "y.tab.h"
-#include "string.h"
+
 %}
 
 %%

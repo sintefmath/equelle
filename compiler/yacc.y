@@ -75,11 +75,11 @@
 
 %{
 
-#include <stdio.h>
-#include <stdbool.h>
+#include <cstdio>
+//#include <stdbool.h>
 #include <sstream>
 #include <string>
-#include <string.h>
+#include <cstring>
 #ifndef _MSC_VER
   #define HEAP_CHECK()
 #else
@@ -278,7 +278,7 @@ s^d                              all cells
   struct info
   {
       double size;
-      string str;
+      char* str;
   };
 
   // struct array
@@ -289,8 +289,8 @@ s^d                              all cells
 
   struct dinfo
   {
-      string cCode;
-      string sepCode;
+      char* cCode;
+      char* sepCode;
   };
 }
 
@@ -299,10 +299,10 @@ s^d                              all cells
 %union
 {
   int value;
-  string str;           // the non-terminals which need to store only the translation code for C++ will be declared with this type
-  struct info inf;      // the non-terminals which need to store both the translation code for C++ and the size of the collection will be declared with this type
+  char* str;           // the non-terminals which need to store only the translation code for C++ will be declared with this type
+  info inf;      // the non-terminals which need to store both the translation code for C++ and the size of the collection will be declared with this type
   //struct array arr;   // the values which are passed as arguments when calling a function must be checked to see if they correspond to the function's template
-  struct dinfo dinf;
+  dinfo dinf;
 };
 
 
@@ -311,7 +311,7 @@ s^d                              all cells
 
 scalar_expr: scalar_term 		                 {$$ = $1;}
            | '-' scalar_term                 {stringstream ss; ss << "-" << $2; $$ = ss.str();}
-           | scalar_expr '+' scalar_term	   {stringstream ss; ss << $1 << " + " << $3; $$ = ss.str();}
+           | scalar_expr '+' scalar_term	   {stringstream ss; ss << $1 << " + " << $3; $$ = strdup(ss.str().c_str());}
            | scalar_expr '-' scalar_term	   {stringstream ss; ss << $1 << " - " << $3; $$ = ss.str();}
            ;
 
