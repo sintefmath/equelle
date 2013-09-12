@@ -76,8 +76,10 @@
 %{
 
 #include <stdio.h>
-#include <string.h>
 #include <stdbool.h>
+#include <sstream>
+#include <string>
+#include <string.h>
 #ifndef _MSC_VER
   #define HEAP_CHECK()
 #else
@@ -85,57 +87,42 @@
   #define HEAP_CHECK() _ASSERTE( _CrtCheckMemory( ) )
 #endif
 
+using namespace std;
 
 void yyerror(const char* s);
 int yylex(void);
-char* append1(char *s1, char s2, char *s3);
-char* append2(char s1, char *s2, char s3);
-char* append3(char *s1, char s2, char *s3, char s4);
-char* append4(char *s1, char s2, char *s3, char s4, char *s5, char s6);
-char* append5(char *s1, char s2, char *s3);
-char* append6(char *s1, char *s2, char *s3);
-char* append7(char s1, char *s2);
-char* append8(char s1, char s2, char *s3, char s4);
-char* append9(char *s1, char s2, char *s3);
-char* append10(char *s1, char *s2);
-char* append11(char *s1, char *s2, char s3, char *s4, char s5);
-char* append12(char *s1, char s2, char *s3, char s4);
-char* append13(char *s1, char *s2, char *s3, char *s4, char *s5, char *s6, char s7);
-char* append14(char s1, char *s2, char s3, char s4, char s5, char *s6, char s7);
-char* append15(char s1, char *s2, char s3, char *s4, char s5, char *s6, char s7);
-bool find1(char *s1, char *s2);
-char* find2(char *s1);
-char* find3(char *s1);
-int find4(char *s1);
-char* find5(char *s1);
-char* find6(char *s1);
-bool check1(char *s1);
-bool check2(char *s1);
-bool check3(char *s1);
-bool check4(char *s1);
-bool check5(char *s1);
-bool check6(char *s1);
-bool check7(char *s1);
-bool check8(char *s1, char *s2);
-char* getType(char *s1);
-int getIndex1(char *s1);
-int getIndex2(char *s1);
-double getSize1(char *s1);
-double getSize2(char *s1);
-double getSize3(char *s1);
-int getSize4(char *s1);
-char* extract(char *s1);
-char* structureToString(char *st);
-char *CPPToEquelle1(char *st);
-int CPPToEquelle2(char *st);
-char* singular_declaration_function(char *st1, char *st2);
-char* plural_declaration_function(char *st1, char *st2);
-char* extended_plural_declaration_function(char *st1, char *st2, char *st3, double d1);
-char* singular_assignment_function(char *st1, char *st2, char *st3, char *st4);
-char* plural_assignment_function(char *st1, char *st2, char *st3, char *st4, double d1);
-char* singular_declaration_with_assignment_function(char *st1, char *st2, char *st3, char *st4);
-char* plural_declaration_with_assignment_function(char *st1, char *st2, char *st3, char *st4, double d1);
-char* extended_plural_declaration_with_assignment_function(char *st1, char *st2, char *st3, char *st4, char *st5, double d1, double d2);
+bool find1(string s1, string s2);
+string find2(string s1);
+string find3(string s1);
+int find4(string s1);
+string find5(string s1);
+string find6(string s1);
+bool check1(string s1);
+bool check2(string s1);
+bool check3(string s1);
+bool check4(string s1);
+bool check5(string s1);
+bool check6(string s1);
+bool check7(string s1);
+bool check8(string s1, string s2);
+string getType(string s1);
+int getIndex1(string s1);
+int getIndex2(string s1);
+double getSize1(string s1);
+double getSize2(string s1);
+double getSize3(string s1);
+int getSize4(string s1);
+string extract(string s1);
+string CPPToEquelle1(string st);
+int CPPToEquelle2(string st);
+string singular_declaration_function(string st1, string st2);
+string plural_declaration_function(string st1, string st2);
+string extended_plural_declaration_function(string st1, string st2, string st3, double d1);
+string singular_assignment_function(string st1, string st2, string st3, string st4);
+string plural_assignment_function(string st1, string st2, string st3, string st4, double d1);
+string singular_declaration_with_assignment_function(string st1, string st2, string st3, string st4);
+string plural_declaration_with_assignment_function(string st1, string st2, string st3, string st4, double d1);
+string extended_plural_declaration_with_assignment_function(string st1, string st2, string st3, string st4, string st5, double d1, double d2);
 
 
 
@@ -144,12 +131,12 @@ char* extended_plural_declaration_with_assignment_function(char *st1, char *st2,
 // global structure and counter for storing the names of the variables of each type (used for stopping variables reassignment)
 struct VariableStructure
 {
-  char *name;       // must begin with a small letter
-  char *type;       // can be: scalar, vector, vertex, scalars etc.
-  double length;    // if the type is a singular type, then the length is 1; otherwise it can be any other number >= 1
-  bool assigned;    // we want to know if a variable has been assigned, in order to prevent errors (example: operations with unassigned variables)
-}
-var[10000];
+  string name;       // must begin with a small letter
+  string type;       // can be: scalar, vector, vertex, scalars etc.
+  double length;     // if the type is a singular type, then the length is 1; otherwise it can be any other number >= 1
+  bool assigned;     // we want to know if a variable has been assigned, in order to prevent errors (example: operations with unassigned variables)
+};
+VariableStructure var[10000];
 
 int varNo = 0;
 
@@ -157,17 +144,17 @@ int varNo = 0;
 // global structure and counter for storing the names of the functions
 struct FunctionStructure
 {
-  char *name;                 // g1
-  char *returnType;           // Collection Of Scalars
-  double returnSize;          // 8
-  char *paramList;            // (Cell, Face, Collection Of Vectors, Collection Of Scalars On AllFaces(Grid))
-  struct VariableStructure headerVariables[100];     // (c1, f1, pv1, ps1)
-  int noParam;                // 4
-  struct VariableStructure localVariables[100];      // var1, var2, var3
-  int noLocalVariables;       // 3
+  string name;                                // g1
+  string returnType;                          // Collection Of Scalars
+  double returnSize;                          // 8
+  string paramList;                           // (Cell, Face, Collection Of Vectors, Collection Of Scalars On AllFaces(Grid))
+  VariableStructure headerVariables[100];     // (c1, f1, pv1, ps1)
+  int noParam;                                // 4
+  VariableStructure localVariables[100];      // var1, var2, var3
+  int noLocalVariables;                       // 3
   bool assigned;              // false
-}
-fun[10000];
+};
+FunctionStructure fun[10000];
 
 int funNo = 0;
 
@@ -193,7 +180,7 @@ s^d                              all cells
 // we define constant values for the number of cells, faces, edges and vertices in the grid, in order to detect length-mismatch errors at operations involving these entities
 // as they don't collide (for example, an operation to involve both collections on internal cells and on boundary cells), we need to define these constant values to be coprime and distanced integers (in order to avoid creating a relation between them)
 
-// by summing any multiple of the below values between them, we cannot obtain another unique value (except for: Interior + Boundary = All)
+// by summing any multiples of the below values between them, we cannot obtain another unique value (except for: Interior + Boundary = All)
 
 #define INTERIORCELLS     1.01
 #define BOUNDARYCELLS     1.02
@@ -291,7 +278,7 @@ s^d                              all cells
   struct info
   {
       double size;
-      char *str;
+      string str;
   };
 
   // struct array
@@ -302,8 +289,8 @@ s^d                              all cells
 
   struct dinfo
   {
-      char *cCode;
-      char *sepCode;
+      string cCode;
+      string sepCode;
   };
 }
 
@@ -312,9 +299,9 @@ s^d                              all cells
 %union
 {
   int value;
-  char *str;          // the non-terminals which need to store only the translation code for C++ will be declared with this type
-  struct info inf;    // the non-terminals which need to store both the translation code for C++ and the size of the collection will be declared with this type
-  //struct array arr;   // the values which are passed are arguments when calling a function must be checked that correspond to the function's template
+  string str;           // the non-terminals which need to store only the translation code for C++ will be declared with this type
+  struct info inf;      // the non-terminals which need to store both the translation code for C++ and the size of the collection will be declared with this type
+  //struct array arr;   // the values which are passed as arguments when calling a function must be checked to see if they correspond to the function's template
   struct dinfo dinf;
 };
 
@@ -322,71 +309,101 @@ s^d                              all cells
 %%
 
 
-scalar_expr: scalar_term 		                 {$$ = strdup($1);}
-           | '-' scalar_term                 {char *str = append7('-',$2); $$ = strdup(str); free(str);}
-           | scalar_expr '+' scalar_term	   {char *str = append1($1,'+',$3); $$ = strdup(str); free(str);}
-           | scalar_expr '-' scalar_term	   {char *str = append1($1,'-',$3); $$ = strdup(str); free(str);}
+scalar_expr: scalar_term 		                 {$$ = $1;}
+           | '-' scalar_term                 {stringstream ss; ss << "-" << $2; $$ = ss.str();}
+           | scalar_expr '+' scalar_term	   {stringstream ss; ss << $1 << " + " << $3; $$ = ss.str();}
+           | scalar_expr '-' scalar_term	   {stringstream ss; ss << $1 << " - " << $3; $$ = ss.str();}
            ;
 
 
-scalar_term: scalar_factor		                       {$$ = strdup($1);}
-           | scalar_term '*' scalar_factor	         {char *str = append1($1,'*',$3); $$ = strdup(str); free(str);}
-           | scalar_factor '*' scalar_term           {char *str = append1($1,'*',$3); $$ = strdup(str); free(str);}
-           | scalar_term '/' scalar_factor	         {char *str = append1($1,'/',$3); $$ = strdup(str); free(str);}
-           | scalar_term '^' scalar_factor           {char *str = append4("er.pow", '(', $1, ',', $3, ')'); $$ = strdup(str); free(str);}
+scalar_term: scalar_factor		                       {$$ = $1;}
+           | scalar_term '*' scalar_factor	         {stringstream ss; ss << $1 << " * " << $3; $$ = ss.str();}
+           | scalar_factor '*' scalar_term           {stringstream ss; ss << $1 << " * " << $3; $$ = ss.str();}
+           | scalar_term '/' scalar_factor	         {stringstream ss; ss << $1 << " / " << $3; $$ = ss.str();}
+           | scalar_term '^' scalar_factor           {stringstream ss; ss << "er.pow(" << $1 << ", " << $3 << ")"; $$ = ss.str();}
            ;
 
 
-scalar_factor: NUMBER		                               {$$ = strdup($1);}
-             | NUMBER '.' NUMBER                       {char *str = append9($1, '.', $3); $$ = strdup(str); free(str);}
-             | '(' scalar_expr ')'	                   {char *str = append2('(', $2, ')'); $$ = strdup(str); free(str);}
-             | EUCLIDEAN_LENGTH '(' vector_expr ')'    {char *str = append3("er.euclideanLength", '(', $3, ')'); $$ = strdup(str); free(str);}
-             | LENGTH '(' edge ')'                     {char *str = append3("er.length", '(', $3, ')'); $$ = strdup(str); free(str);}
-             | AREA '(' face ')'                       {char *str = append3("er.area", '(', $3, ')'); $$ = strdup(str); free(str);}
-             | VOLUME '(' cell ')'                     {char *str = append3("er.volume", '(', $3, ')'); $$ = strdup(str); free(str);}
-             | DOT '(' vector_expr ',' vector_expr ')' {char *str = append4("er.dot", '(', $3, ',', $5, ')'); $$ = strdup(str); free(str);}
-             | CEIL '(' scalar_expr ')'                {char *str = append3("er.ceil", '(', $3, ')'); $$ = strdup(str); free(str);}
-             | FLOOR '(' scalar_expr ')'               {char *str = append3("er.floor", '(', $3, ')'); $$ = strdup(str); free(str);}
-             | ABS '(' scalar_expr ')'                 {char *str = append3("er.abs", '(', $3, ')'); $$ = strdup(str); free(str);}
-             | MIN '(' scalars ')'                     {char *str = append3("er.min", '(', $3.str, ')'); $$ = strdup(str); free(str);}
-             | MAX '(' scalars ')'                     {char *str = append3("er.max", '(', $3.str, ')'); $$ = strdup(str); free(str);}
+scalar_factor: NUMBER		                               {$$ = $1;}
+             | NUMBER '.' NUMBER                       {stringstream ss; ss << $1 << "." << $3; $$ = ss.str();}
+             | '(' scalar_expr ')'	                   {stringstream ss; ss << "(" << $2 << ")"; $$ = ss.str();}
+             | EUCLIDEAN_LENGTH '(' vector_expr ')'    {stringstream ss; ss << "er.euclideanLength(" << $3 << ")"; $$ = ss.str();}
+             | LENGTH '(' edge ')'                     {stringstream ss; ss << "er.length(" << $3 << ")"; $$ = ss.str();}
+             | AREA '(' face ')'                       {stringstream ss; ss << "er.area(" << $3 << ")"; $$ = ss.str();}
+             | VOLUME '(' cell ')'                     {stringstream ss; ss << "er.volume(" << $3 << ")"; $$ = ss.str();}
+             | DOT '(' vector_expr ',' vector_expr ')' {stringstream ss; ss << "er.dot(" << $3 << ", " << $5 << ")"; $$ = ss.str();}
+             | CEIL '(' scalar_expr ')'                {stringstream ss; ss << "er.ceil(" << $3 << ")"; $$ = ss.str();}
+             | FLOOR '(' scalar_expr ')'               {stringstream ss; ss << "er.floor(" << $3 << ")"; $$ = ss.str();}
+             | ABS '(' scalar_expr ')'                 {stringstream ss; ss << "er.abs(" << $3 << ")"; $$ = ss.str();}
+             | MIN '(' scalars ')'                     {stringstream ss; ss << "er.min(" << $3 << ")"; $$ = ss.str();}
+             | MAX '(' scalars ')'                     {stringstream ss; ss << "er.max(" << $3 << ")"; $$ = ss.str();}
              | VARIABLE                                {
                                                           if(strcmp(getType($1), "scalar") != 0)
                                                           {
-                                                              $$ = strdup("wrong_type_error");   // we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
-                                                              $$ = strcat($$, "  ");
-                                                              $$ = strcat($$, $1);
+                                                              stringstream ss;
+                                                              ss << "wrong_type_error  " << $1;   // we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
+                                                              $$ = ss.str();
                                                           }
                                                           else
                                                           {
-                                                              $$ = strdup($1);
+                                                              $$ = $1;
                                                           }
                                                        }
 
              | VARIABLE '(' values ')'                 {
                                                           if(getIndex2($1) == -1)
-                                                              sprintf($$, "error1: This function does not exist");
+                                                          {
+                                                            stringstream ss;
+                                                            ss << "error1: This function does not exist";
+                                                            $$ = ss.str();
+                                                          }
                                                           else
                                                               if(fun[getIndex2($1)].assigned == false)
-                                                                  sprintf($$, "error2: The function is not assigned");
+                                                              {
+                                                                stringstream ss;
+                                                                ss << "error2: The function is not assigned";
+                                                                $$ = ss.str();
+                                                              }
                                                               else
                                                                   if(strcmp(fun[getIndex2($1)].returnType, "Scalar") != 0)
-                                                                      sprintf($$, "error3: The return type of the function is not a scalar type");
+                                                                  {
+                                                                    stringstream ss;
+                                                                    ss << "error3: The return type of the function is not a scalar type";
+                                                                    $$ = ss.str();
+                                                                  }
                                                                   else
                                                                       if(fun[getIndex2($1)].noParam != getSize4($3))
-                                                                          sprintf($$, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
+                                                                      {
+                                                                        stringstream ss;
+                                                                        ss << "error4: The number of arguments of the function does not correspond to the number of arguments sent";
+                                                                        $$ = ss.str();
+                                                                      }
                                                                       else
                                                                           if(check1($3) == false)
-                                                                              sprintf($$, "error5: One input variable from the function's call is undefined");
+                                                                          {
+                                                                            stringstream ss;
+                                                                            ss << "error5: One input variable from the function's call is undefined";
+                                                                            $$ = ss.str();
+                                                                          }
                                                                           else
                                                                               if(check2($3) == false)
-                                                                                  sprintf($$, "error6: One input variable from the function's call is unassigned");
+                                                                              {
+                                                                                stringstream ss;
+                                                                                ss << "error6: One input variable from the function's call is unassigned";
+                                                                                $$ = ss.str();
+                                                                              }
                                                                               else
                                                                                   if(check8($3, fun[getIndex2($1)].paramList) == false)
-                                                                                      sprintf($$, "error7: The parameter list of the template of the function does not correspond to the given parameter list");
+                                                                                  {
+                                                                                    stringstream ss;
+                                                                                    ss << "error7: The parameter list of the template of the function does not correspond to the given parameter list";
+                                                                                    $$ = ss.str();
+                                                                                  }
                                                                                   else
                                                                                   {
-                                                                                      $$ = append3($1, '(', $3, ')');
+                                                                                      stringstream ss;
+                                                                                      ss << $1 << "(" << $3 << ")";
+                                                                                      $$ = ss.str();
                                                                                   }
                                                        }
              ;
@@ -534,35 +551,35 @@ scalar_factors: EUCLIDEAN_LENGTH '(' vector_exprs ')'           {char *str = app
               ;
 
 
-numbers: NUMBER                         {$$ = strdup($1);}
-       | numbers ',' NUMBER             {char *str = append5($1,',',$3); $$ = strdup(str); free(str);}
+numbers: NUMBER                         {$$ = $1;}
+       | numbers ',' NUMBER             {stringstream ss; ss << $1 << ", " << $3; $$ = ss.str();}
        ;
 
 
-vector_expr: vector_term                      {$$ = strdup($1);}
-           | '-' vector_term                  {char *str = append7('-',$2); $$ = strdup(str); free(str);}
-           | vector_expr '+' vector_term      {char *str = append1($1,'+',$3); $$ = strdup(str); free(str);}
-           | vector_expr '-' vector_term      {char *str = append1($1,'-',$3); $$ = strdup(str); free(str);}
+vector_expr: vector_term                      {$$ = $1;}
+           | '-' vector_term                  {stringstream ss; ss << "-" << $2; $$ = ss.str();}
+           | vector_expr '+' vector_term      {stringstream ss; ss << $1 << " + " << $3; $$ = ss.str();}
+           | vector_expr '-' vector_term      {stringstream ss; ss << $1 << " - " << $3; $$ = ss.str();}
            ;
 
 
-vector_term: '(' numbers ')'                       {char *str = append2('(', $2, ')'); $$ = strdup(str); free(str);}
-           | CENTROID '(' cell ')'                 {char *str = append3("er.centroid", '(', $3, ')'); $$ = strdup(str); free(str);}
-           | NORMAL '(' face ')'                   {char *str = append3("er.normal", '(', $3, ')'); $$ = strdup(str); free(str);}
-           | '(' vector_expr ')'                   {char *str = append2('(', $2, ')'); $$ = strdup(str); free(str);}          // produces 1 shift/reduce conflict
-           | vector_term '*' scalar_factor         {char *str = append1($1,'*',$3); $$ = strdup(str); free(str);}             // produces 1 reduce/reduce conflict
-           | scalar_factor '*' vector_term         {char *str = append1($1,'*',$3); $$ = strdup(str); free(str);}
-           | vector_term '/' scalar_factor         {char *str = append1($1,'/',$3); $$ = strdup(str); free(str);}
+vector_term: '(' numbers ')'                       {stringstream ss; ss << "(" << $2 << ")"; $$ = ss.str();}
+           | CENTROID '(' cell ')'                 {stringstream ss; ss << "er.centroid(" << $3 << ")"; $$ = ss.str();}
+           | NORMAL '(' face ')'                   {stringstream ss; ss << "er.normal(" << $3 << ")"; $$ = ss.str();}
+           | '(' vector_expr ')'                   {stringstream ss; ss << "(" << $2 << ")"; $$ = ss.str();}              // produces 1 shift/reduce conflict
+           | vector_term '*' scalar_factor         {stringstream ss; ss << $1 << " * " << $3; $$ = ss.str();}             // produces 1 reduce/reduce conflict
+           | scalar_factor '*' vector_term         {stringstream ss; ss << $1 << " * " << $3; $$ = ss.str();}
+           | vector_term '/' scalar_factor         {stringstream ss; ss << $1 << " / " << $3; $$ = ss.str();}
            | VARIABLE                              {
                                                       if(strcmp(getType($1), "vector") != 0)
                                                       {
-                                                          $$ = strdup("wrong_type_error");   // we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
-                                                          $$ = strcat($$, "  ");
-                                                          $$ = strcat($$, $1);
+                                                          stringstream ss;
+                                                          ss << "wrong_type_error  " << $1;     // we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
+                                                          $$ = ss.str();
                                                       }
                                                       else
                                                       {
-                                                          $$ = strdup($1);
+                                                          $$ = $1;
                                                       }
                                                    }
 
@@ -1556,7 +1573,11 @@ function_declaration: VARIABLE ':' FUNCTION '(' parameter_list ')' RET type
                                                     }
 
                                                 if(declaredBefore == true)
-                                                    sprintf($$, "error: The function '%s' is redeclared", $1);
+                                                {
+                                                    stringstream ss;
+                                                    ss << "error: The function " << $1 << "' is redeclared";
+                                                    $$ = ss.str();
+                                                }
                                                 else
                                                 {
                                                         fun[funNo++].name = strdup($1);
@@ -1612,7 +1633,11 @@ function_assignment: function_start end_lines commands end_lines return_instr en
 
                                                 if(declaredBefore == true)
                                                       if(fun[i].assigned == true)
-                                                          sprintf($$, "error: The function '%s' is reassigned", fun[i].name);
+                                                      {
+                                                          stringstream ss;
+                                                          ss << "error: The function '" << fun[i].name << "' is reassigned";
+                                                          $$ = ss.str();
+                                                      }
                                                       else
                                                       {
                                                           if($5.size != -1)
@@ -1631,11 +1656,18 @@ function_assignment: function_start end_lines commands end_lines return_instr en
                                                               fun[i].assigned = true;
                                                           }
                                                           else
-                                                              sprintf($$, "error: At least one of the return variables does not exist within the function or the return type of the function '%s' from its assignment differs than the length of the return type from the function's definition", fun[i].name);
+                                                          {
+                                                              stringstream ss;
+                                                              ss << "error: At least one of the return variables does not exist within the function or the return type of the function '" << fun[i].name << "' from its assignment differs than the length of the return type from the function's definition";
+                                                              $$ = ss.str();
+                                                          }
+
                                                       }
                                                 else
                                                 {
-                                                    sprintf($$, "error: The function '%s' must be declared before being assigned", extract($1));
+                                                    stringstream ss;
+                                                    ss << "error: The function '" << extract($1) <<"' must be declared before being assigned";
+                                                    $$ = ss.str();
                                                 }
                                                 insideFunction = false;
                                                 currentFunctionIndex = -1;
@@ -1652,25 +1684,25 @@ function_assignment: function_start end_lines commands end_lines return_instr en
 
 
 
-singular_declaration: VARIABLE ':' SCALAR               {char* out = singular_declaration_function($1, "scalar"); $$ = out;}
-                    | VARIABLE ':' VECTOR               {char* out = singular_declaration_function($1, "vector"); $$ = out;}
-                    | VARIABLE ':' VERTEX               {char* out = singular_declaration_function($1, "vertex"); $$ = out;}
-                    | VARIABLE ':' EDGE                 {char* out = singular_declaration_function($1, "edge"); $$ = out;}
-                    | VARIABLE ':' FACE                 {char* out = singular_declaration_function($1, "face"); $$ = out;}
-                    | VARIABLE ':' CELL                 {char* out = singular_declaration_function($1, "cell"); $$ = out;}
-                    | VARIABLE ':' ADB                  {char* out = singular_declaration_function($1, "scalarAD"); $$ = out;}
-                    | VARIABLE ':' BOOLEAN              {char* out = singular_declaration_function($1, "bool"); $$ = out;}
+singular_declaration: VARIABLE ':' SCALAR               {$$ = singular_declaration_function($1, "scalar");}
+                    | VARIABLE ':' VECTOR               {$$ = singular_declaration_function($1, "vector");}
+                    | VARIABLE ':' VERTEX               {$$ = singular_declaration_function($1, "vertex");}
+                    | VARIABLE ':' EDGE                 {$$ = singular_declaration_function($1, "edge");}
+                    | VARIABLE ':' FACE                 {$$ = singular_declaration_function($1, "face");}
+                    | VARIABLE ':' CELL                 {$$ = singular_declaration_function($1, "cell");}
+                    | VARIABLE ':' ADB                  {$$ = singular_declaration_function($1, "scalarAD");}
+                    | VARIABLE ':' BOOLEAN              {$$ = singular_declaration_function($1, "bool");}
                     ;
 
 
-plural_declaration: VARIABLE ':' COLLECTION OF SCALAR       {char* out = plural_declaration_function($1, "scalars"); $$ = out;}
-                  | VARIABLE ':' COLLECTION OF VECTOR       {char* out = plural_declaration_function($1, "vectors"); $$ = out;}
-                  | VARIABLE ':' COLLECTION OF VERTEX       {char* out = plural_declaration_function($1, "vertices"); $$ = out;}
-                  | VARIABLE ':' COLLECTION OF EDGE         {char* out = plural_declaration_function($1, "edges"); $$ = out;}
-                  | VARIABLE ':' COLLECTION OF FACE         {char* out = plural_declaration_function($1, "faces"); $$ = out;}
-                  | VARIABLE ':' COLLECTION OF CELL         {char* out = plural_declaration_function($1, "cells"); $$ = out;}
-                  | VARIABLE ':' COLLECTION OF ADB          {char* out = plural_declaration_function($1, "scalarsAD"); $$ = out;}
-                  | VARIABLE ':' COLLECTION OF BOOLEAN      {char* out = plural_declaration_function($1, "bools"); $$ = out;}
+plural_declaration: VARIABLE ':' COLLECTION OF SCALAR       {$$ = plural_declaration_function($1, "scalars");}
+                  | VARIABLE ':' COLLECTION OF VECTOR       {$$ = plural_declaration_function($1, "vectors");}
+                  | VARIABLE ':' COLLECTION OF VERTEX       {$$ = plural_declaration_function($1, "vertices");}
+                  | VARIABLE ':' COLLECTION OF EDGE         {$$ = plural_declaration_function($1, "edges");}
+                  | VARIABLE ':' COLLECTION OF FACE         {$$ = plural_declaration_function($1, "faces");}
+                  | VARIABLE ':' COLLECTION OF CELL         {$$ = plural_declaration_function($1, "cells");}
+                  | VARIABLE ':' COLLECTION OF ADB          {$$ = plural_declaration_function($1, "scalarsAD");}
+                  | VARIABLE ':' COLLECTION OF BOOLEAN      {$$ = plural_declaration_function($1, "bools");}
                   ;
 
 
@@ -1808,7 +1840,7 @@ extern int yyparse();
 int main()
 {
   HEAP_CHECK();
-  printf("Opm::parameter::ParameterGroup param(argc, argv, false);\nEquelleRuntimeCPU er(param);\nUserParameters up(param, er);\n\n");
+  cout << "Opm::parameter::ParameterGroup param(argc, argv, false);" << endl << "EquelleRuntimeCPU er(param);" << endl << "UserParameters up(param, er);" << endl << endl;
   HEAP_CHECK();
   yyparse();
   HEAP_CHECK();
@@ -1819,191 +1851,13 @@ int main()
 void yyerror(const char* s)
 {
   HEAP_CHECK();
-  printf("%s",s);
+  cout << s;
 }
 
 
-char* append1(char *s1, char s2, char *s3)
-{
-  HEAP_CHECK();
-  char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s3)+3));
-
-  sprintf(str, "%s %c %s", s1, s2, s3);
-
-  HEAP_CHECK();
-  return str;
-}
 
 
-char* append2(char s1, char *s2, char s3)
-{
-  HEAP_CHECK();
-  char *str = (char*)malloc(5*sizeof(char)*(strlen(s2)+2));
-
-  sprintf(str, "%c%s%c", s1, s2, s3);
-
-  HEAP_CHECK();
-  return str;
-}
-
-
-char* append3(char *s1, char s2, char *s3, char s4)
-{
-  HEAP_CHECK();
-  char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s3)+2));
-
-  sprintf(str, "%s%c%s%c", s1, s2, s3, s4);
-
-  HEAP_CHECK();
-  return str;
-}
-
-
-char* append4(char *s1, char s2, char *s3, char s4, char *s5, char s6)
-{
-  HEAP_CHECK();
-  char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s3)+strlen(s5)+4));
-
-  sprintf(str, "%s%c%s%c %s%c", s1, s2, s3, s4, s5, s6);
-
-  HEAP_CHECK();
-  return str;
-}
-
-
-char* append5(char *s1, char s2, char *s3)
-{
-  HEAP_CHECK();
-  char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s3)+2));
-
-  sprintf(str, "%s%c %s", s1, s2, s3);
-
-  HEAP_CHECK();
-  return str;
-}
-
-
-char *append6(char *s1, char *s2, char *s3)
-{
-  HEAP_CHECK();
-  char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s2)+strlen(s3)+2));
-
-  sprintf(str, "%s %s %s", s1, s2, s3);
-
-  HEAP_CHECK();
-  return str;
-}
-
-
-char* append7(char s1, char *s2)
-{
-  HEAP_CHECK();
-  char *str = (char*)malloc(5*sizeof(char)*(strlen(s2)+1));
-
-  sprintf(str, "%c%s", s1, s2);
-
-  HEAP_CHECK();
-  return str;
-}
-
-
-char* append8(char s1, char s2, char *s3, char s4)
-{
-  HEAP_CHECK();
-  char *str = (char*)malloc(5*sizeof(char)*(strlen(s3)+3));
-
-  sprintf(str, "%c%c%s%c", s1, s2, s3, s4);
-
-  HEAP_CHECK();
-  return str;
-}
-
-
-char* append9(char *s1, char s2, char *s3)
-{
-  HEAP_CHECK();
-  char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s3)+1));
-
-  sprintf(str, "%s%c%s", s1, s2, s3);
-
-  HEAP_CHECK();
-  return str;
-}
-
-
-char* append10(char *s1, char *s2)   // function which returns the C++ code for the XOR between the two given variables: (s1 && (!s2)) || (s2 && (!s1))
-{
-  HEAP_CHECK();
-  char *str = (char*)malloc(5*sizeof(char)*(2*(strlen(s1)+strlen(s2))+22));
-
-  sprintf(str, "(%s && (!%s)) || (%s && (!%s))", s1, s2, s2, s1);
-
-  HEAP_CHECK();
-  return str;
-}
-
-
-char* append11(char *s1, char *s2, char s3, char *s4, char s5)
-{
-  HEAP_CHECK();
-  char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s2)+strlen(s4)+3));
-
-  sprintf(str, "%s %s%c%s%c", s1, s2, s3, s4, s5);
-
-  HEAP_CHECK();
-  return str;
-}
-
-
-char* append12(char *s1, char s2, char *s3, char s4)
-{
-  HEAP_CHECK();
-  char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s3)+4));
-
-  sprintf(str, "%s %c %s%c", s1, s2, s3, s4);
-
-  HEAP_CHECK();
-  return str;
-}
-
-
-char* append13(char *s1, char *s2, char *s3, char *s4, char *s5, char *s6, char s7)
-{
-  HEAP_CHECK();
-  char *str = (char*)malloc(5*sizeof(char)*(strlen(s1)+strlen(s2)+strlen(s3)+strlen(s4)+strlen(s5)+strlen(s6)+1));
-
-  sprintf(str, "%s%s%s%s%s%s%c", s1, s2, s3, s4, s5, s6, s7);
-
-  HEAP_CHECK();
-  return str;
-}
-
-
-char* append14(char s1, char *s2, char s3, char s4, char s5, char *s6, char s7)
-{
-  HEAP_CHECK();
-  char *str = (char*)malloc(5*sizeof(char)*(strlen(s2)+strlen(s6)+7));
-
-  sprintf(str, "%c%s%c %c %c%s%c", s1, s2, s3, s4, s5, s6, s7);
-
-  HEAP_CHECK();
-  return str;
-}
-
-
-char* append15(char s1, char *s2, char s3, char *s4, char s5, char *s6, char s7)
-{
-  HEAP_CHECK();
-  char *str = (char*)malloc(5*sizeof(char)*(strlen(s2)+strlen(s4)+strlen(s6)+6));
-
-  sprintf(str, "%c%s%c %s %c%s%c", s1, s2, s3, s4, s5, s6, s7);
-
-  HEAP_CHECK();
-  return str;
-}
-
-
-bool find1(char *s1, char *s2)     // function which returns true if s2 is contained in s1
+bool find1(string s1, string s2)     // function which returns true if s2 is contained in s1
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -2023,7 +1877,7 @@ bool find1(char *s1, char *s2)     // function which returns true if s2 is conta
 }
 
 
-char* find2(char *s1)   // function which returns the first undeclared variable from a given expression (this function is called after the function "check1" returns false)
+string find2(string s1)   // function which returns the first undeclared variable from a given expression (this function is called after the function "check1" returns false)
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -2062,7 +1916,7 @@ char* find2(char *s1)   // function which returns the first undeclared variable 
 }
 
 
-char* find3(char *s1)     // function which returns the first unassigned variable from a given expression (this function is called after the function "check2" returns false)
+string find3(string s1)     // function which returns the first unassigned variable from a given expression (this function is called after the function "check2" returns false)
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -2107,7 +1961,7 @@ int find4(char *s1)       // function which returns the number of parameters fro
 }
 
 
-char* find5(char *s1)   // function which returns the first undeclared variable from a given expression inside a function (this function is called after the function "check3" returns false)
+string find5(string s1)   // function which returns the first undeclared variable from a given expression inside a function (this function is called after the function "check3" returns false)
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -2153,7 +2007,7 @@ char* find5(char *s1)   // function which returns the first undeclared variable 
 }
 
 
-char* find6(char *s1)     // function which returns the first unassigned variable from a given expression inside a function (this function is called after the function "check4" returns false)
+string find6(string s1)     // function which returns the first unassigned variable from a given expression inside a function (this function is called after the function "check4" returns false)
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -2181,7 +2035,7 @@ char* find6(char *s1)     // function which returns the first unassigned variabl
 }
 
 
-bool check1(char *s1)   // function which checks if each variable (one that begins with a small letter and it's not a function) from a given expression was declared
+bool check1(string s1)   // function which checks if each variable (one that begins with a small letter and it's not a function) from a given expression was declared
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -2220,7 +2074,7 @@ bool check1(char *s1)   // function which checks if each variable (one that begi
 }
 
 
-bool check2(char *s1)     // function which checks if each variable from a given expression was assigned to a value, and returns false if not
+bool check2(string s1)     // function which checks if each variable from a given expression was assigned to a value, and returns false if not
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -2248,7 +2102,7 @@ bool check2(char *s1)     // function which checks if each variable from a given
 }
 
 
-bool check3(char *s1)     // function which checks if each variable from a given expression (which is inside a function) is declared as a header or local variable in the current function (indicated by a global index)
+bool check3(string s1)     // function which checks if each variable from a given expression (which is inside a function) is declared as a header or local variable in the current function (indicated by a global index)
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -2293,7 +2147,7 @@ bool check3(char *s1)     // function which checks if each variable from a given
 }
 
 
-bool check4(char *s1)     // function which checks if each variable from a given expression (which is inside a function) is assigned as a header or local variable in the current function (indicated by a global index)
+bool check4(string s1)     // function which checks if each variable from a given expression (which is inside a function) is assigned as a header or local variable in the current function (indicated by a global index)
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -2328,7 +2182,7 @@ bool check4(char *s1)     // function which checks if each variable from a given
 }
 
 
-bool check5(char *s1)     // function which checks if the given variable corresponds to a header/local variable of the current function and if its type is the same as the current function's return type
+bool check5(string s1)     // function which checks if the given variable corresponds to a header/local variable of the current function and if its type is the same as the current function's return type
 {
   HEAP_CHECK();
   bool found = false;
@@ -2372,7 +2226,7 @@ bool check5(char *s1)     // function which checks if the given variable corresp
 }
 
 
-bool check6(char *s1)     // function which checks if the phrase "length_mismatch_error" is found within a string (for error checking of length mismatch operations)
+bool check6(string s1)     // function which checks if the phrase "length_mismatch_error" is found within a string (for error checking of length mismatch operations)
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -2392,7 +2246,7 @@ bool check6(char *s1)     // function which checks if the phrase "length_mismatc
 }
 
 
-bool check7(char *s1)    // function which checks if the phrase "wrong_type_error" is found within a string (for error checking of operations between variables)
+bool check7(string s1)    // function which checks if the phrase "wrong_type_error" is found within a string (for error checking of operations between variables)
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -2451,7 +2305,7 @@ bool check8(char *s1, char *s2)    // function which checks if a given array of 
 }
 
 
-char* getType(char *s1)     // function which returns the type of a variable, based on its name
+string getType(string s1)     // function which returns the type of a variable, based on its name
 {
   HEAP_CHECK();
   int i;
@@ -2468,7 +2322,7 @@ char* getType(char *s1)     // function which returns the type of a variable, ba
 }
 
 
-int getIndex1(char *s1)     // function which returns the index of a variable, based on its name
+int getIndex1(string s1)     // function which returns the index of a variable, based on its name
 {
   HEAP_CHECK();
   int i;
@@ -2485,7 +2339,7 @@ int getIndex1(char *s1)     // function which returns the index of a variable, b
 }
 
 
-int getIndex2(char *s1)     // function which returns the index of a function, based on its name
+int getIndex2(string s1)     // function which returns the index of a function, based on its name
 {
   HEAP_CHECK();
   int i;
@@ -2502,7 +2356,7 @@ int getIndex2(char *s1)     // function which returns the index of a function, b
 }
 
 
-double getSize1(char *s1)     // function which returns the size of a variable, based on its name
+double getSize1(string s1)     // function which returns the size of a variable, based on its name
 {
   HEAP_CHECK();
   int i;
@@ -2519,7 +2373,7 @@ double getSize1(char *s1)     // function which returns the size of a variable, 
 }
 
 
-double getSize2(char *s1)     // function which returns the return size of a function, based on its name
+double getSize2(string s1)     // function which returns the return size of a function, based on its name
 {
   HEAP_CHECK();
   int i;
@@ -2536,7 +2390,7 @@ double getSize2(char *s1)     // function which returns the return size of a fun
 }
 
 
-double getSize3(char *s1)     // function which returns the size of a header/local variable inside the current function, based on its name
+double getSize3(string s1)     // function which returns the size of a header/local variable inside the current function, based on its name
 {
   HEAP_CHECK();
   int i;
@@ -2561,7 +2415,7 @@ double getSize3(char *s1)     // function which returns the size of a header/loc
 }
 
 
-int getSize4(char *s1)    // function which counts the number of given arguments, separated by '@'
+int getSize4(string s1)    // function which counts the number of given arguments, separated by '@'
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -2578,7 +2432,7 @@ int getSize4(char *s1)    // function which counts the number of given arguments
 }
 
 
-char* extract(char *s1)   // function which receives the start of a function declaration and returns its name
+char* extract(string s1)   // function which receives the start of a function declaration and returns its name
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -2589,7 +2443,7 @@ char* extract(char *s1)   // function which receives the start of a function dec
 }
 
 
-char *structureToString(char *st)     // function used to transfer a string within a structure to a separate memory address (of its own)
+char *structureToString(string st)     // function used to transfer a string within a structure to a separate memory address (of its own)
 {
   HEAP_CHECK();
   int a = strlen(st);
@@ -2600,7 +2454,7 @@ char *structureToString(char *st)     // function used to transfer a string with
 }
 
 
-char *CPPToEquelle1(char *st)      // function which converts a type from C++ to its corresponding type in Equelle
+string CPPToEquelle1(string st)      // function which converts a type from C++ to its corresponding type in Equelle
 {
     if(strcmp(st, "Scalar") == 0) {
       return strdup("scalar");
@@ -2666,7 +2520,7 @@ char *CPPToEquelle1(char *st)      // function which converts a type from C++ to
 }
 
 
-int CPPToEquelle2(char *st)      // function which returns the corresponding size of a C++ type
+int CPPToEquelle2(string st)      // function which returns the corresponding size of a C++ type
 {
     if(strcmp(st, "Scalar") == 0) {
       return 1;
@@ -2746,10 +2600,10 @@ int CPPToEquelle2(char *st)      // function which returns the corresponding siz
 
 
 
-char* singular_declaration_function(char *st1, char *st2)
+string singular_declaration_function(string st1, string st2)
 {
     HEAP_CHECK();
-    char* finalString = (char*) malloc(1024*sizeof(char));
+    string finalString;
     if(insideFunction == true)
     {
         int i;
@@ -2763,7 +2617,11 @@ char* singular_declaration_function(char *st1, char *st2)
             }
 
         if(taken == true)
-            sprintf(finalString, "error at line %d: The %s variable '%s' exists in the header of the function '%s'", currentLineNumber, st2, st1, fun[currentFunctionIndex].name);
+        {
+            stringstream ss;
+            ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' exists in the header of the function '" << fun[currentFunctionIndex].name << "'";
+            finalString = ss.str();
+        }
         else
         {
               for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
@@ -2774,14 +2632,17 @@ char* singular_declaration_function(char *st1, char *st2)
                   }
 
               if(taken == true)
-                  sprintf(finalString, "error at line %d: The %s variable '%s' is redeclared as a local variable of the function '%s'", currentLineNumber, st2, st1, fun[currentFunctionIndex].name);
+              {
+                  stringstream ss;
+                  ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is redeclared as a local variable of the function '" << fun[currentFunctionIndex].name << "'";
+                  finalString = ss.str();
+              }
               else
               {
-                    fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = strdup(st1);
-                    fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = strdup(st2);
+                    fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
+                    fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = 1;
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = false;
-                    finalString[0] = '\0';
               }
         }
     }
@@ -2798,14 +2659,17 @@ char* singular_declaration_function(char *st1, char *st2)
             }
 
         if(declaredBefore == true)
-            sprintf(finalString, "error at line %d: The %s variable '%s' is redeclared", currentLineNumber, st2, st1);
+        {
+            stringstream ss;
+            ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is redeclared";
+            finalString = ss.str();
+        }
         else
         {
-            var[varNo++].name = strdup(st1);
-            var[varNo-1].type = strdup(st2);
+            var[varNo++].name = st1;
+            var[varNo-1].type = st2;
             var[varNo-1].length = 1;
             var[varNo-1].assigned = false;
-            finalString[0] = '\0';
         }
     }
 
@@ -2814,10 +2678,10 @@ char* singular_declaration_function(char *st1, char *st2)
 }
 
 
-char* plural_declaration_function(char *st1, char *st2)
+string plural_declaration_function(string st1, string st2)
 {
     HEAP_CHECK();
-    char* finalString = (char*) malloc(1024*sizeof(char));
+    string finalString;
     if(insideFunction == true)
     {
         int i;
@@ -2831,7 +2695,11 @@ char* plural_declaration_function(char *st1, char *st2)
             }
 
         if(taken == true)
-            sprintf(finalString, "error at line %d: The %s variable '%s' is redeclared in the header of the function '%s'", currentLineNumber, st2, st1, fun[currentFunctionIndex].name);
+        {
+            stringstream ss;
+            ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' exists in the header of the function '" << fun[currentFunctionIndex].name << "'";
+            finalString = ss.str();
+        }
         else
         {
                 for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
@@ -2842,14 +2710,17 @@ char* plural_declaration_function(char *st1, char *st2)
                   }
 
               if(taken == true)
-                  sprintf(finalString, "error at line %d: The %s variable '%s' is redeclared as a local variable of the function '%s'", currentLineNumber, st2, st1, fun[currentFunctionIndex].name);
+              {
+                  stringstream ss;
+                  ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is redeclared as a local variable of the function '" << fun[currentFunctionIndex].name << "'";
+                  finalString = ss.str();
+              }
               else
               {
-                    fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = strdup(st1);
-                    fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = strdup(st2);
+                    fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
+                    fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = ANY;
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = false;
-                    finalString[0] = '\0';
               }
         }
     }
@@ -2866,14 +2737,17 @@ char* plural_declaration_function(char *st1, char *st2)
             }
 
         if(declaredBefore == true)
-            sprintf(finalString, "error at line %d: The %s variable '%s' is redeclared", currentLineNumber, st2, st1);
+        {
+            stringstream ss;
+            ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is redeclared";
+            finalString = ss.str();
+        }
         else
         {
-              var[varNo++].name = strdup(st1);
-              var[varNo-1].type = strdup(st2);
+              var[varNo++].name = st1;
+              var[varNo-1].type = st2;
               var[varNo-1].length = ANY;
               var[varNo-1].assigned = false;
-              finalString[0] = '\0';
         }
     }
 
@@ -2882,10 +2756,10 @@ char* plural_declaration_function(char *st1, char *st2)
 }
 
 
-char* extended_plural_declaration_function(char *st1, char *st2, char *st3, double d1)
+string extended_plural_declaration_function(string st1, string st2, string st3, double d1)
 {
     HEAP_CHECK();
-    char* finalString = (char*) malloc(1024*sizeof(char));
+    string finalString;
     if(insideFunction == true)
     {
         int i;
@@ -2899,7 +2773,11 @@ char* extended_plural_declaration_function(char *st1, char *st2, char *st3, doub
             }
 
         if(taken == true)
-            sprintf(finalString, "error at line %d: The %s variable '%s' is redeclared in the header of the function '%s'", currentLineNumber, st2, st1, fun[currentFunctionIndex].name);
+        {
+            stringstream ss;
+            ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' exists in the header of the function '" << fun[currentFunctionIndex].name << "'";
+            finalString = ss.str();
+        }
         else
         {
               for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
@@ -2910,26 +2788,41 @@ char* extended_plural_declaration_function(char *st1, char *st2, char *st3, doub
                 }
 
               if(taken == true)
-                  sprintf(finalString, "error at line %d: The %s variable '%s' is redeclared as a local variable of the function '%s'", currentLineNumber, st2, st1, fun[currentFunctionIndex].name);
+              {
+                  stringstream ss;
+                  ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is redeclared as a local variable of the function '" << fun[currentFunctionIndex].name << "'";
+                  finalString = ss.str();
+              }
               else
               {
                   if(check7(st3) == true)
-                      sprintf(finalString, "error at line %d: There is a wrong used variable contained in the ON expression of the %s variable '%s'", currentLineNumber, st2, st1);
+                  {
+                      stringstream ss;
+                      ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the ON expression of the " << st2 << " variable '" << st1 << "'";
+                      finalString = ss.str();
+                  }
                   else
                   {
                       if(check3(st3) == false)
-                          sprintf(finalString, "error at line %d: The variable '%s' contained in the ON expression of the %s variable '%s' is undeclared", currentLineNumber, find5(st3), st2, st1);
+                      {
+                          stringstream ss;
+                          ss << "error at line " << currentLineNumber << ": The variable '" << find5(st3) << "' contained in the ON expression of the " << st2 << " variable '" << st1 << "' is undeclared";
+                          finalString = ss.str();
+                      }
                       else
                       {
                           if(check4(st3) == false)
-                              sprintf(finalString, "error at line %d: The variable '%s' contained in the ON expression of the %s variable '%s' is unassigned", currentLineNumber, find6(st3), st2, st1);
+                          {
+                              stringstream ss;
+                              ss << "error at line " << currentLineNumber << ": The variable '" << find6(st3) << "' contained in the ON expression of the " << st2 << " variable '" << st1 << "' is unassigned";
+                              finalString = ss.str();
+                          }
                           else
                           {
-                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = strdup(st1);
-                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = strdup(st2);
+                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
+                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = d1;
                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = false;
-                              finalString[0] = '\0';
                           }
                       }
                   }
@@ -2949,26 +2842,41 @@ char* extended_plural_declaration_function(char *st1, char *st2, char *st3, doub
             }
 
         if(declaredBefore == true)
-            sprintf(finalString, "error at line %d: The %s variable '%s' is redeclared", currentLineNumber, st2, st1);
+        {
+            stringstream ss;
+            ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is redeclared";
+            finalString = ss.str();
+        }
         else
         {
               if(check7(st3) == true)
-                  sprintf(finalString, "error at line %d: There is a wrong used variable contained in the ON expression of the %s variable '%s'", currentLineNumber, st2, st1);
+              {
+                  stringstream ss;
+                  ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the ON expression of the " << st2 << " variable '" << st1 << "'";
+                  finalString = ss.str();
+              }
               else
               {
                   if(check1(st3) == false)
-                      sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' is undeclared", currentLineNumber, find2(st3), st2, st1);
+                  {
+                      stringstream ss;
+                      ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the ON expression of the " << st2 << " variable '" << st1 << "' is undeclared";
+                      finalString = ss.str();
+                  }
                   else
                   {
                       if(check2(st3) == false)
-                          sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' is unassigned", currentLineNumber, find3(st3), st2, st1);
+                      {
+                          stringstream ss;
+                          ss << "error at line " << currentLineNumber << ": The variable '" << find3(st3) << "' contained in the ON expression of the " << st2 << " variable '" << st1 << "' is unassigned";
+                          finalString = ss.str();
+                      }
                       else
                       {
-                          var[varNo++].name = strdup(st1);
-                          var[varNo-1].type = strdup(st2);
+                          var[varNo++].name = st1;
+                          var[varNo-1].type = st2;
                           var[varNo-1].length = d1;
                           var[varNo-1].assigned = false;
-                          finalString[0] = '\0';
                       }
                   }
               }
@@ -2980,10 +2888,10 @@ char* extended_plural_declaration_function(char *st1, char *st2, char *st3, doub
 }
 
 
-char* singular_assignment_function(char *st1, char *st2, char *st3, char *st4)
+string singular_assignment_function(string st1, string st2, string st3, string st4)
 {
     HEAP_CHECK();
-    char* finalString = (char*) malloc(1024*sizeof(char));
+    string finalString;
     if(insideFunction == true)
     {
         int i;
@@ -2997,7 +2905,11 @@ char* singular_assignment_function(char *st1, char *st2, char *st3, char *st4)
             }
 
         if(taken == true)
-            sprintf(finalString, "error at line %d: The %s variable '%s' from the header of the function '%s' cannot be assigned", currentLineNumber, st2, st1, fun[currentFunctionIndex].name);
+        {
+            stringstream ss;
+            ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' from the header of the function '" << fun[currentFunctionIndex].name << "' cannot be assigned";
+            finalString = ss.str();
+        }
         else
         {
               for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
@@ -3009,31 +2921,57 @@ char* singular_assignment_function(char *st1, char *st2, char *st3, char *st4)
 
               if(taken == true)
                   if(fun[currentFunctionIndex].localVariables[i].assigned == true)
-                      sprintf(finalString, "error at line %d: The local %s variable '%s' is reassigned in the function '%s'", currentLineNumber, st2, st1, fun[currentFunctionIndex].name);
+                  {
+                      stringstream ss;
+                      ss << "error at line " << currentLineNumber << ": The local " << st2 << " variable '" << st1 << "' is reassigned in the function '" << fun[currentFunctionIndex].name << "'";
+                      finalString = ss.str();
+                  }
                   else
                   {
                       if(check6(st3) == true)
-                          sprintf(finalString, "error at line %d: Length mismatch found between two terms of an operation", currentLineNumber);
+                      {
+                          stringstream ss;
+                          ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
+                          finalString = ss.str();
+                      }
                       else
                       {
                           if(find1(st3, st1))
-                              sprintf(finalString, "error at line %d: The %s variable '%s' from the function '%s' is included in its definition", currentLineNumber, st2, st1, fun[currentFunctionIndex].name);
+                          {
+                              stringstream ss;
+                              ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
+                              finalString = ss.str();
+                          }
                           else
                           {
                               if(check3(st3) == false)
-                                  sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' from the function '%s' is undeclared", currentLineNumber, find5(st3), st2, st1, fun[currentFunctionIndex].name);
+                              {
+                                  stringstream ss;
+                                  ss << "error at line " << currentLineNumber << ": The variable '" << find5(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
+                                  finalString = ss.str();
+                              }
                               else
                               {
                                   if(check4(st3) == false)
-                                      sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' from the function '%s' is unassigned", currentLineNumber, find6(st3), st2, st1, fun[currentFunctionIndex].name);
+                                  {
+                                      stringstream ss;
+                                      ss << "error at line " << currentLineNumber << ": The variable '" << find6(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
+                                      finalString = ss.str();
+                                  }
                                   else
                                   {
                                       if(check7(st3) == true)
-                                          sprintf(finalString, "error at line %d: There is a wrong used variable contained in the assignment expression of the %s variable '%s'", currentLineNumber, st2, st1);
+                                      {
+                                          stringstream ss;
+                                          ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the " << st2 << " variable '" << st1 << "'";
+                                          finalString = ss.str();
+                                      }
                                       else
                                       {
                                           fun[currentFunctionIndex].localVariables[i].assigned = true;
-                                          sprintf(finalString, "const %s %s = %s;", st4, st1, st3);
+                                          stringstream ss;
+                                          ss << "const " << st4 << " " << st1 << " = " << st3;
+                                          finalString = ss.str();
                                       }
                                   }
                               }
@@ -3043,28 +2981,50 @@ char* singular_assignment_function(char *st1, char *st2, char *st3, char *st4)
               else
               {   // deduced declaration
                   if(check6(st3) == true)
-                      sprintf(finalString, "error at line %d: Length mismatch found between two terms of an operation", currentLineNumber);
+                  {
+                      stringstream ss;
+                      ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
+                      finalString = ss.str();
+                  }
                   else
                   {
                       if(find1(st3, st1))
-                          sprintf(finalString, "error at line %d: The %s variable '%s' from the function '%s' is included in its definition", currentLineNumber, st2, st1, fun[currentFunctionIndex].name);
+                      {
+                          stringstream ss;
+                          ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
+                          finalString = ss.str();
+                      }
                       else
                       {
                           if(check3(st3) == false)
-                              sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' from the function '%s' is undeclared", currentLineNumber, find5(st3), st2, st1, fun[currentFunctionIndex].name);
+                          {
+                              stringstream ss;
+                              ss << "error at line " << currentLineNumber << ": The variable '" << find5(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
+                              finalString = ss.str();
+                          }
                           else
                           {
                               if(check4(st3) == false)
-                                  sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' from the function '%s' is unassigned", currentLineNumber, find6(st3), st2, st1, fun[currentFunctionIndex].name);
+                              {
+                                  stringstream ss;
+                                  ss << "error at line " << currentLineNumber << ": The variable '" << find6(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
+                                  finalString = ss.str();
+                              }
                               else
                               {
                                   if(check7(st3) == true)
-                                      sprintf(finalString, "error at line %d: There is a wrong used variable contained in the assignment expression of the %s variable '%s'", currentLineNumber, st2, st1);
+                                  {
+                                      stringstream ss;
+                                      ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the " << st2 << " variable '" << st1 << "'";
+                                      finalString = ss.str();
+                                  }
                                   else
                                   {
-                                      sprintf(finalString, "const %s %s = %s;", st4, st1, st3);
-                                      fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = strdup(st1);
-                                      fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = strdup(st2);
+                                      stringstream ss;
+                                      ss << "const " << st4 << " " << st1 << " = " << st3;
+                                      finalString = ss.str();
+                                      fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
+                                      fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
                                       fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = 1;
                                       fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
                                   }
@@ -3089,31 +3049,57 @@ char* singular_assignment_function(char *st1, char *st2, char *st3, char *st4)
 
         if(declaredBefore == true)
               if(var[i].assigned == true)
-                  sprintf(finalString, "error at line %d: The %s variable '%s' is reassigned", currentLineNumber, st2, st1);
+              {
+                  stringstream ss;
+                  ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is reassigned";
+                  finalString = ss.str();
+              }
               else
               {
                     if(check6(st3) == true)
-                        sprintf(finalString, "error at line %d: Length mismatch found between two terms of an operation", currentLineNumber);
+                    {
+                        stringstream ss;
+                        ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
+                        finalString = ss.str();
+                    }
                     else
                     {
                         if(find1(st3, st1))
-                            sprintf(finalString, "error at line %d: The %s variable '%s' is included in its definition", currentLineNumber, st2, st1);
+                        {
+                            stringstream ss;
+                            ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is included in its definition";
+                            finalString = ss.str();
+                        }
                         else
                         {
                             if(check1(st3) == false)
-                                sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' is undeclared", currentLineNumber, find2(st3), st2, st1);
+                            {
+                                stringstream ss;
+                                ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
+                                finalString = ss.str();
+                            }
                             else
                             {
                                 if(check2(st3) == false)
-                                    sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' is unassigned", currentLineNumber, find3(st3), st2, st1);
+                                {
+                                    stringstream ss;
+                                    ss << "error at line " << currentLineNumber << ": The variable '" << find3(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is unassigned";
+                                    finalString = ss.str();
+                                }
                                 else
                                 {
                                     if(check7(st3) == true)
-                                        sprintf(finalString, "error at line %d: There is a wrong used variable contained in the assignment expression of the %s variable '%s'", currentLineNumber, st2, st1);
+                                    {
+                                        stringstream ss;
+                                        ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the " << st2 << " variable '" << st1 << "'";
+                                        finalString = ss.str();
+                                    }
                                     else
                                     {
                                         var[i].assigned = true;
-                                        sprintf(finalString, "const %s %s = %s;", st4, st1, st3);
+                                        stringstream ss;
+                                        ss << "const " << st4 << " " << st1 << " = " << st3;
+                                        finalString = ss.str();
                                     }
                                 }
                             }
@@ -3122,29 +3108,52 @@ char* singular_assignment_function(char *st1, char *st2, char *st3, char *st4)
               }
         else
         {
+            // deduced declaration
             if(check6(st3) == true)
-                sprintf(finalString, "error at line %d: Length mismatch found between two terms of an operation", currentLineNumber);
+            {
+                stringstream ss;
+                ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
+                finalString = ss.str();
+            }
             else
             {
                 if(find1(st3, st1))
-                    sprintf(finalString, "error at line %d: The %s variable '%s' is included in its definition", currentLineNumber, st2, st1);
+                {
+                    stringstream ss;
+                    ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is included in its definition";
+                    finalString = ss.str();
+                }
                 else
                 {
                     if(check1(st3) == false)
-                        sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' is undeclared", currentLineNumber, find2(st3), st2, st1);
+                    {
+                        stringstream ss;
+                        ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
+                        finalString = ss.str();
+                    }
                     else
                     {
                         if(check2(st3) == false)
-                            sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' is unassigned", currentLineNumber, find3(st3), st2, st1);
+                        {
+                            stringstream ss;
+                            ss << "error at line " << currentLineNumber << ": The variable '" << find3(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is unassigned";
+                            finalString = ss.str();
+                        }
                         else
                         {
                             if(check7(st3) == true)
-                                sprintf(finalString, "error at line %d: There is a wrong used variable contained in the assignment expression of the %s variable '%s'", currentLineNumber, st2, st1);
+                            {
+                                stringstream ss;
+                                ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the " << st2 << " variable '" << st1 << "'";
+                                finalString = ss.str();
+                            }
                             else
                             {
-                                sprintf(finalString, "const %s %s = %s;", st4, st1, st3);
-                                var[varNo++].name = strdup(st1);
-                                var[varNo-1].type = strdup(st2);
+                                stringstream ss;
+                                ss << "const " << st4 << " " << st1 << " = " << st3;
+                                finalString = ss.str();
+                                var[varNo++].name = st1;
+                                var[varNo-1].type = st2;
                                 var[varNo-1].length = 1;
                                 var[varNo-1].assigned = true;
                             }
@@ -3160,10 +3169,10 @@ char* singular_assignment_function(char *st1, char *st2, char *st3, char *st4)
 }
 
 
-char* plural_assignment_function(char *st1, char *st2, char *st3, char *st4, double d1)
+string plural_assignment_function(string st1, string st2, string st3, string st4, double d1)
 {
     HEAP_CHECK();
-    char* finalString = (char*) malloc(1024*sizeof(char));
+    string finalString;
     if(insideFunction == true)
     {
         int i;
@@ -3177,7 +3186,11 @@ char* plural_assignment_function(char *st1, char *st2, char *st3, char *st4, dou
             }
 
         if(taken == true)
-            sprintf(finalString, "error at line %d: The %s variable '%s' from the header of the function '%s' cannot be assigned", currentLineNumber, st2, st1, fun[currentFunctionIndex].name);
+        {
+            stringstream ss;
+            ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' from the header of the function '" << fun[currentFunctionIndex].name << "' cannot be assigned";
+            finalString = ss.str();
+        }
         else
         {
               for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
@@ -3189,74 +3202,128 @@ char* plural_assignment_function(char *st1, char *st2, char *st3, char *st4, dou
 
               if(taken == true)
                   if(fun[currentFunctionIndex].localVariables[i].assigned == true)
-                      sprintf(finalString, "error at line %d: The local %s variable '%s' is reassigned in the function '%s'", currentLineNumber, st2, st1, fun[currentFunctionIndex].name);
+                  {
+                      stringstream ss;
+                      ss << "error at line " << currentLineNumber << ": The local " << st2 << " variable '" << st1 << "' is reassigned in the function '" << fun[currentFunctionIndex].name << "'";
+                      finalString = ss.str();
+                  }
                   else
                   {
                         if(check6(st3) == true)
-                            sprintf(finalString, "error at line %d: Length mismatch found between two terms of an operation", currentLineNumber);
-                        else
                         {
-                            if(find1(st3, st1))
-                                sprintf(finalString, "error at line %d: The %s variable '%s' from the function '%s' is included in its definition", currentLineNumber, st2, st1, fun[currentFunctionIndex].name);
-                            else
-                            {
-                                if(check3(st3) == false)
-                                    sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' from the function '%s' is undeclared", currentLineNumber, find5(st3), st2, st1, fun[currentFunctionIndex].name);
-                                else
-                                {
-                                    if(check4(st3) == false)
-                                        sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' from the function '%s' is unassigned", currentLineNumber, find6(st3), st2, st1, fun[currentFunctionIndex].name);
-                                    else
-                                    {
-                                        if(check7(st3) == true)
-                                            sprintf(finalString, "error at line %d: There is a wrong used variable contained in the assignment expression of the %s variable '%s'", currentLineNumber, st2, st1);
-                                        else
-                                        {
-                                            if(getSize3(st1) != d1)
-                                                if(getSize3(st1) == ANY)
-                                                {
-                                                    fun[currentFunctionIndex].localVariables[i].length = d1;
-                                                    fun[currentFunctionIndex].localVariables[i].assigned = true;
-                                                    sprintf(finalString, "const %s %s = %s;", st4, st1, st3);
-                                                }
-                                                else
-                                                    sprintf(finalString, "error at line %d: The length of the %s variable '%s' from its definition differs than the length of its assignment in the function '%s'", currentLineNumber, st2, st1, fun[currentFunctionIndex].name);
-                                            else
-                                            {
-                                                sprintf(finalString, "const %s %s = %s;", st4, st1, st3);
-                                                fun[currentFunctionIndex].localVariables[i].assigned = true;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                            stringstream ss;
+                            ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
+                            finalString = ss.str();
                         }
+                      else
+                      {
+                          if(find1(st3, st1))
+                          {
+                              stringstream ss;
+                              ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
+                              finalString = ss.str();
+                          }
+                          else
+                          {
+                              if(check3(st3) == false)
+                              {
+                                  stringstream ss;
+                                  ss << "error at line " << currentLineNumber << ": The variable '" << find5(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
+                                  finalString = ss.str();
+                              }
+                              else
+                              {
+                                  if(check4(st3) == false)
+                                  {
+                                      stringstream ss;
+                                      ss << "error at line " << currentLineNumber << ": The variable '" << find6(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
+                                      finalString = ss.str();
+                                  }
+                                  else
+                                  {
+                                      if(check7(st3) == true)
+                                      {
+                                          stringstream ss;
+                                          ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the " << st2 << " variable '" << st1 << "'";
+                                          finalString = ss.str();
+                                      }
+                                      else
+                                      {
+                                          if(getSize3(st1) != d1)
+                                              if(getSize3(st1) == ANY)
+                                              {
+                                                  fun[currentFunctionIndex].localVariables[i].length = d1;
+                                                  fun[currentFunctionIndex].localVariables[i].assigned = true;
+                                                  stringstream ss;
+                                                  ss << "const " << st4 << " " << st1 << " = " << st3;
+                                                  finalString = ss.str();
+                                              }
+                                              else
+                                              {
+                                                  stringstream ss;
+                                                  ss << "error at line " << currentLineNumber << ": The length of the " << st2 << " variable '" << st1 << "' from its definition differs than the length of its assignment in the function '" << fun[currentFunctionIndex].name << "'";
+                                                  finalString = ss.str();
+                                              }
+                                          else
+                                          {
+                                              stringstream ss;
+                                              ss << "const " << st4 << " " << st1 << " = " << st3;
+                                              finalString = ss.str();
+                                              fun[currentFunctionIndex].localVariables[i].assigned = true;
+                                          }
+                                      }
+                                  }
+                              }
+                          }
+                      }
                   }
               else
               {   // deduced declaration
                   if(check6(st3) == true)
-                      sprintf(finalString, "error at line %d: Length mismatch found between two terms of an operation", currentLineNumber);
+                  {
+                      stringstream ss;
+                      ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
+                      finalString = ss.str();
+                  }
                   else
                   {
                       if(find1(st3, st1))
-                          sprintf(finalString, "error at line %d: The %s variable '%s' from the function '%s' is included in its definition", currentLineNumber, st2, st1, fun[currentFunctionIndex].name);
+                      {
+                          stringstream ss;
+                          ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
+                          finalString = ss.str();
+                      }
                       else
                       {
                           if(check3(st3) == false)
-                              sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' from the function '%s' is undeclared", currentLineNumber, find5(st3), st2, st1, fun[currentFunctionIndex].name);
+                          {
+                              stringstream ss;
+                              ss << "error at line " << currentLineNumber << ": The variable '" << find5(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
+                              finalString = ss.str();
+                          }
                           else
                           {
                               if(check4(st3) == false)
-                                  sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' from the function '%s' is unassigned", currentLineNumber, find6(st3), st2, st1, fun[currentFunctionIndex].name);
+                              {
+                                  stringstream ss;
+                                  ss << "error at line " << currentLineNumber << ": The variable '" << find6(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
+                                  finalString = ss.str();
+                              }
                               else
                               {
                                   if(check7(st3) == true)
-                                      sprintf(finalString, "error at line %d: There is a wrong used variable contained in the assignment expression of the %s variable '%s'", currentLineNumber, st2, st1);
+                                  {
+                                      stringstream ss;
+                                      ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the " << st2 << " variable '" << st1 << "'";
+                                      finalString = ss.str();
+                                  }
                                   else
                                   {
-                                      sprintf(finalString, "const %s %s = %s;", st4, st1, st3);
-                                      fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = strdup(st1);
-                                      fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = strdup(st2);
+                                      stringstream ss;
+                                      ss << "const " << st4 << " " << st1 << " = " << st3;
+                                      finalString = ss.str();
+                                      fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
+                                      fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
                                       fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = d1;
                                       fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
                                   }
@@ -3281,27 +3348,51 @@ char* plural_assignment_function(char *st1, char *st2, char *st3, char *st4, dou
 
         if(declaredBefore == true)
               if(var[i].assigned == true)
-                  sprintf(finalString, "error at line %d: The %s variable '%s' is reassigned", currentLineNumber, st2, st1);
+              {
+                  stringstream ss;
+                  ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is reassigned";
+                  finalString = ss.str();
+              }
               else
               {
                     if(check6(st3) == true)
-                        sprintf(finalString, "error at line %d: Length mismatch found between two terms of an operation", currentLineNumber);
+                    {
+                        stringstream ss;
+                        ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
+                        finalString = ss.str();
+                    }
                     else
                     {
                         if(find1(st3, st1))
-                            sprintf(finalString, "error at line %d: The %s variable '%s' is included in its definition", currentLineNumber, st2, st1);
+                        {
+                            stringstream ss;
+                            ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is included in its definition";
+                            finalString = ss.str();
+                        }
                         else
                         {
                             if(check1(st3) == false)
-                                sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' is undeclared", currentLineNumber, find2(st3), st2, st1);
+                            {
+                                stringstream ss;
+                                ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
+                                finalString = ss.str();
+                            }
                             else
                             {
                                 if(check2(st3) == false)
-                                    sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' is unassigned", currentLineNumber, find3(st3), st2, st1);
+                                {
+                                    stringstream ss;
+                                    ss << "error at line " << currentLineNumber << ": The variable '" << find3(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is unassigned";
+                                    finalString = ss.str();
+                                }
                                 else
                                 {
                                     if(check7(st3) == true)
-                                        sprintf(finalString, "error at line %d: There is a wrong used variable contained in the assignment expression of the %s variable '%s'", currentLineNumber, st2, st1);
+                                    {
+                                        stringstream ss;
+                                        ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the " << st2 << " variable '" << st1 << "'";
+                                        finalString = ss.str();
+                                    }
                                     else
                                     {
                                         if(getSize1(st1) != d1)
@@ -3309,13 +3400,21 @@ char* plural_assignment_function(char *st1, char *st2, char *st3, char *st4, dou
                                             {
                                                 var[i].length = d1;
                                                 var[i].assigned = true;
-                                                sprintf(finalString, "const %s %s = %s;", st4, st1, st3);
+                                                stringstream ss;
+                                                ss << "const " << st4 << " " << st1 << " = " << st3;
+                                                finalString = ss.str();
                                             }
                                             else
-                                                sprintf(finalString, "error at line %d: The length of the %s variable '%s' from its definition differs than the length of its assignment", currentLineNumber, st2, st1);
+                                            {
+                                                stringstream ss;
+                                                ss << "error at line " << currentLineNumber << ": The length of the " << st2 << " variable '" << st1 << "' from its definition differs than the length of its assignment";
+                                                finalString = ss.str();
+                                            }
                                         else
                                         {
-                                            sprintf(finalString, "const %s %s = %s;", st4, st1, st3);
+                                            stringstream ss;
+                                            ss << "const " << st4 << " " << st1 << " = " << st3;
+                                            finalString = ss.str();
                                             var[i].assigned = true;
                                         }
                                     }
@@ -3326,32 +3425,55 @@ char* plural_assignment_function(char *st1, char *st2, char *st3, char *st4, dou
               }
         else
         {
+            // deduced declaration
             if(check6(st3) == true)
-                sprintf(finalString, "error at line %d: Length mismatch found between two terms of an operation", currentLineNumber);
+            {
+                stringstream ss;
+                ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
+                finalString = ss.str();
+            }
             else
             {
                 if(find1(st3, st1))
-                    sprintf(finalString, "error at line %d: The %s variable '%s' is included in its definition", currentLineNumber, st2, st1);
+                {
+                    stringstream ss;
+                    ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is included in its definition";
+                    finalString = ss.str();
+                }
                 else
                 {
                     if(check1(st3) == false)
-                        sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' is undeclared", currentLineNumber, find2(st3), st2, st1);
+                    {
+                        stringstream ss;
+                        ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
+                        finalString = ss.str();
+                    }
                     else
                     {
                         if(check2(st3) == false)
-                            sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' is unassigned", currentLineNumber, find3(st3), st2, st1);
+                        {
+                            stringstream ss;
+                            ss << "error at line " << currentLineNumber << ": The variable '" << find3(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is unassigned";
+                            finalString = ss.str();
+                        }
                         else
                         {
-                              if(check7(st3) == true)
-                                  sprintf(finalString, "error at line %d: There is a wrong used variable contained in the assignment expression of the %s variable '%s'", currentLineNumber, st2, st1);
-                              else
-                              {
-                                  sprintf(finalString, "const %s %s = %s;", st4, st1, st3);
-                                  var[varNo++].name = strdup(st1);
-                                  var[varNo-1].type = strdup(st2);
-                                  var[varNo-1].length = d1;
-                                  var[varNo-1].assigned = true;
-                              }
+                            if(check7(st3) == true)
+                            {
+                                stringstream ss;
+                                ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the " << st2 << " variable '" << st1 << "'";
+                                finalString = ss.str();
+                            }
+                            else
+                            {
+                                stringstream ss;
+                                ss << "const " << st4 << " " << st1 << " = " << st3;
+                                finalString = ss.str();
+                                var[varNo++].name = st1;
+                                var[varNo-1].type = st2;
+                                var[varNo-1].length = d1;
+                                var[varNo-1].assigned = true;
+                            }
                         }
                     }
                 }
@@ -3364,10 +3486,10 @@ char* plural_assignment_function(char *st1, char *st2, char *st3, char *st4, dou
 }
 
 
-char* singular_declaration_with_assignment_function(char *st1, char *st2, char *st3, char *st4)
+string singular_declaration_with_assignment_function(string st1, string st2, string st3, string st4)
 {
     HEAP_CHECK();
-    char* finalString = (char*) malloc(1024*sizeof(char));
+    string finalString;
     if(insideFunction == true)
     {
         int i;
@@ -3381,7 +3503,11 @@ char* singular_declaration_with_assignment_function(char *st1, char *st2, char *
             }
 
         if(taken == true)
-            sprintf(finalString, "error at line %d: The %s variable '%s' exists in the header of the function '%s'", currentLineNumber, st2, st1, fun[currentFunctionIndex].name);
+        {
+            stringstream ss;
+            ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' exists in the header of the function '" << fun[currentFunctionIndex].name << "'";
+            finalString = ss.str();
+        }
         else
         {
               for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
@@ -3392,35 +3518,61 @@ char* singular_declaration_with_assignment_function(char *st1, char *st2, char *
                   }
 
               if(taken == true)
-                  sprintf(finalString, "error at line %d: The %s variable '%s' is redeclared as a local variable of the function '%s'", currentLineNumber, st2, st1, fun[currentFunctionIndex].name);
+              {
+                  stringstream ss;
+                  ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is redeclared as a local variable of the function '%s'" << fun[currentFunctionIndex].name << "'";
+                  finalString = ss.str();
+              }
               else
               {
                     if(check6(st3) == true)
-                        sprintf(finalString, "error at line %d: Length mismatch found between two terms of an operation", currentLineNumber);
+                    {
+                        stringstream ss;
+                        ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
+                        finalString = ss.str();
+                    }
                     else
                     {
                         if(find1(st3, st1))
-                            sprintf(finalString, "error at line %d: The %s variable '%s' of the function '%s' is included in its definition", currentLineNumber, st2, st1, fun[currentFunctionIndex].name);
-                        else
-                        {
-                            if(check3(st3) == false)
-                                sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' from the function '%s' is undeclared", currentLineNumber, find5(st3), st2, st1, fun[currentFunctionIndex].name);
-                            else
-                            {
-                                if(check4(st3) == false)
-                                    sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' from the function '%s' is unassigned", currentLineNumber, find6(st3), st2, st1, fun[currentFunctionIndex].name);
-                                else
-                                {
-                                    if(check7(st3) == true)
-                                        sprintf(finalString, "error at line %d: There is a wrong used variable contained in the assignment expression of the %s variable '%s'", currentLineNumber, st2, st1);
-                                    else
-                                    {
-                                        sprintf(finalString, "const %s %s = %s;", st4, st1, st3);
-                                        fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = strdup(st1);
-                                        fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = strdup(st2);
-                                        fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = 1;
-                                        fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
-                                    }
+                          {
+                              stringstream ss;
+                              ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
+                              finalString = ss.str();
+                          }
+                          else
+                          {
+                              if(check3(st3) == false)
+                              {
+                                  stringstream ss;
+                                  ss << "error at line " << currentLineNumber << ": The variable '" << find5(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
+                                  finalString = ss.str();
+                              }
+                              else
+                              {
+                                  if(check4(st3) == false)
+                                  {
+                                      stringstream ss;
+                                      ss << "error at line " << currentLineNumber << ": The variable '" << find6(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
+                                      finalString = ss.str();
+                                  }
+                                  else
+                                  {
+                                      if(check7(st3) == true)
+                                      {
+                                          stringstream ss;
+                                          ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the " << st2 << " variable '" << st1 << "'";
+                                          finalString = ss.str();
+                                      }
+                                      else
+                                      {
+                                          stringstream ss;
+                                          ss << "const " << st4 << " " << st1 << " = " << st3;
+                                          finalString = ss.str();
+                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
+                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
+                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = 1;
+                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
+                                      }
                                 }
                             }
                         }
@@ -3441,35 +3593,61 @@ char* singular_declaration_with_assignment_function(char *st1, char *st2, char *
             }
 
         if(declaredBefore == true)
-            sprintf(finalString, "error at line %d: The %s variable '%s' is redeclared", currentLineNumber, st2, st1);
+        {
+            stringstream ss;
+            ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is redeclared";
+            finalString = ss.str();
+        }
         else
         {
             if(check6(st3) == true)
-                sprintf(finalString, "error at line %d: Length mismatch found between two terms of an operation", currentLineNumber);
+            {
+                stringstream ss;
+                ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
+                finalString = ss.str();
+            }
             else
             {
                 if(find1(st3, st1))
-                    sprintf(finalString, "error at line %d: The %s variable '%s' is included in its definition", currentLineNumber, st2, st1);
+                {
+                    stringstream ss;
+                    ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is included in its definition";
+                    finalString = ss.str();
+                }
                 else
                 {
                     if(check1(st3) == false)
-                        sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' is undeclared", currentLineNumber, find2(st3), st2, st1);
+                    {
+                        stringstream ss;
+                        ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
+                        finalString = ss.str();
+                    }
                     else
                     {
                         if(check2(st3) == false)
-                            sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' is unassigned", currentLineNumber, find3(st3), st2, st1);
+                        {
+                            stringstream ss;
+                            ss << "error at line " << currentLineNumber << ": The variable '" << find3(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is unassigned";
+                            finalString = ss.str();
+                        }
                         else
                         {
-                              if(check7(st3) == true)
-                                  sprintf(finalString, "error at line %d: There is a wrong used variable contained in the assignment expression of the %s variable '%s'", currentLineNumber, st2, st1);
-                              else
-                              {
-                                  sprintf(finalString, "const %s %s = %s;", st4, st1, st3);
-                                  var[varNo++].name = strdup(st1);
-                                  var[varNo-1].type = strdup(st2);
-                                  var[varNo-1].length = 1;
-                                  var[varNo-1].assigned = true;
-                              }
+                            if(check7(st3) == true)
+                            {
+                                stringstream ss;
+                                ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the " << st2 << " variable '" << st1 << "'";
+                                finalString = ss.str();
+                            }
+                            else
+                            {
+                                stringstream ss;
+                                ss << "const " << st4 << " " << st1 << " = " << st3;
+                                finalString = ss.str();
+                                var[varNo++].name = st1;
+                                var[varNo-1].type = st2;
+                                var[varNo-1].length = 1;
+                                var[varNo-1].assigned = true;
+                            }
                         }
                     }
                 }
@@ -3482,10 +3660,10 @@ char* singular_declaration_with_assignment_function(char *st1, char *st2, char *
 }
 
 
-char* plural_declaration_with_assignment_function(char *st1, char *st2, char *st3, char *st4, double d1)
+string plural_declaration_with_assignment_function(string st1, string st2, string st3, string st4, double d1)
 {
     HEAP_CHECK();
-    char* finalString = (char*) malloc(1024*sizeof(char));
+    string finalString;
     if(insideFunction == true)
     {
         int i;
@@ -3499,7 +3677,11 @@ char* plural_declaration_with_assignment_function(char *st1, char *st2, char *st
             }
 
         if(taken == true)
-            sprintf(finalString, "error at line %d: The %s variable '%s' exists in the header of the function '%s'", currentLineNumber, st2, st1, fun[currentFunctionIndex].name);
+        {
+            stringstream ss;
+            ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' exists in the header of the function '" << fun[currentFunctionIndex].name << "'";
+            finalString = ss.str();
+        }
         else
         {
               for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
@@ -3510,35 +3692,61 @@ char* plural_declaration_with_assignment_function(char *st1, char *st2, char *st
                   }
 
               if(taken == true)
-                  sprintf(finalString, "error at line %d: The %s variable '%s' is redeclared as a local variable of the function '%s'", currentLineNumber, st2, st1, fun[currentFunctionIndex].name);
+              {
+                  stringstream ss;
+                  ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is redeclared as a local variable of the function '%s'" << fun[currentFunctionIndex].name << "'";
+                  finalString = ss.str();
+              }
               else
               {
                     if(check6(st3) == true)
-                        sprintf(finalString, "error at line %d: Length mismatch found between two terms of an operation", currentLineNumber);
+                    {
+                        stringstream ss;
+                        ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
+                        finalString = ss.str();
+                    }
                     else
                     {
                         if(find1(st3, st1))
-                            sprintf(finalString, "error at line %d: The %s variable '%s' of the function '%s' is included in its definition", currentLineNumber, st2, st1, fun[currentFunctionIndex].name);
-                        else
                         {
-                            if(check3(st3) == false)
-                                sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' from the function '%s' is undeclared", currentLineNumber, find5(st3), st2, st1, fun[currentFunctionIndex].name);
-                            else
-                            {
-                                if(check4(st3) == false)
-                                    sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' from the function '%s' is unassigned", currentLineNumber, find6(st3), st2, st1, fun[currentFunctionIndex].name);
-                                else
-                                {
-                                    if(check7(st3) == true)
-                                        sprintf(finalString, "error at line %d: There is a wrong used variable contained in the assignment expression of the %s variable '%s'", currentLineNumber, st2, st1);
-                                    else
-                                    {
-                                        sprintf(finalString, "const %s %s = %s;", st4, st1, st3);
-                                        fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = strdup(st1);
-                                        fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = strdup(st2);
-                                        fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = d1;
-                                        fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
-                                    }
+                            stringstream ss;
+                            ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
+                            finalString = ss.str();
+                        }
+                          else
+                          {
+                              if(check3(st3) == false)
+                              {
+                                  stringstream ss;
+                                  ss << "error at line " << currentLineNumber << ": The variable '" << find5(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
+                                  finalString = ss.str();
+                              }
+                              else
+                              {
+                                  if(check4(st3) == false)
+                                  {
+                                      stringstream ss;
+                                      ss << "error at line " << currentLineNumber << ": The variable '" << find6(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
+                                      finalString = ss.str();
+                                  }
+                                  else
+                                  {
+                                      if(check7(st3) == true)
+                                      {
+                                          stringstream ss;
+                                          ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the " << st2 << " variable '" << st1 << "'";
+                                          finalString = ss.str();
+                                      }
+                                      else
+                                      {
+                                          stringstream ss;
+                                          ss << "const " << st4 << " " << st1 << " = " << st3;
+                                          finalString = ss.str();
+                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
+                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
+                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = d1;
+                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
+                                      }
                                 }
                             }
                         }
@@ -3559,35 +3767,61 @@ char* plural_declaration_with_assignment_function(char *st1, char *st2, char *st
             }
 
         if(declaredBefore == true)
-            sprintf(finalString, "error at line %d: The %s variable '%s' is redeclared", currentLineNumber, st2, st1);
+        {
+            stringstream ss;
+            ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is redeclared";
+            finalString = ss.str();
+        }
         else
         {
             if(check6(st3) == true)
-                sprintf(finalString, "error at line %d: Length mismatch found between two terms of an operation", currentLineNumber);
+            {
+                stringstream ss;
+                ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
+                finalString = ss.str();
+            }
             else
             {
                 if(find1(st3, st1))
-                    sprintf(finalString, "error at line %d: The %s variable '%s' is included in its definition", currentLineNumber, st2, st1);
+                {
+                    stringstream ss;
+                    ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is included in its definition";
+                    finalString = ss.str();
+                }
                 else
                 {
                     if(check1(st3) == false)
-                        sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' is undeclared", currentLineNumber, find2(st3), st2, st1);
+                    {
+                        stringstream ss;
+                        ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
+                        finalString = ss.str();
+                    }
                     else
                     {
                         if(check2(st3) == false)
-                            sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' is unassigned", currentLineNumber, find3(st3), st2, st1);
+                        {
+                            stringstream ss;
+                            ss << "error at line " << currentLineNumber << ": The variable '" << find3(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is unassigned";
+                            finalString = ss.str();
+                        }
                         else
                         {
-                              if(check7(st3) == true)
-                                  sprintf(finalString, "error at line %d: There is a wrong used variable contained in the assignment expression of the %s variable '%s'", currentLineNumber, st2, st1);
-                              else
-                              {
-                                  sprintf(finalString, "const %s %s = %s;", st4, st1, st3);
-                                  var[varNo++].name = strdup(st1);
-                                  var[varNo-1].type = strdup(st2);
-                                  var[varNo-1].length = d1;
-                                  var[varNo-1].assigned = true;
-                              }
+                            if(check7(st3) == true)
+                            {
+                                stringstream ss;
+                                ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the " << st2 << " variable '" << st1 << "'";
+                                finalString = ss.str();
+                            }
+                            else
+                            {
+                                stringstream ss;
+                                ss << "const " << st4 << " " << st1 << " = " << st3;
+                                finalString = ss.str();
+                                var[varNo++].name = st1;
+                                var[varNo-1].type = st2;
+                                var[varNo-1].length = d1;
+                                var[varNo-1].assigned = true;
+                            }
                         }
                     }
                 }
@@ -3600,10 +3834,10 @@ char* plural_declaration_with_assignment_function(char *st1, char *st2, char *st
 }
 
 
-char* extended_plural_declaration_with_assignment_function(char *st1, char *st2, char *st3, char *st4, char *st5, double d1, double d2)
+string extended_plural_declaration_with_assignment_function(string st1, string st2, string st3, string st4, string st5, double d1, double d2)
 {
     HEAP_CHECK();
-    char* finalString = (char*) malloc(1024*sizeof(char));
+    string finalString;
     if(insideFunction == true)
     {
         int i;
@@ -3617,7 +3851,11 @@ char* extended_plural_declaration_with_assignment_function(char *st1, char *st2,
             }
 
         if(taken == true)
-            sprintf(finalString, "error at line %d: The %s variable '%s' exists in the header of the function '%s'", currentLineNumber, st2, st1, fun[currentFunctionIndex].name);
+        {
+            stringstream ss;
+            ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' exists in the header of the function '" << fun[currentFunctionIndex].name << "'";
+            finalString = ss.str();
+        }
         else
         {
               for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
@@ -3628,44 +3866,82 @@ char* extended_plural_declaration_with_assignment_function(char *st1, char *st2,
                   }
 
               if(taken == true)
-                  sprintf(finalString, "error at line %d: The %s variable '%s' is redeclared as a local variable of the function '%s'", currentLineNumber, st2, st1, fun[currentFunctionIndex].name);
+              {
+                  stringstream ss;
+                  ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is redeclared as a local variable of the function '" << fun[currentFunctionIndex].name << "'";
+                  finalString = ss.str();
+              }
               else
               {
                     if(check6(st3) == true)
-                        sprintf(finalString, "error at line %d: Length mismatch found between two terms of an operation", currentLineNumber);
+                    {
+                        stringstream ss;
+                        ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
+                        finalString = ss.str();
+                    }
                     else
                     {
                         if(find1(st3, st1))
-                            sprintf(finalString, "error at line %d: The %s variable '%s' of the function '%s' is included in its definition", currentLineNumber, st2, st1, fun[currentFunctionIndex].name);
+                        {
+                            stringstream ss;
+                            ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
+                            finalString = ss.str();
+                        }
                         else
                         {
                             if(check3(st3) == false)
-                                sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' from the function '%s' is undeclared", currentLineNumber, find5(st3), st2, st1, fun[currentFunctionIndex].name);
+                            {
+                                stringstream ss;
+                                ss << "error at line " << currentLineNumber << ": The variable '" << find5(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
+                                finalString = ss.str();
+                            }
                             else
                             {
                                 if(check4(st3) == false)
-                                    sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' from the function '%s' is unassigned", currentLineNumber, find6(st3), st2, st1, fun[currentFunctionIndex].name);
+                                {
+                                    stringstream ss;
+                                    ss << "error at line " << currentLineNumber << ": The variable '" << find6(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
+                                    finalString = ss.str();
+                                }
                                 else
                                 {
                                     if(check3(st5) == false)
-                                        sprintf(finalString, "error at line %d: The variable '%s' contained in the ON expression of the %s variable '%s' is undeclared", currentLineNumber, find5(st5), st2, st1);
+                                    {
+                                        stringstream ss;
+                                        ss << "error at line " << currentLineNumber << ": The variable '" << find5(st5) << "' contained in the ON expression of the " << st2 << " variable '" << st1 << "' is undeclared";
+                                        finalString = ss.str();
+                                    }
                                     else
                                     {
                                         if(check4(st5) == false)
-                                            sprintf(finalString, "error at line %d: The variable '%s' contained in the ON expression of the %s variable '%s' is unassigned", currentLineNumber, find6(st5), st2, st1);
+                                        {
+                                            stringstream ss;
+                                            ss << "error at line " << currentLineNumber << ": The variable '" << find6(st5) << "' contained in the ON expression of the " << st2 << " variable '" << st1 << "' is unassigned";
+                                            finalString = ss.str();
+                                        }
                                         else
                                         {
                                             if(check7(st5) == true)
-                                                sprintf(finalString, "error at line %d: There is a wrong used variable contained in the ON expression of the %s variable '%s'", currentLineNumber, st2, st1);
+                                            {
+                                                stringstream ss;
+                                                ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the ON expression of the " << st2 << " variable '" << st1 << "'";
+                                                finalString = ss.str();
+                                            }
                                             else
                                             {
                                                 if(d2 != d1)
-                                                    sprintf(finalString, "error at line %d: The length of the %s variable '%s' from its definition differs than the length of its assignment", currentLineNumber, st2, st1);
+                                                {
+                                                    stringstream ss;
+                                                    ss << "error at line " << currentLineNumber << ": The length of the " << st2 << " variable '" << st1 << "' from its definition differs than the length of its assignment";
+                                                    finalString = ss.str();
+                                                }
                                                 else
                                                 {
-                                                    sprintf(finalString, "const %s %s = %s;", st4, st1, st3);
-                                                    fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = strdup(st1);
-                                                    fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = strdup(st2);
+                                                    stringstream ss;
+                                                    ss << "const " << st4 << " " << st1 << " = " << st3;
+                                                    finalString = ss.str();
+                                                    fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
+                                                    fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
                                                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = d1;
                                                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
                                                 }
@@ -3692,44 +3968,82 @@ char* extended_plural_declaration_with_assignment_function(char *st1, char *st2,
             }
 
         if(declaredBefore == true)
-            sprintf(finalString, "error at line %d: The %s variable '%s' is redeclared", currentLineNumber, st2, st1);
+        {
+            stringstream ss;
+            ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is redeclared";
+            finalString = ss.str();
+        }
         else
         {
             if(check6(st3) == true)
-                sprintf(finalString, "error at line %d: Length mismatch found between two terms of an operation", currentLineNumber);
+            {
+                stringstream ss;
+                ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
+                finalString = ss.str();
+            }
             else
             {
                 if(find1(st3, st1))
-                    sprintf(finalString, "error at line %d: The %s variable '%s' is included in its definition", currentLineNumber, st2, st1);
+                {
+                    stringstream ss;
+                    ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is included in its definition";
+                    finalString = ss.str();
+                }
                 else
                 {
                     if(check1(st3) == false)
-                        sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' is undeclared", currentLineNumber, find2(st3), st2, st1);
+                    {
+                        stringstream ss;
+                        ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
+                        finalString = ss.str();
+                    }
                     else
                     {
                         if(check2(st3) == false)
-                            sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' is unassigned", currentLineNumber, find3(st3), st2, st1);
+                        {
+                            stringstream ss;
+                            ss << "error at line " << currentLineNumber << ": The variable '" << find3(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is unassigned";
+                            finalString = ss.str();
+                        }
                         else
                         {
                               if(check1(st5) == false)
-                                  sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' is undeclared", currentLineNumber, find2(st5), st2, st1);
+                              {
+                                  stringstream ss;
+                                  ss << "error at line " << currentLineNumber << ": The variable '" << find2(st5) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
+                                  finalString = ss.str();
+                              }
                               else
                               {
                                   if(check2(st5) == false)
-                                      sprintf(finalString, "error at line %d: The variable '%s' contained in the definition of the %s variable '%s' is unassigned", currentLineNumber, find3(st5), st2, st1);
+                                  {
+                                      stringstream ss;
+                                      ss << "error at line " << currentLineNumber << ": The variable '" << find3(st5) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is unassigned";
+                                      finalString = ss.str();
+                                  }
                                   else
                                   {
                                       if(check7(st5) == true)
-                                          sprintf(finalString, "error at line %d: There is a wrong used variable contained in the ON expression of the %s variable '%s'", currentLineNumber, st2, st1);
+                                      {
+                                          stringstream ss;
+                                          ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the ON expression of the " << st2 << " variable '" << st1 << "'";
+                                          finalString = ss.str();
+                                      }
                                       else
                                       {
                                           if(d2 != d1)
-                                              sprintf(finalString, "error at line %d: The length of the %s variable '%s' from its definition differs than the length of its assignment", currentLineNumber, st2, st1);
+                                          {
+                                              stringstream ss;
+                                              ss << "error at line " << currentLineNumber << ": The length of the " << st2 << " variable '" << st1 << "' from its definition differs than the length of its assignment";
+                                              finalString = ss.str();
+                                          }
                                           else
                                           {
-                                              sprintf(finalString, "const %s %s = %s;", st4, st1, st3);
-                                              var[varNo++].name = strdup(st1);
-                                              var[varNo-1].type = strdup(st2);
+                                              stringstream ss;
+                                              ss << "const " << st4 << " " << st1 << " = " << st3;
+                                              finalString = ss.str();
+                                              var[varNo++].name = st1;
+                                              var[varNo-1].type = st2;
                                               var[varNo-1].length = d1;
                                               var[varNo-1].assigned = true;
                                           }
