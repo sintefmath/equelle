@@ -310,39 +310,39 @@ s^d                              all cells
 
 
 scalar_expr: scalar_term 		                 {$$ = $1;}
-           | '-' scalar_term                 {stringstream ss; ss << "-" << $2; $$ = ss.str();}
+           | '-' scalar_term                 {stringstream ss; ss << "-" << $2; $$ = strdup(ss.str().c_str());}
            | scalar_expr '+' scalar_term	   {stringstream ss; ss << $1 << " + " << $3; $$ = strdup(ss.str().c_str());}
-           | scalar_expr '-' scalar_term	   {stringstream ss; ss << $1 << " - " << $3; $$ = ss.str();}
+           | scalar_expr '-' scalar_term	   {stringstream ss; ss << $1 << " - " << $3; $$ = strdup(ss.str().c_str());}
            ;
 
 
 scalar_term: scalar_factor		                       {$$ = $1;}
-           | scalar_term '*' scalar_factor	         {stringstream ss; ss << $1 << " * " << $3; $$ = ss.str();}
-           | scalar_factor '*' scalar_term           {stringstream ss; ss << $1 << " * " << $3; $$ = ss.str();}
-           | scalar_term '/' scalar_factor	         {stringstream ss; ss << $1 << " / " << $3; $$ = ss.str();}
-           | scalar_term '^' scalar_factor           {stringstream ss; ss << "er.pow(" << $1 << ", " << $3 << ")"; $$ = ss.str();}
+           | scalar_term '*' scalar_factor	         {stringstream ss; ss << $1 << " * " << $3; $$ = strdup(ss.str().c_str());}
+           | scalar_factor '*' scalar_term           {stringstream ss; ss << $1 << " * " << $3; $$ = strdup(ss.str().c_str());}
+           | scalar_term '/' scalar_factor	         {stringstream ss; ss << $1 << " / " << $3; $$ = strdup(ss.str().c_str());}
+           | scalar_term '^' scalar_factor           {stringstream ss; ss << "er.pow(" << $1 << ", " << $3 << ")"; $$ = strdup(ss.str().c_str());}
            ;
 
 
 scalar_factor: NUMBER		                               {$$ = $1;}
-             | NUMBER '.' NUMBER                       {stringstream ss; ss << $1 << "." << $3; $$ = ss.str();}
-             | '(' scalar_expr ')'	                   {stringstream ss; ss << "(" << $2 << ")"; $$ = ss.str();}
-             | EUCLIDEAN_LENGTH '(' vector_expr ')'    {stringstream ss; ss << "er.euclideanLength(" << $3 << ")"; $$ = ss.str();}
-             | LENGTH '(' edge ')'                     {stringstream ss; ss << "er.length(" << $3 << ")"; $$ = ss.str();}
-             | AREA '(' face ')'                       {stringstream ss; ss << "er.area(" << $3 << ")"; $$ = ss.str();}
-             | VOLUME '(' cell ')'                     {stringstream ss; ss << "er.volume(" << $3 << ")"; $$ = ss.str();}
-             | DOT '(' vector_expr ',' vector_expr ')' {stringstream ss; ss << "er.dot(" << $3 << ", " << $5 << ")"; $$ = ss.str();}
-             | CEIL '(' scalar_expr ')'                {stringstream ss; ss << "er.ceil(" << $3 << ")"; $$ = ss.str();}
-             | FLOOR '(' scalar_expr ')'               {stringstream ss; ss << "er.floor(" << $3 << ")"; $$ = ss.str();}
-             | ABS '(' scalar_expr ')'                 {stringstream ss; ss << "er.abs(" << $3 << ")"; $$ = ss.str();}
-             | MIN '(' scalars ')'                     {stringstream ss; ss << "er.min(" << $3 << ")"; $$ = ss.str();}
-             | MAX '(' scalars ')'                     {stringstream ss; ss << "er.max(" << $3 << ")"; $$ = ss.str();}
+             | NUMBER '.' NUMBER                       {stringstream ss; ss << $1 << "." << $3; $$ = strdup(ss.str().c_str());}
+             | '(' scalar_expr ')'	                   {stringstream ss; ss << "(" << $2 << ")"; $$ = strdup(ss.str().c_str());}
+             | EUCLIDEAN_LENGTH '(' vector_expr ')'    {stringstream ss; ss << "er.euclideanLength(" << $3 << ")"; $$ = strdup(ss.str().c_str());}
+             | LENGTH '(' edge ')'                     {stringstream ss; ss << "er.length(" << $3 << ")"; $$ = strdup(ss.str().c_str());}
+             | AREA '(' face ')'                       {stringstream ss; ss << "er.area(" << $3 << ")"; $$ = strdup(ss.str().c_str());}
+             | VOLUME '(' cell ')'                     {stringstream ss; ss << "er.volume(" << $3 << ")"; $$ = strdup(ss.str().c_str());}
+             | DOT '(' vector_expr ',' vector_expr ')' {stringstream ss; ss << "er.dot(" << $3 << ", " << $5 << ")"; $$ = strdup(ss.str().c_str());}
+             | CEIL '(' scalar_expr ')'                {stringstream ss; ss << "er.ceil(" << $3 << ")"; $$ = strdup(ss.str().c_str());}
+             | FLOOR '(' scalar_expr ')'               {stringstream ss; ss << "er.floor(" << $3 << ")"; $$ = strdup(ss.str().c_str());}
+             | ABS '(' scalar_expr ')'                 {stringstream ss; ss << "er.abs(" << $3 << ")"; $$ = strdup(ss.str().c_str());}
+             | MIN '(' scalars ')'                     {stringstream ss; ss << "er.min(" << $3 << ")"; $$ = strdup(ss.str().c_str());}
+             | MAX '(' scalars ')'                     {stringstream ss; ss << "er.max(" << $3 << ")"; $$ = strdup(ss.str().c_str());}
              | VARIABLE                                {
                                                           if(strcmp(getType($1), "scalar") != 0)
                                                           {
                                                               stringstream ss;
                                                               ss << "wrong_type_error  " << $1;   // we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
-                                                              $$ = ss.str();
+                                                              $$ = strdup(ss.str().c_str());
                                                           }
                                                           else
                                                           {
@@ -355,55 +355,55 @@ scalar_factor: NUMBER		                               {$$ = $1;}
                                                           {
                                                             stringstream ss;
                                                             ss << "error1: This function does not exist";
-                                                            $$ = ss.str();
+                                                            $$ = strdup(ss.str().c_str());
                                                           }
                                                           else
                                                               if(fun[getIndex2($1)].assigned == false)
                                                               {
                                                                 stringstream ss;
                                                                 ss << "error2: The function is not assigned";
-                                                                $$ = ss.str();
+                                                                $$ = strdup(ss.str().c_str());
                                                               }
                                                               else
                                                                   if(strcmp(fun[getIndex2($1)].returnType, "Scalar") != 0)
                                                                   {
                                                                     stringstream ss;
                                                                     ss << "error3: The return type of the function is not a scalar type";
-                                                                    $$ = ss.str();
+                                                                    $$ = strdup(ss.str().c_str());
                                                                   }
                                                                   else
                                                                       if(fun[getIndex2($1)].noParam != getSize4($3))
                                                                       {
                                                                         stringstream ss;
                                                                         ss << "error4: The number of arguments of the function does not correspond to the number of arguments sent";
-                                                                        $$ = ss.str();
+                                                                        $$ = strdup(ss.str().c_str());
                                                                       }
                                                                       else
                                                                           if(isVariableDeclared($3) == false)
                                                                           {
                                                                             stringstream ss;
                                                                             ss << "error5: One input variable from the function's call is undefined";
-                                                                            $$ = ss.str();
+                                                                            $$ = strdup(ss.str().c_str());
                                                                           }
                                                                           else
                                                                               if(check2($3) == false)
                                                                               {
                                                                                 stringstream ss;
                                                                                 ss << "error6: One input variable from the function's call is unassigned";
-                                                                                $$ = ss.str();
+                                                                                $$ = strdup(ss.str().c_str());
                                                                               }
                                                                               else
                                                                                   if(check8($3, fun[getIndex2($1)].paramList) == false)
                                                                                   {
                                                                                     stringstream ss;
                                                                                     ss << "error7: The parameter list of the template of the function does not correspond to the given parameter list";
-                                                                                    $$ = ss.str();
+                                                                                    $$ = strdup(ss.str().c_str());
                                                                                   }
                                                                                   else
                                                                                   {
                                                                                       stringstream ss;
                                                                                       ss << $1 << "(" << $3 << ")";
-                                                                                      $$ = ss.str();
+                                                                                      $$ = strdup(ss.str().c_str());
                                                                                   }
                                                        }
              ;
@@ -552,30 +552,30 @@ scalar_factors: EUCLIDEAN_LENGTH '(' vector_exprs ')'           {char *str = app
 
 
 numbers: NUMBER                         {$$ = $1;}
-       | numbers ',' NUMBER             {stringstream ss; ss << $1 << ", " << $3; $$ = ss.str();}
+       | numbers ',' NUMBER             {stringstream ss; ss << $1 << ", " << $3; $$ = strdup(ss.str().c_str());}
        ;
 
 
 vector_expr: vector_term                      {$$ = $1;}
-           | '-' vector_term                  {stringstream ss; ss << "-" << $2; $$ = ss.str();}
-           | vector_expr '+' vector_term      {stringstream ss; ss << $1 << " + " << $3; $$ = ss.str();}
-           | vector_expr '-' vector_term      {stringstream ss; ss << $1 << " - " << $3; $$ = ss.str();}
+           | '-' vector_term                  {stringstream ss; ss << "-" << $2; $$ = strdup(ss.str().c_str());}
+           | vector_expr '+' vector_term      {stringstream ss; ss << $1 << " + " << $3; $$ = strdup(ss.str().c_str());}
+           | vector_expr '-' vector_term      {stringstream ss; ss << $1 << " - " << $3; $$ = strdup(ss.str().c_str());}
            ;
 
 
-vector_term: '(' numbers ')'                       {stringstream ss; ss << "(" << $2 << ")"; $$ = ss.str();}
-           | CENTROID '(' cell ')'                 {stringstream ss; ss << "er.centroid(" << $3 << ")"; $$ = ss.str();}
-           | NORMAL '(' face ')'                   {stringstream ss; ss << "er.normal(" << $3 << ")"; $$ = ss.str();}
-           | '(' vector_expr ')'                   {stringstream ss; ss << "(" << $2 << ")"; $$ = ss.str();}              // produces 1 shift/reduce conflict
-           | vector_term '*' scalar_factor         {stringstream ss; ss << $1 << " * " << $3; $$ = ss.str();}             // produces 1 reduce/reduce conflict
-           | scalar_factor '*' vector_term         {stringstream ss; ss << $1 << " * " << $3; $$ = ss.str();}
-           | vector_term '/' scalar_factor         {stringstream ss; ss << $1 << " / " << $3; $$ = ss.str();}
+vector_term: '(' numbers ')'                       {stringstream ss; ss << "(" << $2 << ")"; $$ = strdup(ss.str().c_str());}
+           | CENTROID '(' cell ')'                 {stringstream ss; ss << "er.centroid(" << $3 << ")"; $$ = strdup(ss.str().c_str());}
+           | NORMAL '(' face ')'                   {stringstream ss; ss << "er.normal(" << $3 << ")"; $$ = strdup(ss.str().c_str());}
+           | '(' vector_expr ')'                   {stringstream ss; ss << "(" << $2 << ")"; $$ = strdup(ss.str().c_str());}              // produces 1 shift/reduce conflict
+           | vector_term '*' scalar_factor         {stringstream ss; ss << $1 << " * " << $3; $$ = strdup(ss.str().c_str());}             // produces 1 reduce/reduce conflict
+           | scalar_factor '*' vector_term         {stringstream ss; ss << $1 << " * " << $3; $$ = strdup(ss.str().c_str());}
+           | vector_term '/' scalar_factor         {stringstream ss; ss << $1 << " / " << $3; $$ = strdup(ss.str().c_str());}
            | VARIABLE                              {
                                                       if(strcmp(getType($1), "vector") != 0)
                                                       {
                                                           stringstream ss;
                                                           ss << "wrong_type_error  " << $1;     // we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
-                                                          $$ = ss.str();
+                                                          $$ = strdup(ss.str().c_str());
                                                       }
                                                       else
                                                       {
@@ -1576,7 +1576,7 @@ function_declaration: VARIABLE ':' FUNCTION '(' parameter_list ')' RET type
                                                 {
                                                     stringstream ss;
                                                     ss << "error: The function " << $1 << "' is redeclared";
-                                                    $$ = ss.str();
+                                                    $$ = strdup(ss.str().c_str());
                                                 }
                                                 else
                                                 {
@@ -1636,7 +1636,7 @@ function_assignment: function_start end_lines commands end_lines return_instr en
                                                       {
                                                           stringstream ss;
                                                           ss << "error: The function '" << fun[i].name << "' is reassigned";
-                                                          $$ = ss.str();
+                                                          $$ = strdup(ss.str().c_str());
                                                       }
                                                       else
                                                       {
@@ -1659,7 +1659,7 @@ function_assignment: function_start end_lines commands end_lines return_instr en
                                                           {
                                                               stringstream ss;
                                                               ss << "error: At least one of the return variables does not exist within the function or the return type of the function '" << fun[i].name << "' from its assignment differs than the length of the return type from the function's definition";
-                                                              $$ = ss.str();
+                                                              $$ = strdup(ss.str().c_str());
                                                           }
 
                                                       }
@@ -1667,7 +1667,7 @@ function_assignment: function_start end_lines commands end_lines return_instr en
                                                 {
                                                     stringstream ss;
                                                     ss << "error: The function '" << extract($1) <<"' must be declared before being assigned";
-                                                    $$ = ss.str();
+                                                    $$ = strdup(ss.str().c_str());
                                                 }
                                                 insideFunction = false;
                                                 currentFunctionIndex = -1;
