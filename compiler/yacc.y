@@ -75,8 +75,8 @@
 
 %{
 
+#include <iostream>
 #include <cstdio>
-//#include <stdbool.h>
 #include <sstream>
 #include <string>
 #include <cstring>
@@ -84,37 +84,39 @@
   #define HEAP_CHECK()
 #else
   #include <crtdbg.h>
-  #define HEAP_CHECK() _ASSERTE( _CrtCheckMemory( ) )
+  #define HEAP_CHECK() _ASSERTE(_CrtCheckMemory())
 #endif
 
 using namespace std;
 
 void yyerror(const char* s);
 int yylex(void);
-bool find1(string s1, string s2);
-string find2(string s1);
-string find3(string s1);
-int find4(string s1);
-string find5(string s1);
-string find6(string s1);
-bool isVariableDeclared(string s1);
-bool check2(string s1);
-bool check3(string s1);
-bool check4(string s1);
-bool check5(string s1);
-bool check6(string s1);
-bool check7(string s1);
-bool check8(string s1, string s2);
-string getType(string s1);
-int getIndex1(string s1);
-int getIndex2(string s1);
-double getSize1(string s1);
-double getSize2(string s1);
-double getSize3(string s1);
-int getSize4(string s1);
-string extract(string s1);
-string CPPToEquelle1(string st);
-int CPPToEquelle2(string st);
+bool find1(char* s1, char* s2);
+char* find2(char* s1);
+char* find3(char* s1);
+int find4(char* s1);
+char* find5(char* s1);
+char* find6(char* s1);
+bool check1(char* s1);
+bool check2(char* s1);
+bool check3(char* s1);
+bool check4(char* s1);
+bool check5(char* s1);
+bool check6(char* s1);
+bool check7(char* s1);
+bool check8(char* s1, char* s2);
+char* getType(char* s1);
+int getIndex1(char* s1);
+int getIndex2(char* s1);
+double getSize1(char* s1);
+double getSize2(char* s1);
+double getSize3(char* s1);
+int getSize4(char* s1);
+char* extract(char* s1);
+string CPPToEquelle1(char* st);
+int CPPToEquelle2(char* st);
+string functionToAnySingularType(char *st1, char *st2, char *st3, const string &st4);
+string functionToAnyCollectionType(char *st1, char *st2, char *st3, const string &st4);
 string singular_declaration_function(string st1, string st2);
 string plural_declaration_function(string st1, string st2);
 string extended_plural_declaration_function(string st1, string st2, string st3, double d1);
@@ -182,6 +184,7 @@ s^d                              all cells
 
 // by summing any multiples of the below values between them, we cannot obtain another unique value (except for: Interior + Boundary = All)
 
+// CONSTANTS
 #define INTERIORCELLS     1.01
 #define BOUNDARYCELLS     1.02
 #define ALLCELLS          2.03
@@ -195,6 +198,15 @@ s^d                              all cells
 #define BOUNDARYVERTICES  1.23
 #define ALLVERTICES       2.45
 #define ANY               2.46      // the default length of a collection, if it is not explicitly specified
+
+
+// MACROS
+#define STREAM_TO_DOLLARS_CHAR_ARRAY(dd, streamcontent)                 do { stringstream ss; ss << streamcontent; dd = strdup(ss.str().c_str()); } while (false)
+#define LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY(dd)           do { stringstream ss; ss << "length_mismatch_error"; dd = strdup(ss.str().c_str()); } while (false)
+// we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
+#define WRONG_TYPE_ERROR_TO_CHAR_ARRAY(dd, d1)                          do { stringstream ss; ss << "wrong_type_error  " << d1; dd = strdup(ss.str().c_str()); }  while (false)
+// we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
+#define WRONG_TYPE_ERROR_TO_CHAR_ARRAY(dd, d1)            do { stringstream ss; ss << "wrong_type_error  " << d1; dd = strdup(ss.str().c_str()); }  while (false)
 
 
 %}
@@ -300,133 +312,79 @@ s^d                              all cells
 {
   int value;
   char* str;           // the non-terminals which need to store only the translation code for C++ will be declared with this type
-  info inf;      // the non-terminals which need to store both the translation code for C++ and the size of the collection will be declared with this type
-  //struct array arr;   // the values which are passed as arguments when calling a function must be checked to see if they correspond to the function's template
-  dinfo dinf;
+  struct info inf;            // the non-terminals which need to store both the translation code for C++ and the size of the collection will be declared with this type
+  //struct array arr;  // the values which are passed as arguments when calling a function must be checked to see if they correspond to the function's template
+  struct dinfo dinf;
 };
 
 
 %%
 
 
-scalar_expr: scalar_term 		                 {$$ = $1;}
-           | '-' scalar_term                 {stringstream ss; ss << "-" << $2; $$ = strdup(ss.str().c_str());}
-           | scalar_expr '+' scalar_term	   {stringstream ss; ss << $1 << " + " << $3; $$ = strdup(ss.str().c_str());}
-           | scalar_expr '-' scalar_term	   {stringstream ss; ss << $1 << " - " << $3; $$ = strdup(ss.str().c_str());}
+scalar_expr: scalar_term                     { $$ = strdup($1); }
+           | '-' scalar_term                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "-" << $2); }
+           | scalar_expr '+' scalar_term     { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << " + " << $3); }
+           | scalar_expr '-' scalar_term     { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << " - " << $3); }
            ;
 
 
-scalar_term: scalar_factor		                       {$$ = $1;}
-           | scalar_term '*' scalar_factor	         {stringstream ss; ss << $1 << " * " << $3; $$ = strdup(ss.str().c_str());}
-           | scalar_factor '*' scalar_term           {stringstream ss; ss << $1 << " * " << $3; $$ = strdup(ss.str().c_str());}
-           | scalar_term '/' scalar_factor	         {stringstream ss; ss << $1 << " / " << $3; $$ = strdup(ss.str().c_str());}
-           | scalar_term '^' scalar_factor           {stringstream ss; ss << "er.pow(" << $1 << ", " << $3 << ")"; $$ = strdup(ss.str().c_str());}
+scalar_term: scalar_factor                           { $$ = strdup($1); }
+           | scalar_term '*' scalar_factor           { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << " * " << $3); }
+           | scalar_factor '*' scalar_term           { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << " * " << $3); }
+           | scalar_term '/' scalar_factor           { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << " / " << $3); }
+           | scalar_term '^' scalar_factor           { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.pow(" << $1 << ", " << $3 << ")"); }
            ;
 
 
-scalar_factor: NUMBER		                               {$$ = $1;}
-             | NUMBER '.' NUMBER                       {stringstream ss; ss << $1 << "." << $3; $$ = strdup(ss.str().c_str());}
-             | '(' scalar_expr ')'	                   {stringstream ss; ss << "(" << $2 << ")"; $$ = strdup(ss.str().c_str());}
-             | EUCLIDEAN_LENGTH '(' vector_expr ')'    {stringstream ss; ss << "er.euclideanLength(" << $3 << ")"; $$ = strdup(ss.str().c_str());}
-             | LENGTH '(' edge ')'                     {stringstream ss; ss << "er.length(" << $3 << ")"; $$ = strdup(ss.str().c_str());}
-             | AREA '(' face ')'                       {stringstream ss; ss << "er.area(" << $3 << ")"; $$ = strdup(ss.str().c_str());}
-             | VOLUME '(' cell ')'                     {stringstream ss; ss << "er.volume(" << $3 << ")"; $$ = strdup(ss.str().c_str());}
-             | DOT '(' vector_expr ',' vector_expr ')' {stringstream ss; ss << "er.dot(" << $3 << ", " << $5 << ")"; $$ = strdup(ss.str().c_str());}
-             | CEIL '(' scalar_expr ')'                {stringstream ss; ss << "er.ceil(" << $3 << ")"; $$ = strdup(ss.str().c_str());}
-             | FLOOR '(' scalar_expr ')'               {stringstream ss; ss << "er.floor(" << $3 << ")"; $$ = strdup(ss.str().c_str());}
-             | ABS '(' scalar_expr ')'                 {stringstream ss; ss << "er.abs(" << $3 << ")"; $$ = strdup(ss.str().c_str());}
-             | MIN '(' scalars ')'                     {stringstream ss; ss << "er.min(" << $3 << ")"; $$ = strdup(ss.str().c_str());}
-             | MAX '(' scalars ')'                     {stringstream ss; ss << "er.max(" << $3 << ")"; $$ = strdup(ss.str().c_str());}
+scalar_factor: NUMBER                                  { $$ = strdup($1); }
+             | NUMBER '.' NUMBER                       { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << "." << $3); }
+             | '(' scalar_expr ')'                     { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "(" << $2 << ")"); }
+             | EUCLIDEAN_LENGTH '(' vector_expr ')'    { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.euclideanLength(" << $3 << ")"); }
+             | LENGTH '(' edge ')'                     { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.length(" << $3 << ")"); }
+             | AREA '(' face ')'                       { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.area(" << $3 << ")"); }
+             | VOLUME '(' cell ')'                     { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.volume(" << $3 << ")"); }
+             | DOT '(' vector_expr ',' vector_expr ')' { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.dot(" << $3 << ", " << $5 << ")"); }
+             | CEIL '(' scalar_expr ')'                { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.ceil(" << $3 << ")"); }
+             | FLOOR '(' scalar_expr ')'               { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.floor(" << $3 << ")"); }
+             | ABS '(' scalar_expr ')'                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.abs(" << $3 << ")"); }
+             | MIN '(' scalars ')'                     { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.min(" << $3.str << ")"); }
+             | MAX '(' scalars ')'                     { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.max(" << $3.str << ")"); }
              | VARIABLE                                {
                                                           if(strcmp(getType($1), "scalar") != 0)
                                                           {
-                                                              stringstream ss;
-                                                              ss << "wrong_type_error  " << $1;   // we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
-                                                              $$ = strdup(ss.str().c_str());
+                                                              WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$, $1);
                                                           }
                                                           else
                                                           {
-                                                              $$ = $1;
+                                                              $$ = strdup($1);
                                                           }
                                                        }
 
              | VARIABLE '(' values ')'                 {
-                                                          if(getIndex2($1) == -1)
-                                                          {
-                                                            stringstream ss;
-                                                            ss << "error1: This function does not exist";
-                                                            $$ = strdup(ss.str().c_str());
-                                                          }
-                                                          else
-                                                              if(fun[getIndex2($1)].assigned == false)
-                                                              {
-                                                                stringstream ss;
-                                                                ss << "error2: The function is not assigned";
-                                                                $$ = strdup(ss.str().c_str());
-                                                              }
-                                                              else
-                                                                  if(strcmp(fun[getIndex2($1)].returnType, "Scalar") != 0)
-                                                                  {
-                                                                    stringstream ss;
-                                                                    ss << "error3: The return type of the function is not a scalar type";
-                                                                    $$ = strdup(ss.str().c_str());
-                                                                  }
-                                                                  else
-                                                                      if(fun[getIndex2($1)].noParam != getSize4($3))
-                                                                      {
-                                                                        stringstream ss;
-                                                                        ss << "error4: The number of arguments of the function does not correspond to the number of arguments sent";
-                                                                        $$ = strdup(ss.str().c_str());
-                                                                      }
-                                                                      else
-                                                                          if(isVariableDeclared($3) == false)
-                                                                          {
-                                                                            stringstream ss;
-                                                                            ss << "error5: One input variable from the function's call is undefined";
-                                                                            $$ = strdup(ss.str().c_str());
-                                                                          }
-                                                                          else
-                                                                              if(check2($3) == false)
-                                                                              {
-                                                                                stringstream ss;
-                                                                                ss << "error6: One input variable from the function's call is unassigned";
-                                                                                $$ = strdup(ss.str().c_str());
-                                                                              }
-                                                                              else
-                                                                                  if(check8($3, fun[getIndex2($1)].paramList) == false)
-                                                                                  {
-                                                                                    stringstream ss;
-                                                                                    ss << "error7: The parameter list of the template of the function does not correspond to the given parameter list";
-                                                                                    $$ = strdup(ss.str().c_str());
-                                                                                  }
-                                                                                  else
-                                                                                  {
-                                                                                      stringstream ss;
-                                                                                      ss << $1 << "(" << $3 << ")";
-                                                                                      $$ = strdup(ss.str().c_str());
-                                                                                  }
+                                                          string st = functionToAnySingularType($1, "Scalar", $3, "scalar");
+                                                          $$ = strdup(st.c_str());
                                                        }
              ;
 
 
-scalars: scalar_exprs                 {$$.str = strdup($1.str); $$.size = $1.size;}
-       | scalars ',' scalar_exprs     {char *str = append5($1.str,',',$3.str); $$.str = strdup(str); free(str); $$.size = $1.size + $3.size;}
-       | scalar_expr                  {$$.str = strdup($1); $$.size = 1;}
-       | scalars ',' scalar_expr      {char *str = append5($1.str,',',$3); $$.str = strdup(str); free(str); $$.size = $1.size + 1;}
+scalars: scalar_exprs                 { $$.str = strdup($1.str); $$.size = $1.size; }
+       | scalars ',' scalar_exprs     { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << ", " << $3.str); $$.size = $1.size + $3.size; }
+       | scalar_expr                  { $$.str = strdup($1); $$.size = 1; }
+       | scalars ',' scalar_expr      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << ", " << $3); $$.size = $1.size + 1; }
        ;
 
 
-scalar_exprs: scalar_terms                     {$$.str = strdup($1.str); $$.size = $1.size;}
-            | '-' scalar_terms                 {char *str = append7('-',$2.str); $$.str = strdup(str); free(str); $$.size = $2.size;}
+scalar_exprs: scalar_terms                     { $$.str = strdup($1.str); $$.size = $1.size; }
+            | '-' scalar_terms                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str); $$.size = $2.size; }
             | scalar_exprs '+' scalar_terms
                                                {
                                                   if($1.size != $3.size)    // check that the lengths of the 2 terms are equal
-                                                      $$.str = strdup("length_mismatch_error");
+                                                  {
+                                                      LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                  }
                                                   else
                                                   {
-                                                      char *str = append1($1.str,'+',$3.str);
-                                                      $$.str = strdup(str);
-                                                      free(str);
+                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str);
                                                       $$.size = $1.size;
                                                   }
                                                }
@@ -434,200 +392,159 @@ scalar_exprs: scalar_terms                     {$$.str = strdup($1.str); $$.size
             | scalar_exprs '-' scalar_terms
                                                {
                                                   if($1.size != $3.size)    // check that the lengths of the 2 terms are equal
-                                                      $$.str = strdup("length_mismatch_error");
+                                                  {
+                                                      LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                  }
                                                   else
                                                   {
-                                                      char *str = append1($1.str,'-',$3.str);
-                                                      $$.str = strdup(str);
-                                                      free(str);
+                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
                                                       $$.size = $1.size;
                                                   }
                                                }
             ;
 
 
-scalar_terms: scalar_factors                    {$$.str = strdup($1.str); $$.size = $1.size;}
+scalar_terms: scalar_factors                    { $$.str = strdup($1.str); $$.size = $1.size; }
             | scalar_terms '*' scalar_factors
                                                 {
                                                   if($1.size != $3.size)    // check that the lengths of the 2 terms are equal
-                                                      $$.str = strdup("length_mismatch_error");
+                                                  {
+                                                      LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                  }
                                                   else
                                                   {
-                                                      char *str = append1($1.str,'*',$3.str);
-                                                      $$.str = strdup(str);
-                                                      free(str);
+                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " * " << $3.str);
                                                       $$.size = $1.size;
                                                   }
                                                }
             | scalar_factors '*' scalar_terms
                                                 {
                                                   if($1.size != $3.size)    // check that the lengths of the 2 terms are equal
-                                                      $$.str = strdup("length_mismatch_error");
+                                                  {
+                                                      LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                  }
                                                   else
                                                   {
-                                                      char *str = append1($1.str,'*',$3.str);
-                                                      $$.str = strdup(str);
-                                                      free(str);
+                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " * " << $3.str);
                                                       $$.size = $1.size;
                                                   }
                                                }
             | scalar_terms '/' scalar_factors
                                                {
                                                   if($1.size != $3.size)    // check that the lengths of the 2 terms are equal
-                                                      $$.str = strdup("length_mismatch_error");
+                                                  {
+                                                      LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                  }
                                                   else
                                                   {
-                                                      char *str = append1($1.str,'/',$3.str);
-                                                      $$.str = strdup(str);
-                                                      free(str);
+                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " / " << $3.str);
                                                       $$.size = $1.size;
                                                   }
                                                }
-            | scalar_terms '^' scalar_factor    {char *str = append4("er.pow", '(', $1.str, ',', $3, ')'); $$.str = strdup(str); free(str); $$.size = $1.size;}
+            | scalar_terms '^' scalar_factor   { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.pow(" << $1.str << ", " << $3 << ")"); $$.size = $1.size; }
             ;
 
 
-scalar_factors: EUCLIDEAN_LENGTH '(' vector_exprs ')'           {char *str = append3("er.euclideanLength", '(', $3.str, ')'); $$.str = strdup(str); free(str); $$.size = $3.size;}
-              | LENGTH '(' edges ')'                            {char *str = append3("er.length", '(', $3.str, ')'); $$.str = strdup(str); free(str); $$.size = $3.size;}
-              | AREA '(' faces ')'                              {char *str = append3("er.area", '(', $3.str, ')'); $$.str = strdup(str); free(str); $$.size = $3.size;}
-              | VOLUME '(' cells ')'                            {char *str = append3("er.volume", '(', $3.str, ')'); $$.str = strdup(str); free(str); $$.size = $3.size;}
+scalar_factors: EUCLIDEAN_LENGTH '(' vector_exprs ')'           { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.euclideanLength(" << $3.str << ")"); $$.size = $3.size; }
+              | LENGTH '(' edges ')'                            { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.length(" << $3.str << ")"); $$.size = $3.size; }
+              | AREA '(' faces ')'                              { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.area(" << $3.str << ")"); $$.size = $3.size; }
+              | VOLUME '(' cells ')'                            { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.volume(" << $3.str << ")"); $$.size = $3.size; }
               | DOT '(' vector_exprs ',' vector_exprs ')'
                                                                 {
                                                                    if($3.size != $5.size)    // check that the lengths of the 2 terms are equal
-                                                                       $$.str = strdup("length_mismatch_error");
+                                                                   {
+                                                                      LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                                  }
                                                                    else
                                                                    {
-                                                                       char *str = append4("er.dot", '(', $3.str, ',', $5.str, ')');
-                                                                       $$.str = strdup(str);
-                                                                       free(str);
+                                                                       STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.dot(" << $3.str << ", " << $5.str << ")");
                                                                        $$.size = $3.size;
                                                                    }
                                                                 }
 
-              | CEIL '(' scalar_exprs ')'                       {char *str = append3("er.ceil", '(', $3.str, ')'); $$.str = strdup(str); free(str); $$.size = $3.size;}
-              | FLOOR '(' scalar_exprs ')'                      {char *str = append3("er.floor", '(', $3.str, ')'); $$.str = strdup(str); free(str); $$.size = $3.size;}
-              | ABS '(' scalar_exprs ')'                        {char *str = append3("er.abs", '(', $3.str, ')'); $$.str = strdup(str); free(str); $$.size = $3.size;}
-              | VARIABLE                                         {
+              | CEIL '(' scalar_exprs ')'                       { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.ceil(" << $3.str << ")"); $$.size = $3.size;}
+              | FLOOR '(' scalar_exprs ')'                      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.floor(" << $3.str << ")"); $$.size = $3.size;}
+              | ABS '(' scalar_exprs ')'                        { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.abs(" << $3.str << ")"); $$.size = $3.size;}
+              | VARIABLE                                        {
                                                                     if(strcmp(getType($1), "scalars") != 0)
                                                                     {
-                                                                        $$.str = strdup("wrong_type_error");   // we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
-                                                                        $$.str = strcat($$.str, "  ");
-                                                                        $$.str = strcat($$.str, $1);
+                                                                        WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$.str, $1);
                                                                     }
                                                                     else
                                                                     {
                                                                         $$.str = strdup($1);
                                                                         $$.size = getSize1($1);
                                                                     }
-                                                                 }
+                                                                }
 
-              | VARIABLE '(' values ')'             {
-                                                        if(getIndex2($1) == -1)
-                                                            sprintf($$.str, "error1: This function does not exist");
-                                                        else
-                                                            if(fun[getIndex2($1)].assigned == false)
-                                                                sprintf($$.str, "error2: The function is not assigned");
-                                                            else
-                                                                if(strcmp(fun[getIndex2($1)].returnType, "CollOfScalars") != 0)
-                                                                    sprintf($$.str, "error3: The return type of the function is not a collection of scalars type");
-                                                                else
-                                                                    if(fun[getIndex2($1)].noParam != getSize4($3))
-                                                                        sprintf($$.str, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
+              | VARIABLE '(' values ')'                         {
+                                                                    string st = functionToAnyCollectionType($1, "CollOfScalars", $3, "scalars");
+                                                                    if(st == "ok")
+                                                                    {
+                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1 << "(" << $3 << ")");
+                                                                        $$.size = fun[getIndex2($1)].returnSize;
+                                                                    }
                                                                     else
-                                                                        if(isVariableDeclared($3) == false)
-                                                                            sprintf($$.str, "error5: One input variable from the function's call is undefined");
-                                                                        else
-                                                                            if(check2($3) == false)
-                                                                                sprintf($$.str, "error6: One input variable from the function's call is unassigned");
-                                                                            else
-                                                                                if(check8($3, fun[getIndex2($1)].paramList) == false)
-                                                                                    sprintf($$.str, "error7: The parameter list of the template of the function does not correspond to the given parameter list");
-                                                                                else
-                                                                                {
-                                                                                    $$.str = append3($1, '(', $3, ')');
-                                                                                    $$.size = fun[getIndex2($1)].returnSize;
-                                                                                }
-                                                    }
+                                                                    {
+                                                                        $$.str = strdup(st.c_str());
+                                                                    }
+                                                                }
               ;
 
 
-numbers: NUMBER                         {$$ = $1;}
-       | numbers ',' NUMBER             {stringstream ss; ss << $1 << ", " << $3; $$ = strdup(ss.str().c_str());}
+numbers: NUMBER                         { $$ = strdup($1); }
+       | numbers ',' NUMBER             { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << ", " << $3); }
        ;
 
 
-vector_expr: vector_term                      {$$ = $1;}
-           | '-' vector_term                  {stringstream ss; ss << "-" << $2; $$ = strdup(ss.str().c_str());}
-           | vector_expr '+' vector_term      {stringstream ss; ss << $1 << " + " << $3; $$ = strdup(ss.str().c_str());}
-           | vector_expr '-' vector_term      {stringstream ss; ss << $1 << " - " << $3; $$ = strdup(ss.str().c_str());}
+vector_expr: vector_term                      { $$ = strdup($1); }
+           | '-' vector_term                  { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "-" << $2); }
+           | vector_expr '+' vector_term      { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << " + " << $3); }
+           | vector_expr '-' vector_term      { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << " - " << $3); }
            ;
 
 
-vector_term: '(' numbers ')'                       {stringstream ss; ss << "(" << $2 << ")"; $$ = strdup(ss.str().c_str());}
-           | CENTROID '(' cell ')'                 {stringstream ss; ss << "er.centroid(" << $3 << ")"; $$ = strdup(ss.str().c_str());}
-           | NORMAL '(' face ')'                   {stringstream ss; ss << "er.normal(" << $3 << ")"; $$ = strdup(ss.str().c_str());}
-           | '(' vector_expr ')'                   {stringstream ss; ss << "(" << $2 << ")"; $$ = strdup(ss.str().c_str());}              // produces 1 shift/reduce conflict
-           | vector_term '*' scalar_factor         {stringstream ss; ss << $1 << " * " << $3; $$ = strdup(ss.str().c_str());}             // produces 1 reduce/reduce conflict
-           | scalar_factor '*' vector_term         {stringstream ss; ss << $1 << " * " << $3; $$ = strdup(ss.str().c_str());}
-           | vector_term '/' scalar_factor         {stringstream ss; ss << $1 << " / " << $3; $$ = strdup(ss.str().c_str());}
+vector_term: '(' numbers ')'                       { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "(" << $2 << ")"); }
+           | CENTROID '(' cell ')'                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.centroid(" << $3 << ")"); }
+           | NORMAL '(' face ')'                   { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.normal(" << $3 << ")"); }
+           | '(' vector_expr ')'                   { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "(" << $2 << ")"); }              // produces 1 shift/reduce conflict
+           | vector_term '*' scalar_factor         { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << " * " << $3); }             // produces 1 reduce/reduce conflict
+           | scalar_factor '*' vector_term         { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << " * " << $3); }
+           | vector_term '/' scalar_factor         { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << " / " << $3); }
            | VARIABLE                              {
                                                       if(strcmp(getType($1), "vector") != 0)
                                                       {
-                                                          stringstream ss;
-                                                          ss << "wrong_type_error  " << $1;     // we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
-                                                          $$ = strdup(ss.str().c_str());
+                                                          WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$, $1);
                                                       }
                                                       else
                                                       {
-                                                          $$ = $1;
+                                                          $$ = strdup($1);
                                                       }
                                                    }
 
            | VARIABLE '(' values ')'               {
-                                                      if(getIndex2($1) == -1)
-                                                          sprintf($$, "error1: This function does not exist");
-                                                      else
-                                                          if(fun[getIndex2($1)].assigned == false)
-                                                              sprintf($$, "error2: The function is not assigned");
-                                                          else
-                                                              if(strcmp(fun[getIndex2($1)].returnType, "Vector") != 0)
-                                                                  sprintf($$, "error3: The return type of the function is not a vector type");
-                                                              else
-                                                                  if(fun[getIndex2($1)].noParam != getSize4($3))
-                                                                      sprintf($$, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
-                                                                  else
-                                                                      if(isVariableDeclared($3) == false)
-                                                                          sprintf($$, "error5: One input variable from the function's call is undefined");
-                                                                      else
-                                                                          if(check2($3) == false)
-                                                                              sprintf($$, "error6: One input variable from the function's call is unassigned");
-                                                                          else
-                                                                              if(check8($3, fun[getIndex2($1)].paramList) == false)
-                                                                                  sprintf($$, "error7: The parameter list of the template of the function does not correspond to the given parameter list");
-                                                                              else
-                                                                              {
-                                                                                  $$ = append3($1, '(', $3, ')');
-                                                                              }
+                                                      string st = functionToAnySingularType($1, "Vector", $3, "vector");
+                                                      $$ = strdup(st.c_str());
                                                    }
            ;
 
 
-vectors: vector_term                      {$$.str = strdup($1); $$.size = 1;}
-       | vectors ',' vector_term          {char *str = append5($1.str,',',$3); $$.str = strdup(str); free(str); $$.size = $1.size + 1;}
+vectors: vector_term                      { $$.str = strdup($1); $$.size = 1; }
+       | vectors ',' vector_term          { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1.str << ", " << $3); $$.size = $1.size + 1; }
        ;
 
 
-vector_exprs: vector_terms                       {$$.str = strdup($1.str); $$.size = $1.size;}
-            | '-' vector_terms                   {char *str = append7('-',$2.str); $$.str = strdup(str); free(str); $$.size = $2.size;}            // produces 1 shift/reduce conflict
+vector_exprs: vector_terms                       { $$.str = strdup($1.str); $$.size = $1.size; }
+            | '-' vector_terms                   { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str); $$.size = $2.size; }            // produces 1 shift/reduce conflict
             | vector_exprs '+' vector_terms
                                                  {
                                                     if($1.size != $3.size)    // check that the lengths of the 2 terms are equal
-                                                        $$.str = strdup("length_mismatch_error");
+                                                    {
+                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                    }
                                                     else
                                                     {
-                                                        char *str = append1($1.str,'+',$3.str);
-                                                        $$.str = strdup(str);
-                                                        free(str);
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str);
                                                         $$.size = $1.size;
                                                     }
                                                  }
@@ -635,31 +552,29 @@ vector_exprs: vector_terms                       {$$.str = strdup($1.str); $$.si
             | vector_exprs '-' vector_terms
                                                  {
                                                     if($1.size != $3.size)    // check that the lengths of the 2 terms are equal
-                                                        $$.str = strdup("length_mismatch_error");
+                                                    {
+                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                    }
                                                     else
                                                     {
-                                                        char *str = append1($1.str,'-',$3.str);
-                                                        $$.str = strdup(str);
-                                                        free(str);
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
                                                         $$.size = $1.size;
                                                     }
                                                  }
             ;
 
 
-vector_terms: '(' vectors ')'                        {char *str = append2('(', $2.str, ')'); $$.str = strdup(str); free(str); $$.size = $2.size;}
-            | CENTROID '(' cells ')'                 {char *str = append3("er.centroid", '(', $3.str, ')'); $$.str = strdup(str); free(str); $$.size = $3.size;}
-            | NORMAL '(' faces ')'                   {char *str = append3("er.normal", '(', $3.str, ')'); $$.str = strdup(str); free(str); $$.size = $3.size;}
-            | '(' vector_exprs ')'                   {char *str = append2('(', $2.str, ')'); $$.str = strdup(str); free(str); $$.size = $2.size;}          // produces 1 shift/reduce conflict
-            | vector_terms '*' scalar_factor         {char *str = append1($1.str,'*',$3); $$.str = strdup(str); free(str); $$.size = $1.size;}             // produces 1 reduce/reduce conflict
-            | scalar_factor '*' vector_terms         {char *str = append1($1,'*',$3.str); $$.str = strdup(str); free(str); $$.size = $3.size;}
-            | vector_terms '/' scalar_factor         {char *str = append1($1.str,'/',$3); $$.str = strdup(str); free(str); $$.size = $1.size;}
+vector_terms: '(' vectors ')'                        { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")"); $$.size = $2.size; }
+            | CENTROID '(' cells ')'                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")"); $$.size = $3.size; }
+            | NORMAL '(' faces ')'                   { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.normal(" << $3.str << ")"); $$.size = $3.size; }
+            | '(' vector_exprs ')'                   { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")"); $$.size = $2.size; }          // produces 1 shift/reduce conflict
+            | vector_terms '*' scalar_factor         { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3); $$.size = $1.size; }         // produces 1 reduce/reduce conflict
+            | scalar_factor '*' vector_terms         { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1 << " - " << $3.str); $$.size = $3.size; }
+            | vector_terms '/' scalar_factor         { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3); $$.size = $1.size; }
             | VARIABLE                               {
                                                         if(strcmp(getType($1), "vectors") != 0)
                                                         {
-                                                            $$.str = strdup("wrong_type_error");   // we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
-                                                            $$.str = strcat($$.str, "  ");
-                                                            $$.str = strcat($$.str, $1);
+                                                            WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$.str, $1);
                                                         }
                                                         else
                                                         {
@@ -669,31 +584,16 @@ vector_terms: '(' vectors ')'                        {char *str = append2('(', $
                                                      }
 
             | VARIABLE '(' values ')'                {
-                                                        if(getIndex2($1) == -1)
-                                                            sprintf($$.str, "error1: This function does not exist");
-                                                        else
-                                                            if(fun[getIndex2($1)].assigned == false)
-                                                                sprintf($$.str, "error2: The function is not assigned");
-                                                            else
-                                                                if(strcmp(fun[getIndex2($1)].returnType, "CollOfVectors") != 0)
-                                                                    sprintf($$.str, "error3: The return type of the function is not a collection of vectors type");
-                                                                else
-                                                                    if(fun[getIndex2($1)].noParam != getSize4($3))
-                                                                        sprintf($$.str, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
-                                                                    else
-                                                                        if(isVariableDeclared($3) == false)
-                                                                            sprintf($$.str, "error5: One input variable from the function's call is undefined");
-                                                                        else
-                                                                            if(check2($3) == false)
-                                                                                sprintf($$.str, "error6: One input variable from the function's call is unassigned");
-                                                                            else
-                                                                                if(check8($3, fun[getIndex2($1)].paramList) == false)
-                                                                                    sprintf($$.str, "error7: The parameter list of the template of the function does not correspond to the given parameter list");
-                                                                                else
-                                                                                {
-                                                                                    $$.str = append3($1, '(', $3, ')');
-                                                                                    $$.size = fun[getIndex2($1)].returnSize;
-                                                                                }
+                                                          string st = functionToAnyCollectionType($1, "CollOfVectors", $3, "vectors");
+                                                          if(st == "ok")
+                                                          {
+                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1 << "(" << $3 << ")");
+                                                              $$.size = fun[getIndex2($1)].returnSize;
+                                                          }
+                                                          else
+                                                          {
+                                                              $$.str = strdup(st.c_str());
+                                                          }
                                                      }
             ;
 
@@ -701,9 +601,7 @@ vector_terms: '(' vectors ')'                        {char *str = append2('(', $
 vertex: VARIABLE           {
                               if(strcmp(getType($1), "vertex") != 0)
                               {
-                                  $$ = strdup("wrong_type_error");   // we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
-                                  $$ = strcat($$, "  ");
-                                  $$ = strcat($$, $1);
+                                  WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$, $1);
                               }
                               else
                               {
@@ -712,43 +610,19 @@ vertex: VARIABLE           {
                            }
 
       | VARIABLE '(' values ')'               {
-                                                  if(getIndex2($1) == -1)
-                                                      sprintf($$, "error1: This function does not exist");
-                                                  else
-                                                      if(fun[getIndex2($1)].assigned == false)
-                                                          sprintf($$, "error2: The function is not assigned");
-                                                      else
-                                                          if(strcmp(fun[getIndex2($1)].returnType, "Vertex") != 0)
-                                                              sprintf($$, "error3: The return type of the function is not a vertex type");
-                                                          else
-                                                              if(fun[getIndex2($1)].noParam != getSize4($3))
-                                                                  sprintf($$, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
-                                                              else
-                                                                  if(isVariableDeclared($3) == false)
-                                                                      sprintf($$, "error5: One input variable from the function's call is undefined");
-                                                                  else
-                                                                      if(check2($3) == false)
-                                                                          sprintf($$, "error6: One input variable from the function's call is unassigned");
-                                                                      else
-                                                                          if(check8($3, fun[getIndex2($1)].paramList) == false)
-                                                                              sprintf($$, "error7: The parameter list of the template of the function does not correspond to the given parameter list");
-                                                                          else
-                                                                          {
-                                                                              $$ = append3($1, '(', $3, ')');
-                                                                          }
+                                                  string st = functionToAnySingularType($1, "Vertex", $3, "vertex");
+                                                  $$ = strdup(st.c_str());
                                               }
       ;
 
 
-vertices: INTERIOR_VERTICES '(' GRID ')'      {$$.str = strdup("er.interiorVertices()"); $$.size = INTERIORVERTICES;}
-        | BOUNDARY_VERTICES '(' GRID ')'      {$$.str = strdup("er.boundaryVertices()"); $$.size = BOUNDARYVERTICES;}
-        | ALL_VERTICES '(' GRID ')'           {$$.str = strdup("er.allVertices()"); $$.size = ALLVERTICES;}
+vertices: INTERIOR_VERTICES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorVertices()"); $$.size = INTERIORVERTICES; }
+        | BOUNDARY_VERTICES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryVertices()"); $$.size = BOUNDARYVERTICES; }
+        | ALL_VERTICES '(' GRID ')'           { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allVertices()"); $$.size = ALLVERTICES; }
         | VARIABLE                            {
                                                   if(strcmp(getType($1), "vertices") != 0)
                                                   {
-                                                      $$.str = strdup("wrong_type_error");   // we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
-                                                      $$.str = strcat($$.str, "  ");
-                                                      $$.str = strcat($$.str, $1);
+                                                      WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$.str, $1);
                                                   }
                                                   else
                                                   {
@@ -758,31 +632,16 @@ vertices: INTERIOR_VERTICES '(' GRID ')'      {$$.str = strdup("er.interiorVerti
                                               }
 
         | VARIABLE '(' values ')'                 {
-                                                      if(getIndex2($1) == -1)
-                                                          sprintf($$.str, "error1: This function does not exist");
+                                                      string st = functionToAnyCollectionType($1, "CollOfVertices", $3, "vertices");
+                                                      if(st == "ok")
+                                                      {
+                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1 << "(" << $3 << ")");
+                                                          $$.size = fun[getIndex2($1)].returnSize;
+                                                      }
                                                       else
-                                                          if(fun[getIndex2($1)].assigned == false)
-                                                              sprintf($$.str, "error2: The function is not assigned");
-                                                          else
-                                                              if(strcmp(fun[getIndex2($1)].returnType, "CollOfVertices") != 0)
-                                                                  sprintf($$.str, "error3: The return type of the function is not a collection of vertices type");
-                                                              else
-                                                                  if(fun[getIndex2($1)].noParam != getSize4($3))
-                                                                      sprintf($$.str, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
-                                                                  else
-                                                                      if(isVariableDeclared($3) == false)
-                                                                          sprintf($$.str, "error5: One input variable from the function's call is undefined");
-                                                                      else
-                                                                          if(check2($3) == false)
-                                                                              sprintf($$.str, "error6: One input variable from the function's call is unassigned");
-                                                                          else
-                                                                              if(check8($3, fun[getIndex2($1)].paramList) == false)
-                                                                                  sprintf($$.str, "error7: The parameter list of the template of the function does not correspond to the given parameter list");
-                                                                              else
-                                                                              {
-                                                                                  $$.str = append3($1, '(', $3, ')');
-                                                                                  $$.size = fun[getIndex2($1)].returnSize;
-                                                                              }
+                                                      {
+                                                          $$.str = strdup(st.c_str());
+                                                      }
                                                   }
         ;
 
@@ -790,9 +649,7 @@ vertices: INTERIOR_VERTICES '(' GRID ')'      {$$.str = strdup("er.interiorVerti
 edge: VARIABLE             {
                               if(strcmp(getType($1), "edge") != 0)
                               {
-                                  $$ = strdup("wrong_type_error");   // we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
-                                  $$ = strcat($$, "  ");
-                                  $$ = strcat($$, $1);
+                                  WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$, $1);
                               }
                               else
                               {
@@ -801,43 +658,19 @@ edge: VARIABLE             {
                            }
 
     | VARIABLE '(' values ')'               {
-                                                if(getIndex2($1) == -1)
-                                                    sprintf($$, "error1: This function does not exist");
-                                                else
-                                                    if(fun[getIndex2($1)].assigned == false)
-                                                        sprintf($$, "error2: The function is not assigned");
-                                                    else
-                                                        if(strcmp(fun[getIndex2($1)].returnType, "Edge") != 0)
-                                                            sprintf($$, "error3: The return type of the function is not an edge type");
-                                                        else
-                                                            if(fun[getIndex2($1)].noParam != getSize4($3))
-                                                                sprintf($$, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
-                                                            else
-                                                                if(isVariableDeclared($3) == false)
-                                                                    sprintf($$, "error5: One input variable from the function's call is undefined");
-                                                                else
-                                                                    if(check2($3) == false)
-                                                                        sprintf($$, "error6: One input variable from the function's call is unassigned");
-                                                                    else
-                                                                        if(check8($3, fun[getIndex2($1)].paramList) == false)
-                                                                            sprintf($$, "error7: The parameter list of the template of the function does not correspond to the given parameter list");
-                                                                        else
-                                                                        {
-                                                                            $$ = append3($1, '(', $3, ')');
-                                                                        }
+                                                string st = functionToAnySingularType($1, "Edge", $3, "edge");
+                                                $$ = strdup(st.c_str());
                                             }
     ;
 
 
-edges: INTERIOR_EDGES '(' GRID ')'      {$$.str = strdup("er.interiorEdges()"); $$.size = INTERIOREDGES;}
-     | BOUNDARY_EDGES '(' GRID ')'      {$$.str = strdup("er.boundaryEdges()"); $$.size = BOUNDARYEDGES;}
-     | ALL_EDGES '(' GRID ')'           {$$.str = strdup("er.allEdges()"); $$.size = ALLEDGES;}
+edges: INTERIOR_EDGES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorEdges()"); $$.size = INTERIOREDGES; }
+     | BOUNDARY_EDGES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryEdges()"); $$.size = BOUNDARYEDGES; }
+     | ALL_EDGES '(' GRID ')'           { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allEdges()"); $$.size = ALLEDGES; }
      | VARIABLE                         {
                                             if(strcmp(getType($1), "edges") != 0)
                                             {
-                                                $$.str = strdup("wrong_type_error");   // we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
-                                                $$.str = strcat($$.str, "  ");
-                                                $$.str = strcat($$.str, $1);
+                                                WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$.str, $1);
                                             }
                                             else
                                             {
@@ -847,31 +680,16 @@ edges: INTERIOR_EDGES '(' GRID ')'      {$$.str = strdup("er.interiorEdges()"); 
                                         }
 
      | VARIABLE '(' values ')'                  {
-                                                    if(getIndex2($1) == -1)
-                                                        sprintf($$.str, "error1: This function does not exist");
+                                                    string st = functionToAnyCollectionType($1, "CollOfEdges", $3, "edges");
+                                                    if(st == "ok")
+                                                    {
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1 << "(" << $3 << ")");
+                                                        $$.size = fun[getIndex2($1)].returnSize;
+                                                    }
                                                     else
-                                                        if(fun[getIndex2($1)].assigned == false)
-                                                            sprintf($$.str, "error2: The function is not assigned");
-                                                        else
-                                                            if(strcmp(fun[getIndex2($1)].returnType, "CollOfEdges") != 0)
-                                                                sprintf($$.str, "error3: The return type of the function is not a collection of edges type");
-                                                            else
-                                                                if(fun[getIndex2($1)].noParam != getSize4($3))
-                                                                    sprintf($$.str, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
-                                                                else
-                                                                    if(isVariableDeclared($3) == false)
-                                                                        sprintf($$.str, "error5: One input variable from the function's call is undefined");
-                                                                    else
-                                                                        if(check2($3) == false)
-                                                                            sprintf($$.str, "error6: One input variable from the function's call is unassigned");
-                                                                        else
-                                                                            if(check8($3, fun[getIndex2($1)].paramList) == false)
-                                                                                sprintf($$.str, "error7: The parameter list of the template of the function does not correspond to the given parameter list");
-                                                                            else
-                                                                            {
-                                                                                $$.str = append3($1, '(', $3, ')');
-                                                                                $$.size = fun[getIndex2($1)].returnSize;
-                                                                            }
+                                                    {
+                                                        $$.str = strdup(st.c_str());
+                                                    }
                                                 }
      ;
 
@@ -879,9 +697,7 @@ edges: INTERIOR_EDGES '(' GRID ')'      {$$.str = strdup("er.interiorEdges()"); 
 face: VARIABLE                    {
                                       if(strcmp(getType($1), "face") != 0)
                                       {
-                                          $$ = strdup("wrong_type_error");   // we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
-                                          $$ = strcat($$, "  ");
-                                          $$ = strcat($$, $1);
+                                          WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$, $1);
                                       }
                                       else
                                       {
@@ -890,43 +706,19 @@ face: VARIABLE                    {
                                   }
 
     | VARIABLE '(' values ')'               {
-                                                if(getIndex2($1) == -1)
-                                                    sprintf($$, "error1: This function does not exist");
-                                                else
-                                                    if(fun[getIndex2($1)].assigned == false)
-                                                        sprintf($$, "error2: The function is not assigned");
-                                                    else
-                                                        if(strcmp(fun[getIndex2($1)].returnType, "Face") != 0)
-                                                            sprintf($$, "error3: The return type of the function is not a face type");
-                                                        else
-                                                            if(fun[getIndex2($1)].noParam != getSize4($3))
-                                                                sprintf($$, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
-                                                            else
-                                                                if(isVariableDeclared($3) == false)
-                                                                    sprintf($$, "error5: One input variable from the function's call is undefined");
-                                                                else
-                                                                    if(check2($3) == false)
-                                                                        sprintf($$, "error6: One input variable from the function's call is unassigned");
-                                                                    else
-                                                                        if(check8($3, fun[getIndex2($1)].paramList) == false)
-                                                                            sprintf($$, "error7: The parameter list of the template of the function does not correspond to the given parameter list");
-                                                                        else
-                                                                        {
-                                                                            $$ = append3($1, '(', $3, ')');
-                                                                        }
+                                                string st = functionToAnySingularType($1, "Face", $3, "face");
+                                                $$ = strdup(st.c_str());
                                             }
     ;
 
 
-faces: INTERIOR_FACES '(' GRID ')'      {$$.str = strdup("er.interiorFaces()"); $$.size = INTERIORFACES;}
-     | BOUNDARY_FACES '(' GRID ')'      {$$.str = strdup("er.boundaryFaces()"); $$.size = BOUNDARYFACES;}
-     | ALL_FACES '(' GRID ')'           {$$.str = strdup("er.allFaces()"); $$.size = ALLFACES;}
+faces: INTERIOR_FACES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorFaces()"); $$.size = INTERIORFACES; }
+     | BOUNDARY_FACES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryFaces()"); $$.size = BOUNDARYFACES; }
+     | ALL_FACES '(' GRID ')'           { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allFaces()"); $$.size = ALLFACES; }
      | VARIABLE                         {
                                             if(strcmp(getType($1), "faces") != 0)
                                             {
-                                                $$.str = strdup("wrong_type_error");   // we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
-                                                $$.str = strcat($$.str, "  ");
-                                                $$.str = strcat($$.str, $1);
+                                                WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$.str, $1);
                                             }
                                             else
                                             {
@@ -936,43 +728,26 @@ faces: INTERIOR_FACES '(' GRID ')'      {$$.str = strdup("er.interiorFaces()"); 
                                         }
 
      | VARIABLE '(' values ')'                   {
-                                                    if(getIndex2($1) == -1)
-                                                        sprintf($$.str, "error1: This function does not exist");
-                                                    else
-                                                        if(fun[getIndex2($1)].assigned == false)
-                                                            sprintf($$.str, "error2: The function is not assigned");
-                                                        else
-                                                            if(strcmp(fun[getIndex2($1)].returnType, "CollOfFaces") != 0)
-                                                                sprintf($$.str, "error3: The return type of the function is not a collection of faces type");
-                                                            else
-                                                                if(fun[getIndex2($1)].noParam != getSize4($3))
-                                                                    sprintf($$.str, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
-                                                                else
-                                                                    if(isVariableDeclared($3) == false)
-                                                                        sprintf($$.str, "error5: One input variable from the function's call is undefined");
-                                                                    else
-                                                                        if(check2($3) == false)
-                                                                            sprintf($$.str, "error6: One input variable from the function's call is unassigned");
-                                                                        else
-                                                                            if(check8($3, fun[getIndex2($1)].paramList) == false)
-                                                                                sprintf($$.str, "error7: The parameter list of the template of the function does not correspond to the given parameter list");
-                                                                            else
-                                                                            {
-                                                                                $$.str = append3($1, '(', $3, ')');
-                                                                                $$.size = fun[getIndex2($1)].returnSize;
-                                                                            }
+                                                      string st = functionToAnyCollectionType($1, "CollOfFaces", $3, "faces");
+                                                      if(st == "ok")
+                                                      {
+                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1 << "(" << $3 << ")");
+                                                          $$.size = fun[getIndex2($1)].returnSize;
+                                                      }
+                                                      else
+                                                      {
+                                                          $$.str = strdup(st.c_str());
+                                                      }
                                                  }
      ;
 
 
-cell: FIRST_CELL '(' face ')'     {char *str = append3("er.firstCell", '(', $3, ')'); $$ = strdup(str); free(str);}
-    | SECOND_CELL '(' face ')'    {char *str = append3("er.secondCell", '(', $3, ')'); $$ = strdup(str); free(str);}
+cell: FIRST_CELL '(' face ')'     { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.firstCell(" << $3 << ")"); }
+    | SECOND_CELL '(' face ')'    { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.secondCell(" << $3 << ")"); }
     | VARIABLE                    {
                                       if(strcmp(getType($1), "cell") != 0)
                                       {
-                                          $$ = strdup("wrong_type_error");   // we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
-                                          $$ = strcat($$, "  ");
-                                          $$ = strcat($$, $1);
+                                          WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$, $1);
                                       }
                                       else
                                       {
@@ -981,45 +756,21 @@ cell: FIRST_CELL '(' face ')'     {char *str = append3("er.firstCell", '(', $3, 
                                   }
 
     | VARIABLE '(' values ')'                 {
-                                                  if(getIndex2($1) == -1)
-                                                      sprintf($$, "error1: This function does not exist");
-                                                  else
-                                                      if(fun[getIndex2($1)].assigned == false)
-                                                          sprintf($$, "error2: The function is not assigned");
-                                                      else
-                                                          if(strcmp(fun[getIndex2($1)].returnType, "Cell") != 0)
-                                                              sprintf($$, "error3: The return type of the function is not a cell type");
-                                                          else
-                                                              if(fun[getIndex2($1)].noParam != getSize4($3))
-                                                                  sprintf($$, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
-                                                              else
-                                                                  if(isVariableDeclared($3) == false)
-                                                                      sprintf($$, "error5: One input variable from the function's call is undefined");
-                                                                  else
-                                                                      if(check2($3) == false)
-                                                                          sprintf($$, "error6: One input variable from the function's call is unassigned");
-                                                                      else
-                                                                          if(check8($3, fun[getIndex2($1)].paramList) == false)
-                                                                              sprintf($$, "error7: The parameter list of the template of the function does not correspond to the given parameter list");
-                                                                          else
-                                                                          {
-                                                                              $$ = append3($1, '(', $3, ')');
-                                                                          }
+                                                  string st = functionToAnySingularType($1, "Cell", $3, "cell");
+                                                  $$ = strdup(st.c_str());
                                               }
     ;
 
 
-cells: INTERIOR_CELLS '(' GRID ')'          {$$.str = strdup("er.interiorCells()"); $$.size = INTERIORCELLS;}
-     | BOUNDARY_CELLS '(' GRID ')'          {$$.str = strdup("er.boundaryCells()"); $$.size = BOUNDARYCELLS;}
-     | ALL_CELLS '(' GRID ')'               {$$.str = strdup("er.allCells()"); $$.size = ALLCELLS;}
-     | FIRST_CELL '(' faces ')'             {char *str = append3("er.firstCell", '(', $3.str, ')'); $$.str = strdup(str); free(str); $$.size = $3.size;}
-     | SECOND_CELL '(' faces ')'            {char *str = append3("er.secondCell", '(', $3.str, ')'); $$.str = strdup(str); free(str); $$.size = $3.size;}
+cells: INTERIOR_CELLS '(' GRID ')'          { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorCells()"); $$.size = INTERIORCELLS; }
+     | BOUNDARY_CELLS '(' GRID ')'          { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryCells()"); $$.size = BOUNDARYCELLS;}
+     | ALL_CELLS '(' GRID ')'               { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allCells()"); $$.size = ALLCELLS;}
+     | FIRST_CELL '(' faces ')'             { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.firstCell(" << $3.str << ")"); $$.size = $3.size;}
+     | SECOND_CELL '(' faces ')'            { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.secondCell(" << $3.str << ")"); $$.size = $3.size;}
      | VARIABLE                             {
                                                 if(strcmp(getType($1), "cells") != 0)
                                                 {
-                                                    $$.str = strdup("wrong_type_error");   // we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
-                                                    $$.str = strcat($$.str, "  ");
-                                                    $$.str = strcat($$.str, $1);
+                                                    WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$.str, $1);
                                                 }
                                                 else
                                                 {
@@ -1029,43 +780,26 @@ cells: INTERIOR_CELLS '(' GRID ')'          {$$.str = strdup("er.interiorCells()
                                             }
 
      | VARIABLE '(' values ')'                  {
-                                                    if(getIndex2($1) == -1)
-                                                        sprintf($$.str, "error1: This function does not exist");
+                                                    string st = functionToAnyCollectionType($1, "CollOfCells", $3, "cells");
+                                                    if(st == "ok")
+                                                    {
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1 << "(" << $3 << ")");
+                                                        $$.size = fun[getIndex2($1)].returnSize;
+                                                    }
                                                     else
-                                                        if(fun[getIndex2($1)].assigned == false)
-                                                            sprintf($$.str, "error2: The function is not assigned");
-                                                        else
-                                                            if(strcmp(fun[getIndex2($1)].returnType, "CollOfCells") != 0)
-                                                                sprintf($$.str, "error3: The return type of the function is not a collection of cells type");
-                                                            else
-                                                                if(fun[getIndex2($1)].noParam != getSize4($3))
-                                                                    sprintf($$.str, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
-                                                                else
-                                                                    if(isVariableDeclared($3) == false)
-                                                                        sprintf($$.str, "error5: One input variable from the function's call is undefined");
-                                                                    else
-                                                                        if(check2($3) == false)
-                                                                            sprintf($$.str, "error6: One input variable from the function's call is unassigned");
-                                                                        else
-                                                                            if(check8($3, fun[getIndex2($1)].paramList) == false)
-                                                                                sprintf($$.str, "error7: The parameter list of the template of the function does not correspond to the given parameter list");
-                                                                            else
-                                                                            {
-                                                                                $$.str = append3($1, '(', $3, ')');
-                                                                                $$.size = fun[getIndex2($1)].returnSize;
-                                                                            }
+                                                    {
+                                                        $$.str = strdup(st.c_str());
+                                                    }
                                                 }
      ;
 
 
-adb: GRADIENT '(' adb ')'         {char *str = append3("er.negGradient", '(', $3, ')'); $$ = strdup(str); free(str);}
-   | DIVERGENCE '(' adb ')'       {char *str = append3("er.divergence", '(', $3, ')'); $$ = strdup(str); free(str);}
+adb: GRADIENT '(' adb ')'         { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.gradient(" << $3 << ")"); }
+   | DIVERGENCE '(' adb ')'       { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.divergence(" << $3 << ")"); }
    | VARIABLE                     {
                                       if(strcmp(getType($1), "scalarAD") != 0)
                                       {
-                                          $$ = strdup("wrong_type_error");   // we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
-                                          $$ = strcat($$, "  ");
-                                          $$ = strcat($$, $1);
+                                          WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$, $1);
                                       }
                                       else
                                       {
@@ -1074,42 +808,18 @@ adb: GRADIENT '(' adb ')'         {char *str = append3("er.negGradient", '(', $3
                                   }
 
    | VARIABLE '(' values ')'                {
-                                                if(getIndex2($1) == -1)
-                                                    sprintf($$, "error1: This function does not exist");
-                                                else
-                                                    if(fun[getIndex2($1)].assigned == false)
-                                                        sprintf($$, "error2: The function is not assigned");
-                                                    else
-                                                        if(strcmp(fun[getIndex2($1)].returnType, "ScalarAD") != 0)
-                                                            sprintf($$, "error3: The return type of the function is not a scalarAD type");
-                                                        else
-                                                            if(fun[getIndex2($1)].noParam != getSize4($3))
-                                                                sprintf($$, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
-                                                            else
-                                                                if(isVariableDeclared($3) == false)
-                                                                    sprintf($$, "error5: One input variable from the function's call is undefined");
-                                                                else
-                                                                    if(check2($3) == false)
-                                                                        sprintf($$, "error6: One input variable from the function's call is unassigned");
-                                                                    else
-                                                                        if(check8($3, fun[getIndex2($1)].paramList) == false)
-                                                                            sprintf($$, "error7: The parameter list of the template of the function does not correspond to the given parameter list");
-                                                                        else
-                                                                        {
-                                                                            $$ = append3($1, '(', $3, ')');
-                                                                        }
+                                                string st = functionToAnySingularType($1, "ScalarAD", $3, "scalarAD");
+                                                $$ = strdup(st.c_str());
                                             }
    ;
 
 
-adbs: GRADIENT '(' adbs ')'       {char *str = append3("er.negGradient", '(', $3.str, ')'); $$.str = strdup(str); free(str); $$.size = $3.size;}
-    | DIVERGENCE '(' adbs ')'     {char *str = append3("er.divergence", '(', $3.str, ')'); $$.str = strdup(str); free(str); $$.size = $3.size;}
+adbs: GRADIENT '(' adbs ')'       { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.gradient(" << $3.str << ")"); $$.size = $3.size; }
+    | DIVERGENCE '(' adbs ')'     { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.divergence(" << $3.str << ")"); $$.size = $3.size;}
     | VARIABLE                    {
                                       if(strcmp(getType($1), "scalarsAD") != 0)
                                       {
-                                          $$.str = strdup("wrong_type_error");   // we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
-                                          $$.str = strcat($$.str, "  ");
-                                          $$.str = strcat($$.str, $1);
+                                          WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$.str, $1);
                                       }
                                       else
                                       {
@@ -1119,59 +829,42 @@ adbs: GRADIENT '(' adbs ')'       {char *str = append3("er.negGradient", '(', $3
                                   }
 
     | VARIABLE '(' values ')'                   {
-                                                    if(getIndex2($1) == -1)
-                                                        sprintf($$.str, "error1: This function does not exist");
+                                                    string st = functionToAnyCollectionType($1, "CollOfScalarsAD", $3, "scalarsAD");
+                                                    if(st == "ok")
+                                                    {
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1 << "(" << $3 << ")");
+                                                        $$.size = fun[getIndex2($1)].returnSize;
+                                                    }
                                                     else
-                                                        if(fun[getIndex2($1)].assigned == false)
-                                                            sprintf($$.str, "error2: The function is not assigned");
-                                                        else
-                                                            if(strcmp(fun[getIndex2($1)].returnType, "CollOfScalarsAD") != 0)
-                                                                sprintf($$.str, "error3: The return type of the function is not a collection of scalarsAD type");
-                                                            else
-                                                                if(fun[getIndex2($1)].noParam != getSize4($3))
-                                                                    sprintf($$.str, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
-                                                                else
-                                                                    if(isVariableDeclared($3) == false)
-                                                                        sprintf($$.str, "error5: One input variable from the function's call is undefined");
-                                                                    else
-                                                                        if(check2($3) == false)
-                                                                            sprintf($$.str, "error6: One input variable from the function's call is unassigned");
-                                                                        else
-                                                                            if(check8($3, fun[getIndex2($1)].paramList) == false)
-                                                                                sprintf($$.str, "error7: The parameter list of the template of the function does not correspond to the given parameter list");
-                                                                            else
-                                                                            {
-                                                                                $$.str = append3($1, '(', $3, ')');
-                                                                                $$.size = fun[getIndex2($1)].returnSize;
-                                                                            }
+                                                    {
+                                                        $$.str = strdup(st.c_str());
+                                                    }
                                                 }
     ;
 
 
-boolean_expr: boolean_term                           {$$ = strdup($1);}
-            | NOT boolean_term                       {char *str = append7('!', $2); $$ = strdup(str); free(str);}
-            | boolean_expr AND boolean_term          {char *str = append6($1, "&&", $3); $$ = strdup(str); free(str);}
-            | boolean_expr OR boolean_term           {char *str = append6($1, "||", $3); $$ = strdup(str); free(str);}
-            | boolean_expr XOR boolean_term          {char *str = append10($1, $3); $$ = strdup(str); free(str);}
+boolean_expr: boolean_term                           { $$ = strdup($1); }
+            | NOT boolean_term                       { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "!" << $2); }
+            | boolean_expr AND boolean_term          { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << " && " << $3); }
+            | boolean_expr OR boolean_term           { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << " || " << $3); }
+            | boolean_expr XOR boolean_term          { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "(!" << $1 << " && " << $3 << ") || (!" << $3 << " && " << $1 << ")"); }
             ;
 
 
 
-boolean_term: TRUE                                   {$$ = strdup("true");}
-            | FALSE                                  {$$ = strdup("false");}
-            | scalar_expr '>' scalar_expr            {char *str = append1($1, '>', $3); $$ = strdup(str); free(str);}
-            | scalar_expr '<' scalar_expr            {char *str = append1($1, '<', $3); $$ = strdup(str); free(str);}
-            | scalar_expr LESSEQ scalar_expr         {char *str = append6($1, "<=", $3); $$ = strdup(str); free(str);}
-            | scalar_expr GREATEREQ scalar_expr      {char *str = append6($1, ">=", $3); $$ = strdup(str); free(str);}
-            | scalar_expr EQ scalar_expr             {char *str = append6($1, "==", $3); $$ = strdup(str); free(str);}
-            | scalar_expr NOTEQ scalar_expr          {char *str = append6($1, "!=", $3); $$ = strdup(str); free(str);}
-            | '(' boolean_expr ')'                   {char *str = append2('(', $2, ')'); $$ = strdup(str); free(str);}
+boolean_term: TRUE                                   { $$ = strdup("true"); }
+            | FALSE                                  { $$ = strdup("false"); }
+            | scalar_expr '>' scalar_expr            { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << " > " << $3); }
+            | scalar_expr '<' scalar_expr            { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << " < " << $3); }
+            | scalar_expr LESSEQ scalar_expr         { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << " <= " << $3); }
+            | scalar_expr GREATEREQ scalar_expr      { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << " >= " << $3); }
+            | scalar_expr EQ scalar_expr             { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << " == " << $3); }
+            | scalar_expr NOTEQ scalar_expr          { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << " != " << $3); }
+            | '(' boolean_expr ')'                   { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "(" << $2 << ")"); }
             | VARIABLE                               {
                                                         if(strcmp(getType($1), "bool") != 0)
                                                         {
-                                                            $$ = strdup("wrong_type_error");   // we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
-                                                            $$ = strcat($$, "  ");
-                                                            $$ = strcat($$, $1);
+                                                            WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$, $1);
                                                         }
                                                         else
                                                         {
@@ -1180,45 +873,23 @@ boolean_term: TRUE                                   {$$ = strdup("true");}
                                                     }
 
             | VARIABLE '(' values ')'               {
-                                                        if(getIndex2($1) == -1)
-                                                            sprintf($$, "error1: This function does not exist");
-                                                        else
-                                                            if(fun[getIndex2($1)].assigned == false)
-                                                                sprintf($$, "error2: The function is not assigned");
-                                                            else
-                                                                if(strcmp(fun[getIndex2($1)].returnType, "bool") != 0)
-                                                                    sprintf($$, "error3: The return type of the function is not a bool type");
-                                                                else
-                                                                    if(fun[getIndex2($1)].noParam != getSize4($3))
-                                                                        sprintf($$, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
-                                                                    else
-                                                                        if(isVariableDeclared($3) == false)
-                                                                            sprintf($$, "error5: One input variable from the function's call is undefined");
-                                                                        else
-                                                                            if(check2($3) == false)
-                                                                                sprintf($$, "error6: One input variable from the function's call is unassigned");
-                                                                            else
-                                                                                if(check8($3, fun[getIndex2($1)].paramList) == false)
-                                                                                    sprintf($$, "error7: The parameter list of the template of the function does not correspond to the given parameter list");
-                                                                                else
-                                                                                {
-                                                                                    $$ = append3($1, '(', $3, ')');
-                                                                                }
+                                                        string st = functionToAnySingularType($1, "bool", $3, "bool");
+                                                        $$ = strdup(st.c_str());
                                                     }
             ;
 
 
-boolean_exprs: boolean_terms                           {$$.str = strdup($1.str); $$.size = $1.size;}
-             | NOT boolean_terms                       {char *str = append7('!', $2.str); $$.str = strdup(str); free(str); $$.size = $2.size;}
+boolean_exprs: boolean_terms                           { $$.str = strdup($1.str); $$.size = $1.size; }
+             | NOT boolean_terms                       { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "!" << $2.str); $$.size = $2.size;}
              | boolean_exprs AND boolean_terms
                                                        {
                                                           if($1.size != $3.size)    // check that the lengths of the 2 terms are equal
-                                                              $$.str = strdup("length_mismatch_error");
+                                                          {
+                                                              LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                          }
                                                           else
                                                           {
-                                                              char *str = append6($1.str, "&&", $3.str);
-                                                              $$.str = strdup(str);
-                                                              free(str);
+                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " && " << $3.str);
                                                               $$.size = $1.size;
                                                           }
                                                        }
@@ -1226,12 +897,12 @@ boolean_exprs: boolean_terms                           {$$.str = strdup($1.str);
              | boolean_exprs OR boolean_terms
                                                        {
                                                           if($1.size != $3.size)    // check that the lengths of the 2 terms are equal
-                                                              $$.str = strdup("length_mismatch_error");
+                                                          {
+                                                              LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                          }
                                                           else
                                                           {
-                                                              char *str = append6($1.str, "||", $3.str);
-                                                              $$.str = strdup(str);
-                                                              free(str);
+                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " || " << $3.str);
                                                               $$.size = $1.size;
                                                           }
                                                        }
@@ -1239,12 +910,12 @@ boolean_exprs: boolean_terms                           {$$.str = strdup($1.str);
              | boolean_exprs XOR boolean_terms
                                                        {
                                                           if($1.size != $3.size)    // check that the lengths of the 2 terms are equal
-                                                              $$.str = strdup("length_mismatch_error");
+                                                          {
+                                                              LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                          }
                                                           else
                                                           {
-                                                              char *str = append10($1.str, $3.str);
-                                                              $$.str = strdup(str);
-                                                              free(str);
+                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(!" << $1.str << " && " << $3.str << ") || (!" << $3.str << " && " << $1.str << ")");
                                                               $$.size = $1.size;
                                                           }
                                                        }
@@ -1255,12 +926,12 @@ boolean_exprs: boolean_terms                           {$$.str = strdup($1.str);
 boolean_terms: '(' scalars ')' '>' '(' scalars ')'
                                                       {
                                                           if($2.size != $6.size)    // check that the lengths of the 2 terms are equal
-                                                              $$.str = strdup("length_mismatch_error");
+                                                          {
+                                                              LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                          }
                                                           else
                                                           {
-                                                              char *str = append14('(',$2.str,')','>','(',$6.str,')');
-                                                              $$.str = strdup(str);
-                                                              free(str);
+                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") > (" << $6.str << ")");
                                                               $$.size = $2.size;
                                                           }
                                                       }
@@ -1268,12 +939,12 @@ boolean_terms: '(' scalars ')' '>' '(' scalars ')'
              | '(' scalars ')' '<' '(' scalars ')'
                                                       {
                                                           if($2.size != $6.size)    // check that the lengths of the 2 terms are equal
-                                                              $$.str = strdup("length_mismatch_error");
+                                                          {
+                                                              LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                          }
                                                           else
                                                           {
-                                                              char *str = append14('(',$2.str,')','<','(',$6.str,')');
-                                                              $$.str = strdup(str);
-                                                              free(str);
+                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") < (" << $6.str << ")");
                                                               $$.size = $2.size;
                                                           }
                                                       }
@@ -1281,12 +952,12 @@ boolean_terms: '(' scalars ')' '>' '(' scalars ')'
              | '(' scalars ')' LESSEQ '(' scalars ')'
                                                       {
                                                           if($2.size != $6.size)    // check that the lengths of the 2 terms are equal
-                                                              $$.str = strdup("length_mismatch_error");
+                                                          {
+                                                              LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                          }
                                                           else
                                                           {
-                                                              char *str = append15('(',$2.str,')',"<=",'(',$6.str,')');
-                                                              $$.str = strdup(str);
-                                                              free(str);
+                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") <= (" << $6.str << ")");
                                                               $$.size = $2.size;
                                                           }
                                                       }
@@ -1294,12 +965,12 @@ boolean_terms: '(' scalars ')' '>' '(' scalars ')'
              | '(' scalars ')' GREATEREQ '(' scalars ')'
                                                       {
                                                           if($2.size != $6.size)    // check that the lengths of the 2 terms are equal
-                                                              $$.str = strdup("length_mismatch_error");
+                                                          {
+                                                              LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                          }
                                                           else
                                                           {
-                                                              char *str = append15('(',$2.str,')',">=",'(',$6.str,')');
-                                                              $$.str = strdup(str);
-                                                              free(str);
+                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") >= (" << $6.str << ")");
                                                               $$.size = $2.size;
                                                           }
                                                       }
@@ -1307,12 +978,12 @@ boolean_terms: '(' scalars ')' '>' '(' scalars ')'
              | '(' scalars ')' EQ '(' scalars ')'
                                                       {
                                                           if($2.size != $6.size)    // check that the lengths of the 2 terms are equal
-                                                              $$.str = strdup("length_mismatch_error");
+                                                          {
+                                                              LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                          }
                                                           else
                                                           {
-                                                              char *str = append15('(',$2.str,')',"==",'(',$6.str,')');
-                                                              $$.str = strdup(str);
-                                                              free(str);
+                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") == (" << $6.str << ")");
                                                               $$.size = $2.size;
                                                           }
                                                       }
@@ -1320,22 +991,20 @@ boolean_terms: '(' scalars ')' '>' '(' scalars ')'
              | '(' scalars ')' NOTEQ '(' scalars ')'
                                                       {
                                                           if($2.size != $6.size)    // check that the lengths of the 2 terms are equal
-                                                              $$.str = strdup("length_mismatch_error");
+                                                          {
+                                                              LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                          }
                                                           else
                                                           {
-                                                              char *str = append15('(',$2.str,')',"!=",'(',$6.str,')');
-                                                              $$.str = strdup(str);
-                                                              free(str);
+                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") != (" << $6.str << ")");
                                                               $$.size = $2.size;
                                                           }
                                                       }
-             | '(' boolean_exprs ')'                  {char *str = append2('(', $2.str, ')'); $$.str = strdup(str); free(str); $$.size = $2.size;}
+             | '(' boolean_exprs ')'                  { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")"); $$.size = $2.size;}
              | VARIABLE                               {
                                                           if(strcmp(getType($1), "bools") != 0)
                                                           {
-                                                              $$.str = strdup("wrong_type_error");   // we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
-                                                              $$.str = strcat($$.str, "  ");
-                                                              $$.str = strcat($$.str, $1);
+                                                              WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$.str, $1);
                                                           }
                                                           else
                                                           {
@@ -1345,101 +1014,86 @@ boolean_terms: '(' scalars ')' '>' '(' scalars ')'
                                                       }
 
              | VARIABLE '(' values ')'                {
-                                                          if(getIndex2($1) == -1)
-                                                              sprintf($$.str, "error1: This function does not exist");
+                                                          string st = functionToAnyCollectionType($1, "CollOfBools", $3, "bools");
+                                                          if(st == "ok")
+                                                          {
+                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1 << "(" << $3 << ")");
+                                                              $$.size = fun[getIndex2($1)].returnSize;
+                                                          }
                                                           else
-                                                              if(fun[getIndex2($1)].assigned == false)
-                                                                  sprintf($$.str, "error2: The function is not assigned");
-                                                              else
-                                                                  if(strcmp(fun[getIndex2($1)].returnType, "CollOfBools") != 0)
-                                                                      sprintf($$.str, "error3: The return type of the function is not a collection of bools type");
-                                                                  else
-                                                                      if(fun[getIndex2($1)].noParam != getSize4($3))
-                                                                          sprintf($$.str, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
-                                                                      else
-                                                                          if(isVariableDeclared($3) == false)
-                                                                              sprintf($$.str, "error5: One input variable from the function's call is undefined");
-                                                                          else
-                                                                              if(check2($3) == false)
-                                                                                  sprintf($$.str, "error6: One input variable from the function's call is unassigned");
-                                                                              else
-                                                                                  if(check8($3, fun[getIndex2($1)].paramList) == false)
-                                                                                      sprintf($$.str, "error7: The parameter list of the template of the function does not correspond to the given parameter list");
-                                                                                  else
-                                                                                  {
-                                                                                      $$.str = append3($1, '(', $3, ')');
-                                                                                      $$.size = fun[getIndex2($1)].returnSize;
-                                                                                  }
+                                                          {
+                                                              $$.str = strdup(st.c_str());
+                                                          }
                                                       }
              ;
 
 
 
-plural: scalar_exprs            {$$.str = strdup($1.str); $$.size = $1.size;}
-      | vector_exprs            {$$.str = strdup($1.str); $$.size = $1.size;}
-      | vertices                {$$.str = strdup($1.str); $$.size = $1.size;}
-      | edges                   {$$.str = strdup($1.str); $$.size = $1.size;}
-      | faces                   {$$.str = strdup($1.str); $$.size = $1.size;}
-      | cells                   {$$.str = strdup($1.str); $$.size = $1.size;}
-      | adbs                    {$$.str = strdup($1.str); $$.size = $1.size;}
-      | boolean_exprs           {$$.str = strdup($1.str); $$.size = $1.size;}
+plural: scalar_exprs            { $$.str = strdup($1.str); $$.size = $1.size; }
+      | vector_exprs            { $$.str = strdup($1.str); $$.size = $1.size; }
+      | vertices                { $$.str = strdup($1.str); $$.size = $1.size; }
+      | edges                   { $$.str = strdup($1.str); $$.size = $1.size; }
+      | faces                   { $$.str = strdup($1.str); $$.size = $1.size; }
+      | cells                   { $$.str = strdup($1.str); $$.size = $1.size; }
+      | adbs                    { $$.str = strdup($1.str); $$.size = $1.size; }
+      | boolean_exprs           { $$.str = strdup($1.str); $$.size = $1.size; }
       ;
 
 
-header: VARIABLE HEADER_DECL SCALAR                          {char *str = append9("Scalar", ' ', $1); $$ = strdup(str); free(str);}
-      | VARIABLE HEADER_DECL VECTOR                          {char *str = append9("Vector", ' ', $1); $$ = strdup(str); free(str);}
-      | VARIABLE HEADER_DECL VERTEX                          {char *str = append9("Vertex", ' ', $1); $$ = strdup(str); free(str);}
-      | VARIABLE HEADER_DECL EDGE                            {char *str = append9("Edge", ' ', $1); $$ = strdup(str); free(str);}
-      | VARIABLE HEADER_DECL FACE                            {char *str = append9("Face", ' ', $1); $$ = strdup(str); free(str);}
-      | VARIABLE HEADER_DECL CELL                            {char *str = append9("Cell", ' ', $1); $$ = strdup(str); free(str);}
-      | VARIABLE HEADER_DECL ADB                             {char *str = append9("ScalarAD", ' ', $1); $$ = strdup(str); free(str);}
-      | VARIABLE HEADER_DECL BOOLEAN                         {char *str = append9("bool", ' ', $1); $$ = strdup(str); free(str);}
-      | VARIABLE HEADER_DECL COLLECTION OF SCALAR            {char *str = append9("CollOfScalars", ' ', $1); $$ = strdup(str); free(str);}
-      | VARIABLE HEADER_DECL COLLECTION OF VECTOR            {char *str = append9("CollOfVectors", ' ', $1); $$ = strdup(str); free(str);}
-      | VARIABLE HEADER_DECL COLLECTION OF VERTEX            {char *str = append9("CollOfVertices", ' ', $1); $$ = strdup(str); free(str);}
-      | VARIABLE HEADER_DECL COLLECTION OF EDGE              {char *str = append9("CollOfEdges", ' ', $1); $$ = strdup(str); free(str);}
-      | VARIABLE HEADER_DECL COLLECTION OF FACE              {char *str = append9("CollOfFaces", ' ', $1); $$ = strdup(str); free(str);}
-      | VARIABLE HEADER_DECL COLLECTION OF CELL              {char *str = append9("CollOfCells", ' ', $1); $$ = strdup(str); free(str);}
-      | VARIABLE HEADER_DECL COLLECTION OF ADB               {char *str = append9("CollOfScalarsAD", ' ', $1); $$ = strdup(str); free(str);}
-      | VARIABLE HEADER_DECL COLLECTION OF BOOLEAN           {char *str = append9("CollOfBools", ' ', $1); $$ = strdup(str); free(str);}
+header: VARIABLE HEADER_DECL SCALAR                          { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "Scalar " << $1); }
+      | VARIABLE HEADER_DECL VECTOR                          { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "Vector " << $1); }
+      | VARIABLE HEADER_DECL VERTEX                          { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "Vertex " << $1); }
+      | VARIABLE HEADER_DECL EDGE                            { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "Edge " << $1); }
+      | VARIABLE HEADER_DECL FACE                            { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "Face " << $1); }
+      | VARIABLE HEADER_DECL CELL                            { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "Cell " << $1); }
+      | VARIABLE HEADER_DECL ADB                             { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "ScalarAD " << $1); }
+      | VARIABLE HEADER_DECL BOOLEAN                         { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "bool " << $1); }
+      | VARIABLE HEADER_DECL COLLECTION OF SCALAR            { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "CollOfScalars " << $1); }
+      | VARIABLE HEADER_DECL COLLECTION OF VECTOR            { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "CollOfVectors " << $1); }
+      | VARIABLE HEADER_DECL COLLECTION OF VERTEX            { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "CollOfVertices " << $1); }
+      | VARIABLE HEADER_DECL COLLECTION OF EDGE              { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "CollOfEdges " << $1); }
+      | VARIABLE HEADER_DECL COLLECTION OF FACE              { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "CollOfFaces " << $1); }
+      | VARIABLE HEADER_DECL COLLECTION OF CELL              { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "CollOfCells " << $1); }
+      | VARIABLE HEADER_DECL COLLECTION OF ADB               { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "CollOfScalarsAD " << $1); }
+      | VARIABLE HEADER_DECL COLLECTION OF BOOLEAN           { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "CollOfBools " << $1); }
       ;
 
 
-parameter_list: header                         {$$ = strdup($1);}
-              | parameter_list ',' header      {char *str = append5($1,',',$3); $$ = strdup(str); free(str);}
+parameter_list: header                         { $$ = strdup($1); }
+              | parameter_list ',' header      { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << ", " << $3); }
               ;
 
 
-commands: command                              {$$ = strdup($1);}
-        | commands end_lines command           {char *str = append6($1, $2, $3); $$ = strdup(str); free(str);}
-        |                                      {$$ = strdup("");}     // a function can have only the return instruction
+commands: command                              { $$ = strdup($1); }
+        | commands end_lines command           { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << $2 << $3); }
+        |                                      { $$ = strdup(""); }     // a function can have only the return instruction
         ;
 
 
-type: SCALAR                                {$$.str = strdup("Scalar"); $$.size = ANY;}
-    | VECTOR                                {$$.str = strdup("Vector"); $$.size = ANY;}
-    | VERTEX                                {$$.str = strdup("Vertex"); $$.size = ANY;}
-    | EDGE                                  {$$.str = strdup("Edge"); $$.size = ANY;}
-    | FACE                                  {$$.str = strdup("Face"); $$.size = ANY;}
-    | CELL                                  {$$.str = strdup("Cell"); $$.size = ANY;}
-    | ADB                                   {$$.str = strdup("ScalarAD"); $$.size = ANY;}
-    | BOOLEAN                               {$$.str = strdup("bool"); $$.size = ANY;}
-    | COLLECTION OF SCALAR                  {$$.str = strdup("CollOfScalars"); $$.size = ANY;}
-    | COLLECTION OF VECTOR                  {$$.str = strdup("CollOfVectors"); $$.size = ANY;}
-    | COLLECTION OF VERTEX                  {$$.str = strdup("CollOfVertices"); $$.size = ANY;}
-    | COLLECTION OF EDGE                    {$$.str = strdup("CollOfEdges"); $$.size = ANY;}
-    | COLLECTION OF FACE                    {$$.str = strdup("CollOfFaces"); $$.size = ANY;}
-    | COLLECTION OF CELL                    {$$.str = strdup("CollOfCells"); $$.size = ANY;}
-    | COLLECTION OF ADB                     {$$.str = strdup("CollOfScalarsAD"); $$.size = ANY;}
-    | COLLECTION OF BOOLEAN                 {$$.str = strdup("CollOfBools"); $$.size = ANY;}
-    | COLLECTION OF SCALAR ON plural        {$$.str = strdup("CollOfScalars"); $$.size = $5.size;}
-    | COLLECTION OF VECTOR ON plural        {$$.str = strdup("CollOfVectors"); $$.size = $5.size;}
-    | COLLECTION OF VERTEX ON plural        {$$.str = strdup("CollOfVertices"); $$.size = $5.size;}
-    | COLLECTION OF EDGE ON plural          {$$.str = strdup("CollOfEdges"); $$.size = $5.size;}
-    | COLLECTION OF FACE ON plural          {$$.str = strdup("CollOfFaces"); $$.size = $5.size;}
-    | COLLECTION OF CELL ON plural          {$$.str = strdup("CollOfCells"); $$.size = $5.size;}
-    | COLLECTION OF ADB ON plural           {$$.str = strdup("CollOfScalarsAD"); $$.size = $5.size;}
-    | COLLECTION OF BOOLEAN ON plural       {$$.str = strdup("CollOfBools"); $$.size = $5.size;}
+type: SCALAR                                { $$.str = strdup("Scalar"); $$.size = ANY; }
+    | VECTOR                                { $$.str = strdup("Vector"); $$.size = ANY; }
+    | VERTEX                                { $$.str = strdup("Vertex"); $$.size = ANY; }
+    | EDGE                                  { $$.str = strdup("Edge"); $$.size = ANY; }
+    | FACE                                  { $$.str = strdup("Face"); $$.size = ANY; }
+    | CELL                                  { $$.str = strdup("Cell"); $$.size = ANY; }
+    | ADB                                   { $$.str = strdup("ScalarAD"); $$.size = ANY; }
+    | BOOLEAN                               { $$.str = strdup("bool"); $$.size = ANY; }
+    | COLLECTION OF SCALAR                  { $$.str = strdup("CollOfScalars"); $$.size = ANY; }
+    | COLLECTION OF VECTOR                  { $$.str = strdup("CollOfVectors"); $$.size = ANY; }
+    | COLLECTION OF VERTEX                  { $$.str = strdup("CollOfVertices"); $$.size = ANY; }
+    | COLLECTION OF EDGE                    { $$.str = strdup("CollOfEdges"); $$.size = ANY; }
+    | COLLECTION OF FACE                    { $$.str = strdup("CollOfFaces"); $$.size = ANY; }
+    | COLLECTION OF CELL                    { $$.str = strdup("CollOfCells"); $$.size = ANY; }
+    | COLLECTION OF ADB                     { $$.str = strdup("CollOfScalarsAD"); $$.size = ANY; }
+    | COLLECTION OF BOOLEAN                 { $$.str = strdup("CollOfBools"); $$.size = ANY; }
+    | COLLECTION OF SCALAR ON plural        { $$.str = strdup("CollOfScalars"); $$.size = $5.size; }
+    | COLLECTION OF VECTOR ON plural        { $$.str = strdup("CollOfVectors"); $$.size = $5.size; }
+    | COLLECTION OF VERTEX ON plural        { $$.str = strdup("CollOfVertices"); $$.size = $5.size; }
+    | COLLECTION OF EDGE ON plural          { $$.str = strdup("CollOfEdges"); $$.size = $5.size; }
+    | COLLECTION OF FACE ON plural          { $$.str = strdup("CollOfFaces"); $$.size = $5.size; }
+    | COLLECTION OF CELL ON plural          { $$.str = strdup("CollOfCells"); $$.size = $5.size; }
+    | COLLECTION OF ADB ON plural           { $$.str = strdup("CollOfScalarsAD"); $$.size = $5.size; }
+    | COLLECTION OF BOOLEAN ON plural       { $$.str = strdup("CollOfBools"); $$.size = $5.size; }
     ;
 
 
@@ -1508,14 +1162,14 @@ values: value                   {$$.cCode = strdup($1); $$.sepCode = strdup($1);
 
 
 //////////////////////////////////////////////////////////////////////// this supports input parameters as variables
-values: VARIABLE                {$$ = strdup($1);}
-      | values ',' VARIABLE     {char *str = append5($1,',',$3); $$ = strdup(str); free(str);}
+values: VARIABLE                { $$ = strdup($1); }
+      | values ',' VARIABLE     { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << ", " << $3); }
       ;
 
 
-end_lines: '\n'                 {char *s = (char *)malloc(sizeof(char)); s[0] = '\n'; s[1] = '\0'; $$ = strdup(s); free(s);}
-         | '\n' end_lines       {char *str = append7('\n', $2); $$ = strdup(str); free(str);}
-         |                      {$$ = strdup("");}
+end_lines: '\n'                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "\n"); }
+         | '\n' end_lines       { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "\n" << $2); }
+         |                      { $$ = strdup(""); }
          ;
 
 
@@ -1528,7 +1182,7 @@ return_instr: RETURN boolean_expr '?' VARIABLE ':' VARIABLE
                     }
                     else
                     {
-                        sprintf($$.str, "return %s ? %s : %s", $2, $4, $6);
+                        STREAM_TO_DOLLARS_CHAR_ARRAY($$, "return " << $2 << " ? " << $4 << " : " << $6);
                         $$.size = getSize3($4);
                     }
                   }
@@ -1542,7 +1196,7 @@ return_instr: RETURN boolean_expr '?' VARIABLE ':' VARIABLE
                     }
                     else
                     {
-                        sprintf($$.str, "return %s", $2);
+                        STREAM_TO_DOLLARS_CHAR_ARRAY($$, "return " << $2);
                         $$.size = getSize3($2);
                     }
                   }
@@ -1553,9 +1207,7 @@ function_start: VARIABLE '=' end_lines '{'
                                             {
                                               insideFunction = true;
                                               currentFunctionIndex = getIndex2($1);
-                                              char *str = append12($1, '=', $3, '{');
-                                              $$ = strdup(str);
-                                              free(str);
+                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << " = " << $3 << " {");
                                             }
 
 
@@ -1566,7 +1218,7 @@ function_declaration: VARIABLE ':' FUNCTION '(' parameter_list ')' RET type
                                                 bool declaredBefore = false;
 
                                                 for(i = 0; i < funNo; i++)
-                                                    if(strcmp(fun[i].name, $1) == 0)
+                                                    if(strcmp(fun[i].name.c_str(), $1) == 0)
                                                     {
                                                         declaredBefore = true;
                                                         break;
@@ -1574,9 +1226,7 @@ function_declaration: VARIABLE ':' FUNCTION '(' parameter_list ')' RET type
 
                                                 if(declaredBefore == true)
                                                 {
-                                                    stringstream ss;
-                                                    ss << "error: The function " << $1 << "' is redeclared";
-                                                    $$ = strdup(ss.str().c_str());
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$, "error: The function '" << $1 << "' is redeclared");
                                                 }
                                                 else
                                                 {
@@ -1596,8 +1246,12 @@ function_declaration: VARIABLE ':' FUNCTION '(' parameter_list ')' RET type
                                                         {
                                                           cs2 = strdup(pch);
                                                           pch2 = strtok(cs2, " ");    // type of the variable
-                                                          char *aux1 = structureToString(fun[funNo-1].paramList);
-                                                          fun[funNo-1].paramList = append1(aux1, ',', pch2);
+                                                          char *aux1 = strdup(fun[funNo-1].paramList.c_str());
+
+                                                          stringstream ss;
+                                                          ss << aux1 << ", " << pch2;
+
+                                                          fun[funNo-1].paramList = strdup(ss.str().c_str());
                                                           char *copy = strdup(pch2);
                                                           pch2 = strtok(NULL, " ");   // name of the variable
 
@@ -1610,9 +1264,7 @@ function_declaration: VARIABLE ':' FUNCTION '(' parameter_list ')' RET type
                                                         }
 
                                                         fun[funNo-1].assigned = false;
-                                                        char *str = append11($8.str, $1, '(', $5, ')');
-                                                        $$ = strdup(str);
-                                                        free(str);
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$, $8.str << " " << $1 << "(" << $5 << ")");
                                                 }
                                             }
                     ;
@@ -1625,7 +1277,7 @@ function_assignment: function_start end_lines commands end_lines return_instr en
                                                 bool declaredBefore = false;
 
                                                 for(i = 0; i < funNo; i++)
-                                                    if(strcmp(fun[i].name, extract($1)) == 0)
+                                                    if(strcmp(fun[i].name.c_str(), extract($1)) == 0)
                                                     {
                                                         declaredBefore = true;
                                                         break;
@@ -1642,10 +1294,7 @@ function_assignment: function_start end_lines commands end_lines return_instr en
                                                       {
                                                           if($5.size != -1)
                                                           {
-                                                              char *str = (char *)malloc(1000 * sizeof(char));
-                                                              str = append13($1, $2, $3, $4, $5.str, $6, '}');
-                                                              $$ = strdup(str);
-                                                              free(str);
+                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << $2 << $3 << $4 << $5.str << $6 << "}");
                                                               if(fun[i].returnSize == ANY && $5.size != ANY)
                                                                   fun[i].returnSize = $5.size;
                                                               else
@@ -1657,18 +1306,15 @@ function_assignment: function_start end_lines commands end_lines return_instr en
                                                           }
                                                           else
                                                           {
-                                                              stringstream ss;
-                                                              ss << "error: At least one of the return variables does not exist within the function or the return type of the function '" << fun[i].name << "' from its assignment differs than the length of the return type from the function's definition";
-                                                              $$ = strdup(ss.str().c_str());
+                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$, "error: At least one of the return variables does not exist within the function or the return type of the function '" << fun[i].name << "' from its assignment differs than the length of the return type from the function's definition");
                                                           }
 
                                                       }
                                                 else
                                                 {
-                                                    stringstream ss;
-                                                    ss << "error: The function '" << extract($1) <<"' must be declared before being assigned";
-                                                    $$ = strdup(ss.str().c_str());
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$, "error: The function '" << extract($1) <<"' must be declared before being assigned");
                                                 }
+
                                                 insideFunction = false;
                                                 currentFunctionIndex = -1;
                                             }
@@ -1684,151 +1330,152 @@ function_assignment: function_start end_lines commands end_lines return_instr en
 
 
 
-singular_declaration: VARIABLE ':' SCALAR               {$$ = singular_declaration_function($1, "scalar");}
-                    | VARIABLE ':' VECTOR               {$$ = singular_declaration_function($1, "vector");}
-                    | VARIABLE ':' VERTEX               {$$ = singular_declaration_function($1, "vertex");}
-                    | VARIABLE ':' EDGE                 {$$ = singular_declaration_function($1, "edge");}
-                    | VARIABLE ':' FACE                 {$$ = singular_declaration_function($1, "face");}
-                    | VARIABLE ':' CELL                 {$$ = singular_declaration_function($1, "cell");}
-                    | VARIABLE ':' ADB                  {$$ = singular_declaration_function($1, "scalarAD");}
-                    | VARIABLE ':' BOOLEAN              {$$ = singular_declaration_function($1, "bool");}
+singular_declaration: VARIABLE ':' SCALAR               { string out = singular_declaration_function($1, "scalar"); $$ = (char*) out.c_str(); }
+                    | VARIABLE ':' VECTOR               { string out = singular_declaration_function($1, "vector"); $$ = (char*) out.c_str(); }
+                    | VARIABLE ':' VERTEX               { string out = singular_declaration_function($1, "vertex"); $$ = (char*) out.c_str(); }
+                    | VARIABLE ':' EDGE                 { string out = singular_declaration_function($1, "edge"); $$ = (char*) out.c_str(); }
+                    | VARIABLE ':' FACE                 { string out = singular_declaration_function($1, "face"); $$ = (char*) out.c_str(); }
+                    | VARIABLE ':' CELL                 { string out = singular_declaration_function($1, "cell"); $$ = (char*) out.c_str(); }
+                    | VARIABLE ':' ADB                  { string out = singular_declaration_function($1, "scalarAD"); $$ = (char*) out.c_str(); }
+                    | VARIABLE ':' BOOLEAN              { string out = singular_declaration_function($1, "bool"); $$ = (char*) out.c_str(); }
                     ;
 
 
-plural_declaration: VARIABLE ':' COLLECTION OF SCALAR       {$$ = plural_declaration_function($1, "scalars");}
-                  | VARIABLE ':' COLLECTION OF VECTOR       {$$ = plural_declaration_function($1, "vectors");}
-                  | VARIABLE ':' COLLECTION OF VERTEX       {$$ = plural_declaration_function($1, "vertices");}
-                  | VARIABLE ':' COLLECTION OF EDGE         {$$ = plural_declaration_function($1, "edges");}
-                  | VARIABLE ':' COLLECTION OF FACE         {$$ = plural_declaration_function($1, "faces");}
-                  | VARIABLE ':' COLLECTION OF CELL         {$$ = plural_declaration_function($1, "cells");}
-                  | VARIABLE ':' COLLECTION OF ADB          {$$ = plural_declaration_function($1, "scalarsAD");}
-                  | VARIABLE ':' COLLECTION OF BOOLEAN      {$$ = plural_declaration_function($1, "bools");}
+plural_declaration: VARIABLE ':' COLLECTION OF SCALAR       { string out = plural_declaration_function($1, "scalars"); $$ = (char*) out.c_str(); }
+                  | VARIABLE ':' COLLECTION OF VECTOR       { string out = plural_declaration_function($1, "vectors"); $$ = (char*) out.c_str(); }
+                  | VARIABLE ':' COLLECTION OF VERTEX       { string out = plural_declaration_function($1, "vertices"); $$ = (char*) out.c_str(); }
+                  | VARIABLE ':' COLLECTION OF EDGE         { string out = plural_declaration_function($1, "edges"); $$ = (char*) out.c_str(); }
+                  | VARIABLE ':' COLLECTION OF FACE         { string out = plural_declaration_function($1, "faces"); $$ = (char*) out.c_str(); }
+                  | VARIABLE ':' COLLECTION OF CELL         { string out = plural_declaration_function($1, "cells"); $$ = (char*) out.c_str(); }
+                  | VARIABLE ':' COLLECTION OF ADB          { string out = plural_declaration_function($1, "scalarsAD"); $$ = (char*) out.c_str(); }
+                  | VARIABLE ':' COLLECTION OF BOOLEAN      { string out = plural_declaration_function($1, "bools"); $$ = (char*) out.c_str(); }
                   ;
 
 
-extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON plural      {char *st = structureToString($7.str); char* out = extended_plural_declaration_function($1, "scalars", st, $7.size); $$ = out;}
-                           | VARIABLE ':' COLLECTION OF VECTOR ON plural      {char *st = structureToString($7.str); char* out = extended_plural_declaration_function($1, "vectors", st, $7.size); $$ = out;}
-                           | VARIABLE ':' COLLECTION OF VERTEX ON plural      {char *st = structureToString($7.str); char* out = extended_plural_declaration_function($1, "vertices", st, $7.size); $$ = out;}
-                           | VARIABLE ':' COLLECTION OF EDGE ON plural        {char *st = structureToString($7.str); char* out = extended_plural_declaration_function($1, "edges", st, $7.size); $$ = out;}
-                           | VARIABLE ':' COLLECTION OF FACE ON plural        {char *st = structureToString($7.str); char* out = extended_plural_declaration_function($1, "faces", st, $7.size); $$ = out;}
-                           | VARIABLE ':' COLLECTION OF CELL ON plural        {char *st = structureToString($7.str); char* out = extended_plural_declaration_function($1, "cells", st, $7.size); $$ = out;}
-                           | VARIABLE ':' COLLECTION OF ADB ON plural         {char *st = structureToString($7.str); char* out = extended_plural_declaration_function($1, "scalarsAD", st, $7.size); $$ = out;}
-                           | VARIABLE ':' COLLECTION OF BOOLEAN ON plural     {char *st = structureToString($7.str); char* out = extended_plural_declaration_function($1, "bools", st, $7.size); $$ = out;}
+extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON plural      { char *st = strdup($7.str); string out = extended_plural_declaration_function($1, "scalars", st, $7.size); $$ = (char*) out.c_str(); }
+                           | VARIABLE ':' COLLECTION OF VECTOR ON plural      { char *st = strdup($7.str); string out = extended_plural_declaration_function($1, "vectors", st, $7.size); $$ = (char*) out.c_str(); }
+                           | VARIABLE ':' COLLECTION OF VERTEX ON plural      { char *st = strdup($7.str); string out = extended_plural_declaration_function($1, "vertices", st, $7.size); $$ = (char*) out.c_str(); }
+                           | VARIABLE ':' COLLECTION OF EDGE ON plural        { char *st = strdup($7.str); string out = extended_plural_declaration_function($1, "edges", st, $7.size); $$ = (char*) out.c_str(); }
+                           | VARIABLE ':' COLLECTION OF FACE ON plural        { char *st = strdup($7.str); string out = extended_plural_declaration_function($1, "faces", st, $7.size); $$ = (char*) out.c_str(); }
+                           | VARIABLE ':' COLLECTION OF CELL ON plural        { char *st = strdup($7.str); string out = extended_plural_declaration_function($1, "cells", st, $7.size); $$ = (char*) out.c_str(); }
+                           | VARIABLE ':' COLLECTION OF ADB ON plural         { char *st = strdup($7.str); string out = extended_plural_declaration_function($1, "scalarsAD", st, $7.size); $$ = (char*) out.c_str(); }
+                           | VARIABLE ':' COLLECTION OF BOOLEAN ON plural     { char *st = strdup($7.str); string out = extended_plural_declaration_function($1, "bools", st, $7.size); $$ = (char*) out.c_str(); }
                            ;
 
 
-declaration: singular_declaration           {$$ = strdup($1);}
-           | plural_declaration             {$$ = strdup($1);}
-           | extended_plural_declaration    {$$ = strdup($1);}
+declaration: singular_declaration           { char* out = strdup($1); $$ = out; }
+           | plural_declaration             { char* out = strdup($1); $$ = out; }
+           | extended_plural_declaration    { char* out = strdup($1); $$ = out; }
            ;
 
 
 
-singular_assignment: VARIABLE '=' scalar_expr              {char str[1000]; int i; for(i = 0; i < strlen($3); i++) str[i] = $3[i]; str[strlen($3)] = '\0'; char* out = singular_assignment_function($1, "scalar", str, "Scalar"); $$ = out;}
-                   | VARIABLE '=' vector_expr              {char str[1000]; int i; for(i = 0; i < strlen($3); i++) str[i] = $3[i]; str[strlen($3)] = '\0'; char* out = singular_assignment_function($1, "vector", str, "Vector"); $$ = out;}
-                   | VARIABLE '=' vertex                   {char str[1000]; int i; for(i = 0; i < strlen($3); i++) str[i] = $3[i]; str[strlen($3)] = '\0'; char* out = singular_assignment_function($1, "vertex", str, "Vertex"); $$ = out;}
-                   | VARIABLE '=' edge                     {char str[1000]; int i; for(i = 0; i < strlen($3); i++) str[i] = $3[i]; str[strlen($3)] = '\0'; char* out = singular_assignment_function($1, "edge", str, "Edge"); $$ = out;}
-                   | VARIABLE '=' face                     {char str[1000]; int i; for(i = 0; i < strlen($3); i++) str[i] = $3[i]; str[strlen($3)] = '\0'; char* out = singular_assignment_function($1, "face", str, "Face"); $$ = out;}
-                   | VARIABLE '=' cell                     {char str[1000]; int i; for(i = 0; i < strlen($3); i++) str[i] = $3[i]; str[strlen($3)] = '\0'; char* out = singular_assignment_function($1, "cell", str, "Cell"); $$ = out;}
-                   | VARIABLE '=' adb                      {char str[1000]; int i; for(i = 0; i < strlen($3); i++) str[i] = $3[i]; str[strlen($3)] = '\0'; char* out = singular_assignment_function($1, "scalarAD", str, "ScalarAD"); $$ = out;}
-                   | VARIABLE '=' boolean_expr             {char str[1000]; int i; for(i = 0; i < strlen($3); i++) str[i] = $3[i]; str[strlen($3)] = '\0'; char* out = singular_assignment_function($1, "bool", str, "bool"); $$ = out;}
+singular_assignment: VARIABLE '=' scalar_expr              { char *st = strdup($3); string out = singular_assignment_function($1, "scalar", st, "Scalar"); $$ = (char*) out.c_str(); }
+                   | VARIABLE '=' vector_expr              { char *st = strdup($3); string out = singular_assignment_function($1, "vector", st, "Vector"); $$ = (char*) out.c_str(); }
+                   | VARIABLE '=' vertex                   { char *st = strdup($3); string out = singular_assignment_function($1, "vertex", st, "Vertex"); $$ = (char*) out.c_str(); }
+                   | VARIABLE '=' edge                     { char *st = strdup($3); string out = singular_assignment_function($1, "edge", st, "Edge"); $$ = (char*) out.c_str(); }
+                   | VARIABLE '=' face                     { char *st = strdup($3); string out = singular_assignment_function($1, "face", st, "Face"); $$ = (char*) out.c_str(); }
+                   | VARIABLE '=' cell                     { char *st = strdup($3); string out = singular_assignment_function($1, "cell", st, "Cell"); $$ = (char*) out.c_str(); }
+                   | VARIABLE '=' adb                      { char *st = strdup($3); string out = singular_assignment_function($1, "scalarAD", st, "ScalarAD"); $$ = (char*) out.c_str(); }
+                   | VARIABLE '=' boolean_expr             { char *st = strdup($3); string out = singular_assignment_function($1, "bool", st, "bool"); $$ = (char*) out.c_str(); }
                    ;
 
 
-plural_assignment: VARIABLE '=' scalar_exprs              {char *st = structureToString($3.str); char* out = plural_assignment_function($1, "scalars", st, "CollOfScalars", $3.size); $$ = out;}
-                 | VARIABLE '=' vector_exprs              {char *st = structureToString($3.str); char* out = plural_assignment_function($1, "vectors", st, "CollOfVectors", $3.size); $$ = out;}
-                 | VARIABLE '=' vertices                  {char *st = structureToString($3.str); char* out = plural_assignment_function($1, "vertices", st, "CollOfVertices", $3.size); $$ = out;}
-                 | VARIABLE '=' edges                     {char *st = structureToString($3.str); char* out = plural_assignment_function($1, "edges", st, "CollOfEdges", $3.size); $$ = out;}
-                 | VARIABLE '=' faces                     {char *st = structureToString($3.str); char* out = plural_assignment_function($1, "faces", st, "CollOfFaces", $3.size); $$ = out;}
-                 | VARIABLE '=' cells                     {char *st = structureToString($3.str); char* out = plural_assignment_function($1, "cells", st, "CollOfCells", $3.size); $$ = out;}
-                 | VARIABLE '=' adbs                      {char *st = structureToString($3.str); char* out = plural_assignment_function($1, "scalarsAD", st, "CollOfScalarsAD", $3.size); $$ = out;}
-                 | VARIABLE '=' boolean_exprs             {char *st = structureToString($3.str); char* out = plural_assignment_function($1, "bools", st, "CollOfBools", $3.size); $$ = out;}
+plural_assignment: VARIABLE '=' scalar_exprs              { char *st = strdup($3.str); string out = plural_assignment_function($1, "scalars", st, "CollOfScalars", $3.size); $$ = (char*) out.c_str(); }
+                 | VARIABLE '=' vector_exprs              { char *st = strdup($3.str); string out = plural_assignment_function($1, "vectors", st, "CollOfVectors", $3.size); $$ = (char*) out.c_str(); }
+                 | VARIABLE '=' vertices                  { char *st = strdup($3.str); string out = plural_assignment_function($1, "vertices", st, "CollOfVertices", $3.size); $$ = (char*) out.c_str(); }
+                 | VARIABLE '=' edges                     { char *st = strdup($3.str); string out = plural_assignment_function($1, "edges", st, "CollOfEdges", $3.size); $$ = (char*) out.c_str(); }
+                 | VARIABLE '=' faces                     { char *st = strdup($3.str); string out = plural_assignment_function($1, "faces", st, "CollOfFaces", $3.size); $$ = (char*) out.c_str(); }
+                 | VARIABLE '=' cells                     { char *st = strdup($3.str); string out = plural_assignment_function($1, "cells", st, "CollOfCells", $3.size); $$ = (char*) out.c_str(); }
+                 | VARIABLE '=' adbs                      { char *st = strdup($3.str); string out = plural_assignment_function($1, "scalarsAD", st, "CollOfScalarsAD", $3.size); $$ = (char*) out.c_str(); }
+                 | VARIABLE '=' boolean_exprs             { char *st = strdup($3.str); string out = plural_assignment_function($1, "bools", st, "CollOfBools", $3.size); $$ = (char*) out.c_str(); }
                  ;
 
 
 //if the variable hasn't been declared before, it is an assignment with deduced declaration (type)
 
-assignment: singular_assignment     {char* out = strdup($1); $$ = out;}
-          | plural_assignment       {char* out = strdup($1); $$ = out;}
+assignment: singular_assignment     { char* out = strdup($1); $$ = out; }
+          | plural_assignment       { char* out = strdup($1); $$ = out; }
           ;
 
 
 
 
-singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' scalar_expr          {char str[1000]; int i; for(i = 0; i < strlen($5); i++) str[i] = $5[i]; str[strlen($5)] = '\0'; char* out = singular_declaration_with_assignment_function($1, "scalar", str, "Scalar"); $$ = out;}
-                                    | VARIABLE ':' VECTOR '=' vector_expr          {char str[1000]; int i; for(i = 0; i < strlen($5); i++) str[i] = $5[i]; str[strlen($5)] = '\0'; char* out = singular_declaration_with_assignment_function($1, "vector", str, "Vector"); $$ = out;}
-                                    | VARIABLE ':' VERTEX '=' vertex               {char str[1000]; int i; for(i = 0; i < strlen($5); i++) str[i] = $5[i]; str[strlen($5)] = '\0'; char* out = singular_declaration_with_assignment_function($1, "vertex", str, "Vertex"); $$ = out;}
-                                    | VARIABLE ':' EDGE '=' edge                   {char str[1000]; int i; for(i = 0; i < strlen($5); i++) str[i] = $5[i]; str[strlen($5)] = '\0'; char* out = singular_declaration_with_assignment_function($1, "edge", str, "Edge"); $$ = out;}
-                                    | VARIABLE ':' FACE '=' face                   {char str[1000]; int i; for(i = 0; i < strlen($5); i++) str[i] = $5[i]; str[strlen($5)] = '\0'; char* out = singular_declaration_with_assignment_function($1, "face", str, "Face"); $$ = out;}
-                                    | VARIABLE ':' CELL '=' cell                   {char str[1000]; int i; for(i = 0; i < strlen($5); i++) str[i] = $5[i]; str[strlen($5)] = '\0'; char* out = singular_declaration_with_assignment_function($1, "cell", str, "Cell"); $$ = out;}
-                                    | VARIABLE ':' ADB '=' adb                     {char str[1000]; int i; for(i = 0; i < strlen($5); i++) str[i] = $5[i]; str[strlen($5)] = '\0'; char* out = singular_declaration_with_assignment_function($1, "scalarAD", str, "ScalarAD"); $$ = out;}
-                                    | VARIABLE ':' BOOLEAN '=' boolean_expr        {char str[1000]; int i; for(i = 0; i < strlen($5); i++) str[i] = $5[i]; str[strlen($5)] = '\0'; char* out = singular_declaration_with_assignment_function($1, "bool", str, "bool"); $$ = out;}
+singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' scalar_expr          { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "scalar", st, "Scalar"); $$ = (char*) out.c_str(); }
+                                    | VARIABLE ':' VECTOR '=' vector_expr          { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "vector", st, "Vector"); $$ = (char*) out.c_str(); }
+                                    | VARIABLE ':' VERTEX '=' vertex               { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "vertex", st, "Vertex"); $$ = (char*) out.c_str(); }
+                                    | VARIABLE ':' EDGE '=' edge                   { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "edge", st, "Edge"); $$ = (char*) out.c_str(); }
+                                    | VARIABLE ':' FACE '=' face                   { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "face", st, "Face"); $$ = (char*) out.c_str(); }
+                                    | VARIABLE ':' CELL '=' cell                   { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "cell", st, "Cell"); $$ = (char*) out.c_str(); }
+                                    | VARIABLE ':' ADB '=' adb                     { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "scalarAD", st, "ScalarAD"); $$ = (char*) out.c_str(); }
+                                    | VARIABLE ':' BOOLEAN '=' boolean_expr        { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "bool", st, "bool"); $$ = (char*) out.c_str(); }
                                     ;
 
 
-plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' scalar_exprs        {char *st = structureToString($7.str); char* out = plural_declaration_with_assignment_function($1, "scalars", st, "CollOfScalars", $7.size); $$ = out;}
-                                  | VARIABLE ':' COLLECTION OF VECTOR '=' vector_exprs        {char *st = structureToString($7.str); char* out = plural_declaration_with_assignment_function($1, "vectors", st, "CollOfVectors", $7.size); $$ = out;}
-                                  | VARIABLE ':' COLLECTION OF VERTEX '=' vertices            {char *st = structureToString($7.str); char* out = plural_declaration_with_assignment_function($1, "vertices", st, "CollOfVertices", $7.size); $$ = out;}
-                                  | VARIABLE ':' COLLECTION OF EDGE '=' edges                 {char *st = structureToString($7.str); char* out = plural_declaration_with_assignment_function($1, "edges", st, "CollOfEdges", $7.size); $$ = out;}
-                                  | VARIABLE ':' COLLECTION OF FACE '=' faces                 {char *st = structureToString($7.str); char* out = plural_declaration_with_assignment_function($1, "faces", st, "CollOfFaces", $7.size); $$ = out;}
-                                  | VARIABLE ':' COLLECTION OF CELL '=' cells                 {char *st = structureToString($7.str); char* out = plural_declaration_with_assignment_function($1, "cells", st, "CollOfCells", $7.size); $$ = out;}
-                                  | VARIABLE ':' COLLECTION OF ADB '=' adbs                   {char *st = structureToString($7.str); char* out = plural_declaration_with_assignment_function($1, "scalarsAD", st, "CollOfScalarsAD", $7.size); $$ = out;}
-                                  | VARIABLE ':' COLLECTION OF BOOLEAN '=' boolean_exprs      {char *st = structureToString($7.str); char* out = plural_declaration_with_assignment_function($1, "bools", st, "CollOfBools", $7.size); $$ = out;}
+plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' scalar_exprs        { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "scalars", st, "CollOfScalars", $7.size); $$ = (char*) out.c_str(); }
+                                  | VARIABLE ':' COLLECTION OF VECTOR '=' vector_exprs        { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "vectors", st, "CollOfVectors", $7.size); $$ = (char*) out.c_str(); }
+                                  | VARIABLE ':' COLLECTION OF VERTEX '=' vertices            { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "vertices", st, "CollOfVertices", $7.size); $$ = (char*) out.c_str(); }
+                                  | VARIABLE ':' COLLECTION OF EDGE '=' edges                 { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "edges", st, "CollOfEdges", $7.size); $$ = (char*) out.c_str(); }
+                                  | VARIABLE ':' COLLECTION OF FACE '=' faces                 { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "faces", st, "CollOfFaces", $7.size); $$ = (char*) out.c_str(); }
+                                  | VARIABLE ':' COLLECTION OF CELL '=' cells                 { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "cells", st, "CollOfCells", $7.size); $$ = (char*) out.c_str(); }
+                                  | VARIABLE ':' COLLECTION OF ADB '=' adbs                   { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "scalarsAD", st, "CollOfScalarsAD", $7.size); $$ = (char*) out.c_str(); }
+                                  | VARIABLE ':' COLLECTION OF BOOLEAN '=' boolean_exprs      { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "bools", st, "CollOfBools", $7.size); $$ = (char*) out.c_str(); }
                                   ;
 
 
-extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR ON plural '=' scalar_exprs        {char *st = structureToString($9.str); char *st2 = structureToString($7.str); char* out = extended_plural_declaration_with_assignment_function($1, "scalars", st, "CollOfScalars", st2, $9.size, $7.size); $$ = out;}
-                                           | VARIABLE ':' COLLECTION OF VECTOR ON plural '=' vector_exprs        {char *st = structureToString($9.str); char *st2 = structureToString($7.str); char* out = extended_plural_declaration_with_assignment_function($1, "vectors", st, "CollOfVectors", st2, $9.size, $7.size); $$ = out;}
-                                           | VARIABLE ':' COLLECTION OF VERTEX ON plural '=' vertices            {char *st = structureToString($9.str); char *st2 = structureToString($7.str); char* out = extended_plural_declaration_with_assignment_function($1, "vertices", st, "CollOfVertices", st2, $9.size, $7.size); $$ = out;}
-                                           | VARIABLE ':' COLLECTION OF EDGE ON plural '=' edges                 {char *st = structureToString($9.str); char *st2 = structureToString($7.str); char* out = extended_plural_declaration_with_assignment_function($1, "edges", st, "CollOfEdges", st2, $9.size, $7.size); $$ = out;}
-                                           | VARIABLE ':' COLLECTION OF FACE ON plural '=' faces                 {char *st = structureToString($9.str); char *st2 = structureToString($7.str); char* out = extended_plural_declaration_with_assignment_function($1, "faces", st, "CollOfFaces", st2, $9.size, $7.size); $$ = out;}
-                                           | VARIABLE ':' COLLECTION OF CELL ON plural '=' cells                 {char *st = structureToString($9.str); char *st2 = structureToString($7.str); char* out = extended_plural_declaration_with_assignment_function($1, "cells", st, "CollOfCells", st2, $9.size, $7.size); $$ = out;}
-                                           | VARIABLE ':' COLLECTION OF ADB ON plural '=' adbs                   {char *st = structureToString($9.str); char *st2 = structureToString($7.str); char* out = extended_plural_declaration_with_assignment_function($1, "scalarsAD", st, "CollOfScalarsAD", st2, $9.size, $7.size); $$ = out;}
-                                           | VARIABLE ':' COLLECTION OF BOOLEAN ON plural '=' boolean_exprs      {char *st = structureToString($9.str); char *st2 = structureToString($7.str); char* out = extended_plural_declaration_with_assignment_function($1, "bools", st, "CollOfBools", st2, $9.size, $7.size); $$ = out;}
+extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR ON plural '=' scalar_exprs        { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "scalars", st1, "CollOfScalars", st2, $9.size, $7.size); $$ = (char*) out.c_str(); }
+                                           | VARIABLE ':' COLLECTION OF VECTOR ON plural '=' vector_exprs        { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "vectors", st1, "CollOfVectors", st2, $9.size, $7.size); $$ = (char*) out.c_str(); }
+                                           | VARIABLE ':' COLLECTION OF VERTEX ON plural '=' vertices            { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "vertices", st1, "CollOfVertices", st2, $9.size, $7.size); $$ = (char*) out.c_str(); }
+                                           | VARIABLE ':' COLLECTION OF EDGE ON plural '=' edges                 { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "edges", st1, "CollOfEdges", st2, $9.size, $7.size); $$ = (char*) out.c_str(); }
+                                           | VARIABLE ':' COLLECTION OF FACE ON plural '=' faces                 { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "faces", st1, "CollOfFaces", st2, $9.size, $7.size); $$ = (char*) out.c_str(); }
+                                           | VARIABLE ':' COLLECTION OF CELL ON plural '=' cells                 { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "cells", st1, "CollOfCells", st2, $9.size, $7.size); $$ = (char*) out.c_str(); }
+                                           | VARIABLE ':' COLLECTION OF ADB ON plural '=' adbs                   { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "scalarsAD", st1, "CollOfScalarsAD", st2, $9.size, $7.size); $$ = (char*)out.c_str(); }
+                                           | VARIABLE ':' COLLECTION OF BOOLEAN ON plural '=' boolean_exprs      { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "bools", st1, "CollOfBools", st2, $9.size, $7.size); $$ = (char*)out.c_str(); }
                                            ;
 
 
- declaration_with_assignment: singular_declaration_with_assignment          {char* out = strdup($1); $$ = out;}
-                            | plural_declaration_with_assignment            {char* out = strdup($1); $$ = out;}
-                            | extended_plural_declaration_with_assignment   {char* out = strdup($1); $$ = out;}
+
+ declaration_with_assignment: singular_declaration_with_assignment          { char* out = strdup($1); $$ = out; }
+                            | plural_declaration_with_assignment            { char* out = strdup($1); $$ = out; }
+                            | extended_plural_declaration_with_assignment   { char* out = strdup($1); $$ = out; }
                             ;
 
 
 
 
 // instructions which can be used in the program and in a function's body
-command: declaration                    {char* out = strdup($1); $$ = out;}
-       | assignment                     {char* out = strdup($1); $$ = out;}
-       | declaration_with_assignment    {char* out = strdup($1); $$ = out;}
+command: declaration                    { char* out = strdup($1); $$ = out; }
+       | assignment                     { char* out = strdup($1); $$ = out; }
+       | declaration_with_assignment    { char* out = strdup($1); $$ = out; }
        ;
 
 
 // instructions which can be used in the program, but not in a function's body (since we must not allow inner functions)
-command2: command                                    {char* out = strdup($1); $$ = out;}
-        | function_declaration                       {char* out = strcat($1,";"); $$ = out;}
-        | function_assignment                        {char* out = strdup($1); $$ = out;}
-    //  | function_declaration_with_assignment       {$$ = strdup($1);}
+command2: command                                    { char* out = strdup($1); $$ = out; }
+        | function_declaration                       { char* out = strcat($1,";"); $$ = out; }
+        | function_assignment                        { char* out = strdup($1); $$ = out; }
+    //  | function_declaration_with_assignment       { $$ = strdup($1); }
         ;
 
 
 pr: pr command2 '\n'                  {
-                                        char* out = $2;
-                                        printf("%s\n", out);
+                                        string out = $2;
+                                        cout << out << endl;
                                         currentLineNumber++;
                                       }
   | pr command2 COMMENT '\n'          {
-                                        char* out1 = $2;
-                                        char* out2 = $3;
-                                        printf("%s // %s \n", out1, (out2+1)); //+1 to skip comment sign (#)
+                                        string out1 = $2;
+                                        string out2 = $3;
+                                        cout << out1 << " // " << out2.substr(1, out2.size() - 1) << endl;   //+1 to skip comment sign (#)
                                         currentLineNumber++;
                                       }
   | pr COMMENT '\n'                   {
-	                                      char* out = $2;
-	                                      printf("// %s\n", (out+1)); //+1 to skip comment sign (#)
-	                                      currentLineNumber++;
+                                        string out = $2;
+                                        cout << "// " << out.substr(1, out.size() - 1) << endl;      //+1 to skip comment sign (#)
+                                        currentLineNumber++;
                                       }
-  | pr '\n'                           {printf("\n"); currentLineNumber++;}
-  |                                   {}
+  | pr '\n'                           { cout << endl; currentLineNumber++; }
+  |                                   { }
   ;
 
 %%
@@ -1851,13 +1498,15 @@ int main()
 void yyerror(const char* s)
 {
   HEAP_CHECK();
-  cout << s;
+  string st = s;
+  cout << st << endl;
 }
 
 
 
 
-bool find1(string s1, string s2)     // function which returns true if s2 is contained in s1
+// function which returns true if s2 is contained in s1
+bool find1(char* s1, char* s2)
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -1867,9 +1516,9 @@ bool find1(string s1, string s2)     // function which returns true if s2 is con
   {
       if(strcmp(pch, s2) == 0)
       {
-		      HEAP_CHECK();
+          HEAP_CHECK();
           return true;
-	    }
+      }
       pch = strtok (NULL, " -+*/()<>!=,");
   }
   HEAP_CHECK();
@@ -1877,7 +1526,8 @@ bool find1(string s1, string s2)     // function which returns true if s2 is con
 }
 
 
-string find2(string s1)   // function which returns the first undeclared variable from a given expression (this function is called after the function "isVariableDeclared" returns false)
+// function which returns the first undeclared variable from a given expression (this function is called after the function "check1" returns false)
+char* find2(char* s1)
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -1895,7 +1545,7 @@ string find2(string s1)   // function which returns the first undeclared variabl
                 int i;
                 for(i = 0; i < varNo; i++)
                 {
-                    if(strcmp(pch, var[i].name) == 0)
+                    if(strcmp(pch, var[i].name.c_str()) == 0)
                     {
                       found = true;
                       break;
@@ -1903,9 +1553,9 @@ string find2(string s1)   // function which returns the first undeclared variabl
                 }
                 if(found == false)
                 {
-				          HEAP_CHECK();
+                  HEAP_CHECK();
                   return pch;
-				        }
+                }
             }
         }
       }
@@ -1916,7 +1566,8 @@ string find2(string s1)   // function which returns the first undeclared variabl
 }
 
 
-string find3(string s1)     // function which returns the first unassigned variable from a given expression (this function is called after the function "check2" returns false)
+// function which returns the first unassigned variable from a given expression (this function is called after the function "check2" returns false)
+char* find3(char* s1)
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -1927,13 +1578,13 @@ string find3(string s1)     // function which returns the first unassigned varia
       int i;
       for(i = 0; i < varNo; i++)
       {
-          if(strcmp(pch, var[i].name) == 0)
+          if(strcmp(pch, var[i].name.c_str()) == 0)
           {
               if(var[i].assigned == false)
               {
-				        HEAP_CHECK();
+                HEAP_CHECK();
                 return pch;
-			        }
+              }
               break;
           }
       }
@@ -1944,7 +1595,8 @@ string find3(string s1)     // function which returns the first unassigned varia
 }
 
 
-int find4(char *s1)       // function which returns the number of parameters from a given parameters list
+// function which returns the number of parameters from a given parameters list
+int find4(char *s1)
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -1961,7 +1613,8 @@ int find4(char *s1)       // function which returns the number of parameters fro
 }
 
 
-string find5(string s1)   // function which returns the first undeclared variable from a given expression inside a function (this function is called after the function "check3" returns false)
+// function which returns the first undeclared variable from a given expression inside a function (this function is called after the function "check3" returns false)
+char* find5(char* s1)
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -1978,7 +1631,7 @@ string find5(string s1)   // function which returns the first undeclared variabl
                 bool found = false;
                 int i;
                 for(i = 0; i < fun[currentFunctionIndex].noParam; i++)
-                    if(strcmp(pch, fun[currentFunctionIndex].headerVariables[i].name) == 0)
+                    if(strcmp(pch, fun[currentFunctionIndex].headerVariables[i].name.c_str()) == 0)
                     {
                       found = true;
                       break;
@@ -1986,7 +1639,7 @@ string find5(string s1)   // function which returns the first undeclared variabl
 
                 if(found == false)
                     for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
-                        if(strcmp(fun[currentFunctionIndex].localVariables[i].name, pch) == 0)
+                        if(strcmp(fun[currentFunctionIndex].localVariables[i].name.c_str(), pch) == 0)
                         {
                           found = true;
                           break;
@@ -1994,9 +1647,9 @@ string find5(string s1)   // function which returns the first undeclared variabl
 
                 if(found == false)
                 {
-				          HEAP_CHECK();
+                  HEAP_CHECK();
                   return pch;
-				        }
+                }
             }
         }
       }
@@ -2007,7 +1660,8 @@ string find5(string s1)   // function which returns the first undeclared variabl
 }
 
 
-string find6(string s1)     // function which returns the first unassigned variable from a given expression inside a function (this function is called after the function "check4" returns false)
+// function which returns the first unassigned variable from a given expression inside a function (this function is called after the function "check4" returns false)
+char* find6(char* s1)
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -2018,13 +1672,13 @@ string find6(string s1)     // function which returns the first unassigned varia
       int i;
       for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
       {
-          if(strcmp(pch, fun[currentFunctionIndex].localVariables[i].name) == 0)
+          if(strcmp(pch, fun[currentFunctionIndex].localVariables[i].name.c_str()) == 0)
           {
               if(fun[currentFunctionIndex].localVariables[i].assigned == false)
               {
-				        HEAP_CHECK();
+                HEAP_CHECK();
                 return pch;
-			        }
+              }
               break;
           }
       }
@@ -2034,8 +1688,9 @@ string find6(string s1)     // function which returns the first unassigned varia
   return strdup("InvalidCall");
 }
 
+
 // function which checks if each variable (one that begins with a small letter and it's not a function) from a given expression was declared
-bool isVariableDeclared(string s1)
+bool check1(char* s1)
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -2053,7 +1708,7 @@ bool isVariableDeclared(string s1)
                 int i;
                 for(i = 0; i < varNo; i++)
                 {
-                    if(strcmp(pch, var[i].name) == 0)
+                    if(strcmp(pch, var[i].name.c_str()) == 0)
                     {
                       found = true;
                       break;
@@ -2061,9 +1716,9 @@ bool isVariableDeclared(string s1)
                 }
                 if(found == false)
                 {
-				          HEAP_CHECK();
+                  HEAP_CHECK();
                   return false;
-				        }
+                }
             }
         }
       }
@@ -2074,7 +1729,8 @@ bool isVariableDeclared(string s1)
 }
 
 
-bool check2(string s1)     // function which checks if each variable from a given expression was assigned to a value, and returns false if not
+// function which checks if each variable from a given expression was assigned to a value, and returns false if not
+bool check2(char* s1)
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -2085,13 +1741,13 @@ bool check2(string s1)     // function which checks if each variable from a give
       int i;
       for(i = 0; i < varNo; i++)
       {
-          if(strcmp(pch, var[i].name) == 0)
+          if(strcmp(pch, var[i].name.c_str()) == 0)
           {
               if(var[i].assigned == false)
               {
-				        HEAP_CHECK();
+                HEAP_CHECK();
                 return false;
-			        }
+              }
               break;
           }
       }
@@ -2102,7 +1758,8 @@ bool check2(string s1)     // function which checks if each variable from a give
 }
 
 
-bool check3(string s1)     // function which checks if each variable from a given expression (which is inside a function) is declared as a header or local variable in the current function (indicated by a global index)
+// function which checks if each variable from a given expression (which is inside a function) is declared as a header or local variable in the current function (indicated by a global index)
+bool check3(char* s1)
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -2119,23 +1776,23 @@ bool check3(string s1)     // function which checks if each variable from a give
                 int i;
                 bool taken = false;
                 for(i = 0; i < fun[currentFunctionIndex].noParam; i++)
-                    if(strcmp(fun[currentFunctionIndex].headerVariables[i].name, pch) == 0)
+                    if(strcmp(fun[currentFunctionIndex].headerVariables[i].name.c_str(), pch) == 0)
                     {
                         taken = true;
                         break;
                     }
                 if(taken == false)
                     for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
-                        if(strcmp(fun[currentFunctionIndex].localVariables[i].name, pch) == 0)
+                        if(strcmp(fun[currentFunctionIndex].localVariables[i].name.c_str(), pch) == 0)
                         {
                             taken = true;
                             break;
                         }
                 if(taken == false)
                 {
-					          HEAP_CHECK();
+                    HEAP_CHECK();
                     return false;   // the given variable doesn't exist among the header and local variables of the current function
-				        }
+                }
             }
         }
       }
@@ -2147,7 +1804,8 @@ bool check3(string s1)     // function which checks if each variable from a give
 }
 
 
-bool check4(string s1)     // function which checks if each variable from a given expression (which is inside a function) is assigned as a header or local variable in the current function (indicated by a global index)
+// function which checks if each variable from a given expression (which is inside a function) is assigned as a header or local variable in the current function (indicated by a global index)
+bool check4(char* s1)
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -2158,20 +1816,20 @@ bool check4(string s1)     // function which checks if each variable from a give
       int i;
       bool taken = false;
       for(i = 0; i < fun[currentFunctionIndex].noParam; i++)
-          if(strcmp(fun[currentFunctionIndex].headerVariables[i].name, pch) == 0)
+          if(strcmp(fun[currentFunctionIndex].headerVariables[i].name.c_str(), pch) == 0)
           {
               taken = true;     // if it's a header variable, it's already assigned
               break;
           }
       if(taken == false)
           for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
-              if(strcmp(fun[currentFunctionIndex].localVariables[i].name, pch) == 0)
+              if(strcmp(fun[currentFunctionIndex].localVariables[i].name.c_str(), pch) == 0)
               {
                   if(fun[currentFunctionIndex].localVariables[i].assigned == false)
                   {
-					            HEAP_CHECK();
+                      HEAP_CHECK();
                       return false;
-				          }
+                  }
                   break;
               }
 
@@ -2182,42 +1840,43 @@ bool check4(string s1)     // function which checks if each variable from a give
 }
 
 
-bool check5(string s1)     // function which checks if the given variable corresponds to a header/local variable of the current function and if its type is the same as the current function's return type
+// function which checks if the given variable corresponds to a header/local variable of the current function and if its type is the same as the current function's return type
+bool check5(char* s1)
 {
   HEAP_CHECK();
   bool found = false;
   int i;
   for(i = 0; i < fun[currentFunctionIndex].noParam; i++)
-    if(strcmp(fun[currentFunctionIndex].headerVariables[i].name, s1) == 0)
+    if(strcmp(fun[currentFunctionIndex].headerVariables[i].name.c_str(), s1) == 0)
     {
       found = true;
       break;
     }
   if(found == true)
   {
-    if(strcmp(fun[currentFunctionIndex].headerVariables[i].type, fun[currentFunctionIndex].returnType) != 0 || (fun[currentFunctionIndex].headerVariables[i].length != fun[currentFunctionIndex].returnSize && fun[currentFunctionIndex].returnSize != ANY && fun[currentFunctionIndex].headerVariables[i].length != ANY))
+    if(strcmp(fun[currentFunctionIndex].headerVariables[i].type.c_str(), fun[currentFunctionIndex].returnType.c_str()) != 0 || (fun[currentFunctionIndex].headerVariables[i].length != fun[currentFunctionIndex].returnSize && fun[currentFunctionIndex].returnSize != ANY && fun[currentFunctionIndex].headerVariables[i].length != ANY))
     {
-	     HEAP_CHECK();
+       HEAP_CHECK();
        return false;
-	  }
-	  HEAP_CHECK();
+    }
+    HEAP_CHECK();
     return true;
   }
 
   for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
-    if(strcmp(fun[currentFunctionIndex].localVariables[i].name, s1) == 0)
+    if(strcmp(fun[currentFunctionIndex].localVariables[i].name.c_str(), s1) == 0)
     {
       found = true;
       break;
     }
   if(found == true)
   {
-    if(strcmp(fun[currentFunctionIndex].localVariables[i].type, fun[currentFunctionIndex].returnType) != 0 || (fun[currentFunctionIndex].localVariables[i].length != fun[currentFunctionIndex].returnSize && fun[currentFunctionIndex].returnSize != ANY && fun[currentFunctionIndex].localVariables[i].length != ANY))
+    if(strcmp(fun[currentFunctionIndex].localVariables[i].type.c_str(), fun[currentFunctionIndex].returnType.c_str()) != 0 || (fun[currentFunctionIndex].localVariables[i].length != fun[currentFunctionIndex].returnSize && fun[currentFunctionIndex].returnSize != ANY && fun[currentFunctionIndex].localVariables[i].length != ANY))
     {
-	    HEAP_CHECK();
+      HEAP_CHECK();
       return false;
-	  }
-	  HEAP_CHECK();
+    }
+    HEAP_CHECK();
     return true;
   }
 
@@ -2226,7 +1885,8 @@ bool check5(string s1)     // function which checks if the given variable corres
 }
 
 
-bool check6(string s1)     // function which checks if the phrase "length_mismatch_error" is found within a string (for error checking of length mismatch operations)
+// function which checks if the phrase "length_mismatch_error" is found within a string (for error checking of length mismatch operations)
+bool check6(char* s1)
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -2236,9 +1896,9 @@ bool check6(string s1)     // function which checks if the phrase "length_mismat
   {
       if(strcmp(pch, "length_mismatch_error") == 0)
       {
-		      HEAP_CHECK();
+          HEAP_CHECK();
           return true;
-	    }
+      }
       pch = strtok (NULL, " -+*/()<>!=,");
   }
   HEAP_CHECK();
@@ -2246,7 +1906,8 @@ bool check6(string s1)     // function which checks if the phrase "length_mismat
 }
 
 
-bool check7(string s1)    // function which checks if the phrase "wrong_type_error" is found within a string (for error checking of operations between variables)
+// function which checks if the phrase "wrong_type_error" is found within a string (for error checking of operations between variables)
+bool check7(char* s1)
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -2257,9 +1918,9 @@ bool check7(string s1)    // function which checks if the phrase "wrong_type_err
       int i;
       if(strcmp(pch, "wrong_type_error") == 0)
       {
-		      HEAP_CHECK();
+          HEAP_CHECK();
           return true;
-	    }
+      }
       pch = strtok (NULL, " -+*/()<>!=,");
   }
   HEAP_CHECK();
@@ -2267,7 +1928,8 @@ bool check7(string s1)    // function which checks if the phrase "wrong_type_err
 }
 
 
-bool check8(char *s1, char *s2)    // function which checks if a given array of variables corresponds to a given array of types
+// function which checks if a given array of variables corresponds to a given array of types
+bool check8(char *s1, char *s2)
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -2282,7 +1944,7 @@ bool check8(char *s1, char *s2)    // function which checks if a given array of 
       int i;
       for(i = 0; i < varNo; i++)
       {
-          if(strcmp(pch1, var[i].name) == 0)
+          if(strcmp(pch1, var[i].name.c_str()) == 0)
           {
             found = true;
             break;
@@ -2294,7 +1956,7 @@ bool check8(char *s1, char *s2)    // function which checks if a given array of 
         return false;
       }
 
-      if(strcmp(var[i].type, pch2) != 0)
+      if(strcmp(var[i].type.c_str(), pch2) != 0)
           return false;
 
       pch1 = strtok (NULL, " ,");
@@ -2305,117 +1967,124 @@ bool check8(char *s1, char *s2)    // function which checks if a given array of 
 }
 
 
-string getType(string s1)     // function which returns the type of a variable, based on its name
+// function which returns the type of a variable, based on its name
+char* getType(char* s1)
 {
   HEAP_CHECK();
   int i;
   for(i = 0; i < varNo; i++)
   {
-      if(strcmp(s1, var[i].name) == 0)
+      if(strcmp(s1, var[i].name.c_str()) == 0)
       {
-		    HEAP_CHECK();
-        return var[i].type;
-	    }
+        HEAP_CHECK();
+        return (char*)var[i].type.c_str();
+      }
   }
   HEAP_CHECK();
   return strdup("NoType");
 }
 
 
-int getIndex1(string s1)     // function which returns the index of a variable, based on its name
+// function which returns the index of a variable, based on its name
+int getIndex1(char* s1)
 {
   HEAP_CHECK();
   int i;
   for(i = 0; i < varNo; i++)
   {
-      if(strcmp(s1, var[i].name) == 0)
+      if(strcmp(s1, var[i].name.c_str()) == 0)
       {
-		    HEAP_CHECK();
+        HEAP_CHECK();
         return i;
-	    }
+      }
   }
   HEAP_CHECK();
   return -1;
 }
 
 
-int getIndex2(string s1)     // function which returns the index of a function, based on its name
+// function which returns the index of a function, based on its name
+int getIndex2(char* s1)
 {
   HEAP_CHECK();
   int i;
   for(i = 0; i < funNo; i++)
   {
-      if(strcmp(s1, fun[i].name) == 0)
+      if(strcmp(s1, fun[i].name.c_str()) == 0)
       {
-		    HEAP_CHECK();
+        HEAP_CHECK();
         return i;
-	    }
+      }
   }
   HEAP_CHECK();
   return -1;
 }
 
 
-double getSize1(string s1)     // function which returns the size of a variable, based on its name
+// function which returns the size of a variable, based on its name
+double getSize1(char* s1)
 {
   HEAP_CHECK();
   int i;
   for(i = 0; i < varNo; i++)
   {
-      if(strcmp(s1, var[i].name) == 0)
+      if(strcmp(s1, var[i].name.c_str()) == 0)
       {
-		    HEAP_CHECK();
+        HEAP_CHECK();
         return var[i].length;
-	    }
+      }
   }
   HEAP_CHECK();
   return -1;
 }
 
 
-double getSize2(string s1)     // function which returns the return size of a function, based on its name
+// function which returns the return size of a function, based on its name
+double getSize2(char* s1)
 {
   HEAP_CHECK();
   int i;
   for(i = 0; i < funNo; i++)
   {
-      if(strcmp(s1, fun[i].name) == 0)
+      if(strcmp(s1, fun[i].name.c_str()) == 0)
       {
-		    HEAP_CHECK();
+        HEAP_CHECK();
         return fun[i].returnSize;
-	    }
+      }
   }
   HEAP_CHECK();
   return -1;
 }
 
 
-double getSize3(string s1)     // function which returns the size of a header/local variable inside the current function, based on its name
+// function which returns the size of a header/local variable inside the current function, based on its name
+double getSize3(char* s1)
 {
   HEAP_CHECK();
   int i;
   for(i = 0; i < fun[currentFunctionIndex].noParam; i++)
   {
-      if(strcmp(s1, fun[currentFunctionIndex].headerVariables[i].name) == 0)
+      if(strcmp(s1, fun[currentFunctionIndex].headerVariables[i].name.c_str()) == 0)
       {
-		    HEAP_CHECK();
+        HEAP_CHECK();
         return fun[currentFunctionIndex].headerVariables[i].length;
-	    }
+      }
   }
   for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
   {
-      if(strcmp(s1, fun[currentFunctionIndex].localVariables[i].name) == 0)
+      if(strcmp(s1, fun[currentFunctionIndex].localVariables[i].name.c_str()) == 0)
       {
-		    HEAP_CHECK();
+        HEAP_CHECK();
         return fun[currentFunctionIndex].localVariables[i].length;
-	    }
+      }
   }
   HEAP_CHECK();
   return -1;
 }
 
 
-int getSize4(string s1)    // function which counts the number of given arguments, separated by '@'
+// function which counts the number of given arguments, separated by '@'
+int getSize4(char* s1)
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -2432,7 +2101,8 @@ int getSize4(string s1)    // function which counts the number of given argument
 }
 
 
-char* extract(string s1)   // function which receives the start of a function declaration and returns its name
+// function which receives the start of a function declaration and returns its name
+char* extract(char* s1)
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -2443,84 +2113,87 @@ char* extract(string s1)   // function which receives the start of a function de
 }
 
 
-char *structureToString(string st)     // function used to transfer a string within a structure to a separate memory address (of its own)
+// function used to transfer a string within a structure to a separate memory address (of its own)
+char *structureToString(char* st)
 {
   HEAP_CHECK();
   int a = strlen(st);
   char *strA = (char*)malloc(sizeof(char)*strlen(st)+1);
-	strcpy(strA, st);
+  strcpy(strA, st);
   HEAP_CHECK();
   return strA;
 }
 
 
-string CPPToEquelle1(string st)      // function which converts a type from C++ to its corresponding type in Equelle
+// function which converts a type from C++ to its corresponding type in Equelle
+string CPPToEquelle1(char* st)
 {
     if(strcmp(st, "Scalar") == 0) {
-      return strdup("scalar");
+      return "scalar";
     }
 
     if(strcmp(st, "Vector") == 0) {
-      return strdup("vector");
+      return "vector";
     }
 
     if(strcmp(st, "Vertex") == 0) {
-      return strdup("vertex");
+      return "vertex";
     }
 
     if(strcmp(st, "Edge") == 0) {
-      return strdup("edge");
+      return "edge";
     }
 
     if(strcmp(st, "Face") == 0) {
-      return strdup("face");
+      return "face";
     }
 
     if(strcmp(st, "Cell") == 0) {
-      return strdup("cell");
+      return "cell";
     }
 
     if(strcmp(st, "ScalarAD") == 0) {
-      return strdup("scalarAD");
+      return "scalarAD";
     }
 
     if(strcmp(st, "bool") == 0) {
-      return strdup("bool");
+      return "bool";
     }
 
     if(strcmp(st, "CollOfScalars") == 0) {
-      return strdup("scalars");
+      return "scalars";
     }
 
     if(strcmp(st, "CollOfVectors") == 0) {
-      return strdup("vectors");
+      return "vectors";
     }
 
     if(strcmp(st, "CollOfVertices") == 0) {
-      return strdup("vertices");
+      return "vertices";
     }
 
     if(strcmp(st, "CollOfEdges") == 0) {
-      return strdup("edges");
+      return "edges";
     }
 
     if(strcmp(st, "CollOfCells") == 0) {
-      return strdup("cells");
+      return "cells";
     }
 
     if(strcmp(st, "CollOfScalarsAD") == 0) {
-      return strdup("scalarsAD");
+      return "scalarsAD";
     }
 
     if(strcmp(st, "CollOfBools") == 0) {
-      return strdup("bools");
+      return "bools";
     }
 
-    return strdup("InvalidType");
+    return "InvalidType";
 }
 
 
-int CPPToEquelle2(string st)      // function which returns the corresponding size of a C++ type
+// function which returns the corresponding size of a C++ type
+int CPPToEquelle2(char* st)
 {
     if(strcmp(st, "Scalar") == 0) {
       return 1;
@@ -2586,6 +2259,81 @@ int CPPToEquelle2(string st)      // function which returns the corresponding si
 }
 
 
+string functionToAnySingularType(char *st1, char *st2, char *st3, const string &st4)
+{
+    if(getIndex2(st1) == -1)
+    {
+      return "error1: This function does not exist";
+    }
+    if(fun[getIndex2(st1)].assigned == false)
+    {
+      return "error2: The function is not assigned";
+    }
+    if(strcmp(fun[getIndex2(st1)].returnType.c_str(), st2) != 0)
+    {
+      stringstream ss;
+      ss << "error3: The return type of the function is not a " << st4 << " type";
+      return ss.str();
+    }
+    if(fun[getIndex2(st1)].noParam != getSize4(st3))
+    {
+      return "error4: The number of arguments of the function does not correspond to the number of arguments sent";
+    }
+    if(check1(st3) == false)
+    {
+      return "error5: One input variable from the function's call is undefined";
+    }
+    if(check2(st3) == false)
+    {
+      return "error6: One input variable from the function's call is unassigned";
+    }
+    if(check8(st3, (char*)fun[getIndex2(st1)].paramList.c_str()) == false)    // explicit conversion from (const char *) to (char *)
+    {
+      return "error7: The parameter list of the template of the function does not correspond to the given parameter list";
+    }
+
+    stringstream ss;
+    ss << st1 << "(" << st3 << ")";
+    return ss.str();
+}
+
+
+
+string functionToAnyCollectionType(char *st1, char *st2, char *st3, const string &st4)
+{
+    if(getIndex2(st1) == -1)
+    {
+      return "error1: This function does not exist";
+    }
+    if(fun[getIndex2(st1)].assigned == false)
+    {
+      return "error2: The function is not assigned";
+    }
+    if(strcmp(fun[getIndex2(st1)].returnType.c_str(), st2) != 0)
+    {
+      stringstream ss;
+      ss << "error3: The return type of the function is not a collection of " << st4 << " type";
+      return ss.str();
+    }
+    if(fun[getIndex2(st1)].noParam != getSize4(st3))
+    {
+      return "error4: The number of arguments of the function does not correspond to the number of arguments sent";
+    }
+    if(check1(st3) == false)
+    {
+      return "error5: One input variable from the function's call is undefined";
+    }
+    if(check2(st3) == false)
+    {
+      return "error6: One input variable from the function's call is unassigned";
+    }
+    if(check8(st3, (char*)fun[getIndex2(st1)].paramList.c_str()) == false)    // explicit conversion from (const char *) to (char *)
+    {
+      return "error7: The parameter list of the template of the function does not correspond to the given parameter list";
+    }
+
+    return "ok";
+}
 
 
 
@@ -2600,7 +2348,12 @@ int CPPToEquelle2(string st)      // function which returns the corresponding si
 
 
 
-string singular_declaration_function(string st1, string st2)
+
+
+
+
+
+string singular_declaration_function(char* st1, char* st2)
 {
     HEAP_CHECK();
     string finalString;
@@ -2610,7 +2363,7 @@ string singular_declaration_function(string st1, string st2)
         bool taken = false;
 
         for(i = 0; i < fun[currentFunctionIndex].noParam; i++)
-            if(strcmp(fun[currentFunctionIndex].headerVariables[i].name, st1) == 0)
+            if(strcmp(fun[currentFunctionIndex].headerVariables[i].name.c_str(), st1) == 0)
             {
                 taken = true;
                 break;
@@ -2625,7 +2378,7 @@ string singular_declaration_function(string st1, string st2)
         else
         {
               for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
-                  if(strcmp(fun[currentFunctionIndex].localVariables[i].name, st1) == 0)
+                  if(strcmp(fun[currentFunctionIndex].localVariables[i].name.c_str(), st1) == 0)
                   {
                       taken = true;
                       break;
@@ -2652,7 +2405,7 @@ string singular_declaration_function(string st1, string st2)
         bool declaredBefore = false;
 
         for(i = 0; i < varNo; i++)
-            if(strcmp(var[i].name, st1) == 0)
+            if(strcmp(var[i].name.c_str(), st1) == 0)
             {
                 declaredBefore = true;
                 break;
@@ -2678,7 +2431,7 @@ string singular_declaration_function(string st1, string st2)
 }
 
 
-string plural_declaration_function(string st1, string st2)
+string plural_declaration_function(char* st1, char* st2)
 {
     HEAP_CHECK();
     string finalString;
@@ -2688,7 +2441,7 @@ string plural_declaration_function(string st1, string st2)
         bool taken = false;
 
         for(i = 0; i < fun[currentFunctionIndex].noParam; i++)
-            if(strcmp(fun[currentFunctionIndex].headerVariables[i].name, st1) == 0)
+            if(strcmp(fun[currentFunctionIndex].headerVariables[i].name.c_str(), st1) == 0)
             {
                 taken = true;
                 break;
@@ -2703,7 +2456,7 @@ string plural_declaration_function(string st1, string st2)
         else
         {
                 for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
-                  if(strcmp(fun[currentFunctionIndex].localVariables[i].name, st1) == 0)
+                  if(strcmp(fun[currentFunctionIndex].localVariables[i].name.c_str(), st1) == 0)
                   {
                       taken = true;
                       break;
@@ -2730,7 +2483,7 @@ string plural_declaration_function(string st1, string st2)
         bool declaredBefore = false;
 
         for(i = 0; i < varNo; i++)
-            if(strcmp(var[i].name, st1) == 0)
+            if(strcmp(var[i].name.c_str(), st1) == 0)
             {
                 declaredBefore = true;
                 break;
@@ -2756,7 +2509,7 @@ string plural_declaration_function(string st1, string st2)
 }
 
 
-string extended_plural_declaration_function(string st1, string st2, string st3, double d1)
+string extended_plural_declaration_function(char* st1, char* st2, char* st3, double d1)
 {
     HEAP_CHECK();
     string finalString;
@@ -2766,7 +2519,7 @@ string extended_plural_declaration_function(string st1, string st2, string st3, 
         bool taken = false;
 
         for(i = 0; i < fun[currentFunctionIndex].noParam; i++)
-            if(strcmp(fun[currentFunctionIndex].headerVariables[i].name, st1) == 0)
+            if(strcmp(fun[currentFunctionIndex].headerVariables[i].name.c_str(), st1) == 0)
             {
                 taken = true;
                 break;
@@ -2781,7 +2534,7 @@ string extended_plural_declaration_function(string st1, string st2, string st3, 
         else
         {
               for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
-                if(strcmp(fun[currentFunctionIndex].localVariables[i].name, st1) == 0)
+                if(strcmp(fun[currentFunctionIndex].localVariables[i].name.c_str(), st1) == 0)
                 {
                     taken = true;
                     break;
@@ -2835,7 +2588,7 @@ string extended_plural_declaration_function(string st1, string st2, string st3, 
         bool declaredBefore = false;
 
         for(i = 0; i < varNo; i++)
-            if(strcmp(var[i].name, st1) == 0)
+            if(strcmp(var[i].name.c_str(), st1) == 0)
             {
                 declaredBefore = true;
                 break;
@@ -2857,7 +2610,7 @@ string extended_plural_declaration_function(string st1, string st2, string st3, 
               }
               else
               {
-                  if(isVariableDeclared(st3) == false)
+                  if(check1(st3) == false)
                   {
                       stringstream ss;
                       ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the ON expression of the " << st2 << " variable '" << st1 << "' is undeclared";
@@ -2888,7 +2641,7 @@ string extended_plural_declaration_function(string st1, string st2, string st3, 
 }
 
 
-string singular_assignment_function(string st1, string st2, string st3, string st4)
+string singular_assignment_function(char* st1, char* st2, char* st3, char* st4)
 {
     HEAP_CHECK();
     string finalString;
@@ -2898,7 +2651,7 @@ string singular_assignment_function(string st1, string st2, string st3, string s
         bool taken = false;
 
         for(i = 0; i < fun[currentFunctionIndex].noParam; i++)
-            if(strcmp(fun[currentFunctionIndex].headerVariables[i].name, st1) == 0)
+            if(strcmp(fun[currentFunctionIndex].headerVariables[i].name.c_str(), st1) == 0)
             {
                 taken = true;
                 break;
@@ -2913,7 +2666,7 @@ string singular_assignment_function(string st1, string st2, string st3, string s
         else
         {
               for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
-                if(strcmp(fun[currentFunctionIndex].localVariables[i].name, st1) == 0)
+                if(strcmp(fun[currentFunctionIndex].localVariables[i].name.c_str(), st1) == 0)
                 {
                     taken = true;
                     break;
@@ -3041,7 +2794,7 @@ string singular_assignment_function(string st1, string st2, string st3, string s
         bool declaredBefore = false;
 
         for(i = 0; i < varNo; i++)
-            if(strcmp(var[i].name, st1) == 0)
+            if(strcmp(var[i].name.c_str(), st1) == 0)
             {
                 declaredBefore = true;
                 break;
@@ -3072,7 +2825,7 @@ string singular_assignment_function(string st1, string st2, string st3, string s
                         }
                         else
                         {
-                            if(isVariableDeclared(st3) == false)
+                            if(check1(st3) == false)
                             {
                                 stringstream ss;
                                 ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
@@ -3125,7 +2878,7 @@ string singular_assignment_function(string st1, string st2, string st3, string s
                 }
                 else
                 {
-                    if(isVariableDeclared(st3) == false)
+                    if(check1(st3) == false)
                     {
                         stringstream ss;
                         ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
@@ -3169,7 +2922,7 @@ string singular_assignment_function(string st1, string st2, string st3, string s
 }
 
 
-string plural_assignment_function(string st1, string st2, string st3, string st4, double d1)
+string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, double d1)
 {
     HEAP_CHECK();
     string finalString;
@@ -3179,7 +2932,7 @@ string plural_assignment_function(string st1, string st2, string st3, string st4
         bool taken = false;
 
         for(i = 0; i < fun[currentFunctionIndex].noParam; i++)
-            if(strcmp(fun[currentFunctionIndex].headerVariables[i].name, st1) == 0)
+            if(strcmp(fun[currentFunctionIndex].headerVariables[i].name.c_str(), st1) == 0)
             {
                 taken = true;
                 break;
@@ -3194,7 +2947,7 @@ string plural_assignment_function(string st1, string st2, string st3, string st4
         else
         {
               for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
-                  if(strcmp(fun[currentFunctionIndex].localVariables[i].name, st1) == 0)
+                  if(strcmp(fun[currentFunctionIndex].localVariables[i].name.c_str(), st1) == 0)
                   {
                       taken = true;
                       break;
@@ -3340,7 +3093,7 @@ string plural_assignment_function(string st1, string st2, string st3, string st4
         bool declaredBefore = false;
 
         for(i = 0; i < varNo; i++)
-            if(strcmp(var[i].name, st1) == 0)
+            if(strcmp(var[i].name.c_str(), st1) == 0)
             {
                 declaredBefore = true;
                 break;
@@ -3371,7 +3124,7 @@ string plural_assignment_function(string st1, string st2, string st3, string st4
                         }
                         else
                         {
-                            if(isVariableDeclared(st3) == false)
+                            if(check1(st3) == false)
                             {
                                 stringstream ss;
                                 ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
@@ -3442,7 +3195,7 @@ string plural_assignment_function(string st1, string st2, string st3, string st4
                 }
                 else
                 {
-                    if(isVariableDeclared(st3) == false)
+                    if(check1(st3) == false)
                     {
                         stringstream ss;
                         ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
@@ -3486,7 +3239,7 @@ string plural_assignment_function(string st1, string st2, string st3, string st4
 }
 
 
-string singular_declaration_with_assignment_function(string st1, string st2, string st3, string st4)
+string singular_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4)
 {
     HEAP_CHECK();
     string finalString;
@@ -3496,7 +3249,7 @@ string singular_declaration_with_assignment_function(string st1, string st2, str
         bool taken = false;
 
         for(i = 0; i < fun[currentFunctionIndex].noParam; i++)
-            if(strcmp(fun[currentFunctionIndex].headerVariables[i].name, st1) == 0)
+            if(strcmp(fun[currentFunctionIndex].headerVariables[i].name.c_str(), st1) == 0)
             {
                 taken = true;
                 break;
@@ -3511,7 +3264,7 @@ string singular_declaration_with_assignment_function(string st1, string st2, str
         else
         {
               for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
-                  if(strcmp(fun[currentFunctionIndex].localVariables[i].name, st1) == 0)
+                  if(strcmp(fun[currentFunctionIndex].localVariables[i].name.c_str(), st1) == 0)
                   {
                       taken = true;
                       break;
@@ -3586,7 +3339,7 @@ string singular_declaration_with_assignment_function(string st1, string st2, str
         bool declaredBefore = false;
 
         for(i = 0; i < varNo; i++)
-            if(strcmp(var[i].name, st1) == 0)
+            if(strcmp(var[i].name.c_str(), st1) == 0)
             {
                 declaredBefore = true;
                 break;
@@ -3616,7 +3369,7 @@ string singular_declaration_with_assignment_function(string st1, string st2, str
                 }
                 else
                 {
-                    if(isVariableDeclared(st3) == false)
+                    if(check1(st3) == false)
                     {
                         stringstream ss;
                         ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
@@ -3660,7 +3413,7 @@ string singular_declaration_with_assignment_function(string st1, string st2, str
 }
 
 
-string plural_declaration_with_assignment_function(string st1, string st2, string st3, string st4, double d1)
+string plural_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4, double d1)
 {
     HEAP_CHECK();
     string finalString;
@@ -3670,7 +3423,7 @@ string plural_declaration_with_assignment_function(string st1, string st2, strin
         bool taken = false;
 
         for(i = 0; i < fun[currentFunctionIndex].noParam; i++)
-            if(strcmp(fun[currentFunctionIndex].headerVariables[i].name, st1) == 0)
+            if(strcmp(fun[currentFunctionIndex].headerVariables[i].name.c_str(), st1) == 0)
             {
                 taken = true;
                 break;
@@ -3685,7 +3438,7 @@ string plural_declaration_with_assignment_function(string st1, string st2, strin
         else
         {
               for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
-                  if(strcmp(fun[currentFunctionIndex].localVariables[i].name, st1) == 0)
+                  if(strcmp(fun[currentFunctionIndex].localVariables[i].name.c_str(), st1) == 0)
                   {
                       taken = true;
                       break;
@@ -3760,7 +3513,7 @@ string plural_declaration_with_assignment_function(string st1, string st2, strin
         bool declaredBefore = false;
 
         for(i = 0; i < varNo; i++)
-            if(strcmp(var[i].name, st1) == 0)
+            if(strcmp(var[i].name.c_str(), st1) == 0)
             {
                 declaredBefore = true;
                 break;
@@ -3790,7 +3543,7 @@ string plural_declaration_with_assignment_function(string st1, string st2, strin
                 }
                 else
                 {
-                    if(isVariableDeclared(st3) == false)
+                    if(check1(st3) == false)
                     {
                         stringstream ss;
                         ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
@@ -3834,7 +3587,7 @@ string plural_declaration_with_assignment_function(string st1, string st2, strin
 }
 
 
-string extended_plural_declaration_with_assignment_function(string st1, string st2, string st3, string st4, string st5, double d1, double d2)
+string extended_plural_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4, char* st5, double d1, double d2)
 {
     HEAP_CHECK();
     string finalString;
@@ -3844,7 +3597,7 @@ string extended_plural_declaration_with_assignment_function(string st1, string s
         bool taken = false;
 
         for(i = 0; i < fun[currentFunctionIndex].noParam; i++)
-            if(strcmp(fun[currentFunctionIndex].headerVariables[i].name, st1) == 0)
+            if(strcmp(fun[currentFunctionIndex].headerVariables[i].name.c_str(), st1) == 0)
             {
                 taken = true;
                 break;
@@ -3859,7 +3612,7 @@ string extended_plural_declaration_with_assignment_function(string st1, string s
         else
         {
               for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
-                  if(strcmp(fun[currentFunctionIndex].localVariables[i].name, st1) == 0)
+                  if(strcmp(fun[currentFunctionIndex].localVariables[i].name.c_str(), st1) == 0)
                   {
                       taken = true;
                       break;
@@ -3961,7 +3714,7 @@ string extended_plural_declaration_with_assignment_function(string st1, string s
         bool declaredBefore = false;
 
         for(i = 0; i < varNo; i++)
-            if(strcmp(var[i].name, st1) == 0)
+            if(strcmp(var[i].name.c_str(), st1) == 0)
             {
                 declaredBefore = true;
                 break;
@@ -3991,7 +3744,7 @@ string extended_plural_declaration_with_assignment_function(string st1, string s
                 }
                 else
                 {
-                    if(isVariableDeclared(st3) == false)
+                    if(check1(st3) == false)
                     {
                         stringstream ss;
                         ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
@@ -4007,7 +3760,7 @@ string extended_plural_declaration_with_assignment_function(string st1, string s
                         }
                         else
                         {
-                              if(isVariableDeclared(st5) == false)
+                              if(check1(st5) == false)
                               {
                                   stringstream ss;
                                   ss << "error at line " << currentLineNumber << ": The variable '" << find2(st5) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
