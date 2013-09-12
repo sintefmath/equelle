@@ -97,7 +97,7 @@ string find3(string s1);
 int find4(string s1);
 string find5(string s1);
 string find6(string s1);
-bool check1(string s1);
+bool isVariableDeclared(string s1);
 bool check2(string s1);
 bool check3(string s1);
 bool check4(string s1);
@@ -379,7 +379,7 @@ scalar_factor: NUMBER		                               {$$ = $1;}
                                                                         $$ = ss.str();
                                                                       }
                                                                       else
-                                                                          if(check1($3) == false)
+                                                                          if(isVariableDeclared($3) == false)
                                                                           {
                                                                             stringstream ss;
                                                                             ss << "error5: One input variable from the function's call is undefined";
@@ -534,7 +534,7 @@ scalar_factors: EUCLIDEAN_LENGTH '(' vector_exprs ')'           {char *str = app
                                                                     if(fun[getIndex2($1)].noParam != getSize4($3))
                                                                         sprintf($$.str, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
                                                                     else
-                                                                        if(check1($3) == false)
+                                                                        if(isVariableDeclared($3) == false)
                                                                             sprintf($$.str, "error5: One input variable from the function's call is undefined");
                                                                         else
                                                                             if(check2($3) == false)
@@ -596,7 +596,7 @@ vector_term: '(' numbers ')'                       {stringstream ss; ss << "(" <
                                                                   if(fun[getIndex2($1)].noParam != getSize4($3))
                                                                       sprintf($$, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
                                                                   else
-                                                                      if(check1($3) == false)
+                                                                      if(isVariableDeclared($3) == false)
                                                                           sprintf($$, "error5: One input variable from the function's call is undefined");
                                                                       else
                                                                           if(check2($3) == false)
@@ -681,7 +681,7 @@ vector_terms: '(' vectors ')'                        {char *str = append2('(', $
                                                                     if(fun[getIndex2($1)].noParam != getSize4($3))
                                                                         sprintf($$.str, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
                                                                     else
-                                                                        if(check1($3) == false)
+                                                                        if(isVariableDeclared($3) == false)
                                                                             sprintf($$.str, "error5: One input variable from the function's call is undefined");
                                                                         else
                                                                             if(check2($3) == false)
@@ -724,7 +724,7 @@ vertex: VARIABLE           {
                                                               if(fun[getIndex2($1)].noParam != getSize4($3))
                                                                   sprintf($$, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
                                                               else
-                                                                  if(check1($3) == false)
+                                                                  if(isVariableDeclared($3) == false)
                                                                       sprintf($$, "error5: One input variable from the function's call is undefined");
                                                                   else
                                                                       if(check2($3) == false)
@@ -770,7 +770,7 @@ vertices: INTERIOR_VERTICES '(' GRID ')'      {$$.str = strdup("er.interiorVerti
                                                                   if(fun[getIndex2($1)].noParam != getSize4($3))
                                                                       sprintf($$.str, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
                                                                   else
-                                                                      if(check1($3) == false)
+                                                                      if(isVariableDeclared($3) == false)
                                                                           sprintf($$.str, "error5: One input variable from the function's call is undefined");
                                                                       else
                                                                           if(check2($3) == false)
@@ -813,7 +813,7 @@ edge: VARIABLE             {
                                                             if(fun[getIndex2($1)].noParam != getSize4($3))
                                                                 sprintf($$, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
                                                             else
-                                                                if(check1($3) == false)
+                                                                if(isVariableDeclared($3) == false)
                                                                     sprintf($$, "error5: One input variable from the function's call is undefined");
                                                                 else
                                                                     if(check2($3) == false)
@@ -859,7 +859,7 @@ edges: INTERIOR_EDGES '(' GRID ')'      {$$.str = strdup("er.interiorEdges()"); 
                                                                 if(fun[getIndex2($1)].noParam != getSize4($3))
                                                                     sprintf($$.str, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
                                                                 else
-                                                                    if(check1($3) == false)
+                                                                    if(isVariableDeclared($3) == false)
                                                                         sprintf($$.str, "error5: One input variable from the function's call is undefined");
                                                                     else
                                                                         if(check2($3) == false)
@@ -902,7 +902,7 @@ face: VARIABLE                    {
                                                             if(fun[getIndex2($1)].noParam != getSize4($3))
                                                                 sprintf($$, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
                                                             else
-                                                                if(check1($3) == false)
+                                                                if(isVariableDeclared($3) == false)
                                                                     sprintf($$, "error5: One input variable from the function's call is undefined");
                                                                 else
                                                                     if(check2($3) == false)
@@ -948,7 +948,7 @@ faces: INTERIOR_FACES '(' GRID ')'      {$$.str = strdup("er.interiorFaces()"); 
                                                                 if(fun[getIndex2($1)].noParam != getSize4($3))
                                                                     sprintf($$.str, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
                                                                 else
-                                                                    if(check1($3) == false)
+                                                                    if(isVariableDeclared($3) == false)
                                                                         sprintf($$.str, "error5: One input variable from the function's call is undefined");
                                                                     else
                                                                         if(check2($3) == false)
@@ -993,7 +993,7 @@ cell: FIRST_CELL '(' face ')'     {char *str = append3("er.firstCell", '(', $3, 
                                                               if(fun[getIndex2($1)].noParam != getSize4($3))
                                                                   sprintf($$, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
                                                               else
-                                                                  if(check1($3) == false)
+                                                                  if(isVariableDeclared($3) == false)
                                                                       sprintf($$, "error5: One input variable from the function's call is undefined");
                                                                   else
                                                                       if(check2($3) == false)
@@ -1041,7 +1041,7 @@ cells: INTERIOR_CELLS '(' GRID ')'          {$$.str = strdup("er.interiorCells()
                                                                 if(fun[getIndex2($1)].noParam != getSize4($3))
                                                                     sprintf($$.str, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
                                                                 else
-                                                                    if(check1($3) == false)
+                                                                    if(isVariableDeclared($3) == false)
                                                                         sprintf($$.str, "error5: One input variable from the function's call is undefined");
                                                                     else
                                                                         if(check2($3) == false)
@@ -1086,7 +1086,7 @@ adb: GRADIENT '(' adb ')'         {char *str = append3("er.negGradient", '(', $3
                                                             if(fun[getIndex2($1)].noParam != getSize4($3))
                                                                 sprintf($$, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
                                                             else
-                                                                if(check1($3) == false)
+                                                                if(isVariableDeclared($3) == false)
                                                                     sprintf($$, "error5: One input variable from the function's call is undefined");
                                                                 else
                                                                     if(check2($3) == false)
@@ -1131,7 +1131,7 @@ adbs: GRADIENT '(' adbs ')'       {char *str = append3("er.negGradient", '(', $3
                                                                 if(fun[getIndex2($1)].noParam != getSize4($3))
                                                                     sprintf($$.str, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
                                                                 else
-                                                                    if(check1($3) == false)
+                                                                    if(isVariableDeclared($3) == false)
                                                                         sprintf($$.str, "error5: One input variable from the function's call is undefined");
                                                                     else
                                                                         if(check2($3) == false)
@@ -1192,7 +1192,7 @@ boolean_term: TRUE                                   {$$ = strdup("true");}
                                                                     if(fun[getIndex2($1)].noParam != getSize4($3))
                                                                         sprintf($$, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
                                                                     else
-                                                                        if(check1($3) == false)
+                                                                        if(isVariableDeclared($3) == false)
                                                                             sprintf($$, "error5: One input variable from the function's call is undefined");
                                                                         else
                                                                             if(check2($3) == false)
@@ -1357,7 +1357,7 @@ boolean_terms: '(' scalars ')' '>' '(' scalars ')'
                                                                       if(fun[getIndex2($1)].noParam != getSize4($3))
                                                                           sprintf($$.str, "error4: The number of arguments of the function does not correspond to the number of arguments sent");
                                                                       else
-                                                                          if(check1($3) == false)
+                                                                          if(isVariableDeclared($3) == false)
                                                                               sprintf($$.str, "error5: One input variable from the function's call is undefined");
                                                                           else
                                                                               if(check2($3) == false)
@@ -1877,7 +1877,7 @@ bool find1(string s1, string s2)     // function which returns true if s2 is con
 }
 
 
-string find2(string s1)   // function which returns the first undeclared variable from a given expression (this function is called after the function "check1" returns false)
+string find2(string s1)   // function which returns the first undeclared variable from a given expression (this function is called after the function "isVariableDeclared" returns false)
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -2034,8 +2034,8 @@ string find6(string s1)     // function which returns the first unassigned varia
   return strdup("InvalidCall");
 }
 
-
-bool check1(string s1)   // function which checks if each variable (one that begins with a small letter and it's not a function) from a given expression was declared
+// function which checks if each variable (one that begins with a small letter and it's not a function) from a given expression was declared
+bool isVariableDeclared(string s1)
 {
   HEAP_CHECK();
   char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -2857,7 +2857,7 @@ string extended_plural_declaration_function(string st1, string st2, string st3, 
               }
               else
               {
-                  if(check1(st3) == false)
+                  if(isVariableDeclared(st3) == false)
                   {
                       stringstream ss;
                       ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the ON expression of the " << st2 << " variable '" << st1 << "' is undeclared";
@@ -3072,7 +3072,7 @@ string singular_assignment_function(string st1, string st2, string st3, string s
                         }
                         else
                         {
-                            if(check1(st3) == false)
+                            if(isVariableDeclared(st3) == false)
                             {
                                 stringstream ss;
                                 ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
@@ -3125,7 +3125,7 @@ string singular_assignment_function(string st1, string st2, string st3, string s
                 }
                 else
                 {
-                    if(check1(st3) == false)
+                    if(isVariableDeclared(st3) == false)
                     {
                         stringstream ss;
                         ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
@@ -3371,7 +3371,7 @@ string plural_assignment_function(string st1, string st2, string st3, string st4
                         }
                         else
                         {
-                            if(check1(st3) == false)
+                            if(isVariableDeclared(st3) == false)
                             {
                                 stringstream ss;
                                 ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
@@ -3442,7 +3442,7 @@ string plural_assignment_function(string st1, string st2, string st3, string st4
                 }
                 else
                 {
-                    if(check1(st3) == false)
+                    if(isVariableDeclared(st3) == false)
                     {
                         stringstream ss;
                         ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
@@ -3616,7 +3616,7 @@ string singular_declaration_with_assignment_function(string st1, string st2, str
                 }
                 else
                 {
-                    if(check1(st3) == false)
+                    if(isVariableDeclared(st3) == false)
                     {
                         stringstream ss;
                         ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
@@ -3790,7 +3790,7 @@ string plural_declaration_with_assignment_function(string st1, string st2, strin
                 }
                 else
                 {
-                    if(check1(st3) == false)
+                    if(isVariableDeclared(st3) == false)
                     {
                         stringstream ss;
                         ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
@@ -3991,7 +3991,7 @@ string extended_plural_declaration_with_assignment_function(string st1, string s
                 }
                 else
                 {
-                    if(check1(st3) == false)
+                    if(isVariableDeclared(st3) == false)
                     {
                         stringstream ss;
                         ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
@@ -4007,7 +4007,7 @@ string extended_plural_declaration_with_assignment_function(string st1, string s
                         }
                         else
                         {
-                              if(check1(st5) == false)
+                              if(isVariableDeclared(st5) == false)
                               {
                                   stringstream ss;
                                   ss << "error at line " << currentLineNumber << ": The variable '" << find2(st5) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
