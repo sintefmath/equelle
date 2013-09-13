@@ -60,6 +60,7 @@
 
 
 %start pr
+%error-verbose
 
 %left OR
 %left AND
