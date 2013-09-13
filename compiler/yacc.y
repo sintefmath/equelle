@@ -1246,10 +1246,9 @@ function_declaration: VARIABLE ':' FUNCTION '(' parameter_list ')' RET type
                                                         {
                                                           cs2 = strdup(pch);
                                                           pch2 = strtok(cs2, " ");    // type of the variable
-                                                          char *aux1 = strdup(fun[funNo-1].paramList.c_str());
 
                                                           stringstream ss;
-                                                          ss << aux1 << ", " << pch2;
+                                                          ss << fun[funNo-1].paramList << ", " << pch2;
 
                                                           fun[funNo-1].paramList = strdup(ss.str().c_str());
                                                           char *copy = strdup(pch2);
@@ -1451,10 +1450,10 @@ command: declaration                    { char* out = strdup($1); $$ = out; }
 
 
 // instructions which can be used in the program, but not in a function's body (since we must not allow inner functions)
-command2: command                                    { char* out = strdup($1); $$ = out; }
-        | function_declaration                       { char* out = strcat($1,";"); $$ = out; }
-        | function_assignment                        { char* out = strdup($1); $$ = out; }
-    //  | function_declaration_with_assignment       { $$ = strdup($1); }
+command2: command                                    { stringstream ss; ss << $1 << ";"; $$ = strdup(ss.str().c_str()); }
+        | function_declaration                       { stringstream ss; ss << $1 << ";"; $$ = strdup(ss.str().c_str()); }
+        | function_assignment                        { stringstream ss; ss << $1 << ";"; $$ = strdup(ss.str().c_str()); }
+    //  | function_declaration_with_assignment       { stringstream ss; ss << $1 << ";"; $$ = strdup(ss.str().c_str()); }
         ;
 
 
@@ -1977,7 +1976,7 @@ char* getType(char* s1)
       if(strcmp(s1, var[i].name.c_str()) == 0)
       {
         HEAP_CHECK();
-        return (char*)var[i].type.c_str();
+        return strdup(var[i].type.c_str());
       }
   }
   HEAP_CHECK();
