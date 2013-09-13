@@ -57,10 +57,9 @@
 %token MAX
 
 
-
-
 %start pr
 %error-verbose
+
 
 %left OR
 %left AND
@@ -218,7 +217,6 @@ s^d                              all cells
 %type<inf> scalar_terms
 %type<str> scalar_factor
 %type<inf> scalar_factors
-%type<str> numbers
 %type<inf> scalars
 %type<str> vector_expr
 %type<str> vector_term
@@ -493,11 +491,6 @@ scalar_factors: EUCLIDEAN_LENGTH '(' vector_exprs ')'           { STREAM_TO_DOLL
               ;
 
 
-numbers: NUMBER                         { $$ = strdup($1); }
-       | numbers ',' NUMBER             { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << ", " << $3); }
-       ;
-
-
 vector_expr: vector_term                      { $$ = strdup($1); }
            | '-' vector_term                  { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "-" << $2); }
            | vector_expr '+' vector_term      { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << " + " << $3); }
@@ -505,7 +498,7 @@ vector_expr: vector_term                      { $$ = strdup($1); }
            ;
 
 
-vector_term: '(' numbers ')'                       { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "(" << $2 << ")"); }
+vector_term: '(' scalars ')'                       { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "(" << $2.str << ")"); }
            | CENTROID '(' cell ')'                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.centroid(" << $3 << ")"); }
            | NORMAL '(' face ')'                   { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.normal(" << $3 << ")"); }
            | '(' vector_expr ')'                   { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "(" << $2 << ")"); }              // produces 1 shift/reduce conflict
