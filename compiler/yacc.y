@@ -1330,36 +1330,36 @@ function_assignment: function_start end_lines commands end_lines return_instr en
 
 
 
-singular_declaration: VARIABLE ':' SCALAR               { string out = singular_declaration_function($1, "scalar"); $$ = (char*) out.c_str(); }
-                    | VARIABLE ':' VECTOR               { string out = singular_declaration_function($1, "vector"); $$ = (char*) out.c_str(); }
-                    | VARIABLE ':' VERTEX               { string out = singular_declaration_function($1, "vertex"); $$ = (char*) out.c_str(); }
-                    | VARIABLE ':' EDGE                 { string out = singular_declaration_function($1, "edge"); $$ = (char*) out.c_str(); }
-                    | VARIABLE ':' FACE                 { string out = singular_declaration_function($1, "face"); $$ = (char*) out.c_str(); }
-                    | VARIABLE ':' CELL                 { string out = singular_declaration_function($1, "cell"); $$ = (char*) out.c_str(); }
-                    | VARIABLE ':' ADB                  { string out = singular_declaration_function($1, "scalarAD"); $$ = (char*) out.c_str(); }
-                    | VARIABLE ':' BOOLEAN              { string out = singular_declaration_function($1, "bool"); $$ = (char*) out.c_str(); }
+singular_declaration: VARIABLE ':' SCALAR               { string out = singular_declaration_function($1, "scalar"); $$ = strdup(out.c_str()); }
+                    | VARIABLE ':' VECTOR               { string out = singular_declaration_function($1, "vector"); $$ = strdup(out.c_str()); }
+                    | VARIABLE ':' VERTEX               { string out = singular_declaration_function($1, "vertex"); $$ = strdup(out.c_str()); }
+                    | VARIABLE ':' EDGE                 { string out = singular_declaration_function($1, "edge"); $$ = strdup(out.c_str()); }
+                    | VARIABLE ':' FACE                 { string out = singular_declaration_function($1, "face"); $$ = strdup(out.c_str()); }
+                    | VARIABLE ':' CELL                 { string out = singular_declaration_function($1, "cell"); $$ = strdup(out.c_str()); }
+                    | VARIABLE ':' ADB                  { string out = singular_declaration_function($1, "scalarAD"); $$ = strdup(out.c_str()); }
+                    | VARIABLE ':' BOOLEAN              { string out = singular_declaration_function($1, "bool"); $$ = strdup(out.c_str()); }
                     ;
 
 
-plural_declaration: VARIABLE ':' COLLECTION OF SCALAR       { string out = plural_declaration_function($1, "scalars"); $$ = (char*) out.c_str(); }
-                  | VARIABLE ':' COLLECTION OF VECTOR       { string out = plural_declaration_function($1, "vectors"); $$ = (char*) out.c_str(); }
-                  | VARIABLE ':' COLLECTION OF VERTEX       { string out = plural_declaration_function($1, "vertices"); $$ = (char*) out.c_str(); }
-                  | VARIABLE ':' COLLECTION OF EDGE         { string out = plural_declaration_function($1, "edges"); $$ = (char*) out.c_str(); }
-                  | VARIABLE ':' COLLECTION OF FACE         { string out = plural_declaration_function($1, "faces"); $$ = (char*) out.c_str(); }
-                  | VARIABLE ':' COLLECTION OF CELL         { string out = plural_declaration_function($1, "cells"); $$ = (char*) out.c_str(); }
-                  | VARIABLE ':' COLLECTION OF ADB          { string out = plural_declaration_function($1, "scalarsAD"); $$ = (char*) out.c_str(); }
-                  | VARIABLE ':' COLLECTION OF BOOLEAN      { string out = plural_declaration_function($1, "bools"); $$ = (char*) out.c_str(); }
+plural_declaration: VARIABLE ':' COLLECTION OF SCALAR       { string out = plural_declaration_function($1, "scalars"); $$ = strdup(out.c_str()); }
+                  | VARIABLE ':' COLLECTION OF VECTOR       { string out = plural_declaration_function($1, "vectors"); $$ = strdup(out.c_str()); }
+                  | VARIABLE ':' COLLECTION OF VERTEX       { string out = plural_declaration_function($1, "vertices"); $$ = strdup(out.c_str()); }
+                  | VARIABLE ':' COLLECTION OF EDGE         { string out = plural_declaration_function($1, "edges"); $$ = strdup(out.c_str()); }
+                  | VARIABLE ':' COLLECTION OF FACE         { string out = plural_declaration_function($1, "faces"); $$ = strdup(out.c_str()); }
+                  | VARIABLE ':' COLLECTION OF CELL         { string out = plural_declaration_function($1, "cells"); $$ = strdup(out.c_str()); }
+                  | VARIABLE ':' COLLECTION OF ADB          { string out = plural_declaration_function($1, "scalarsAD"); $$ = strdup(out.c_str()); }
+                  | VARIABLE ':' COLLECTION OF BOOLEAN      { string out = plural_declaration_function($1, "bools"); $$ = strdup(out.c_str()); }
                   ;
 
 
-extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON plural      { char *st = strdup($7.str); string out = extended_plural_declaration_function($1, "scalars", st, $7.size); $$ = (char*) out.c_str(); }
-                           | VARIABLE ':' COLLECTION OF VECTOR ON plural      { char *st = strdup($7.str); string out = extended_plural_declaration_function($1, "vectors", st, $7.size); $$ = (char*) out.c_str(); }
-                           | VARIABLE ':' COLLECTION OF VERTEX ON plural      { char *st = strdup($7.str); string out = extended_plural_declaration_function($1, "vertices", st, $7.size); $$ = (char*) out.c_str(); }
-                           | VARIABLE ':' COLLECTION OF EDGE ON plural        { char *st = strdup($7.str); string out = extended_plural_declaration_function($1, "edges", st, $7.size); $$ = (char*) out.c_str(); }
-                           | VARIABLE ':' COLLECTION OF FACE ON plural        { char *st = strdup($7.str); string out = extended_plural_declaration_function($1, "faces", st, $7.size); $$ = (char*) out.c_str(); }
-                           | VARIABLE ':' COLLECTION OF CELL ON plural        { char *st = strdup($7.str); string out = extended_plural_declaration_function($1, "cells", st, $7.size); $$ = (char*) out.c_str(); }
-                           | VARIABLE ':' COLLECTION OF ADB ON plural         { char *st = strdup($7.str); string out = extended_plural_declaration_function($1, "scalarsAD", st, $7.size); $$ = (char*) out.c_str(); }
-                           | VARIABLE ':' COLLECTION OF BOOLEAN ON plural     { char *st = strdup($7.str); string out = extended_plural_declaration_function($1, "bools", st, $7.size); $$ = (char*) out.c_str(); }
+extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON plural      { char *st = strdup($7.str); string out = extended_plural_declaration_function($1, "scalars", st, $7.size); $$ = strdup(out.c_str()); }
+                           | VARIABLE ':' COLLECTION OF VECTOR ON plural      { char *st = strdup($7.str); string out = extended_plural_declaration_function($1, "vectors", st, $7.size); $$ = strdup(out.c_str()); }
+                           | VARIABLE ':' COLLECTION OF VERTEX ON plural      { char *st = strdup($7.str); string out = extended_plural_declaration_function($1, "vertices", st, $7.size); $$ = strdup(out.c_str()); }
+                           | VARIABLE ':' COLLECTION OF EDGE ON plural        { char *st = strdup($7.str); string out = extended_plural_declaration_function($1, "edges", st, $7.size); $$ = strdup(out.c_str()); }
+                           | VARIABLE ':' COLLECTION OF FACE ON plural        { char *st = strdup($7.str); string out = extended_plural_declaration_function($1, "faces", st, $7.size); $$ = strdup(out.c_str()); }
+                           | VARIABLE ':' COLLECTION OF CELL ON plural        { char *st = strdup($7.str); string out = extended_plural_declaration_function($1, "cells", st, $7.size); $$ = strdup(out.c_str()); }
+                           | VARIABLE ':' COLLECTION OF ADB ON plural         { char *st = strdup($7.str); string out = extended_plural_declaration_function($1, "scalarsAD", st, $7.size); $$ = strdup(out.c_str()); }
+                           | VARIABLE ':' COLLECTION OF BOOLEAN ON plural     { char *st = strdup($7.str); string out = extended_plural_declaration_function($1, "bools", st, $7.size); $$ = strdup(out.c_str()); }
                            ;
 
 
@@ -1370,25 +1370,25 @@ declaration: singular_declaration           { char* out = strdup($1); $$ = out; 
 
 
 
-singular_assignment: VARIABLE '=' scalar_expr              { char *st = strdup($3); string out = singular_assignment_function($1, "scalar", st, "Scalar"); $$ = (char*) out.c_str(); }
-                   | VARIABLE '=' vector_expr              { char *st = strdup($3); string out = singular_assignment_function($1, "vector", st, "Vector"); $$ = (char*) out.c_str(); }
-                   | VARIABLE '=' vertex                   { char *st = strdup($3); string out = singular_assignment_function($1, "vertex", st, "Vertex"); $$ = (char*) out.c_str(); }
-                   | VARIABLE '=' edge                     { char *st = strdup($3); string out = singular_assignment_function($1, "edge", st, "Edge"); $$ = (char*) out.c_str(); }
-                   | VARIABLE '=' face                     { char *st = strdup($3); string out = singular_assignment_function($1, "face", st, "Face"); $$ = (char*) out.c_str(); }
-                   | VARIABLE '=' cell                     { char *st = strdup($3); string out = singular_assignment_function($1, "cell", st, "Cell"); $$ = (char*) out.c_str(); }
-                   | VARIABLE '=' adb                      { char *st = strdup($3); string out = singular_assignment_function($1, "scalarAD", st, "ScalarAD"); $$ = (char*) out.c_str(); }
-                   | VARIABLE '=' boolean_expr             { char *st = strdup($3); string out = singular_assignment_function($1, "bool", st, "bool"); $$ = (char*) out.c_str(); }
+singular_assignment: VARIABLE '=' scalar_expr              { char *st = strdup($3); string out = singular_assignment_function($1, "scalar", st, "Scalar"); $$ = strdup(out.c_str()); }
+                   | VARIABLE '=' vector_expr              { char *st = strdup($3); string out = singular_assignment_function($1, "vector", st, "Vector"); $$ = strdup(out.c_str()); }
+                   | VARIABLE '=' vertex                   { char *st = strdup($3); string out = singular_assignment_function($1, "vertex", st, "Vertex"); $$ = strdup(out.c_str()); }
+                   | VARIABLE '=' edge                     { char *st = strdup($3); string out = singular_assignment_function($1, "edge", st, "Edge"); $$ = strdup(out.c_str()); }
+                   | VARIABLE '=' face                     { char *st = strdup($3); string out = singular_assignment_function($1, "face", st, "Face"); $$ = strdup(out.c_str()); }
+                   | VARIABLE '=' cell                     { char *st = strdup($3); string out = singular_assignment_function($1, "cell", st, "Cell"); $$ = strdup(out.c_str()); }
+                   | VARIABLE '=' adb                      { char *st = strdup($3); string out = singular_assignment_function($1, "scalarAD", st, "ScalarAD"); $$ = strdup(out.c_str()); }
+                   | VARIABLE '=' boolean_expr             { char *st = strdup($3); string out = singular_assignment_function($1, "bool", st, "bool"); $$ = strdup(out.c_str()); }
                    ;
 
 
-plural_assignment: VARIABLE '=' scalar_exprs              { char *st = strdup($3.str); string out = plural_assignment_function($1, "scalars", st, "CollOfScalars", $3.size); $$ = (char*) out.c_str(); }
-                 | VARIABLE '=' vector_exprs              { char *st = strdup($3.str); string out = plural_assignment_function($1, "vectors", st, "CollOfVectors", $3.size); $$ = (char*) out.c_str(); }
-                 | VARIABLE '=' vertices                  { char *st = strdup($3.str); string out = plural_assignment_function($1, "vertices", st, "CollOfVertices", $3.size); $$ = (char*) out.c_str(); }
-                 | VARIABLE '=' edges                     { char *st = strdup($3.str); string out = plural_assignment_function($1, "edges", st, "CollOfEdges", $3.size); $$ = (char*) out.c_str(); }
-                 | VARIABLE '=' faces                     { char *st = strdup($3.str); string out = plural_assignment_function($1, "faces", st, "CollOfFaces", $3.size); $$ = (char*) out.c_str(); }
-                 | VARIABLE '=' cells                     { char *st = strdup($3.str); string out = plural_assignment_function($1, "cells", st, "CollOfCells", $3.size); $$ = (char*) out.c_str(); }
-                 | VARIABLE '=' adbs                      { char *st = strdup($3.str); string out = plural_assignment_function($1, "scalarsAD", st, "CollOfScalarsAD", $3.size); $$ = (char*) out.c_str(); }
-                 | VARIABLE '=' boolean_exprs             { char *st = strdup($3.str); string out = plural_assignment_function($1, "bools", st, "CollOfBools", $3.size); $$ = (char*) out.c_str(); }
+plural_assignment: VARIABLE '=' scalar_exprs              { char *st = strdup($3.str); string out = plural_assignment_function($1, "scalars", st, "CollOfScalars", $3.size); $$ = strdup(out.c_str()); }
+                 | VARIABLE '=' vector_exprs              { char *st = strdup($3.str); string out = plural_assignment_function($1, "vectors", st, "CollOfVectors", $3.size); $$ = strdup(out.c_str()); }
+                 | VARIABLE '=' vertices                  { char *st = strdup($3.str); string out = plural_assignment_function($1, "vertices", st, "CollOfVertices", $3.size); $$ = strdup(out.c_str()); }
+                 | VARIABLE '=' edges                     { char *st = strdup($3.str); string out = plural_assignment_function($1, "edges", st, "CollOfEdges", $3.size); $$ = strdup(out.c_str()); }
+                 | VARIABLE '=' faces                     { char *st = strdup($3.str); string out = plural_assignment_function($1, "faces", st, "CollOfFaces", $3.size); $$ = strdup(out.c_str()); }
+                 | VARIABLE '=' cells                     { char *st = strdup($3.str); string out = plural_assignment_function($1, "cells", st, "CollOfCells", $3.size); $$ = strdup(out.c_str()); }
+                 | VARIABLE '=' adbs                      { char *st = strdup($3.str); string out = plural_assignment_function($1, "scalarsAD", st, "CollOfScalarsAD", $3.size); $$ = strdup(out.c_str()); }
+                 | VARIABLE '=' boolean_exprs             { char *st = strdup($3.str); string out = plural_assignment_function($1, "bools", st, "CollOfBools", $3.size); $$ = strdup(out.c_str()); }
                  ;
 
 
@@ -1401,36 +1401,36 @@ assignment: singular_assignment     { char* out = strdup($1); $$ = out; }
 
 
 
-singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' scalar_expr          { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "scalar", st, "Scalar"); $$ = (char*) out.c_str(); }
-                                    | VARIABLE ':' VECTOR '=' vector_expr          { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "vector", st, "Vector"); $$ = (char*) out.c_str(); }
-                                    | VARIABLE ':' VERTEX '=' vertex               { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "vertex", st, "Vertex"); $$ = (char*) out.c_str(); }
-                                    | VARIABLE ':' EDGE '=' edge                   { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "edge", st, "Edge"); $$ = (char*) out.c_str(); }
-                                    | VARIABLE ':' FACE '=' face                   { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "face", st, "Face"); $$ = (char*) out.c_str(); }
-                                    | VARIABLE ':' CELL '=' cell                   { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "cell", st, "Cell"); $$ = (char*) out.c_str(); }
-                                    | VARIABLE ':' ADB '=' adb                     { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "scalarAD", st, "ScalarAD"); $$ = (char*) out.c_str(); }
-                                    | VARIABLE ':' BOOLEAN '=' boolean_expr        { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "bool", st, "bool"); $$ = (char*) out.c_str(); }
+singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' scalar_expr          { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "scalar", st, "Scalar"); $$ = strdup(out.c_str()); }
+                                    | VARIABLE ':' VECTOR '=' vector_expr          { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "vector", st, "Vector"); $$ = strdup(out.c_str()); }
+                                    | VARIABLE ':' VERTEX '=' vertex               { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "vertex", st, "Vertex"); $$ = strdup(out.c_str()); }
+                                    | VARIABLE ':' EDGE '=' edge                   { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "edge", st, "Edge"); $$ = strdup(out.c_str()); }
+                                    | VARIABLE ':' FACE '=' face                   { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "face", st, "Face"); $$ = strdup(out.c_str()); }
+                                    | VARIABLE ':' CELL '=' cell                   { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "cell", st, "Cell"); $$ = strdup(out.c_str()); }
+                                    | VARIABLE ':' ADB '=' adb                     { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "scalarAD", st, "ScalarAD"); $$ = strdup(out.c_str()); }
+                                    | VARIABLE ':' BOOLEAN '=' boolean_expr        { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "bool", st, "bool"); $$ = strdup(out.c_str()); }
                                     ;
 
 
-plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' scalar_exprs        { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "scalars", st, "CollOfScalars", $7.size); $$ = (char*) out.c_str(); }
-                                  | VARIABLE ':' COLLECTION OF VECTOR '=' vector_exprs        { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "vectors", st, "CollOfVectors", $7.size); $$ = (char*) out.c_str(); }
-                                  | VARIABLE ':' COLLECTION OF VERTEX '=' vertices            { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "vertices", st, "CollOfVertices", $7.size); $$ = (char*) out.c_str(); }
-                                  | VARIABLE ':' COLLECTION OF EDGE '=' edges                 { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "edges", st, "CollOfEdges", $7.size); $$ = (char*) out.c_str(); }
-                                  | VARIABLE ':' COLLECTION OF FACE '=' faces                 { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "faces", st, "CollOfFaces", $7.size); $$ = (char*) out.c_str(); }
-                                  | VARIABLE ':' COLLECTION OF CELL '=' cells                 { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "cells", st, "CollOfCells", $7.size); $$ = (char*) out.c_str(); }
-                                  | VARIABLE ':' COLLECTION OF ADB '=' adbs                   { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "scalarsAD", st, "CollOfScalarsAD", $7.size); $$ = (char*) out.c_str(); }
-                                  | VARIABLE ':' COLLECTION OF BOOLEAN '=' boolean_exprs      { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "bools", st, "CollOfBools", $7.size); $$ = (char*) out.c_str(); }
+plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' scalar_exprs        { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "scalars", st, "CollOfScalars", $7.size); $$ = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF VECTOR '=' vector_exprs        { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "vectors", st, "CollOfVectors", $7.size); $$ = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF VERTEX '=' vertices            { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "vertices", st, "CollOfVertices", $7.size); $$ = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF EDGE '=' edges                 { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "edges", st, "CollOfEdges", $7.size); $$ = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF FACE '=' faces                 { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "faces", st, "CollOfFaces", $7.size); $$ = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF CELL '=' cells                 { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "cells", st, "CollOfCells", $7.size); $$ = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF ADB '=' adbs                   { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "scalarsAD", st, "CollOfScalarsAD", $7.size); $$ = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF BOOLEAN '=' boolean_exprs      { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "bools", st, "CollOfBools", $7.size); $$ = strdup(out.c_str()); }
                                   ;
 
 
-extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR ON plural '=' scalar_exprs        { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "scalars", st1, "CollOfScalars", st2, $9.size, $7.size); $$ = (char*) out.c_str(); }
-                                           | VARIABLE ':' COLLECTION OF VECTOR ON plural '=' vector_exprs        { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "vectors", st1, "CollOfVectors", st2, $9.size, $7.size); $$ = (char*) out.c_str(); }
-                                           | VARIABLE ':' COLLECTION OF VERTEX ON plural '=' vertices            { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "vertices", st1, "CollOfVertices", st2, $9.size, $7.size); $$ = (char*) out.c_str(); }
-                                           | VARIABLE ':' COLLECTION OF EDGE ON plural '=' edges                 { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "edges", st1, "CollOfEdges", st2, $9.size, $7.size); $$ = (char*) out.c_str(); }
-                                           | VARIABLE ':' COLLECTION OF FACE ON plural '=' faces                 { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "faces", st1, "CollOfFaces", st2, $9.size, $7.size); $$ = (char*) out.c_str(); }
-                                           | VARIABLE ':' COLLECTION OF CELL ON plural '=' cells                 { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "cells", st1, "CollOfCells", st2, $9.size, $7.size); $$ = (char*) out.c_str(); }
-                                           | VARIABLE ':' COLLECTION OF ADB ON plural '=' adbs                   { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "scalarsAD", st1, "CollOfScalarsAD", st2, $9.size, $7.size); $$ = (char*)out.c_str(); }
-                                           | VARIABLE ':' COLLECTION OF BOOLEAN ON plural '=' boolean_exprs      { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "bools", st1, "CollOfBools", st2, $9.size, $7.size); $$ = (char*)out.c_str(); }
+extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR ON plural '=' scalar_exprs        { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "scalars", st1, "CollOfScalars", st2, $9.size, $7.size); $$ = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF VECTOR ON plural '=' vector_exprs        { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "vectors", st1, "CollOfVectors", st2, $9.size, $7.size); $$ = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF VERTEX ON plural '=' vertices            { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "vertices", st1, "CollOfVertices", st2, $9.size, $7.size); $$ = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF EDGE ON plural '=' edges                 { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "edges", st1, "CollOfEdges", st2, $9.size, $7.size); $$ = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF FACE ON plural '=' faces                 { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "faces", st1, "CollOfFaces", st2, $9.size, $7.size); $$ = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF CELL ON plural '=' cells                 { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "cells", st1, "CollOfCells", st2, $9.size, $7.size); $$ = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF ADB ON plural '=' adbs                   { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "scalarsAD", st1, "CollOfScalarsAD", st2, $9.size, $7.size); $$ = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF BOOLEAN ON plural '=' boolean_exprs      { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "bools", st1, "CollOfBools", st2, $9.size, $7.size); $$ = strdup(out.c_str()); }
                                            ;
 
 
