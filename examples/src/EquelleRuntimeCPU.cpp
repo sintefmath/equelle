@@ -13,8 +13,10 @@
 
 
 EquelleRuntimeCPU::EquelleRuntimeCPU(const Opm::parameter::ParameterGroup& param)
-    : grid_manager_(param.getDefault("n", 6), 1),
-      grid_(*grid_manager_.c_grid()),
+    : grid_from_file_(param.has("grid_filename")),
+      grid_manager_(grid_from_file_ ? new Opm::GridManager(param.get<std::string>("grid_filename"))
+                    : new Opm::GridManager(param.getDefault("n", 6), 1)),
+      grid_(*(grid_manager_->c_grid())),
       ops_(grid_),
       linsolver_(param)
 {

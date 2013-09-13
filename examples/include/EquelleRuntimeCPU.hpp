@@ -170,7 +170,8 @@ private:
     double twoNorm(const CollOfScalarsAD& vals) const;
 
     /// Data members.
-    Opm::GridManager grid_manager_;
+    bool grid_from_file_;
+    std::unique_ptr<Opm::GridManager> grid_manager_;
     const UnstructuredGrid& grid_;
     HelperOps ops_;
     Opm::LinearSolverFactory linsolver_;
