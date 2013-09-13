@@ -530,7 +530,7 @@ vector_term: '(' numbers ')'                       { STREAM_TO_DOLLARS_CHAR_ARRA
 
 
 vectors: vector_term                      { $$.str = strdup($1); $$.size = 1; }
-       | vectors ',' vector_term          { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1.str << ", " << $3); $$.size = $1.size + 1; }
+       | vectors ',' vector_term          { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << ", " << $3); $$.size = $1.size + 1; }
        ;
 
 
@@ -1182,7 +1182,7 @@ return_instr: RETURN boolean_expr '?' VARIABLE ':' VARIABLE
                     }
                     else
                     {
-                        STREAM_TO_DOLLARS_CHAR_ARRAY($$, "return " << $2 << " ? " << $4 << " : " << $6);
+                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "return " << $2 << " ? " << $4 << " : " << $6);
                         $$.size = getSize3($4);
                     }
                   }
@@ -1196,7 +1196,7 @@ return_instr: RETURN boolean_expr '?' VARIABLE ':' VARIABLE
                     }
                     else
                     {
-                        STREAM_TO_DOLLARS_CHAR_ARRAY($$, "return " << $2);
+                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "return " << $2);
                         $$.size = getSize3($2);
                     }
                   }
