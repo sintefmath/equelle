@@ -117,14 +117,14 @@ string CPPToEquelle1(char* st);
 int CPPToEquelle2(char* st);
 string functionToAnySingularType(char *st1, char *st2, char *st3, const string &st4);
 string functionToAnyCollectionType(char *st1, char *st2, char *st3, const string &st4);
-string singular_declaration_function(string st1, string st2);
-string plural_declaration_function(string st1, string st2);
-string extended_plural_declaration_function(string st1, string st2, string st3, double d1);
-string singular_assignment_function(string st1, string st2, string st3, string st4);
-string plural_assignment_function(string st1, string st2, string st3, string st4, double d1);
-string singular_declaration_with_assignment_function(string st1, string st2, string st3, string st4);
-string plural_declaration_with_assignment_function(string st1, string st2, string st3, string st4, double d1);
-string extended_plural_declaration_with_assignment_function(string st1, string st2, string st3, string st4, string st5, double d1, double d2);
+string singular_declaration_function(char* st1, char* st2);
+string plural_declaration_function(char* st1, char* st2);
+string extended_plural_declaration_function(char* st1, char* st2, char* st3, double d1);
+string singular_assignment_function(char* st1, char* st2, char* st3, char* st4);
+string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, double d1);
+string singular_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4);
+string plural_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4, double d1);
+string extended_plural_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4, char* st5, double d1, double d2);
 
 
 
