@@ -117,6 +117,7 @@ int getSize4(char* s1);
 char* extract(char* s1);
 string CPPToEquelle1(char* st);
 int CPPToEquelle2(char* st);
+char* EquelleToCPP(string st);
 string errorTypeToErrorMessage(string errorType);
 string functionToAnySingularType(char *st1, char *st2, char *st3, const string &st4);
 string functionToAnyCollectionType(char *st1, char *st2, char *st3, const string &st4);
@@ -1702,7 +1703,7 @@ char* find6(char* s1)
 }
 
 
-// function which checks if each variable (one that begins with a small letter and it's not a function) from a given expression was declared
+// function which checks if each variable (one that begins with a small letter and it's not a default/user-defined function) from a given expression was declared
 bool check1(char* s1)
 {
   HEAP_CHECK();
@@ -1713,7 +1714,7 @@ bool check1(char* s1)
   {
       if(pch[0] >= 'a' && pch[0] <= 'z')  // begins with a small letter ==> variable or function (not a number)
       {
-        if(strncmp(pch, "er.", 3) != 0 && strcmp(pch, "true") != 0 && strcmp(pch, "false") != 0 && strcmp(pch, "return") != 0)  // not a function or a small letter keyword
+        if(strncmp(pch, "er.", 3) != 0 && strcmp(pch, "true") != 0 && strcmp(pch, "false") != 0 && strcmp(pch, "return") != 0)  // not a default function or a small letter keyword
         {
             if(strcmp(pch, "wrong_type_error") != 0)    // we do this to prioritize the error checking
             {
@@ -1730,7 +1731,18 @@ bool check1(char* s1)
                 if(found == false)
                 {
                   HEAP_CHECK();
-                  return false;
+                  bool found2 = false;
+                  int j;
+                  for(j = 0; j < funNo; j++)
+                  {
+                      if(strcmp(pch, fun[j].name.c_str()) == 0)
+                      {
+                        found2 = true;
+                        break;
+                      }
+                  }
+                  if(found2 == false)   // the unfound name doesn't belong to a user-defined function either
+                    return false;
                 }
             }
         }
@@ -1782,7 +1794,7 @@ bool check3(char* s1)
   {
       if(pch[0] >= 'a' && pch[0] <= 'z')  // begins with a small letter ==> variable or function (not a number)
       {
-        if(strncmp(pch, "er.", 3) != 0)  // not a function
+        if(strncmp(pch, "er.", 3) != 0)  // not a default function
         {
             if(strcmp(pch, "wrong_type_error") != 0)    // we do this to prioritize the error checking
             {
@@ -1804,7 +1816,18 @@ bool check3(char* s1)
                 if(taken == false)
                 {
                     HEAP_CHECK();
-                    return false;   // the given variable doesn't exist among the header and local variables of the current function
+                    bool found = false;
+                    int j;
+                    for(j = 0; j < funNo; j++)
+                    {
+                        if(strcmp(pch, fun[j].name.c_str()) == 0)
+                        {
+                          found = true;
+                          break;
+                        }
+                    }
+                    if(found == false)    // the unfound name doesn't belong to a user-defined function either (user-defined functions can be called from inside another function's body)
+                        return false;   // the given variable doesn't exist among the header and local variables of the current function
                 }
             }
         }
@@ -1970,8 +1993,10 @@ bool check8(char *s1, char *s2)
         return false;
       }
 
-      if(strcmp(var[i].type.c_str(), pch2) != 0)
+      if(var[i].type != CPPToEquelle1(pch2))
+      {
           return false;
+      }
 
       pch1 = strtok (NULL, " ,");
       pch2 = strtok (NULL, " ,");
@@ -2334,6 +2359,74 @@ int CPPToEquelle2(char* st)
 }
 
 
+// function which converts a type from Equelle to its corresponding type in C++
+char* EquelleToCPP(string st)
+{
+    if(st == "scalar") {
+      return strdup("Scalar");
+    }
+
+    if(st == "vector") {
+      return strdup("Vector");
+    }
+
+    if(st == "vertex") {
+      return strdup("Vertex");
+    }
+
+    if(st == "edge") {
+      return strdup("Edge");
+    }
+
+    if(st == "face") {
+      return strdup("Face");
+    }
+
+    if(st == "cell") {
+      return strdup("Cell");
+    }
+
+    if(st == "scalarAD") {
+      return strdup("ScalarAD");
+    }
+
+    if(st == "bool") {
+      return strdup("bool");
+    }
+
+    if(st == "scalars") {
+      return strdup("CollOfScalars");
+    }
+
+    if(st == "vectors") {
+      return strdup("CollOfVectors");
+    }
+
+    if(st == "vertices") {
+      return strdup("CollOfVertices");
+    }
+
+    if(st == "edges") {
+      return strdup("CollOfEdges");
+    }
+
+    if(st == "cells") {
+      return strdup("CollOfCells");
+    }
+
+    if(st == "scalarsAD") {
+      return strdup("CollOfScalarsAD");
+    }
+
+    if(st == "bools") {
+      return strdup("CollOfBools");
+    }
+
+    return strdup("InvalidType");
+}
+
+
+// function used to convert possible error types received when assigning a function call to a variable and converts them to explicit messages
 string errorTypeToErrorMessage(string errorType)
 {
     // map<string, string> myMap;
@@ -2376,7 +2469,7 @@ string functionToAnySingularType(char *st1, char *st2, char *st3, const string &
     {
       return "error2: The function is not assigned";
     }
-    if(strcmp(fun[getIndex2(st1)].returnType.c_str(), st2) != 0)
+    if(strcmp(EquelleToCPP(fun[getIndex2(st1)].returnType), st2) != 0)
     {
       stringstream ss;
       ss << "error3: The return type of the function is not a " << st4 << " type";
@@ -2394,7 +2487,7 @@ string functionToAnySingularType(char *st1, char *st2, char *st3, const string &
     {
       return "error6: One input variable from the function's call is unassigned";
     }
-    if(check8(st3, (char*)fun[getIndex2(st1)].paramList.c_str()) == false)    // explicit conversion from (const char *) to (char *)
+    if(check8(st3, strdup(fun[getIndex2(st1)].paramList.c_str())) == false)    // explicit conversion from (const char *) to (char *)
     {
       return "error7: The parameter list of the template of the function does not correspond to the given parameter list";
     }
@@ -2416,7 +2509,7 @@ string functionToAnyCollectionType(char *st1, char *st2, char *st3, const string
     {
       return "error2: The function is not assigned";
     }
-    if(strcmp(fun[getIndex2(st1)].returnType.c_str(), st2) != 0)
+    if(strcmp(EquelleToCPP(fun[getIndex2(st1)].returnType), st2) != 0)
     {
       stringstream ss;
       ss << "error3: The return type of the function is not a collection of " << st4 << " type";
@@ -2434,7 +2527,7 @@ string functionToAnyCollectionType(char *st1, char *st2, char *st3, const string
     {
       return "error6: One input variable from the function's call is unassigned";
     }
-    if(check8(st3, (char*)fun[getIndex2(st1)].paramList.c_str()) == false)    // explicit conversion from (const char *) to (char *)
+    if(check8(st3, strdup(fun[getIndex2(st1)].paramList.c_str())) == false)    // explicit conversion from (const char *) to (char *)
     {
       return "error7: The parameter list of the template of the function does not correspond to the given parameter list";
     }
