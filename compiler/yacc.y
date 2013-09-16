@@ -2487,7 +2487,7 @@ string functionToAnySingularType(char *st1, char *st2, char *st3, const string &
     {
       return "error6: One input variable from the function's call is unassigned";
     }
-    if(check8(st3, strdup(fun[getIndex2(st1)].paramList.c_str())) == false)    // explicit conversion from (const char *) to (char *)
+    if(check8(st3, strdup(fun[getIndex2(st1)].paramList.c_str())) == false)
     {
       return "error7: The parameter list of the template of the function does not correspond to the given parameter list";
     }
@@ -2527,7 +2527,7 @@ string functionToAnyCollectionType(char *st1, char *st2, char *st3, const string
     {
       return "error6: One input variable from the function's call is unassigned";
     }
-    if(check8(st3, strdup(fun[getIndex2(st1)].paramList.c_str())) == false)    // explicit conversion from (const char *) to (char *)
+    if(check8(st3, strdup(fun[getIndex2(st1)].paramList.c_str())) == false)
     {
       return "error7: The parameter list of the template of the function does not correspond to the given parameter list";
     }
