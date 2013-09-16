@@ -214,6 +214,7 @@ s^d                              all cells
 
 %}
 
+
 %type<str> scalar_expr
 %type<inf> scalar_exprs
 %type<str> scalar_term
@@ -270,6 +271,7 @@ s^d                              all cells
 %type<str> function_assignment
 %type<str> commands
 %type<str> command
+%type<str> command1;
 %type<str> command2
 %type<str> singular_declaration
 %type<str> plural_declaration
@@ -1061,9 +1063,9 @@ parameter_list: header                         { $$ = strdup($1); }
               ;
 
 
-commands: command                              { $$ = strdup($1); }
-        | commands end_lines command           { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << $2 << $3); }
-        |                                      { $$ = strdup(""); }     // a function can have only the return instruction
+commands: command1                              { $$ = strdup($1); }
+        | commands end_lines command1           { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << $2 << $3); }
+        |                                       { $$ = strdup(""); }     // a function can have only the return instruction
         ;
 
 
@@ -1446,6 +1448,12 @@ command: declaration                    { char* out = strdup($1); $$ = out; }
        ;
 
 
+command1: command                       { char* out = strdup($1); $$ = out; }
+        | command COMMENT               { string st1 = $1; string st2 = $2; stringstream ss; ss << st1 << " // " << st2.substr(1, st2.size() - 1); $$ = strdup(ss.str().c_str()); }
+        | COMMENT                       { string st1 = $1; stringstream ss; ss << "// " << st1.substr(1, st1.size() - 1); $$ = strdup(ss.str().c_str()); }
+        ;
+
+
 // instructions which can be used in the program, but not in a function's body (since we must not allow inner functions)
 command2: command                                    { stringstream ss; ss << $1 << ";"; $$ = strdup(ss.str().c_str()); }
         | function_declaration                       { stringstream ss; ss << $1 << ";"; $$ = strdup(ss.str().c_str()); }
@@ -1497,6 +1505,15 @@ void yyerror(const char* s)
   string st = s;
   cout << st << endl;
 }
+
+
+
+
+
+
+
+
+
 
 
 
