@@ -1263,7 +1263,7 @@ function_declaration: VARIABLE ':' FUNCTION '(' parameter_list ')' RET type
                                                         }
 
                                                         fun[funNo-1].assigned = false;
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$, $8.str << " " << $1 << "(" << $5 << ")");
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$, $8.str << " " << $1 << "(" << $5 << ")" << ";");
                                                 }
                                             }
                     ;
@@ -1456,10 +1456,10 @@ command1: command                       { char* out = strdup($1); $$ = out; }
 
 
 // instructions which can be used in the program, but not in a function's body (since we must not allow inner functions)
-command2: command                                    { stringstream ss; ss << $1 << ";"; $$ = strdup(ss.str().c_str()); }
-        | function_declaration                       { stringstream ss; ss << $1 << ";"; $$ = strdup(ss.str().c_str()); }
-        | function_assignment                        { stringstream ss; ss << $1 << ";"; $$ = strdup(ss.str().c_str()); }
-    //  | function_declaration_with_assignment       { stringstream ss; ss << $1 << ";"; $$ = strdup(ss.str().c_str()); }
+command2: command                                    { stringstream ss; ss << $1; $$ = strdup(ss.str().c_str()); }
+        | function_declaration                       { stringstream ss; ss << $1; $$ = strdup(ss.str().c_str()); }
+        | function_assignment                        { stringstream ss; ss << $1; $$ = strdup(ss.str().c_str()); }
+    //  | function_declaration_with_assignment       { stringstream ss; ss << $1; $$ = strdup(ss.str().c_str()); }
         ;
 
 
@@ -2931,7 +2931,7 @@ string singular_assignment_function(char* st1, char* st2, char* st3, char* st4)
                                           {
                                               fun[currentFunctionIndex].localVariables[i].assigned = true;
                                               stringstream ss;
-                                              ss << "const " << st4 << " " << st1 << " = " << st3;
+                                              ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
                                               finalString = ss.str();
                                           }
                                       }
@@ -2991,7 +2991,7 @@ string singular_assignment_function(char* st1, char* st2, char* st3, char* st4)
                                       else
                                       {
                                           stringstream ss;
-                                          ss << "const " << st4 << " " << st1 << " = " << st3;
+                                          ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
                                           finalString = ss.str();
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
@@ -3077,7 +3077,7 @@ string singular_assignment_function(char* st1, char* st2, char* st3, char* st4)
                                         {
                                             var[i].assigned = true;
                                             stringstream ss;
-                                            ss << "const " << st4 << " " << st1 << " = " << st3;
+                                            ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
                                             finalString = ss.str();
                                         }
                                     }
@@ -3138,7 +3138,7 @@ string singular_assignment_function(char* st1, char* st2, char* st3, char* st4)
                                 else
                                 {
                                     stringstream ss;
-                                    ss << "const " << st4 << " " << st1 << " = " << st3;
+                                    ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
                                     finalString = ss.str();
                                     var[varNo++].name = st1;
                                     var[varNo-1].type = st2;
@@ -3252,7 +3252,7 @@ string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, do
                                                         fun[currentFunctionIndex].localVariables[i].length = d1;
                                                         fun[currentFunctionIndex].localVariables[i].assigned = true;
                                                         stringstream ss;
-                                                        ss << "const " << st4 << " " << st1 << " = " << st3;
+                                                        ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
                                                         finalString = ss.str();
                                                     }
                                                     else
@@ -3264,7 +3264,7 @@ string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, do
                                                 else
                                                 {
                                                     stringstream ss;
-                                                    ss << "const " << st4 << " " << st1 << " = " << st3;
+                                                    ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
                                                     finalString = ss.str();
                                                     fun[currentFunctionIndex].localVariables[i].assigned = true;
                                                 }
@@ -3326,7 +3326,7 @@ string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, do
                                       else
                                       {
                                           stringstream ss;
-                                          ss << "const " << st4 << " " << st1 << " = " << st3;
+                                          ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
                                           finalString = ss.str();
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
@@ -3416,7 +3416,7 @@ string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, do
                                                     var[i].length = d1;
                                                     var[i].assigned = true;
                                                     stringstream ss;
-                                                    ss << "const " << st4 << " " << st1 << " = " << st3;
+                                                    ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
                                                     finalString = ss.str();
                                                 }
                                                 else
@@ -3428,7 +3428,7 @@ string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, do
                                             else
                                             {
                                                 stringstream ss;
-                                                ss << "const " << st4 << " " << st1 << " = " << st3;
+                                                ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
                                                 finalString = ss.str();
                                                 var[i].assigned = true;
                                             }
@@ -3491,7 +3491,7 @@ string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, do
                                 else
                                 {
                                     stringstream ss;
-                                    ss << "const " << st4 << " " << st1 << " = " << st3;
+                                    ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
                                     finalString = ss.str();
                                     var[varNo++].name = st1;
                                     var[varNo-1].type = st2;
@@ -3599,7 +3599,7 @@ string singular_declaration_with_assignment_function(char* st1, char* st2, char*
                                           else
                                           {
                                               stringstream ss;
-                                              ss << "const " << st4 << " " << st1 << " = " << st3;
+                                              ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
                                               finalString = ss.str();
                                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
                                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
@@ -3683,7 +3683,7 @@ string singular_declaration_with_assignment_function(char* st1, char* st2, char*
                                 else
                                 {
                                     stringstream ss;
-                                    ss << "const " << st4 << " " << st1 << " = " << st3;
+                                    ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
                                     finalString = ss.str();
                                     var[varNo++].name = st1;
                                     var[varNo-1].type = st2;
@@ -3791,7 +3791,7 @@ string plural_declaration_with_assignment_function(char* st1, char* st2, char* s
                                           else
                                           {
                                               stringstream ss;
-                                              ss << "const " << st4 << " " << st1 << " = " << st3;
+                                              ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
                                               finalString = ss.str();
                                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
                                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
@@ -3875,7 +3875,7 @@ string plural_declaration_with_assignment_function(char* st1, char* st2, char* s
                                 else
                                 {
                                     stringstream ss;
-                                    ss << "const " << st4 << " " << st1 << " = " << st3;
+                                    ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
                                     finalString = ss.str();
                                     var[varNo++].name = st1;
                                     var[varNo-1].type = st2;
@@ -4007,7 +4007,7 @@ string extended_plural_declaration_with_assignment_function(char* st1, char* st2
                                                     else
                                                     {
                                                         stringstream ss;
-                                                        ss << "const " << st4 << " " << st1 << " = " << st3;
+                                                        ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
                                                         finalString = ss.str();
                                                         fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
                                                         fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
@@ -4118,7 +4118,7 @@ string extended_plural_declaration_with_assignment_function(char* st1, char* st2
                                               else
                                               {
                                                   stringstream ss;
-                                                  ss << "const " << st4 << " " << st1 << " = " << st3;
+                                                  ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
                                                   finalString = ss.str();
                                                   var[varNo++].name = st1;
                                                   var[varNo-1].type = st2;
