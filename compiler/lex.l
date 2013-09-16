@@ -5,6 +5,8 @@ using namespace std;
 
 %}
 
+%option nounput
+
 %%
 [-]         return yytext[0];
 [+]         return yytext[0];
