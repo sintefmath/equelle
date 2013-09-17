@@ -523,7 +523,7 @@ vector_expr: vector_term                      { $$ = strdup($1); }
            ;
 
 
-vector_term: '(' scalars ')'                       { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "(" << $2.str << ")"); }
+vector_term: '[' scalars ']'                       { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "[" << $2.str << "]"); }
            | CENTROID '(' cell ')'                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.centroid(" << $3 << ")"); }
            | NORMAL '(' face ')'                   { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.normal(" << $3 << ")"); }
            | '(' vector_expr ')'                   { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "(" << $2 << ")"); }              // produces 1 shift/reduce conflict
@@ -583,7 +583,7 @@ vector_exprs: vector_terms                       { $$.str = strdup($1.str); $$.s
             ;
 
 
-vector_terms: '(' vectors ')'                        { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")"); $$.size = $2.size; }
+vector_terms: '[' vectors ']'                        { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "[" << $2.str << "]"); $$.size = $2.size; }
             | CENTROID '(' cells ')'                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")"); $$.size = $3.size; }
             | NORMAL '(' faces ')'                   { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.normal(" << $3.str << ")"); $$.size = $3.size; }
             | '(' vector_exprs ')'                   { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")"); $$.size = $2.size; }          // produces 1 shift/reduce conflict
