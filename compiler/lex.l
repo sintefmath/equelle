@@ -79,6 +79,7 @@ using namespace std;
 "return"                return RETURN;
 "Min"                   return MIN;
 "Max"                   return MAX;
+"UserSpecifiedScalar"				return USS;
 
 
 
