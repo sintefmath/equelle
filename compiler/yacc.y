@@ -1186,8 +1186,8 @@ values: VARIABLE                { $$ = strdup($1); }
       ;
 
 
-end_lines: '\n'                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "\n"); }
-         | '\n' end_lines       { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "\n" << $2); }
+end_lines: '\n'                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "\n"); currentLineNumber++; }
+         | '\n' end_lines       { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "\n" << $2); currentLineNumber++; }
          |                      { $$ = strdup(""); }
          ;
 
