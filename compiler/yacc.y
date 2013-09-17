@@ -58,7 +58,6 @@
 %token USS
 
 
-
 %start pr
 %error-verbose
 
@@ -132,6 +131,7 @@ string singular_declaration_with_assignment_function(char* st1, char* st2, char*
 string plural_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4, double d1);
 string extended_plural_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4, char* st5, double d1, double d2);
 string USS_assignment_function(char* st1);
+string USS_declaration_with_assignment_function(char* st1);
 
 
 
@@ -1412,6 +1412,7 @@ singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' scalar_expr       
                                     | VARIABLE ':' CELL '=' cell                   { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "cell", st, "Cell"); $$ = strdup(out.c_str()); }
                                     | VARIABLE ':' ADB '=' adb                     { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "scalarAD", st, "ScalarAD"); $$ = strdup(out.c_str()); }
                                     | VARIABLE ':' BOOLEAN '=' boolean_expr        { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "bool", st, "bool"); $$ = strdup(out.c_str()); }
+                                    | VARIABLE ':' SCALAR '=' USS                  { string out = USS_declaration_with_assignment_function($1); $$ = strdup(out.c_str()); }
                                     ;
 
 
@@ -4193,7 +4194,7 @@ string USS_assignment_function(char* st1)
                   {
                       var[i].assigned = true;
                       stringstream ss;
-                      ss << "param.get<Scalar>(\"" << st1 << "\");";
+                      ss << "const Scalar " << st1 << " = param.get<Scalar>(\"" << st1 << "\");";
                       finalString = ss.str();
                   }
               }
@@ -4201,7 +4202,52 @@ string USS_assignment_function(char* st1)
         {
             // deduced declaration
             stringstream ss;
-            ss << "param.get<Scalar>(\"" << st1 << "\");";
+            ss << "const Scalar " << st1 << " = param.get<Scalar>(\"" << st1 << "\");";
+            finalString = ss.str();
+            var[varNo++].name = st1;
+            var[varNo-1].type = "scalar";
+            var[varNo-1].length = 1;
+            var[varNo-1].assigned = true;
+        }
+    }
+
+    HEAP_CHECK();
+    return finalString;
+}
+
+
+string USS_declaration_with_assignment_function(char* st1)
+{
+    HEAP_CHECK();
+    string finalString;
+    if(insideFunction == true)
+    {
+        stringstream ss;
+        ss << "error at line " << currentLineNumber << ": The variable '" << st1 << "' cannot be declared as a user specified scalar inside a function";
+        finalString = ss.str();
+    }
+    else
+    {
+        int i;
+        bool declaredBefore = false;
+
+        for(i = 0; i < varNo; i++)
+            if(strcmp(var[i].name.c_str(), st1) == 0)
+            {
+                declaredBefore = true;
+                break;
+            }
+
+        if(declaredBefore == true)
+        {
+            stringstream ss;
+            ss << "error at line " << currentLineNumber << ": The variable '" << st1 << "' is redeclared";
+            finalString = ss.str();
+        }
+        else
+        {
+            stringstream ss;
+            ss << "const Scalar " << st1 << " = param.get<Scalar>(\"" << st1 << "\");";
             finalString = ss.str();
             var[varNo++].name = st1;
             var[varNo-1].type = "scalar";
