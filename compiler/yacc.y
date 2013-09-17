@@ -57,6 +57,7 @@
 %token MAX
 %token USS
 %token USSWD
+%token USCOS
 
 
 %start pr
@@ -135,7 +136,9 @@ string USS_assignment_function(char* st1);
 string USS_declaration_with_assignment_function(char* st1);
 string USSWD_assignment_function(char* st1, char* st2);
 string USSWD_declaration_with_assignment_function(char* st1, char* st2);
-
+string USCOS_assignment_function(char* st1, char* st2, double d1);
+string USCOS_declaration_with_assignment_function(char* st1, char* st2, double d1);
+string USCOS_extended_declaration_with_assignment_function(char* st1, char* st2, char* st3, double d1, double d2);
 
 
 
@@ -1406,6 +1409,7 @@ plural_assignment: VARIABLE '=' scalar_exprs              { char *st = strdup($3
                  | VARIABLE '=' cells                     { char *st = strdup($3.str); string out = plural_assignment_function($1, "cells", st, "CollOfCells", $3.size); $$ = strdup(out.c_str()); }
                  | VARIABLE '=' adbs                      { char *st = strdup($3.str); string out = plural_assignment_function($1, "scalarsAD", st, "CollOfScalarsAD", $3.size); $$ = strdup(out.c_str()); }
                  | VARIABLE '=' boolean_exprs             { char *st = strdup($3.str); string out = plural_assignment_function($1, "bools", st, "CollOfBools", $3.size); $$ = strdup(out.c_str()); }
+                 | VARIABLE '=' USCOS '(' plural ')'      { string out = USCOS_assignment_function($1, $5.str, $5.size); $$ = strdup(out.c_str()); }
                  ;
 
 
@@ -1431,25 +1435,27 @@ singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' scalar_expr       
                                     ;
 
 
-plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' scalar_exprs        { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "scalars", st, "CollOfScalars", $7.size); $$ = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF VECTOR '=' vector_exprs        { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "vectors", st, "CollOfVectors", $7.size); $$ = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF VERTEX '=' vertices            { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "vertices", st, "CollOfVertices", $7.size); $$ = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF EDGE '=' edges                 { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "edges", st, "CollOfEdges", $7.size); $$ = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF FACE '=' faces                 { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "faces", st, "CollOfFaces", $7.size); $$ = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF CELL '=' cells                 { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "cells", st, "CollOfCells", $7.size); $$ = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF ADB '=' adbs                   { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "scalarsAD", st, "CollOfScalarsAD", $7.size); $$ = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF BOOLEAN '=' boolean_exprs      { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "bools", st, "CollOfBools", $7.size); $$ = strdup(out.c_str()); }
+plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' scalar_exprs          { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "scalars", st, "CollOfScalars", $7.size); $$ = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF VECTOR '=' vector_exprs          { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "vectors", st, "CollOfVectors", $7.size); $$ = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF VERTEX '=' vertices              { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "vertices", st, "CollOfVertices", $7.size); $$ = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF EDGE '=' edges                   { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "edges", st, "CollOfEdges", $7.size); $$ = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF FACE '=' faces                   { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "faces", st, "CollOfFaces", $7.size); $$ = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF CELL '=' cells                   { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "cells", st, "CollOfCells", $7.size); $$ = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF ADB '=' adbs                     { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "scalarsAD", st, "CollOfScalarsAD", $7.size); $$ = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF BOOLEAN '=' boolean_exprs        { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1, "bools", st, "CollOfBools", $7.size); $$ = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF SCALAR '=' USCOS '(' plural ')'  { string out = USCOS_declaration_with_assignment_function($1, $9.str, $9.size); $$ = strdup(out.c_str()); }
                                   ;
 
 
-extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR ON plural '=' scalar_exprs        { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "scalars", st1, "CollOfScalars", st2, $9.size, $7.size); $$ = strdup(out.c_str()); }
-                                           | VARIABLE ':' COLLECTION OF VECTOR ON plural '=' vector_exprs        { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "vectors", st1, "CollOfVectors", st2, $9.size, $7.size); $$ = strdup(out.c_str()); }
-                                           | VARIABLE ':' COLLECTION OF VERTEX ON plural '=' vertices            { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "vertices", st1, "CollOfVertices", st2, $9.size, $7.size); $$ = strdup(out.c_str()); }
-                                           | VARIABLE ':' COLLECTION OF EDGE ON plural '=' edges                 { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "edges", st1, "CollOfEdges", st2, $9.size, $7.size); $$ = strdup(out.c_str()); }
-                                           | VARIABLE ':' COLLECTION OF FACE ON plural '=' faces                 { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "faces", st1, "CollOfFaces", st2, $9.size, $7.size); $$ = strdup(out.c_str()); }
-                                           | VARIABLE ':' COLLECTION OF CELL ON plural '=' cells                 { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "cells", st1, "CollOfCells", st2, $9.size, $7.size); $$ = strdup(out.c_str()); }
-                                           | VARIABLE ':' COLLECTION OF ADB ON plural '=' adbs                   { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "scalarsAD", st1, "CollOfScalarsAD", st2, $9.size, $7.size); $$ = strdup(out.c_str()); }
-                                           | VARIABLE ':' COLLECTION OF BOOLEAN ON plural '=' boolean_exprs      { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "bools", st1, "CollOfBools", st2, $9.size, $7.size); $$ = strdup(out.c_str()); }
+extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR ON plural '=' scalar_exprs          { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "scalars", st1, "CollOfScalars", st2, $9.size, $7.size); $$ = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF VECTOR ON plural '=' vector_exprs          { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "vectors", st1, "CollOfVectors", st2, $9.size, $7.size); $$ = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF VERTEX ON plural '=' vertices              { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "vertices", st1, "CollOfVertices", st2, $9.size, $7.size); $$ = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF EDGE ON plural '=' edges                   { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "edges", st1, "CollOfEdges", st2, $9.size, $7.size); $$ = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF FACE ON plural '=' faces                   { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "faces", st1, "CollOfFaces", st2, $9.size, $7.size); $$ = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF CELL ON plural '=' cells                   { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "cells", st1, "CollOfCells", st2, $9.size, $7.size); $$ = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF ADB ON plural '=' adbs                     { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "scalarsAD", st1, "CollOfScalarsAD", st2, $9.size, $7.size); $$ = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF BOOLEAN ON plural '=' boolean_exprs        { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1, "bools", st1, "CollOfBools", st2, $9.size, $7.size); $$ = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF SCALAR ON plural '=' USCOS '(' plural ')'  { string out = USCOS_extended_declaration_with_assignment_function($1, $11.str, $7.str, $11.size, $7.size); $$ = strdup(out.c_str()); }
                                            ;
 
 
@@ -4168,6 +4174,15 @@ string extended_plural_declaration_with_assignment_function(char* st1, char* st2
 
 
 
+
+
+
+
+
+
+
+
+
 string USS_assignment_function(char* st1)
 {
     HEAP_CHECK();
@@ -4376,6 +4391,411 @@ string USSWD_declaration_with_assignment_function(char* st1, char* st2)
             var[varNo-1].type = "scalar";
             var[varNo-1].length = 1;
             var[varNo-1].assigned = true;
+        }
+    }
+
+    HEAP_CHECK();
+    return finalString;
+}
+
+
+string USCOS_assignment_function(char* st1, char* st2, double d1)
+{
+    HEAP_CHECK();
+    string finalString;
+    if(insideFunction == true)
+    {
+        stringstream ss;
+        ss << "error at line " << currentLineNumber << ": The variable '" << st1 << "' cannot be declared as a user specified collection of scalars inside a function";
+        finalString = ss.str();
+    }
+    else
+    {
+        int i;
+        bool declaredBefore = false;
+
+        for(i = 0; i < varNo; i++)
+            if(strcmp(var[i].name.c_str(), st1) == 0)
+            {
+                declaredBefore = true;
+                break;
+            }
+
+        if(declaredBefore == true)
+              if(var[i].assigned == true)
+              {
+                  stringstream ss;
+                  ss << "error at line " << currentLineNumber << ": The variable '" << st1 << "' is reassigned";
+                  finalString = ss.str();
+              }
+              else
+              {
+                    if(check9(st2) != "isOk")
+                    {
+                        stringstream ss;
+                        ss << "error at line " << currentLineNumber << ": " << check9(st2);
+                        finalString = ss.str();
+                    }
+                    else
+                    {
+                        if(check6(st2) == true)
+                        {
+                            stringstream ss;
+                            ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
+                            finalString = ss.str();
+                        }
+                        else
+                        {
+                            if(find1(st2, st1))
+                            {
+                                stringstream ss;
+                                ss << "error at line " << currentLineNumber << ": The variable '" << st1 << "' is included in its definition";
+                                finalString = ss.str();
+                            }
+                            else
+                            {
+                                if(check1(st2) == false)
+                                {
+                                    stringstream ss;
+                                    ss << "error at line " << currentLineNumber << ": The variable '" << find2(st2) << "' contained in the definition of the variable '" << st1 << "' is undeclared";
+                                    finalString = ss.str();
+                                }
+                                else
+                                {
+                                    if(check2(st2) == false)
+                                    {
+                                        stringstream ss;
+                                        ss << "error at line " << currentLineNumber << ": The variable '" << find3(st2) << "' contained in the definition of the variable '" << st1 << "' is unassigned";
+                                        finalString = ss.str();
+                                    }
+                                    else
+                                    {
+                                        if(check7(st2) == true)
+                                        {
+                                            stringstream ss;
+                                            ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the variable '" << st1 << "'";
+                                            finalString = ss.str();
+                                        }
+                                        else
+                                        {
+                                            if(getSize1(st1) != d1)
+                                                if(getSize1(st1) == ANY)
+                                                {
+                                                    var[i].length = d1;
+                                                    var[i].assigned = true;
+                                                    stringstream ss;
+                                                    ss << "const CollOfScalars " << st1 << " = param.get<CollOfScalars>(\"" << st1 << "\", " << st2 << ");";
+                                                    finalString = ss.str();
+                                                }
+                                                else
+                                                {
+                                                    stringstream ss;
+                                                    ss << "error at line " << currentLineNumber << ": The length of the variable '" << st1 << "' from its definition differs than the length of its assignment";
+                                                    finalString = ss.str();
+                                                }
+                                            else
+                                            {
+                                                stringstream ss;
+                                                ss << "const CollOfScalars " << st1 << " = param.get<CollOfScalars>(\"" << st1 << "\", " << st2 << ");";
+                                                finalString = ss.str();
+                                                var[i].assigned = true;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+              }
+        else
+        {
+            // deduced declaration
+            if(check9(st2) != "isOk")
+            {
+                stringstream ss;
+                ss << "error at line " << currentLineNumber << ": " << check9(st2);
+                finalString = ss.str();
+            }
+            else
+            {
+                if(check6(st2) == true)
+                {
+                    stringstream ss;
+                    ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
+                    finalString = ss.str();
+                }
+                else
+                {
+                    if(find1(st2, st1))
+                    {
+                        stringstream ss;
+                        ss << "error at line " << currentLineNumber << ": The variable '" << st1 << "' is included in its definition";
+                        finalString = ss.str();
+                    }
+                    else
+                    {
+                        if(check1(st2) == false)
+                        {
+                            stringstream ss;
+                            ss << "error at line " << currentLineNumber << ": The variable '" << find2(st2) << "' contained in the definition of the variable '" << st1 << "' is undeclared";
+                            finalString = ss.str();
+                        }
+                        else
+                        {
+                            if(check2(st2) == false)
+                            {
+                                stringstream ss;
+                                ss << "error at line " << currentLineNumber << ": The variable '" << find3(st2) << "' contained in the definition of the variable '" << st1 << "' is unassigned";
+                                finalString = ss.str();
+                            }
+                            else
+                            {
+                                if(check7(st2) == true)
+                                {
+                                    stringstream ss;
+                                    ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the variable '" << st1 << "'";
+                                    finalString = ss.str();
+                                }
+                                else
+                                {
+                                    stringstream ss;
+                                    ss << "const CollOfScalars " << st1 << " = param.get<CollOfScalars>(\"" << st1 << "\", " << st2 << ");";
+                                    finalString = ss.str();
+                                    var[varNo++].name = st1;
+                                    var[varNo-1].type = "scalars";
+                                    var[varNo-1].length = d1;
+                                    var[varNo-1].assigned = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    HEAP_CHECK();
+    return finalString;
+}
+
+
+string USCOS_declaration_with_assignment_function(char* st1, char* st2, double d1)
+{
+    HEAP_CHECK();
+    string finalString;
+    if(insideFunction == true)
+    {
+        stringstream ss;
+        ss << "error at line " << currentLineNumber << ": The variable '" << st1 << "' cannot be declared as a user specified collection of scalars inside a function";
+        finalString = ss.str();
+    }
+    else
+    {
+        int i;
+        bool declaredBefore = false;
+
+        for(i = 0; i < varNo; i++)
+            if(strcmp(var[i].name.c_str(), st1) == 0)
+            {
+                declaredBefore = true;
+                break;
+            }
+
+        if(declaredBefore == true)
+        {
+            stringstream ss;
+            ss << "error at line " << currentLineNumber << ": The variable '" << st1 << "' is redeclared";
+            finalString = ss.str();
+        }
+        else
+        {
+            if(check9(st2) != "isOk")
+            {
+                stringstream ss;
+                ss << "error at line " << currentLineNumber << ": " << check9(st2);
+                finalString = ss.str();
+            }
+            else
+            {
+                if(check6(st2) == true)
+                {
+                    stringstream ss;
+                    ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
+                    finalString = ss.str();
+                }
+                else
+                {
+                    if(find1(st2, st1))
+                    {
+                        stringstream ss;
+                        ss << "error at line " << currentLineNumber << ": The variable '" << st1 << "' is included in its definition";
+                        finalString = ss.str();
+                    }
+                    else
+                    {
+                        if(check1(st2) == false)
+                        {
+                            stringstream ss;
+                            ss << "error at line " << currentLineNumber << ": The variable '" << find2(st2) << "' contained in the definition of the variable '" << st1 << "' is undeclared";
+                            finalString = ss.str();
+                        }
+                        else
+                        {
+                            if(check2(st2) == false)
+                            {
+                                stringstream ss;
+                                ss << "error at line " << currentLineNumber << ": The variable '" << find3(st2) << "' contained in the definition of the variable '" << st1 << "' is unassigned";
+                                finalString = ss.str();
+                            }
+                            else
+                            {
+                                if(check7(st2) == true)
+                                {
+                                    stringstream ss;
+                                    ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the variable '" << st1 << "'";
+                                    finalString = ss.str();
+                                }
+                                else
+                                {
+                                    stringstream ss;
+                                    ss << "const CollOfScalars " << st1 << " = param.get<CollOfScalars>(\"" << st1 << "\", " << st2 << ");";
+                                    finalString = ss.str();
+                                    var[varNo++].name = st1;
+                                    var[varNo-1].type = "scalars";
+                                    var[varNo-1].length = d1;
+                                    var[varNo-1].assigned = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    HEAP_CHECK();
+    return finalString;
+}
+
+
+string USCOS_extended_declaration_with_assignment_function(char* st1, char* st2, char* st3, double d1, double d2)
+{
+    HEAP_CHECK();
+    string finalString;
+    if(insideFunction == true)
+    {
+        stringstream ss;
+        ss << "error at line " << currentLineNumber << ": The variable '" << st1 << "' cannot be declared as a user specified collection of scalars inside a function";
+        finalString = ss.str();
+    }
+    else
+    {
+        int i;
+        bool declaredBefore = false;
+
+        for(i = 0; i < varNo; i++)
+            if(strcmp(var[i].name.c_str(), st1) == 0)
+            {
+                declaredBefore = true;
+                break;
+            }
+
+        if(declaredBefore == true)
+        {
+            stringstream ss;
+            ss << "error at line " << currentLineNumber << ": The variable '" << st1 << "' is redeclared";
+            finalString = ss.str();
+        }
+        else
+        {
+            if(check9(st2) != "isOk")
+            {
+                stringstream ss;
+                ss << "error at line " << currentLineNumber << ": " << check9(st2);
+                finalString = ss.str();
+            }
+            else
+            {
+                if(check6(st2) == true)
+                {
+                    stringstream ss;
+                    ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
+                    finalString = ss.str();
+                }
+                else
+                {
+                    if(find1(st2, st1))
+                    {
+                        stringstream ss;
+                        ss << "error at line " << currentLineNumber << ": The variable '" << st1 << "' is included in its definition";
+                        finalString = ss.str();
+                    }
+                    else
+                    {
+                        if(check1(st2) == false)
+                        {
+                            stringstream ss;
+                            ss << "error at line " << currentLineNumber << ": The variable '" << find2(st2) << "' contained in the definition of the variable '" << st1 << "' is undeclared";
+                            finalString = ss.str();
+                        }
+                        else
+                        {
+                            if(check2(st2) == false)
+                            {
+                                stringstream ss;
+                                ss << "error at line " << currentLineNumber << ": The variable '" << find3(st2) << "' contained in the definition of the variable '" << st1 << "' is unassigned";
+                                finalString = ss.str();
+                            }
+                            else
+                            {
+                                  if(check1(st3) == false)
+                                  {
+                                      stringstream ss;
+                                      ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the variable '" << st1 << "' is undeclared";
+                                      finalString = ss.str();
+                                  }
+                                  else
+                                  {
+                                      if(check2(st3) == false)
+                                      {
+                                          stringstream ss;
+                                          ss << "error at line " << currentLineNumber << ": The variable '" << find3(st3) << "' contained in the definition of the variable '" << st1 << "' is unassigned";
+                                          finalString = ss.str();
+                                      }
+                                      else
+                                      {
+                                          if(check7(st3) == true)
+                                          {
+                                              stringstream ss;
+                                              ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the ON expression of the variable '" << st1 << "'";
+                                              finalString = ss.str();
+                                          }
+                                          else
+                                          {
+                                              if(d2 != d1)
+                                              {
+                                                  stringstream ss;
+                                                  ss << "error at line " << currentLineNumber << ": The length of the variable '" << st1 << "' from its definition differs than the length of its assignment";
+                                                  finalString = ss.str();
+                                              }
+                                              else
+                                              {
+                                                  stringstream ss;
+                                                  ss << "const CollOfScalars " << st1 << " = param.get<CollOfScalars>(\"" << st1 << "\", " << st3 << ");";
+                                                  finalString = ss.str();
+                                                  var[varNo++].name = st1;
+                                                  var[varNo-1].type = "scalars";
+                                                  var[varNo-1].length = d1;
+                                                  var[varNo-1].assigned = true;
+                                              }
+                                          }
+                                      }
+                                  }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 

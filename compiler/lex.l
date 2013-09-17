@@ -81,6 +81,7 @@ using namespace std;
 "Max"                   return MAX;
 "UserSpecifiedScalar"				return USS;
 "UserSpecifiedScalarWithDefault"	return USSWD;
+"UserSpecifiedCollectionOfScalar"	return USCOS;
 
 
 
