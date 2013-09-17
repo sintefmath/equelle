@@ -1,4 +1,4 @@
-%token NUMBER
+%token INTEGER
 %token SCALAR
 %token VECTOR
 %token CELL
@@ -56,6 +56,7 @@
 %token MIN
 %token MAX
 %token USS
+%token USSWD
 
 
 %start pr
@@ -132,6 +133,8 @@ string plural_declaration_with_assignment_function(char* st1, char* st2, char* s
 string extended_plural_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4, char* st5, double d1, double d2);
 string USS_assignment_function(char* st1);
 string USS_declaration_with_assignment_function(char* st1);
+string USSWD_assignment_function(char* st1, char* st2);
+string USSWD_declaration_with_assignment_function(char* st1, char* st2);
 
 
 
@@ -219,6 +222,8 @@ s^d                              all cells
 %}
 
 
+%type<str> floating_point
+%type<str> number
 %type<str> scalar_expr
 %type<inf> scalar_exprs
 %type<str> scalar_term
@@ -245,7 +250,7 @@ s^d                              all cells
 %type<str> boolean_term
 %type<inf> boolean_exprs
 %type<inf> boolean_terms
-%type<str> NUMBER
+%type<str> INTEGER
 %type<str> VARIABLE
 %type<str> COMMENT
 %type<inf> plural
@@ -329,6 +334,15 @@ s^d                              all cells
 %%
 
 
+floating_point: INTEGER '.' INTEGER          { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << "." << $3); }
+              ;
+
+
+number: INTEGER                              { $$ = strdup($1); }
+      | floating_point                       { $$ = strdup($1); }
+      ;
+
+
 scalar_expr: scalar_term                     { $$ = strdup($1); }
            | '-' scalar_term                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "-" << $2); }
            | scalar_expr '+' scalar_term     { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << " + " << $3); }
@@ -344,8 +358,7 @@ scalar_term: scalar_factor                           { $$ = strdup($1); }
            ;
 
 
-scalar_factor: NUMBER                                  { $$ = strdup($1); }
-             | NUMBER '.' NUMBER                       { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << "." << $3); }
+scalar_factor: number                                  { $$ = strdup($1); }
              | '(' scalar_expr ')'                     { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "(" << $2 << ")"); }
              | EUCLIDEAN_LENGTH '(' vector_expr ')'    { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.euclideanLength(" << $3 << ")"); }
              | LENGTH '(' edge ')'                     { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.length(" << $3 << ")"); }
@@ -1381,6 +1394,7 @@ singular_assignment: VARIABLE '=' scalar_expr              { char *st = strdup($
                    | VARIABLE '=' adb                      { char *st = strdup($3); string out = singular_assignment_function($1, "scalarAD", st, "ScalarAD"); $$ = strdup(out.c_str()); }
                    | VARIABLE '=' boolean_expr             { char *st = strdup($3); string out = singular_assignment_function($1, "bool", st, "bool"); $$ = strdup(out.c_str()); }
                    | VARIABLE '=' USS                      { string out = USS_assignment_function($1); $$ = strdup(out.c_str()); }
+                   | VARIABLE '=' USSWD '(' number ')'     { string out = USSWD_assignment_function($1, $5); $$ = strdup(out.c_str()); }
                    ;
 
 
@@ -1413,6 +1427,7 @@ singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' scalar_expr       
                                     | VARIABLE ':' ADB '=' adb                     { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "scalarAD", st, "ScalarAD"); $$ = strdup(out.c_str()); }
                                     | VARIABLE ':' BOOLEAN '=' boolean_expr        { char *st = strdup($5); string out = singular_declaration_with_assignment_function($1, "bool", st, "bool"); $$ = strdup(out.c_str()); }
                                     | VARIABLE ':' SCALAR '=' USS                  { string out = USS_declaration_with_assignment_function($1); $$ = strdup(out.c_str()); }
+                                    | VARIABLE ':' SCALAR '=' USSWD '(' number ')' { string out = USSWD_declaration_with_assignment_function($1, $7); $$ = strdup(out.c_str()); }
                                     ;
 
 
@@ -4248,6 +4263,114 @@ string USS_declaration_with_assignment_function(char* st1)
         {
             stringstream ss;
             ss << "const Scalar " << st1 << " = param.get<Scalar>(\"" << st1 << "\");";
+            finalString = ss.str();
+            var[varNo++].name = st1;
+            var[varNo-1].type = "scalar";
+            var[varNo-1].length = 1;
+            var[varNo-1].assigned = true;
+        }
+    }
+
+    HEAP_CHECK();
+    return finalString;
+}
+
+
+string USSWD_assignment_function(char* st1, char* st2)
+{
+    HEAP_CHECK();
+    string finalString;
+    if(insideFunction == true)
+    {
+        stringstream ss;
+        ss << "error at line " << currentLineNumber << ": The variable '" << st1 << "' cannot be declared as a user specified scalar with default inside a function";
+        finalString = ss.str();
+    }
+    else
+    {
+        int i;
+        bool declaredBefore = false;
+
+        for(i = 0; i < varNo; i++)
+            if(strcmp(var[i].name.c_str(), st1) == 0)
+            {
+                declaredBefore = true;
+                break;
+            }
+
+        if(declaredBefore == true)
+              if(var[i].assigned == true)
+              {
+                  stringstream ss;
+                  ss << "error at line " << currentLineNumber << ": The variable '" << st1 << "' is reassigned";
+                  finalString = ss.str();
+              }
+              else
+              {
+                  if(var[i].type != "scalar")
+                  {
+                      stringstream ss;
+                      ss << "error at line " << currentLineNumber << ": The variable '" << st1 << "' is declared as a " << var[i].type << " and cannot be assigned to a scalar";
+                      finalString = ss.str();
+                  }
+                  else
+                  {
+                      var[i].assigned = true;
+                      stringstream ss;
+                      ss << "const Scalar " << st1 << " = param.getDefault(\"" << st1 << "\", " << st2 << ");";
+                      finalString = ss.str();
+                  }
+              }
+        else
+        {
+            // deduced declaration
+            stringstream ss;
+            ss << "const Scalar " << st1 << " = param.getDefault(\"" << st1 << "\", " << st2 << ");";
+            finalString = ss.str();
+            var[varNo++].name = st1;
+            var[varNo-1].type = "scalar";
+            var[varNo-1].length = 1;
+            var[varNo-1].assigned = true;
+        }
+    }
+
+    HEAP_CHECK();
+    return finalString;
+}
+
+
+string USSWD_declaration_with_assignment_function(char* st1, char* st2)
+{
+    HEAP_CHECK();
+    string finalString;
+    if(insideFunction == true)
+    {
+        stringstream ss;
+        ss << "error at line " << currentLineNumber << ": The variable '" << st1 << "' cannot be declared as a user specified scalar inside a function";
+        finalString = ss.str();
+    }
+    else
+    {
+        int i;
+        bool declaredBefore = false;
+
+        for(i = 0; i < varNo; i++)
+            if(strcmp(var[i].name.c_str(), st1) == 0)
+            {
+                declaredBefore = true;
+                break;
+            }
+
+        if(declaredBefore == true)
+        {
+            stringstream ss;
+            ss << "error at line " << currentLineNumber << ": The variable '" << st1 << "' is redeclared";
+            finalString = ss.str();
+        }
+        else
+        {
+            stringstream ss;
+            ss << "const Scalar " << st1 << " = param.getDefault(\"" << st1 << "\", " << st2 << ");";
             finalString = ss.str();
             var[varNo++].name = st1;
             var[varNo-1].type = "scalar";

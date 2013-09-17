@@ -80,12 +80,12 @@ using namespace std;
 "Min"                   return MIN;
 "Max"                   return MAX;
 "UserSpecifiedScalar"				return USS;
+"UserSpecifiedScalarWithDefault"	return USSWD;
 
 
 
-
-"0"                 {yylval.str = strdup(yytext); return NUMBER;}
-[1-9][0-9]*         {yylval.str = strdup(yytext); return NUMBER;}
+"0"                 {yylval.str = strdup(yytext); return INTEGER;}
+[1-9][0-9]*         {yylval.str = strdup(yytext); return INTEGER;}
 [a-z][a-zA-Z0-9_]*  {yylval.str = strdup(yytext); return VARIABLE;}
 
 
