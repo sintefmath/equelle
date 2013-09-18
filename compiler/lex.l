@@ -5,6 +5,8 @@ using namespace std;
 
 %}
 
+%option nounput
+
 %%
 [-]         return yytext[0];
 [+]         return yytext[0];
@@ -20,6 +22,8 @@ using namespace std;
 [:]         return yytext[0];
 [{]         return yytext[0];
 [}]         return yytext[0];
+[[]			return yytext[0];
+[]]			return yytext[0];
 "<="        return LESSEQ;
 ">="        return GREATEREQ;
 "=="        return EQ;
@@ -77,12 +81,14 @@ using namespace std;
 "return"                return RETURN;
 "Min"                   return MIN;
 "Max"                   return MAX;
+"UserSpecifiedScalar"				return USS;
+"UserSpecifiedScalarWithDefault"	return USSWD;
+"UserSpecifiedCollectionOfScalar"	return USCOS;
 
 
 
-
-"0"                 {yylval.str = strdup(yytext); return NUMBER;}
-[1-9][0-9]*         {yylval.str = strdup(yytext); return NUMBER;}
+"0"                 {yylval.str = strdup(yytext); return INTEGER;}
+[1-9][0-9]*         {yylval.str = strdup(yytext); return INTEGER;}
 [a-z][a-zA-Z0-9_]*  {yylval.str = strdup(yytext); return VARIABLE;}
 
 

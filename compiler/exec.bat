@@ -1,1 +1,1 @@
-START cmd.exe /k "flex lex.l & bison -dy yacc.y & g++ -Wno-write-strings lex.yy.c y.tab.c -o f.exe -static-libgcc -static-libstdc++ & f.exe <input.equ >output.cpp"
+START cmd.exe /k "flex lex.l & bison -dy yacc.y & g++ -Wall -Wextra -Wno-write-strings lex.yy.c y.tab.c -o f.exe -static-libgcc -static-libstdc++ & f.exe <input.equ >output.cpp"
