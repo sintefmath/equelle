@@ -343,7 +343,7 @@ void EquelleRuntimeCPU::output(const std::string& tag, const double val) const
 
 void EquelleRuntimeCPU::output(const std::string& tag, const CollOfScalars& vals) const
 {
-    if (output_to_file) {
+    if (output_to_file_) {
         std::string filename = tag + ".output";
         std::ofstream os(filename.c_str());
         for (int i = 0; i < vals.size(); ++i) {
