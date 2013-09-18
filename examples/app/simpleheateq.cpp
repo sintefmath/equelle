@@ -65,10 +65,10 @@ int main(int argc, char** argv)
         const CollOfScalars flux = -itrans * er.gradient(u);
         return flux;
     };
-    auto computeInteriorFluxAD = [&](const CollOfScalarsAD u) -> CollOfScalarsAD {
-        const CollOfScalarsAD flux = -itrans * er.gradient(u);
-        return flux;
-    };
+    // auto computeInteriorFluxAD = [&](const CollOfScalarsAD u) -> CollOfScalarsAD {
+    //     const CollOfScalarsAD flux = -itrans * er.gradient(u);
+    //     return flux;
+    // };
 
     // --------------------------------------------------------------------------------
     // # Compute the residual for the heat equation.
@@ -85,25 +85,25 @@ int main(int argc, char** argv)
         const CollOfScalars residual = u - u0 + (dt / vol) * er.divergence(ifluxes);
         return residual;
     };
-    auto computeResidualAD = [&](const CollOfScalarsAD u) -> CollOfScalarsAD {
-        const CollOfScalarsAD ifluxes = computeInteriorFluxAD(u);
-        const CollOfScalarsAD residual = u - u0 + (dt / vol) * er.divergence(ifluxes);
-        return residual;
-    };
+    // auto computeResidualAD = [&](const CollOfScalarsAD u) -> CollOfScalarsAD {
+    //     const CollOfScalarsAD ifluxes = computeInteriorFluxAD(u);
+    //     const CollOfScalarsAD residual = u - u0 + (dt / vol) * er.divergence(ifluxes);
+    //     return residual;
+    // };
 
     // --------------------------------------------------------------------------------
     // explicitu = u0 - computeResidual(u0)
     // u = NewtonSolve(computeResidual, u0)
     // --------------------------------------------------------------------------------
     const CollOfScalars explicitu = u0 - computeResidual(u0);
-    const CollOfScalarsAD u = er.newtonSolve(computeResidualAD, u0);
+    // const CollOfScalarsAD u = er.newtonSolve(computeResidualAD, u0);
 
     // --------------------------------------------------------------------------------
     // Output(explixitu)
     // Output(u)
     // --------------------------------------------------------------------------------
-    er.output("Explicit u is equal to: ", explicitu);
-    er.output("Implicit u is equal to: ", u);
+    er.output("explicitu", explicitu);
+    // er.output("u", u);
 
     // ============= Generated code ends here ================
 
