@@ -1,38 +1,110 @@
-pf0 : Collection Of Face = AllFaces(Grid)		# works
-# pf0a : Collection Of Face = AllFaces(Grid)		# doesn't work
-pf0a : Collection Of Face = InteriorFaces(Grid)		# works
+pf0 : Collection Of Face = AllFaces(Grid)		
+# pf0a : Collection Of Face = AllFaces(Grid)		
+pf0a : Collection Of Face = InteriorFaces(Grid)		
 
-ps = Area(InteriorFaces(Grid)) 
-ps1 = Length(AllEdges(Grid))
 
-ps2 = Area(InteriorFaces(Grid)) 
-# ps3 = Volume(FirstCells(BoundaryFaces(Grid)))		# works
-# ps4 = Volume(FirstCells(AllFaces(Grid)))		# doesn't work
+
+
+# ps = Area(InteriorFaces(Grid)) 
+# ps1 = Length(AllEdges(Grid))
+
+# ps2 = Area(InteriorFaces(Grid)) 
+# ps3 = Volume(FirstCell(BoundaryFaces(Grid)))	
+# ps4 = Volume(FirstCell(AllFaces(Grid)))		
 
 s1 = 4 + 11
+s2 = s1
 
 ps11 = Volume(AllCells(Grid)) ^ 2
+ps12 = ps11
 
-pv0 = Centroid(AllCells(Grid))
-pv1 = pv0					# doesn't work
+v1 = [1,2,3,4]
+v2 = v1
 
-sc0 = Max(4,5,6)				# works
-# sc1 = Min(4,5,6,Area(AllFaces(Grid)))	# doesn't work
+pv1 = Centroid(AllCells(Grid))
+pv2 = pv1				
+
+px1 = InteriorVertices(Grid)
+px2 = px1
+
+pe1 = AllEdges(Grid)
+pe2 = pe1
+
+pf1 = BoundaryFaces(Grid)
+pf2 = pf1
+
+# pc1 = FirstCell(pf1)
+pc1 = AllCells(Grid)
+pc2 = pc1
+
+b1 = True And False Or (True And 1 > 2 Xor (3 < 4))
+b2 = b1
+
+pb1 = (1,2,3) > (4,5,6) Xor (1,1,1)>(2,2,2)
+pb2 = pb1
 
 
-pb12 = (1,2,3) > (4,5,6) Xor (1,1,1)>(2,2,2)	# works
 
-# min = Min(1,2,3,4,5)
+
+
+
+sc0 = Max(4,5,6)				
+sc1 = Min(4,5,6,Area(AllFaces(Grid)))	
+
+min = Min(1,2,3,4,5)
 
 v = Centroid(AllCells(Grid)) + Centroid(BoundaryCells(Grid))
 
-
-
-b1 = True And False Or (True And 1 > 2 Xor (3 < 4))  # works
-lpb = ((1,2,3) > (2,3,4)) Xor pb12
-
+pb3 = ((1,2,3) > (2,3,4)) Xor pb1
 
 a = 2
 
+g : Function(s :: Scalar) -> Scalar  
+g : Function(v :: Vector) -> Vector
+vec1 = func(sc0)
+vec2 = g(sc0)
 
-# g : Function(s :: Scalar) -> Vector  
+g = 
+{
+	a = 5
+	b = 9
+	c = 12
+	# d = [1,2,3]
+	# return d
+	return c
+}
+
+scal = g(sc0)
+vec3 : Vector = g(sc0)
+scal2 = g(sc0, sc0)
+scal3 = g(sc2)
+sc2 : Scalar
+scal4 = g(sc2)
+scal5 = g(b1)
+
+
+
+
+scal6 = UserSpecifiedScalar
+scal7 : Scalar = UserSpecifiedScalar
+scal8 = UserSpecifiedScalarWithDefault(0.3)
+scal9 : Scalar = UserSpecifiedScalarWithDefault(0.3)
+
+scal10 = UserSpecifiedCollectionOfScalar(AllCells(Grid))
+scal11 : Collection Of Scalar
+scal11 = UserSpecifiedCollectionOfScalar(BoundaryFaces(Grid))
+scal12 : Collection Of Scalar = UserSpecifiedCollectionOfScalar(scal11)
+scal13 : Collection Of Scalar On BoundaryFaces(Grid) = UserSpecifiedCollectionOfScalar(scal12)
+
+
+
+
+computeResidual : Function(u :: Collection Of Scalar) -> Collection Of Scalar 
+
+b = a
+
+c = Gradient(5)
+d = Divergence(10)
+
+Output(c)
+

@@ -81,9 +81,11 @@ using namespace std;
 "return"                return RETURN;
 "Min"                   return MIN;
 "Max"                   return MAX;
+"Tuple"					return TUPLE;
 "UserSpecifiedScalar"				return USS;
 "UserSpecifiedScalarWithDefault"	return USSWD;
 "UserSpecifiedCollectionOfScalar"	return USCOS;
+"Output"							return OUTPUT;
 
 
 
