@@ -18,7 +18,8 @@ EquelleRuntimeCPU::EquelleRuntimeCPU(const Opm::parameter::ParameterGroup& param
                     : new Opm::GridManager(param.getDefault("n", 6), 1)),
       grid_(*(grid_manager_->c_grid())),
       ops_(grid_),
-      linsolver_(param)
+      linsolver_(param),
+      output_to_file_(param.getDefault("output_to_file", false))
 {
 }
 
@@ -130,7 +131,7 @@ CollOfFaces EquelleRuntimeCPU::boundaryFaces() const
             ++bf_cursor;
         }
     }
-    
+
     return bfaces;
 }
 
@@ -334,38 +335,47 @@ double EquelleRuntimeCPU::twoNorm(const CollOfScalarsAD& vals) const
 }
 
 
-void EquelleRuntimeCPU::output(const std::string& tag, const double val)
+void EquelleRuntimeCPU::output(const std::string& tag, const double val) const
 {
     std::cout << tag << val << std::endl;
 }
 
 
-void EquelleRuntimeCPU::output(const std::string& tag, const CollOfScalars& vals)
+void EquelleRuntimeCPU::output(const std::string& tag, const CollOfScalars& vals) const
 {
-    std::cout << tag;
-    for (int i = 0; i < vals.size(); ++i) {
-        std::cout << std::setw(15) << std::left << ( vals[i] ) << " ";
+    if (output_to_file) {
+        std::string filename = tag + ".output";
+        std::ofstream os(filename.c_str());
+        for (int i = 0; i < vals.size(); ++i) {
+            os << std::setw(15) << std::left << ( vals[i] ) << " ";
+        }
+        os << std::endl;
+    } else {
+        std::cout << tag;
+        for (int i = 0; i < vals.size(); ++i) {
+            std::cout << std::setw(15) << std::left << ( vals[i] ) << " ";
+        }
+        std::cout << std::endl;
     }
-    std::cout << std::endl;
 }
 
 
-void EquelleRuntimeCPU::output(const std::string& tag, const CollOfScalarsOnColl& vals)
+void EquelleRuntimeCPU::output(const std::string& tag, const CollOfScalarsOnColl& vals) const
 {
     output(tag, vals.getColl());
     std::cout << "(This was On Collection " << vals.getOnColl() << ")" << std::endl;
 }
 
 
-void EquelleRuntimeCPU::output(const std::string& tag, const CollOfScalarsAD& vals)
+void EquelleRuntimeCPU::output(const std::string& tag, const CollOfScalarsAD& vals) const
 {
     output(tag, vals.value());
 }
 
 
 CollOfScalars EquelleRuntimeCPU::getUserSpecifiedCollectionOfScalar(const Opm::parameter::ParameterGroup& param,
-								    const std::string& name,
-								    const int size)
+                                                                    const std::string& name,
+                                                                    const int size)
 {
     const bool from_file = param.getDefault(name + "_from_file", false);
     if (from_file) {

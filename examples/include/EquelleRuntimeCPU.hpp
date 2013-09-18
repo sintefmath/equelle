@@ -141,10 +141,10 @@ public:
 				const CollOfScalars& u_initialguess) const;
 
     /// Output.
-    static void output(const std::string& tag, double val);
-    static void output(const std::string& tag, const CollOfScalars& vals);
-    static void output(const std::string& tag, const CollOfScalarsOnColl& vals);
-    static void output(const std::string& tag, const CollOfScalarsAD& vals);
+    void output(const std::string& tag, double val) const;
+    void output(const std::string& tag, const CollOfScalars& vals) const;
+    void output(const std::string& tag, const CollOfScalarsOnColl& vals) const;
+    void output(const std::string& tag, const CollOfScalarsAD& vals) const;
 
     /// Input.
     static CollOfFaces getUserSpecifiedCollectionOfFaceSubsetOf(const Opm::parameter::ParameterGroup& param,
@@ -175,6 +175,7 @@ private:
     const UnstructuredGrid& grid_;
     HelperOps ops_;
     Opm::LinearSolverFactory linsolver_;
+    bool output_to_file_;
 };
 
 // Include the implementations of template members.
