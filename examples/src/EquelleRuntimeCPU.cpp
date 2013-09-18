@@ -253,12 +253,22 @@ CollOfScalarsAD EquelleRuntimeCPU::negGradient(const CollOfScalarsAD& cell_scala
 
 CollOfScalars EquelleRuntimeCPU::divergence(const CollOfScalars& face_fluxes) const
 {
+    if (face_fluxes.size() == ops_.internal_faces.size()) {
+        // This is actually a hack, the compiler should know to emit interiorDivergence()
+        // eventually, but as a temporary measure we do this.
+        return interiorDivergence(face_fluxes);
+    }
     return ops_.fulldiv * face_fluxes.matrix();
 }
 
 
 CollOfScalarsAD EquelleRuntimeCPU::divergence(const CollOfScalarsAD& face_fluxes) const
 {
+    if (face_fluxes.size() == ops_.internal_faces.size()) {
+        // This is actually a hack, the compiler should know to emit interiorDivergence()
+        // eventually, but as a temporary measure we do this.
+        return interiorDivergence(face_fluxes);
+    }
     return ops_.fulldiv * face_fluxes;
 }
 
