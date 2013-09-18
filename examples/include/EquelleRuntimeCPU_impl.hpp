@@ -149,11 +149,11 @@ CollOfScalarsAD EquelleRuntimeCPU::newtonSolve(const ResidualFunctor& rescomp,
 {
     // Set up Newton loop.
     CollOfScalarsAD u = singlePrimaryVariable(u_initialguess);
-    output("Initial u:\t\t", u);
-    output("\tnorm = ", twoNorm(u));
+    output("Initial u", u);
+    output("norm", twoNorm(u));
     CollOfScalarsAD residual = rescomp(u); //  Generated code in here
-    output("Initial residual:\t", residual);
-    output("\tnorm = ", twoNorm(residual));
+    output("Initial residual", residual);
+    output("norm", twoNorm(residual));
     const int max_iter = 10;
     const double tol = 1e-6;
     int iter = 0;
@@ -173,10 +173,10 @@ CollOfScalarsAD EquelleRuntimeCPU::newtonSolve(const ResidualFunctor& rescomp,
         residual = rescomp(u);
 
         // Debugging output not specified in Equelle.
-        output("\tu:\t", u);
-        output("\tnorm = ", twoNorm(u));
-        output("\tresidual:\t", residual);
-        output("\tnorm = ", twoNorm(residual));
+        output("u", u);
+        output("norm(u)", twoNorm(u));
+        output("residual", residual);
+        output("norm(residual)", twoNorm(residual));
 
         ++iter;
     }

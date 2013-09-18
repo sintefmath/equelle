@@ -347,7 +347,7 @@ double EquelleRuntimeCPU::twoNorm(const CollOfScalarsAD& vals) const
 
 void EquelleRuntimeCPU::output(const std::string& tag, const double val) const
 {
-    std::cout << tag << val << std::endl;
+    std::cout << tag << " = " << val << std::endl;
 }
 
 
@@ -361,7 +361,7 @@ void EquelleRuntimeCPU::output(const std::string& tag, const CollOfScalars& vals
         }
         os << std::endl;
     } else {
-        std::cout << tag;
+        std::cout << tag << " =\n";
         for (int i = 0; i < vals.size(); ++i) {
             std::cout << std::setw(15) << std::left << ( vals[i] ) << " ";
         }
