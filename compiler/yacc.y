@@ -55,9 +55,11 @@
 %token COMMENT
 %token MIN
 %token MAX
+%token TUPLE
 %token USS
 %token USSWD
 %token USCOS
+%token OUTPUT
 
 
 %start pr
@@ -139,6 +141,7 @@ string USSWD_declaration_with_assignment_function(char* st1, char* st2);
 string USCOS_assignment_function(char* st1, char* st2, double d1);
 string USCOS_declaration_with_assignment_function(char* st1, char* st2, double d1);
 string USCOS_extended_declaration_with_assignment_function(char* st1, char* st2, char* st3, double d1, double d2);
+string output_function(char* st1);
 
 
 
@@ -162,10 +165,11 @@ struct FunctionStructure
   string name;                                // g1
   string returnType;                          // Collection Of Scalars
   double returnSize;                          // 8
-  string paramList;                           // (Cell, Face, Collection Of Vectors, Collection Of Scalars On AllFaces(Grid))
+  string paramList;                           // (Cell, Face, CollOfVectors, CollOfScalars On AllFaces(Grid))
   VariableStructure headerVariables[100];     // (c1, f1, pv1, ps1)
   int noParam;                                // 4
   VariableStructure localVariables[100];      // var1, var2, var3
+  string signature;                           // (Cell c1, Face f1, CollOfVectors pv1, CollOfScalars On AllFaces(Grid) ps1)
   int noLocalVariables;                       // 3
   bool assigned;              // false
 };
@@ -296,6 +300,7 @@ s^d                              all cells
 %type<str> declaration
 %type<str> assignment
 %type<str> declaration_with_assignment
+%type<str> output
 
 
 
@@ -373,6 +378,8 @@ scalar_factor: number                                  { $$ = strdup($1); }
              | ABS '(' scalar_expr ')'                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.abs(" << $3 << ")"); }
              | MIN '(' scalars ')'                     { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.min(" << $3.str << ")"); }
              | MAX '(' scalars ')'                     { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.max(" << $3.str << ")"); }
+             | GRADIENT '(' scalar_expr ')'            { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.gradient(" << $3 << ")"); }
+             | DIVERGENCE '(' scalar_expr ')'          { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.divergence(" << $3 << ")"); }
              | VARIABLE                                {
                                                           if(strcmp(getType($1), "scalar") != 0)
                                                           {
@@ -489,6 +496,8 @@ scalar_factors: EUCLIDEAN_LENGTH '(' vector_exprs ')'           { STREAM_TO_DOLL
               | CEIL '(' scalar_exprs ')'                       { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.ceil(" << $3.str << ")"); $$.size = $3.size;}
               | FLOOR '(' scalar_exprs ')'                      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.floor(" << $3.str << ")"); $$.size = $3.size;}
               | ABS '(' scalar_exprs ')'                        { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.abs(" << $3.str << ")"); $$.size = $3.size;}
+              | GRADIENT '(' scalar_exprs ')'                   { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.gradient(" << $3.str << ")"); $$.size = $3.size; }
+              | DIVERGENCE '(' scalar_exprs ')'                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.divergence(" << $3.str << ")"); $$.size = $3.size;}
               | VARIABLE                                        {
                                                                     if(strcmp(getType($1), "scalars") != 0)
                                                                     {
@@ -525,6 +534,7 @@ vector_expr: vector_term                      { $$ = strdup($1); }
 
 vector_term: '[' scalars ']'                       { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "[" << $2.str << "]"); }
            | CENTROID '(' cell ')'                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.centroid(" << $3 << ")"); }
+           | CENTROID '(' face ')'                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.centroid(" << $3 << ")"); }
            | NORMAL '(' face ')'                   { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.normal(" << $3 << ")"); }
            | '(' vector_expr ')'                   { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "(" << $2 << ")"); }              // produces 1 shift/reduce conflict
            | vector_term '*' scalar_factor         { STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << " * " << $3); }             // produces 1 reduce/reduce conflict
@@ -585,6 +595,7 @@ vector_exprs: vector_terms                       { $$.str = strdup($1.str); $$.s
 
 vector_terms: '[' vectors ']'                        { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "[" << $2.str << "]"); $$.size = $2.size; }
             | CENTROID '(' cells ')'                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")"); $$.size = $3.size; }
+            | CENTROID '(' faces ')'                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")"); $$.size = $3.size; }
             | NORMAL '(' faces ')'                   { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.normal(" << $3.str << ")"); $$.size = $3.size; }
             | '(' vector_exprs ')'                   { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")"); $$.size = $2.size; }          // produces 1 shift/reduce conflict
             | vector_terms '*' scalar_factor         { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3); $$.size = $1.size; }         // produces 1 reduce/reduce conflict
@@ -1245,7 +1256,7 @@ function_declaration: VARIABLE ':' FUNCTION '(' parameter_list ')' RET type
 
                                                 if(declaredBefore == true)
                                                 {
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$, "error: The function '" << $1 << "' is redeclared");
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$, "error at line " << currentLineNumber << ": The function '" << $1 << "' is redeclared");
                                                 }
                                                 else
                                                 {
@@ -1277,12 +1288,14 @@ function_declaration: VARIABLE ':' FUNCTION '(' parameter_list ')' RET type
                                                           fun[funNo-1].headerVariables[fun[funNo-1].noParam-1].type = CPPToEquelle1(copy);    // the string we have as a parameter list is already transformed in C++, but we need the types' keywords from Equelle
                                                           fun[funNo-1].headerVariables[fun[funNo-1].noParam-1].length = CPPToEquelle2(copy);  // the string we have as a parameter list is already transformed in C++, but we need the types' lengths
                                                           fun[funNo-1].headerVariables[fun[funNo-1].noParam-1].assigned = true;
+                                                          fun[funNo-1].signature = strdup($5);
 
                                                           pch = strtok(NULL, ",");
                                                         }
 
                                                         fun[funNo-1].assigned = false;
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$, $8.str << " " << $1 << "(" << $5 << ")" << ";");
+                                                        // STREAM_TO_DOLLARS_CHAR_ARRAY($$, $8.str << " " << $1 << "(" << $5 << ")" << ";");
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$, "");
                                                 }
                                             }
                     ;
@@ -1305,14 +1318,15 @@ function_assignment: function_start end_lines commands end_lines return_instr en
                                                       if(fun[i].assigned == true)
                                                       {
                                                           stringstream ss;
-                                                          ss << "error: The function '" << fun[i].name << "' is reassigned";
+                                                          ss << "error at line " << currentLineNumber << ": The function '" << fun[i].name << "' is reassigned";
                                                           $$ = strdup(ss.str().c_str());
                                                       }
                                                       else
                                                       {
                                                           if($5.size != -1)
                                                           {
-                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << $2 << $3 << $4 << $5.str << $6 << "}");
+                                                              // STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << $2 << $3 << $4 << $5.str << $6 << "}");
+                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$, "auto " << fun[i].name << "[&](" << fun[i].signature << ") -> " << EquelleToCPP(fun[i].returnType) << " {\n" << $2 << $3 << $4 << $5.str << $6 << "}");
                                                               if(fun[i].returnSize == ANY && $5.size != ANY)
                                                                   fun[i].returnSize = $5.size;
                                                               else
@@ -1324,13 +1338,13 @@ function_assignment: function_start end_lines commands end_lines return_instr en
                                                           }
                                                           else
                                                           {
-                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$, "error: At least one of the return variables does not exist within the function or the return type of the function '" << fun[i].name << "' from its assignment differs than the length of the return type from the function's definition");
+                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$, "error at line " << currentLineNumber << ": At least one of the return variables does not exist within the function or the return type of the function '" << fun[i].name << "' from its assignment differs than the length of the return type from the function's definition");
                                                           }
 
                                                       }
                                                 else
                                                 {
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$, "error: The function '" << extract($1) <<"' must be declared before being assigned");
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$, "error at line " << currentLineNumber << ": The function '" << extract($1) <<"' must be declared before being assigned");
                                                 }
 
                                                 insideFunction = false;
@@ -1343,6 +1357,26 @@ function_assignment: function_start end_lines commands end_lines return_instr en
 
 // function_declaration_with_assignment: FUNCTION_VARIABLE ':' FUNCTION '(' parameter_list ')' "->" type '=' end_lines '{' end_lines commands end_lines return_instr end_lines '}'    // the end lines are optional
 //                                     ; // tre sa punem booleana globala true inainte sa execute comenzile din functie
+
+
+
+/*
+tuple_declaration: VARIABLE ':' TUPLE OF '(' type ')'
+
+tuple_assignment: VARIABLE '=' '(' entities ')'
+
+tuple_declaration_with_assignment: VARIABLE ':' TUPLE OF '(' type ')' '=' '(' entities ')'
+*/
+
+
+
+
+
+
+output: OUTPUT '(' VARIABLE ')'       { string out = output_function($3); $$ = strdup(out.c_str()); }
+
+
+
 
 
 
@@ -1485,6 +1519,7 @@ command1: command                       { char* out = strdup($1); $$ = out; }
 command2: command                                    { stringstream ss; ss << $1; $$ = strdup(ss.str().c_str()); }
         | function_declaration                       { stringstream ss; ss << $1; $$ = strdup(ss.str().c_str()); }
         | function_assignment                        { stringstream ss; ss << $1; $$ = strdup(ss.str().c_str()); }
+        | output                                     { stringstream ss; ss << $1; $$ = strdup(ss.str().c_str()); }
     //  | function_declaration_with_assignment       { stringstream ss; ss << $1; $$ = strdup(ss.str().c_str()); }
         ;
 
@@ -1518,9 +1553,30 @@ extern int yyparse();
 int main()
 {
   HEAP_CHECK();
-  cout << "Opm::parameter::ParameterGroup param(argc, argv, false);" << endl << "EquelleRuntimeCPU er(param);" << endl << "UserParameters up(param, er);" << endl << endl;
+  cout << "/*" << endl << "  Copyright 2013 SINTEF ICT, Applied Mathematics." << endl << "*/" << endl;
+  cout << "#include <opm/core/utility/parameters/ParameterGroup.hpp>" << endl;
+  cout << "#include <opm/core/linalg/LinearSolverFactory.hpp>" << endl;
+  cout << "#include <opm/core/utility/ErrorMacros.hpp>" << endl;
+  cout << "#include <opm/autodiff/AutoDiffBlock.hpp>" << endl;
+  cout << "#include <opm/autodiff/AutoDiffHelpers.hpp>" << endl;
+  cout << "#include <opm/core/grid.h>" << endl;
+  cout << "#include <opm/core/grid/GridManager.hpp>" << endl;
+  cout << "#include <algorithm>" << endl;
+  cout << "#include <iterator>" << endl;
+  cout << "#include <iostream>" << endl;
+  cout << "#include <cmath>" << endl;
+  cout << endl;
+  cout << "#include \"EquelleRuntimeCPU.hpp\"" << endl;
+  cout << endl << endl;
+  cout << "int main()" << endl;
+  cout << "{" << endl;
+  cout << "Opm::parameter::ParameterGroup param(argc, argv, false);" << endl;
+  cout << "EquelleRuntimeCPU er(param);" << endl;
+  cout << "UserParameters up(param, er);" << endl;
+  cout << endl;
   HEAP_CHECK();
   yyparse();
+  cout << "}" << endl;
   HEAP_CHECK();
   return 0;
 }
@@ -4795,6 +4851,56 @@ string USCOS_extended_declaration_with_assignment_function(char* st1, char* st2,
                         }
                     }
                 }
+            }
+        }
+    }
+
+    HEAP_CHECK();
+    return finalString;
+}
+
+
+string output_function(char* st1)
+{
+    HEAP_CHECK();
+    string finalString;
+    if(insideFunction == true)
+    {
+        stringstream ss;
+        ss << "error at line " << currentLineNumber << ": The variable '" << st1 << "' cannot be outputted inside a function";
+        finalString = ss.str();
+    }
+    else
+    {
+        int i;
+        bool declaredBefore = false;
+
+        for(i = 0; i < varNo; i++)
+            if(strcmp(var[i].name.c_str(), st1) == 0)
+            {
+                declaredBefore = true;
+                break;
+            }
+
+        if(declaredBefore != true)
+        {
+            stringstream ss;
+            ss << "error at line " << currentLineNumber << ": The variable '" << st1 << "' needs to be declared first";
+            finalString = ss.str();
+        }
+        else
+        {
+            if(var[i].assigned != true)
+            {
+                stringstream ss;
+                ss << "error at line " << currentLineNumber << ": The variable '" << st1 << "' needs to be assigned first";
+                finalString = ss.str();
+            }
+            else
+            {
+                stringstream ss;
+                ss << "er.output(\"" << st1 << "\", " << st1 << ");";
+                finalString = ss.str();
             }
         }
     }
