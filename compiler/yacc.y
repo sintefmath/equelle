@@ -80,7 +80,7 @@
 /**
   * Definitions we need for types etc.
   */
-%code top 
+%code top
 {
 	#include <iostream>
 	#include <cstdio>
@@ -88,7 +88,7 @@
 	#include <string>
 	#include <list>
 	#include <cstring>
-	
+
 
 
 	// MACROS
@@ -115,7 +115,7 @@
 } //Code top
 
 
-%code requires 
+%code requires
 {
 	enum CollectionSize {
 		SIZE_ENTITY,
@@ -149,13 +149,13 @@
 	struct info
 	{
 		//Why does this not work?: info() : size(SIZE_INVALID), array_size(-1), str(NULL), type(TYPE_INVALID), collection(false) {}
-		CollectionSize size; // this is a code for the "On" construct (not in number of elements, but rather what it is on)
-		int array_size; //The number of elements in a vector / array
-		char* str;
-		VariableType type; //The type of the variable
-		bool collection; //Is this variable a collection of types or not?
+    char* str;            // The string which is to be outputted in the C++ file
+		CollectionSize size;  // This is a code for the "On" construct (not in number of elements, but rather what it is on)
+		int array_size;       // The number of elements in a vector / array
+		VariableType type;    // The type of the variable
+		bool collection;      // Is this variable a collection of types or not?
 	};
-	
+
 
 
 
@@ -165,26 +165,26 @@
 	// global structure and counter for storing the names of the variables of each type (used for stopping variables reassignment)
 	struct VariableStructureForCPP
 	{
-	  string name;       // must begin with a small letter
-	  string type;       // can be: scalar, vector, vertex, scalars etc.
-	  CollectionSize length;     // if the type is a singular type, then the length is 1; otherwise it can be any other number >= 1
-	  bool assigned;     // we want to know if a variable has been assigned, in order to prevent errors (example: operations with unassigned variables)
+	  string name;           // must begin with a small letter
+	  string type;           // can be: scalar, vector, vertex, scalars etc.
+	  CollectionSize length; // if the type is a singular type, then the length is 1; otherwise it can be any other number >= 1
+	  bool assigned;         // we want to know if a variable has been assigned, in order to prevent errors (example: operations with unassigned variables)
 	};
 
 
 	// global structure and counter for storing the names of the functions
 	struct FunctionStructureForCPP
 	{
-	  string name;                                // g1
-	  string returnType;                          // Collection Of Scalars
-	  CollectionSize returnSize;                          // 8
-	  string paramList;                           // (Cell, Face, CollOfVectors, CollOfScalars On AllFaces(Grid))
+	  string name;                                      // g1
+	  string returnType;                                // Collection Of Scalars
+	  CollectionSize returnSize;                        // SIZE_ALLCELLS
+	  string paramList;                                 // (Cell, Face, CollOfVectors, CollOfScalars On AllFaces(Grid))
 	  VariableStructureForCPP headerVariables[100];     // (c1, f1, pv1, ps1)
-	  int noParam;                                // 4
+	  int noParam;                                      // 4
 	  VariableStructureForCPP localVariables[100];      // var1, var2, var3
-	  string signature;                           // (Cell c1, Face f1, CollOfVectors pv1, CollOfScalars On AllFaces(Grid) ps1)
-	  int noLocalVariables;                       // 3
-	  bool assigned;              // false
+	  string signature;                                 // (Cell c1, Face f1, CollOfVectors pv1, CollOfScalars On AllFaces(Grid) ps1)
+	  int noLocalVariables;                             // 3
+	  bool assigned;                                    // false
 	};
 
 } //Code requires
@@ -245,7 +245,8 @@
 	string USCOS_declaration_with_assignment_function(char* st1, char* st2, CollectionSize d1);
 	string USCOS_extended_declaration_with_assignment_function(char* st1, char* st2, char* st3, CollectionSize d1, CollectionSize d2);
 	string output_function(char* st1);
-	string getVariableTypeString(VariableType v, bool collection);
+	string getVariableTypeString1(VariableType v, bool collection);
+  string getVariableTypeString2(VariableType v, bool collection);
 } //Code provides
 
 
@@ -253,7 +254,7 @@
   * All global variables
   * Should preferably not really be needed
   */
-%code 
+%code
 {
 
 VariableStructureForCPP var[10000];
@@ -305,22 +306,7 @@ int currentLineNumber = 1;
 %type<inf> header
 %type<inf> parameter_list
 %type<inf> type
-
-// option 1
-/*
-%type<inf> value
-%type<arr> values
-*/
-
-// option 2
-/*
-%type<inf> value
-%type<dinf> values
-*/
-
-// option 3
 %type<inf> values
-
 %type<inf> end_lines
 %type<inf> return_instr
 %type<inf> function_start
@@ -342,6 +328,8 @@ int currentLineNumber = 1;
 %type<inf> assignment
 %type<inf> declaration_with_assignment
 %type<inf> output
+%type<inf> expression
+%type<inf> expressions
 
 
 
@@ -360,16 +348,16 @@ int currentLineNumber = 1;
 %%
 
 
-floating_point: INTEGER '.' INTEGER          { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "." << $3.str); }
+floating_point: INTEGER '.' INTEGER          { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "." << $3.str); $$.size = SIZE_ENTITY; $$.array_size = 1; $$.type = TYPE_SCALAR; $$.collection = false; }
               ;
 
 
-number: INTEGER                              { $$.str = strdup($1.str); }
-      | floating_point                       { $$.str = strdup($1.str); }
+number: INTEGER                              { $$.str = strdup($1.str); $$.size = SIZE_ENTITY; $$.array_size = 1; $$.type = TYPE_SCALAR; $$.collection = false; }
+      | floating_point                       { $$.str = strdup($1.str); $$.size = SIZE_ENTITY; $$.array_size = 1; $$.type = TYPE_SCALAR; $$.collection = false; }
       ;
 
 
-scalar_expr: scalar_term                     { $$.str = strdup($1.str); }
+scalar_expr: scalar_term                     { $$.str = strdup($1.str); $$.size = SIZE_ENTITY; $$.array_size = 1; $$.type = TYPE_SCALAR; $$.collection = false; }
            | '-' scalar_term                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str); }
            | scalar_expr '+' scalar_term     { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str); }
            | scalar_expr '-' scalar_term     { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str); }
@@ -1439,29 +1427,34 @@ declaration: singular_declaration           { char* out = strdup($1.str); $$.str
            ;
 
 
+expression: scalar_expr       { $$.str = strdup($1.str); $$.size = $1.size; $$.array_size = $1.array_size; $$.type = TYPE_SCALAR; $$.collection = false; }
+          | vector_expr       { $$.str = strdup($1.str); $$.size = $1.size; $$.array_size = $1.array_size; $$.type = TYPE_VECTOR; $$.collection = false; }
+          | vertex            { $$.str = strdup($1.str); $$.size = $1.size; $$.array_size = $1.array_size; $$.type = TYPE_VERTEX; $$.collection = false; }
+          | edge              { $$.str = strdup($1.str); $$.size = $1.size; $$.array_size = $1.array_size; $$.type = TYPE_EDGE; $$.collection = false; }
+          | face              { $$.str = strdup($1.str); $$.size = $1.size; $$.array_size = $1.array_size; $$.type = TYPE_FACE; $$.collection = false; }
+          | cell              { $$.str = strdup($1.str); $$.size = $1.size; $$.array_size = $1.array_size; $$.type = TYPE_CELL; $$.collection = false; }
+          | boolean_expr      { $$.str = strdup($1.str); $$.size = $1.size; $$.array_size = $1.array_size; $$.type = TYPE_BOOLEAN; $$.collection = false; }
+          ;
 
-singular_assignment: VARIABLE '=' scalar_expr              { char *st = strdup($3.str); string out = singular_assignment_function($1.str, "scalar", st, "Scalar"); $$.str = strdup(out.c_str()); }
-                   | VARIABLE '=' vector_expr              { char *st = strdup($3.str); string out = singular_assignment_function($1.str, "vector", st, "Vector"); $$.str = strdup(out.c_str()); }
-                   | VARIABLE '=' vertex                   { char *st = strdup($3.str); string out = singular_assignment_function($1.str, "vertex", st, "Vertex"); $$.str = strdup(out.c_str()); }
-                   | VARIABLE '=' edge                     { char *st = strdup($3.str); string out = singular_assignment_function($1.str, "edge", st, "Edge"); $$.str = strdup(out.c_str()); }
-                   | VARIABLE '=' face                     { char *st = strdup($3.str); string out = singular_assignment_function($1.str, "face", st, "Face"); $$.str = strdup(out.c_str()); }
-                   | VARIABLE '=' cell                     { char *st = strdup($3.str); string out = singular_assignment_function($1.str, "cell", st, "Cell"); $$.str = strdup(out.c_str()); }
-                   | VARIABLE '=' adb                      { char *st = strdup($3.str); string out = singular_assignment_function($1.str, "scalarAD", st, "ScalarAD"); $$.str = strdup(out.c_str()); }
-                   | VARIABLE '=' boolean_expr             { char *st = strdup($3.str); string out = singular_assignment_function($1.str, "bool", st, "bool"); $$.str = strdup(out.c_str()); }
-                   | VARIABLE '=' USS                      { string out = USS_assignment_function($1.str); $$.str = strdup(out.c_str()); }
+
+expressions: scalar_exprs     { $$.str = strdup($1.str); $$.size = $1.size; $$.array_size = $1.array_size; $$.type = TYPE_SCALAR; $$.collection = true; }
+           | vector_exprs     { $$.str = strdup($1.str); $$.size = $1.size; $$.array_size = $1.array_size; $$.type = TYPE_VECTOR; $$.collection = true; }
+           | vertices         { $$.str = strdup($1.str); $$.size = $1.size; $$.array_size = $1.array_size; $$.type = TYPE_VERTEX; $$.collection = true; }
+           | edges            { $$.str = strdup($1.str); $$.size = $1.size; $$.array_size = $1.array_size; $$.type = TYPE_EDGE; $$.collection = true; }
+           | faces            { $$.str = strdup($1.str); $$.size = $1.size; $$.array_size = $1.array_size; $$.type = TYPE_FACE; $$.collection = true; }
+           | cells            { $$.str = strdup($1.str); $$.size = $1.size; $$.array_size = $1.array_size; $$.type = TYPE_CELL; $$.collection = true; }
+           | boolean_exprs    { $$.str = strdup($1.str); $$.size = $1.size; $$.array_size = $1.array_size; $$.type = TYPE_BOOLEAN; $$.collection = true; }
+           ;
+
+
+singular_assignment: VARIABLE '=' USS                      { string out = USS_assignment_function($1.str); $$.str = strdup(out.c_str()); }
                    | VARIABLE '=' USSWD '(' number ')'     { string out = USSWD_assignment_function($1.str, $5.str); $$.str = strdup(out.c_str()); }
+                   | VARIABLE '=' expression               { string str2 = getVariableTypeString1($3.type, false); string str1 = getVariableTypeString2($3.type, false); string out = singular_assignment_function($1.str, strdup(str1.c_str()), $3.str, strdup(str2.c_str())); $$.str = strdup(out.c_str()); }
                    ;
 
 
-plural_assignment: VARIABLE '=' scalar_exprs              { char *st = strdup($3.str); string out = plural_assignment_function($1.str, "scalars", st, "CollOfScalars", $3.size); $$.str = strdup(out.c_str()); }
-                 | VARIABLE '=' vector_exprs              { char *st = strdup($3.str); string out = plural_assignment_function($1.str, "vectors", st, "CollOfVectors", $3.size); $$.str = strdup(out.c_str()); }
-                 | VARIABLE '=' vertices                  { char *st = strdup($3.str); string out = plural_assignment_function($1.str, "vertices", st, "CollOfVertices", $3.size); $$.str = strdup(out.c_str()); }
-                 | VARIABLE '=' edges                     { char *st = strdup($3.str); string out = plural_assignment_function($1.str, "edges", st, "CollOfEdges", $3.size); $$.str = strdup(out.c_str()); }
-                 | VARIABLE '=' faces                     { char *st = strdup($3.str); string out = plural_assignment_function($1.str, "faces", st, "CollOfFaces", $3.size); $$.str = strdup(out.c_str()); }
-                 | VARIABLE '=' cells                     { char *st = strdup($3.str); string out = plural_assignment_function($1.str, "cells", st, "CollOfCells", $3.size); $$.str = strdup(out.c_str()); }
-                 | VARIABLE '=' adbs                      { char *st = strdup($3.str); string out = plural_assignment_function($1.str, "scalarsAD", st, "CollOfScalarsAD", $3.size); $$.str = strdup(out.c_str()); }
-                 | VARIABLE '=' boolean_exprs             { char *st = strdup($3.str); string out = plural_assignment_function($1.str, "bools", st, "CollOfBools", $3.size); $$.str = strdup(out.c_str()); }
-                 | VARIABLE '=' USCOS '(' plural ')'      { string out = USCOS_assignment_function($1.str, $5.str, $5.size); $$.str = strdup(out.c_str()); }
+plural_assignment: VARIABLE '=' USCOS '(' plural ')'      { string out = USCOS_assignment_function($1.str, $5.str, $5.size); $$.str = strdup(out.c_str()); }
+                 | VARIABLE '=' expressions               { string str2 = getVariableTypeString1($3.type, true); string str1 = getVariableTypeString2($3.type, true); string out = plural_assignment_function($1.str, strdup(str1.c_str()), $3.str, strdup(str2.c_str()), $3.size); $$.str = strdup(out.c_str()); }
                  ;
 
 
@@ -4928,37 +4921,75 @@ string output_function(char* st1)
 }
 
 
-string getVariableTypeString(VariableType v, bool collection) {
+string getVariableTypeString1(VariableType v, bool collection)
+{
 	std::stringstream ss;
 
 	switch(v) {
-		case TYPE_SCALAR: 
-			ss << (collection) ? "CollOfScalars" : "Scalar";
+		case TYPE_SCALAR:
+			ss << ((collection) ? "CollOfScalars" : "Scalar");
 			break;
-		case TYPE_VECTOR:  
-			ss << (collection) ? "CollOfVectors" : "Vector";
+		case TYPE_VECTOR:
+			ss << ((collection) ? "CollOfVectors" : "Vector");
 			break;
 		case TYPE_VERTEX:
-			ss << (collection) ? "CollOfVertices" : "Vertex";
+			ss << ((collection) ? "CollOfVertices" : "Vertex");
 			break;
-		case TYPE_EDGE:	
-			ss << (collection) ? "CollOfEdges" : "Edge";
+		case TYPE_EDGE:
+			ss << ((collection) ? "CollOfEdges" : "Edge");
 			break;
 		case TYPE_FACE:
-			ss << (collection) ? "CollOfFaces" : "Face";
+			ss << ((collection) ? "CollOfFaces" : "Face");
 			break;
-		case TYPE_CELL:	
-			ss << (collection) ? "CollOfCells" : "Cell";
+		case TYPE_CELL:
+			ss << ((collection) ? "CollOfCells" : "Cell");
 			break;
 		case TYPE_BOOLEAN:
-			ss << (collection) ? "CollOfBools" : "bool";
+			ss << ((collection) ? "CollOfBools" : "bool");
 			break;
 		case TYPE_INVALID:
-			ss << (collection) ? "CollOfInvalidTypes" : "InvalidType";
+			ss << ((collection) ? "CollOfInvalidTypes" : "InvalidType");
 			break;
 		default:
-			ss << (collection) ? "CollOfUnknownTypes" : "UnknownType";
+			ss << ((collection) ? "CollOfUnknownTypes" : "UnknownType");
 	}
 
 	return ss.str();
+}
+
+
+string getVariableTypeString2(VariableType v, bool collection)
+{
+  std::stringstream ss;
+
+  switch(v) {
+    case TYPE_SCALAR:
+      ss << ((collection) ? "scalars" : "scalar");
+      break;
+    case TYPE_VECTOR:
+      ss << ((collection) ? "vectors" : "vector");
+      break;
+    case TYPE_VERTEX:
+      ss << ((collection) ? "vertices" : "vertex");
+      break;
+    case TYPE_EDGE:
+      ss << ((collection) ? "edges" : "edge");
+      break;
+    case TYPE_FACE:
+      ss << ((collection) ? "faces" : "face");
+      break;
+    case TYPE_CELL:
+      ss << ((collection) ? "cells" : "cell");
+      break;
+    case TYPE_BOOLEAN:
+      ss << ((collection) ? "bools" : "bool");
+      break;
+    case TYPE_INVALID:
+      ss << ((collection) ? "CollOfInvalidTypes" : "InvalidType");
+      break;
+    default:
+      ss << ((collection) ? "CollOfUnknownTypes" : "UnknownType");
+  }
+
+  return ss.str();
 }
