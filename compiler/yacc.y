@@ -121,7 +121,7 @@ double getSize3(char* s1);
 int getSize4(char* s1);
 char* extract(char* s1);
 string CPPToEquelle1(char* st);
-int CPPToEquelle2(char* st);
+double CPPToEquelle2(char* st);
 char* EquelleToCPP(string st);
 string errorTypeToErrorMessage(string errorType);
 string functionToAnySingularType(char *st1, char *st2, char *st3, const string &st4);
@@ -2375,7 +2375,7 @@ string CPPToEquelle1(char* st)
 
 
 // function which returns the corresponding size of a C++ type
-int CPPToEquelle2(char* st)
+double CPPToEquelle2(char* st)
 {
     if(strcmp(st, "Scalar") == 0) {
       return 1;
