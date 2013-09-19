@@ -31,6 +31,9 @@ CollOfScalars EquelleRuntimeCPU::operatorOn(const double data,
 
 namespace
 {
+    using Opm::subset;
+    using Opm::superset;
+
     template <class EntityCollection>
     std::vector<int> subsetIndices(const EntityCollection& superset,
                                    const EntityCollection& subset)

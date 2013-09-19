@@ -38,7 +38,7 @@ typedef std::vector<Face> CollOfFaces;
 
 
 /// Types from opm-autodiff and Eigen.
-typedef AutoDiff::ForwardBlock<double> CollOfScalarsAD;
+typedef Opm::AutoDiffBlock<double> CollOfScalarsAD;
 typedef CollOfScalarsAD::V CollOfScalars;
 
 class CollOfScalarsOnColl
@@ -173,7 +173,7 @@ private:
     bool grid_from_file_;
     std::unique_ptr<Opm::GridManager> grid_manager_;
     const UnstructuredGrid& grid_;
-    HelperOps ops_;
+    Opm::HelperOps ops_;
     Opm::LinearSolverFactory linsolver_;
     bool output_to_file_;
 };
