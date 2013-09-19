@@ -226,6 +226,8 @@ s^d                              all cells
 #define WRONG_TYPE_ERROR_TO_CHAR_ARRAY(dd, d1)            do { stringstream ss; ss << "wrong_type_error  " << d1; dd = strdup(ss.str().c_str()); }  while (false)
 
 
+
+
 %}
 
 
@@ -306,36 +308,34 @@ s^d                              all cells
 
 
 
+
 %code requires
 {
-  struct info
-  {
-      double size;
-      char* str;
-  };
+	enum VariableType {
+		TYPE_SCALAR,
+		TYPE_VECTOR,
+		TYPE_VERTEX,
+		TYPE_EDGE,
+		TYPE_FACE,
+		TYPE_CELL,
+		TYPE_BOOLEAN,
+	};
 
-  // struct array
-  // {
-  //     char *sizes;
-  //     char *str;
-  // };
-
-  struct dinfo
-  {
-      char* cCode;
-      char* sepCode;
-  };
+	struct info
+	{
+		double size; // this is a code for the "On" construct (not in number of elements, but rather what it is on)
+		char* str;
+		VariableType type; //The type of the variable
+		bool collection; //Is this variable a collection of types or not?
+	};
 }
 
 
 
 %union
 {
-  int value;
   char* str;           // the non-terminals which need to store only the translation code for C++ will be declared with this type
   struct info inf;            // the non-terminals which need to store both the translation code for C++ and the size of the collection will be declared with this type
-  //struct array arr;  // the values which are passed as arguments when calling a function must be checked to see if they correspond to the function's template
-  struct dinfo dinf;
 };
 
 
