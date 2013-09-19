@@ -117,22 +117,22 @@
 
 %code requires
 {
-	enum CollectionSize {
-		SIZE_ENTITY,
-		SIZE_INTERIORCELLS,
-		SIZE_BOUNDARYCELLS,
-		SIZE_ALLCELLS,
-		SIZE_INTERIORFACES,
-		SIZE_BOUNDARYFACES,
-		SIZE_ALLFACES,
-		SIZE_INTERIOREDGES,
-		SIZE_BOUNDARYEDGES,
-		SIZE_ALLEDGES,
-		SIZE_INTERIORVERTICES,
-		SIZE_BOUNDARYVERTICES,
-		SIZE_ALLVERTICES,
-		SIZE_ANY, // the default length of a collection, if it is not explicitly specified
-		SIZE_INVALID, //Invalid size... should be caught by error checking
+	enum GridMapping {
+		GRID_MAPPING_ENTITY, //Scalar, vector, (any non-collection)
+		GRID_MAPPING_INTERIORCELLS,
+		GRID_MAPPING_BOUNDARYCELLS,
+		GRID_MAPPING_ALLCELLS,
+		GRID_MAPPING_INTERIORFACES,
+		GRID_MAPPING_BOUNDARYFACES,
+		GRID_MAPPING_ALLFACES,
+		GRID_MAPPING_INTERIOREDGES,
+		GRID_MAPPING_BOUNDARYEDGES,
+		GRID_MAPPING_ALLEDGES,
+		GRID_MAPPING_INTERIORVERTICES,
+		GRID_MAPPING_BOUNDARYVERTICES,
+		GRID_MAPPING_ALLVERTICES,
+		GRID_MAPPING_ANY, // the default length of a collection, if it is not explicitly specified
+		GRID_MAPPING_INVALID, //Invalid size... should be caught by error checking
 	};
 
 	enum VariableType {
@@ -148,9 +148,9 @@
 
 	struct info
 	{
-		//Why does this not work?: info() : size(SIZE_INVALID), array_size(-1), str(NULL), type(TYPE_INVALID), collection(false) {}
+		//Why does this not work?: info() : size(GRID_MAPPING_INVALID), array_size(-1), str(NULL), type(TYPE_INVALID), collection(false) {}
     char* str;            // The string which is to be outputted in the C++ file
-		CollectionSize size;  // This is a code for the "On" construct (not in number of elements, but rather what it is on)
+		GridMapping grid_mapping;  // This defines the mapping of the variable (one value per face, cell, interior face, etc.)
 		int array_size;       // The number of elements in a vector / array
 		VariableType type;    // The type of the variable
 		bool collection;      // Is this variable a collection of types or not?
@@ -167,7 +167,7 @@
 	{
 	  string name;           // must begin with a small letter
 	  string type;           // can be: scalar, vector, vertex, scalars etc.
-	  CollectionSize length; // if the type is a singular type, then the length is 1; otherwise it can be any other number >= 1
+	  GridMapping length; // if the type is a singular type, then the length is 1; otherwise it can be any other number >= 1
 	  bool assigned;         // we want to know if a variable has been assigned, in order to prevent errors (example: operations with unassigned variables)
 	};
 
@@ -177,7 +177,7 @@
 	{
 	  string name;                                      // g1
 	  string returnType;                                // Collection Of Scalars
-	  CollectionSize returnSize;                        // SIZE_ALLCELLS
+	  GridMapping returnSize;                        // GRID_MAPPING_ALLCELLS
 	  string paramList;                                 // (Cell, Face, CollOfVectors, CollOfScalars On AllFaces(Grid))
 	  VariableStructureForCPP headerVariables[100];     // (c1, f1, pv1, ps1)
 	  int noParam;                                      // 4
@@ -218,32 +218,32 @@
 	char* getType(char* s1);
 	int getIndex1(char* s1);
 	int getIndex2(char* s1);
-	CollectionSize getSize1(char* s1);
-	CollectionSize getSize2(char* s1);
-	CollectionSize getSize3(char* s1);
+	GridMapping getSize1(char* s1);
+	GridMapping getSize2(char* s1);
+	GridMapping getSize3(char* s1);
 	int getSize4(char* s1);
 	char* extract(char* s1);
 	string CPPToEquelle1(char* st);
-	CollectionSize CPPToEquelle2(char* st);
+	GridMapping CPPToEquelle2(char* st);
 	char* EquelleToCPP(string st);
 	string errorTypeToErrorMessage(string errorType);
 	string functionToAnySingularType(char *st1, char *st2, char *st3, const string &st4);
 	string functionToAnyCollectionType(char *st1, char *st2, char *st3, const string &st4);
 	string singular_declaration_function(char* st1, char* st2);
 	string plural_declaration_function(char* st1, char* st2);
-	string extended_plural_declaration_function(char* st1, char* st2, char* st3, CollectionSize d1);
+	string extended_plural_declaration_function(char* st1, char* st2, char* st3, GridMapping d1);
 	string singular_assignment_function(char* st1, char* st2, char* st3, char* st4);
-	string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, CollectionSize d1);
+	string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, GridMapping d1);
 	string singular_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4);
-	string plural_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4, CollectionSize d1);
-	string extended_plural_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4, char* st5, CollectionSize d1, CollectionSize d2);
+	string plural_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4, GridMapping d1);
+	string extended_plural_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4, char* st5, GridMapping d1, GridMapping d2);
 	string USS_assignment_function(char* st1);
 	string USS_declaration_with_assignment_function(char* st1);
 	string USSWD_assignment_function(char* st1, char* st2);
 	string USSWD_declaration_with_assignment_function(char* st1, char* st2);
-	string USCOS_assignment_function(char* st1, char* st2, CollectionSize d1);
-	string USCOS_declaration_with_assignment_function(char* st1, char* st2, CollectionSize d1);
-	string USCOS_extended_declaration_with_assignment_function(char* st1, char* st2, char* st3, CollectionSize d1, CollectionSize d2);
+	string USCOS_assignment_function(char* st1, char* st2, GridMapping d1);
+	string USCOS_declaration_with_assignment_function(char* st1, char* st2, GridMapping d1);
+	string USCOS_extended_declaration_with_assignment_function(char* st1, char* st2, char* st3, GridMapping d1, GridMapping d2);
 	string output_function(char* st1);
 	string getVariableTypeString1(VariableType v, bool collection);
   string getVariableTypeString2(VariableType v, bool collection);
@@ -348,16 +348,16 @@ int currentLineNumber = 1;
 %%
 
 
-floating_point: INTEGER '.' INTEGER          { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "." << $3.str); $$.size = SIZE_ENTITY; $$.array_size = 1; $$.type = TYPE_SCALAR; $$.collection = false; }
+floating_point: INTEGER '.' INTEGER          { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "." << $3.str); $$.grid_mapping = GRID_MAPPING_ENTITY; $$.array_size = 1; $$.type = TYPE_SCALAR; $$.collection = false; }
               ;
 
 
-number: INTEGER                              { $$.str = strdup($1.str); $$.size = SIZE_ENTITY; $$.array_size = 1; $$.type = TYPE_SCALAR; $$.collection = false; }
-      | floating_point                       { $$.str = strdup($1.str); $$.size = SIZE_ENTITY; $$.array_size = 1; $$.type = TYPE_SCALAR; $$.collection = false; }
+number: INTEGER                              { $$.str = strdup($1.str); $$.grid_mapping = GRID_MAPPING_ENTITY; $$.array_size = 1; $$.type = TYPE_SCALAR; $$.collection = false; }
+      | floating_point                       { $$.str = strdup($1.str); $$.grid_mapping = GRID_MAPPING_ENTITY; $$.array_size = 1; $$.type = TYPE_SCALAR; $$.collection = false; }
       ;
 
 
-scalar_expr: scalar_term                     { $$.str = strdup($1.str); $$.size = SIZE_ENTITY; $$.array_size = 1; $$.type = TYPE_SCALAR; $$.collection = false; }
+scalar_expr: scalar_term                     { $$.str = strdup($1.str); $$.grid_mapping = GRID_MAPPING_ENTITY; $$.array_size = 1; $$.type = TYPE_SCALAR; $$.collection = false; }
            | '-' scalar_term                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str); }
            | scalar_expr '+' scalar_term     { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str); }
            | scalar_expr '-' scalar_term     { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str); }
@@ -411,99 +411,99 @@ scalars: scalar_exprs                 { $$.str = strdup($1.str); $$.array_size =
        ;
 
 
-scalar_exprs: scalar_terms                     { $$.str = strdup($1.str); $$.size = $1.size; }
-            | '-' scalar_terms                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str); $$.size = $2.size; }
+scalar_exprs: scalar_terms                     { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; }
+            | '-' scalar_terms                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str); $$.grid_mapping = $2.grid_mapping; }
             | scalar_exprs '+' scalar_terms
                                                {
-                                                  if($1.size != $3.size)    // check that the lengths of the 2 terms are equal
+                                                  if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
                                                   {
                                                       LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
                                                   }
                                                   else
                                                   {
                                                       STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str);
-                                                      $$.size = $1.size;
+                                                      $$.grid_mapping = $1.grid_mapping;
                                                   }
                                                }
 
             | scalar_exprs '-' scalar_terms
                                                {
-                                                  if($1.size != $3.size)    // check that the lengths of the 2 terms are equal
+                                                  if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
                                                   {
                                                       LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
                                                   }
                                                   else
                                                   {
                                                       STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
-                                                      $$.size = $1.size;
+                                                      $$.grid_mapping = $1.grid_mapping;
                                                   }
                                                }
             ;
 
 
-scalar_terms: scalar_factors                    { $$.str = strdup($1.str); $$.size = $1.size; }
+scalar_terms: scalar_factors                    { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; }
             | scalar_terms '*' scalar_factors
                                                 {
-                                                  if($1.size != $3.size)    // check that the lengths of the 2 terms are equal
+                                                  if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
                                                   {
                                                       LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
                                                   }
                                                   else
                                                   {
                                                       STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " * " << $3.str);
-                                                      $$.size = $1.size;
+                                                      $$.grid_mapping = $1.grid_mapping;
                                                   }
                                                }
             | scalar_factors '*' scalar_terms
                                                 {
-                                                  if($1.size != $3.size)    // check that the lengths of the 2 terms are equal
+                                                  if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
                                                   {
                                                       LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
                                                   }
                                                   else
                                                   {
                                                       STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " * " << $3.str);
-                                                      $$.size = $1.size;
+                                                      $$.grid_mapping = $1.grid_mapping;
                                                   }
                                                }
             | scalar_terms '/' scalar_factors
                                                {
-                                                  if($1.size != $3.size)    // check that the lengths of the 2 terms are equal
+                                                  if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
                                                   {
                                                       LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
                                                   }
                                                   else
                                                   {
                                                       STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " / " << $3.str);
-                                                      $$.size = $1.size;
+                                                      $$.grid_mapping = $1.grid_mapping;
                                                   }
                                                }
-            | scalar_terms '^' scalar_factor   { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.pow(" << $1.str << ", " << $3.str << ")"); $$.size = $1.size; }
+            | scalar_terms '^' scalar_factor   { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.pow(" << $1.str << ", " << $3.str << ")"); $$.grid_mapping = $1.grid_mapping; }
             ;
 
 
-scalar_factors: EUCLIDEAN_LENGTH '(' vector_exprs ')'           { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.euclideanLength(" << $3.str << ")"); $$.size = $3.size; }
-              | LENGTH '(' edges ')'                            { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.length(" << $3.str << ")"); $$.size = $3.size; }
-              | AREA '(' faces ')'                              { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.area(" << $3.str << ")"); $$.size = $3.size; }
-              | VOLUME '(' cells ')'                            { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.volume(" << $3.str << ")"); $$.size = $3.size; }
+scalar_factors: EUCLIDEAN_LENGTH '(' vector_exprs ')'           { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.euclideanLength(" << $3.str << ")"); $$.grid_mapping = $3.grid_mapping; }
+              | LENGTH '(' edges ')'                            { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.length(" << $3.str << ")"); $$.grid_mapping = $3.grid_mapping; }
+              | AREA '(' faces ')'                              { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.area(" << $3.str << ")"); $$.grid_mapping = $3.grid_mapping; }
+              | VOLUME '(' cells ')'                            { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.volume(" << $3.str << ")"); $$.grid_mapping = $3.grid_mapping; }
               | DOT '(' vector_exprs ',' vector_exprs ')'
                                                                 {
-                                                                   if($3.size != $5.size)    // check that the lengths of the 2 terms are equal
+                                                                   if($3.grid_mapping != $5.grid_mapping)    // check that the lengths of the 2 terms are equal
                                                                    {
                                                                       LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
                                                                   }
                                                                    else
                                                                    {
                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.dot(" << $3.str << ", " << $5.str << ")");
-                                                                       $$.size = $3.size;
+                                                                       $$.grid_mapping = $3.grid_mapping;
                                                                    }
                                                                 }
 
-              | CEIL '(' scalar_exprs ')'                       { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.ceil(" << $3.str << ")"); $$.size = $3.size;}
-              | FLOOR '(' scalar_exprs ')'                      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.floor(" << $3.str << ")"); $$.size = $3.size;}
-              | ABS '(' scalar_exprs ')'                        { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.abs(" << $3.str << ")"); $$.size = $3.size;}
-              | GRADIENT '(' scalar_exprs ')'                   { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.gradient(" << $3.str << ")"); $$.size = $3.size; }
-              | DIVERGENCE '(' scalar_exprs ')'                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.divergence(" << $3.str << ")"); $$.size = $3.size;}
+              | CEIL '(' scalar_exprs ')'                       { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.ceil(" << $3.str << ")"); $$.grid_mapping = $3.grid_mapping;}
+              | FLOOR '(' scalar_exprs ')'                      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.floor(" << $3.str << ")"); $$.grid_mapping = $3.grid_mapping;}
+              | ABS '(' scalar_exprs ')'                        { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.abs(" << $3.str << ")"); $$.grid_mapping = $3.grid_mapping;}
+              | GRADIENT '(' scalar_exprs ')'                   { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.gradient(" << $3.str << ")"); $$.grid_mapping = $3.grid_mapping; }
+              | DIVERGENCE '(' scalar_exprs ')'                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.divergence(" << $3.str << ")"); $$.grid_mapping = $3.grid_mapping;}
               | VARIABLE                                        {
                                                                     if(strcmp(getType($1.str), "scalars") != 0)
                                                                     {
@@ -512,7 +512,7 @@ scalar_factors: EUCLIDEAN_LENGTH '(' vector_exprs ')'           { STREAM_TO_DOLL
                                                                     else
                                                                     {
                                                                         $$.str = strdup($1.str);
-                                                                        $$.size = getSize1($1.str);
+                                                                        $$.grid_mapping = getSize1($1.str);
                                                                     }
                                                                 }
 
@@ -521,7 +521,7 @@ scalar_factors: EUCLIDEAN_LENGTH '(' vector_exprs ')'           { STREAM_TO_DOLL
                                                                     if(st == "ok")
                                                                     {
                                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "(" << $3.str << ")");
-                                                                        $$.size = fun[getIndex2($1.str)].returnSize;
+                                                                        $$.grid_mapping = fun[getIndex2($1.str)].returnSize;
                                                                     }
                                                                     else
                                                                     {
@@ -569,44 +569,44 @@ vectors: vector_term                      { $$.str = strdup($1.str); $$.array_si
        ;
 
 
-vector_exprs: vector_terms                       { $$.str = strdup($1.str); $$.size = $1.size; }
-            | '-' vector_terms                   { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str); $$.size = $2.size; }            // produces 1 shift/reduce conflict
+vector_exprs: vector_terms                       { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; }
+            | '-' vector_terms                   { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str); $$.grid_mapping = $2.grid_mapping; }            // produces 1 shift/reduce conflict
             | vector_exprs '+' vector_terms
                                                  {
-                                                    if($1.size != $3.size)    // check that the lengths of the 2 terms are equal
+                                                    if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
                                                     {
                                                         LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
                                                     }
                                                     else
                                                     {
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str);
-                                                        $$.size = $1.size;
+                                                        $$.grid_mapping = $1.grid_mapping;
                                                     }
                                                  }
 
             | vector_exprs '-' vector_terms
                                                  {
-                                                    if($1.size != $3.size)    // check that the lengths of the 2 terms are equal
+                                                    if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
                                                     {
                                                         LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
                                                     }
                                                     else
                                                     {
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
-                                                        $$.size = $1.size;
+                                                        $$.grid_mapping = $1.grid_mapping;
                                                     }
                                                  }
             ;
 
 
-vector_terms: '[' vectors ']'                        { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "[" << $2.str << "]"); $$.size = $2.size; }
-            | CENTROID '(' cells ')'                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")"); $$.size = $3.size; }
-            | CENTROID '(' faces ')'                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")"); $$.size = $3.size; }
-            | NORMAL '(' faces ')'                   { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.normal(" << $3.str << ")"); $$.size = $3.size; }
-            | '(' vector_exprs ')'                   { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")"); $$.size = $2.size; }          // produces 1 shift/reduce conflict
-            | vector_terms '*' scalar_factor         { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str); $$.size = $1.size; }         // produces 1 reduce/reduce conflict
-            | scalar_factor '*' vector_terms         { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str); $$.size = $3.size; }
-            | vector_terms '/' scalar_factor         { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str); $$.size = $1.size; }
+vector_terms: '[' vectors ']'                        { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "[" << $2.str << "]"); $$.grid_mapping = $2.grid_mapping; }
+            | CENTROID '(' cells ')'                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")"); $$.grid_mapping = $3.grid_mapping; }
+            | CENTROID '(' faces ')'                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")"); $$.grid_mapping = $3.grid_mapping; }
+            | NORMAL '(' faces ')'                   { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.normal(" << $3.str << ")"); $$.grid_mapping = $3.grid_mapping; }
+            | '(' vector_exprs ')'                   { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")"); $$.grid_mapping = $2.grid_mapping; }          // produces 1 shift/reduce conflict
+            | vector_terms '*' scalar_factor         { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str); $$.grid_mapping = $1.grid_mapping; }         // produces 1 reduce/reduce conflict
+            | scalar_factor '*' vector_terms         { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str); $$.grid_mapping = $3.grid_mapping; }
+            | vector_terms '/' scalar_factor         { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str); $$.grid_mapping = $1.grid_mapping; }
             | VARIABLE                               {
                                                         if(strcmp(getType($1.str), "vectors") != 0)
                                                         {
@@ -615,7 +615,7 @@ vector_terms: '[' vectors ']'                        { STREAM_TO_DOLLARS_CHAR_AR
                                                         else
                                                         {
                                                             $$.str = strdup($1.str);
-                                                            $$.size = getSize1($1.str);
+                                                            $$.grid_mapping = getSize1($1.str);
                                                         }
                                                      }
 
@@ -624,7 +624,7 @@ vector_terms: '[' vectors ']'                        { STREAM_TO_DOLLARS_CHAR_AR
                                                           if(st == "ok")
                                                           {
                                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "(" << $3.str << ")");
-                                                              $$.size = fun[getIndex2($1.str)].returnSize;
+                                                              $$.grid_mapping = fun[getIndex2($1.str)].returnSize;
                                                           }
                                                           else
                                                           {
@@ -652,9 +652,9 @@ vertex: VARIABLE           {
       ;
 
 
-vertices: INTERIOR_VERTICES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorVertices()"); $$.size = SIZE_INTERIORVERTICES; }
-        | BOUNDARY_VERTICES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryVertices()"); $$.size = SIZE_BOUNDARYVERTICES; }
-        | ALL_VERTICES '(' GRID ')'           { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allVertices()"); $$.size = SIZE_ALLVERTICES; }
+vertices: INTERIOR_VERTICES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorVertices()"); $$.grid_mapping = GRID_MAPPING_INTERIORVERTICES; }
+        | BOUNDARY_VERTICES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryVertices()"); $$.grid_mapping = GRID_MAPPING_BOUNDARYVERTICES; }
+        | ALL_VERTICES '(' GRID ')'           { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allVertices()"); $$.grid_mapping = GRID_MAPPING_ALLVERTICES; }
         | VARIABLE                            {
                                                   if(strcmp(getType($1.str), "vertices") != 0)
                                                   {
@@ -663,7 +663,7 @@ vertices: INTERIOR_VERTICES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.
                                                   else
                                                   {
                                                       $$.str = strdup($1.str);
-                                                      $$.size = getSize1($1.str);
+                                                      $$.grid_mapping = getSize1($1.str);
                                                   }
                                               }
 
@@ -672,7 +672,7 @@ vertices: INTERIOR_VERTICES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.
                                                       if(st == "ok")
                                                       {
                                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "(" << $3.str << ")");
-                                                          $$.size = fun[getIndex2($1.str)].returnSize;
+                                                          $$.grid_mapping = fun[getIndex2($1.str)].returnSize;
                                                       }
                                                       else
                                                       {
@@ -700,9 +700,9 @@ edge: VARIABLE             {
     ;
 
 
-edges: INTERIOR_EDGES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorEdges()"); $$.size = SIZE_INTERIOREDGES; }
-     | BOUNDARY_EDGES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryEdges()"); $$.size = SIZE_BOUNDARYEDGES; }
-     | ALL_EDGES '(' GRID ')'           { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allEdges()"); $$.size = SIZE_ALLEDGES; }
+edges: INTERIOR_EDGES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorEdges()"); $$.grid_mapping = GRID_MAPPING_INTERIOREDGES; }
+     | BOUNDARY_EDGES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryEdges()"); $$.grid_mapping = GRID_MAPPING_BOUNDARYEDGES; }
+     | ALL_EDGES '(' GRID ')'           { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allEdges()"); $$.grid_mapping = GRID_MAPPING_ALLEDGES; }
      | VARIABLE                         {
                                             if(strcmp(getType($1.str), "edges") != 0)
                                             {
@@ -711,7 +711,7 @@ edges: INTERIOR_EDGES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "
                                             else
                                             {
                                                 $$.str = strdup($1.str);
-                                                $$.size = getSize1($1.str);
+                                                $$.grid_mapping = getSize1($1.str);
                                             }
                                         }
 
@@ -720,7 +720,7 @@ edges: INTERIOR_EDGES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "
                                                     if(st == "ok")
                                                     {
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "(" << $3.str << ")");
-                                                        $$.size = fun[getIndex2($1.str)].returnSize;
+                                                        $$.grid_mapping = fun[getIndex2($1.str)].returnSize;
                                                     }
                                                     else
                                                     {
@@ -748,9 +748,9 @@ face: VARIABLE                    {
     ;
 
 
-faces: INTERIOR_FACES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorFaces()"); $$.size = SIZE_INTERIORFACES; }
-     | BOUNDARY_FACES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryFaces()"); $$.size = SIZE_BOUNDARYFACES; }
-     | ALL_FACES '(' GRID ')'           { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allFaces()"); $$.size = SIZE_ALLFACES; }
+faces: INTERIOR_FACES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorFaces()"); $$.grid_mapping = GRID_MAPPING_INTERIORFACES; }
+     | BOUNDARY_FACES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryFaces()"); $$.grid_mapping = GRID_MAPPING_BOUNDARYFACES; }
+     | ALL_FACES '(' GRID ')'           { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allFaces()"); $$.grid_mapping = GRID_MAPPING_ALLFACES; }
      | VARIABLE                         {
                                             if(strcmp(getType($1.str), "faces") != 0)
                                             {
@@ -759,7 +759,7 @@ faces: INTERIOR_FACES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "
                                             else
                                             {
                                                 $$.str = strdup($1.str);
-                                                $$.size = getSize1($1.str);
+                                                $$.grid_mapping = getSize1($1.str);
                                             }
                                         }
 
@@ -768,7 +768,7 @@ faces: INTERIOR_FACES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "
                                                       if(st == "ok")
                                                       {
                                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "(" << $3.str << ")");
-                                                          $$.size = fun[getIndex2($1.str)].returnSize;
+                                                          $$.grid_mapping = fun[getIndex2($1.str)].returnSize;
                                                       }
                                                       else
                                                       {
@@ -798,11 +798,11 @@ cell: FIRST_CELL '(' face ')'     { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.fir
     ;
 
 
-cells: INTERIOR_CELLS '(' GRID ')'          { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorCells()"); $$.size = SIZE_INTERIORCELLS; }
-     | BOUNDARY_CELLS '(' GRID ')'          { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryCells()"); $$.size = SIZE_BOUNDARYCELLS;}
-     | ALL_CELLS '(' GRID ')'               { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allCells()"); $$.size = SIZE_ALLCELLS;}
-     | FIRST_CELL '(' faces ')'             { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.firstCell(" << $3.str << ")"); $$.size = $3.size;}
-     | SECOND_CELL '(' faces ')'            { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.secondCell(" << $3.str << ")"); $$.size = $3.size;}
+cells: INTERIOR_CELLS '(' GRID ')'          { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorCells()"); $$.grid_mapping = GRID_MAPPING_INTERIORCELLS; }
+     | BOUNDARY_CELLS '(' GRID ')'          { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryCells()"); $$.grid_mapping = GRID_MAPPING_BOUNDARYCELLS;}
+     | ALL_CELLS '(' GRID ')'               { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allCells()"); $$.grid_mapping = GRID_MAPPING_ALLCELLS;}
+     | FIRST_CELL '(' faces ')'             { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.firstCell(" << $3.str << ")"); $$.grid_mapping = $3.grid_mapping;}
+     | SECOND_CELL '(' faces ')'            { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.secondCell(" << $3.str << ")"); $$.grid_mapping = $3.grid_mapping;}
      | VARIABLE                             {
                                                 if(strcmp(getType($1.str), "cells") != 0)
                                                 {
@@ -811,7 +811,7 @@ cells: INTERIOR_CELLS '(' GRID ')'          { STREAM_TO_DOLLARS_CHAR_ARRAY($$.st
                                                 else
                                                 {
                                                     $$.str = strdup($1.str);
-                                                    $$.size = getSize1($1.str);
+                                                    $$.grid_mapping = getSize1($1.str);
                                                 }
                                             }
 
@@ -820,7 +820,7 @@ cells: INTERIOR_CELLS '(' GRID ')'          { STREAM_TO_DOLLARS_CHAR_ARRAY($$.st
                                                     if(st == "ok")
                                                     {
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "(" << $3.str << ")");
-                                                        $$.size = fun[getIndex2($1.str)].returnSize;
+                                                        $$.grid_mapping = fun[getIndex2($1.str)].returnSize;
                                                     }
                                                     else
                                                     {
@@ -850,8 +850,8 @@ adb: GRADIENT '(' adb ')'         { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.gra
    ;
 
 
-adbs: GRADIENT '(' adbs ')'       { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.gradient(" << $3.str << ")"); $$.size = $3.size; }
-    | DIVERGENCE '(' adbs ')'     { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.divergence(" << $3.str << ")"); $$.size = $3.size;}
+adbs: GRADIENT '(' adbs ')'       { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.gradient(" << $3.str << ")"); $$.grid_mapping = $3.grid_mapping; }
+    | DIVERGENCE '(' adbs ')'     { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.divergence(" << $3.str << ")"); $$.grid_mapping = $3.grid_mapping;}
     | VARIABLE                    {
                                       if(strcmp(getType($1.str), "scalarsAD") != 0)
                                       {
@@ -860,7 +860,7 @@ adbs: GRADIENT '(' adbs ')'       { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.gra
                                       else
                                       {
                                           $$.str = strdup($1.str);
-                                          $$.size = getSize1($1.str);
+                                          $$.grid_mapping = getSize1($1.str);
                                       }
                                   }
 
@@ -869,7 +869,7 @@ adbs: GRADIENT '(' adbs ')'       { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.gra
                                                     if(st == "ok")
                                                     {
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "(" << $3.str << ")");
-                                                        $$.size = fun[getIndex2($1.str)].returnSize;
+                                                        $$.grid_mapping = fun[getIndex2($1.str)].returnSize;
                                                     }
                                                     else
                                                     {
@@ -915,44 +915,44 @@ boolean_term: TRUE                                   { $$.str = strdup("true"); 
             ;
 
 
-boolean_exprs: boolean_terms                           { $$.str = strdup($1.str); $$.size = $1.size; }
-             | NOT boolean_terms                       { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "!" << $2.str); $$.size = $2.size;}
+boolean_exprs: boolean_terms                           { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; }
+             | NOT boolean_terms                       { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "!" << $2.str); $$.grid_mapping = $2.grid_mapping;}
              | boolean_exprs AND boolean_terms
                                                        {
-                                                          if($1.size != $3.size)    // check that the lengths of the 2 terms are equal
+                                                          if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
                                                           {
                                                               LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
                                                           }
                                                           else
                                                           {
                                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " && " << $3.str);
-                                                              $$.size = $1.size;
+                                                              $$.grid_mapping = $1.grid_mapping;
                                                           }
                                                        }
 
              | boolean_exprs OR boolean_terms
                                                        {
-                                                          if($1.size != $3.size)    // check that the lengths of the 2 terms are equal
+                                                          if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
                                                           {
                                                               LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
                                                           }
                                                           else
                                                           {
                                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " || " << $3.str);
-                                                              $$.size = $1.size;
+                                                              $$.grid_mapping = $1.grid_mapping;
                                                           }
                                                        }
 
              | boolean_exprs XOR boolean_terms
                                                        {
-                                                          if($1.size != $3.size)    // check that the lengths of the 2 terms are equal
+                                                          if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
                                                           {
                                                               LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
                                                           }
                                                           else
                                                           {
                                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(!" << $1.str << " && " << $3.str << ") || (!" << $3.str << " && " << $1.str << ")");
-                                                              $$.size = $1.size;
+                                                              $$.grid_mapping = $1.grid_mapping;
                                                           }
                                                        }
              ;
@@ -961,82 +961,82 @@ boolean_exprs: boolean_terms                           { $$.str = strdup($1.str)
 
 boolean_terms: '(' scalars ')' '>' '(' scalars ')'
                                                       {
-                                                          if($2.size != $6.size)    // check that the lengths of the 2 terms are equal
+                                                          if($2.grid_mapping != $6.grid_mapping)    // check that the lengths of the 2 terms are equal
                                                           {
                                                               LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
                                                           }
                                                           else
                                                           {
                                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") > (" << $6.str << ")");
-                                                              $$.size = $2.size;
+                                                              $$.grid_mapping = $2.grid_mapping;
                                                           }
                                                       }
 
              | '(' scalars ')' '<' '(' scalars ')'
                                                       {
-                                                          if($2.size != $6.size)    // check that the lengths of the 2 terms are equal
+                                                          if($2.grid_mapping != $6.grid_mapping)    // check that the lengths of the 2 terms are equal
                                                           {
                                                               LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
                                                           }
                                                           else
                                                           {
                                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") < (" << $6.str << ")");
-                                                              $$.size = $2.size;
+                                                              $$.grid_mapping = $2.grid_mapping;
                                                           }
                                                       }
 
              | '(' scalars ')' LESSEQ '(' scalars ')'
                                                       {
-                                                          if($2.size != $6.size)    // check that the lengths of the 2 terms are equal
+                                                          if($2.grid_mapping != $6.grid_mapping)    // check that the lengths of the 2 terms are equal
                                                           {
                                                               LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
                                                           }
                                                           else
                                                           {
                                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") <= (" << $6.str << ")");
-                                                              $$.size = $2.size;
+                                                              $$.grid_mapping = $2.grid_mapping;
                                                           }
                                                       }
 
              | '(' scalars ')' GREATEREQ '(' scalars ')'
                                                       {
-                                                          if($2.size != $6.size)    // check that the lengths of the 2 terms are equal
+                                                          if($2.grid_mapping != $6.grid_mapping)    // check that the lengths of the 2 terms are equal
                                                           {
                                                               LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
                                                           }
                                                           else
                                                           {
                                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") >= (" << $6.str << ")");
-                                                              $$.size = $2.size;
+                                                              $$.grid_mapping = $2.grid_mapping;
                                                           }
                                                       }
 
              | '(' scalars ')' EQ '(' scalars ')'
                                                       {
-                                                          if($2.size != $6.size)    // check that the lengths of the 2 terms are equal
+                                                          if($2.grid_mapping != $6.grid_mapping)    // check that the lengths of the 2 terms are equal
                                                           {
                                                               LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
                                                           }
                                                           else
                                                           {
                                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") == (" << $6.str << ")");
-                                                              $$.size = $2.size;
+                                                              $$.grid_mapping = $2.grid_mapping;
                                                           }
                                                       }
 
              | '(' scalars ')' NOTEQ '(' scalars ')'
                                                       {
-                                                          if($2.size != $6.size)    // check that the lengths of the 2 terms are equal
+                                                          if($2.grid_mapping != $6.grid_mapping)    // check that the lengths of the 2 terms are equal
                                                           {
                                                               LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
                                                           }
                                                           else
                                                           {
                                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") != (" << $6.str << ")");
-                                                              $$.size = $2.size;
+                                                              $$.grid_mapping = $2.grid_mapping;
                                                           }
                                                       }
-             | '(' boolean_exprs ')'                  { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")"); $$.size = $2.size;}
+             | '(' boolean_exprs ')'                  { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")"); $$.grid_mapping = $2.grid_mapping;}
              | VARIABLE                               {
                                                           if(strcmp(getType($1.str), "bools") != 0)
                                                           {
@@ -1045,7 +1045,7 @@ boolean_terms: '(' scalars ')' '>' '(' scalars ')'
                                                           else
                                                           {
                                                               $$.str = strdup($1.str);
-                                                              $$.size = getSize1($1.str);
+                                                              $$.grid_mapping = getSize1($1.str);
                                                           }
                                                       }
 
@@ -1054,7 +1054,7 @@ boolean_terms: '(' scalars ')' '>' '(' scalars ')'
                                                           if(st == "ok")
                                                           {
                                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "(" << $3.str << ")");
-                                                              $$.size = fun[getIndex2($1.str)].returnSize;
+                                                              $$.grid_mapping = fun[getIndex2($1.str)].returnSize;
                                                           }
                                                           else
                                                           {
@@ -1065,14 +1065,14 @@ boolean_terms: '(' scalars ')' '>' '(' scalars ')'
 
 
 
-plural: scalar_exprs            { $$.str = strdup($1.str); $$.size = $1.size; }
-      | vector_exprs            { $$.str = strdup($1.str); $$.size = $1.size; }
-      | vertices                { $$.str = strdup($1.str); $$.size = $1.size; }
-      | edges                   { $$.str = strdup($1.str); $$.size = $1.size; }
-      | faces                   { $$.str = strdup($1.str); $$.size = $1.size; }
-      | cells                   { $$.str = strdup($1.str); $$.size = $1.size; }
-      | adbs                    { $$.str = strdup($1.str); $$.size = $1.size; }
-      | boolean_exprs           { $$.str = strdup($1.str); $$.size = $1.size; }
+plural: scalar_exprs            { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; }
+      | vector_exprs            { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; }
+      | vertices                { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; }
+      | edges                   { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; }
+      | faces                   { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; }
+      | cells                   { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; }
+      | adbs                    { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; }
+      | boolean_exprs           { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; }
       ;
 
 
@@ -1106,63 +1106,63 @@ commands: command1                              { $$.str = strdup($1.str); }
         ;
 
 
-type: SCALAR                                { $$.str = strdup("Scalar"); $$.size = SIZE_ENTITY; }
-    | VECTOR                                { $$.str = strdup("Vector"); $$.size = SIZE_ENTITY; }
-    | VERTEX                                { $$.str = strdup("Vertex"); $$.size = SIZE_ENTITY; }
-    | EDGE                                  { $$.str = strdup("Edge"); $$.size = SIZE_ENTITY; }
-    | FACE                                  { $$.str = strdup("Face"); $$.size = SIZE_ENTITY; }
-    | CELL                                  { $$.str = strdup("Cell"); $$.size = SIZE_ENTITY; }
-    | ADB                                   { $$.str = strdup("ScalarAD"); $$.size = SIZE_ENTITY; }
-    | BOOLEAN                               { $$.str = strdup("bool"); $$.size = SIZE_ENTITY; }
-    | COLLECTION OF SCALAR                  { $$.str = strdup("CollOfScalars"); $$.size = SIZE_ANY; }
-    | COLLECTION OF VECTOR                  { $$.str = strdup("CollOfVectors"); $$.size = SIZE_ANY; }
-    | COLLECTION OF VERTEX                  { $$.str = strdup("CollOfVertices"); $$.size = SIZE_ANY; }
-    | COLLECTION OF EDGE                    { $$.str = strdup("CollOfEdges"); $$.size = SIZE_ANY; }
-    | COLLECTION OF FACE                    { $$.str = strdup("CollOfFaces"); $$.size = SIZE_ANY; }
-    | COLLECTION OF CELL                    { $$.str = strdup("CollOfCells"); $$.size = SIZE_ANY; }
-    | COLLECTION OF ADB                     { $$.str = strdup("CollOfScalarsAD"); $$.size = SIZE_ANY; }
-    | COLLECTION OF BOOLEAN                 { $$.str = strdup("CollOfBools"); $$.size = SIZE_ANY; }
-    | COLLECTION OF SCALAR ON plural        { $$.str = strdup("CollOfScalars"); $$.size = $5.size; }
-    | COLLECTION OF VECTOR ON plural        { $$.str = strdup("CollOfVectors"); $$.size = $5.size; }
-    | COLLECTION OF VERTEX ON plural        { $$.str = strdup("CollOfVertices"); $$.size = $5.size; }
-    | COLLECTION OF EDGE ON plural          { $$.str = strdup("CollOfEdges"); $$.size = $5.size; }
-    | COLLECTION OF FACE ON plural          { $$.str = strdup("CollOfFaces"); $$.size = $5.size; }
-    | COLLECTION OF CELL ON plural          { $$.str = strdup("CollOfCells"); $$.size = $5.size; }
-    | COLLECTION OF ADB ON plural           { $$.str = strdup("CollOfScalarsAD"); $$.size = $5.size; }
-    | COLLECTION OF BOOLEAN ON plural       { $$.str = strdup("CollOfBools"); $$.size = $5.size; }
+type: SCALAR                                { $$.str = strdup("Scalar"); $$.grid_mapping = GRID_MAPPING_ENTITY; }
+    | VECTOR                                { $$.str = strdup("Vector"); $$.grid_mapping = GRID_MAPPING_ENTITY; }
+    | VERTEX                                { $$.str = strdup("Vertex"); $$.grid_mapping = GRID_MAPPING_ENTITY; }
+    | EDGE                                  { $$.str = strdup("Edge"); $$.grid_mapping = GRID_MAPPING_ENTITY; }
+    | FACE                                  { $$.str = strdup("Face"); $$.grid_mapping = GRID_MAPPING_ENTITY; }
+    | CELL                                  { $$.str = strdup("Cell"); $$.grid_mapping = GRID_MAPPING_ENTITY; }
+    | ADB                                   { $$.str = strdup("ScalarAD"); $$.grid_mapping = GRID_MAPPING_ENTITY; }
+    | BOOLEAN                               { $$.str = strdup("bool"); $$.grid_mapping = GRID_MAPPING_ENTITY; }
+    | COLLECTION OF SCALAR                  { $$.str = strdup("CollOfScalars"); $$.grid_mapping = GRID_MAPPING_ANY; }
+    | COLLECTION OF VECTOR                  { $$.str = strdup("CollOfVectors"); $$.grid_mapping = GRID_MAPPING_ANY; }
+    | COLLECTION OF VERTEX                  { $$.str = strdup("CollOfVertices"); $$.grid_mapping = GRID_MAPPING_ANY; }
+    | COLLECTION OF EDGE                    { $$.str = strdup("CollOfEdges"); $$.grid_mapping = GRID_MAPPING_ANY; }
+    | COLLECTION OF FACE                    { $$.str = strdup("CollOfFaces"); $$.grid_mapping = GRID_MAPPING_ANY; }
+    | COLLECTION OF CELL                    { $$.str = strdup("CollOfCells"); $$.grid_mapping = GRID_MAPPING_ANY; }
+    | COLLECTION OF ADB                     { $$.str = strdup("CollOfScalarsAD"); $$.grid_mapping = GRID_MAPPING_ANY; }
+    | COLLECTION OF BOOLEAN                 { $$.str = strdup("CollOfBools"); $$.grid_mapping = GRID_MAPPING_ANY; }
+    | COLLECTION OF SCALAR ON plural        { $$.str = strdup("CollOfScalars"); $$.grid_mapping = $5.grid_mapping; }
+    | COLLECTION OF VECTOR ON plural        { $$.str = strdup("CollOfVectors"); $$.grid_mapping = $5.grid_mapping; }
+    | COLLECTION OF VERTEX ON plural        { $$.str = strdup("CollOfVertices"); $$.grid_mapping = $5.grid_mapping; }
+    | COLLECTION OF EDGE ON plural          { $$.str = strdup("CollOfEdges"); $$.grid_mapping = $5.grid_mapping; }
+    | COLLECTION OF FACE ON plural          { $$.str = strdup("CollOfFaces"); $$.grid_mapping = $5.grid_mapping; }
+    | COLLECTION OF CELL ON plural          { $$.str = strdup("CollOfCells"); $$.grid_mapping = $5.grid_mapping; }
+    | COLLECTION OF ADB ON plural           { $$.str = strdup("CollOfScalarsAD"); $$.grid_mapping = $5.grid_mapping; }
+    | COLLECTION OF BOOLEAN ON plural       { $$.str = strdup("CollOfBools"); $$.grid_mapping = $5.grid_mapping; }
     ;
 
 
 //////////////////////////////////////////////////////////////////////// these support input parameters as expressions with or without ON (option 1)
 /*
-value: scalar            {$$.str = strdup($1.str); $$.size = 1;}
-     | vector            {$$.str = strdup($1.str); $$.size = 1;}
-     | vertex            {$$.str = strdup($1.str); $$.size = 1;}
-     | edge              {$$.str = strdup($1.str); $$.size = 1;}
-     | face              {$$.str = strdup($1.str); $$.size = 1;}
-     | cell              {$$.str = strdup($1.str); $$.size = 1;}
-     | adb               {$$.str = strdup($1.str); $$.size = 1;}
-     | boolean           {$$.str = strdup($1.str); $$.size = 1;}
-     | scalar_exprs      {$$.str = strdup($1.size); $$.size = $1.size;}
-     | vector_exprs      {$$.str = strdup($1.size); $$.size = $1.size;}
-     | vertices          {$$.str = strdup($1.size); $$.size = $1.size;}
-     | edges             {$$.str = strdup($1.size); $$.size = $1.size;}
-     | faces             {$$.str = strdup($1.size); $$.size = $1.size;}
-     | cells             {$$.str = strdup($1.size); $$.size = $1.size;}
-     | adbs              {$$.str = strdup($1.size); $$.size = $1.size;}
-     | booleans          {$$.str = strdup($1.size); $$.size = $1.size;}
+value: scalar            {$$.str = strdup($1.str); $$.grid_mapping = 1;}
+     | vector            {$$.str = strdup($1.str); $$.grid_mapping = 1;}
+     | vertex            {$$.str = strdup($1.str); $$.grid_mapping = 1;}
+     | edge              {$$.str = strdup($1.str); $$.grid_mapping = 1;}
+     | face              {$$.str = strdup($1.str); $$.grid_mapping = 1;}
+     | cell              {$$.str = strdup($1.str); $$.grid_mapping = 1;}
+     | adb               {$$.str = strdup($1.str); $$.grid_mapping = 1;}
+     | boolean           {$$.str = strdup($1.str); $$.grid_mapping = 1;}
+     | scalar_exprs      {$$.str = strdup($1.grid_mapping); $$.grid_mapping = $1.grid_mapping;}
+     | vector_exprs      {$$.str = strdup($1.grid_mapping); $$.grid_mapping = $1.grid_mapping;}
+     | vertices          {$$.str = strdup($1.grid_mapping); $$.grid_mapping = $1.grid_mapping;}
+     | edges             {$$.str = strdup($1.grid_mapping); $$.grid_mapping = $1.grid_mapping;}
+     | faces             {$$.str = strdup($1.grid_mapping); $$.grid_mapping = $1.grid_mapping;}
+     | cells             {$$.str = strdup($1.grid_mapping); $$.grid_mapping = $1.grid_mapping;}
+     | adbs              {$$.str = strdup($1.grid_mapping); $$.grid_mapping = $1.grid_mapping;}
+     | booleans          {$$.str = strdup($1.grid_mapping); $$.grid_mapping = $1.grid_mapping;}
      ;
 
 
-values: value                   {$$.str = strdup($1.str); itoa($$.sizes, $1.sizes, 100);}
+values: value                   {$$.str = strdup($1.str); itoa($$.grid_mappings, $1.grid_mappings, 100);}
       | values ',' value        {
                                   char *str = append5($1.str,',',$3.str);
                                   $$.str = strdup(str);
                                   free(str);
                                   char *temp = (char *)malloc(1000 * sizeof(char));
-                                  itoa(temp, $3.size, 100);
-                                  char *str2 = append5($1.sizes,',',temp);
-                                  $$.sizes = strdup(str2);
+                                  itoa(temp, $3.grid_mapping, 100);
+                                  char *str2 = append5($1.grid_mappings,',',temp);
+                                  $$.grid_mappings = strdup(str2);
                                   free(str2);
                                 }
       ;
@@ -1214,12 +1214,12 @@ return_instr: RETURN boolean_expr '?' VARIABLE ':' VARIABLE
                     if(check5($4.str) == false || check5($6.str) == false)
                     {
                         $$.str = strdup("Invalid");
-                        $$.size = SIZE_INVALID;   // we force it to generate an error message at the function's assignment
+                        $$.grid_mapping = GRID_MAPPING_INVALID;   // we force it to generate an error message at the function's assignment
                     }
                     else
                     {
                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "return " << $2.str << " ? " << $4.str << " : " << $6.str);
-                        $$.size = getSize3($4.str);
+                        $$.grid_mapping = getSize3($4.str);
                     }
                   }
 
@@ -1228,12 +1228,12 @@ return_instr: RETURN boolean_expr '?' VARIABLE ':' VARIABLE
                     if(check5($2.str) == false)
                     {
                         $$.str = strdup("Invalid");
-                        $$.size = SIZE_INVALID;   // we force it to generate an error message at the function's assignment
+                        $$.grid_mapping = GRID_MAPPING_INVALID;   // we force it to generate an error message at the function's assignment
                     }
                     else
                     {
                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "return " << $2.str << ";");
-                        $$.size = getSize3($2.str);
+                        $$.grid_mapping = getSize3($2.str);
                     }
                   }
             ;
@@ -1268,7 +1268,7 @@ function_declaration: VARIABLE ':' FUNCTION '(' parameter_list ')' RET type
                                                 {
                                                         fun[funNo++].name = strdup($1.str);
                                                         fun[funNo-1].returnType = CPPToEquelle1($8.str);
-                                                        fun[funNo-1].returnSize = $8.size;
+                                                        fun[funNo-1].returnSize = $8.grid_mapping;
                                                         fun[funNo-1].noLocalVariables = 0;
                                                         fun[funNo-1].noParam = 0;
 
@@ -1329,14 +1329,14 @@ function_assignment: function_start end_lines commands end_lines return_instr en
                                                       }
                                                       else
                                                       {
-                                                          if($5.size != SIZE_INVALID)
+                                                          if($5.grid_mapping != GRID_MAPPING_INVALID)
                                                           {
                                                               // STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << $2.str << $3.str << $4.str << $5.str << $6.str << "}");
                                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "auto " << fun[i].name << "[&](" << fun[i].signature << ") -> " << EquelleToCPP(fun[i].returnType) << " {\n" << $2.str << $3.str << $4.str << $5.str << $6.str << "}");
-                                                              if(fun[i].returnSize == SIZE_ANY && $5.size != SIZE_ANY)
-                                                                  fun[i].returnSize = $5.size;
+                                                              if(fun[i].returnSize == GRID_MAPPING_ANY && $5.grid_mapping != GRID_MAPPING_ANY)
+                                                                  fun[i].returnSize = $5.grid_mapping;
                                                               else
-                                                                  if(fun[i].returnSize != SIZE_ANY && $5.size == SIZE_ANY)
+                                                                  if(fun[i].returnSize != GRID_MAPPING_ANY && $5.grid_mapping == GRID_MAPPING_ANY)
                                                                       {;}   // do nothing (the function must keep its return size from the definition)
                                                                   else
                                                                       {;}   // if both are ANY, the function's return type is already correct; if none are ANY, then they should already be equal, otherwise the instruction flow wouldn't enter on this branch
@@ -1410,14 +1410,14 @@ plural_declaration: VARIABLE ':' COLLECTION OF SCALAR       { string out = plura
                   ;
 
 
-extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON plural      { char *st = strdup($7.str); string out = extended_plural_declaration_function($1.str, "scalars", st, $7.size); $$.str = strdup(out.c_str()); }
-                           | VARIABLE ':' COLLECTION OF VECTOR ON plural      { char *st = strdup($7.str); string out = extended_plural_declaration_function($1.str, "vectors", st, $7.size); $$.str = strdup(out.c_str()); }
-                           | VARIABLE ':' COLLECTION OF VERTEX ON plural      { char *st = strdup($7.str); string out = extended_plural_declaration_function($1.str, "vertices", st, $7.size); $$.str = strdup(out.c_str()); }
-                           | VARIABLE ':' COLLECTION OF EDGE ON plural        { char *st = strdup($7.str); string out = extended_plural_declaration_function($1.str, "edges", st, $7.size); $$.str = strdup(out.c_str()); }
-                           | VARIABLE ':' COLLECTION OF FACE ON plural        { char *st = strdup($7.str); string out = extended_plural_declaration_function($1.str, "faces", st, $7.size); $$.str = strdup(out.c_str()); }
-                           | VARIABLE ':' COLLECTION OF CELL ON plural        { char *st = strdup($7.str); string out = extended_plural_declaration_function($1.str, "cells", st, $7.size); $$.str = strdup(out.c_str()); }
-                           | VARIABLE ':' COLLECTION OF ADB ON plural         { char *st = strdup($7.str); string out = extended_plural_declaration_function($1.str, "scalarsAD", st, $7.size); $$.str = strdup(out.c_str()); }
-                           | VARIABLE ':' COLLECTION OF BOOLEAN ON plural     { char *st = strdup($7.str); string out = extended_plural_declaration_function($1.str, "bools", st, $7.size); $$.str = strdup(out.c_str()); }
+extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON plural      { char *st = strdup($7.str); string out = extended_plural_declaration_function($1.str, "scalars", st, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                           | VARIABLE ':' COLLECTION OF VECTOR ON plural      { char *st = strdup($7.str); string out = extended_plural_declaration_function($1.str, "vectors", st, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                           | VARIABLE ':' COLLECTION OF VERTEX ON plural      { char *st = strdup($7.str); string out = extended_plural_declaration_function($1.str, "vertices", st, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                           | VARIABLE ':' COLLECTION OF EDGE ON plural        { char *st = strdup($7.str); string out = extended_plural_declaration_function($1.str, "edges", st, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                           | VARIABLE ':' COLLECTION OF FACE ON plural        { char *st = strdup($7.str); string out = extended_plural_declaration_function($1.str, "faces", st, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                           | VARIABLE ':' COLLECTION OF CELL ON plural        { char *st = strdup($7.str); string out = extended_plural_declaration_function($1.str, "cells", st, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                           | VARIABLE ':' COLLECTION OF ADB ON plural         { char *st = strdup($7.str); string out = extended_plural_declaration_function($1.str, "scalarsAD", st, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                           | VARIABLE ':' COLLECTION OF BOOLEAN ON plural     { char *st = strdup($7.str); string out = extended_plural_declaration_function($1.str, "bools", st, $7.grid_mapping); $$.str = strdup(out.c_str()); }
                            ;
 
 
@@ -1427,23 +1427,23 @@ declaration: singular_declaration           { char* out = strdup($1.str); $$.str
            ;
 
 
-expression: scalar_expr       { $$.str = strdup($1.str); $$.size = $1.size; $$.array_size = $1.array_size; $$.type = TYPE_SCALAR; $$.collection = false; }
-          | vector_expr       { $$.str = strdup($1.str); $$.size = $1.size; $$.array_size = $1.array_size; $$.type = TYPE_VECTOR; $$.collection = false; }
-          | vertex            { $$.str = strdup($1.str); $$.size = $1.size; $$.array_size = $1.array_size; $$.type = TYPE_VERTEX; $$.collection = false; }
-          | edge              { $$.str = strdup($1.str); $$.size = $1.size; $$.array_size = $1.array_size; $$.type = TYPE_EDGE; $$.collection = false; }
-          | face              { $$.str = strdup($1.str); $$.size = $1.size; $$.array_size = $1.array_size; $$.type = TYPE_FACE; $$.collection = false; }
-          | cell              { $$.str = strdup($1.str); $$.size = $1.size; $$.array_size = $1.array_size; $$.type = TYPE_CELL; $$.collection = false; }
-          | boolean_expr      { $$.str = strdup($1.str); $$.size = $1.size; $$.array_size = $1.array_size; $$.type = TYPE_BOOLEAN; $$.collection = false; }
+expression: scalar_expr       { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type = TYPE_SCALAR; $$.collection = false; }
+          | vector_expr       { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type = TYPE_VECTOR; $$.collection = false; }
+          | vertex            { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type = TYPE_VERTEX; $$.collection = false; }
+          | edge              { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type = TYPE_EDGE; $$.collection = false; }
+          | face              { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type = TYPE_FACE; $$.collection = false; }
+          | cell              { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type = TYPE_CELL; $$.collection = false; }
+          | boolean_expr      { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type = TYPE_BOOLEAN; $$.collection = false; }
           ;
 
 
-expressions: scalar_exprs     { $$.str = strdup($1.str); $$.size = $1.size; $$.array_size = $1.array_size; $$.type = TYPE_SCALAR; $$.collection = true; }
-           | vector_exprs     { $$.str = strdup($1.str); $$.size = $1.size; $$.array_size = $1.array_size; $$.type = TYPE_VECTOR; $$.collection = true; }
-           | vertices         { $$.str = strdup($1.str); $$.size = $1.size; $$.array_size = $1.array_size; $$.type = TYPE_VERTEX; $$.collection = true; }
-           | edges            { $$.str = strdup($1.str); $$.size = $1.size; $$.array_size = $1.array_size; $$.type = TYPE_EDGE; $$.collection = true; }
-           | faces            { $$.str = strdup($1.str); $$.size = $1.size; $$.array_size = $1.array_size; $$.type = TYPE_FACE; $$.collection = true; }
-           | cells            { $$.str = strdup($1.str); $$.size = $1.size; $$.array_size = $1.array_size; $$.type = TYPE_CELL; $$.collection = true; }
-           | boolean_exprs    { $$.str = strdup($1.str); $$.size = $1.size; $$.array_size = $1.array_size; $$.type = TYPE_BOOLEAN; $$.collection = true; }
+expressions: scalar_exprs     { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type = TYPE_SCALAR; $$.collection = true; }
+           | vector_exprs     { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type = TYPE_VECTOR; $$.collection = true; }
+           | vertices         { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type = TYPE_VERTEX; $$.collection = true; }
+           | edges            { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type = TYPE_EDGE; $$.collection = true; }
+           | faces            { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type = TYPE_FACE; $$.collection = true; }
+           | cells            { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type = TYPE_CELL; $$.collection = true; }
+           | boolean_exprs    { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type = TYPE_BOOLEAN; $$.collection = true; }
            ;
 
 
@@ -1453,8 +1453,8 @@ singular_assignment: VARIABLE '=' USS                      { string out = USS_as
                    ;
 
 
-plural_assignment: VARIABLE '=' USCOS '(' plural ')'      { string out = USCOS_assignment_function($1.str, $5.str, $5.size); $$.str = strdup(out.c_str()); }
-                 | VARIABLE '=' expressions               { string str2 = getVariableTypeString1($3.type, true); string str1 = getVariableTypeString2($3.type, true); string out = plural_assignment_function($1.str, strdup(str1.c_str()), $3.str, strdup(str2.c_str()), $3.size); $$.str = strdup(out.c_str()); }
+plural_assignment: VARIABLE '=' USCOS '(' plural ')'      { string out = USCOS_assignment_function($1.str, $5.str, $5.grid_mapping); $$.str = strdup(out.c_str()); }
+                 | VARIABLE '=' expressions               { string str2 = getVariableTypeString1($3.type, true); string str1 = getVariableTypeString2($3.type, true); string out = plural_assignment_function($1.str, strdup(str1.c_str()), $3.str, strdup(str2.c_str()), $3.grid_mapping); $$.str = strdup(out.c_str()); }
                  ;
 
 
@@ -1480,27 +1480,27 @@ singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' scalar_expr       
                                     ;
 
 
-plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' scalar_exprs          { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1.str, "scalars", st, "CollOfScalars", $7.size); $$.str = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF VECTOR '=' vector_exprs          { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1.str, "vectors", st, "CollOfVectors", $7.size); $$.str = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF VERTEX '=' vertices              { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1.str, "vertices", st, "CollOfVertices", $7.size); $$.str = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF EDGE '=' edges                   { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1.str, "edges", st, "CollOfEdges", $7.size); $$.str = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF FACE '=' faces                   { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1.str, "faces", st, "CollOfFaces", $7.size); $$.str = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF CELL '=' cells                   { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1.str, "cells", st, "CollOfCells", $7.size); $$.str = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF ADB '=' adbs                     { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1.str, "scalarsAD", st, "CollOfScalarsAD", $7.size); $$.str = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF BOOLEAN '=' boolean_exprs        { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1.str, "bools", st, "CollOfBools", $7.size); $$.str = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF SCALAR '=' USCOS '(' plural ')'  { string out = USCOS_declaration_with_assignment_function($1.str, $9.str, $9.size); $$.str = strdup(out.c_str()); }
+plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' scalar_exprs          { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1.str, "scalars", st, "CollOfScalars", $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF VECTOR '=' vector_exprs          { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1.str, "vectors", st, "CollOfVectors", $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF VERTEX '=' vertices              { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1.str, "vertices", st, "CollOfVertices", $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF EDGE '=' edges                   { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1.str, "edges", st, "CollOfEdges", $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF FACE '=' faces                   { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1.str, "faces", st, "CollOfFaces", $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF CELL '=' cells                   { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1.str, "cells", st, "CollOfCells", $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF ADB '=' adbs                     { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1.str, "scalarsAD", st, "CollOfScalarsAD", $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF BOOLEAN '=' boolean_exprs        { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1.str, "bools", st, "CollOfBools", $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF SCALAR '=' USCOS '(' plural ')'  { string out = USCOS_declaration_with_assignment_function($1.str, $9.str, $9.grid_mapping); $$.str = strdup(out.c_str()); }
                                   ;
 
 
-extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR ON plural '=' scalar_exprs          { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1.str, "scalars", st1, "CollOfScalars", st2, $9.size, $7.size); $$.str = strdup(out.c_str()); }
-                                           | VARIABLE ':' COLLECTION OF VECTOR ON plural '=' vector_exprs          { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1.str, "vectors", st1, "CollOfVectors", st2, $9.size, $7.size); $$.str = strdup(out.c_str()); }
-                                           | VARIABLE ':' COLLECTION OF VERTEX ON plural '=' vertices              { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1.str, "vertices", st1, "CollOfVertices", st2, $9.size, $7.size); $$.str = strdup(out.c_str()); }
-                                           | VARIABLE ':' COLLECTION OF EDGE ON plural '=' edges                   { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1.str, "edges", st1, "CollOfEdges", st2, $9.size, $7.size); $$.str = strdup(out.c_str()); }
-                                           | VARIABLE ':' COLLECTION OF FACE ON plural '=' faces                   { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1.str, "faces", st1, "CollOfFaces", st2, $9.size, $7.size); $$.str = strdup(out.c_str()); }
-                                           | VARIABLE ':' COLLECTION OF CELL ON plural '=' cells                   { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1.str, "cells", st1, "CollOfCells", st2, $9.size, $7.size); $$.str = strdup(out.c_str()); }
-                                           | VARIABLE ':' COLLECTION OF ADB ON plural '=' adbs                     { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1.str, "scalarsAD", st1, "CollOfScalarsAD", st2, $9.size, $7.size); $$.str = strdup(out.c_str()); }
-                                           | VARIABLE ':' COLLECTION OF BOOLEAN ON plural '=' boolean_exprs        { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1.str, "bools", st1, "CollOfBools", st2, $9.size, $7.size); $$.str = strdup(out.c_str()); }
-                                           | VARIABLE ':' COLLECTION OF SCALAR ON plural '=' USCOS '(' plural ')'  { string out = USCOS_extended_declaration_with_assignment_function($1.str, $11.str, $7.str, $11.size, $7.size); $$.str = strdup(out.c_str()); }
+extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR ON plural '=' scalar_exprs          { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1.str, "scalars", st1, "CollOfScalars", st2, $9.grid_mapping, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF VECTOR ON plural '=' vector_exprs          { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1.str, "vectors", st1, "CollOfVectors", st2, $9.grid_mapping, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF VERTEX ON plural '=' vertices              { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1.str, "vertices", st1, "CollOfVertices", st2, $9.grid_mapping, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF EDGE ON plural '=' edges                   { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1.str, "edges", st1, "CollOfEdges", st2, $9.grid_mapping, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF FACE ON plural '=' faces                   { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1.str, "faces", st1, "CollOfFaces", st2, $9.grid_mapping, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF CELL ON plural '=' cells                   { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1.str, "cells", st1, "CollOfCells", st2, $9.grid_mapping, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF ADB ON plural '=' adbs                     { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1.str, "scalarsAD", st1, "CollOfScalarsAD", st2, $9.grid_mapping, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF BOOLEAN ON plural '=' boolean_exprs        { char *st1 = strdup($9.str); char *st2 = strdup($7.str); string out = extended_plural_declaration_with_assignment_function($1.str, "bools", st1, "CollOfBools", st2, $9.grid_mapping, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF SCALAR ON plural '=' USCOS '(' plural ')'  { string out = USCOS_extended_declaration_with_assignment_function($1.str, $11.str, $7.str, $11.grid_mapping, $7.grid_mapping); $$.str = strdup(out.c_str()); }
                                            ;
 
 
@@ -1985,7 +1985,7 @@ bool check5(char* s1)
   }
   if(found == true)
   {
-    if(strcmp(fun[currentFunctionIndex].headerVariables[i].type.c_str(), fun[currentFunctionIndex].returnType.c_str()) != 0 || (fun[currentFunctionIndex].headerVariables[i].length != fun[currentFunctionIndex].returnSize && fun[currentFunctionIndex].returnSize != SIZE_ANY && fun[currentFunctionIndex].headerVariables[i].length != SIZE_ANY))
+    if(strcmp(fun[currentFunctionIndex].headerVariables[i].type.c_str(), fun[currentFunctionIndex].returnType.c_str()) != 0 || (fun[currentFunctionIndex].headerVariables[i].length != fun[currentFunctionIndex].returnSize && fun[currentFunctionIndex].returnSize != GRID_MAPPING_ANY && fun[currentFunctionIndex].headerVariables[i].length != GRID_MAPPING_ANY))
     {
        HEAP_CHECK();
        return false;
@@ -2002,7 +2002,7 @@ bool check5(char* s1)
     }
   if(found == true)
   {
-    if(strcmp(fun[currentFunctionIndex].localVariables[i].type.c_str(), fun[currentFunctionIndex].returnType.c_str()) != 0 || (fun[currentFunctionIndex].localVariables[i].length != fun[currentFunctionIndex].returnSize && fun[currentFunctionIndex].returnSize != SIZE_ANY && fun[currentFunctionIndex].localVariables[i].length != SIZE_ANY))
+    if(strcmp(fun[currentFunctionIndex].localVariables[i].type.c_str(), fun[currentFunctionIndex].returnType.c_str()) != 0 || (fun[currentFunctionIndex].localVariables[i].length != fun[currentFunctionIndex].returnSize && fun[currentFunctionIndex].returnSize != GRID_MAPPING_ANY && fun[currentFunctionIndex].localVariables[i].length != GRID_MAPPING_ANY))
     {
       HEAP_CHECK();
       return false;
@@ -2216,7 +2216,7 @@ int getIndex2(char* s1)
 
 
 // function which returns the size of a variable, based on its name
-CollectionSize getSize1(char* s1)
+GridMapping getSize1(char* s1)
 {
   HEAP_CHECK();
   int i;
@@ -2229,12 +2229,12 @@ CollectionSize getSize1(char* s1)
       }
   }
   HEAP_CHECK();
-  return SIZE_INVALID;
+  return GRID_MAPPING_INVALID;
 }
 
 
 // function which returns the return size of a function, based on its name
-CollectionSize getSize2(char* s1)
+GridMapping getSize2(char* s1)
 {
   HEAP_CHECK();
   int i;
@@ -2247,12 +2247,12 @@ CollectionSize getSize2(char* s1)
       }
   }
   HEAP_CHECK();
-  return SIZE_INVALID;
+  return GRID_MAPPING_INVALID;
 }
 
 
 // function which returns the size of a header/local variable inside the current function, based on its name
-CollectionSize getSize3(char* s1)
+GridMapping getSize3(char* s1)
 {
   HEAP_CHECK();
   int i;
@@ -2273,7 +2273,7 @@ CollectionSize getSize3(char* s1)
       }
   }
   HEAP_CHECK();
-  return SIZE_INVALID;
+  return GRID_MAPPING_INVALID;
 }
 
 
@@ -2386,69 +2386,69 @@ string CPPToEquelle1(char* st)
 
 
 // function which returns the corresponding size of a C++ type
-CollectionSize CPPToEquelle2(char* st)
+GridMapping CPPToEquelle2(char* st)
 {
     if(strcmp(st, "Scalar") == 0) {
-      return SIZE_ENTITY;
+      return GRID_MAPPING_ENTITY;
     }
 
     if(strcmp(st, "Vector") == 0) {
-      return SIZE_ENTITY;
+      return GRID_MAPPING_ENTITY;
     }
 
     if(strcmp(st, "Vertex") == 0) {
-      return SIZE_ENTITY;
+      return GRID_MAPPING_ENTITY;
     }
 
     if(strcmp(st, "Edge") == 0) {
-      return SIZE_ENTITY;
+      return GRID_MAPPING_ENTITY;
     }
 
     if(strcmp(st, "Face") == 0) {
-      return SIZE_ENTITY;
+      return GRID_MAPPING_ENTITY;
     }
 
     if(strcmp(st, "Cell") == 0) {
-      return SIZE_ENTITY;
+      return GRID_MAPPING_ENTITY;
     }
 
     if(strcmp(st, "ScalarAD") == 0) {
-      return SIZE_ENTITY;
+      return GRID_MAPPING_ENTITY;
     }
 
     if(strcmp(st, "bool") == 0) {
-      return SIZE_ENTITY;
+      return GRID_MAPPING_ENTITY;
     }
 
     if(strcmp(st, "CollOfScalars") == 0) {
-      return SIZE_ANY;
+      return GRID_MAPPING_ANY;
     }
 
     if(strcmp(st, "CollOfVectors") == 0) {
-      return SIZE_ANY;
+      return GRID_MAPPING_ANY;
     }
 
     if(strcmp(st, "CollOfVertices") == 0) {
-      return SIZE_ANY;
+      return GRID_MAPPING_ANY;
     }
 
     if(strcmp(st, "CollOfEdges") == 0) {
-      return SIZE_ANY;
+      return GRID_MAPPING_ANY;
     }
 
     if(strcmp(st, "CollOfCells") == 0) {
-      return SIZE_ANY;
+      return GRID_MAPPING_ANY;
     }
 
     if(strcmp(st, "CollOfScalarsAD") == 0) {
-      return SIZE_ANY;
+      return GRID_MAPPING_ANY;
     }
 
     if(strcmp(st, "CollOfBools") == 0) {
-      return SIZE_ANY;
+      return GRID_MAPPING_ANY;
     }
 
-    return SIZE_INVALID;
+    return GRID_MAPPING_INVALID;
 }
 
 
@@ -2687,7 +2687,7 @@ string singular_declaration_function(char* st1, char* st2)
               {
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
-                    fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = SIZE_ENTITY;
+                    fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = GRID_MAPPING_ENTITY;
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = false;
               }
         }
@@ -2714,7 +2714,7 @@ string singular_declaration_function(char* st1, char* st2)
         {
             var[varNo++].name = st1;
             var[varNo-1].type = st2;
-            var[varNo-1].length = SIZE_ENTITY;
+            var[varNo-1].length = GRID_MAPPING_ENTITY;
             var[varNo-1].assigned = false;
         }
     }
@@ -2765,7 +2765,7 @@ string plural_declaration_function(char* st1, char* st2)
               {
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
-                    fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = SIZE_ANY;
+                    fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = GRID_MAPPING_ANY;
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = false;
               }
         }
@@ -2792,7 +2792,7 @@ string plural_declaration_function(char* st1, char* st2)
         {
               var[varNo++].name = st1;
               var[varNo-1].type = st2;
-              var[varNo-1].length = SIZE_ANY;
+              var[varNo-1].length = GRID_MAPPING_ANY;
               var[varNo-1].assigned = false;
         }
     }
@@ -2802,7 +2802,7 @@ string plural_declaration_function(char* st1, char* st2)
 }
 
 
-string extended_plural_declaration_function(char* st1, char* st2, char* st3, CollectionSize d1)
+string extended_plural_declaration_function(char* st1, char* st2, char* st3, GridMapping d1)
 {
     HEAP_CHECK();
     string finalString;
@@ -3088,7 +3088,7 @@ string singular_assignment_function(char* st1, char* st2, char* st3, char* st4)
                                           finalString = ss.str();
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
-                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = SIZE_ENTITY;
+                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = GRID_MAPPING_ENTITY;
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
                                       }
                                   }
@@ -3235,7 +3235,7 @@ string singular_assignment_function(char* st1, char* st2, char* st3, char* st4)
                                     finalString = ss.str();
                                     var[varNo++].name = st1;
                                     var[varNo-1].type = st2;
-                                    var[varNo-1].length = SIZE_ENTITY;
+                                    var[varNo-1].length = GRID_MAPPING_ENTITY;
                                     var[varNo-1].assigned = true;
                                 }
                             }
@@ -3251,7 +3251,7 @@ string singular_assignment_function(char* st1, char* st2, char* st3, char* st4)
 }
 
 
-string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, CollectionSize d1)
+string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, GridMapping d1)
 {
     HEAP_CHECK();
     string finalString;
@@ -3340,7 +3340,7 @@ string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, Co
                                             else
                                             {
                                                 if(getSize3(st1) != d1)
-                                                    if(getSize3(st1) == SIZE_ANY)
+                                                    if(getSize3(st1) == GRID_MAPPING_ANY)
                                                     {
                                                         fun[currentFunctionIndex].localVariables[i].length = d1;
                                                         fun[currentFunctionIndex].localVariables[i].assigned = true;
@@ -3504,7 +3504,7 @@ string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, Co
                                         else
                                         {
                                             if(getSize1(st1) != d1)
-                                                if(getSize1(st1) == SIZE_ANY)
+                                                if(getSize1(st1) == GRID_MAPPING_ANY)
                                                 {
                                                     var[i].length = d1;
                                                     var[i].assigned = true;
@@ -3696,7 +3696,7 @@ string singular_declaration_with_assignment_function(char* st1, char* st2, char*
                                               finalString = ss.str();
                                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
                                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
-                                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = SIZE_ENTITY;
+                                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = GRID_MAPPING_ENTITY;
                                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
                                           }
                                     }
@@ -3780,7 +3780,7 @@ string singular_declaration_with_assignment_function(char* st1, char* st2, char*
                                     finalString = ss.str();
                                     var[varNo++].name = st1;
                                     var[varNo-1].type = st2;
-                                    var[varNo-1].length = SIZE_ENTITY;
+                                    var[varNo-1].length = GRID_MAPPING_ENTITY;
                                     var[varNo-1].assigned = true;
                                 }
                             }
@@ -3796,7 +3796,7 @@ string singular_declaration_with_assignment_function(char* st1, char* st2, char*
 }
 
 
-string plural_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4, CollectionSize d1)
+string plural_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4, GridMapping d1)
 {
     HEAP_CHECK();
     string finalString;
@@ -3988,7 +3988,7 @@ string plural_declaration_with_assignment_function(char* st1, char* st2, char* s
 }
 
 
-string extended_plural_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4, char* st5, CollectionSize d1, CollectionSize d2)
+string extended_plural_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4, char* st5, GridMapping d1, GridMapping d2)
 {
     HEAP_CHECK();
     string finalString;
@@ -4303,7 +4303,7 @@ string USS_assignment_function(char* st1)
             finalString = ss.str();
             var[varNo++].name = st1;
             var[varNo-1].type = "scalar";
-            var[varNo-1].length = SIZE_ENTITY;
+            var[varNo-1].length = GRID_MAPPING_ENTITY;
             var[varNo-1].assigned = true;
         }
     }
@@ -4348,7 +4348,7 @@ string USS_declaration_with_assignment_function(char* st1)
             finalString = ss.str();
             var[varNo++].name = st1;
             var[varNo-1].type = "scalar";
-            var[varNo-1].length = SIZE_ENTITY;
+            var[varNo-1].length = GRID_MAPPING_ENTITY;
             var[varNo-1].assigned = true;
         }
     }
@@ -4411,7 +4411,7 @@ string USSWD_assignment_function(char* st1, char* st2)
             finalString = ss.str();
             var[varNo++].name = st1;
             var[varNo-1].type = "scalar";
-            var[varNo-1].length = SIZE_ENTITY;
+            var[varNo-1].length = GRID_MAPPING_ENTITY;
             var[varNo-1].assigned = true;
         }
     }
@@ -4456,7 +4456,7 @@ string USSWD_declaration_with_assignment_function(char* st1, char* st2)
             finalString = ss.str();
             var[varNo++].name = st1;
             var[varNo-1].type = "scalar";
-            var[varNo-1].length = SIZE_ENTITY;
+            var[varNo-1].length = GRID_MAPPING_ENTITY;
             var[varNo-1].assigned = true;
         }
     }
@@ -4466,7 +4466,7 @@ string USSWD_declaration_with_assignment_function(char* st1, char* st2)
 }
 
 
-string USCOS_assignment_function(char* st1, char* st2, CollectionSize d1)
+string USCOS_assignment_function(char* st1, char* st2, GridMapping d1)
 {
     HEAP_CHECK();
     string finalString;
@@ -4546,7 +4546,7 @@ string USCOS_assignment_function(char* st1, char* st2, CollectionSize d1)
                                         else
                                         {
                                             if(getSize1(st1) != d1)
-                                                if(getSize1(st1) == SIZE_ANY)
+                                                if(getSize1(st1) == GRID_MAPPING_ANY)
                                                 {
                                                     var[i].length = d1;
                                                     var[i].assigned = true;
@@ -4646,7 +4646,7 @@ string USCOS_assignment_function(char* st1, char* st2, CollectionSize d1)
 }
 
 
-string USCOS_declaration_with_assignment_function(char* st1, char* st2, CollectionSize d1)
+string USCOS_declaration_with_assignment_function(char* st1, char* st2, GridMapping d1)
 {
     HEAP_CHECK();
     string finalString;
@@ -4745,7 +4745,7 @@ string USCOS_declaration_with_assignment_function(char* st1, char* st2, Collecti
 }
 
 
-string USCOS_extended_declaration_with_assignment_function(char* st1, char* st2, char* st3, CollectionSize d1, CollectionSize d2)
+string USCOS_extended_declaration_with_assignment_function(char* st1, char* st2, char* st3, GridMapping d1, GridMapping d2)
 {
     HEAP_CHECK();
     string finalString;
