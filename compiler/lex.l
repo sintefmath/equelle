@@ -89,12 +89,12 @@ using namespace std;
 
 
 
-"0"                 {yylval.str = strdup(yytext); return INTEGER;}
-[1-9][0-9]*         {yylval.str = strdup(yytext); return INTEGER;}
-[a-z][a-zA-Z0-9_]*  {yylval.str = strdup(yytext); return VARIABLE;}
+"0"                 {yylval.inf.str = strdup(yytext); return INTEGER;}
+[1-9][0-9]*         {yylval.inf.str = strdup(yytext); return INTEGER;}
+[a-z][a-zA-Z0-9_]*  {yylval.inf.str = strdup(yytext); return VARIABLE;}
 
 
-[#][^\n]*           {yylval.str = strdup(yytext); return COMMENT;}
+[#][^\n]*           {yylval.inf.str = strdup(yytext); return COMMENT;}
 [ \t]
 .                   printf("Character %c is unknown\n", yytext[0]);
 
