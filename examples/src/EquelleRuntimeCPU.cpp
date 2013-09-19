@@ -327,7 +327,7 @@ CollOfScalars EquelleRuntimeCPU::solveForUpdate(const CollOfScalarsAD& residual)
                            matr.outerIndexPtr(), matr.innerIndexPtr(), matr.valuePtr(),
                            residual.value().data(), du.data());
     if (!rep.converged) {
-        THROW("Linear solver convergence failure.");
+        OPM_THROW(std::runtime_error, "Linear solver convergence failure.");
     }
     return du;
 }
@@ -392,13 +392,13 @@ CollOfScalars EquelleRuntimeCPU::getUserSpecifiedCollectionOfScalar(const Opm::p
         const std::string filename = param.get<std::string>(name + "_filename");
         std::ifstream is(filename.c_str());
         if (!is) {
-            THROW("Could not find file " << filename);
+            OPM_THROW(std::runtime_error, "Could not find file " << filename);
         }
         std::istream_iterator<double> beg(is);
         std::istream_iterator<double> end;
         std::vector<double> data(beg, end);
         if (int(data.size()) != size) {
-            THROW("Unexpected size of input data for " << name << " in file " << filename);
+            OPM_THROW(std::runtime_error, "Unexpected size of input data for " << name << " in file " << filename);
         }
         return CollOfScalars(Eigen::Map<CollOfScalars>(&data[0], size));
     } else {
@@ -415,7 +415,7 @@ CollOfFaces EquelleRuntimeCPU::getUserSpecifiedCollectionOfFaceSubsetOf(const Op
     const std::string filename = param.get<std::string>(name + "_filename");
     std::ifstream is(filename.c_str());
     if (!is) {
-        THROW("Could not find file " << filename);
+        OPM_THROW(std::runtime_error, "Could not find file " << filename);
     }
     std::istream_iterator<int> beg(is);
     std::istream_iterator<int> end;
@@ -424,10 +424,10 @@ CollOfFaces EquelleRuntimeCPU::getUserSpecifiedCollectionOfFaceSubsetOf(const Op
         data.push_back(Face(*it));
     }
     if (!is_sorted(data.begin(), data.end())) {
-        THROW("Input set of faces was not sorted in ascending order.");
+        OPM_THROW(std::runtime_error, "Input set of faces was not sorted in ascending order.");
     }
     if (!includes(face_superset.begin(), face_superset.end(), data.begin(), data.end())) {
-        THROW("Given faces are not in the assumed subset.");
+        OPM_THROW(std::runtime_error, "Given faces are not in the assumed subset.");
     }
     return data;
 }
