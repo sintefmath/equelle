@@ -149,14 +149,23 @@
 	struct info
 	{
 		//Why does this not work?: info() : size(GRID_MAPPING_INVALID), array_size(-1), str(NULL), type(TYPE_INVALID), collection(false) {}
-    char* str;            // The string which is to be outputted in the C++ file
+        char* str;            // The string which is to be outputted in the C++ file
 		GridMapping grid_mapping;  // This defines the mapping of the variable (one value per face, cell, interior face, etc.)
 		int array_size;       // The number of elements in a vector / array
 		VariableType type;    // The type of the variable
 		bool collection;      // Is this variable a collection of types or not?
+		//char* error;	      // The error string to give to a user. (test if (error != NULL) std::cout << error << std::endl;
+		//unsigned int error_code;
 	};
 
-
+	/*
+	char[][] error_msgs = {
+		"you forgot something",
+		"Types do not match",
+		..
+	}
+	std::cout << "Error message " << inf.error_code << error_msgs[inf.error_code] << std::endl;
+	*/
 
 
 
@@ -232,7 +241,7 @@
 	string singular_declaration_function(char* st1, char* st2);
 	string plural_declaration_function(char* st1, char* st2);
 	string extended_plural_declaration_function(char* st1, char* st2, char* st3, GridMapping d1);
-	string singular_assignment_function(char* st1, char* st2, char* st3, char* st4);
+	string singular_assignment_function(char* variable_name, const info& right_hand_side);
 	string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, GridMapping d1);
 	string singular_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4);
 	string plural_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4, GridMapping d1);
@@ -245,8 +254,8 @@
 	string USCOS_declaration_with_assignment_function(char* st1, char* st2, GridMapping d1);
 	string USCOS_extended_declaration_with_assignment_function(char* st1, char* st2, char* st3, GridMapping d1, GridMapping d2);
 	string output_function(char* st1);
-	string getVariableTypeString1(VariableType v, bool collection);
-  string getVariableTypeString2(VariableType v, bool collection);
+	string getVariableTypeString(VariableType v, bool collection);
+    void clone_info(info& output, const info& input);
 } //Code provides
 
 
@@ -348,16 +357,28 @@ int currentLineNumber = 1;
 %%
 
 
-floating_point: INTEGER '.' INTEGER          { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "." << $3.str); $$.grid_mapping = GRID_MAPPING_ENTITY; $$.array_size = 1; $$.type = TYPE_SCALAR; $$.collection = false; }
-              ;
+floating_point: INTEGER '.' INTEGER
+{ 
+		STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "." << $3.str); 
+		$$.grid_mapping = GRID_MAPPING_ENTITY; 
+		$$.array_size = 1; 
+		$$.type = TYPE_SCALAR; 
+		$$.collection = false; 
+};
 
 
-number: INTEGER                              { $$.str = strdup($1.str); $$.grid_mapping = GRID_MAPPING_ENTITY; $$.array_size = 1; $$.type = TYPE_SCALAR; $$.collection = false; }
-      | floating_point                       { $$.str = strdup($1.str); $$.grid_mapping = GRID_MAPPING_ENTITY; $$.array_size = 1; $$.type = TYPE_SCALAR; $$.collection = false; }
+number: INTEGER { 
+					$$.str = strdup($1.str); 
+					$$.grid_mapping = GRID_MAPPING_ENTITY; 
+					$$.array_size = 1; 
+					$$.type = TYPE_SCALAR; 
+					$$.collection = false; 
+				}
+      | floating_point                       { clone_info($$, $1); }
       ;
 
 
-scalar_expr: scalar_term                     { $$.str = strdup($1.str); $$.grid_mapping = GRID_MAPPING_ENTITY; $$.array_size = 1; $$.type = TYPE_SCALAR; $$.collection = false; }
+scalar_expr: scalar_term                     { clone_info($$, $1); }
            | '-' scalar_term                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str); }
            | scalar_expr '+' scalar_term     { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str); }
            | scalar_expr '-' scalar_term     { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str); }
@@ -370,6 +391,7 @@ scalar_term: scalar_factor                           { $$.str = strdup($1.str); 
            | scalar_term '/' scalar_factor           { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " / " << $3.str); }
            | scalar_term '^' scalar_factor           { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.pow(" << $1.str << ", " << $3.str << ")"); }
            ;
+
 
 
 scalar_factor: number                                  { $$.str = strdup($1.str); }
@@ -387,6 +409,32 @@ scalar_factor: number                                  { $$.str = strdup($1.str)
              | GRADIENT '(' scalar_expr ')'            { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.gradient(" << $3.str << ")"); }
              | DIVERGENCE '(' scalar_expr ')'          { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.divergence(" << $3.str << ")"); }
              | VARIABLE                                {
+															switch($1.type) {
+															case TYPE_SCALAR:
+																$$.str = strdup("FIXME: TYPE_SCALAR");
+																break;
+															case TYPE_VERTEX:
+																$$.str = strdup("FIXME: TYPE_VERTEX");
+																break;
+															case TYPE_EDGE:
+																$$.str = strdup("FIXME: TYPE_EDGE");
+																break;
+															case TYPE_FACE:
+																$$.str = strdup("FIXME: FACE");
+																break;
+															case TYPE_CELL:
+																$$.str = strdup("FIXME: CELL");
+																break;
+															case TYPE_BOOLEAN:
+																$$.str = strdup("FIXME: TYPE_BOOLEAN");
+																break;
+															case TYPE_INVALID:
+																$$.str = strdup("FIXME: TYPE_INVALID");
+																break;
+															default:
+																$$.str = strdup("FIXME: TYPE_UNKNOWN");
+															}
+				 /*
                                                           if(strcmp(getType($1.str), "scalar") != 0)
                                                           {
                                                               WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$.str, $1.str);
@@ -395,6 +443,7 @@ scalar_factor: number                                  { $$.str = strdup($1.str)
                                                           {
                                                               $$.str = strdup($1.str);
                                                           }
+														  */
                                                        }
 
              | VARIABLE '(' values ')'                 {
@@ -1449,12 +1498,26 @@ expressions: scalar_exprs     { $$.str = strdup($1.str); $$.grid_mapping = $1.gr
 
 singular_assignment: VARIABLE '=' USS                      { string out = USS_assignment_function($1.str); $$.str = strdup(out.c_str()); }
                    | VARIABLE '=' USSWD '(' number ')'     { string out = USSWD_assignment_function($1.str, $5.str); $$.str = strdup(out.c_str()); }
-                   | VARIABLE '=' expression               { string str2 = getVariableTypeString1($3.type, false); string str1 = getVariableTypeString2($3.type, false); string out = singular_assignment_function($1.str, strdup(str1.c_str()), $3.str, strdup(str2.c_str())); $$.str = strdup(out.c_str()); }
+                   | VARIABLE '=' expression               
+					   { 
+						   string out = singular_assignment_function($1.str, $3); 
+						   $$.str = strdup(out.c_str()); 
+					   }
                    ;
 
 
 plural_assignment: VARIABLE '=' USCOS '(' plural ')'      { string out = USCOS_assignment_function($1.str, $5.str, $5.grid_mapping); $$.str = strdup(out.c_str()); }
-                 | VARIABLE '=' expressions               { string str2 = getVariableTypeString1($3.type, true); string str1 = getVariableTypeString2($3.type, true); string out = plural_assignment_function($1.str, strdup(str1.c_str()), $3.str, strdup(str2.c_str()), $3.grid_mapping); $$.str = strdup(out.c_str()); }
+                 | VARIABLE '=' expressions               
+					{ 
+						$$.str = strdup("FIXME: Not implemented");
+						/*
+						FIXME: This needs to be fixed as for singular assignment
+						string str2 = getVariableTypeString1($3.type, true); 
+						string str1 = getVariableTypeString2($3.type, true); 
+						string out = plural_assignment_function($1.str, strdup(str1.c_str()), $3.str, strdup(str2.c_str()), $3.grid_mapping); 
+						$$.str = strdup(out.c_str()); 
+						*/
+				    }
                  ;
 
 
@@ -2933,8 +2996,10 @@ string extended_plural_declaration_function(char* st1, char* st2, char* st3, Gri
     return finalString;
 }
 
-
-string singular_assignment_function(char* st1, char* st2, char* st3, char* st4)
+/**
+  * @param rhs Right hand side of the assignment (a = b+c => rhs is essentially "b+c")
+  */
+string singular_assignment_function(char* variable_name, const info& rhs)
 {
     HEAP_CHECK();
     string finalString;
@@ -2944,7 +3009,7 @@ string singular_assignment_function(char* st1, char* st2, char* st3, char* st4)
         bool taken = false;
 
         for(i = 0; i < fun[currentFunctionIndex].noParam; i++)
-            if(strcmp(fun[currentFunctionIndex].headerVariables[i].name.c_str(), st1) == 0)
+            if(strcmp(fun[currentFunctionIndex].headerVariables[i].name.c_str(), variable_name) == 0)
             {
                 taken = true;
                 break;
@@ -2953,13 +3018,13 @@ string singular_assignment_function(char* st1, char* st2, char* st3, char* st4)
         if(taken == true)
         {
             stringstream ss;
-            ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' from the header of the function '" << fun[currentFunctionIndex].name << "' cannot be assigned";
+			ss << "error at line " << currentLineNumber << ": The " << getVariableTypeString(rhs.type, rhs.collection) << " variable '" << variable_name << "' from the header of the function '" << fun[currentFunctionIndex].name << "' cannot be assigned";
             finalString = ss.str();
         }
         else
         {
               for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
-                if(strcmp(fun[currentFunctionIndex].localVariables[i].name.c_str(), st1) == 0)
+                if(strcmp(fun[currentFunctionIndex].localVariables[i].name.c_str(), variable_name) == 0)
                 {
                     taken = true;
                     break;
@@ -2969,20 +3034,20 @@ string singular_assignment_function(char* st1, char* st2, char* st3, char* st4)
                   if(fun[currentFunctionIndex].localVariables[i].assigned == true)
                   {
                       stringstream ss;
-                      ss << "error at line " << currentLineNumber << ": The local " << st2 << " variable '" << st1 << "' is reassigned in the function '" << fun[currentFunctionIndex].name << "'";
+                      ss << "error at line " << currentLineNumber << ": The local " << getVariableTypeString(rhs.type, rhs.collection) << " variable '" << variable_name << "' is reassigned in the function '" << fun[currentFunctionIndex].name << "'";
                       finalString = ss.str();
                   }
                   else
                   {
-                      if(check9(st3) != "isOk")
+                      if(check9(rhs.str) != "isOk")
                       {
                           stringstream ss;
-                          ss << "error at line " << currentLineNumber << ": " << check9(st3);
+                          ss << "error at line " << currentLineNumber << ": " << check9(rhs.str);
                           finalString = ss.str();
                       }
                       else
                       {
-                          if(check6(st3) == true)
+                          if(check6(rhs.str) == true)
                           {
                               stringstream ss;
                               ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -2990,41 +3055,41 @@ string singular_assignment_function(char* st1, char* st2, char* st3, char* st4)
                           }
                           else
                           {
-                              if(find1(st3, st1))
+                              if(find1(rhs.str, variable_name))
                               {
                                   stringstream ss;
-                                  ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
+                                  ss << "error at line " << currentLineNumber << ": The " << getVariableTypeString(rhs.type, rhs.collection) << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
                                   finalString = ss.str();
                               }
                               else
                               {
-                                  if(check3(st3) == false)
+                                  if(check3(rhs.str) == false)
                                   {
                                       stringstream ss;
-                                      ss << "error at line " << currentLineNumber << ": The variable '" << find5(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
+                                      ss << "error at line " << currentLineNumber << ": The variable '" << find5(rhs.str) << "' contained in the definition of the " << getVariableTypeString(rhs.type, rhs.collection) << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
                                       finalString = ss.str();
                                   }
                                   else
                                   {
-                                      if(check4(st3) == false)
+                                      if(check4(rhs.str) == false)
                                       {
                                           stringstream ss;
-                                          ss << "error at line " << currentLineNumber << ": The variable '" << find6(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
+                                          ss << "error at line " << currentLineNumber << ": The variable '" << find6(rhs.str) << "' contained in the definition of the " << getVariableTypeString(rhs.type, rhs.collection) << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
                                           finalString = ss.str();
                                       }
                                       else
                                       {
-                                          if(check7(st3) == true)
+                                          if(check7(rhs.str) == true)
                                           {
                                               stringstream ss;
-                                              ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the " << st2 << " variable '" << st1 << "'";
+                                              ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment rhs.str of the " << getVariableTypeString(rhs.type, rhs.collection) << " variable '" << variable_name << "'";
                                               finalString = ss.str();
                                           }
                                           else
                                           {
                                               fun[currentFunctionIndex].localVariables[i].assigned = true;
                                               stringstream ss;
-                                              ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
+                                              ss << "const " << getVariableTypeString(rhs.type, rhs.collection)  << " " << variable_name << " = " << rhs.str << ";";
                                               finalString = ss.str();
                                           }
                                       }
@@ -3035,15 +3100,15 @@ string singular_assignment_function(char* st1, char* st2, char* st3, char* st4)
                   }
               else
               {   // deduced declaration
-                  if(check9(st3) != "isOk")
+                  if(check9(rhs.str) != "isOk")
                   {
                       stringstream ss;
-                      ss << "error at line " << currentLineNumber << ": " << check9(st3);
+                      ss << "error at line " << currentLineNumber << ": " << check9(rhs.str);
                       finalString = ss.str();
                   }
                   else
                   {
-                      if(check6(st3) == true)
+                      if(check6(rhs.str) == true)
                       {
                           stringstream ss;
                           ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -3051,43 +3116,43 @@ string singular_assignment_function(char* st1, char* st2, char* st3, char* st4)
                       }
                       else
                       {
-                          if(find1(st3, st1))
+                          if(find1(rhs.str, variable_name))
                           {
                               stringstream ss;
-                              ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
+                              ss << "error at line " << currentLineNumber << ": The " << getVariableTypeString(rhs.type, rhs.collection)  << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
                               finalString = ss.str();
                           }
                           else
                           {
-                              if(check3(st3) == false)
+                              if(check3(rhs.str) == false)
                               {
                                   stringstream ss;
-                                  ss << "error at line " << currentLineNumber << ": The variable '" << find5(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
+                                  ss << "error at line " << currentLineNumber << ": The variable '" << find5(rhs.str) << "' contained in the definition of the " << getVariableTypeString(rhs.type, rhs.collection)  << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
                                   finalString = ss.str();
                               }
                               else
                               {
-                                  if(check4(st3) == false)
+                                  if(check4(rhs.str) == false)
                                   {
                                       stringstream ss;
-                                      ss << "error at line " << currentLineNumber << ": The variable '" << find6(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
+                                      ss << "error at line " << currentLineNumber << ": The variable '" << find6(rhs.str) << "' contained in the definition of the " << getVariableTypeString(rhs.type, rhs.collection)  << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
                                       finalString = ss.str();
                                   }
                                   else
                                   {
-                                      if(check7(st3) == true)
+                                      if(check7(rhs.str) == true)
                                       {
                                           stringstream ss;
-                                          ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the " << st2 << " variable '" << st1 << "'";
+                                          ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment rhs.str of the " << getVariableTypeString(rhs.type, rhs.collection)  << " variable '" << variable_name << "'";
                                           finalString = ss.str();
                                       }
                                       else
                                       {
                                           stringstream ss;
-                                          ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
+                                          ss << "const " << getVariableTypeString(rhs.type, rhs.collection)  << " " << variable_name << " = " << rhs.str << ";";
                                           finalString = ss.str();
-                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
-                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
+                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = variable_name;
+                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = getVariableTypeString(rhs.type, rhs.collection) ;
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = GRID_MAPPING_ENTITY;
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
                                       }
@@ -3105,7 +3170,7 @@ string singular_assignment_function(char* st1, char* st2, char* st3, char* st4)
         bool declaredBefore = false;
 
         for(i = 0; i < varNo; i++)
-            if(strcmp(var[i].name.c_str(), st1) == 0)
+            if(strcmp(var[i].name.c_str(), variable_name) == 0)
             {
                 declaredBefore = true;
                 break;
@@ -3115,20 +3180,20 @@ string singular_assignment_function(char* st1, char* st2, char* st3, char* st4)
               if(var[i].assigned == true)
               {
                   stringstream ss;
-                  ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is reassigned";
+                  ss << "error at line " << currentLineNumber << ": The " << getVariableTypeString(rhs.type, rhs.collection)  << " variable '" << variable_name << "' is reassigned";
                   finalString = ss.str();
               }
               else
               {
-                    if(check9(st3) != "isOk")
+                    if(check9(rhs.str) != "isOk")
                     {
                         stringstream ss;
-                        ss << "error at line " << currentLineNumber << ": " << check9(st3);
+                        ss << "error at line " << currentLineNumber << ": " << check9(rhs.str);
                         finalString = ss.str();
                     }
                     else
                     {
-                        if(check6(st3) == true)
+                        if(check6(rhs.str) == true)
                         {
                             stringstream ss;
                             ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -3136,41 +3201,41 @@ string singular_assignment_function(char* st1, char* st2, char* st3, char* st4)
                         }
                         else
                         {
-                            if(find1(st3, st1))
+                            if(find1(rhs.str, variable_name))
                             {
                                 stringstream ss;
-                                ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is included in its definition";
+                                ss << "error at line " << currentLineNumber << ": The " << getVariableTypeString(rhs.type, rhs.collection)  << " variable '" << variable_name << "' is included in its definition";
                                 finalString = ss.str();
                             }
                             else
                             {
-                                if(check1(st3) == false)
+                                if(check1(rhs.str) == false)
                                 {
                                     stringstream ss;
-                                    ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
+                                    ss << "error at line " << currentLineNumber << ": The variable '" << find2(rhs.str) << "' contained in the definition of the " << getVariableTypeString(rhs.type, rhs.collection)  << " variable '" << variable_name << "' is undeclared";
                                     finalString = ss.str();
                                 }
                                 else
                                 {
-                                    if(check2(st3) == false)
+                                    if(check2(rhs.str) == false)
                                     {
                                         stringstream ss;
-                                        ss << "error at line " << currentLineNumber << ": The variable '" << find3(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is unassigned";
+                                        ss << "error at line " << currentLineNumber << ": The variable '" << find3(rhs.str) << "' contained in the definition of the " << getVariableTypeString(rhs.type, rhs.collection)  << " variable '" << variable_name << "' is unassigned";
                                         finalString = ss.str();
                                     }
                                     else
                                     {
-                                        if(check7(st3) == true)
+                                        if(check7(rhs.str) == true)
                                         {
                                             stringstream ss;
-                                            ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the " << st2 << " variable '" << st1 << "'";
+                                            ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment rhs.str of the " << getVariableTypeString(rhs.type, rhs.collection)  << " variable '" << variable_name << "'";
                                             finalString = ss.str();
                                         }
                                         else
                                         {
                                             var[i].assigned = true;
                                             stringstream ss;
-                                            ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
+                                            ss << "const " << getVariableTypeString(rhs.type, rhs.collection)  << " " << variable_name << " = " << rhs.str << ";";
                                             finalString = ss.str();
                                         }
                                     }
@@ -3182,15 +3247,15 @@ string singular_assignment_function(char* st1, char* st2, char* st3, char* st4)
         else
         {
             // deduced declaration
-            if(check9(st3) != "isOk")
+            if(check9(rhs.str) != "isOk")
             {
                 stringstream ss;
-                ss << "error at line " << currentLineNumber << ": " << check9(st3);
+                ss << "error at line " << currentLineNumber << ": " << check9(rhs.str);
                 finalString = ss.str();
             }
             else
             {
-                if(check6(st3) == true)
+                if(check6(rhs.str) == true)
                 {
                     stringstream ss;
                     ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -3198,43 +3263,43 @@ string singular_assignment_function(char* st1, char* st2, char* st3, char* st4)
                 }
                 else
                 {
-                    if(find1(st3, st1))
+                    if(find1(rhs.str, variable_name))
                     {
                         stringstream ss;
-                        ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is included in its definition";
+                        ss << "error at line " << currentLineNumber << ": The " << getVariableTypeString(rhs.type, rhs.collection)  << " variable '" << variable_name << "' is included in its definition";
                         finalString = ss.str();
                     }
                     else
                     {
-                        if(check1(st3) == false)
+                        if(check1(rhs.str) == false)
                         {
                             stringstream ss;
-                            ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
+                            ss << "error at line " << currentLineNumber << ": The variable '" << find2(rhs.str) << "' contained in the definition of the " << getVariableTypeString(rhs.type, rhs.collection)  << " variable '" << variable_name << "' is undeclared";
                             finalString = ss.str();
                         }
                         else
                         {
-                            if(check2(st3) == false)
+                            if(check2(rhs.str) == false)
                             {
                                 stringstream ss;
-                                ss << "error at line " << currentLineNumber << ": The variable '" << find3(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is unassigned";
+                                ss << "error at line " << currentLineNumber << ": The variable '" << find3(rhs.str) << "' contained in the definition of the " << getVariableTypeString(rhs.type, rhs.collection)  << " variable '" << variable_name << "' is unassigned";
                                 finalString = ss.str();
                             }
                             else
                             {
-                                if(check7(st3) == true)
+                                if(check7(rhs.str) == true)
                                 {
                                     stringstream ss;
-                                    ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the " << st2 << " variable '" << st1 << "'";
+                                    ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment rhs.str of the " << getVariableTypeString(rhs.type, rhs.collection)  << " variable '" << variable_name << "'";
                                     finalString = ss.str();
                                 }
                                 else
                                 {
                                     stringstream ss;
-                                    ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
+                                    ss << "const " << getVariableTypeString(rhs.type, rhs.collection)  << " " << variable_name << " = " << rhs.str << ";";
                                     finalString = ss.str();
-                                    var[varNo++].name = st1;
-                                    var[varNo-1].type = st2;
+                                    var[varNo++].name = variable_name;
+                                    var[varNo-1].type = getVariableTypeString(rhs.type, rhs.collection) ;
                                     var[varNo-1].grid_mapping = GRID_MAPPING_ENTITY;
                                     var[varNo-1].assigned = true;
                                 }
@@ -4921,7 +4986,7 @@ string output_function(char* st1)
 }
 
 
-string getVariableTypeString1(VariableType v, bool collection)
+string getVariableTypeString(VariableType v, bool collection)
 {
 	std::stringstream ss;
 
@@ -4958,38 +5023,15 @@ string getVariableTypeString1(VariableType v, bool collection)
 }
 
 
-string getVariableTypeString2(VariableType v, bool collection)
-{
-  std::stringstream ss;
+void clone_info(info& output, const info& input) {
+	if (output.str != NULL) {
+		free(output.str);
+	}
 
-  switch(v) {
-    case TYPE_SCALAR:
-      ss << ((collection) ? "scalars" : "scalar");
-      break;
-    case TYPE_VECTOR:
-      ss << ((collection) ? "vectors" : "vector");
-      break;
-    case TYPE_VERTEX:
-      ss << ((collection) ? "vertices" : "vertex");
-      break;
-    case TYPE_EDGE:
-      ss << ((collection) ? "edges" : "edge");
-      break;
-    case TYPE_FACE:
-      ss << ((collection) ? "faces" : "face");
-      break;
-    case TYPE_CELL:
-      ss << ((collection) ? "cells" : "cell");
-      break;
-    case TYPE_BOOLEAN:
-      ss << ((collection) ? "bools" : "bool");
-      break;
-    case TYPE_INVALID:
-      ss << ((collection) ? "CollOfInvalidTypes" : "InvalidType");
-      break;
-    default:
-      ss << ((collection) ? "CollOfUnknownTypes" : "UnknownType");
-  }
-
-  return ss.str();
+	output.str = strdup(input.str);
+	output.grid_mapping = input.grid_mapping;
+	output.array_size = input.array_size;
+	output.type = input.type;
+	output.collection = input.collection;
 }
+
