@@ -167,7 +167,7 @@
 	{
 	  string name;           // must begin with a small letter
 	  string type;           // can be: scalar, vector, vertex, scalars etc.
-	  GridMapping length; // if the type is a singular type, then the length is 1; otherwise it can be any other number >= 1
+	  GridMapping grid_mapping; // if the type is a singular type, then the length is 1; otherwise it can be any other number >= 1
 	  bool assigned;         // we want to know if a variable has been assigned, in order to prevent errors (example: operations with unassigned variables)
 	};
 
@@ -177,7 +177,7 @@
 	{
 	  string name;                                      // g1
 	  string returnType;                                // Collection Of Scalars
-	  GridMapping returnSize;                        // GRID_MAPPING_ALLCELLS
+	  GridMapping grid_mapping;                        // GRID_MAPPING_ALLCELLS
 	  string paramList;                                 // (Cell, Face, CollOfVectors, CollOfScalars On AllFaces(Grid))
 	  VariableStructureForCPP headerVariables[100];     // (c1, f1, pv1, ps1)
 	  int noParam;                                      // 4
@@ -521,7 +521,7 @@ scalar_factors: EUCLIDEAN_LENGTH '(' vector_exprs ')'           { STREAM_TO_DOLL
                                                                     if(st == "ok")
                                                                     {
                                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "(" << $3.str << ")");
-                                                                        $$.grid_mapping = fun[getIndex2($1.str)].returnSize;
+                                                                        $$.grid_mapping = fun[getIndex2($1.str)].grid_mapping;
                                                                     }
                                                                     else
                                                                     {
@@ -624,7 +624,7 @@ vector_terms: '[' vectors ']'                        { STREAM_TO_DOLLARS_CHAR_AR
                                                           if(st == "ok")
                                                           {
                                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "(" << $3.str << ")");
-                                                              $$.grid_mapping = fun[getIndex2($1.str)].returnSize;
+                                                              $$.grid_mapping = fun[getIndex2($1.str)].grid_mapping;
                                                           }
                                                           else
                                                           {
@@ -672,7 +672,7 @@ vertices: INTERIOR_VERTICES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.
                                                       if(st == "ok")
                                                       {
                                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "(" << $3.str << ")");
-                                                          $$.grid_mapping = fun[getIndex2($1.str)].returnSize;
+                                                          $$.grid_mapping = fun[getIndex2($1.str)].grid_mapping;
                                                       }
                                                       else
                                                       {
@@ -720,7 +720,7 @@ edges: INTERIOR_EDGES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "
                                                     if(st == "ok")
                                                     {
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "(" << $3.str << ")");
-                                                        $$.grid_mapping = fun[getIndex2($1.str)].returnSize;
+                                                        $$.grid_mapping = fun[getIndex2($1.str)].grid_mapping;
                                                     }
                                                     else
                                                     {
@@ -768,7 +768,7 @@ faces: INTERIOR_FACES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "
                                                       if(st == "ok")
                                                       {
                                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "(" << $3.str << ")");
-                                                          $$.grid_mapping = fun[getIndex2($1.str)].returnSize;
+                                                          $$.grid_mapping = fun[getIndex2($1.str)].grid_mapping;
                                                       }
                                                       else
                                                       {
@@ -820,7 +820,7 @@ cells: INTERIOR_CELLS '(' GRID ')'          { STREAM_TO_DOLLARS_CHAR_ARRAY($$.st
                                                     if(st == "ok")
                                                     {
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "(" << $3.str << ")");
-                                                        $$.grid_mapping = fun[getIndex2($1.str)].returnSize;
+                                                        $$.grid_mapping = fun[getIndex2($1.str)].grid_mapping;
                                                     }
                                                     else
                                                     {
@@ -869,7 +869,7 @@ adbs: GRADIENT '(' adbs ')'       { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.gra
                                                     if(st == "ok")
                                                     {
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "(" << $3.str << ")");
-                                                        $$.grid_mapping = fun[getIndex2($1.str)].returnSize;
+                                                        $$.grid_mapping = fun[getIndex2($1.str)].grid_mapping;
                                                     }
                                                     else
                                                     {
@@ -1054,7 +1054,7 @@ boolean_terms: '(' scalars ')' '>' '(' scalars ')'
                                                           if(st == "ok")
                                                           {
                                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "(" << $3.str << ")");
-                                                              $$.grid_mapping = fun[getIndex2($1.str)].returnSize;
+                                                              $$.grid_mapping = fun[getIndex2($1.str)].grid_mapping;
                                                           }
                                                           else
                                                           {
@@ -1268,7 +1268,7 @@ function_declaration: VARIABLE ':' FUNCTION '(' parameter_list ')' RET type
                                                 {
                                                         fun[funNo++].name = strdup($1.str);
                                                         fun[funNo-1].returnType = CPPToEquelle1($8.str);
-                                                        fun[funNo-1].returnSize = $8.grid_mapping;
+                                                        fun[funNo-1].grid_mapping = $8.grid_mapping;
                                                         fun[funNo-1].noLocalVariables = 0;
                                                         fun[funNo-1].noParam = 0;
 
@@ -1292,7 +1292,7 @@ function_declaration: VARIABLE ':' FUNCTION '(' parameter_list ')' RET type
 
                                                           fun[funNo-1].headerVariables[fun[funNo-1].noParam++].name = strdup(pch2);
                                                           fun[funNo-1].headerVariables[fun[funNo-1].noParam-1].type = CPPToEquelle1(copy);    // the string we have as a parameter list is already transformed in C++, but we need the types' keywords from Equelle
-                                                          fun[funNo-1].headerVariables[fun[funNo-1].noParam-1].length = CPPToEquelle2(copy);  // the string we have as a parameter list is already transformed in C++, but we need the types' lengths
+                                                          fun[funNo-1].headerVariables[fun[funNo-1].noParam-1].grid_mapping = CPPToEquelle2(copy);  // the string we have as a parameter list is already transformed in C++, but we need the types' lengths
                                                           fun[funNo-1].headerVariables[fun[funNo-1].noParam-1].assigned = true;
                                                           fun[funNo-1].signature = strdup($5.str);
 
@@ -1333,10 +1333,10 @@ function_assignment: function_start end_lines commands end_lines return_instr en
                                                           {
                                                               // STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << $2.str << $3.str << $4.str << $5.str << $6.str << "}");
                                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "auto " << fun[i].name << "[&](" << fun[i].signature << ") -> " << EquelleToCPP(fun[i].returnType) << " {\n" << $2.str << $3.str << $4.str << $5.str << $6.str << "}");
-                                                              if(fun[i].returnSize == GRID_MAPPING_ANY && $5.grid_mapping != GRID_MAPPING_ANY)
-                                                                  fun[i].returnSize = $5.grid_mapping;
+                                                              if(fun[i].grid_mapping == GRID_MAPPING_ANY && $5.grid_mapping != GRID_MAPPING_ANY)
+                                                                  fun[i].grid_mapping = $5.grid_mapping;
                                                               else
-                                                                  if(fun[i].returnSize != GRID_MAPPING_ANY && $5.grid_mapping == GRID_MAPPING_ANY)
+                                                                  if(fun[i].grid_mapping != GRID_MAPPING_ANY && $5.grid_mapping == GRID_MAPPING_ANY)
                                                                       {;}   // do nothing (the function must keep its return size from the definition)
                                                                   else
                                                                       {;}   // if both are ANY, the function's return type is already correct; if none are ANY, then they should already be equal, otherwise the instruction flow wouldn't enter on this branch
@@ -1985,7 +1985,7 @@ bool check5(char* s1)
   }
   if(found == true)
   {
-    if(strcmp(fun[currentFunctionIndex].headerVariables[i].type.c_str(), fun[currentFunctionIndex].returnType.c_str()) != 0 || (fun[currentFunctionIndex].headerVariables[i].length != fun[currentFunctionIndex].returnSize && fun[currentFunctionIndex].returnSize != GRID_MAPPING_ANY && fun[currentFunctionIndex].headerVariables[i].length != GRID_MAPPING_ANY))
+    if(strcmp(fun[currentFunctionIndex].headerVariables[i].type.c_str(), fun[currentFunctionIndex].returnType.c_str()) != 0 || (fun[currentFunctionIndex].headerVariables[i].grid_mapping != fun[currentFunctionIndex].grid_mapping && fun[currentFunctionIndex].grid_mapping != GRID_MAPPING_ANY && fun[currentFunctionIndex].headerVariables[i].grid_mapping != GRID_MAPPING_ANY))
     {
        HEAP_CHECK();
        return false;
@@ -2002,7 +2002,7 @@ bool check5(char* s1)
     }
   if(found == true)
   {
-    if(strcmp(fun[currentFunctionIndex].localVariables[i].type.c_str(), fun[currentFunctionIndex].returnType.c_str()) != 0 || (fun[currentFunctionIndex].localVariables[i].length != fun[currentFunctionIndex].returnSize && fun[currentFunctionIndex].returnSize != GRID_MAPPING_ANY && fun[currentFunctionIndex].localVariables[i].length != GRID_MAPPING_ANY))
+    if(strcmp(fun[currentFunctionIndex].localVariables[i].type.c_str(), fun[currentFunctionIndex].returnType.c_str()) != 0 || (fun[currentFunctionIndex].localVariables[i].grid_mapping != fun[currentFunctionIndex].grid_mapping && fun[currentFunctionIndex].grid_mapping != GRID_MAPPING_ANY && fun[currentFunctionIndex].localVariables[i].grid_mapping != GRID_MAPPING_ANY))
     {
       HEAP_CHECK();
       return false;
@@ -2225,7 +2225,7 @@ GridMapping getSize1(char* s1)
       if(strcmp(s1, var[i].name.c_str()) == 0)
       {
         HEAP_CHECK();
-        return var[i].length;
+        return var[i].grid_mapping;
       }
   }
   HEAP_CHECK();
@@ -2243,7 +2243,7 @@ GridMapping getSize2(char* s1)
       if(strcmp(s1, fun[i].name.c_str()) == 0)
       {
         HEAP_CHECK();
-        return fun[i].returnSize;
+        return fun[i].grid_mapping;
       }
   }
   HEAP_CHECK();
@@ -2261,7 +2261,7 @@ GridMapping getSize3(char* s1)
       if(strcmp(s1, fun[currentFunctionIndex].headerVariables[i].name.c_str()) == 0)
       {
         HEAP_CHECK();
-        return fun[currentFunctionIndex].headerVariables[i].length;
+        return fun[currentFunctionIndex].headerVariables[i].grid_mapping;
       }
   }
   for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
@@ -2269,7 +2269,7 @@ GridMapping getSize3(char* s1)
       if(strcmp(s1, fun[currentFunctionIndex].localVariables[i].name.c_str()) == 0)
       {
         HEAP_CHECK();
-        return fun[currentFunctionIndex].localVariables[i].length;
+        return fun[currentFunctionIndex].localVariables[i].grid_mapping;
       }
   }
   HEAP_CHECK();
@@ -2687,7 +2687,7 @@ string singular_declaration_function(char* st1, char* st2)
               {
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
-                    fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = GRID_MAPPING_ENTITY;
+                    fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = GRID_MAPPING_ENTITY;
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = false;
               }
         }
@@ -2714,7 +2714,7 @@ string singular_declaration_function(char* st1, char* st2)
         {
             var[varNo++].name = st1;
             var[varNo-1].type = st2;
-            var[varNo-1].length = GRID_MAPPING_ENTITY;
+            var[varNo-1].grid_mapping = GRID_MAPPING_ENTITY;
             var[varNo-1].assigned = false;
         }
     }
@@ -2765,7 +2765,7 @@ string plural_declaration_function(char* st1, char* st2)
               {
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
-                    fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = GRID_MAPPING_ANY;
+                    fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = GRID_MAPPING_ANY;
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = false;
               }
         }
@@ -2792,7 +2792,7 @@ string plural_declaration_function(char* st1, char* st2)
         {
               var[varNo++].name = st1;
               var[varNo-1].type = st2;
-              var[varNo-1].length = GRID_MAPPING_ANY;
+              var[varNo-1].grid_mapping = GRID_MAPPING_ANY;
               var[varNo-1].assigned = false;
         }
     }
@@ -2867,7 +2867,7 @@ string extended_plural_declaration_function(char* st1, char* st2, char* st3, Gri
                           {
                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
-                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = d1;
+                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = d1;
                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = false;
                           }
                       }
@@ -2921,7 +2921,7 @@ string extended_plural_declaration_function(char* st1, char* st2, char* st3, Gri
                       {
                           var[varNo++].name = st1;
                           var[varNo-1].type = st2;
-                          var[varNo-1].length = d1;
+                          var[varNo-1].grid_mapping = d1;
                           var[varNo-1].assigned = false;
                       }
                   }
@@ -3088,7 +3088,7 @@ string singular_assignment_function(char* st1, char* st2, char* st3, char* st4)
                                           finalString = ss.str();
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
-                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = GRID_MAPPING_ENTITY;
+                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = GRID_MAPPING_ENTITY;
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
                                       }
                                   }
@@ -3235,7 +3235,7 @@ string singular_assignment_function(char* st1, char* st2, char* st3, char* st4)
                                     finalString = ss.str();
                                     var[varNo++].name = st1;
                                     var[varNo-1].type = st2;
-                                    var[varNo-1].length = GRID_MAPPING_ENTITY;
+                                    var[varNo-1].grid_mapping = GRID_MAPPING_ENTITY;
                                     var[varNo-1].assigned = true;
                                 }
                             }
@@ -3342,7 +3342,7 @@ string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, Gr
                                                 if(getSize3(st1) != d1)
                                                     if(getSize3(st1) == GRID_MAPPING_ANY)
                                                     {
-                                                        fun[currentFunctionIndex].localVariables[i].length = d1;
+                                                        fun[currentFunctionIndex].localVariables[i].grid_mapping = d1;
                                                         fun[currentFunctionIndex].localVariables[i].assigned = true;
                                                         stringstream ss;
                                                         ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
@@ -3423,7 +3423,7 @@ string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, Gr
                                           finalString = ss.str();
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
-                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = d1;
+                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = d1;
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
                                       }
                                   }
@@ -3506,7 +3506,7 @@ string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, Gr
                                             if(getSize1(st1) != d1)
                                                 if(getSize1(st1) == GRID_MAPPING_ANY)
                                                 {
-                                                    var[i].length = d1;
+                                                    var[i].grid_mapping = d1;
                                                     var[i].assigned = true;
                                                     stringstream ss;
                                                     ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
@@ -3588,7 +3588,7 @@ string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, Gr
                                     finalString = ss.str();
                                     var[varNo++].name = st1;
                                     var[varNo-1].type = st2;
-                                    var[varNo-1].length = d1;
+                                    var[varNo-1].grid_mapping = d1;
                                     var[varNo-1].assigned = true;
                                 }
                             }
@@ -3696,7 +3696,7 @@ string singular_declaration_with_assignment_function(char* st1, char* st2, char*
                                               finalString = ss.str();
                                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
                                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
-                                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = GRID_MAPPING_ENTITY;
+                                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = GRID_MAPPING_ENTITY;
                                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
                                           }
                                     }
@@ -3780,7 +3780,7 @@ string singular_declaration_with_assignment_function(char* st1, char* st2, char*
                                     finalString = ss.str();
                                     var[varNo++].name = st1;
                                     var[varNo-1].type = st2;
-                                    var[varNo-1].length = GRID_MAPPING_ENTITY;
+                                    var[varNo-1].grid_mapping = GRID_MAPPING_ENTITY;
                                     var[varNo-1].assigned = true;
                                 }
                             }
@@ -3888,7 +3888,7 @@ string plural_declaration_with_assignment_function(char* st1, char* st2, char* s
                                               finalString = ss.str();
                                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
                                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
-                                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = d1;
+                                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = d1;
                                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
                                           }
                                     }
@@ -3972,7 +3972,7 @@ string plural_declaration_with_assignment_function(char* st1, char* st2, char* s
                                     finalString = ss.str();
                                     var[varNo++].name = st1;
                                     var[varNo-1].type = st2;
-                                    var[varNo-1].length = d1;
+                                    var[varNo-1].grid_mapping = d1;
                                     var[varNo-1].assigned = true;
                                 }
                             }
@@ -4104,7 +4104,7 @@ string extended_plural_declaration_with_assignment_function(char* st1, char* st2
                                                         finalString = ss.str();
                                                         fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
                                                         fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
-                                                        fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = d1;
+                                                        fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = d1;
                                                         fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
                                                     }
                                                 }
@@ -4215,7 +4215,7 @@ string extended_plural_declaration_with_assignment_function(char* st1, char* st2
                                                   finalString = ss.str();
                                                   var[varNo++].name = st1;
                                                   var[varNo-1].type = st2;
-                                                  var[varNo-1].length = d1;
+                                                  var[varNo-1].grid_mapping = d1;
                                                   var[varNo-1].assigned = true;
                                               }
                                           }
@@ -4303,7 +4303,7 @@ string USS_assignment_function(char* st1)
             finalString = ss.str();
             var[varNo++].name = st1;
             var[varNo-1].type = "scalar";
-            var[varNo-1].length = GRID_MAPPING_ENTITY;
+            var[varNo-1].grid_mapping = GRID_MAPPING_ENTITY;
             var[varNo-1].assigned = true;
         }
     }
@@ -4348,7 +4348,7 @@ string USS_declaration_with_assignment_function(char* st1)
             finalString = ss.str();
             var[varNo++].name = st1;
             var[varNo-1].type = "scalar";
-            var[varNo-1].length = GRID_MAPPING_ENTITY;
+            var[varNo-1].grid_mapping = GRID_MAPPING_ENTITY;
             var[varNo-1].assigned = true;
         }
     }
@@ -4411,7 +4411,7 @@ string USSWD_assignment_function(char* st1, char* st2)
             finalString = ss.str();
             var[varNo++].name = st1;
             var[varNo-1].type = "scalar";
-            var[varNo-1].length = GRID_MAPPING_ENTITY;
+            var[varNo-1].grid_mapping = GRID_MAPPING_ENTITY;
             var[varNo-1].assigned = true;
         }
     }
@@ -4456,7 +4456,7 @@ string USSWD_declaration_with_assignment_function(char* st1, char* st2)
             finalString = ss.str();
             var[varNo++].name = st1;
             var[varNo-1].type = "scalar";
-            var[varNo-1].length = GRID_MAPPING_ENTITY;
+            var[varNo-1].grid_mapping = GRID_MAPPING_ENTITY;
             var[varNo-1].assigned = true;
         }
     }
@@ -4548,7 +4548,7 @@ string USCOS_assignment_function(char* st1, char* st2, GridMapping d1)
                                             if(getSize1(st1) != d1)
                                                 if(getSize1(st1) == GRID_MAPPING_ANY)
                                                 {
-                                                    var[i].length = d1;
+                                                    var[i].grid_mapping = d1;
                                                     var[i].assigned = true;
                                                     stringstream ss;
                                                     ss << "const CollOfScalars " << st1 << " = param.get<CollOfScalars>(\"" << st1 << "\", " << st2 << ");";
@@ -4630,7 +4630,7 @@ string USCOS_assignment_function(char* st1, char* st2, GridMapping d1)
                                     finalString = ss.str();
                                     var[varNo++].name = st1;
                                     var[varNo-1].type = "scalars";
-                                    var[varNo-1].length = d1;
+                                    var[varNo-1].grid_mapping = d1;
                                     var[varNo-1].assigned = true;
                                 }
                             }
@@ -4729,7 +4729,7 @@ string USCOS_declaration_with_assignment_function(char* st1, char* st2, GridMapp
                                     finalString = ss.str();
                                     var[varNo++].name = st1;
                                     var[varNo-1].type = "scalars";
-                                    var[varNo-1].length = d1;
+                                    var[varNo-1].grid_mapping = d1;
                                     var[varNo-1].assigned = true;
                                 }
                             }
@@ -4852,7 +4852,7 @@ string USCOS_extended_declaration_with_assignment_function(char* st1, char* st2,
                                                   finalString = ss.str();
                                                   var[varNo++].name = st1;
                                                   var[varNo-1].type = "scalars";
-                                                  var[varNo-1].length = d1;
+                                                  var[varNo-1].grid_mapping = d1;
                                                   var[varNo-1].assigned = true;
                                               }
                                           }
