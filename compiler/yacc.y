@@ -240,7 +240,7 @@
 	string USCOS_declaration_with_assignment_function(char* st1, char* st2, CollectionSize d1);
 	string USCOS_extended_declaration_with_assignment_function(char* st1, char* st2, char* st3, CollectionSize d1, CollectionSize d2);
 	string output_function(char* st1);
-
+	string getVariableTypeString(VariableType v, bool collection);
 } //Code provides
 
 
@@ -4921,4 +4921,40 @@ string output_function(char* st1)
 
     HEAP_CHECK();
     return finalString;
+}
+
+
+string getVariableTypeString(VariableType v, bool collection) {
+	std::stringstream ss;
+
+	switch(v) {
+		case TYPE_SCALAR: 
+			ss << (collection) ? "CollOfScalars" : "Scalar";
+			break;
+		case TYPE_VECTOR:  
+			ss << (collection) ? "CollOfVectors" : "Vector";
+			break;
+		case TYPE_VERTEX:
+			ss << (collection) ? "CollOfVertices" : "Vertex";
+			break;
+		case TYPE_EDGE:	
+			ss << (collection) ? "CollOfEdges" : "Edge";
+			break;
+		case TYPE_FACE:
+			ss << (collection) ? "CollOfFaces" : "Face";
+			break;
+		case TYPE_CELL:	
+			ss << (collection) ? "CollOfCells" : "Cell";
+			break;
+		case TYPE_BOOLEAN:
+			ss << (collection) ? "CollOfBools" : "bool";
+			break;
+		case TYPE_INVALID:
+			ss << (collection) ? "CollOfInvalidTypes" : "InvalidType";
+			break;
+		default:
+			ss << (collection) ? "CollOfUnknownTypes" : "UnknownType";
+	}
+
+	return ss.str();
 }
