@@ -77,158 +77,192 @@
 %right NOT
 
 
-
-%{
-
-#include <iostream>
-#include <cstdio>
-#include <sstream>
-#include <string>
-#include <list>
-#include <cstring>
-#ifndef _MSC_VER
-  #define HEAP_CHECK()
-#else
-  #include <crtdbg.h>
-  #define HEAP_CHECK() _ASSERTE(_CrtCheckMemory())
-#endif
-
-using namespace std;
-
-void yyerror(const char* s);
-int yylex(void);
-bool find1(char* s1, char* s2);
-char* find2(char* s1);
-char* find3(char* s1);
-int find4(char* s1);
-char* find5(char* s1);
-char* find6(char* s1);
-bool check1(char* s1);
-bool check2(char* s1);
-bool check3(char* s1);
-bool check4(char* s1);
-bool check5(char* s1);
-bool check6(char* s1);
-bool check7(char* s1);
-bool check8(char* s1, char* s2);
-string check9(char* s1);
-char* getType(char* s1);
-int getIndex1(char* s1);
-int getIndex2(char* s1);
-double getSize1(char* s1);
-double getSize2(char* s1);
-double getSize3(char* s1);
-int getSize4(char* s1);
-char* extract(char* s1);
-string CPPToEquelle1(char* st);
-double CPPToEquelle2(char* st);
-char* EquelleToCPP(string st);
-string errorTypeToErrorMessage(string errorType);
-string functionToAnySingularType(char *st1, char *st2, char *st3, const string &st4);
-string functionToAnyCollectionType(char *st1, char *st2, char *st3, const string &st4);
-string singular_declaration_function(char* st1, char* st2);
-string plural_declaration_function(char* st1, char* st2);
-string extended_plural_declaration_function(char* st1, char* st2, char* st3, double d1);
-string singular_assignment_function(char* st1, char* st2, char* st3, char* st4);
-string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, double d1);
-string singular_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4);
-string plural_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4, double d1);
-string extended_plural_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4, char* st5, double d1, double d2);
-string USS_assignment_function(char* st1);
-string USS_declaration_with_assignment_function(char* st1);
-string USSWD_assignment_function(char* st1, char* st2);
-string USSWD_declaration_with_assignment_function(char* st1, char* st2);
-string USCOS_assignment_function(char* st1, char* st2, double d1);
-string USCOS_declaration_with_assignment_function(char* st1, char* st2, double d1);
-string USCOS_extended_declaration_with_assignment_function(char* st1, char* st2, char* st3, double d1, double d2);
-string output_function(char* st1);
-
-
-
-
-// global structure and counter for storing the names of the variables of each type (used for stopping variables reassignment)
-struct VariableStructure
+/**
+  * Definitions we need for types etc.
+  */
+%code top 
 {
-  string name;       // must begin with a small letter
-  string type;       // can be: scalar, vector, vertex, scalars etc.
-  double length;     // if the type is a singular type, then the length is 1; otherwise it can be any other number >= 1
-  bool assigned;     // we want to know if a variable has been assigned, in order to prevent errors (example: operations with unassigned variables)
-};
+	#include <iostream>
+	#include <cstdio>
+	#include <sstream>
+	#include <string>
+	#include <list>
+	#include <cstring>
+	
+
+
+	// MACROS
+	#ifndef _MSC_VER
+	  #define HEAP_CHECK()
+	#else
+	  #pragma warning( disable : 4127 )
+	  #include <crtdbg.h>
+	  #define HEAP_CHECK() _ASSERTE(_CrtCheckMemory())
+	#endif
+
+	#define STREAM_TO_DOLLARS_CHAR_ARRAY(dd, streamcontent)                 do { stringstream ss; ss << streamcontent; dd = strdup(ss.str().c_str()); } while (false)
+	#define LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY(dd)           do { stringstream ss; ss << "length_mismatch_error"; dd = strdup(ss.str().c_str()); } while (false)
+	// we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
+	#define WRONG_TYPE_ERROR_TO_CHAR_ARRAY(dd, d1)                          do { stringstream ss; ss << "wrong_type_error  " << d1; dd = strdup(ss.str().c_str()); }  while (false)
+	// we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
+	#define WRONG_TYPE_ERROR_TO_CHAR_ARRAY(dd, d1)            do { stringstream ss; ss << "wrong_type_error  " << d1; dd = strdup(ss.str().c_str()); }  while (false)
+
+	//using std::cout;
+	//using std::endl;
+	//using std::string;
+	using namespace std;
+
+} //Code top
+
+
+%code requires 
+{
+
+	enum CollectionSize {
+		SIZE_ENTITY,
+		SIZE_INTERIORCELLS,
+		SIZE_BOUNDARYCELLS,
+		SIZE_ALLCELLS,
+		SIZE_INTERIORFACES,
+		SIZE_BOUNDARYFACES,
+		SIZE_ALLFACES,
+		SIZE_INTERIOREDGES,
+		SIZE_BOUNDARYEDGES,
+		SIZE_ALLEDGES,
+		SIZE_INTERIORVERTICES,
+		SIZE_BOUNDARYVERTICES,
+		SIZE_ALLVERTICES,
+		SIZE_ANY, // the default length of a collection, if it is not explicitly specified
+		SIZE_INVALID, //Invalid size... should be caught by error checking
+	};
+
+	// global structure and counter for storing the names of the variables of each type (used for stopping variables reassignment)
+	struct VariableStructure
+	{
+	  string name;       // must begin with a small letter
+	  string type;       // can be: scalar, vector, vertex, scalars etc.
+	  CollectionSize length;     // if the type is a singular type, then the length is 1; otherwise it can be any other number >= 1
+	  bool assigned;     // we want to know if a variable has been assigned, in order to prevent errors (example: operations with unassigned variables)
+	};
+
+
+	// global structure and counter for storing the names of the functions
+	struct FunctionStructure
+	{
+	  string name;                                // g1
+	  string returnType;                          // Collection Of Scalars
+	  CollectionSize returnSize;                          // 8
+	  string paramList;                           // (Cell, Face, CollOfVectors, CollOfScalars On AllFaces(Grid))
+	  VariableStructure headerVariables[100];     // (c1, f1, pv1, ps1)
+	  int noParam;                                // 4
+	  VariableStructure localVariables[100];      // var1, var2, var3
+	  string signature;                           // (Cell c1, Face f1, CollOfVectors pv1, CollOfScalars On AllFaces(Grid) ps1)
+	  int noLocalVariables;                       // 3
+	  bool assigned;              // false
+	};
+
+	enum VariableType {
+		TYPE_SCALAR,
+		TYPE_VECTOR,
+		TYPE_VERTEX,
+		TYPE_EDGE,
+		TYPE_FACE,
+		TYPE_CELL,
+		TYPE_BOOLEAN,
+		TYPE_INVALID,
+	};
+
+	struct info
+	{
+		//Why does this not work?: info() : size(SIZE_INVALID), array_size(-1), str(NULL), type(TYPE_INVALID), collection(false) {}
+		CollectionSize size; // this is a code for the "On" construct (not in number of elements, but rather what it is on)
+		int array_size;
+		char* str;
+		VariableType type; //The type of the variable
+		bool collection; //Is this variable a collection of types or not?
+	};
+
+} //Code requires
+
+
+
+
+
+
+
+
+%code provides
+{
+	void yyerror(const char* s);
+	int yylex(void);
+	bool find1(char* s1, char* s2);
+	char* find2(char* s1);
+	char* find3(char* s1);
+	int find4(char* s1);
+	char* find5(char* s1);
+	char* find6(char* s1);
+	bool check1(char* s1);
+	bool check2(char* s1);
+	bool check3(char* s1);
+	bool check4(char* s1);
+	bool check5(char* s1);
+	bool check6(char* s1);
+	bool check7(char* s1);
+	bool check8(char* s1, char* s2);
+	string check9(char* s1);
+	char* getType(char* s1);
+	int getIndex1(char* s1);
+	int getIndex2(char* s1);
+	CollectionSize getSize1(char* s1);
+	CollectionSize getSize2(char* s1);
+	CollectionSize getSize3(char* s1);
+	int getSize4(char* s1);
+	char* extract(char* s1);
+	string CPPToEquelle1(char* st);
+	CollectionSize CPPToEquelle2(char* st);
+	char* EquelleToCPP(string st);
+	string errorTypeToErrorMessage(string errorType);
+	string functionToAnySingularType(char *st1, char *st2, char *st3, const string &st4);
+	string functionToAnyCollectionType(char *st1, char *st2, char *st3, const string &st4);
+	string singular_declaration_function(char* st1, char* st2);
+	string plural_declaration_function(char* st1, char* st2);
+	string extended_plural_declaration_function(char* st1, char* st2, char* st3, CollectionSize d1);
+	string singular_assignment_function(char* st1, char* st2, char* st3, char* st4);
+	string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, CollectionSize d1);
+	string singular_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4);
+	string plural_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4, CollectionSize d1);
+	string extended_plural_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4, char* st5, CollectionSize d1, CollectionSize d2);
+	string USS_assignment_function(char* st1);
+	string USS_declaration_with_assignment_function(char* st1);
+	string USSWD_assignment_function(char* st1, char* st2);
+	string USSWD_declaration_with_assignment_function(char* st1, char* st2);
+	string USCOS_assignment_function(char* st1, char* st2, CollectionSize d1);
+	string USCOS_declaration_with_assignment_function(char* st1, char* st2, CollectionSize d1);
+	string USCOS_extended_declaration_with_assignment_function(char* st1, char* st2, char* st3, CollectionSize d1, CollectionSize d2);
+	string output_function(char* st1);
+
+} //Code provides
+
+
+/**
+  * All global variables
+  * Should preferably not really be needed
+  */
+%code 
+{
+
 VariableStructure var[10000];
-
-int varNo = 0;
-
-
-// global structure and counter for storing the names of the functions
-struct FunctionStructure
-{
-  string name;                                // g1
-  string returnType;                          // Collection Of Scalars
-  double returnSize;                          // 8
-  string paramList;                           // (Cell, Face, CollOfVectors, CollOfScalars On AllFaces(Grid))
-  VariableStructure headerVariables[100];     // (c1, f1, pv1, ps1)
-  int noParam;                                // 4
-  VariableStructure localVariables[100];      // var1, var2, var3
-  string signature;                           // (Cell c1, Face f1, CollOfVectors pv1, CollOfScalars On AllFaces(Grid) ps1)
-  int noLocalVariables;                       // 3
-  bool assigned;              // false
-};
 FunctionStructure fun[10000];
 
+int varNo = 0;
 int funNo = 0;
-
 
 bool insideFunction = false;
 int currentFunctionIndex = -1;
 
-
-
 int currentLineNumber = 1;
 
-
-/*
-For a d-dimensional s-sized uniform hypercube grid, the values are:
-(s-2)^d                          internal cells
-s^d - (s-2)^d                    boundary cells
-s^d                              all cells
-(d+1)d^s - (d+1)d^s + 2ds^(d-1)  internal faces
-(d+1)d^s - 2ds^(d-1)             boundary faces
-(d+1)d^s                         all faces
-...
-*/
-// we define constant values for the number of cells, faces, edges and vertices in the grid, in order to detect length-mismatch errors at operations involving these entities
-// as they don't collide (for example, an operation to involve both collections on internal cells and on boundary cells), we need to define these constant values to be coprime and distanced integers (in order to avoid creating a relation between them)
-
-// by summing any multiples of the below values between them, we cannot obtain another unique value (except for: Interior + Boundary = All)
-
-// CONSTANTS
-#define INTERIORCELLS     1.01
-#define BOUNDARYCELLS     1.02
-#define ALLCELLS          2.03
-#define INTERIORFACES     1.04
-#define BOUNDARYFACES     1.05
-#define ALLFACES          2.09
-#define INTERIOREDGES     1.10
-#define BOUNDARYEDGES     1.11
-#define ALLEDGES          2.21
-#define INTERIORVERTICES  1.22
-#define BOUNDARYVERTICES  1.23
-#define ALLVERTICES       2.45
-#define ANY               2.46      // the default length of a collection, if it is not explicitly specified
-
-
-// MACROS
-#define STREAM_TO_DOLLARS_CHAR_ARRAY(dd, streamcontent)                 do { stringstream ss; ss << streamcontent; dd = strdup(ss.str().c_str()); } while (false)
-#define LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY(dd)           do { stringstream ss; ss << "length_mismatch_error"; dd = strdup(ss.str().c_str()); } while (false)
-// we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
-#define WRONG_TYPE_ERROR_TO_CHAR_ARRAY(dd, d1)                          do { stringstream ss; ss << "wrong_type_error  " << d1; dd = strdup(ss.str().c_str()); }  while (false)
-// we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
-#define WRONG_TYPE_ERROR_TO_CHAR_ARRAY(dd, d1)            do { stringstream ss; ss << "wrong_type_error  " << d1; dd = strdup(ss.str().c_str()); }  while (false)
-
-
-
-
-%}
+} //Code
 
 
 %type<str> floating_point
@@ -309,26 +343,6 @@ s^d                              all cells
 
 
 
-%code requires
-{
-	enum VariableType {
-		TYPE_SCALAR,
-		TYPE_VECTOR,
-		TYPE_VERTEX,
-		TYPE_EDGE,
-		TYPE_FACE,
-		TYPE_CELL,
-		TYPE_BOOLEAN,
-	};
-
-	struct info
-	{
-		double size; // this is a code for the "On" construct (not in number of elements, but rather what it is on)
-		char* str;
-		VariableType type; //The type of the variable
-		bool collection; //Is this variable a collection of types or not?
-	};
-}
 
 
 
@@ -398,10 +412,10 @@ scalar_factor: number                                  { $$ = strdup($1); }
              ;
 
 
-scalars: scalar_exprs                 { $$.str = strdup($1.str); $$.size = $1.size; }
-       | scalars ',' scalar_exprs     { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << ", " << $3.str); $$.size = $1.size + $3.size; }
-       | scalar_expr                  { $$.str = strdup($1); $$.size = 1; }
-       | scalars ',' scalar_expr      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << ", " << $3); $$.size = $1.size + 1; }
+scalars: scalar_exprs                 { $$.str = strdup($1.str); $$.array_size = $1.array_size; }
+       | scalars ',' scalar_exprs     { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << ", " << $3.str); $$.array_size = $1.array_size + $3.array_size; }
+       | scalar_expr                  { $$.str = strdup($1); $$.array_size = 1; }
+       | scalars ',' scalar_expr      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << ", " << $3); $$.array_size = $1.array_size + 1; }
        ;
 
 
@@ -558,8 +572,8 @@ vector_term: '[' scalars ']'                       { STREAM_TO_DOLLARS_CHAR_ARRA
            ;
 
 
-vectors: vector_term                      { $$.str = strdup($1); $$.size = 1; }
-       | vectors ',' vector_term          { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << ", " << $3); $$.size = $1.size + 1; }
+vectors: vector_term                      { $$.str = strdup($1); $$.array_size = 1; }
+       | vectors ',' vector_term          { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << ", " << $3); $$.array_size = $1.array_size + 1; }
        ;
 
 
@@ -646,9 +660,9 @@ vertex: VARIABLE           {
       ;
 
 
-vertices: INTERIOR_VERTICES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorVertices()"); $$.size = INTERIORVERTICES; }
-        | BOUNDARY_VERTICES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryVertices()"); $$.size = BOUNDARYVERTICES; }
-        | ALL_VERTICES '(' GRID ')'           { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allVertices()"); $$.size = ALLVERTICES; }
+vertices: INTERIOR_VERTICES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorVertices()"); $$.size = SIZE_INTERIORVERTICES; }
+        | BOUNDARY_VERTICES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryVertices()"); $$.size = SIZE_BOUNDARYVERTICES; }
+        | ALL_VERTICES '(' GRID ')'           { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allVertices()"); $$.size = SIZE_ALLVERTICES; }
         | VARIABLE                            {
                                                   if(strcmp(getType($1), "vertices") != 0)
                                                   {
@@ -694,9 +708,9 @@ edge: VARIABLE             {
     ;
 
 
-edges: INTERIOR_EDGES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorEdges()"); $$.size = INTERIOREDGES; }
-     | BOUNDARY_EDGES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryEdges()"); $$.size = BOUNDARYEDGES; }
-     | ALL_EDGES '(' GRID ')'           { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allEdges()"); $$.size = ALLEDGES; }
+edges: INTERIOR_EDGES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorEdges()"); $$.size = SIZE_INTERIOREDGES; }
+     | BOUNDARY_EDGES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryEdges()"); $$.size = SIZE_BOUNDARYEDGES; }
+     | ALL_EDGES '(' GRID ')'           { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allEdges()"); $$.size = SIZE_ALLEDGES; }
      | VARIABLE                         {
                                             if(strcmp(getType($1), "edges") != 0)
                                             {
@@ -742,9 +756,9 @@ face: VARIABLE                    {
     ;
 
 
-faces: INTERIOR_FACES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorFaces()"); $$.size = INTERIORFACES; }
-     | BOUNDARY_FACES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryFaces()"); $$.size = BOUNDARYFACES; }
-     | ALL_FACES '(' GRID ')'           { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allFaces()"); $$.size = ALLFACES; }
+faces: INTERIOR_FACES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorFaces()"); $$.size = SIZE_INTERIORFACES; }
+     | BOUNDARY_FACES '(' GRID ')'      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryFaces()"); $$.size = SIZE_BOUNDARYFACES; }
+     | ALL_FACES '(' GRID ')'           { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allFaces()"); $$.size = SIZE_ALLFACES; }
      | VARIABLE                         {
                                             if(strcmp(getType($1), "faces") != 0)
                                             {
@@ -792,9 +806,9 @@ cell: FIRST_CELL '(' face ')'     { STREAM_TO_DOLLARS_CHAR_ARRAY($$, "er.firstCe
     ;
 
 
-cells: INTERIOR_CELLS '(' GRID ')'          { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorCells()"); $$.size = INTERIORCELLS; }
-     | BOUNDARY_CELLS '(' GRID ')'          { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryCells()"); $$.size = BOUNDARYCELLS;}
-     | ALL_CELLS '(' GRID ')'               { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allCells()"); $$.size = ALLCELLS;}
+cells: INTERIOR_CELLS '(' GRID ')'          { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorCells()"); $$.size = SIZE_INTERIORCELLS; }
+     | BOUNDARY_CELLS '(' GRID ')'          { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryCells()"); $$.size = SIZE_BOUNDARYCELLS;}
+     | ALL_CELLS '(' GRID ')'               { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allCells()"); $$.size = SIZE_ALLCELLS;}
      | FIRST_CELL '(' faces ')'             { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.firstCell(" << $3.str << ")"); $$.size = $3.size;}
      | SECOND_CELL '(' faces ')'            { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.secondCell(" << $3.str << ")"); $$.size = $3.size;}
      | VARIABLE                             {
@@ -1100,22 +1114,22 @@ commands: command1                              { $$ = strdup($1); }
         ;
 
 
-type: SCALAR                                { $$.str = strdup("Scalar"); $$.size = ANY; }
-    | VECTOR                                { $$.str = strdup("Vector"); $$.size = ANY; }
-    | VERTEX                                { $$.str = strdup("Vertex"); $$.size = ANY; }
-    | EDGE                                  { $$.str = strdup("Edge"); $$.size = ANY; }
-    | FACE                                  { $$.str = strdup("Face"); $$.size = ANY; }
-    | CELL                                  { $$.str = strdup("Cell"); $$.size = ANY; }
-    | ADB                                   { $$.str = strdup("ScalarAD"); $$.size = ANY; }
-    | BOOLEAN                               { $$.str = strdup("bool"); $$.size = ANY; }
-    | COLLECTION OF SCALAR                  { $$.str = strdup("CollOfScalars"); $$.size = ANY; }
-    | COLLECTION OF VECTOR                  { $$.str = strdup("CollOfVectors"); $$.size = ANY; }
-    | COLLECTION OF VERTEX                  { $$.str = strdup("CollOfVertices"); $$.size = ANY; }
-    | COLLECTION OF EDGE                    { $$.str = strdup("CollOfEdges"); $$.size = ANY; }
-    | COLLECTION OF FACE                    { $$.str = strdup("CollOfFaces"); $$.size = ANY; }
-    | COLLECTION OF CELL                    { $$.str = strdup("CollOfCells"); $$.size = ANY; }
-    | COLLECTION OF ADB                     { $$.str = strdup("CollOfScalarsAD"); $$.size = ANY; }
-    | COLLECTION OF BOOLEAN                 { $$.str = strdup("CollOfBools"); $$.size = ANY; }
+type: SCALAR                                { $$.str = strdup("Scalar"); $$.size = SIZE_ENTITY; }
+    | VECTOR                                { $$.str = strdup("Vector"); $$.size = SIZE_ENTITY; }
+    | VERTEX                                { $$.str = strdup("Vertex"); $$.size = SIZE_ENTITY; }
+    | EDGE                                  { $$.str = strdup("Edge"); $$.size = SIZE_ENTITY; }
+    | FACE                                  { $$.str = strdup("Face"); $$.size = SIZE_ENTITY; }
+    | CELL                                  { $$.str = strdup("Cell"); $$.size = SIZE_ENTITY; }
+    | ADB                                   { $$.str = strdup("ScalarAD"); $$.size = SIZE_ENTITY; }
+    | BOOLEAN                               { $$.str = strdup("bool"); $$.size = SIZE_ENTITY; }
+    | COLLECTION OF SCALAR                  { $$.str = strdup("CollOfScalars"); $$.size = SIZE_ANY; }
+    | COLLECTION OF VECTOR                  { $$.str = strdup("CollOfVectors"); $$.size = SIZE_ANY; }
+    | COLLECTION OF VERTEX                  { $$.str = strdup("CollOfVertices"); $$.size = SIZE_ANY; }
+    | COLLECTION OF EDGE                    { $$.str = strdup("CollOfEdges"); $$.size = SIZE_ANY; }
+    | COLLECTION OF FACE                    { $$.str = strdup("CollOfFaces"); $$.size = SIZE_ANY; }
+    | COLLECTION OF CELL                    { $$.str = strdup("CollOfCells"); $$.size = SIZE_ANY; }
+    | COLLECTION OF ADB                     { $$.str = strdup("CollOfScalarsAD"); $$.size = SIZE_ANY; }
+    | COLLECTION OF BOOLEAN                 { $$.str = strdup("CollOfBools"); $$.size = SIZE_ANY; }
     | COLLECTION OF SCALAR ON plural        { $$.str = strdup("CollOfScalars"); $$.size = $5.size; }
     | COLLECTION OF VECTOR ON plural        { $$.str = strdup("CollOfVectors"); $$.size = $5.size; }
     | COLLECTION OF VERTEX ON plural        { $$.str = strdup("CollOfVertices"); $$.size = $5.size; }
@@ -1208,7 +1222,7 @@ return_instr: RETURN boolean_expr '?' VARIABLE ':' VARIABLE
                     if(check5($4) == false || check5($6) == false)
                     {
                         $$.str = strdup("Invalid");
-                        $$.size = -1;   // we force it to generate an error message at the function's assignment
+                        $$.size = SIZE_INVALID;   // we force it to generate an error message at the function's assignment
                     }
                     else
                     {
@@ -1222,7 +1236,7 @@ return_instr: RETURN boolean_expr '?' VARIABLE ':' VARIABLE
                     if(check5($2) == false)
                     {
                         $$.str = strdup("Invalid");
-                        $$.size = -1;   // we force it to generate an error message at the function's assignment
+                        $$.size = SIZE_INVALID;   // we force it to generate an error message at the function's assignment
                     }
                     else
                     {
@@ -1323,14 +1337,14 @@ function_assignment: function_start end_lines commands end_lines return_instr en
                                                       }
                                                       else
                                                       {
-                                                          if($5.size != -1)
+                                                          if($5.size != SIZE_INVALID)
                                                           {
                                                               // STREAM_TO_DOLLARS_CHAR_ARRAY($$, $1 << $2 << $3 << $4 << $5.str << $6 << "}");
                                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$, "auto " << fun[i].name << "[&](" << fun[i].signature << ") -> " << EquelleToCPP(fun[i].returnType) << " {\n" << $2 << $3 << $4 << $5.str << $6 << "}");
-                                                              if(fun[i].returnSize == ANY && $5.size != ANY)
+                                                              if(fun[i].returnSize == SIZE_ANY && $5.size != SIZE_ANY)
                                                                   fun[i].returnSize = $5.size;
                                                               else
-                                                                  if(fun[i].returnSize != ANY && $5.size == ANY)
+                                                                  if(fun[i].returnSize != SIZE_ANY && $5.size == SIZE_ANY)
                                                                       {;}   // do nothing (the function must keep its return size from the definition)
                                                                   else
                                                                       {;}   // if both are ANY, the function's return type is already correct; if none are ANY, then they should already be equal, otherwise the instruction flow wouldn't enter on this branch
@@ -1974,7 +1988,7 @@ bool check5(char* s1)
   }
   if(found == true)
   {
-    if(strcmp(fun[currentFunctionIndex].headerVariables[i].type.c_str(), fun[currentFunctionIndex].returnType.c_str()) != 0 || (fun[currentFunctionIndex].headerVariables[i].length != fun[currentFunctionIndex].returnSize && fun[currentFunctionIndex].returnSize != ANY && fun[currentFunctionIndex].headerVariables[i].length != ANY))
+    if(strcmp(fun[currentFunctionIndex].headerVariables[i].type.c_str(), fun[currentFunctionIndex].returnType.c_str()) != 0 || (fun[currentFunctionIndex].headerVariables[i].length != fun[currentFunctionIndex].returnSize && fun[currentFunctionIndex].returnSize != SIZE_ANY && fun[currentFunctionIndex].headerVariables[i].length != SIZE_ANY))
     {
        HEAP_CHECK();
        return false;
@@ -1991,7 +2005,7 @@ bool check5(char* s1)
     }
   if(found == true)
   {
-    if(strcmp(fun[currentFunctionIndex].localVariables[i].type.c_str(), fun[currentFunctionIndex].returnType.c_str()) != 0 || (fun[currentFunctionIndex].localVariables[i].length != fun[currentFunctionIndex].returnSize && fun[currentFunctionIndex].returnSize != ANY && fun[currentFunctionIndex].localVariables[i].length != ANY))
+    if(strcmp(fun[currentFunctionIndex].localVariables[i].type.c_str(), fun[currentFunctionIndex].returnType.c_str()) != 0 || (fun[currentFunctionIndex].localVariables[i].length != fun[currentFunctionIndex].returnSize && fun[currentFunctionIndex].returnSize != SIZE_ANY && fun[currentFunctionIndex].localVariables[i].length != SIZE_ANY))
     {
       HEAP_CHECK();
       return false;
@@ -2205,7 +2219,7 @@ int getIndex2(char* s1)
 
 
 // function which returns the size of a variable, based on its name
-double getSize1(char* s1)
+CollectionSize getSize1(char* s1)
 {
   HEAP_CHECK();
   int i;
@@ -2218,12 +2232,12 @@ double getSize1(char* s1)
       }
   }
   HEAP_CHECK();
-  return -1;
+  return SIZE_INVALID;
 }
 
 
 // function which returns the return size of a function, based on its name
-double getSize2(char* s1)
+CollectionSize getSize2(char* s1)
 {
   HEAP_CHECK();
   int i;
@@ -2236,12 +2250,12 @@ double getSize2(char* s1)
       }
   }
   HEAP_CHECK();
-  return -1;
+  return SIZE_INVALID;
 }
 
 
 // function which returns the size of a header/local variable inside the current function, based on its name
-double getSize3(char* s1)
+CollectionSize getSize3(char* s1)
 {
   HEAP_CHECK();
   int i;
@@ -2262,7 +2276,7 @@ double getSize3(char* s1)
       }
   }
   HEAP_CHECK();
-  return -1;
+  return SIZE_INVALID;
 }
 
 
@@ -2375,69 +2389,69 @@ string CPPToEquelle1(char* st)
 
 
 // function which returns the corresponding size of a C++ type
-double CPPToEquelle2(char* st)
+CollectionSize CPPToEquelle2(char* st)
 {
     if(strcmp(st, "Scalar") == 0) {
-      return 1;
+      return SIZE_ENTITY;
     }
 
     if(strcmp(st, "Vector") == 0) {
-      return 1;
+      return SIZE_ENTITY;
     }
 
     if(strcmp(st, "Vertex") == 0) {
-      return 1;
+      return SIZE_ENTITY;
     }
 
     if(strcmp(st, "Edge") == 0) {
-      return 1;
+      return SIZE_ENTITY;
     }
 
     if(strcmp(st, "Face") == 0) {
-      return 1;
+      return SIZE_ENTITY;
     }
 
     if(strcmp(st, "Cell") == 0) {
-      return 1;
+      return SIZE_ENTITY;
     }
 
     if(strcmp(st, "ScalarAD") == 0) {
-      return 1;
+      return SIZE_ENTITY;
     }
 
     if(strcmp(st, "bool") == 0) {
-      return 1;
+      return SIZE_ENTITY;
     }
 
     if(strcmp(st, "CollOfScalars") == 0) {
-      return ANY;
+      return SIZE_ANY;
     }
 
     if(strcmp(st, "CollOfVectors") == 0) {
-      return ANY;
+      return SIZE_ANY;
     }
 
     if(strcmp(st, "CollOfVertices") == 0) {
-      return ANY;
+      return SIZE_ANY;
     }
 
     if(strcmp(st, "CollOfEdges") == 0) {
-      return ANY;
+      return SIZE_ANY;
     }
 
     if(strcmp(st, "CollOfCells") == 0) {
-      return ANY;
+      return SIZE_ANY;
     }
 
     if(strcmp(st, "CollOfScalarsAD") == 0) {
-      return ANY;
+      return SIZE_ANY;
     }
 
     if(strcmp(st, "CollOfBools") == 0) {
-      return ANY;
+      return SIZE_ANY;
     }
 
-    return -1;
+    return SIZE_INVALID;
 }
 
 
@@ -2676,7 +2690,7 @@ string singular_declaration_function(char* st1, char* st2)
               {
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
-                    fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = 1;
+                    fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = SIZE_ENTITY;
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = false;
               }
         }
@@ -2703,7 +2717,7 @@ string singular_declaration_function(char* st1, char* st2)
         {
             var[varNo++].name = st1;
             var[varNo-1].type = st2;
-            var[varNo-1].length = 1;
+            var[varNo-1].length = SIZE_ENTITY;
             var[varNo-1].assigned = false;
         }
     }
@@ -2754,7 +2768,7 @@ string plural_declaration_function(char* st1, char* st2)
               {
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
-                    fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = ANY;
+                    fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = SIZE_ANY;
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = false;
               }
         }
@@ -2781,7 +2795,7 @@ string plural_declaration_function(char* st1, char* st2)
         {
               var[varNo++].name = st1;
               var[varNo-1].type = st2;
-              var[varNo-1].length = ANY;
+              var[varNo-1].length = SIZE_ANY;
               var[varNo-1].assigned = false;
         }
     }
@@ -2791,7 +2805,7 @@ string plural_declaration_function(char* st1, char* st2)
 }
 
 
-string extended_plural_declaration_function(char* st1, char* st2, char* st3, double d1)
+string extended_plural_declaration_function(char* st1, char* st2, char* st3, CollectionSize d1)
 {
     HEAP_CHECK();
     string finalString;
@@ -3077,7 +3091,7 @@ string singular_assignment_function(char* st1, char* st2, char* st3, char* st4)
                                           finalString = ss.str();
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
-                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = 1;
+                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = SIZE_ENTITY;
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
                                       }
                                   }
@@ -3224,7 +3238,7 @@ string singular_assignment_function(char* st1, char* st2, char* st3, char* st4)
                                     finalString = ss.str();
                                     var[varNo++].name = st1;
                                     var[varNo-1].type = st2;
-                                    var[varNo-1].length = 1;
+                                    var[varNo-1].length = SIZE_ENTITY;
                                     var[varNo-1].assigned = true;
                                 }
                             }
@@ -3240,7 +3254,7 @@ string singular_assignment_function(char* st1, char* st2, char* st3, char* st4)
 }
 
 
-string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, double d1)
+string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, CollectionSize d1)
 {
     HEAP_CHECK();
     string finalString;
@@ -3329,7 +3343,7 @@ string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, do
                                             else
                                             {
                                                 if(getSize3(st1) != d1)
-                                                    if(getSize3(st1) == ANY)
+                                                    if(getSize3(st1) == SIZE_ANY)
                                                     {
                                                         fun[currentFunctionIndex].localVariables[i].length = d1;
                                                         fun[currentFunctionIndex].localVariables[i].assigned = true;
@@ -3493,7 +3507,7 @@ string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, do
                                         else
                                         {
                                             if(getSize1(st1) != d1)
-                                                if(getSize1(st1) == ANY)
+                                                if(getSize1(st1) == SIZE_ANY)
                                                 {
                                                     var[i].length = d1;
                                                     var[i].assigned = true;
@@ -3685,7 +3699,7 @@ string singular_declaration_with_assignment_function(char* st1, char* st2, char*
                                               finalString = ss.str();
                                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
                                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
-                                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = 1;
+                                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].length = SIZE_ENTITY;
                                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
                                           }
                                     }
@@ -3769,7 +3783,7 @@ string singular_declaration_with_assignment_function(char* st1, char* st2, char*
                                     finalString = ss.str();
                                     var[varNo++].name = st1;
                                     var[varNo-1].type = st2;
-                                    var[varNo-1].length = 1;
+                                    var[varNo-1].length = SIZE_ENTITY;
                                     var[varNo-1].assigned = true;
                                 }
                             }
@@ -3785,7 +3799,7 @@ string singular_declaration_with_assignment_function(char* st1, char* st2, char*
 }
 
 
-string plural_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4, double d1)
+string plural_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4, CollectionSize d1)
 {
     HEAP_CHECK();
     string finalString;
@@ -3977,7 +3991,7 @@ string plural_declaration_with_assignment_function(char* st1, char* st2, char* s
 }
 
 
-string extended_plural_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4, char* st5, double d1, double d2)
+string extended_plural_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4, char* st5, CollectionSize d1, CollectionSize d2)
 {
     HEAP_CHECK();
     string finalString;
@@ -4292,7 +4306,7 @@ string USS_assignment_function(char* st1)
             finalString = ss.str();
             var[varNo++].name = st1;
             var[varNo-1].type = "scalar";
-            var[varNo-1].length = 1;
+            var[varNo-1].length = SIZE_ENTITY;
             var[varNo-1].assigned = true;
         }
     }
@@ -4337,7 +4351,7 @@ string USS_declaration_with_assignment_function(char* st1)
             finalString = ss.str();
             var[varNo++].name = st1;
             var[varNo-1].type = "scalar";
-            var[varNo-1].length = 1;
+            var[varNo-1].length = SIZE_ENTITY;
             var[varNo-1].assigned = true;
         }
     }
@@ -4400,7 +4414,7 @@ string USSWD_assignment_function(char* st1, char* st2)
             finalString = ss.str();
             var[varNo++].name = st1;
             var[varNo-1].type = "scalar";
-            var[varNo-1].length = 1;
+            var[varNo-1].length = SIZE_ENTITY;
             var[varNo-1].assigned = true;
         }
     }
@@ -4445,7 +4459,7 @@ string USSWD_declaration_with_assignment_function(char* st1, char* st2)
             finalString = ss.str();
             var[varNo++].name = st1;
             var[varNo-1].type = "scalar";
-            var[varNo-1].length = 1;
+            var[varNo-1].length = SIZE_ENTITY;
             var[varNo-1].assigned = true;
         }
     }
@@ -4455,7 +4469,7 @@ string USSWD_declaration_with_assignment_function(char* st1, char* st2)
 }
 
 
-string USCOS_assignment_function(char* st1, char* st2, double d1)
+string USCOS_assignment_function(char* st1, char* st2, CollectionSize d1)
 {
     HEAP_CHECK();
     string finalString;
@@ -4535,7 +4549,7 @@ string USCOS_assignment_function(char* st1, char* st2, double d1)
                                         else
                                         {
                                             if(getSize1(st1) != d1)
-                                                if(getSize1(st1) == ANY)
+                                                if(getSize1(st1) == SIZE_ANY)
                                                 {
                                                     var[i].length = d1;
                                                     var[i].assigned = true;
@@ -4635,7 +4649,7 @@ string USCOS_assignment_function(char* st1, char* st2, double d1)
 }
 
 
-string USCOS_declaration_with_assignment_function(char* st1, char* st2, double d1)
+string USCOS_declaration_with_assignment_function(char* st1, char* st2, CollectionSize d1)
 {
     HEAP_CHECK();
     string finalString;
@@ -4734,7 +4748,7 @@ string USCOS_declaration_with_assignment_function(char* st1, char* st2, double d
 }
 
 
-string USCOS_extended_declaration_with_assignment_function(char* st1, char* st2, char* st3, double d1, double d2)
+string USCOS_extended_declaration_with_assignment_function(char* st1, char* st2, char* st3, CollectionSize d1, CollectionSize d2)
 {
     HEAP_CHECK();
     string finalString;
