@@ -302,32 +302,9 @@ bool operator!=(const VariableType& a, const VariableType& b) {
 
 %type<inf> floating_point
 %type<inf> number
-%type<inf> scalar_expr
-%type<inf> scalar_exprs
-%type<inf> scalar_term
-%type<inf> scalar_terms
-%type<inf> scalar_factor
-%type<inf> scalar_factors
 %type<inf> scalars
-%type<inf> vector_expr
-%type<inf> vector_term
 %type<inf> vectors
-%type<inf> vector_exprs
-%type<inf> vector_terms
-%type<inf> vertex
-%type<inf> vertices
-%type<inf> edge
-%type<inf> edges
-%type<inf> face
-%type<inf> faces
-%type<inf> cell
-%type<inf> cells
-%type<inf> adb
-%type<inf> adbs
-%type<inf> boolean_expr
-%type<inf> boolean_term
-%type<inf> boolean_exprs
-%type<inf> boolean_terms
+%type<inf> expression
 %type<inf> INTEGER
 %type<inf> VARIABLE
 %type<inf> COMMENT
@@ -357,8 +334,7 @@ bool operator!=(const VariableType& a, const VariableType& b) {
 %type<inf> assignment
 %type<inf> declaration_with_assignment
 %type<inf> output
-%type<inf> expression
-%type<inf> expressions
+
 
 
 
@@ -387,211 +363,45 @@ floating_point: INTEGER '.' INTEGER
 };
 
 
-number: INTEGER
-                                            {
-                                    					$$.str = strdup($1.str);
-                                    					$$.grid_mapping = GRID_MAPPING_ENTITY;
-                                    					$$.array_size = 1;
-                                    					$$.type.entity_type = TYPE_SCALAR;
-                                    					$$.type.collection = false;
-                                    				}
-      | floating_point                      { clone_info($$, $1); }
+number: floating_point                { clone_info($$, $1); }
+      | INTEGER
+                                      {
+                              					$$.str = strdup($1.str);
+                              					$$.grid_mapping = GRID_MAPPING_ENTITY;
+                              					$$.array_size = 1;
+                              					$$.type.entity_type = TYPE_SCALAR;
+                              					$$.type.collection = false;
+                              				}
       ;
 
 
-scalar_expr: scalar_term                     { clone_info($$, $1); }
-           | '-' scalar_term                 {
-                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str);
-                                                clone_info_without_name($$, $2);
-                                             }
-           | scalar_expr '+' scalar_term     {
-                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str);
-                                                clone_info_without_name($$, $1);
-                                             }
-           | scalar_expr '-' scalar_term     {
-                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
-                                                clone_info_without_name($$, $1);
-                                             }
-           ;
 
-
-scalar_term: scalar_factor                           { clone_info($$, $1); }
-           | scalar_term '*' scalar_factor           {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " * " << $3.str);
-                                                        clone_info_without_name($$, $1);
-                                                     }
-           | scalar_factor '*' scalar_term           {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " * " << $3.str);
-                                                        clone_info_without_name($$, $1);
-                                                     }
-           | scalar_term '/' scalar_factor           {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " / " << $3.str);
-                                                        clone_info_without_name($$, $1);
-                                                     }
-           | scalar_term '^' scalar_factor           {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.pow(" << $1.str << ", " << $3.str << ")");
-                                                        clone_info_without_name($$, $1);
-                                                     }
-           ;
-
-
-
-scalar_factor: number                                  { clone_info($$, $1); }
-             | '(' scalar_expr ')'                     {
-                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")");
-                                                          clone_info_without_name($$, $2);
-                                                       }
-             | EUCLIDEAN_LENGTH '(' vector_expr ')'    {
-                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.euclideanLength(" << $3.str << ")");
-                                                          $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                          $$.array_size = 1;
-                                                          $$.type.entity_type = TYPE_SCALAR;
-                                                          $$.type.collection = false;
-                                                       }
-             | LENGTH '(' edge ')'                     {
-                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.length(" << $3.str << ")");
-                                                          $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                          $$.array_size = 1;
-                                                          $$.type.entity_type = TYPE_SCALAR;
-                                                          $$.type.collection = false;
-                                                       }
-             | AREA '(' face ')'                       {
-                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.area(" << $3.str << ")");
-                                                          $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                          $$.array_size = 1;
-                                                          $$.type.entity_type = TYPE_SCALAR;
-                                                          $$.type.collection = false;
-                                                       }
-             | VOLUME '(' cell ')'                     {
-                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.volume(" << $3.str << ")");
-                                                          $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                          $$.array_size = 1;
-                                                          $$.type.entity_type = TYPE_SCALAR;
-                                                          $$.type.collection = false;
-                                                       }
-             | DOT '(' vector_expr ',' vector_expr ')' {
-                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.dot(" << $3.str << ", " << $5.str << ")");
-                                                          $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                          $$.array_size = 1;
-                                                          $$.type.entity_type = TYPE_SCALAR;
-                                                          $$.type.collection = false;
-                                                        }
-             | CEIL '(' scalar_expr ')'                {
-                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.ceil(" << $3.str << ")");
-                                                          $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                          $$.array_size = 1;
-                                                          $$.type.entity_type = TYPE_SCALAR;
-                                                          $$.type.collection = false; ;
-                                                       }
-             | FLOOR '(' scalar_expr ')'               {
-                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.floor(" << $3.str << ")");
-                                                          $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                          $$.array_size = 1;
-                                                          $$.type.entity_type = TYPE_SCALAR;
-                                                          $$.type.collection = false;
-                                                       }
-             | ABS '(' scalar_expr ')'                 {
-                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.abs(" << $3.str << ")");
-                                                          $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                          $$.array_size = 1;
-                                                          $$.type.entity_type = TYPE_SCALAR;
-                                                          $$.type.collection = false;
-                                                       }
-             | MIN '(' scalars ')'                     {
-                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.min(" << $3.str << ")");
-                                                          $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                          $$.array_size = 1;
-                                                          $$.type.entity_type = TYPE_SCALAR;
-                                                          $$.type.collection = false;
-                                                       }
-             | MAX '(' scalars ')'                     {
-                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.max(" << $3.str << ")");
-                                                          $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                          $$.array_size = 1;
-                                                          $$.type.entity_type = TYPE_SCALAR;
-                                                          $$.type.collection = false;
-                                                       }
-             | GRADIENT '(' scalar_expr ')'            {
-                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.gradient(" << $3.str << ")");
-                                                          $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                          $$.array_size = 1;
-                                                          $$.type.entity_type = TYPE_SCALAR;
-                                                          $$.type.collection = false;
-                                                       }
-             | DIVERGENCE '(' scalar_expr ')'          {
-                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.divergence(" << $3.str << ")");
-                                                          $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                          $$.array_size = 1;
-                                                          $$.type.entity_type = TYPE_SCALAR;
-                                                          $$.type.collection = false;
-                                                       }
-             | VARIABLE                                {
-                            									switch($1.type.entity_type) {
-                            									case TYPE_SCALAR:
-                            										$$.str = strdup("FIXME: TYPE_SCALAR");
-                            										break;
-                            									case TYPE_VERTEX:
-                            										$$.str = strdup("FIXME: TYPE_VERTEX");
-                            										break;
-                            									case TYPE_EDGE:
-                            										$$.str = strdup("FIXME: TYPE_EDGE");
-                            										break;
-                            									case TYPE_FACE:
-                            										$$.str = strdup("FIXME: FACE");
-                            										break;
-                            									case TYPE_CELL:
-                            										$$.str = strdup("FIXME: CELL");
-                            										break;
-                            									case TYPE_BOOLEAN:
-                            										$$.str = strdup("FIXME: TYPE_BOOLEAN");
-                            										break;
-                            									case TYPE_INVALID:
-                            										$$.str = strdup("FIXME: TYPE_INVALID");
-                            										break;
-                            									default:
-                            										$$.str = strdup("FIXME: TYPE_UNKNOWN");
-                            									}
-                            				                      /*
-                                                              if(strcmp(getType($1.str), "scalar") != 0)
-                                                              {
-                                                                  WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$.str, $1.str);
-                                                              }
-                                                              else
-                                                              {
-                                                                  $$.str = strdup($1.str);
-                                                              }
-                            														  */
-                                                       }
-
-             | VARIABLE '(' values ')'                 {
-                                                          string st = functionToAnySingularType($1.str, "Scalar", $3.str, "scalar");
-                                                          $$.str = strdup(st.c_str());
-                                                       }
-             ;
-
-
-scalars: scalar_exprs                 {
+scalars: expression
+                                      { // it should be scalars
                                         $$.str = strdup($1.str);
                                         $$.grid_mapping = GRID_MAPPING_INVALID;   // it mustn't have a specific grid mapping, since we won't use this structure alone
                                         $$.array_size = $1.array_size;
                                         $$.type.entity_type = TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
                                         $$.type.collection = false;
                                       }
-       | scalars ',' scalar_exprs     {
+       | scalars ',' expression
+                                      { // 2nd should be scalars
                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << ", " << $3.str);
                                         $$.grid_mapping = GRID_MAPPING_INVALID;   // it mustn't have a specific grid mapping, since we won't use this structure alone
                                         $$.array_size = $1.array_size + $3.array_size;
                                         $$.type.entity_type = TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
                                         $$.type.collection = false;
                                       }
-       | scalar_expr                  {
+       | expression
+                                      { // it should be scalar
                                         $$.str = strdup($1.str);
                                         $$.grid_mapping = GRID_MAPPING_INVALID;   // it mustn't have a specific grid mapping, since we won't use this structure alone
                                         $$.array_size = 1;
                                         $$.type.entity_type = TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
                                         $$.type.collection = false;
                                       }
-       | scalars ',' scalar_expr      {
+       | scalars ',' expression
+                                      { // 2nd should be scalar
                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << ", " << $3.str);
                                         $$.grid_mapping = GRID_MAPPING_INVALID;   // it mustn't have a specific grid mapping, since we won't use this structure alone
                                         $$.array_size = $1.array_size + 1;
@@ -601,278 +411,17 @@ scalars: scalar_exprs                 {
        ;
 
 
-scalar_exprs: scalar_terms                     { clone_info($$, $1); }
-            | '-' scalar_terms                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str); clone_info_without_name($$, $2); }
-            | scalar_exprs '+' scalar_terms
-                                               {
-                                                  if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                  {
-                                                      LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                  }
-                                                  else
-                                                  {
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str);
-                                                      clone_info_without_name($$, $1);
-                                                  }
-                                               }
 
-            | scalar_exprs '-' scalar_terms
-                                               {
-                                                  if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                  {
-                                                      LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                  }
-                                                  else
-                                                  {
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
-                                                      clone_info_without_name($$, $1);
-                                                  }
-                                               }
-            ;
-
-
-scalar_terms: scalar_factors                    { clone_info($$, $1); }
-            | scalar_terms '*' scalar_factors
-                                                {
-                                                  if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                  {
-                                                      LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                  }
-                                                  else
-                                                  {
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " * " << $3.str);
-                                                      clone_info_without_name($$, $1);
-                                                  }
-                                               }
-            | scalar_factors '*' scalar_terms
-                                                {
-                                                  if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                  {
-                                                      LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                  }
-                                                  else
-                                                  {
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " * " << $3.str);
-                                                      clone_info_without_name($$, $1);
-                                                  }
-                                               }
-            | scalar_terms '/' scalar_factors
-                                               {
-                                                  if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                  {
-                                                      LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                  }
-                                                  else
-                                                  {
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " / " << $3.str);
-                                                      clone_info_without_name($$, $1);
-                                                  }
-                                               }
-            | scalar_terms '^' scalar_factor   {
-                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.pow(" << $1.str << ", " << $3.str << ")");
-                                                  clone_info_without_name($$, $1);
-                                               }
-            ;
-
-
-scalar_factors: EUCLIDEAN_LENGTH '(' vector_exprs ')'           {
-                                                                   STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.euclideanLength(" << $3.str << ")");
-                                                                   $$.grid_mapping = $3.grid_mapping;
-                                                                   $$.array_size = $3.array_size;
-                                                                   $$.type.entity_type = TYPE_SCALAR;
-                                                                   $$.type.collection = true;
-                                                                }
-              | LENGTH '(' edges ')'                            {
-                                                                   STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.length(" << $3.str << ")");
-                                                                   $$.grid_mapping = $3.grid_mapping;
-                                                                   $$.array_size = $3.array_size;
-                                                                   $$.type.entity_type = TYPE_SCALAR;
-                                                                   $$.type.collection = true;
-                                                                }
-              | AREA '(' faces ')'                              {
-                                                                   STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.area(" << $3.str << ")");
-                                                                   $$.grid_mapping = $3.grid_mapping;
-                                                                   $$.array_size = $3.array_size;
-                                                                   $$.type.entity_type = TYPE_SCALAR;
-                                                                   $$.type.collection = true;
-                                                                }
-              | VOLUME '(' cells ')'                            {
-                                                                   STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.volume(" << $3.str << ")");
-                                                                   $$.grid_mapping = $3.grid_mapping;
-                                                                   $$.array_size = $3.array_size;
-                                                                   $$.type.entity_type = TYPE_SCALAR;
-                                                                   $$.type.collection = true;
-                                                                }
-              | DOT '(' vector_exprs ',' vector_exprs ')'
-                                                                {
-                                                                   if($3.grid_mapping != $5.grid_mapping || $3.array_size != $5.array_size)    // check that the lengths of the 2 terms are equal
-                                                                   {
-                                                                      LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                                  }
-                                                                   else
-                                                                   {
-                                                                       STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.dot(" << $3.str << ", " << $5.str << ")");
-                                                                       $$.grid_mapping = $3.grid_mapping;
-                                                                       $$.array_size = $3.array_size;
-                                                                       $$.type.entity_type = TYPE_SCALAR;
-                                                                       $$.type.collection = true;
-                                                                   }
-                                                                }
-
-              | CEIL '(' scalar_exprs ')'                       {
-                                                                   STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.ceil(" << $3.str << ")");
-                                                                   $$.grid_mapping = $3.grid_mapping;
-                                                                   $$.array_size = $3.array_size;
-                                                                   $$.type.entity_type = TYPE_SCALAR;
-                                                                   $$.type.collection = true;
-                                                                }
-              | FLOOR '(' scalar_exprs ')'                      {
-                                                                   STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.floor(" << $3.str << ")");
-                                                                   $$.grid_mapping = $3.grid_mapping;
-                                                                   $$.array_size = $3.array_size;
-                                                                   $$.type.entity_type = TYPE_SCALAR;
-                                                                   $$.type.collection = true;
-                                                                }
-              | ABS '(' scalar_exprs ')'                        {
-                                                                   STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.abs(" << $3.str << ")");
-                                                                   $$.grid_mapping = $3.grid_mapping;
-                                                                   $$.array_size = $3.array_size;
-                                                                   $$.type.entity_type = TYPE_SCALAR;
-                                                                   $$.type.collection = true;
-                                                                }
-              | GRADIENT '(' scalar_exprs ')'                   {
-                                                                   STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.gradient(" << $3.str << ")");
-                                                                   $$.grid_mapping = $3.grid_mapping;
-                                                                   $$.array_size = $3.array_size;
-                                                                   $$.type.entity_type = TYPE_SCALAR;
-                                                                   $$.type.collection = true;
-                                                                }
-              | DIVERGENCE '(' scalar_exprs ')'                 {
-                                                                   STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.divergence(" << $3.str << ")");
-                                                                   $$.grid_mapping = $3.grid_mapping;
-                                                                   $$.array_size = $3.array_size;
-                                                                   $$.type.entity_type = TYPE_SCALAR;
-                                                                   $$.type.collection = true;
-                                                                }
-              | VARIABLE                                        {
-																	$$.str = strdup("Not implemented");
-																	/*
-                                                                    if(strcmp(getType($1.str), "scalars") != 0)
-                                                                    {
-                                                                        WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$.str, $1.str);
-                                                                    }
-                                                                    else
-                                                                    {
-                                                                        $$.str = strdup($1.str);
-                                                                        $$.grid_mapping = getSize1($1.str);
-                                                                    }
-																	*/
-                                                                }
-
-              | VARIABLE '(' values ')'                         {
-                                                                    string st = functionToAnyCollectionType($1.str, "CollOfScalars", $3.str, "scalars");
-                                                                    if(st == "ok")
-                                                                    {
-                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "(" << $3.str << ")");
-                                                                        $$.grid_mapping = fun[getIndex2($1.str)].grid_mapping;
-                                                                    }
-                                                                    else
-                                                                    {
-                                                                        $$.str = strdup(st.c_str());
-                                                                    }
-                                                                }
-              ;
-
-
-vector_expr: vector_term                      { clone_info($$, $1); }
-           | '-' vector_term                  {
-                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str);
-                                                clone_info_without_name($$, $2);
-                                              }
-           | vector_expr '+' vector_term      {
-                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str);
-                                                clone_info_without_name($$, $1);
-                                              }
-           | vector_expr '-' vector_term      {
-                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
-                                                clone_info_without_name($$, $1);
-                                              }
-           ;
-
-
-vector_term: '[' scalars ']'                       {
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "[" << $2.str << "]");
-                                                      $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                      $$.array_size = $2.array_size;
-                                                      $$.type.entity_type = TYPE_VECTOR;
-                                                      $$.type.collection = false;
-                                                   }
-           | CENTROID '(' cell ')'                 {
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
-                                                      $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                      $$.array_size = 1;
-                                                      $$.type.entity_type = TYPE_VECTOR;
-                                                      $$.type.collection = false;
-                                                   }
-           | CENTROID '(' face ')'                 {
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
-                                                      $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                      $$.array_size = 1;
-                                                      $$.type.entity_type = TYPE_VECTOR;
-                                                      $$.type.collection = false;
-                                                   }
-           | NORMAL '(' face ')'                   {
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.normal(" << $3.str << ")");
-                                                      $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                      $$.array_size = 1;
-                                                      $$.type.entity_type = TYPE_VECTOR;
-                                                      $$.type.collection = false;
-                                                   }
-           | '(' vector_expr ')'                   {
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")");
-                                                      clone_info_without_name($$, $2);
-                                                   }              // produces 1 shift/reduce conflict
-           | vector_term '*' scalar_factor         {
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " * " << $3.str);
-                                                      clone_info_without_name($$, $1);
-                                                   }             // produces 1 reduce/reduce conflict
-           | scalar_factor '*' vector_term         {
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " * " << $3.str);
-                                                      clone_info_without_name($$, $3);
-                                                   }
-           | vector_term '/' scalar_factor         {
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " / " << $3.str);
-                                                      clone_info_without_name($$, $1);
-                                                   }
-           | VARIABLE                              {
-													  $$.str = strdup("Not implemented");
-													  /*
-                                                      if(strcmp(getType($1.str), "vector") != 0)
-                                                      {
-                                                          WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$.str, $1.str);
-                                                      }
-                                                      else
-                                                      {
-                                                          $$.str = strdup($1.str);
-                                                      }
-													  */
-                                                   }
-
-           | VARIABLE '(' values ')'               {
-                                                      string st = functionToAnySingularType($1.str, "Vector", $3.str, "vector");
-                                                      $$.str = strdup(st.c_str());
-                                                   }
-           ;
-
-
-vectors: vector_term                      {
+vectors: expression
+                                          { // it should be vector
                                             $$.str = strdup($1.str);
                                             $$.array_size = 1;
                                             $$.grid_mapping = GRID_MAPPING_INVALID;   // it mustn't have a specific grid mapping, since we won't use this structure alone
                                             $$.type.entity_type = TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
                                             $$.type.collection = false;
                                           }
-       | vectors ',' vector_term          {
+       | vectors ',' expression
+                                          { // 2nd should be vector
                                             STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << ", " << $3.str);
                                             $$.array_size = $1.array_size + 1;
                                             $$.grid_mapping = GRID_MAPPING_INVALID;   // it mustn't have a specific grid mapping, since we won't use this structure alone
@@ -882,13 +431,373 @@ vectors: vector_term                      {
        ;
 
 
-vector_exprs: vector_terms                       { clone_info($$, $1); }
-            | '-' vector_terms                   {
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str);
-                                                    clone_info_without_name($$, $2);
-                                                 }            // produces 1 shift/reduce conflict
-            | vector_exprs '+' vector_terms
-                                                 {
+expression: '-' expression
+                                             { // it should be scalar
+                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str);
+                                                clone_info_without_name($$, $2);
+                                             }
+          | expression '+' expression
+                                             { // both should be scalar
+                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str);
+                                                clone_info_without_name($$, $1);
+                                             }
+          | expression '-' expression
+                                             { // both should be scalar
+                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
+                                                clone_info_without_name($$, $1);
+                                             }
+          | expression '*' expression
+                                             { // both should be scalar
+                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " * " << $3.str);
+                                                clone_info_without_name($$, $1);
+                                             }
+          | expression '/' expression
+                                             {  // both should be scalar
+                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " / " << $3.str);
+                                                clone_info_without_name($$, $1);
+                                             }
+          | expression '^' expression
+                                             {  // both should be scalar
+                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.pow(" << $1.str << ", " << $3.str << ")");
+                                                clone_info_without_name($$, $1);
+                                             }
+          | number
+                                             {
+                                                 clone_info($$, $1);
+                                             }
+          | '(' expression ')'
+                                             {
+                                                 // it should be scalar
+                                                 STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")");
+                                                 clone_info_without_name($$, $2);
+                                             }
+          | EUCLIDEAN_LENGTH '(' expression ')'
+                                                     {  // it should be vector
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.euclideanLength(" << $3.str << ")");
+                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                        $$.array_size = 1;
+                                                        $$.type.entity_type = TYPE_SCALAR;
+                                                        $$.type.collection = false;
+                                                     }
+          | LENGTH '(' expression ')'
+                                                     {  // it should be edge
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.length(" << $3.str << ")");
+                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                        $$.array_size = 1;
+                                                        $$.type.entity_type = TYPE_SCALAR;
+                                                        $$.type.collection = false;
+                                                     }
+          | AREA '(' expression ')'
+                                                     {  // it should be face
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.area(" << $3.str << ")");
+                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                        $$.array_size = 1;
+                                                        $$.type.entity_type = TYPE_SCALAR;
+                                                        $$.type.collection = false;
+                                                     }
+          | VOLUME '(' expression ')'
+                                                     {  // it should be cell
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.volume(" << $3.str << ")");
+                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                        $$.array_size = 1;
+                                                        $$.type.entity_type = TYPE_SCALAR;
+                                                        $$.type.collection = false;
+                                                     }
+          | DOT '(' expression ',' expression ')'
+                                                     {  // both should be vectors
+                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.dot(" << $3.str << ", " << $5.str << ")");
+                                                          $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                          $$.array_size = 1;
+                                                          $$.type.entity_type = TYPE_SCALAR;
+                                                          $$.type.collection = false;
+                                                     }
+          | CEIL '(' expression ')'
+                                                     {  // it should be scalar
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.ceil(" << $3.str << ")");
+                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                        $$.array_size = 1;
+                                                        $$.type.entity_type = TYPE_SCALAR;
+                                                        $$.type.collection = false; ;
+                                                     }
+          | FLOOR '(' expression ')'
+                                                     {  // it should be scalar
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.floor(" << $3.str << ")");
+                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                        $$.array_size = 1;
+                                                        $$.type.entity_type = TYPE_SCALAR;
+                                                        $$.type.collection = false;
+                                                     }
+          | ABS '(' expression ')'
+                                                     {  // it should be scalar
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.abs(" << $3.str << ")");
+                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                        $$.array_size = 1;
+                                                        $$.type.entity_type = TYPE_SCALAR;
+                                                        $$.type.collection = false;
+                                                     }
+          | MIN '(' scalars ')'
+                                                     {
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.min(" << $3.str << ")");
+                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                        $$.array_size = 1;
+                                                        $$.type.entity_type = TYPE_SCALAR;
+                                                        $$.type.collection = false;
+                                                     }
+          | MAX '(' scalars ')'
+                                                     {
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.max(" << $3.str << ")");
+                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                        $$.array_size = 1;
+                                                        $$.type.entity_type = TYPE_SCALAR;
+                                                        $$.type.collection = false;
+                                                     }
+          | GRADIENT '(' expression ')'
+                                                     {  // it should be scalar
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.gradient(" << $3.str << ")");
+                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                        $$.array_size = 1;
+                                                        $$.type.entity_type = TYPE_SCALAR;
+                                                        $$.type.collection = false;
+                                                     }
+          | DIVERGENCE '(' expression ')'
+                                                     {  // it should be scalar
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.divergence(" << $3.str << ")");
+                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                        $$.array_size = 1;
+                                                        $$.type.entity_type = TYPE_SCALAR;
+                                                        $$.type.collection = false;
+                                                     }
+          | '-' expression
+                                                     {  // it should be scalars
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str);
+                                                        clone_info_without_name($$, $2);
+                                                     }
+          | expression '+' expression
+                                                     {  // they both should be scalars
+                                                        if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                        {
+                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                        }
+                                                        else
+                                                        {
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str);
+                                                            clone_info_without_name($$, $1);
+                                                        }
+                                                     }
+          | expression '-' expression
+                                                     {  // they both should be scalars
+                                                        if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                        {
+                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                        }
+                                                        else
+                                                        {
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
+                                                            clone_info_without_name($$, $1);
+                                                        }
+                                                     }
+          | expression '*' expression
+                                                     {  // they both should be scalars
+                                                        if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                        {
+                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                        }
+                                                        else
+                                                        {
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " * " << $3.str);
+                                                            clone_info_without_name($$, $1);
+                                                        }
+                                                     }
+          | expression '*' expression
+                                                     {  // they both should be scalars
+                                                        if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                        {
+                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                        }
+                                                        else
+                                                        {
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " * " << $3.str);
+                                                            clone_info_without_name($$, $1);
+                                                        }
+                                                     }
+          | expression '/' expression
+                                                     {  // they both should be scalars
+                                                        if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                        {
+                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                        }
+                                                        else
+                                                        {
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " / " << $3.str);
+                                                            clone_info_without_name($$, $1);
+                                                        }
+                                                     }
+          | expression '^' expression
+                                                     {  // they both should be scalars
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.pow(" << $1.str << ", " << $3.str << ")");
+                                                        clone_info_without_name($$, $1);
+                                                     }
+          | EUCLIDEAN_LENGTH '(' expression ')'
+                                                     {  // it should be vector
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.euclideanLength(" << $3.str << ")");
+                                                        $$.grid_mapping = $3.grid_mapping;
+                                                        $$.array_size = $3.array_size;
+                                                        $$.type.entity_type = TYPE_SCALAR;
+                                                        $$.type.collection = true;
+                                                     }
+          | LENGTH '(' expression ')'
+                                                 {  // it should be edges
+                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.length(" << $3.str << ")");
+                                                     $$.grid_mapping = $3.grid_mapping;
+                                                     $$.array_size = $3.array_size;
+                                                     $$.type.entity_type = TYPE_SCALAR;
+                                                     $$.type.collection = true;
+                                                 }
+          | AREA '(' expression ')'
+                                                 {  // it should be faces
+                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.area(" << $3.str << ")");
+                                                     $$.grid_mapping = $3.grid_mapping;
+                                                     $$.array_size = $3.array_size;
+                                                     $$.type.entity_type = TYPE_SCALAR;
+                                                     $$.type.collection = true;
+                                                 }
+          | VOLUME '(' expression ')'
+                                                  { // it should be cells
+                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.volume(" << $3.str << ")");
+                                                     $$.grid_mapping = $3.grid_mapping;
+                                                     $$.array_size = $3.array_size;
+                                                     $$.type.entity_type = TYPE_SCALAR;
+                                                     $$.type.collection = true;
+                                                  }
+          | DOT '(' expression ',' expression ')'
+                                                  {  // they both should be vectors
+                                                     if($3.grid_mapping != $5.grid_mapping || $3.array_size != $5.array_size)    // check that the lengths of the 2 terms are equal
+                                                     {
+                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                    }
+                                                     else
+                                                     {
+                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.dot(" << $3.str << ", " << $5.str << ")");
+                                                         $$.grid_mapping = $3.grid_mapping;
+                                                         $$.array_size = $3.array_size;
+                                                         $$.type.entity_type = TYPE_SCALAR;
+                                                         $$.type.collection = true;
+                                                     }
+                                                  }
+          | CEIL '(' expression ')'
+                                                  {   // it should be scalars
+                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.ceil(" << $3.str << ")");
+                                                     $$.grid_mapping = $3.grid_mapping;
+                                                     $$.array_size = $3.array_size;
+                                                     $$.type.entity_type = TYPE_SCALAR;
+                                                     $$.type.collection = true;
+                                                  }
+          | FLOOR '(' expression ')'
+                                                  {   // it should be scalars
+                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.floor(" << $3.str << ")");
+                                                     $$.grid_mapping = $3.grid_mapping;
+                                                     $$.array_size = $3.array_size;
+                                                     $$.type.entity_type = TYPE_SCALAR;
+                                                     $$.type.collection = true;
+                                                  }
+          | ABS '(' expression ')'
+                                                  {   // it should be scalars
+                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.abs(" << $3.str << ")");
+                                                     $$.grid_mapping = $3.grid_mapping;
+                                                     $$.array_size = $3.array_size;
+                                                     $$.type.entity_type = TYPE_SCALAR;
+                                                     $$.type.collection = true;
+                                                  }
+          | GRADIENT '(' expression ')'
+                                                  {   // it should be scalars
+                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.gradient(" << $3.str << ")");
+                                                     $$.grid_mapping = $3.grid_mapping;
+                                                     $$.array_size = $3.array_size;
+                                                     $$.type.entity_type = TYPE_SCALAR;
+                                                     $$.type.collection = true;
+                                                  }
+          | DIVERGENCE '(' expression ')'
+                                                  {   // it should be scalars
+                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.divergence(" << $3.str << ")");
+                                                     $$.grid_mapping = $3.grid_mapping;
+                                                     $$.array_size = $3.array_size;
+                                                     $$.type.entity_type = TYPE_SCALAR;
+                                                     $$.type.collection = true;
+                                                  }
+          | '-' expression
+                                                  {   // it should be vector
+                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str);
+                                                      clone_info_without_name($$, $2);
+                                                  }
+          | expression '+' expression
+                                                  {   // both should be vector
+                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str);
+                                                      clone_info_without_name($$, $1);
+                                                  }
+          | expression '-' expression
+                                                  {   // both should be vector
+                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
+                                                      clone_info_without_name($$, $1);
+                                                  }
+          | '[' scalars ']'
+                                                  {
+                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "[" << $2.str << "]");
+                                                      $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                      $$.array_size = $2.array_size;
+                                                      $$.type.entity_type = TYPE_VECTOR;
+                                                      $$.type.collection = false;
+                                                  }
+          | CENTROID '(' expression ')'
+                                                  {   // it should be cell
+                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
+                                                      $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                      $$.array_size = 1;
+                                                      $$.type.entity_type = TYPE_VECTOR;
+                                                      $$.type.collection = false;
+                                                  }
+          | CENTROID '(' expression ')'
+                                                  {  // it should be face
+                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
+                                                      $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                      $$.array_size = 1;
+                                                      $$.type.entity_type = TYPE_VECTOR;
+                                                      $$.type.collection = false;
+                                                  }
+          | NORMAL '(' expression ')'
+                                                  {  // it should be face
+                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.normal(" << $3.str << ")");
+                                                      $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                      $$.array_size = 1;
+                                                      $$.type.entity_type = TYPE_VECTOR;
+                                                      $$.type.collection = false;
+                                                  }
+          | '(' expression ')'
+                                                  {  // it should be vector
+                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")");
+                                                      clone_info_without_name($$, $2);
+                                                  }              // produces 1 shift/reduce conflict
+          | expression '*' expression
+                                                  {  // 1st should be vector, 2nd should be scalar
+                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " * " << $3.str);
+                                                      clone_info_without_name($$, $1);
+                                                  }             // produces 1 reduce/reduce conflict
+          | expression '*' expression
+                                                  {  // 1st should be scalar, 2nd should be vector
+                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " * " << $3.str);
+                                                      clone_info_without_name($$, $3);
+                                                  }
+          | expression '/' expression
+                                                  {  // 1st should be vector, 2nd should be scalar
+                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " / " << $3.str);
+                                                      clone_info_without_name($$, $1);
+                                                  }
+          | '-' expression
+                                                  {   // it should be vectors
+                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str);
+                                                      clone_info_without_name($$, $2);
+                                                  }            // produces 1 shift/reduce conflict
+          | expression '+' expression
+                                                 {  // both should be vectors
                                                     if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
                                                     {
                                                         LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
@@ -899,9 +808,8 @@ vector_exprs: vector_terms                       { clone_info($$, $1); }
                                                         clone_info_without_name($$, $1);
                                                     }
                                                  }
-
-            | vector_exprs '-' vector_terms
-                                                 {
+          | expression '-' expression
+                                                 {  // both should be vectors
                                                     if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
                                                     {
                                                         LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
@@ -912,730 +820,413 @@ vector_exprs: vector_terms                       { clone_info($$, $1); }
                                                         clone_info_without_name($$, $1);
                                                     }
                                                  }
-            ;
-
-
-vector_terms: '[' vectors ']'                        {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "[" << $2.str << "]");
-                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                        $$.array_size = $2.array_size;
-                                                        $$.type.entity_type = TYPE_VECTOR;
-                                                        $$.type.collection = true;
-                                                     }
-            | CENTROID '(' cells ')'                 {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
-                                                        $$.grid_mapping = $3.grid_mapping;
-                                                        $$.array_size = $3.array_size;
-                                                        $$.type.entity_type = TYPE_VECTOR;
-                                                        $$.type.collection = true;
-                                                     }
-            | CENTROID '(' faces ')'                 {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
-                                                        $$.grid_mapping = $3.grid_mapping;
-                                                        $$.array_size = $3.array_size;
-                                                        $$.type.entity_type = TYPE_VECTOR;
-                                                        $$.type.collection = true;
-                                                     }
-            | NORMAL '(' faces ')'                   {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.normal(" << $3.str << ")");
-                                                        $$.grid_mapping = $3.grid_mapping;
-                                                        $$.array_size = $3.array_size;
-                                                        $$.type.entity_type = TYPE_VECTOR;
-                                                        $$.type.collection = true;
-                                                     }
-            | '(' vector_exprs ')'                   {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")");
-                                                        clone_info_without_name($$, $2);
-                                                     }          // produces 1 shift/reduce conflict
-            | vector_terms '*' scalar_factor         {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
-                                                        clone_info_without_name($$, $1);
-                                                     }         // produces 1 reduce/reduce conflict
-            | scalar_factor '*' vector_terms         {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
-                                                        clone_info_without_name($$, $3);
-                                                     }
-            | vector_terms '/' scalar_factor         {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
-                                                        clone_info_without_name($$, $1);
-                                                     }
-            | VARIABLE                               {
-													    $$.str = strdup("Not implemented");
-														/*
-                                                        if(strcmp(getType($1.str), "vectors") != 0)
-                                                        {
-                                                            WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$.str, $1.str);
-                                                        }
-                                                        else
-                                                        {
-                                                            $$.str = strdup($1.str);
-                                                            $$.grid_mapping = getSize1($1.str);
-                                                        }
-														*/
-                                                     }
-
-            | VARIABLE '(' values ')'                {
-                                                          string st = functionToAnyCollectionType($1.str, "CollOfVectors", $3.str, "vectors");
-                                                          if(st == "ok")
-                                                          {
-                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "(" << $3.str << ")");
-                                                              $$.grid_mapping = fun[getIndex2($1.str)].grid_mapping;
-                                                          }
-                                                          else
-                                                          {
-                                                              $$.str = strdup(st.c_str());
-                                                          }
-                                                     }
-            ;
-
-
-vertex: VARIABLE           {
-							  $$.str = strdup("Not implemented");
-							  /*
-                              if(strcmp(getType($1.str), "vertex") != 0)
-                              {
-                                  WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$.str, $1.str);
-                              }
-                              else
-                              {
-                                  $$.str = strdup($1.str);
-                              }
-							  */
-                           }
-
-      | VARIABLE '(' values ')'               {
-                                                  string st = functionToAnySingularType($1.str, "Vertex", $3.str, "vertex");
-                                                  $$.str = strdup(st.c_str());
-                                              }
-      ;
-
-
-vertices: INTERIOR_VERTICES '(' GRID ')'      {
-                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorVertices()");
-                                                $$.grid_mapping = GRID_MAPPING_INTERIORVERTICES;
-                                                $$.array_size = 1;
-                                                $$.type.entity_type = TYPE_VERTEX;
-                                                $$.type.collection = true;
-                                              }
-        | BOUNDARY_VERTICES '(' GRID ')'      {
-                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryVertices()");
-                                                $$.grid_mapping = GRID_MAPPING_BOUNDARYVERTICES;
-                                                $$.array_size = 1;
-                                                $$.type.entity_type = TYPE_VERTEX;
-                                                $$.type.collection = true;
-                                              }
-        | ALL_VERTICES '(' GRID ')'           {
-                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allVertices()");
-                                                $$.grid_mapping = GRID_MAPPING_ALLVERTICES;
-                                                $$.array_size = 1;
-                                                $$.type.entity_type = TYPE_VERTEX;
-                                                $$.type.collection = true;
-                                              }
-        | VARIABLE                            {
-											      $$.str = strdup("Not implemented");
-												  /*
-                                                  if(strcmp(getType($1.str), "vertices") != 0)
-                                                  {
-                                                      WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$.str, $1.str);
-                                                  }
-                                                  else
-                                                  {
-                                                      $$.str = strdup($1.str);
-                                                      $$.grid_mapping = getSize1($1.str);
-                                                  }
-												  */
-                                              }
-
-        | VARIABLE '(' values ')'                 {
-                                                      string st = functionToAnyCollectionType($1.str, "CollOfVertices", $3.str, "vertices");
-                                                      if(st == "ok")
-                                                      {
-                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "(" << $3.str << ")");
-                                                          $$.grid_mapping = fun[getIndex2($1.str)].grid_mapping;
-                                                      }
-                                                      else
-                                                      {
-                                                          $$.str = strdup(st.c_str());
-                                                      }
-                                                  }
-        ;
-
-
-edge: VARIABLE             {
-							  $$.str = strdup("Not implemented");
-							  /*
-                              if(strcmp(getType($1.str), "edge") != 0)
-                              {
-                                  WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$.str, $1.str);
-                              }
-                              else
-                              {
-                                  $$.str = strdup($1.str);
-                              }
-							  */
-                           }
-
-    | VARIABLE '(' values ')'               {
-                                                string st = functionToAnySingularType($1.str, "Edge", $3.str, "edge");
-                                                $$.str = strdup(st.c_str());
-                                            }
-    ;
-
-
-edges: INTERIOR_EDGES '(' GRID ')'      {
-                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorEdges()");
-                                          $$.grid_mapping = GRID_MAPPING_INTERIOREDGES;
-                                          $$.array_size = 1;
-                                          $$.type.entity_type = TYPE_EDGE;
-                                          $$.type.collection = true;
-                                        }
-     | BOUNDARY_EDGES '(' GRID ')'      {
-                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryEdges()");
-                                          $$.grid_mapping = GRID_MAPPING_BOUNDARYEDGES;
-                                          $$.array_size = 1;
-                                          $$.type.entity_type = TYPE_EDGE;
-                                          $$.type.collection = true;
-                                        }
-     | ALL_EDGES '(' GRID ')'           {
-                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allEdges()");
-                                          $$.grid_mapping = GRID_MAPPING_ALLEDGES;
-                                          $$.array_size = 1;
-                                          $$.type.entity_type = TYPE_EDGE;
-                                          $$.type.collection = true;
-                                        }
-     | VARIABLE                         {
-										    $$.str = strdup("Not implemented");
-											/*
-                                            if(strcmp(getType($1.str), "edges") != 0)
-                                            {
-                                                WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$.str, $1.str);
-                                            }
-                                            else
-                                            {
-                                                $$.str = strdup($1.str);
-                                                $$.grid_mapping = getSize1($1.str);
-                                            }
-											*/
-                                        }
-
-     | VARIABLE '(' values ')'                  {
-                                                    string st = functionToAnyCollectionType($1.str, "CollOfEdges", $3.str, "edges");
-                                                    if(st == "ok")
-                                                    {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "(" << $3.str << ")");
-                                                        $$.grid_mapping = fun[getIndex2($1.str)].grid_mapping;
-                                                    }
-                                                    else
-                                                    {
-                                                        $$.str = strdup(st.c_str());
-                                                    }
-                                                }
-     ;
-
-
-face: VARIABLE                    {
-									  $$.str = strdup("Not implemented");
-									  /*
-                                      if(strcmp(getType($1.str), "face") != 0)
-                                      {
-                                          WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$.str, $1.str);
-                                      }
-                                      else
-                                      {
-                                          $$.str = strdup($1.str);
-                                      }
-									  */
-                                  }
-
-    | VARIABLE '(' values ')'               {
-                                                string st = functionToAnySingularType($1.str, "Face", $3.str, "face");
-                                                $$.str = strdup(st.c_str());
-                                            }
-    ;
-
-
-faces: INTERIOR_FACES '(' GRID ')'      {
-                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorFaces()");
-                                          $$.grid_mapping = GRID_MAPPING_INTERIORFACES;
-                                          $$.array_size = 1;
-                                          $$.type.entity_type = TYPE_FACE;
-                                          $$.type.collection = true;
-                                        }
-     | BOUNDARY_FACES '(' GRID ')'      {
-                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryFaces()");
-                                          $$.grid_mapping = GRID_MAPPING_BOUNDARYFACES;
-                                          $$.array_size = 1;
-                                          $$.type.entity_type = TYPE_FACE;
-                                          $$.type.collection = true;
-                                        }
-     | ALL_FACES '(' GRID ')'           {
-                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allFaces()");
-                                          $$.grid_mapping = GRID_MAPPING_ALLFACES;
-                                          $$.array_size = 1;
-                                          $$.type.entity_type = TYPE_FACE;
-                                          $$.type.collection = true;
-                                        }
-     | VARIABLE                         {
-											$$.str = strdup("Not implemented");
-											/*
-                                            if(strcmp(getType($1.str), "faces") != 0)
-                                            {
-                                                WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$.str, $1.str);
-                                            }
-                                            else
-                                            {
-                                                $$.str = strdup($1.str);
-                                                $$.grid_mapping = getSize1($1.str);
-                                            }
-											*/
-                                        }
-
-     | VARIABLE '(' values ')'                   {
-                                                      string st = functionToAnyCollectionType($1.str, "CollOfFaces", $3.str, "faces");
-                                                      if(st == "ok")
-                                                      {
-                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "(" << $3.str << ")");
-                                                          $$.grid_mapping = fun[getIndex2($1.str)].grid_mapping;
-                                                      }
-                                                      else
-                                                      {
-                                                          $$.str = strdup(st.c_str());
-                                                      }
+          | '[' vectors ']'
+                                                 {
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "[" << $2.str << "]");
+                                                    $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                    $$.array_size = $2.array_size;
+                                                    $$.type.entity_type = TYPE_VECTOR;
+                                                    $$.type.collection = true;
                                                  }
-     ;
-
-
-cell: FIRST_CELL '(' face ')'     {
-                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.firstCell(" << $3.str << ")");
-                                    $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                    $$.array_size = 1;
-                                    $$.type.entity_type = TYPE_CELL;
-                                    $$.type.collection = false;
-                                  }
-    | SECOND_CELL '(' face ')'    {
-                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.secondCell(" << $3.str << ")");
-                                    $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                    $$.array_size = 1;
-                                    $$.type.entity_type = TYPE_CELL;
-                                    $$.type.collection = false;
-                                  }
-    | VARIABLE                    {
-									  $$.str = strdup("Not implemented");
-									  /*
-                                      if(strcmp(getType($1.str), "cell") != 0)
-                                      {
-                                          WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$.str, $1.str);
-                                      }
-                                      else
-                                      {
-                                          $$.str = strdup($1.str);
-                                      }
-									  */
-                                  }
-
-    | VARIABLE '(' values ')'                 {
-                                                  string st = functionToAnySingularType($1.str, "Cell", $3.str, "cell");
-                                                  $$.str = strdup(st.c_str());
-                                              }
-    ;
-
-
-cells: INTERIOR_CELLS '(' GRID ')'          {
-                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorCells()");
-                                              $$.grid_mapping = GRID_MAPPING_INTERIORCELLS;
-                                              $$.array_size = 1;
-                                              $$.type.entity_type = TYPE_CELL;
-                                              $$.type.collection = true;
-                                            }
-     | BOUNDARY_CELLS '(' GRID ')'          {
-                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryCells()");
-                                              $$.grid_mapping = GRID_MAPPING_BOUNDARYCELLS;
-                                              $$.array_size = 1;
-                                              $$.type.entity_type = TYPE_CELL;
-                                              $$.type.collection = true;
-                                            }
-     | ALL_CELLS '(' GRID ')'               {
-                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allCells()");
-                                              $$.grid_mapping = GRID_MAPPING_ALLCELLS;
-                                              $$.array_size = 1;
-                                              $$.type.entity_type = TYPE_CELL;
-                                              $$.type.collection = true;
-                                            }
-     | FIRST_CELL '(' faces ')'             {
-                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.firstCell(" << $3.str << ")");
-                                              $$.grid_mapping = $3.grid_mapping;
-                                              $$.array_size = 1;
-                                              $$.type.entity_type = TYPE_CELL;
-                                              $$.type.collection = true;
-                                            }
-     | SECOND_CELL '(' faces ')'            {
-                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.secondCell(" << $3.str << ")");
-                                              $$.grid_mapping = $3.grid_mapping;
-                                              $$.array_size = 1;
-                                              $$.type.entity_type = TYPE_CELL;
-                                              $$.type.collection = true;
-                                            }
-     | VARIABLE                             {
-												$$.str = strdup("Not implemented");
-												/*
-                                                if(strcmp(getType($1.str), "cells") != 0)
-                                                {
-                                                    WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$.str, $1.str);
-                                                }
-                                                else
-                                                {
-                                                    $$.str = strdup($1.str);
-                                                    $$.grid_mapping = getSize1($1.str);
-                                                }
-												*/
-                                            }
-
-     | VARIABLE '(' values ')'                  {
-                                                    string st = functionToAnyCollectionType($1.str, "CollOfCells", $3.str, "cells");
-                                                    if(st == "ok")
+          | CENTROID '(' expression ')'
+                                                 {  // it should be cells
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
+                                                    $$.grid_mapping = $3.grid_mapping;
+                                                    $$.array_size = $3.array_size;
+                                                    $$.type.entity_type = TYPE_VECTOR;
+                                                    $$.type.collection = true;
+                                                 }
+          | CENTROID '(' expression ')'
+                                                 {  // it should be faces
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
+                                                    $$.grid_mapping = $3.grid_mapping;
+                                                    $$.array_size = $3.array_size;
+                                                    $$.type.entity_type = TYPE_VECTOR;
+                                                    $$.type.collection = true;
+                                                 }
+          | NORMAL '(' expression ')'
+                                                 {  // it should be faces
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.normal(" << $3.str << ")");
+                                                    $$.grid_mapping = $3.grid_mapping;
+                                                    $$.array_size = $3.array_size;
+                                                    $$.type.entity_type = TYPE_VECTOR;
+                                                    $$.type.collection = true;
+                                                 }
+          | '(' expression ')'
+                                                 {  // it should be vectors
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")");
+                                                    clone_info_without_name($$, $2);
+                                                 }          // produces 1 shift/reduce conflict
+          | expression '*' expression
+                                                 {  // 1st should be vectors, 2nd should be scalar
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
+                                                    clone_info_without_name($$, $1);
+                                                 }         // produces 1 reduce/reduce conflict
+          | expression '*' expression
+                                                 {  // 1st should be scalar, 2nd should be vectors
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
+                                                    clone_info_without_name($$, $3);
+                                                 }
+          | expression '/' expression
+                                                 {  // 1st should be vectors, 2nd should be scalar
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
+                                                    clone_info_without_name($$, $1);
+                                                 }
+          | INTERIOR_VERTICES '(' GRID ')'
+                                                 {
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorVertices()");
+                                                    $$.grid_mapping = GRID_MAPPING_INTERIORVERTICES;
+                                                    $$.array_size = 1;
+                                                    $$.type.entity_type = TYPE_VERTEX;
+                                                    $$.type.collection = true;
+                                                 }
+          | BOUNDARY_VERTICES '(' GRID ')'
+                                                 {
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryVertices()");
+                                                    $$.grid_mapping = GRID_MAPPING_BOUNDARYVERTICES;
+                                                    $$.array_size = 1;
+                                                    $$.type.entity_type = TYPE_VERTEX;
+                                                    $$.type.collection = true;
+                                                 }
+          | ALL_VERTICES '(' GRID ')'
+                                                 {
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allVertices()");
+                                                    $$.grid_mapping = GRID_MAPPING_ALLVERTICES;
+                                                    $$.array_size = 1;
+                                                    $$.type.entity_type = TYPE_VERTEX;
+                                                    $$.type.collection = true;
+                                                 }
+          | INTERIOR_EDGES '(' GRID ')'
+                                                 {
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorEdges()");
+                                                    $$.grid_mapping = GRID_MAPPING_INTERIOREDGES;
+                                                    $$.array_size = 1;
+                                                    $$.type.entity_type = TYPE_EDGE;
+                                                    $$.type.collection = true;
+                                                 }
+          | BOUNDARY_EDGES '(' GRID ')'
+                                                 {
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryEdges()");
+                                                    $$.grid_mapping = GRID_MAPPING_BOUNDARYEDGES;
+                                                    $$.array_size = 1;
+                                                    $$.type.entity_type = TYPE_EDGE;
+                                                    $$.type.collection = true;
+                                                 }
+          | ALL_EDGES '(' GRID ')'
+                                                 {
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allEdges()");
+                                                    $$.grid_mapping = GRID_MAPPING_ALLEDGES;
+                                                    $$.array_size = 1;
+                                                    $$.type.entity_type = TYPE_EDGE;
+                                                    $$.type.collection = true;
+                                                 }
+          | INTERIOR_FACES '(' GRID ')'
+                                                 {
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorFaces()");
+                                                    $$.grid_mapping = GRID_MAPPING_INTERIORFACES;
+                                                    $$.array_size = 1;
+                                                    $$.type.entity_type = TYPE_FACE;
+                                                    $$.type.collection = true;
+                                                 }
+          | BOUNDARY_FACES '(' GRID ')'
+                                                 {
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryFaces()");
+                                                    $$.grid_mapping = GRID_MAPPING_BOUNDARYFACES;
+                                                    $$.array_size = 1;
+                                                    $$.type.entity_type = TYPE_FACE;
+                                                    $$.type.collection = true;
+                                                 }
+          | ALL_FACES '(' GRID ')'
+                                                 {
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allFaces()");
+                                                    $$.grid_mapping = GRID_MAPPING_ALLFACES;
+                                                    $$.array_size = 1;
+                                                    $$.type.entity_type = TYPE_FACE;
+                                                    $$.type.collection = true;
+                                                 }
+          | FIRST_CELL '(' expression ')'
+                                                 {  // it should be face
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.firstCell(" << $3.str << ")");
+                                                    $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                    $$.array_size = 1;
+                                                    $$.type.entity_type = TYPE_CELL;
+                                                    $$.type.collection = false;
+                                                 }
+          | SECOND_CELL '(' expression ')'
+                                                 {  // it should be face
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.secondCell(" << $3.str << ")");
+                                                    $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                    $$.array_size = 1;
+                                                    $$.type.entity_type = TYPE_CELL;
+                                                    $$.type.collection = false;
+                                                 }
+          | INTERIOR_CELLS '(' GRID ')'
+                                                 {
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorCells()");
+                                                    $$.grid_mapping = GRID_MAPPING_INTERIORCELLS;
+                                                    $$.array_size = 1;
+                                                    $$.type.entity_type = TYPE_CELL;
+                                                    $$.type.collection = true;
+                                                 }
+          | BOUNDARY_CELLS '(' GRID ')'
+                                                 {
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryCells()");
+                                                    $$.grid_mapping = GRID_MAPPING_BOUNDARYCELLS;
+                                                    $$.array_size = 1;
+                                                    $$.type.entity_type = TYPE_CELL;
+                                                    $$.type.collection = true;
+                                                 }
+          | ALL_CELLS '(' GRID ')'
+                                                 {
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allCells()");
+                                                    $$.grid_mapping = GRID_MAPPING_ALLCELLS;
+                                                    $$.array_size = 1;
+                                                    $$.type.entity_type = TYPE_CELL;
+                                                    $$.type.collection = true;
+                                                 }
+          | FIRST_CELL '(' expression ')'
+                                                 {  // it should be faces
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.firstCell(" << $3.str << ")");
+                                                    $$.grid_mapping = $3.grid_mapping;
+                                                    $$.array_size = 1;
+                                                    $$.type.entity_type = TYPE_CELL;
+                                                    $$.type.collection = true;
+                                                 }
+          | SECOND_CELL '(' expression ')'
+                                                 {  // it should be faces
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.secondCell(" << $3.str << ")");
+                                                    $$.grid_mapping = $3.grid_mapping;
+                                                    $$.array_size = 1;
+                                                    $$.type.entity_type = TYPE_CELL;
+                                                    $$.type.collection = true;
+                                                 }
+          | NOT expression
+                                                 {  // it should be boolean
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "!" << $2.str);
+                                                    clone_info_without_name($$, $2);
+                                                 }
+          | expression AND expression
+                                                 {  // both should be boolean
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " && " << $3.str);
+                                                    clone_info_without_name($$, $1);
+                                                 }
+          | expression OR expression
+                                                 {  // both should be boolean
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " || " << $3.str);
+                                                    clone_info_without_name($$, $1);
+                                                 }
+          | expression XOR expression
+                                                 {  // both should be boolean
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(!" << $1.str << " && " << $3.str << ") || (!" << $3.str << " && " << $1.str << ")");
+                                                    clone_info_without_name($$, $1);
+                                                 }
+          | TRUE
+                                                 {
+                                                    $$.str = strdup("true");
+                                                    $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                    $$.array_size = 1;
+                                                    $$.type.entity_type = TYPE_BOOLEAN;
+                                                    $$.type.collection = false;
+                                                 }
+          | FALSE
+                                                 {
+                                                    $$.str = strdup("false");
+                                                    $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                    $$.array_size = 1;
+                                                    $$.type.entity_type = TYPE_BOOLEAN;
+                                                    $$.type.collection = false;
+                                                 }
+          | expression '>' expression
+                                                 {  // both should be scalar
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " > " << $3.str);
+                                                    $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                    $$.array_size = 1;
+                                                    $$.type.entity_type = TYPE_BOOLEAN;
+                                                    $$.type.collection = false;
+                                                 }
+          | expression '<' expression
+                                                 {  // both should be scalar
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " < " << $3.str);
+                                                    $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                    $$.array_size = 1;
+                                                    $$.type.entity_type = TYPE_BOOLEAN;
+                                                    $$.type.collection = false;
+                                                 }
+          | expression LESSEQ expression
+                                                 {  // both should be scalar
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " <= " << $3.str);
+                                                    $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                    $$.array_size = 1;
+                                                    $$.type.entity_type = TYPE_BOOLEAN;
+                                                    $$.type.collection = false;
+                                                 }
+          | expression GREATEREQ expression
+                                                 {  // both should be scalar
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " >= " << $3.str);
+                                                    $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                    $$.array_size = 1;
+                                                    $$.type.entity_type = TYPE_BOOLEAN;
+                                                    $$.type.collection = false;
+                                                 }
+          | expression EQ expression
+                                                 {  // both should be scalar
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " == " << $3.str);
+                                                    $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                    $$.array_size = 1;
+                                                    $$.type.entity_type = TYPE_BOOLEAN;
+                                                    $$.type.collection = false;
+                                                 }
+          | expression NOTEQ expression
+                                                 {  // both should be scalar
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " != " << $3.str);
+                                                    $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                    $$.array_size = 1;
+                                                    $$.type.entity_type = TYPE_BOOLEAN;
+                                                    $$.type.collection = false;
+                                                 }
+          | '(' expression ')'
+                                                 {  // it should be boolean
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")");
+                                                    clone_info_without_name($$, $2);
+                                                 }
+          | NOT expression
+                                                 {  // it should be booleans
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "!" << $2.str);
+                                                    clone_info_without_name($$, $2);
+                                                 }
+          | expression AND expression
+                                                 {  // they should be booleans
+                                                    if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
                                                     {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "(" << $3.str << ")");
-                                                        $$.grid_mapping = fun[getIndex2($1.str)].grid_mapping;
+                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
                                                     }
                                                     else
                                                     {
-                                                        $$.str = strdup(st.c_str());
-                                                    }
-                                                }
-     ;
-
-
-adb: GRADIENT '(' adb ')'         { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.gradient(" << $3.str << ")"); }
-   | DIVERGENCE '(' adb ')'       { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.divergence(" << $3.str << ")"); }
-   | VARIABLE                     {
-									  $$.str = strdup("Not implemented");
-									  /*
-                                      if(strcmp(getType($1.str), "scalarAD") != 0)
-                                      {
-                                          WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$.str, $1.str);
-                                      }
-                                      else
-                                      {
-                                          $$.str = strdup($1.str);
-                                      }
-									  */
-                                  }
-
-   | VARIABLE '(' values ')'                {
-                                                string st = functionToAnySingularType($1.str, "ScalarAD", $3.str, "scalarAD");
-                                                $$.str = strdup(st.c_str());
-                                            }
-   ;
-
-
-adbs: GRADIENT '(' adbs ')'       { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.gradient(" << $3.str << ")"); $$.grid_mapping = $3.grid_mapping; }
-    | DIVERGENCE '(' adbs ')'     { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.divergence(" << $3.str << ")"); $$.grid_mapping = $3.grid_mapping;}
-    | VARIABLE                    {
-									  $$.str = strdup("Not implemented");
-									  /*
-                                      if(strcmp(getType($1.str), "scalarsAD") != 0)
-                                      {
-                                          WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$.str, $1.str);
-                                      }
-                                      else
-                                      {
-                                          $$.str = strdup($1.str);
-                                          $$.grid_mapping = getSize1($1.str);
-                                      }
-									  */
-                                  }
-
-    | VARIABLE '(' values ')'                   {
-                                                    string st = functionToAnyCollectionType($1.str, "CollOfScalarsAD", $3.str, "scalarsAD");
-                                                    if(st == "ok")
-                                                    {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "(" << $3.str << ")");
-                                                        $$.grid_mapping = fun[getIndex2($1.str)].grid_mapping;
-                                                    }
-                                                    else
-                                                    {
-                                                        $$.str = strdup(st.c_str());
-                                                    }
-                                                }
-    ;
-
-
-boolean_expr: boolean_term                           { clone_info($$, $1); }
-            | NOT boolean_term                       {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "!" << $2.str);
-                                                        clone_info_without_name($$, $2);
-                                                     }
-            | boolean_expr AND boolean_term          {
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " && " << $3.str);
                                                         clone_info_without_name($$, $1);
-                                                     }
-            | boolean_expr OR boolean_term           {
+                                                    }
+                                                 }
+          | expression OR expression
+                                                 {  // they should be booleans
+                                                    if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                    {
+                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                    }
+                                                    else
+                                                    {
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " || " << $3.str);
                                                         clone_info_without_name($$, $1);
-                                                     }
-            | boolean_expr XOR boolean_term          {
+                                                    }
+                                                 }
+          | expression XOR expression
+                                                 {  // they should be booleans
+                                                    if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                    {
+                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                    }
+                                                    else
+                                                    {
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(!" << $1.str << " && " << $3.str << ") || (!" << $3.str << " && " << $1.str << ")");
                                                         clone_info_without_name($$, $1);
-                                                     }
-            ;
-
-
-
-boolean_term: TRUE                                   {
-                                                        $$.str = strdup("true");
-                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                        $$.array_size = 1;
-                                                        $$.type.entity_type = TYPE_BOOLEAN;
-                                                        $$.type.collection = false;
-                                                     }
-            | FALSE                                  {
-                                                        $$.str = strdup("false");
-                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                        $$.array_size = 1;
-                                                        $$.type.entity_type = TYPE_BOOLEAN;
-                                                        $$.type.collection = false;
-                                                     }
-            | scalar_expr '>' scalar_expr            {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " > " << $3.str);
-                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                        $$.array_size = 1;
-                                                        $$.type.entity_type = TYPE_BOOLEAN;
-                                                        $$.type.collection = false;
-                                                     }
-            | scalar_expr '<' scalar_expr            {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " < " << $3.str);
-                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                        $$.array_size = 1;
-                                                        $$.type.entity_type = TYPE_BOOLEAN;
-                                                        $$.type.collection = false;
-                                                     }
-            | scalar_expr LESSEQ scalar_expr         {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " <= " << $3.str);
-                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                        $$.array_size = 1;
-                                                        $$.type.entity_type = TYPE_BOOLEAN;
-                                                        $$.type.collection = false;
-                                                     }
-            | scalar_expr GREATEREQ scalar_expr      {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " >= " << $3.str);
-                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                        $$.array_size = 1;
-                                                        $$.type.entity_type = TYPE_BOOLEAN;
-                                                        $$.type.collection = false;
-                                                     }
-            | scalar_expr EQ scalar_expr             {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " == " << $3.str);
-                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                        $$.array_size = 1;
-                                                        $$.type.entity_type = TYPE_BOOLEAN;
-                                                        $$.type.collection = false;
-                                                     }
-            | scalar_expr NOTEQ scalar_expr          {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " != " << $3.str);
-                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                        $$.array_size = 1;
-                                                        $$.type.entity_type = TYPE_BOOLEAN;
-                                                        $$.type.collection = false;
-                                                     }
-            | '(' boolean_expr ')'                   {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")");
-                                                        clone_info_without_name($$, $2);
-                                                     }
-            | VARIABLE                               {
-													    $$.str = strdup("Not implemented");
-														/*
-                                                        if(strcmp(getType($1.str), "bool") != 0)
-                                                        {
-                                                            WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$.str, $1.str);
-                                                        }
-                                                        else
-                                                        {
-                                                            $$.str = strdup($1.str);
-                                                        }
-														*/
                                                     }
-
-            | VARIABLE '(' values ')'               {
-                                                        string st = functionToAnySingularType($1.str, "bool", $3.str, "bool");
-                                                        $$.str = strdup(st.c_str());
+                                                 }
+          | '(' expression ')' '>' '(' expression ')'
+                                                 {  // they should be scalars
+                                                    if($2.grid_mapping != $6.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                    {
+                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
                                                     }
-            ;
+                                                    else
+                                                    {
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") > (" << $6.str << ")");
+                                                        $$.grid_mapping = $2.grid_mapping;
+                                                        $$.array_size = $2.array_size;
+                                                        $$.type.entity_type = TYPE_BOOLEAN;
+                                                        $$.type.collection = true;
+                                                    }
+                                                 }
+          | '(' expression ')' '<' '(' expression ')'
+                                                 {  // they should be scalars
+                                                    if($2.grid_mapping != $6.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                    {
+                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                    }
+                                                    else
+                                                    {
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") < (" << $6.str << ")");
+                                                        $$.grid_mapping = $2.grid_mapping;
+                                                        $$.array_size = $2.array_size;
+                                                        $$.type.entity_type = TYPE_BOOLEAN;
+                                                        $$.type.collection = true;
+                                                    }
+                                                 }
+          | '(' expression ')' LESSEQ '(' expression ')'
+                                                 {   // they should be scalars
+                                                    if($2.grid_mapping != $6.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                    {
+                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                    }
+                                                    else
+                                                    {
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") <= (" << $6.str << ")");
+                                                        $$.grid_mapping = $2.grid_mapping;
+                                                        $$.array_size = $2.array_size;
+                                                        $$.type.entity_type = TYPE_BOOLEAN;
+                                                        $$.type.collection = true;
+                                                    }
+                                                 }
+          | '(' expression ')' GREATEREQ '(' expression ')'
+                                                 {  // they should be scalars
+                                                    if($2.grid_mapping != $6.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                    {
+                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                    }
+                                                    else
+                                                    {
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") >= (" << $6.str << ")");
+                                                        $$.grid_mapping = $2.grid_mapping;
+                                                        $$.array_size = $2.array_size;
+                                                        $$.type.entity_type = TYPE_BOOLEAN;
+                                                        $$.type.collection = true;
+                                                    }
+                                                 }
+          | '(' expression ')' EQ '(' expression ')'
+                                                 {  // they should be scalars
+                                                    if($2.grid_mapping != $6.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                    {
+                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                    }
+                                                    else
+                                                    {
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") == (" << $6.str << ")");
+                                                        $$.grid_mapping = $2.grid_mapping;
+                                                        $$.array_size = $2.array_size;
+                                                        $$.type.entity_type = TYPE_BOOLEAN;
+                                                        $$.type.collection = true;
+                                                    }
+                                                 }
+          | '(' expression ')' NOTEQ '(' expression ')'
+                                                 {  // they should be scalars
+                                                    if($2.grid_mapping != $6.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                    {
+                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                    }
+                                                    else
+                                                    {
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") != (" << $6.str << ")");
+                                                        $$.grid_mapping = $2.grid_mapping;
+                                                        $$.array_size = $2.array_size;
+                                                        $$.type.entity_type = TYPE_BOOLEAN;
+                                                        $$.type.collection = true;
+                                                    }
+                                                 }
+          | '(' expression ')'
+                                                 {  // it should be booleans
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")");
+                                                    clone_info_without_name($$, $2);
+                                                 }
+          ;
 
-
-boolean_exprs: boolean_terms                           { clone_info($$, $1); }
-             | NOT boolean_terms                       {
-                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "!" << $2.str);
-                                                          clone_info_without_name($$, $2);
-                                                       }
-             | boolean_exprs AND boolean_terms
-                                                       {
-                                                          if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                          {
-                                                              LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                          }
-                                                          else
-                                                          {
-                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " && " << $3.str);
-                                                              clone_info_without_name($$, $1);
-                                                          }
-                                                       }
-
-             | boolean_exprs OR boolean_terms
-                                                       {
-                                                          if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                          {
-                                                              LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                          }
-                                                          else
-                                                          {
-                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " || " << $3.str);
-                                                              clone_info_without_name($$, $1);
-                                                          }
-                                                       }
-
-             | boolean_exprs XOR boolean_terms
-                                                       {
-                                                          if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                          {
-                                                              LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                          }
-                                                          else
-                                                          {
-                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(!" << $1.str << " && " << $3.str << ") || (!" << $3.str << " && " << $1.str << ")");
-                                                              clone_info_without_name($$, $1);
-                                                          }
-                                                       }
-             ;
-
-
-
-boolean_terms: '(' scalars ')' '>' '(' scalars ')'
-                                                      {
-                                                          if($2.grid_mapping != $6.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                          {
-                                                              LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                          }
-                                                          else
-                                                          {
-                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") > (" << $6.str << ")");
-                                                              $$.grid_mapping = $2.grid_mapping;
-                                                              $$.array_size = $2.array_size;
-                                                              $$.type.entity_type = TYPE_BOOLEAN;
-                                                              $$.type.collection = true;
-                                                          }
-                                                      }
-
-             | '(' scalars ')' '<' '(' scalars ')'
-                                                      {
-                                                          if($2.grid_mapping != $6.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                          {
-                                                              LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                          }
-                                                          else
-                                                          {
-                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") < (" << $6.str << ")");
-                                                              $$.grid_mapping = $2.grid_mapping;
-                                                              $$.array_size = $2.array_size;
-                                                              $$.type.entity_type = TYPE_BOOLEAN;
-                                                              $$.type.collection = true;
-                                                          }
-                                                      }
-
-             | '(' scalars ')' LESSEQ '(' scalars ')'
-                                                      {
-                                                          if($2.grid_mapping != $6.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                          {
-                                                              LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                          }
-                                                          else
-                                                          {
-                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") <= (" << $6.str << ")");
-                                                              $$.grid_mapping = $2.grid_mapping;
-                                                              $$.array_size = $2.array_size;
-                                                              $$.type.entity_type = TYPE_BOOLEAN;
-                                                              $$.type.collection = true;
-                                                          }
-                                                      }
-
-             | '(' scalars ')' GREATEREQ '(' scalars ')'
-                                                      {
-                                                          if($2.grid_mapping != $6.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                          {
-                                                              LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                          }
-                                                          else
-                                                          {
-                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") >= (" << $6.str << ")");
-                                                              $$.grid_mapping = $2.grid_mapping;
-                                                              $$.array_size = $2.array_size;
-                                                              $$.type.entity_type = TYPE_BOOLEAN;
-                                                              $$.type.collection = true;
-                                                          }
-                                                      }
-
-             | '(' scalars ')' EQ '(' scalars ')'
-                                                      {
-                                                          if($2.grid_mapping != $6.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                          {
-                                                              LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                          }
-                                                          else
-                                                          {
-                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") == (" << $6.str << ")");
-                                                              $$.grid_mapping = $2.grid_mapping;
-                                                              $$.array_size = $2.array_size;
-                                                              $$.type.entity_type = TYPE_BOOLEAN;
-                                                              $$.type.collection = true;
-                                                          }
-                                                      }
-
-             | '(' scalars ')' NOTEQ '(' scalars ')'
-                                                      {
-                                                          if($2.grid_mapping != $6.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                          {
-                                                              LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                          }
-                                                          else
-                                                          {
-                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") != (" << $6.str << ")");
-                                                              $$.grid_mapping = $2.grid_mapping;
-                                                              $$.array_size = $2.array_size;
-                                                              $$.type.entity_type = TYPE_BOOLEAN;
-                                                              $$.type.collection = true;
-                                                          }
-                                                      }
-             | '(' boolean_exprs ')'                  {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")");
-                                                        clone_info_without_name($$, $2);
-                                                      }
-             | VARIABLE                               {
-													      $$.str = strdup("Not implemented");
-														  /*
-                                                          if(strcmp(getType($1.str), "bools") != 0)
-                                                          {
-                                                              WRONG_TYPE_ERROR_TO_CHAR_ARRAY($$.str, $1.str);
-                                                          }
-                                                          else
-                                                          {
-                                                              $$.str = strdup($1.str);
-                                                              $$.grid_mapping = getSize1($1.str);
-                                                          }
-														  */
-                                                      }
-
-             | VARIABLE '(' values ')'                {
-                                                          string st = functionToAnyCollectionType($1.str, "CollOfBools", $3.str, "bools");
-                                                          if(st == "ok")
-                                                          {
-                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "(" << $3.str << ")");
-                                                              $$.grid_mapping = fun[getIndex2($1.str)].grid_mapping;
-                                                          }
-                                                          else
-                                                          {
-                                                              $$.str = strdup(st.c_str());
-                                                          }
-                                                      }
-             ;
 
 
 
@@ -2001,26 +1592,6 @@ declaration: singular_declaration           { char* out = strdup($1.str); $$.str
            ;
 
 
-expression: scalar_expr       { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type = TYPE_SCALAR; $$.type.collection = false; }
-          | vector_expr       { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type = TYPE_VECTOR; $$.type.collection = false; }
-          | vertex            { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type = TYPE_VERTEX; $$.type.collection = false; }
-          | edge              { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type = TYPE_EDGE; $$.type.collection = false; }
-          | face              { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type = TYPE_FACE; $$.type.collection = false; }
-          | cell              { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type = TYPE_CELL; $$.type.collection = false; }
-          | boolean_expr      { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type = TYPE_BOOLEAN; $$.type.collection = false; }
-          ;
-
-
-expressions: scalar_exprs     { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type = TYPE_SCALAR; $$.type.collection = true; }
-           | vector_exprs     { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type = TYPE_VECTOR; $$.type.collection = true; }
-           | vertices         { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type = TYPE_VERTEX; $$.type.collection = true; }
-           | edges            { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type = TYPE_EDGE; $$.type.collection = true; }
-           | faces            { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type = TYPE_FACE; $$.type.collection = true; }
-           | cells            { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type = TYPE_CELL; $$.type.collection = true; }
-           | boolean_exprs    { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type = TYPE_BOOLEAN; $$.type.collection = true; }
-           ;
-
-
 singular_assignment: VARIABLE '=' USS                      { string out = USS_assignment_function($1.str); $$.str = strdup(out.c_str()); }
                    | VARIABLE '=' USSWD '(' number ')'     { string out = USSWD_assignment_function($1.str, $5.str); $$.str = strdup(out.c_str()); }
                    | VARIABLE '=' expression
@@ -2032,7 +1603,7 @@ singular_assignment: VARIABLE '=' USS                      { string out = USS_as
 
 
 plural_assignment: VARIABLE '=' USCOS '(' plural ')'      { string out = USCOS_assignment_function($1.str, $5.str, $5.grid_mapping); $$.str = strdup(out.c_str()); }
-                 | VARIABLE '=' expressions
+                 | VARIABLE '=' expression    //TODO: verify that "expression" is a collection
                                                 					{
                                                              string out = singular_assignment_function($1.str, $3);
                                                              $$.str = strdup(out.c_str());
@@ -2049,39 +1620,39 @@ assignment: singular_assignment     { char* out = strdup($1.str); $$.str = out; 
 
 
 
-singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' scalar_expr          { string out = declaration_with_assignment_function($1.str, $5); $$.str = strdup(out.c_str()); }
-                                    | VARIABLE ':' VECTOR '=' vector_expr          { string out = declaration_with_assignment_function($1.str, $5); $$.str = strdup(out.c_str()); }
-                                    | VARIABLE ':' VERTEX '=' vertex               { string out = declaration_with_assignment_function($1.str, $5); $$.str = strdup(out.c_str()); }
-                                    | VARIABLE ':' EDGE '=' edge                   { string out = declaration_with_assignment_function($1.str, $5); $$.str = strdup(out.c_str()); }
-                                    | VARIABLE ':' FACE '=' face                   { string out = declaration_with_assignment_function($1.str, $5); $$.str = strdup(out.c_str()); }
-                                    | VARIABLE ':' CELL '=' cell                   { string out = declaration_with_assignment_function($1.str, $5); $$.str = strdup(out.c_str()); }
-                                    | VARIABLE ':' ADB '=' adb                     { string out = declaration_with_assignment_function($1.str, $5); $$.str = strdup(out.c_str()); }
-                                    | VARIABLE ':' BOOLEAN '=' boolean_expr        { string out = declaration_with_assignment_function($1.str, $5); $$.str = strdup(out.c_str()); }
-                                    | VARIABLE ':' SCALAR '=' USS                  { string out = USS_declaration_with_assignment_function($1.str); $$.str = strdup(out.c_str()); }
-                                    | VARIABLE ':' SCALAR '=' USSWD '(' number ')' { string out = USSWD_declaration_with_assignment_function($1.str, $7.str); $$.str = strdup(out.c_str()); }
+singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' expression            { string out = declaration_with_assignment_function($1.str, $5); $$.str = strdup(out.c_str()); }
+                                    | VARIABLE ':' VECTOR '=' expression            { string out = declaration_with_assignment_function($1.str, $5); $$.str = strdup(out.c_str()); }
+                                    | VARIABLE ':' VERTEX '=' expression            { string out = declaration_with_assignment_function($1.str, $5); $$.str = strdup(out.c_str()); }
+                                    | VARIABLE ':' EDGE '=' expression              { string out = declaration_with_assignment_function($1.str, $5); $$.str = strdup(out.c_str()); }
+                                    | VARIABLE ':' FACE '=' expression              { string out = declaration_with_assignment_function($1.str, $5); $$.str = strdup(out.c_str()); }
+                                    | VARIABLE ':' CELL '=' expression              { string out = declaration_with_assignment_function($1.str, $5); $$.str = strdup(out.c_str()); }
+                                    | VARIABLE ':' ADB '=' expression               { string out = declaration_with_assignment_function($1.str, $5); $$.str = strdup(out.c_str()); }
+                                    | VARIABLE ':' BOOLEAN '=' expression           { string out = declaration_with_assignment_function($1.str, $5); $$.str = strdup(out.c_str()); }
+                                    | VARIABLE ':' SCALAR '=' USS                   { string out = USS_declaration_with_assignment_function($1.str); $$.str = strdup(out.c_str()); }
+                                    | VARIABLE ':' SCALAR '=' USSWD '(' number ')'  { string out = USSWD_declaration_with_assignment_function($1.str, $7.str); $$.str = strdup(out.c_str()); }
                                     ;
 
 
-plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' scalar_exprs          { string out = declaration_with_assignment_function($1.str, $7); $$.str = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF VECTOR '=' vector_exprs          { string out = declaration_with_assignment_function($1.str, $7); $$.str = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF VERTEX '=' vertices              { string out = declaration_with_assignment_function($1.str, $7); $$.str = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF EDGE '=' edges                   { string out = declaration_with_assignment_function($1.str, $7); $$.str = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF FACE '=' faces                   { string out = declaration_with_assignment_function($1.str, $7); $$.str = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF CELL '=' cells                   { string out = declaration_with_assignment_function($1.str, $7); $$.str = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF ADB '=' adbs                     { string out = declaration_with_assignment_function($1.str, $7); $$.str = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF BOOLEAN '=' boolean_exprs        { string out = declaration_with_assignment_function($1.str, $7); $$.str = strdup(out.c_str()); }
+plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' expression            { string out = declaration_with_assignment_function($1.str, $7); $$.str = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF VECTOR '=' expression            { string out = declaration_with_assignment_function($1.str, $7); $$.str = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF VERTEX '=' expression            { string out = declaration_with_assignment_function($1.str, $7); $$.str = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF EDGE '=' expression              { string out = declaration_with_assignment_function($1.str, $7); $$.str = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF FACE '=' expression              { string out = declaration_with_assignment_function($1.str, $7); $$.str = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF CELL '=' expression              { string out = declaration_with_assignment_function($1.str, $7); $$.str = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF ADB '=' expression               { string out = declaration_with_assignment_function($1.str, $7); $$.str = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF BOOLEAN '=' expression           { string out = declaration_with_assignment_function($1.str, $7); $$.str = strdup(out.c_str()); }
                                   | VARIABLE ':' COLLECTION OF SCALAR '=' USCOS '(' plural ')'  { string out = USCOS_declaration_with_assignment_function($1.str, $9.str, $9.grid_mapping); $$.str = strdup(out.c_str()); }
                                   ;
 
 
-extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR ON plural '=' scalar_exprs          { string out = extended_plural_declaration_with_assignment_function($1.str, $9, $7.grid_mapping); $$.str = strdup(out.c_str()); }
-                                           | VARIABLE ':' COLLECTION OF VECTOR ON plural '=' vector_exprs          { string out = extended_plural_declaration_with_assignment_function($1.str, $9, $7.grid_mapping); $$.str = strdup(out.c_str()); }
-                                           | VARIABLE ':' COLLECTION OF VERTEX ON plural '=' vertices              { string out = extended_plural_declaration_with_assignment_function($1.str, $9, $7.grid_mapping); $$.str = strdup(out.c_str()); }
-                                           | VARIABLE ':' COLLECTION OF EDGE ON plural '=' edges                   { string out = extended_plural_declaration_with_assignment_function($1.str, $9, $7.grid_mapping); $$.str = strdup(out.c_str()); }
-                                           | VARIABLE ':' COLLECTION OF FACE ON plural '=' faces                   { string out = extended_plural_declaration_with_assignment_function($1.str, $9, $7.grid_mapping); $$.str = strdup(out.c_str()); }
-                                           | VARIABLE ':' COLLECTION OF CELL ON plural '=' cells                   { string out = extended_plural_declaration_with_assignment_function($1.str, $9, $7.grid_mapping); $$.str = strdup(out.c_str()); }
-                                           | VARIABLE ':' COLLECTION OF ADB ON plural '=' adbs                     { string out = extended_plural_declaration_with_assignment_function($1.str, $9, $7.grid_mapping); $$.str = strdup(out.c_str()); }
-                                           | VARIABLE ':' COLLECTION OF BOOLEAN ON plural '=' boolean_exprs        { string out = extended_plural_declaration_with_assignment_function($1.str, $9, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR ON plural '=' expression            { string out = extended_plural_declaration_with_assignment_function($1.str, $9, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF VECTOR ON plural '=' expression            { string out = extended_plural_declaration_with_assignment_function($1.str, $9, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF VERTEX ON plural '=' expression            { string out = extended_plural_declaration_with_assignment_function($1.str, $9, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF EDGE ON plural '=' expression              { string out = extended_plural_declaration_with_assignment_function($1.str, $9, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF FACE ON plural '=' expression              { string out = extended_plural_declaration_with_assignment_function($1.str, $9, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF CELL ON plural '=' expression              { string out = extended_plural_declaration_with_assignment_function($1.str, $9, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF ADB ON plural '=' expression               { string out = extended_plural_declaration_with_assignment_function($1.str, $9, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                                           | VARIABLE ':' COLLECTION OF BOOLEAN ON plural '=' expression           { string out = extended_plural_declaration_with_assignment_function($1.str, $9, $7.grid_mapping); $$.str = strdup(out.c_str()); }
                                            | VARIABLE ':' COLLECTION OF SCALAR ON plural '=' USCOS '(' plural ')'  { string out = USCOS_extended_declaration_with_assignment_function($1.str, $11.str, $7.str, $11.grid_mapping, $7.grid_mapping); $$.str = strdup(out.c_str()); }
                                            ;
 
