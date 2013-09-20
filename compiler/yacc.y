@@ -134,7 +134,7 @@
 		GRID_MAPPING_ANY, // the default length of a collection, if it is not explicitly specified
 		GRID_MAPPING_INVALID, //Invalid size... should be caught by error checking
 	};
-	
+
 	enum EntityType {
 		TYPE_SCALAR,
 		TYPE_SCALAR_AD,
@@ -256,11 +256,10 @@
 
 	char* declaration_function(char* variable_name, EntityType entity, bool collection);
 
-	string extended_plural_declaration_function(char* st1, char* st2, char* st3, GridMapping d1);
+	string extended_plural_declaration_function(char* variable_name, EntityType entity, char* ON_expression, GridMapping ON_expression_grid_mapping);
 	string singular_assignment_function(char* variable_name, const info& right_hand_side);
-	string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, GridMapping d1);
-	string singular_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4);
-	string plural_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4, GridMapping d1);
+	string plural_assignment_function(char* variable_name, const info& right_hand_side);
+	string declaration_with_assignment_function(char* variable_name, const info& right_hand_side);
 	string extended_plural_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4, char* st5, GridMapping d1, GridMapping d2);
 	string USS_assignment_function(char* st1);
 	string USS_declaration_with_assignment_function(char* st1);
@@ -379,7 +378,7 @@ floating_point: INTEGER '.' INTEGER
 		STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "." << $3.str);
 		$$.grid_mapping = GRID_MAPPING_ENTITY;
 		$$.array_size = 1;
-		$$.type.entity_type = TYPE_SCALAR;
+		$$.type.entity_type =  TYPE_SCALAR;
 		$$.type.collection = false;
 };
 
@@ -389,7 +388,7 @@ number: INTEGER
                                     					$$.str = strdup($1.str);
                                     					$$.grid_mapping = GRID_MAPPING_ENTITY;
                                     					$$.array_size = 1;
-                                    					$$.type.entity_type =TYPE_SCALAR;
+                                    					$$.type.entity_type = TYPE_SCALAR;
                                     					$$.type.collection = false;
                                     				}
       | floating_point                      { clone_info($$, $1); }
@@ -442,84 +441,84 @@ scalar_factor: number                                  { clone_info($$, $1); }
                                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.euclideanLength(" << $3.str << ")");
                                                           $$.grid_mapping = GRID_MAPPING_ENTITY;
                                                           $$.array_size = 1;
-                                                          $$.type.entity_type =TYPE_SCALAR;
+                                                          $$.type.entity_type = TYPE_SCALAR;
                                                           $$.type.collection = false;
                                                        }
              | LENGTH '(' edge ')'                     {
                                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.length(" << $3.str << ")");
                                                           $$.grid_mapping = GRID_MAPPING_ENTITY;
                                                           $$.array_size = 1;
-                                                          $$.type.entity_type =TYPE_SCALAR;
+                                                          $$.type.entity_type = TYPE_SCALAR;
                                                           $$.type.collection = false;
                                                        }
              | AREA '(' face ')'                       {
                                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.area(" << $3.str << ")");
                                                           $$.grid_mapping = GRID_MAPPING_ENTITY;
                                                           $$.array_size = 1;
-                                                          $$.type.entity_type =TYPE_SCALAR;
+                                                          $$.type.entity_type = TYPE_SCALAR;
                                                           $$.type.collection = false;
                                                        }
              | VOLUME '(' cell ')'                     {
                                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.volume(" << $3.str << ")");
                                                           $$.grid_mapping = GRID_MAPPING_ENTITY;
                                                           $$.array_size = 1;
-                                                          $$.type.entity_type =TYPE_SCALAR;
+                                                          $$.type.entity_type = TYPE_SCALAR;
                                                           $$.type.collection = false;
                                                        }
              | DOT '(' vector_expr ',' vector_expr ')' {
                                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.dot(" << $3.str << ", " << $5.str << ")");
                                                           $$.grid_mapping = GRID_MAPPING_ENTITY;
                                                           $$.array_size = 1;
-                                                          $$.type.entity_type =TYPE_SCALAR;
+                                                          $$.type.entity_type = TYPE_SCALAR;
                                                           $$.type.collection = false;
                                                         }
              | CEIL '(' scalar_expr ')'                {
                                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.ceil(" << $3.str << ")");
                                                           $$.grid_mapping = GRID_MAPPING_ENTITY;
                                                           $$.array_size = 1;
-                                                          $$.type.entity_type =TYPE_SCALAR;
+                                                          $$.type.entity_type = TYPE_SCALAR;
                                                           $$.type.collection = false; ;
                                                        }
              | FLOOR '(' scalar_expr ')'               {
                                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.floor(" << $3.str << ")");
                                                           $$.grid_mapping = GRID_MAPPING_ENTITY;
                                                           $$.array_size = 1;
-                                                          $$.type.entity_type =TYPE_SCALAR;
+                                                          $$.type.entity_type = TYPE_SCALAR;
                                                           $$.type.collection = false;
                                                        }
              | ABS '(' scalar_expr ')'                 {
                                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.abs(" << $3.str << ")");
                                                           $$.grid_mapping = GRID_MAPPING_ENTITY;
                                                           $$.array_size = 1;
-                                                          $$.type.entity_type =TYPE_SCALAR;
+                                                          $$.type.entity_type = TYPE_SCALAR;
                                                           $$.type.collection = false;
                                                        }
              | MIN '(' scalars ')'                     {
                                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.min(" << $3.str << ")");
                                                           $$.grid_mapping = GRID_MAPPING_ENTITY;
                                                           $$.array_size = 1;
-                                                          $$.type.entity_type =TYPE_SCALAR;
+                                                          $$.type.entity_type = TYPE_SCALAR;
                                                           $$.type.collection = false;
                                                        }
              | MAX '(' scalars ')'                     {
                                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.max(" << $3.str << ")");
                                                           $$.grid_mapping = GRID_MAPPING_ENTITY;
                                                           $$.array_size = 1;
-                                                          $$.type.entity_type =TYPE_SCALAR;
+                                                          $$.type.entity_type = TYPE_SCALAR;
                                                           $$.type.collection = false;
                                                        }
              | GRADIENT '(' scalar_expr ')'            {
                                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.gradient(" << $3.str << ")");
                                                           $$.grid_mapping = GRID_MAPPING_ENTITY;
                                                           $$.array_size = 1;
-                                                          $$.type.entity_type =TYPE_SCALAR;
+                                                          $$.type.entity_type = TYPE_SCALAR;
                                                           $$.type.collection = false;
                                                        }
              | DIVERGENCE '(' scalar_expr ')'          {
                                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.divergence(" << $3.str << ")");
                                                           $$.grid_mapping = GRID_MAPPING_ENTITY;
                                                           $$.array_size = 1;
-                                                          $$.type.entity_type =TYPE_SCALAR;
+                                                          $$.type.entity_type = TYPE_SCALAR;
                                                           $$.type.collection = false;
                                                        }
              | VARIABLE                                {
@@ -571,28 +570,28 @@ scalars: scalar_exprs                 {
                                         $$.str = strdup($1.str);
                                         $$.grid_mapping = GRID_MAPPING_INVALID;   // it mustn't have a specific grid mapping, since we won't use this structure alone
                                         $$.array_size = $1.array_size;
-                                        $$.type.entity_type =TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
+                                        $$.type.entity_type = TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
                                         $$.type.collection = false;
                                       }
        | scalars ',' scalar_exprs     {
                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << ", " << $3.str);
                                         $$.grid_mapping = GRID_MAPPING_INVALID;   // it mustn't have a specific grid mapping, since we won't use this structure alone
                                         $$.array_size = $1.array_size + $3.array_size;
-                                        $$.type.entity_type =TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
+                                        $$.type.entity_type = TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
                                         $$.type.collection = false;
                                       }
        | scalar_expr                  {
                                         $$.str = strdup($1.str);
                                         $$.grid_mapping = GRID_MAPPING_INVALID;   // it mustn't have a specific grid mapping, since we won't use this structure alone
                                         $$.array_size = 1;
-                                        $$.type.entity_type =TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
+                                        $$.type.entity_type = TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
                                         $$.type.collection = false;
                                       }
        | scalars ',' scalar_expr      {
                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << ", " << $3.str);
                                         $$.grid_mapping = GRID_MAPPING_INVALID;   // it mustn't have a specific grid mapping, since we won't use this structure alone
                                         $$.array_size = $1.array_size + 1;
-                                        $$.type.entity_type =TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
+                                        $$.type.entity_type = TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
                                         $$.type.collection = false;
                                       }
        ;
@@ -676,28 +675,28 @@ scalar_factors: EUCLIDEAN_LENGTH '(' vector_exprs ')'           {
                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.euclideanLength(" << $3.str << ")");
                                                                    $$.grid_mapping = $3.grid_mapping;
                                                                    $$.array_size = $3.array_size;
-                                                                   $$.type.entity_type =TYPE_SCALAR;
+                                                                   $$.type.entity_type = TYPE_SCALAR;
                                                                    $$.type.collection = true;
                                                                 }
               | LENGTH '(' edges ')'                            {
                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.length(" << $3.str << ")");
                                                                    $$.grid_mapping = $3.grid_mapping;
                                                                    $$.array_size = $3.array_size;
-                                                                   $$.type.entity_type =TYPE_SCALAR;
+                                                                   $$.type.entity_type = TYPE_SCALAR;
                                                                    $$.type.collection = true;
                                                                 }
               | AREA '(' faces ')'                              {
                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.area(" << $3.str << ")");
                                                                    $$.grid_mapping = $3.grid_mapping;
                                                                    $$.array_size = $3.array_size;
-                                                                   $$.type.entity_type =TYPE_SCALAR;
+                                                                   $$.type.entity_type = TYPE_SCALAR;
                                                                    $$.type.collection = true;
                                                                 }
               | VOLUME '(' cells ')'                            {
                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.volume(" << $3.str << ")");
                                                                    $$.grid_mapping = $3.grid_mapping;
                                                                    $$.array_size = $3.array_size;
-                                                                   $$.type.entity_type =TYPE_SCALAR;
+                                                                   $$.type.entity_type = TYPE_SCALAR;
                                                                    $$.type.collection = true;
                                                                 }
               | DOT '(' vector_exprs ',' vector_exprs ')'
@@ -711,7 +710,7 @@ scalar_factors: EUCLIDEAN_LENGTH '(' vector_exprs ')'           {
                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.dot(" << $3.str << ", " << $5.str << ")");
                                                                        $$.grid_mapping = $3.grid_mapping;
                                                                        $$.array_size = $3.array_size;
-                                                                       $$.type.entity_type =TYPE_SCALAR;
+                                                                       $$.type.entity_type = TYPE_SCALAR;
                                                                        $$.type.collection = true;
                                                                    }
                                                                 }
@@ -720,35 +719,35 @@ scalar_factors: EUCLIDEAN_LENGTH '(' vector_exprs ')'           {
                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.ceil(" << $3.str << ")");
                                                                    $$.grid_mapping = $3.grid_mapping;
                                                                    $$.array_size = $3.array_size;
-                                                                   $$.type.entity_type =TYPE_SCALAR;
+                                                                   $$.type.entity_type = TYPE_SCALAR;
                                                                    $$.type.collection = true;
                                                                 }
               | FLOOR '(' scalar_exprs ')'                      {
                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.floor(" << $3.str << ")");
                                                                    $$.grid_mapping = $3.grid_mapping;
                                                                    $$.array_size = $3.array_size;
-                                                                   $$.type.entity_type =TYPE_SCALAR;
+                                                                   $$.type.entity_type = TYPE_SCALAR;
                                                                    $$.type.collection = true;
                                                                 }
               | ABS '(' scalar_exprs ')'                        {
                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.abs(" << $3.str << ")");
                                                                    $$.grid_mapping = $3.grid_mapping;
                                                                    $$.array_size = $3.array_size;
-                                                                   $$.type.entity_type =TYPE_SCALAR;
+                                                                   $$.type.entity_type = TYPE_SCALAR;
                                                                    $$.type.collection = true;
                                                                 }
               | GRADIENT '(' scalar_exprs ')'                   {
                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.gradient(" << $3.str << ")");
                                                                    $$.grid_mapping = $3.grid_mapping;
                                                                    $$.array_size = $3.array_size;
-                                                                   $$.type.entity_type =TYPE_SCALAR;
+                                                                   $$.type.entity_type = TYPE_SCALAR;
                                                                    $$.type.collection = true;
                                                                 }
               | DIVERGENCE '(' scalar_exprs ')'                 {
                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.divergence(" << $3.str << ")");
                                                                    $$.grid_mapping = $3.grid_mapping;
                                                                    $$.array_size = $3.array_size;
-                                                                   $$.type.entity_type =TYPE_SCALAR;
+                                                                   $$.type.entity_type = TYPE_SCALAR;
                                                                    $$.type.collection = true;
                                                                 }
               | VARIABLE                                        {
@@ -801,28 +800,28 @@ vector_term: '[' scalars ']'                       {
                                                       STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "[" << $2.str << "]");
                                                       $$.grid_mapping = GRID_MAPPING_ENTITY;
                                                       $$.array_size = $2.array_size;
-                                                      $$.type.entity_type =TYPE_VECTOR;
+                                                      $$.type.entity_type = TYPE_VECTOR;
                                                       $$.type.collection = false;
                                                    }
            | CENTROID '(' cell ')'                 {
                                                       STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
                                                       $$.grid_mapping = GRID_MAPPING_ENTITY;
                                                       $$.array_size = 1;
-                                                      $$.type.entity_type =TYPE_VECTOR;
+                                                      $$.type.entity_type = TYPE_VECTOR;
                                                       $$.type.collection = false;
                                                    }
            | CENTROID '(' face ')'                 {
                                                       STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
                                                       $$.grid_mapping = GRID_MAPPING_ENTITY;
                                                       $$.array_size = 1;
-                                                      $$.type.entity_type =TYPE_VECTOR;
+                                                      $$.type.entity_type = TYPE_VECTOR;
                                                       $$.type.collection = false;
                                                    }
            | NORMAL '(' face ')'                   {
                                                       STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.normal(" << $3.str << ")");
                                                       $$.grid_mapping = GRID_MAPPING_ENTITY;
                                                       $$.array_size = 1;
-                                                      $$.type.entity_type =TYPE_VECTOR;
+                                                      $$.type.entity_type = TYPE_VECTOR;
                                                       $$.type.collection = false;
                                                    }
            | '(' vector_expr ')'                   {
@@ -866,14 +865,14 @@ vectors: vector_term                      {
                                             $$.str = strdup($1.str);
                                             $$.array_size = 1;
                                             $$.grid_mapping = GRID_MAPPING_INVALID;   // it mustn't have a specific grid mapping, since we won't use this structure alone
-                                            $$.type.entity_type =TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
+                                            $$.type.entity_type = TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
                                             $$.type.collection = false;
                                           }
        | vectors ',' vector_term          {
                                             STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << ", " << $3.str);
                                             $$.array_size = $1.array_size + 1;
                                             $$.grid_mapping = GRID_MAPPING_INVALID;   // it mustn't have a specific grid mapping, since we won't use this structure alone
-                                            $$.type.entity_type =TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
+                                            $$.type.entity_type = TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
                                             $$.type.collection = false;
                                           }
        ;
@@ -916,28 +915,28 @@ vector_terms: '[' vectors ']'                        {
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "[" << $2.str << "]");
                                                         $$.grid_mapping = GRID_MAPPING_ENTITY;
                                                         $$.array_size = $2.array_size;
-                                                        $$.type.entity_type =TYPE_VECTOR;
+                                                        $$.type.entity_type = TYPE_VECTOR;
                                                         $$.type.collection = true;
                                                      }
             | CENTROID '(' cells ')'                 {
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
                                                         $$.grid_mapping = $3.grid_mapping;
                                                         $$.array_size = $3.array_size;
-                                                        $$.type.entity_type =TYPE_VECTOR;
+                                                        $$.type.entity_type = TYPE_VECTOR;
                                                         $$.type.collection = true;
                                                      }
             | CENTROID '(' faces ')'                 {
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
                                                         $$.grid_mapping = $3.grid_mapping;
                                                         $$.array_size = $3.array_size;
-                                                        $$.type.entity_type =TYPE_VECTOR;
+                                                        $$.type.entity_type = TYPE_VECTOR;
                                                         $$.type.collection = true;
                                                      }
             | NORMAL '(' faces ')'                   {
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.normal(" << $3.str << ")");
                                                         $$.grid_mapping = $3.grid_mapping;
                                                         $$.array_size = $3.array_size;
-                                                        $$.type.entity_type =TYPE_VECTOR;
+                                                        $$.type.entity_type = TYPE_VECTOR;
                                                         $$.type.collection = true;
                                                      }
             | '(' vector_exprs ')'                   {
@@ -1011,21 +1010,21 @@ vertices: INTERIOR_VERTICES '(' GRID ')'      {
                                                 STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorVertices()");
                                                 $$.grid_mapping = GRID_MAPPING_INTERIORVERTICES;
                                                 $$.array_size = 1;
-                                                $$.type.entity_type =TYPE_VERTEX;
+                                                $$.type.entity_type = TYPE_VERTEX;
                                                 $$.type.collection = true;
                                               }
         | BOUNDARY_VERTICES '(' GRID ')'      {
                                                 STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryVertices()");
                                                 $$.grid_mapping = GRID_MAPPING_BOUNDARYVERTICES;
                                                 $$.array_size = 1;
-                                                $$.type.entity_type =TYPE_VERTEX;
+                                                $$.type.entity_type = TYPE_VERTEX;
                                                 $$.type.collection = true;
                                               }
         | ALL_VERTICES '(' GRID ')'           {
                                                 STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allVertices()");
                                                 $$.grid_mapping = GRID_MAPPING_ALLVERTICES;
                                                 $$.array_size = 1;
-                                                $$.type.entity_type =TYPE_VERTEX;
+                                                $$.type.entity_type = TYPE_VERTEX;
                                                 $$.type.collection = true;
                                               }
         | VARIABLE                            {
@@ -1083,21 +1082,21 @@ edges: INTERIOR_EDGES '(' GRID ')'      {
                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorEdges()");
                                           $$.grid_mapping = GRID_MAPPING_INTERIOREDGES;
                                           $$.array_size = 1;
-                                          $$.type.entity_type =TYPE_EDGE;
+                                          $$.type.entity_type = TYPE_EDGE;
                                           $$.type.collection = true;
                                         }
      | BOUNDARY_EDGES '(' GRID ')'      {
                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryEdges()");
                                           $$.grid_mapping = GRID_MAPPING_BOUNDARYEDGES;
                                           $$.array_size = 1;
-                                          $$.type.entity_type =TYPE_EDGE;
+                                          $$.type.entity_type = TYPE_EDGE;
                                           $$.type.collection = true;
                                         }
      | ALL_EDGES '(' GRID ')'           {
                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allEdges()");
                                           $$.grid_mapping = GRID_MAPPING_ALLEDGES;
                                           $$.array_size = 1;
-                                          $$.type.entity_type =TYPE_EDGE;
+                                          $$.type.entity_type = TYPE_EDGE;
                                           $$.type.collection = true;
                                         }
      | VARIABLE                         {
@@ -1155,21 +1154,21 @@ faces: INTERIOR_FACES '(' GRID ')'      {
                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorFaces()");
                                           $$.grid_mapping = GRID_MAPPING_INTERIORFACES;
                                           $$.array_size = 1;
-                                          $$.type.entity_type =TYPE_FACE;
+                                          $$.type.entity_type = TYPE_FACE;
                                           $$.type.collection = true;
                                         }
      | BOUNDARY_FACES '(' GRID ')'      {
                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryFaces()");
                                           $$.grid_mapping = GRID_MAPPING_BOUNDARYFACES;
                                           $$.array_size = 1;
-                                          $$.type.entity_type =TYPE_FACE;
+                                          $$.type.entity_type = TYPE_FACE;
                                           $$.type.collection = true;
                                         }
      | ALL_FACES '(' GRID ')'           {
                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allFaces()");
                                           $$.grid_mapping = GRID_MAPPING_ALLFACES;
                                           $$.array_size = 1;
-                                          $$.type.entity_type =TYPE_FACE;
+                                          $$.type.entity_type = TYPE_FACE;
                                           $$.type.collection = true;
                                         }
      | VARIABLE                         {
@@ -1206,14 +1205,14 @@ cell: FIRST_CELL '(' face ')'     {
                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.firstCell(" << $3.str << ")");
                                     $$.grid_mapping = GRID_MAPPING_ENTITY;
                                     $$.array_size = 1;
-                                    $$.type.entity_type =TYPE_CELL;
+                                    $$.type.entity_type = TYPE_CELL;
                                     $$.type.collection = false;
                                   }
     | SECOND_CELL '(' face ')'    {
                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.secondCell(" << $3.str << ")");
                                     $$.grid_mapping = GRID_MAPPING_ENTITY;
                                     $$.array_size = 1;
-                                    $$.type.entity_type =TYPE_CELL;
+                                    $$.type.entity_type = TYPE_CELL;
                                     $$.type.collection = false;
                                   }
     | VARIABLE                    {
@@ -1241,35 +1240,35 @@ cells: INTERIOR_CELLS '(' GRID ')'          {
                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorCells()");
                                               $$.grid_mapping = GRID_MAPPING_INTERIORCELLS;
                                               $$.array_size = 1;
-                                              $$.type.entity_type =TYPE_CELL;
+                                              $$.type.entity_type = TYPE_CELL;
                                               $$.type.collection = true;
                                             }
      | BOUNDARY_CELLS '(' GRID ')'          {
                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryCells()");
                                               $$.grid_mapping = GRID_MAPPING_BOUNDARYCELLS;
                                               $$.array_size = 1;
-                                              $$.type.entity_type =TYPE_CELL;
+                                              $$.type.entity_type = TYPE_CELL;
                                               $$.type.collection = true;
                                             }
      | ALL_CELLS '(' GRID ')'               {
                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allCells()");
                                               $$.grid_mapping = GRID_MAPPING_ALLCELLS;
                                               $$.array_size = 1;
-                                              $$.type.entity_type =TYPE_CELL;
+                                              $$.type.entity_type = TYPE_CELL;
                                               $$.type.collection = true;
                                             }
      | FIRST_CELL '(' faces ')'             {
                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.firstCell(" << $3.str << ")");
                                               $$.grid_mapping = $3.grid_mapping;
                                               $$.array_size = 1;
-                                              $$.type.entity_type =TYPE_CELL;
+                                              $$.type.entity_type = TYPE_CELL;
                                               $$.type.collection = true;
                                             }
      | SECOND_CELL '(' faces ')'            {
                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.secondCell(" << $3.str << ")");
                                               $$.grid_mapping = $3.grid_mapping;
                                               $$.array_size = 1;
-                                              $$.type.entity_type =TYPE_CELL;
+                                              $$.type.entity_type = TYPE_CELL;
                                               $$.type.collection = true;
                                             }
      | VARIABLE                             {
@@ -1382,56 +1381,56 @@ boolean_term: TRUE                                   {
                                                         $$.str = strdup("true");
                                                         $$.grid_mapping = GRID_MAPPING_ENTITY;
                                                         $$.array_size = 1;
-                                                        $$.type.entity_type =TYPE_BOOLEAN;
+                                                        $$.type.entity_type = TYPE_BOOLEAN;
                                                         $$.type.collection = false;
                                                      }
             | FALSE                                  {
                                                         $$.str = strdup("false");
                                                         $$.grid_mapping = GRID_MAPPING_ENTITY;
                                                         $$.array_size = 1;
-                                                        $$.type.entity_type =TYPE_BOOLEAN;
+                                                        $$.type.entity_type = TYPE_BOOLEAN;
                                                         $$.type.collection = false;
                                                      }
             | scalar_expr '>' scalar_expr            {
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " > " << $3.str);
                                                         $$.grid_mapping = GRID_MAPPING_ENTITY;
                                                         $$.array_size = 1;
-                                                        $$.type.entity_type =TYPE_BOOLEAN;
+                                                        $$.type.entity_type = TYPE_BOOLEAN;
                                                         $$.type.collection = false;
                                                      }
             | scalar_expr '<' scalar_expr            {
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " < " << $3.str);
                                                         $$.grid_mapping = GRID_MAPPING_ENTITY;
                                                         $$.array_size = 1;
-                                                        $$.type.entity_type =TYPE_BOOLEAN;
+                                                        $$.type.entity_type = TYPE_BOOLEAN;
                                                         $$.type.collection = false;
                                                      }
             | scalar_expr LESSEQ scalar_expr         {
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " <= " << $3.str);
                                                         $$.grid_mapping = GRID_MAPPING_ENTITY;
                                                         $$.array_size = 1;
-                                                        $$.type.entity_type =TYPE_BOOLEAN;
+                                                        $$.type.entity_type = TYPE_BOOLEAN;
                                                         $$.type.collection = false;
                                                      }
             | scalar_expr GREATEREQ scalar_expr      {
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " >= " << $3.str);
                                                         $$.grid_mapping = GRID_MAPPING_ENTITY;
                                                         $$.array_size = 1;
-                                                        $$.type.entity_type =TYPE_BOOLEAN;
+                                                        $$.type.entity_type = TYPE_BOOLEAN;
                                                         $$.type.collection = false;
                                                      }
             | scalar_expr EQ scalar_expr             {
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " == " << $3.str);
                                                         $$.grid_mapping = GRID_MAPPING_ENTITY;
                                                         $$.array_size = 1;
-                                                        $$.type.entity_type =TYPE_BOOLEAN;
+                                                        $$.type.entity_type = TYPE_BOOLEAN;
                                                         $$.type.collection = false;
                                                      }
             | scalar_expr NOTEQ scalar_expr          {
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " != " << $3.str);
                                                         $$.grid_mapping = GRID_MAPPING_ENTITY;
                                                         $$.array_size = 1;
-                                                        $$.type.entity_type =TYPE_BOOLEAN;
+                                                        $$.type.entity_type = TYPE_BOOLEAN;
                                                         $$.type.collection = false;
                                                      }
             | '(' boolean_expr ')'                   {
@@ -1517,7 +1516,7 @@ boolean_terms: '(' scalars ')' '>' '(' scalars ')'
                                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") > (" << $6.str << ")");
                                                               $$.grid_mapping = $2.grid_mapping;
                                                               $$.array_size = $2.array_size;
-                                                              $$.type.entity_type =TYPE_BOOLEAN;
+                                                              $$.type.entity_type = TYPE_BOOLEAN;
                                                               $$.type.collection = true;
                                                           }
                                                       }
@@ -1533,7 +1532,7 @@ boolean_terms: '(' scalars ')' '>' '(' scalars ')'
                                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") < (" << $6.str << ")");
                                                               $$.grid_mapping = $2.grid_mapping;
                                                               $$.array_size = $2.array_size;
-                                                              $$.type.entity_type =TYPE_BOOLEAN;
+                                                              $$.type.entity_type = TYPE_BOOLEAN;
                                                               $$.type.collection = true;
                                                           }
                                                       }
@@ -1549,7 +1548,7 @@ boolean_terms: '(' scalars ')' '>' '(' scalars ')'
                                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") <= (" << $6.str << ")");
                                                               $$.grid_mapping = $2.grid_mapping;
                                                               $$.array_size = $2.array_size;
-                                                              $$.type.entity_type =TYPE_BOOLEAN;
+                                                              $$.type.entity_type = TYPE_BOOLEAN;
                                                               $$.type.collection = true;
                                                           }
                                                       }
@@ -1565,7 +1564,7 @@ boolean_terms: '(' scalars ')' '>' '(' scalars ')'
                                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") >= (" << $6.str << ")");
                                                               $$.grid_mapping = $2.grid_mapping;
                                                               $$.array_size = $2.array_size;
-                                                              $$.type.entity_type =TYPE_BOOLEAN;
+                                                              $$.type.entity_type = TYPE_BOOLEAN;
                                                               $$.type.collection = true;
                                                           }
                                                       }
@@ -1581,7 +1580,7 @@ boolean_terms: '(' scalars ')' '>' '(' scalars ')'
                                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") == (" << $6.str << ")");
                                                               $$.grid_mapping = $2.grid_mapping;
                                                               $$.array_size = $2.array_size;
-                                                              $$.type.entity_type =TYPE_BOOLEAN;
+                                                              $$.type.entity_type = TYPE_BOOLEAN;
                                                               $$.type.collection = true;
                                                           }
                                                       }
@@ -1597,7 +1596,7 @@ boolean_terms: '(' scalars ')' '>' '(' scalars ')'
                                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") != (" << $6.str << ")");
                                                               $$.grid_mapping = $2.grid_mapping;
                                                               $$.array_size = $2.array_size;
-                                                              $$.type.entity_type =TYPE_BOOLEAN;
+                                                              $$.type.entity_type = TYPE_BOOLEAN;
                                                               $$.type.collection = true;
                                                           }
                                                       }
@@ -1981,14 +1980,14 @@ plural_declaration: VARIABLE ':' COLLECTION OF SCALAR       { $$.str = declarati
                   ;
 
 
-extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON plural      { char *st = strdup($7.str); string out = extended_plural_declaration_function($1.str, "scalars", st, $7.grid_mapping); $$.str = strdup(out.c_str()); }
-                           | VARIABLE ':' COLLECTION OF VECTOR ON plural      { char *st = strdup($7.str); string out = extended_plural_declaration_function($1.str, "vectors", st, $7.grid_mapping); $$.str = strdup(out.c_str()); }
-                           | VARIABLE ':' COLLECTION OF VERTEX ON plural      { char *st = strdup($7.str); string out = extended_plural_declaration_function($1.str, "vertices", st, $7.grid_mapping); $$.str = strdup(out.c_str()); }
-                           | VARIABLE ':' COLLECTION OF EDGE ON plural        { char *st = strdup($7.str); string out = extended_plural_declaration_function($1.str, "edges", st, $7.grid_mapping); $$.str = strdup(out.c_str()); }
-                           | VARIABLE ':' COLLECTION OF FACE ON plural        { char *st = strdup($7.str); string out = extended_plural_declaration_function($1.str, "faces", st, $7.grid_mapping); $$.str = strdup(out.c_str()); }
-                           | VARIABLE ':' COLLECTION OF CELL ON plural        { char *st = strdup($7.str); string out = extended_plural_declaration_function($1.str, "cells", st, $7.grid_mapping); $$.str = strdup(out.c_str()); }
-                           | VARIABLE ':' COLLECTION OF ADB ON plural         { char *st = strdup($7.str); string out = extended_plural_declaration_function($1.str, "scalarsAD", st, $7.grid_mapping); $$.str = strdup(out.c_str()); }
-                           | VARIABLE ':' COLLECTION OF BOOLEAN ON plural     { char *st = strdup($7.str); string out = extended_plural_declaration_function($1.str, "bools", st, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON plural      { string out = extended_plural_declaration_function($1.str, TYPE_SCALAR, $7.str, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                           | VARIABLE ':' COLLECTION OF VECTOR ON plural      { string out = extended_plural_declaration_function($1.str, TYPE_VECTOR, $7.str, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                           | VARIABLE ':' COLLECTION OF VERTEX ON plural      { string out = extended_plural_declaration_function($1.str, TYPE_VERTEX, $7.str, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                           | VARIABLE ':' COLLECTION OF EDGE ON plural        { string out = extended_plural_declaration_function($1.str, TYPE_EDGE, $7.str, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                           | VARIABLE ':' COLLECTION OF FACE ON plural        { string out = extended_plural_declaration_function($1.str, TYPE_FACE, $7.str, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                           | VARIABLE ':' COLLECTION OF CELL ON plural        { string out = extended_plural_declaration_function($1.str, TYPE_CELL, $7.str, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                           | VARIABLE ':' COLLECTION OF ADB ON plural         { string out = extended_plural_declaration_function($1.str, TYPE_SCALAR_AD, $7.str, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                           | VARIABLE ':' COLLECTION OF BOOLEAN ON plural     { string out = extended_plural_declaration_function($1.str, TYPE_BOOLEAN, $7.str, $7.grid_mapping); $$.str = strdup(out.c_str()); }
                            ;
 
 
@@ -1998,23 +1997,23 @@ declaration: singular_declaration           { char* out = strdup($1.str); $$.str
            ;
 
 
-expression: scalar_expr       { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type =TYPE_SCALAR; $$.type.collection = false; }
-          | vector_expr       { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type =TYPE_VECTOR; $$.type.collection = false; }
-          | vertex            { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type =TYPE_VERTEX; $$.type.collection = false; }
-          | edge              { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type =TYPE_EDGE; $$.type.collection = false; }
-          | face              { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type =TYPE_FACE; $$.type.collection = false; }
-          | cell              { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type =TYPE_CELL; $$.type.collection = false; }
-          | boolean_expr      { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type =TYPE_BOOLEAN; $$.type.collection = false; }
+expression: scalar_expr       { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type = TYPE_SCALAR; $$.type.collection = false; }
+          | vector_expr       { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type = TYPE_VECTOR; $$.type.collection = false; }
+          | vertex            { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type = TYPE_VERTEX; $$.type.collection = false; }
+          | edge              { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type = TYPE_EDGE; $$.type.collection = false; }
+          | face              { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type = TYPE_FACE; $$.type.collection = false; }
+          | cell              { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type = TYPE_CELL; $$.type.collection = false; }
+          | boolean_expr      { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type = TYPE_BOOLEAN; $$.type.collection = false; }
           ;
 
 
-expressions: scalar_exprs     { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type =TYPE_SCALAR; $$.type.collection = true; }
-           | vector_exprs     { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type =TYPE_VECTOR; $$.type.collection = true; }
-           | vertices         { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type =TYPE_VERTEX; $$.type.collection = true; }
-           | edges            { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type =TYPE_EDGE; $$.type.collection = true; }
-           | faces            { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type =TYPE_FACE; $$.type.collection = true; }
-           | cells            { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type =TYPE_CELL; $$.type.collection = true; }
-           | boolean_exprs    { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type =TYPE_BOOLEAN; $$.type.collection = true; }
+expressions: scalar_exprs     { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type = TYPE_SCALAR; $$.type.collection = true; }
+           | vector_exprs     { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type = TYPE_VECTOR; $$.type.collection = true; }
+           | vertices         { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type = TYPE_VERTEX; $$.type.collection = true; }
+           | edges            { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type = TYPE_EDGE; $$.type.collection = true; }
+           | faces            { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type = TYPE_FACE; $$.type.collection = true; }
+           | cells            { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type = TYPE_CELL; $$.type.collection = true; }
+           | boolean_exprs    { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; $$.array_size = $1.array_size; $$.type.entity_type = TYPE_BOOLEAN; $$.type.collection = true; }
            ;
 
 
@@ -2022,24 +2021,18 @@ singular_assignment: VARIABLE '=' USS                      { string out = USS_as
                    | VARIABLE '=' USSWD '(' number ')'     { string out = USSWD_assignment_function($1.str, $5.str); $$.str = strdup(out.c_str()); }
                    | VARIABLE '=' expression
                                               					   {
-                                              						   string out = singular_assignment_function($1.str, $3);
-                                              						   $$.str = strdup(out.c_str());
+                                                						  string out = singular_assignment_function($1.str, $3);
+                                                						  $$.str = strdup(out.c_str());
                                               					   }
                    ;
 
 
 plural_assignment: VARIABLE '=' USCOS '(' plural ')'      { string out = USCOS_assignment_function($1.str, $5.str, $5.grid_mapping); $$.str = strdup(out.c_str()); }
                  | VARIABLE '=' expressions
-					{
-						$$.str = strdup("FIXME: Not implemented");
-						/*
-						FIXME: This needs to be fixed as for singular assignment
-						string str2 = getVariableTypeString1($3.type, true);
-						string str1 = getVariableTypeString2($3.type, true);
-						string out = plural_assignment_function($1.str, strdup(str1.c_str()), $3.str, strdup(str2.c_str()), $3.grid_mapping);
-						$$.str = strdup(out.c_str());
-						*/
-				    }
+                                                					{
+                                                             string out = singular_assignment_function($1.str, $3);
+                                                             $$.str = strdup(out.c_str());
+                                                          }
                  ;
 
 
@@ -2052,27 +2045,27 @@ assignment: singular_assignment     { char* out = strdup($1.str); $$.str = out; 
 
 
 
-singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' scalar_expr          { char *st = strdup($5.str); string out = singular_declaration_with_assignment_function($1.str, "scalar", st, "Scalar"); $$.str = strdup(out.c_str()); }
-                                    | VARIABLE ':' VECTOR '=' vector_expr          { char *st = strdup($5.str); string out = singular_declaration_with_assignment_function($1.str, "vector", st, "Vector"); $$.str = strdup(out.c_str()); }
-                                    | VARIABLE ':' VERTEX '=' vertex               { char *st = strdup($5.str); string out = singular_declaration_with_assignment_function($1.str, "vertex", st, "Vertex"); $$.str = strdup(out.c_str()); }
-                                    | VARIABLE ':' EDGE '=' edge                   { char *st = strdup($5.str); string out = singular_declaration_with_assignment_function($1.str, "edge", st, "Edge"); $$.str = strdup(out.c_str()); }
-                                    | VARIABLE ':' FACE '=' face                   { char *st = strdup($5.str); string out = singular_declaration_with_assignment_function($1.str, "face", st, "Face"); $$.str = strdup(out.c_str()); }
-                                    | VARIABLE ':' CELL '=' cell                   { char *st = strdup($5.str); string out = singular_declaration_with_assignment_function($1.str, "cell", st, "Cell"); $$.str = strdup(out.c_str()); }
-                                    | VARIABLE ':' ADB '=' adb                     { char *st = strdup($5.str); string out = singular_declaration_with_assignment_function($1.str, "scalarAD", st, "ScalarAD"); $$.str = strdup(out.c_str()); }
-                                    | VARIABLE ':' BOOLEAN '=' boolean_expr        { char *st = strdup($5.str); string out = singular_declaration_with_assignment_function($1.str, "bool", st, "bool"); $$.str = strdup(out.c_str()); }
+singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' scalar_expr          { string out = singular_declaration_with_assignment_function($1.str, $5); $$.str = strdup(out.c_str()); }
+                                    | VARIABLE ':' VECTOR '=' vector_expr          { string out = singular_declaration_with_assignment_function($1.str, $5); $$.str = strdup(out.c_str()); }
+                                    | VARIABLE ':' VERTEX '=' vertex               { string out = singular_declaration_with_assignment_function($1.str, $5); $$.str = strdup(out.c_str()); }
+                                    | VARIABLE ':' EDGE '=' edge                   { string out = singular_declaration_with_assignment_function($1.str, $5); $$.str = strdup(out.c_str()); }
+                                    | VARIABLE ':' FACE '=' face                   { string out = singular_declaration_with_assignment_function($1.str, $5); $$.str = strdup(out.c_str()); }
+                                    | VARIABLE ':' CELL '=' cell                   { string out = singular_declaration_with_assignment_function($1.str, $5); $$.str = strdup(out.c_str()); }
+                                    | VARIABLE ':' ADB '=' adb                     { string out = singular_declaration_with_assignment_function($1.str, $5); $$.str = strdup(out.c_str()); }
+                                    | VARIABLE ':' BOOLEAN '=' boolean_expr        { string out = singular_declaration_with_assignment_function($1.str, $5); $$.str = strdup(out.c_str()); }
                                     | VARIABLE ':' SCALAR '=' USS                  { string out = USS_declaration_with_assignment_function($1.str); $$.str = strdup(out.c_str()); }
                                     | VARIABLE ':' SCALAR '=' USSWD '(' number ')' { string out = USSWD_declaration_with_assignment_function($1.str, $7.str); $$.str = strdup(out.c_str()); }
                                     ;
 
 
-plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' scalar_exprs          { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1.str, "scalars", st, "CollOfScalars", $7.grid_mapping); $$.str = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF VECTOR '=' vector_exprs          { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1.str, "vectors", st, "CollOfVectors", $7.grid_mapping); $$.str = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF VERTEX '=' vertices              { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1.str, "vertices", st, "CollOfVertices", $7.grid_mapping); $$.str = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF EDGE '=' edges                   { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1.str, "edges", st, "CollOfEdges", $7.grid_mapping); $$.str = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF FACE '=' faces                   { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1.str, "faces", st, "CollOfFaces", $7.grid_mapping); $$.str = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF CELL '=' cells                   { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1.str, "cells", st, "CollOfCells", $7.grid_mapping); $$.str = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF ADB '=' adbs                     { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1.str, "scalarsAD", st, "CollOfScalarsAD", $7.grid_mapping); $$.str = strdup(out.c_str()); }
-                                  | VARIABLE ':' COLLECTION OF BOOLEAN '=' boolean_exprs        { char *st = strdup($7.str); string out = plural_declaration_with_assignment_function($1.str, "bools", st, "CollOfBools", $7.grid_mapping); $$.str = strdup(out.c_str()); }
+plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' scalar_exprs          { string out = singular_declaration_with_assignment_function($1.str, $7); $$.str = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF VECTOR '=' vector_exprs          { string out = singular_declaration_with_assignment_function($1.str, $7); $$.str = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF VERTEX '=' vertices              { string out = singular_declaration_with_assignment_function($1.str, $7); $$.str = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF EDGE '=' edges                   { string out = singular_declaration_with_assignment_function($1.str, $7); $$.str = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF FACE '=' faces                   { string out = singular_declaration_with_assignment_function($1.str, $7); $$.str = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF CELL '=' cells                   { string out = singular_declaration_with_assignment_function($1.str, $7); $$.str = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF ADB '=' adbs                     { string out = singular_declaration_with_assignment_function($1.str, $7); $$.str = strdup(out.c_str()); }
+                                  | VARIABLE ':' COLLECTION OF BOOLEAN '=' boolean_exprs        { string out = singular_declaration_with_assignment_function($1.str, $7); $$.str = strdup(out.c_str()); }
                                   | VARIABLE ':' COLLECTION OF SCALAR '=' USCOS '(' plural ')'  { string out = USCOS_declaration_with_assignment_function($1.str, $9.str, $9.grid_mapping); $$.str = strdup(out.c_str()); }
                                   ;
 
@@ -2571,8 +2564,8 @@ bool check5(char* s1)
   if(found == true)
   {
     if( (fun[currentFunctionIndex].headerVariables[i].type == fun[currentFunctionIndex].type)
-		|| (fun[currentFunctionIndex].headerVariables[i].grid_mapping != fun[currentFunctionIndex].grid_mapping 
-			&& fun[currentFunctionIndex].grid_mapping != GRID_MAPPING_ANY 
+		|| (fun[currentFunctionIndex].headerVariables[i].grid_mapping != fun[currentFunctionIndex].grid_mapping
+			&& fun[currentFunctionIndex].grid_mapping != GRID_MAPPING_ANY
 			&& fun[currentFunctionIndex].headerVariables[i].grid_mapping != GRID_MAPPING_ANY)
 	  )
     {
@@ -2592,8 +2585,8 @@ bool check5(char* s1)
   if(found == true)
   {
     if((fun[currentFunctionIndex].localVariables[i].type == fun[currentFunctionIndex].type)
-		|| (fun[currentFunctionIndex].localVariables[i].grid_mapping != fun[currentFunctionIndex].grid_mapping 
-		    && fun[currentFunctionIndex].grid_mapping != GRID_MAPPING_ANY 
+		|| (fun[currentFunctionIndex].localVariables[i].grid_mapping != fun[currentFunctionIndex].grid_mapping
+		    && fun[currentFunctionIndex].grid_mapping != GRID_MAPPING_ANY
 			&& fun[currentFunctionIndex].localVariables[i].grid_mapping != GRID_MAPPING_ANY)
 		)
     {
@@ -3230,12 +3223,12 @@ char* declaration_function(char* variable_name, EntityType entity, bool collecti
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = variable_name;
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type.entity_type = entity;
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type.collection = collection;
-					if (collection) {
-						fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = GRID_MAPPING_ANY;
-					}
-					else {
-						fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = GRID_MAPPING_ENTITY;
-					}
+          					if (collection) {
+          						fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = GRID_MAPPING_ANY;
+          					}
+          					else {
+          						fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = GRID_MAPPING_ENTITY;
+          					}
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = false;
               }
         }
@@ -3263,12 +3256,12 @@ char* declaration_function(char* variable_name, EntityType entity, bool collecti
             var[varNo++].name = variable_name;
             var[varNo-1].type.entity_type = entity;
             var[varNo-1].type.collection = collection;
-			if (collection) {
-				var[varNo-1].grid_mapping = GRID_MAPPING_ANY;
-			}
-			else {
-				var[varNo-1].grid_mapping = GRID_MAPPING_ENTITY;
-			}
+      			if (collection) {
+      				var[varNo-1].grid_mapping = GRID_MAPPING_ANY;
+      			}
+      			else {
+      				var[varNo-1].grid_mapping = GRID_MAPPING_ENTITY;
+      			}
             var[varNo-1].assigned = false;
         }
     }
@@ -3282,7 +3275,7 @@ char* declaration_function(char* variable_name, EntityType entity, bool collecti
 
 
 
-string extended_plural_declaration_function(char* st1, char* st2, char* st3, GridMapping d1)
+string extended_plural_declaration_function(char* variable_name, EntityType entity, char* st3, GridMapping d1)
 {
     HEAP_CHECK();
     string finalString;
@@ -3292,7 +3285,7 @@ string extended_plural_declaration_function(char* st1, char* st2, char* st3, Gri
         bool taken = false;
 
         for(i = 0; i < fun[currentFunctionIndex].noParam; i++)
-            if(strcmp(fun[currentFunctionIndex].headerVariables[i].name.c_str(), st1) == 0)
+            if(strcmp(fun[currentFunctionIndex].headerVariables[i].name.c_str(), variable_name) == 0)
             {
                 taken = true;
                 break;
@@ -3301,13 +3294,13 @@ string extended_plural_declaration_function(char* st1, char* st2, char* st3, Gri
         if(taken == true)
         {
             stringstream ss;
-            ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' exists in the header of the function '" << fun[currentFunctionIndex].name << "'";
+            ss << "error at line " << currentLineNumber << ": The variable '" << variable_name << "' exists in the header of the function '" << fun[currentFunctionIndex].name << "'";
             finalString = ss.str();
         }
         else
         {
               for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
-                if(strcmp(fun[currentFunctionIndex].localVariables[i].name.c_str(), st1) == 0)
+                if(strcmp(fun[currentFunctionIndex].localVariables[i].name.c_str(), variable_name) == 0)
                 {
                     taken = true;
                     break;
@@ -3316,7 +3309,7 @@ string extended_plural_declaration_function(char* st1, char* st2, char* st3, Gri
               if(taken == true)
               {
                   stringstream ss;
-                  ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is redeclared as a local variable of the function '" << fun[currentFunctionIndex].name << "'";
+                  ss << "error at line " << currentLineNumber << ": The variable '" << variable_name << "' is redeclared as a local variable of the function '" << fun[currentFunctionIndex].name << "'";
                   finalString = ss.str();
               }
               else
@@ -3324,7 +3317,7 @@ string extended_plural_declaration_function(char* st1, char* st2, char* st3, Gri
                   if(check7(st3) == true)
                   {
                       stringstream ss;
-                      ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the ON expression of the " << st2 << " variable '" << st1 << "'";
+                      ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the ON expression of the variable '" << variable_name << "'";
                       finalString = ss.str();
                   }
                   else
@@ -3332,7 +3325,7 @@ string extended_plural_declaration_function(char* st1, char* st2, char* st3, Gri
                       if(check3(st3) == false)
                       {
                           stringstream ss;
-                          ss << "error at line " << currentLineNumber << ": The variable '" << find5(st3) << "' contained in the ON expression of the " << st2 << " variable '" << st1 << "' is undeclared";
+                          ss << "error at line " << currentLineNumber << ": The variable '" << find5(st3) << "' contained in the ON expression of the variable '" << variable_name << "' is undeclared";
                           finalString = ss.str();
                       }
                       else
@@ -3340,13 +3333,14 @@ string extended_plural_declaration_function(char* st1, char* st2, char* st3, Gri
                           if(check4(st3) == false)
                           {
                               stringstream ss;
-                              ss << "error at line " << currentLineNumber << ": The variable '" << find6(st3) << "' contained in the ON expression of the " << st2 << " variable '" << st1 << "' is unassigned";
+                              ss << "error at line " << currentLineNumber << ": The variable '" << find6(st3) << "' contained in the ON expression of the variable '" << variable_name << "' is unassigned";
                               finalString = ss.str();
                           }
                           else
                           {
-                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
-                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
+                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = variable_name;
+                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type.entity_type = entity;
+                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type.collection = true;
                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = d1;
                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = false;
                           }
@@ -3361,7 +3355,7 @@ string extended_plural_declaration_function(char* st1, char* st2, char* st3, Gri
         bool declaredBefore = false;
 
         for(i = 0; i < varNo; i++)
-            if(strcmp(var[i].name.c_str(), st1) == 0)
+            if(strcmp(var[i].name.c_str(), variable_name) == 0)
             {
                 declaredBefore = true;
                 break;
@@ -3370,7 +3364,7 @@ string extended_plural_declaration_function(char* st1, char* st2, char* st3, Gri
         if(declaredBefore == true)
         {
             stringstream ss;
-            ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is redeclared";
+            ss << "error at line " << currentLineNumber << ": The variable '" << variable_name << "' is redeclared";
             finalString = ss.str();
         }
         else
@@ -3378,7 +3372,7 @@ string extended_plural_declaration_function(char* st1, char* st2, char* st3, Gri
               if(check7(st3) == true)
               {
                   stringstream ss;
-                  ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the ON expression of the " << st2 << " variable '" << st1 << "'";
+                  ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the ON expression of the variable '" << variable_name << "'";
                   finalString = ss.str();
               }
               else
@@ -3386,7 +3380,7 @@ string extended_plural_declaration_function(char* st1, char* st2, char* st3, Gri
                   if(check1(st3) == false)
                   {
                       stringstream ss;
-                      ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the ON expression of the " << st2 << " variable '" << st1 << "' is undeclared";
+                      ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the ON expression of the variable '" << variable_name << "' is undeclared";
                       finalString = ss.str();
                   }
                   else
@@ -3394,15 +3388,16 @@ string extended_plural_declaration_function(char* st1, char* st2, char* st3, Gri
                       if(check2(st3) == false)
                       {
                           stringstream ss;
-                          ss << "error at line " << currentLineNumber << ": The variable '" << find3(st3) << "' contained in the ON expression of the " << st2 << " variable '" << st1 << "' is unassigned";
+                          ss << "error at line " << currentLineNumber << ": The variable '" << find3(st3) << "' contained in the ON expression of the variable '" << variable_name << "' is unassigned";
                           finalString = ss.str();
                       }
                       else
                       {
-                          var[varNo++].name = st1;
-                          var[varNo-1].type = st2;
+                          var[varNo++].name = variable_name;
+                          var[varNo-1].type.entity_type = entity;
                           var[varNo-1].grid_mapping = d1;
                           var[varNo-1].assigned = false;
+                          var[varNo-1].type.collection = true;
                       }
                   }
               }
@@ -3733,7 +3728,7 @@ string singular_assignment_function(char* variable_name, const info& rhs)
 }
 
 
-string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, GridMapping d1)
+string plural_assignment_function(char* variable_name, const info& rhs)
 {
     HEAP_CHECK();
     string finalString;
@@ -3743,7 +3738,7 @@ string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, Gr
         bool taken = false;
 
         for(i = 0; i < fun[currentFunctionIndex].noParam; i++)
-            if(strcmp(fun[currentFunctionIndex].headerVariables[i].name.c_str(), st1) == 0)
+            if(strcmp(fun[currentFunctionIndex].headerVariables[i].name.c_str(), variable_name) == 0)
             {
                 taken = true;
                 break;
@@ -3752,13 +3747,13 @@ string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, Gr
         if(taken == true)
         {
             stringstream ss;
-            ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' from the header of the function '" << fun[currentFunctionIndex].name << "' cannot be assigned";
+            ss << "error at line " << currentLineNumber << ": The " << rhs.type << " variable '" << variable_name << "' from the header of the function '" << fun[currentFunctionIndex].name << "' cannot be assigned";
             finalString = ss.str();
         }
         else
         {
               for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
-                  if(strcmp(fun[currentFunctionIndex].localVariables[i].name.c_str(), st1) == 0)
+                  if(strcmp(fun[currentFunctionIndex].localVariables[i].name.c_str(), variable_name) == 0)
                   {
                       taken = true;
                       break;
@@ -3768,20 +3763,20 @@ string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, Gr
                   if(fun[currentFunctionIndex].localVariables[i].assigned == true)
                   {
                       stringstream ss;
-                      ss << "error at line " << currentLineNumber << ": The local " << st2 << " variable '" << st1 << "' is reassigned in the function '" << fun[currentFunctionIndex].name << "'";
+                      ss << "error at line " << currentLineNumber << ": The local " << rhs.type << " variable '" << variable_name << "' is reassigned in the function '" << fun[currentFunctionIndex].name << "'";
                       finalString = ss.str();
                   }
                   else
                   {
-                        if(check9(st3) != "isOk")
+                        if(check9(rhs.str) != "isOk")
                         {
                             stringstream ss;
-                            ss << "error at line " << currentLineNumber << ": " << check9(st3);
+                            ss << "error at line " << currentLineNumber << ": " << check9(rhs.str);
                             finalString = ss.str();
                         }
                         else
                         {
-                            if(check6(st3) == true)
+                            if(check6(rhs.str) == true)
                             {
                                 stringstream ss;
                                 ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -3789,57 +3784,57 @@ string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, Gr
                             }
                             else
                             {
-                                if(find1(st3, st1))
+                                if(find1(rhs.str, variable_name))
                                 {
                                     stringstream ss;
-                                    ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
+                                    ss << "error at line " << currentLineNumber << ": The " << rhs.type << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
                                     finalString = ss.str();
                                 }
                                 else
                                 {
-                                    if(check3(st3) == false)
+                                    if(check3(rhs.str) == false)
                                     {
                                         stringstream ss;
-                                        ss << "error at line " << currentLineNumber << ": The variable '" << find5(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
+                                        ss << "error at line " << currentLineNumber << ": The variable '" << find5(rhs.str) << "' contained in the definition of the " << rhs.type << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
                                         finalString = ss.str();
                                     }
                                     else
                                     {
-                                        if(check4(st3) == false)
+                                        if(check4(rhs.str) == false)
                                         {
                                             stringstream ss;
-                                            ss << "error at line " << currentLineNumber << ": The variable '" << find6(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
+                                            ss << "error at line " << currentLineNumber << ": The variable '" << find6(rhs.str) << "' contained in the definition of the " << rhs.type << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
                                             finalString = ss.str();
                                         }
                                         else
                                         {
-                                            if(check7(st3) == true)
+                                            if(check7(rhs.str) == true)
                                             {
                                                 stringstream ss;
-                                                ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the " << st2 << " variable '" << st1 << "'";
+                                                ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the " << rhs.type << " variable '" << variable_name << "'";
                                                 finalString = ss.str();
                                             }
                                             else
                                             {
-                                                if(getSize3(st1) != d1)
-                                                    if(getSize3(st1) == GRID_MAPPING_ANY)
+                                                if(getSize3(variable_name) != rhs.grid_mapping)
+                                                    if(getSize3(variable_name) == GRID_MAPPING_ANY)
                                                     {
-                                                        fun[currentFunctionIndex].localVariables[i].grid_mapping = d1;
+                                                        fun[currentFunctionIndex].localVariables[i].grid_mapping = rhs.grid_mapping;
                                                         fun[currentFunctionIndex].localVariables[i].assigned = true;
                                                         stringstream ss;
-                                                        ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
+                                                        ss << "const " << getStringFromVariableType(rhs.type) << " " << variable_name << " = " << rhs.str << ";";
                                                         finalString = ss.str();
                                                     }
                                                     else
                                                     {
                                                         stringstream ss;
-                                                        ss << "error at line " << currentLineNumber << ": The length of the " << st2 << " variable '" << st1 << "' from its definition differs than the length of its assignment in the function '" << fun[currentFunctionIndex].name << "'";
+                                                        ss << "error at line " << currentLineNumber << ": The length of the " << rhs.type << " variable '" << variable_name << "' from its definition differs than the length of its assignment in the function '" << fun[currentFunctionIndex].name << "'";
                                                         finalString = ss.str();
                                                     }
                                                 else
                                                 {
                                                     stringstream ss;
-                                                    ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
+                                                    ss << "const " << getStringFromVariableType(rhs.type) << " " << variable_name << " = " << rhs.str << ";";
                                                     finalString = ss.str();
                                                     fun[currentFunctionIndex].localVariables[i].assigned = true;
                                                 }
@@ -3852,15 +3847,15 @@ string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, Gr
                   }
               else
               {   // deduced declaration
-                  if(check9(st3) != "isOk")
+                  if(check9(rhs.str) != "isOk")
                   {
                       stringstream ss;
-                      ss << "error at line " << currentLineNumber << ": " << check9(st3);
+                      ss << "error at line " << currentLineNumber << ": " << check9(rhs.str);
                       finalString = ss.str();
                   }
                   else
                   {
-                      if(check6(st3) == true)
+                      if(check6(rhs.str) == true)
                       {
                           stringstream ss;
                           ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -3868,44 +3863,44 @@ string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, Gr
                       }
                       else
                       {
-                          if(find1(st3, st1))
+                          if(find1(rhs.str, variable_name))
                           {
                               stringstream ss;
-                              ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
+                              ss << "error at line " << currentLineNumber << ": The " << rhs.type << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
                               finalString = ss.str();
                           }
                           else
                           {
-                              if(check3(st3) == false)
+                              if(check3(rhs.str) == false)
                               {
                                   stringstream ss;
-                                  ss << "error at line " << currentLineNumber << ": The variable '" << find5(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
+                                  ss << "error at line " << currentLineNumber << ": The variable '" << find5(rhs.str) << "' contained in the definition of the " << rhs.type << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
                                   finalString = ss.str();
                               }
                               else
                               {
-                                  if(check4(st3) == false)
+                                  if(check4(rhs.str) == false)
                                   {
                                       stringstream ss;
-                                      ss << "error at line " << currentLineNumber << ": The variable '" << find6(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
+                                      ss << "error at line " << currentLineNumber << ": The variable '" << find6(rhs.str) << "' contained in the definition of the " << rhs.type << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
                                       finalString = ss.str();
                                   }
                                   else
                                   {
-                                      if(check7(st3) == true)
+                                      if(check7(rhs.str) == true)
                                       {
                                           stringstream ss;
-                                          ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the " << st2 << " variable '" << st1 << "'";
+                                          ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the " << rhs.type << " variable '" << variable_name << "'";
                                           finalString = ss.str();
                                       }
                                       else
                                       {
                                           stringstream ss;
-                                          ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
+                                          ss << "const " << getStringFromVariableType(rhs.type) << " " << variable_name << " = " << rhs.str << ";";
                                           finalString = ss.str();
-                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
-                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
-                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = d1;
+                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = variable_name;
+                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = rhs.type;
+                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = rhs.grid_mapping;
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
                                       }
                                   }
@@ -3922,7 +3917,7 @@ string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, Gr
         bool declaredBefore = false;
 
         for(i = 0; i < varNo; i++)
-            if(strcmp(var[i].name.c_str(), st1) == 0)
+            if(strcmp(var[i].name.c_str(), variable_name) == 0)
             {
                 declaredBefore = true;
                 break;
@@ -3932,20 +3927,20 @@ string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, Gr
               if(var[i].assigned == true)
               {
                   stringstream ss;
-                  ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is reassigned";
+                  ss << "error at line " << currentLineNumber << ": The " << rhs.type << " variable '" << variable_name << "' is reassigned";
                   finalString = ss.str();
               }
               else
               {
-                    if(check9(st3) != "isOk")
+                    if(check9(rhs.str) != "isOk")
                     {
                         stringstream ss;
-                        ss << "error at line " << currentLineNumber << ": " << check9(st3);
+                        ss << "error at line " << currentLineNumber << ": " << check9(rhs.str);
                         finalString = ss.str();
                     }
                     else
                     {
-                        if(check6(st3) == true)
+                        if(check6(rhs.str) == true)
                         {
                             stringstream ss;
                             ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -3953,57 +3948,57 @@ string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, Gr
                         }
                         else
                         {
-                            if(find1(st3, st1))
+                            if(find1(rhs.str, variable_name))
                             {
                                 stringstream ss;
-                                ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is included in its definition";
+                                ss << "error at line " << currentLineNumber << ": The " << rhs.type << " variable '" << variable_name << "' is included in its definition";
                                 finalString = ss.str();
                             }
                             else
                             {
-                                if(check1(st3) == false)
+                                if(check1(rhs.str) == false)
                                 {
                                     stringstream ss;
-                                    ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
+                                    ss << "error at line " << currentLineNumber << ": The variable '" << find2(rhs.str) << "' contained in the definition of the " << rhs.type << " variable '" << variable_name << "' is undeclared";
                                     finalString = ss.str();
                                 }
                                 else
                                 {
-                                    if(check2(st3) == false)
+                                    if(check2(rhs.str) == false)
                                     {
                                         stringstream ss;
-                                        ss << "error at line " << currentLineNumber << ": The variable '" << find3(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is unassigned";
+                                        ss << "error at line " << currentLineNumber << ": The variable '" << find3(rhs.str) << "' contained in the definition of the " << rhs.type << " variable '" << variable_name << "' is unassigned";
                                         finalString = ss.str();
                                     }
                                     else
                                     {
-                                        if(check7(st3) == true)
+                                        if(check7(rhs.str) == true)
                                         {
                                             stringstream ss;
-                                            ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the " << st2 << " variable '" << st1 << "'";
+                                            ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the " << rhs.type << " variable '" << variable_name << "'";
                                             finalString = ss.str();
                                         }
                                         else
                                         {
-                                            if(getSize1(st1) != d1)
-                                                if(getSize1(st1) == GRID_MAPPING_ANY)
+                                            if(getSize1(variable_name) != rhs.grid_mapping)
+                                                if(getSize1(variable_name) == GRID_MAPPING_ANY)
                                                 {
-                                                    var[i].grid_mapping = d1;
+                                                    var[i].grid_mapping = rhs.grid_mapping;
                                                     var[i].assigned = true;
                                                     stringstream ss;
-                                                    ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
+                                                    ss << "const " << getStringFromVariableType(rhs.type) << " " << variable_name << " = " << rhs.str << ";";
                                                     finalString = ss.str();
                                                 }
                                                 else
                                                 {
                                                     stringstream ss;
-                                                    ss << "error at line " << currentLineNumber << ": The length of the " << st2 << " variable '" << st1 << "' from its definition differs than the length of its assignment";
+                                                    ss << "error at line " << currentLineNumber << ": The length of the " << rhs.type << " variable '" << variable_name << "' from its definition differs than the length of its assignment";
                                                     finalString = ss.str();
                                                 }
                                             else
                                             {
                                                 stringstream ss;
-                                                ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
+                                                ss << "const " << getStringFromVariableType(rhs.type) << " " << variable_name << " = " << rhs.str << ";";
                                                 finalString = ss.str();
                                                 var[i].assigned = true;
                                             }
@@ -4017,15 +4012,15 @@ string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, Gr
         else
         {
             // deduced declaration
-            if(check9(st3) != "isOk")
+            if(check9(rhs.str) != "isOk")
             {
                 stringstream ss;
-                ss << "error at line " << currentLineNumber << ": " << check9(st3);
+                ss << "error at line " << currentLineNumber << ": " << check9(rhs.str);
                 finalString = ss.str();
             }
             else
             {
-                if(check6(st3) == true)
+                if(check6(rhs.str) == true)
                 {
                     stringstream ss;
                     ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -4033,44 +4028,44 @@ string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, Gr
                 }
                 else
                 {
-                    if(find1(st3, st1))
+                    if(find1(rhs.str, variable_name))
                     {
                         stringstream ss;
-                        ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is included in its definition";
+                        ss << "error at line " << currentLineNumber << ": The " << rhs.type << " variable '" << variable_name << "' is included in its definition";
                         finalString = ss.str();
                     }
                     else
                     {
-                        if(check1(st3) == false)
+                        if(check1(rhs.str) == false)
                         {
                             stringstream ss;
-                            ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
+                            ss << "error at line " << currentLineNumber << ": The variable '" << find2(rhs.str) << "' contained in the definition of the " << rhs.type << " variable '" << variable_name << "' is undeclared";
                             finalString = ss.str();
                         }
                         else
                         {
-                            if(check2(st3) == false)
+                            if(check2(rhs.str) == false)
                             {
                                 stringstream ss;
-                                ss << "error at line " << currentLineNumber << ": The variable '" << find3(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is unassigned";
+                                ss << "error at line " << currentLineNumber << ": The variable '" << find3(rhs.str) << "' contained in the definition of the " << rhs.type << " variable '" << variable_name << "' is unassigned";
                                 finalString = ss.str();
                             }
                             else
                             {
-                                if(check7(st3) == true)
+                                if(check7(rhs.str) == true)
                                 {
                                     stringstream ss;
-                                    ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the " << st2 << " variable '" << st1 << "'";
+                                    ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the " << rhs.type << " variable '" << variable_name << "'";
                                     finalString = ss.str();
                                 }
                                 else
                                 {
                                     stringstream ss;
-                                    ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
+                                    ss << "const " << getStringFromVariableType(rhs.type) << " " << variable_name << " = " << rhs.str << ";";
                                     finalString = ss.str();
-                                    var[varNo++].name = st1;
-                                    var[varNo-1].type = st2;
-                                    var[varNo-1].grid_mapping = d1;
+                                    var[varNo++].name = variable_name;
+                                    var[varNo-1].type = rhs.type;
+                                    var[varNo-1].grid_mapping = rhs.grid_mapping;
                                     var[varNo-1].assigned = true;
                                 }
                             }
@@ -4086,7 +4081,7 @@ string plural_assignment_function(char* st1, char* st2, char* st3, char* st4, Gr
 }
 
 
-string singular_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4)
+string declaration_with_assignment_function(char* variable_name, const info& rhs)
 {
     HEAP_CHECK();
     string finalString;
@@ -4096,7 +4091,7 @@ string singular_declaration_with_assignment_function(char* st1, char* st2, char*
         bool taken = false;
 
         for(i = 0; i < fun[currentFunctionIndex].noParam; i++)
-            if(strcmp(fun[currentFunctionIndex].headerVariables[i].name.c_str(), st1) == 0)
+            if(strcmp(fun[currentFunctionIndex].headerVariables[i].name.c_str(), variable_name) == 0)
             {
                 taken = true;
                 break;
@@ -4105,13 +4100,13 @@ string singular_declaration_with_assignment_function(char* st1, char* st2, char*
         if(taken == true)
         {
             stringstream ss;
-            ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' exists in the header of the function '" << fun[currentFunctionIndex].name << "'";
+            ss << "error at line " << currentLineNumber << ": The variable '" << variable_name << "' exists in the header of the function '" << fun[currentFunctionIndex].name << "'";
             finalString = ss.str();
         }
         else
         {
               for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
-                  if(strcmp(fun[currentFunctionIndex].localVariables[i].name.c_str(), st1) == 0)
+                  if(strcmp(fun[currentFunctionIndex].localVariables[i].name.c_str(), variable_name) == 0)
                   {
                       taken = true;
                       break;
@@ -4120,20 +4115,20 @@ string singular_declaration_with_assignment_function(char* st1, char* st2, char*
               if(taken == true)
               {
                   stringstream ss;
-                  ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is redeclared as a local variable of the function '%s'" << fun[currentFunctionIndex].name << "'";
+                  ss << "error at line " << currentLineNumber << ": The variable '" << variable_name << "' is redeclared as a local variable of the function '%s'" << fun[currentFunctionIndex].name << "'";
                   finalString = ss.str();
               }
               else
               {
-                    if(check9(st3) != "isOk")
+                    if(check9(rhs.str) != "isOk")
                     {
                         stringstream ss;
-                        ss << "error at line " << currentLineNumber << ": " << check9(st3);
+                        ss << "error at line " << currentLineNumber << ": " << check9(rhs.str);
                         finalString = ss.str();
                     }
                     else
                     {
-                        if(check6(st3) == true)
+                        if(check6(rhs.str) == true)
                         {
                             stringstream ss;
                             ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -4141,44 +4136,44 @@ string singular_declaration_with_assignment_function(char* st1, char* st2, char*
                         }
                         else
                         {
-                            if(find1(st3, st1))
+                            if(find1(rhs.str, variable_name))
                               {
                                   stringstream ss;
-                                  ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
+                                  ss << "error at line " << currentLineNumber << ": The variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
                                   finalString = ss.str();
                               }
                               else
                               {
-                                  if(check3(st3) == false)
+                                  if(check3(rhs.str) == false)
                                   {
                                       stringstream ss;
-                                      ss << "error at line " << currentLineNumber << ": The variable '" << find5(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
+                                      ss << "error at line " << currentLineNumber << ": The variable '" << find5(rhs.str) << "' contained in the definition of the variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
                                       finalString = ss.str();
                                   }
                                   else
                                   {
-                                      if(check4(st3) == false)
+                                      if(check4(rhs.str) == false)
                                       {
                                           stringstream ss;
-                                          ss << "error at line " << currentLineNumber << ": The variable '" << find6(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
+                                          ss << "error at line " << currentLineNumber << ": The variable '" << find6(rhs.str) << "' contained in the definition of the variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
                                           finalString = ss.str();
                                       }
                                       else
                                       {
-                                          if(check7(st3) == true)
+                                          if(check7(rhs.str) == true)
                                           {
                                               stringstream ss;
-                                              ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the " << st2 << " variable '" << st1 << "'";
+                                              ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the variable '" << variable_name << "'";
                                               finalString = ss.str();
                                           }
                                           else
                                           {
                                               stringstream ss;
-                                              ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
+                                              ss << "const " << getStringFromVariableType(rhs.type) << " " << variable_name << " = " << rhs.str << ";";
                                               finalString = ss.str();
-                                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
-                                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
-                                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = GRID_MAPPING_ENTITY;
+                                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = variable_name;
+                                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = rhs.type;
+                                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = rhs.grid_mapping;
                                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
                                           }
                                     }
@@ -4195,7 +4190,7 @@ string singular_declaration_with_assignment_function(char* st1, char* st2, char*
         bool declaredBefore = false;
 
         for(i = 0; i < varNo; i++)
-            if(strcmp(var[i].name.c_str(), st1) == 0)
+            if(strcmp(var[i].name.c_str(), variable_name) == 0)
             {
                 declaredBefore = true;
                 break;
@@ -4204,20 +4199,20 @@ string singular_declaration_with_assignment_function(char* st1, char* st2, char*
         if(declaredBefore == true)
         {
             stringstream ss;
-            ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is redeclared";
+            ss << "error at line " << currentLineNumber << ": The variable '" << variable_name << "' is redeclared";
             finalString = ss.str();
         }
         else
         {
-            if(check9(st3) != "isOk")
+            if(check9(rhs.str) != "isOk")
             {
                 stringstream ss;
-                ss << "error at line " << currentLineNumber << ": " << check9(st3);
+                ss << "error at line " << currentLineNumber << ": " << check9(rhs.str);
                 finalString = ss.str();
             }
             else
             {
-                if(check6(st3) == true)
+                if(check6(rhs.str) == true)
                 {
                     stringstream ss;
                     ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -4225,44 +4220,44 @@ string singular_declaration_with_assignment_function(char* st1, char* st2, char*
                 }
                 else
                 {
-                    if(find1(st3, st1))
+                    if(find1(rhs.str, variable_name))
                     {
                         stringstream ss;
-                        ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is included in its definition";
+                        ss << "error at line " << currentLineNumber << ": The variable '" << variable_name << "' is included in its definition";
                         finalString = ss.str();
                     }
                     else
                     {
-                        if(check1(st3) == false)
+                        if(check1(rhs.str) == false)
                         {
                             stringstream ss;
-                            ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
+                            ss << "error at line " << currentLineNumber << ": The variable '" << find2(rhs.str) << "' contained in the definition of the variable '" << variable_name << "' is undeclared";
                             finalString = ss.str();
                         }
                         else
                         {
-                            if(check2(st3) == false)
+                            if(check2(rhs.str) == false)
                             {
                                 stringstream ss;
-                                ss << "error at line " << currentLineNumber << ": The variable '" << find3(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is unassigned";
+                                ss << "error at line " << currentLineNumber << ": The variable '" << find3(rhs.str) << "' contained in the definition of the variable '" << variable_name << "' is unassigned";
                                 finalString = ss.str();
                             }
                             else
                             {
-                                if(check7(st3) == true)
+                                if(check7(rhs.str) == true)
                                 {
                                     stringstream ss;
-                                    ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the " << st2 << " variable '" << st1 << "'";
+                                    ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the variable '" << variable_name << "'";
                                     finalString = ss.str();
                                 }
                                 else
                                 {
                                     stringstream ss;
-                                    ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
+                                    ss << "const " << getStringFromVariableType(rhs.type) << " " << variable_name << " = " << rhs.str << ";";
                                     finalString = ss.str();
-                                    var[varNo++].name = st1;
-                                    var[varNo-1].type = st2;
-                                    var[varNo-1].grid_mapping = GRID_MAPPING_ENTITY;
+                                    var[varNo++].name = variable_name;
+                                    var[varNo-1].type = rhs.type;
+                                    var[varNo-1].grid_mapping = rhs.grid_mapping;
                                     var[varNo-1].assigned = true;
                                 }
                             }
@@ -4277,197 +4272,6 @@ string singular_declaration_with_assignment_function(char* st1, char* st2, char*
     return finalString;
 }
 
-
-string plural_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4, GridMapping d1)
-{
-    HEAP_CHECK();
-    string finalString;
-    if(insideFunction == true)
-    {
-        int i;
-        bool taken = false;
-
-        for(i = 0; i < fun[currentFunctionIndex].noParam; i++)
-            if(strcmp(fun[currentFunctionIndex].headerVariables[i].name.c_str(), st1) == 0)
-            {
-                taken = true;
-                break;
-            }
-
-        if(taken == true)
-        {
-            stringstream ss;
-            ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' exists in the header of the function '" << fun[currentFunctionIndex].name << "'";
-            finalString = ss.str();
-        }
-        else
-        {
-              for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
-                  if(strcmp(fun[currentFunctionIndex].localVariables[i].name.c_str(), st1) == 0)
-                  {
-                      taken = true;
-                      break;
-                  }
-
-              if(taken == true)
-              {
-                  stringstream ss;
-                  ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is redeclared as a local variable of the function '%s'" << fun[currentFunctionIndex].name << "'";
-                  finalString = ss.str();
-              }
-              else
-              {
-                    if(check9(st3) != "isOk")
-                    {
-                        stringstream ss;
-                        ss << "error at line " << currentLineNumber << ": " << check9(st3);
-                        finalString = ss.str();
-                    }
-                    else
-                    {
-                        if(check6(st3) == true)
-                        {
-                            stringstream ss;
-                            ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
-                            finalString = ss.str();
-                        }
-                        else
-                        {
-                            if(find1(st3, st1))
-                            {
-                                stringstream ss;
-                                ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
-                                finalString = ss.str();
-                            }
-                              else
-                              {
-                                  if(check3(st3) == false)
-                                  {
-                                      stringstream ss;
-                                      ss << "error at line " << currentLineNumber << ": The variable '" << find5(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
-                                      finalString = ss.str();
-                                  }
-                                  else
-                                  {
-                                      if(check4(st3) == false)
-                                      {
-                                          stringstream ss;
-                                          ss << "error at line " << currentLineNumber << ": The variable '" << find6(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
-                                          finalString = ss.str();
-                                      }
-                                      else
-                                      {
-                                          if(check7(st3) == true)
-                                          {
-                                              stringstream ss;
-                                              ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the " << st2 << " variable '" << st1 << "'";
-                                              finalString = ss.str();
-                                          }
-                                          else
-                                          {
-                                              stringstream ss;
-                                              ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
-                                              finalString = ss.str();
-                                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = st1;
-                                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = st2;
-                                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = d1;
-                                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
-                                          }
-                                    }
-                                }
-                            }
-                        }
-                    }
-              }
-        }
-    }
-    else
-    {
-        int i;
-        bool declaredBefore = false;
-
-        for(i = 0; i < varNo; i++)
-            if(strcmp(var[i].name.c_str(), st1) == 0)
-            {
-                declaredBefore = true;
-                break;
-            }
-
-        if(declaredBefore == true)
-        {
-            stringstream ss;
-            ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is redeclared";
-            finalString = ss.str();
-        }
-        else
-        {
-            if(check9(st3) != "isOk")
-            {
-                stringstream ss;
-                ss << "error at line " << currentLineNumber << ": " << check9(st3);
-                finalString = ss.str();
-            }
-            else
-            {
-                if(check6(st3) == true)
-                {
-                    stringstream ss;
-                    ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
-                    finalString = ss.str();
-                }
-                else
-                {
-                    if(find1(st3, st1))
-                    {
-                        stringstream ss;
-                        ss << "error at line " << currentLineNumber << ": The " << st2 << " variable '" << st1 << "' is included in its definition";
-                        finalString = ss.str();
-                    }
-                    else
-                    {
-                        if(check1(st3) == false)
-                        {
-                            stringstream ss;
-                            ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is undeclared";
-                            finalString = ss.str();
-                        }
-                        else
-                        {
-                            if(check2(st3) == false)
-                            {
-                                stringstream ss;
-                                ss << "error at line " << currentLineNumber << ": The variable '" << find3(st3) << "' contained in the definition of the " << st2 << " variable '" << st1 << "' is unassigned";
-                                finalString = ss.str();
-                            }
-                            else
-                            {
-                                if(check7(st3) == true)
-                                {
-                                    stringstream ss;
-                                    ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the " << st2 << " variable '" << st1 << "'";
-                                    finalString = ss.str();
-                                }
-                                else
-                                {
-                                    stringstream ss;
-                                    ss << "const " << st4 << " " << st1 << " = " << st3 << ";";
-                                    finalString = ss.str();
-                                    var[varNo++].name = st1;
-                                    var[varNo-1].type = st2;
-                                    var[varNo-1].grid_mapping = d1;
-                                    var[varNo-1].assigned = true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    HEAP_CHECK();
-    return finalString;
-}
 
 
 string extended_plural_declaration_with_assignment_function(char* st1, char* st2, char* st3, char* st4, char* st5, GridMapping d1, GridMapping d2)
