@@ -1412,6 +1412,7 @@ expression: '-' expression
                                                  }
           | INTERIOR_CELLS '(' GRID ')'
                                                  {
+													 $$ = new info();
                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.interiorCells()");
                                                     $$->grid_mapping = GRID_MAPPING_INTERIORCELLS;
                                                     $$->array_size = 1;
