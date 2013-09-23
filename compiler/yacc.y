@@ -308,8 +308,8 @@ bool operator!=(const VariableType& a, const VariableType& b) {
 %type<inf> INTEGER
 %type<inf> VARIABLE
 %type<inf> COMMENT
-%type<inf> plural
 /*
+%type<inf> plural
 %type<inf> header
 %type<inf> parameter_list
 %type<inf> type
@@ -434,22 +434,22 @@ vectors: expression
 
 
 expression: '-' expression
-                                             { // it should be scalar
-                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str);
-                                                clone_info_without_name($$, $2);
+                                             {
+                                                switch($2.type.entity_type)
+                                                {
+                                                    case TYPE_SCALAR:
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str);
+                                                        clone_info_without_name($$, $2);
+                                                        break;
+                                                    case TYPE_VECTOR:
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str);
+                                                        clone_info_without_name($$, $2);
+                                                        break;
+                                                    default:
+                                                        // ?
+                                                        break;
+                                                }
                                              }
-                                             {  // it should be scalars
-                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str);
-                                                clone_info_without_name($$, $2);
-                                             }
-                                             {   // it should be vector
-                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str);
-                                                  clone_info_without_name($$, $2);
-                                             }
-                                             {   // it should be vectors
-                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str);
-                                                  clone_info_without_name($$, $2);
-                                             }            // produces 1 shift/reduce conflict
           | expression '+' expression
                                              { // both should be scalar
                                                 STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str);
@@ -583,90 +583,132 @@ expression: '-' expression
                                              }
           | '(' expression ')'
                                              {
-                                                 // it should be scalar
-                                                 STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")");
-                                                 clone_info_without_name($$, $2);
-                                             }
-                                             {
-                                                 // it should be scalars
-                                                 STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")");
-                                                 clone_info_without_name($$, $2);
-                                             }
-                                             {  // it should be vector
-                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")");
-                                                  clone_info_without_name($$, $2);
-                                             }
-                                             {  // it should be vectors
-                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")");
-                                                clone_info_without_name($$, $2);
-                                             }
-                                             {  // it should be boolean
-                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")");
-                                                clone_info_without_name($$, $2);
-                                             }
-                                             {  // it should be booleans
-                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")");
-                                                clone_info_without_name($$, $2);
+                                                switch($2.type.entity_type)
+                                                {
+                                                    case TYPE_SCALAR:
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")");
+                                                        clone_info_without_name($$, $2);
+                                                        break;
+                                                    case TYPE_VECTOR:
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str);
+                                                        clone_info_without_name($$, $2);
+                                                        break;
+                                                    case TYPE_BOOLEAN:
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str);
+                                                        clone_info_without_name($$, $2);
+                                                        break;
+                                                    default:
+                                                        // ?
+                                                        break;
+                                                }
                                              }
           | EUCLIDEAN_LENGTH '(' expression ')'
-                                                     {  // it should be vector
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.euclideanLength(" << $3.str << ")");
-                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                        $$.array_size = 1;
-                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                        $$.type.collection = false;
-                                                     }
-                                                     {  // it should be vectors
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.euclideanLength(" << $3.str << ")");
-                                                        $$.grid_mapping = $3.grid_mapping;
-                                                        $$.array_size = $3.array_size;
-                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                        $$.type.collection = true;
+                                                     {
+                                                        switch($3.type.entity_type)
+                                                        {
+                                                            case TYPE_VECTOR:
+                                                                if($3.type.collection == false)
+                                                                {
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.euclideanLength(" << $3.str << ")");
+                                                                    $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                                    $$.array_size = 1;
+                                                                    $$.type.entity_type = TYPE_SCALAR;
+                                                                    $$.type.collection = false;
+                                                                }
+                                                                else
+                                                                {
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.euclideanLength(" << $3.str << ")");
+                                                                    $$.grid_mapping = $3.grid_mapping;
+                                                                    $$.array_size = $3.array_size;
+                                                                    $$.type.entity_type = TYPE_SCALAR;
+                                                                    $$.type.collection = true;
+                                                                }
+                                                                break;
+                                                            default:
+                                                                // ?
+                                                                break;
+                                                        }
                                                      }
           | LENGTH '(' expression ')'
-                                                     {  // it should be edge
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.length(" << $3.str << ")");
-                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                        $$.array_size = 1;
-                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                        $$.type.collection = false;
-                                                     }
-                                                     {  // it should be edges
-                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.length(" << $3.str << ")");
-                                                         $$.grid_mapping = $3.grid_mapping;
-                                                         $$.array_size = $3.array_size;
-                                                         $$.type.entity_type = TYPE_SCALAR;
-                                                         $$.type.collection = true;
+                                                     {
+                                                        switch($3.type.entity_type)
+                                                        {
+                                                            case TYPE_EDGE:
+                                                                if($3.type.collection == false)
+                                                                {
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.length(" << $3.str << ")");
+                                                                    $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                                    $$.array_size = 1;
+                                                                    $$.type.entity_type = TYPE_SCALAR;
+                                                                    $$.type.collection = false;
+                                                                }
+                                                                else
+                                                                {
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.length(" << $3.str << ")");
+                                                                    $$.grid_mapping = $3.grid_mapping;
+                                                                    $$.array_size = $3.array_size;
+                                                                    $$.type.entity_type = TYPE_SCALAR;
+                                                                    $$.type.collection = true;
+                                                                }
+                                                                break;
+                                                            default:
+                                                                // ?
+                                                                break;
+                                                        }
                                                      }
           | AREA '(' expression ')'
-                                                     {  // it should be face
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.area(" << $3.str << ")");
-                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                        $$.array_size = 1;
-                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                        $$.type.collection = false;
-                                                     }
-                                                     {  // it should be faces
-                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.area(" << $3.str << ")");
-                                                         $$.grid_mapping = $3.grid_mapping;
-                                                         $$.array_size = $3.array_size;
-                                                         $$.type.entity_type = TYPE_SCALAR;
-                                                         $$.type.collection = true;
+                                                     {
+                                                        switch($3.type.entity_type)
+                                                        {
+                                                            case TYPE_FACE:
+                                                                if($3.type.collection == false)
+                                                                {
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.area(" << $3.str << ")");
+                                                                    $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                                    $$.array_size = 1;
+                                                                    $$.type.entity_type = TYPE_SCALAR;
+                                                                    $$.type.collection = false;
+                                                                }
+                                                                else
+                                                                {
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.area(" << $3.str << ")");
+                                                                    $$.grid_mapping = $3.grid_mapping;
+                                                                    $$.array_size = $3.array_size;
+                                                                    $$.type.entity_type = TYPE_SCALAR;
+                                                                    $$.type.collection = true;
+                                                                }
+                                                                break;
+                                                            default:
+                                                                // ?
+                                                                break;
+                                                        }
                                                      }
           | VOLUME '(' expression ')'
-                                                     {  // it should be cell
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.volume(" << $3.str << ")");
-                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                        $$.array_size = 1;
-                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                        $$.type.collection = false;
-                                                     }
-                                                     { // it should be cells
-                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.volume(" << $3.str << ")");
-                                                         $$.grid_mapping = $3.grid_mapping;
-                                                         $$.array_size = $3.array_size;
-                                                         $$.type.entity_type = TYPE_SCALAR;
-                                                         $$.type.collection = true;
+                                                     {
+                                                        switch($3.type.entity_type)
+                                                        {
+                                                            case TYPE_CELL:
+                                                                if($3.type.collection == false)
+                                                                {
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.volume(" << $3.str << ")");
+                                                                    $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                                    $$.array_size = 1;
+                                                                    $$.type.entity_type = TYPE_SCALAR;
+                                                                    $$.type.collection = false;
+                                                                }
+                                                                else
+                                                                {
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.volume(" << $3.str << ")");
+                                                                    $$.grid_mapping = $3.grid_mapping;
+                                                                    $$.array_size = $3.array_size;
+                                                                    $$.type.entity_type = TYPE_SCALAR;
+                                                                    $$.type.collection = true;
+                                                                }
+                                                                break;
+                                                            default:
+                                                                // ?
+                                                                break;
+                                                        }
                                                      }
           | DOT '(' expression ',' expression ')'
                                                      {  // both should be vector
@@ -691,49 +733,85 @@ expression: '-' expression
                                                          }
                                                      }
           | CEIL '(' expression ')'
-                                                     {  // it should be scalar
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.ceil(" << $3.str << ")");
-                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                        $$.array_size = 1;
-                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                        $$.type.collection = false; ;
-                                                     }
-                                                     {   // it should be scalars
-                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.ceil(" << $3.str << ")");
-                                                         $$.grid_mapping = $3.grid_mapping;
-                                                         $$.array_size = $3.array_size;
-                                                         $$.type.entity_type = TYPE_SCALAR;
-                                                         $$.type.collection = true;
+                                                     {
+                                                        switch($3.type.entity_type)
+                                                        {
+                                                            case TYPE_SCALAR:
+                                                                if($3.type.collection == false)
+                                                                {
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.ceil(" << $3.str << ")");
+                                                                    $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                                    $$.array_size = 1;
+                                                                    $$.type.entity_type = TYPE_SCALAR;
+                                                                    $$.type.collection = false;
+                                                                }
+                                                                else
+                                                                {
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.ceil(" << $3.str << ")");
+                                                                    $$.grid_mapping = $3.grid_mapping;
+                                                                    $$.array_size = $3.array_size;
+                                                                    $$.type.entity_type = TYPE_SCALAR;
+                                                                    $$.type.collection = true;
+                                                                }
+                                                                break;
+                                                            default:
+                                                                // ?
+                                                                break;
+                                                        }
                                                      }
           | FLOOR '(' expression ')'
-                                                     {  // it should be scalar
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.floor(" << $3.str << ")");
-                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                        $$.array_size = 1;
-                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                        $$.type.collection = false;
-                                                     }
-                                                     {   // it should be scalars
-                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.floor(" << $3.str << ")");
-                                                         $$.grid_mapping = $3.grid_mapping;
-                                                         $$.array_size = $3.array_size;
-                                                         $$.type.entity_type = TYPE_SCALAR;
-                                                         $$.type.collection = true;
+                                                     {
+                                                        switch($3.type.entity_type)
+                                                        {
+                                                            case TYPE_SCALAR:
+                                                                if($3.type.collection == false)
+                                                                {
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.floor(" << $3.str << ")");
+                                                                    $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                                    $$.array_size = 1;
+                                                                    $$.type.entity_type = TYPE_SCALAR;
+                                                                    $$.type.collection = false;
+                                                                }
+                                                                else
+                                                                {
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.floor(" << $3.str << ")");
+                                                                    $$.grid_mapping = $3.grid_mapping;
+                                                                    $$.array_size = $3.array_size;
+                                                                    $$.type.entity_type = TYPE_SCALAR;
+                                                                    $$.type.collection = true;
+                                                                }
+                                                                break;
+                                                            default:
+                                                                // ?
+                                                                break;
+                                                        }
                                                      }
           | ABS '(' expression ')'
-                                                     {  // it should be scalar
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.abs(" << $3.str << ")");
-                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                        $$.array_size = 1;
-                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                        $$.type.collection = false;
-                                                     }
-                                                     {   // it should be scalars
-                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.abs(" << $3.str << ")");
-                                                         $$.grid_mapping = $3.grid_mapping;
-                                                         $$.array_size = $3.array_size;
-                                                         $$.type.entity_type = TYPE_SCALAR;
-                                                         $$.type.collection = true;
+                                                     {
+                                                        switch($3.type.entity_type)
+                                                        {
+                                                            case TYPE_SCALAR:
+                                                                if($3.type.collection == false)
+                                                                {
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.abs(" << $3.str << ")");
+                                                                    $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                                    $$.array_size = 1;
+                                                                    $$.type.entity_type = TYPE_SCALAR;
+                                                                    $$.type.collection = false;
+                                                                }
+                                                                else
+                                                                {
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.abs(" << $3.str << ")");
+                                                                    $$.grid_mapping = $3.grid_mapping;
+                                                                    $$.array_size = $3.array_size;
+                                                                    $$.type.entity_type = TYPE_SCALAR;
+                                                                    $$.type.collection = true;
+                                                                }
+                                                                break;
+                                                            default:
+                                                                // ?
+                                                                break;
+                                                        }
                                                      }
           | MIN '(' scalars ')'
                                                      {
@@ -752,37 +830,59 @@ expression: '-' expression
                                                         $$.type.collection = false;
                                                      }
           | GRADIENT '(' expression ')'
-                                                     {  // it should be scalar
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.gradient(" << $3.str << ")");
-                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                        $$.array_size = 1;
-                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                        $$.type.collection = false;
+                                                     {
+                                                        switch($3.type.entity_type)
+                                                        {
+                                                            case TYPE_SCALAR:
+                                                                if($3.type.collection == false)
+                                                                {
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.gradient(" << $3.str << ")");
+                                                                    $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                                    $$.array_size = 1;
+                                                                    $$.type.entity_type = TYPE_SCALAR;
+                                                                    $$.type.collection = false;
+                                                                }
+                                                                else
+                                                                {
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.gradient(" << $3.str << ")");
+                                                                    $$.grid_mapping = $3.grid_mapping;
+                                                                    $$.array_size = $3.array_size;
+                                                                    $$.type.entity_type = TYPE_SCALAR;
+                                                                    $$.type.collection = true;
+                                                                }
+                                                                break;
+                                                            default:
+                                                                // ?
+                                                                break;
+                                                        }
                                                      }
           | DIVERGENCE '(' expression ')'
-                                                     {  // it should be scalar
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.divergence(" << $3.str << ")");
-                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                        $$.array_size = 1;
-                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                        $$.type.collection = false;
+                                                     {
+                                                        switch($3.type.entity_type)
+                                                        {
+                                                            case TYPE_SCALAR:
+                                                                if($3.type.collection == false)
+                                                                {
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.divergence(" << $3.str << ")");
+                                                                    $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                                    $$.array_size = 1;
+                                                                    $$.type.entity_type = TYPE_SCALAR;
+                                                                    $$.type.collection = false;
+                                                                }
+                                                                else
+                                                                {
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.divergence(" << $3.str << ")");
+                                                                    $$.grid_mapping = $3.grid_mapping;
+                                                                    $$.array_size = $3.array_size;
+                                                                    $$.type.entity_type = TYPE_SCALAR;
+                                                                    $$.type.collection = true;
+                                                                }
+                                                                break;
+                                                            default:
+                                                                // ?
+                                                                break;
+                                                        }
                                                      }
-          | GRADIENT '(' expression ')'
-                                                  {   // it should be scalars
-                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.gradient(" << $3.str << ")");
-                                                     $$.grid_mapping = $3.grid_mapping;
-                                                     $$.array_size = $3.array_size;
-                                                     $$.type.entity_type = TYPE_SCALAR;
-                                                     $$.type.collection = true;
-                                                  }
-          | DIVERGENCE '(' expression ')'
-                                                  {   // it should be scalars
-                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.divergence(" << $3.str << ")");
-                                                     $$.grid_mapping = $3.grid_mapping;
-                                                     $$.array_size = $3.array_size;
-                                                     $$.type.entity_type = TYPE_SCALAR;
-                                                     $$.type.collection = true;
-                                                  }
           | '[' scalars ']'
                                                   {
                                                       STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "[" << $2.str << "]");
@@ -792,49 +892,76 @@ expression: '-' expression
                                                       $$.type.collection = false;
                                                   }
           | CENTROID '(' expression ')'
-                                                  {   // it should be cell
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
-                                                      $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                      $$.array_size = 1;
-                                                      $$.type.entity_type = TYPE_VECTOR;
-                                                      $$.type.collection = false;
-                                                  }
-                                                  {  // it should be face
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
-                                                      $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                      $$.array_size = 1;
-                                                      $$.type.entity_type = TYPE_VECTOR;
-                                                      $$.type.collection = false;
-                                                  }
-                                                  {  // it should be cells
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
-                                                      $$.grid_mapping = $3.grid_mapping;
-                                                      $$.array_size = $3.array_size;
-                                                      $$.type.entity_type = TYPE_VECTOR;
-                                                      $$.type.collection = true;
-                                                  }
-                                                  {  // it should be faces
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
-                                                      $$.grid_mapping = $3.grid_mapping;
-                                                      $$.array_size = $3.array_size;
-                                                      $$.type.entity_type = TYPE_VECTOR;
-                                                      $$.type.collection = true;
+                                                  {
+                                                      switch($3.type.entity_type)
+                                                      {
+                                                          case TYPE_FACE:
+                                                              if($3.type.collection == false)
+                                                              {
+                                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
+                                                                  $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                                  $$.array_size = 1;
+                                                                  $$.type.entity_type = TYPE_VECTOR;
+                                                                  $$.type.collection = false;
+                                                              }
+                                                              else
+                                                              {
+                                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
+                                                                  $$.grid_mapping = $3.grid_mapping;
+                                                                  $$.array_size = $3.array_size;
+                                                                  $$.type.entity_type = TYPE_VECTOR;
+                                                                  $$.type.collection = true;
+                                                              }
+                                                              break;
+                                                          case TYPE_CELL:
+                                                              if($3.type.collection == false)
+                                                              {
+                                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
+                                                                  $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                                  $$.array_size = 1;
+                                                                  $$.type.entity_type = TYPE_VECTOR;
+                                                                  $$.type.collection = false;
+                                                              }
+                                                              else
+                                                              {
+                                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
+                                                                  $$.grid_mapping = $3.grid_mapping;
+                                                                  $$.array_size = $3.array_size;
+                                                                  $$.type.entity_type = TYPE_VECTOR;
+                                                                  $$.type.collection = true;
+                                                              }
+                                                          default:
+                                                              // ?
+                                                              break;
+                                                      }
                                                   }
           | NORMAL '(' expression ')'
-                                                  {  // it should be face
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.normal(" << $3.str << ")");
-                                                      $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                      $$.array_size = 1;
-                                                      $$.type.entity_type = TYPE_VECTOR;
-                                                      $$.type.collection = false;
-                                                  }
-                                                  {  // it should be faces
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.normal(" << $3.str << ")");
-                                                      $$.grid_mapping = $3.grid_mapping;
-                                                      $$.array_size = $3.array_size;
-                                                      $$.type.entity_type = TYPE_VECTOR;
-                                                      $$.type.collection = true;
-                                                  }
+                                                  {
+                                                      switch($3.type.entity_type)
+                                                      {
+                                                          case TYPE_FACE:
+                                                              if($3.type.collection == false)
+                                                              {
+                                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.normal(" << $3.str << ")");
+                                                                  $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                                  $$.array_size = 1;
+                                                                  $$.type.entity_type = TYPE_VECTOR;
+                                                                  $$.type.collection = false;
+                                                              }
+                                                              else
+                                                              {
+                                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.normal(" << $3.str << ")");
+                                                                  $$.grid_mapping = $3.grid_mapping;
+                                                                  $$.array_size = $3.array_size;
+                                                                  $$.type.entity_type = TYPE_VECTOR;
+                                                                  $$.type.collection = true;
+                                                              }
+                                                              break;
+                                                          default:
+                                                              // ?
+                                                              break;
+                                                      }
+                                                 }
           | '[' vectors ']'
                                                  {
                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "[" << $2.str << "]");
@@ -916,34 +1043,58 @@ expression: '-' expression
                                                     $$.type.collection = true;
                                                  }
           | FIRST_CELL '(' expression ')'
-                                                 {  // it should be face
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.firstCell(" << $3.str << ")");
-                                                    $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                    $$.array_size = 1;
-                                                    $$.type.entity_type = TYPE_CELL;
-                                                    $$.type.collection = false;
-                                                 }
-                                                 {  // it should be faces
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.firstCell(" << $3.str << ")");
-                                                    $$.grid_mapping = $3.grid_mapping;
-                                                    $$.array_size = 1;
-                                                    $$.type.entity_type = TYPE_CELL;
-                                                    $$.type.collection = true;
+                                                 {
+                                                      switch($3.type.entity_type)
+                                                      {
+                                                          case TYPE_FACE:
+                                                              if($3.type.collection == false)
+                                                              {
+                                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.firstCell(" << $3.str << ")");
+                                                                  $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                                  $$.array_size = 1;
+                                                                  $$.type.entity_type = TYPE_CELL;
+                                                                  $$.type.collection = false;
+                                                              }
+                                                              else
+                                                              {
+                                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.firstCell(" << $3.str << ")");
+                                                                  $$.grid_mapping = $3.grid_mapping;
+                                                                  $$.array_size = 1;
+                                                                  $$.type.entity_type = TYPE_CELL;
+                                                                  $$.type.collection = true;
+                                                              }
+                                                              break;
+                                                          default:
+                                                              // ?
+                                                              break;
+                                                      }
                                                  }
           | SECOND_CELL '(' expression ')'
-                                                 {  // it should be face
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.secondCell(" << $3.str << ")");
-                                                    $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                    $$.array_size = 1;
-                                                    $$.type.entity_type = TYPE_CELL;
-                                                    $$.type.collection = false;
-                                                 }
-                                                 {  // it should be faces
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.secondCell(" << $3.str << ")");
-                                                    $$.grid_mapping = $3.grid_mapping;
-                                                    $$.array_size = 1;
-                                                    $$.type.entity_type = TYPE_CELL;
-                                                    $$.type.collection = true;
+                                                 {
+                                                      switch($3.type.entity_type)
+                                                      {
+                                                          case TYPE_FACE:
+                                                              if($3.type.collection == false)
+                                                              {
+                                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.secondCell(" << $3.str << ")");
+                                                                  $$.grid_mapping = GRID_MAPPING_ENTITY;
+                                                                  $$.array_size = 1;
+                                                                  $$.type.entity_type = TYPE_CELL;
+                                                                  $$.type.collection = false;
+                                                              }
+                                                              else
+                                                              {
+                                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.secondCell(" << $3.str << ")");
+                                                                  $$.grid_mapping = $3.grid_mapping;
+                                                                  $$.array_size = 1;
+                                                                  $$.type.entity_type = TYPE_CELL;
+                                                                  $$.type.collection = true;
+                                                              }
+                                                              break;
+                                                          default:
+                                                              // ?
+                                                              break;
+                                                      }
                                                  }
           | INTERIOR_CELLS '(' GRID ')'
                                                  {
@@ -970,13 +1121,25 @@ expression: '-' expression
                                                     $$.type.collection = true;
                                                  }
           | NOT expression
-                                                 {  // it should be boolean
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "!" << $2.str);
-                                                    clone_info_without_name($$, $2);
-                                                 }
-                                                 {  // it should be booleans
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "!" << $2.str);
-                                                    clone_info_without_name($$, $2);
+                                                 {
+                                                      switch($3.type.entity_type)
+                                                      {
+                                                          case TYPE_BOOLEAN:
+                                                              if($3.type.collection == false)
+                                                              {
+                                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "!" << $2.str);
+                                                                  clone_info_without_name($$, $2);
+                                                              }
+                                                              else
+                                                              {
+                                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "!" << $2.str);
+                                                                  clone_info_without_name($$, $2);
+                                                              }
+                                                              break;
+                                                          default:
+                                                              // ?
+                                                              break;
+                                                      }
                                                  }
           | expression AND expression
                                                  {  // both should be boolean
@@ -1553,7 +1716,7 @@ singular_assignment: VARIABLE '=' USS                      { string out = USS_as
                    ;
 
 
-plural_assignment: VARIABLE '=' USCOS '(' plural ')'      { string out = USCOS_assignment_function($1.str, $5.str, $5.grid_mapping); $$.str = strdup(out.c_str()); }
+plural_assignment: VARIABLE '=' USCOS '(' expression ')'  { string out = USCOS_assignment_function($1.str, $5.str, $5.grid_mapping); $$.str = strdup(out.c_str()); }  // TODO: verify that "expression" is a collection
                  | VARIABLE '=' expression    //TODO: verify that "expression" is a collection
                                                 					{
                                                              string out = singular_assignment_function($1.str, $3);
