@@ -148,20 +148,49 @@
 	};
 
 	struct VariableType {
+		VariableType() : entity_type(TYPE_INVALID), collection(false) {}
 		EntityType entity_type;
 		bool collection;
+
+		VariableType& operator=(VariableType other) {
+			entity_type = other.entity_type;
+			collection = other.collection;
+
+			return *this;
+		}
 	};
 
 
 	struct info
 	{
-		//Why does this not work?: info() : size(GRID_MAPPING_INVALID), array_size(-1), str(NULL), type(TYPE_INVALID), collection(false) {}
-    char* str;            // The string which is to be outputted in the C++ file
+		info() : str(NULL), error_str(NULL), grid_mapping(GRID_MAPPING_INVALID), array_size(-1), type() {}
+
+		info* clone() {
+			//Allocate memory
+			info* retval = new info();
+
+			//copy
+			*retval = *this;
+
+			//Return
+			return retval;
+		}
+
+		info& operator=(info other) {
+			str = strdup(other.str);
+			error_str = strdup(other.error_str);
+			grid_mapping = other.grid_mapping;
+			array_size = other.array_size;
+			type = other.type;
+
+			return *this;
+		}
+
+		char* str;            // The string which is to be outputted in the C++ file
 		char* error_str;      // All errors go here; (test if (error != NULL) std::cout << error << std::endl;
 		GridMapping grid_mapping;  // This defines the mapping of the variable (one value per face, cell, interior face, etc.)
 		int array_size;       // The number of elements in a vector / array
 		VariableType type;    // The type of the variable
-		//unsigned int error_code;
 	};
 
 	/*
@@ -245,10 +274,10 @@
 	string functionToAnyCollectionType(char *st1, char *st2, char *st3, const string &st4);
 	char* declaration_function(char* variable_name, EntityType entity, bool collection);
 	string extended_plural_declaration_function(char* variable_name, EntityType entity, char* ON_expression, GridMapping ON_expression_grid_mapping);
-	string singular_assignment_function(char* variable_name, const info& right_hand_side);
-	string plural_assignment_function(char* variable_name, const info& right_hand_side);
-	string declaration_with_assignment_function(char* variable_name, const info& right_hand_side);
-	string extended_plural_declaration_with_assignment_function(char* variable_name, const info& rhs, const GridMapping& lhs);
+	string singular_assignment_function(char* variable_name, const info* right_hand_side);
+	string plural_assignment_function(char* variable_name, const info* right_hand_side);
+	string declaration_with_assignment_function(char* variable_name, const info* right_hand_side);
+	string extended_plural_declaration_with_assignment_function(char* variable_name, const info* rhs, const GridMapping& lhs);
 	string USS_assignment_function(char* st1);
 	string USS_declaration_with_assignment_function(char* st1);
 	string USSWD_assignment_function(char* st1, char* st2);
@@ -258,8 +287,6 @@
 	string USCOS_extended_declaration_with_assignment_function(char* st1, char* st2, char* st3, GridMapping d1, GridMapping d2);
 	string output_function(char* st1);
 	string getStringFromVariableType(VariableType variable);
-  void clone_info(info& output, const info& input);
-  void clone_info_without_name(info& output, const info& input);
 } //Code provides
 
 
@@ -342,7 +369,7 @@ bool operator!=(const VariableType& a, const VariableType& b) {
 
 %union
 {
-  struct info inf;
+  struct info* inf;
 };
 
 
@@ -351,23 +378,25 @@ bool operator!=(const VariableType& a, const VariableType& b) {
 
 floating_point: INTEGER '.' INTEGER
                                       {
-                                      		STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << "." << $3.str);
-                                      		$$.grid_mapping = GRID_MAPPING_ENTITY;
-                                      		$$.array_size = 1;
-                                      		$$.type.entity_type =  TYPE_SCALAR;
-                                      		$$.type.collection = false;
+                                      		STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << "." << $3->str);
+                                      		$$->grid_mapping = GRID_MAPPING_ENTITY;
+                                      		$$->array_size = 1;
+                                      		$$->type.entity_type =  TYPE_SCALAR;
+                                      		$$->type.collection = false;
                                       }
               ;
 
 
-number: floating_point                { clone_info($$, $1); }
+number: floating_point                { 
+											$$ = $1->clone(); 
+										}
       | INTEGER
                                       {
-                              					$$.str = strdup($1.str);
-                              					$$.grid_mapping = GRID_MAPPING_ENTITY;
-                              					$$.array_size = 1;
-                              					$$.type.entity_type = TYPE_SCALAR;
-                              					$$.type.collection = false;
+                              					$$->str = strdup($1->str);
+                              					$$->grid_mapping = GRID_MAPPING_ENTITY;
+                              					$$->array_size = 1;
+                              					$$->type.entity_type = TYPE_SCALAR;
+                              					$$->type.collection = false;
                               				}
       ;
 
@@ -375,65 +404,65 @@ number: floating_point                { clone_info($$, $1); }
 
 scalars: expression
                                       {
-                                        if(strlen($1.error_str) > 2)
-                                            $$.error_str = strdup($1.error_str);
+                                        if($1->error_str != NULL)
+                                            $$->error_str = strdup($1->error_str);
                                         else
-                                          switch($1.type.entity_type)
+                                          switch($1->type.entity_type)
                                           {
                                               case TYPE_SCALAR:
-                                                  if($1.type.collection == false)
+                                                  if($1->type.collection == false)
                                                   {
                                                       // it should be scalar
-                                                      $$.str = strdup($1.str);
-                                                      $$.grid_mapping = GRID_MAPPING_INVALID;   // it mustn't have a specific grid mapping, since we won't use this structure alone
-                                                      $$.array_size = 1;
-                                                      $$.type.entity_type = TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
-                                                      $$.type.collection = false;
+                                                      $$->str = strdup($1->str);
+                                                      $$->grid_mapping = GRID_MAPPING_INVALID;   // it mustn't have a specific grid mapping, since we won't use this structure alone
+                                                      $$->array_size = 1;
+                                                      $$->type.entity_type = TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
+                                                      $$->type.collection = false;
                                                   }
                                                   else
                                                   {
                                                       // it should be scalars
-                                                      $$.str = strdup($1.str);
-                                                      $$.grid_mapping = GRID_MAPPING_INVALID;   // it mustn't have a specific grid mapping, since we won't use this structure alone
-                                                      $$.array_size = $1.array_size;
-                                                      $$.type.entity_type = TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
-                                                      $$.type.collection = false;
+                                                      $$->str = strdup($1->str);
+                                                      $$->grid_mapping = GRID_MAPPING_INVALID;   // it mustn't have a specific grid mapping, since we won't use this structure alone
+                                                      $$->array_size = $1->array_size;
+                                                      $$->type.entity_type = TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
+                                                      $$->type.collection = false;
                                                   }
                                                   break;
                                               default:
-                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "The list must contain only of scalars");
+                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "The list must contain only of scalars");
                                                   break;
                                           }
                                       }
        | scalars ',' expression
                                       {
-                                        if(strlen($3.error_str) > 2)
-                                            $$.error_str = strdup($3.error_str);
+                                        if($3->error_str != NULL)
+                                            $$->error_str = strdup($3->error_str);
                                         else
-                                          switch($3.type.entity_type)
+                                          switch($3->type.entity_type)
                                           {
                                               case TYPE_SCALAR:
-                                                  if($3.type.collection == false)
+                                                  if($3->type.collection == false)
                                                   {
                                                       // 2nd should be scalar
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << ", " << $3.str);
-                                                      $$.grid_mapping = GRID_MAPPING_INVALID;   // it mustn't have a specific grid mapping, since we won't use this structure alone
-                                                      $$.array_size = $1.array_size + 1;
-                                                      $$.type.entity_type = TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
-                                                      $$.type.collection = false;
+                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << ", " << $3->str);
+                                                      $$->grid_mapping = GRID_MAPPING_INVALID;   // it mustn't have a specific grid mapping, since we won't use this structure alone
+                                                      $$->array_size = $1->array_size + 1;
+                                                      $$->type.entity_type = TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
+                                                      $$->type.collection = false;
                                                   }
                                                   else
                                                   {
                                                       // 2nd should be scalars
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << ", " << $3.str);
-                                                      $$.grid_mapping = GRID_MAPPING_INVALID;   // it mustn't have a specific grid mapping, since we won't use this structure alone
-                                                      $$.array_size = $1.array_size + $3.array_size;
-                                                      $$.type.entity_type = TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
-                                                      $$.type.collection = false;
+                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << ", " << $3->str);
+                                                      $$->grid_mapping = GRID_MAPPING_INVALID;   // it mustn't have a specific grid mapping, since we won't use this structure alone
+                                                      $$->array_size = $1->array_size + $3->array_size;
+                                                      $$->type.entity_type = TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
+                                                      $$->type.collection = false;
                                                   }
                                                   break;
                                               default:
-                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "The list must contain only of scalar/scalars entities");
+                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "The list must contain only of scalar/scalars entities");
                                                   break;
                                           }
                                       }
@@ -443,54 +472,54 @@ scalars: expression
 
 vectors: expression
                                           {
-                                            if(strlen($1.error_str) > 2)
-                                                $$.error_str = strdup($1.error_str);
+                                            if($1->error_str != NULL)
+                                                $$->error_str = strdup($1->error_str);
                                             else
                                             {
-                                                switch($1.type.entity_type)
+                                                switch($1->type.entity_type)
                                                 {
                                                     case TYPE_VECTOR:
-                                                        if($1.type.collection == true)
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "The list must contain only of vector entities");
+                                                        if($1->type.collection == true)
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "The list must contain only of vector entities");
                                                         else
                                                         {
                                                             // it should be vector
-                                                            $$.str = strdup($1.str);
-                                                            $$.array_size = 1;
-                                                            $$.grid_mapping = GRID_MAPPING_INVALID;   // it mustn't have a specific grid mapping, since we won't use this structure alone
-                                                            $$.type.entity_type = TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
-                                                            $$.type.collection = false;
+                                                            $$->str = strdup($1->str);
+                                                            $$->array_size = 1;
+                                                            $$->grid_mapping = GRID_MAPPING_INVALID;   // it mustn't have a specific grid mapping, since we won't use this structure alone
+                                                            $$->type.entity_type = TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
+                                                            $$->type.collection = false;
                                                         }
                                                         break;
                                                     default:
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "The list must contain only of vector entities");
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "The list must contain only of vector entities");
                                                         break;
                                                 }
                                             }
                                           }
        | vectors ',' expression
                                           {
-                                            if(strlen($3.error_str) > 2)
-                                                $$.error_str = strdup($3.error_str);
+                                            if($3->error_str != NULL)
+                                                $$->error_str = strdup($3->error_str);
                                             else
                                             {
-                                                switch($3.type.entity_type)
+                                                switch($3->type.entity_type)
                                                 {
                                                     case TYPE_VECTOR:
-                                                        if($3.type.collection == true)
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "The list must contain only of vector entities");
+                                                        if($3->type.collection == true)
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "The list must contain only of vector entities");
                                                         else
                                                         {
                                                             // it should be vector
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << ", " << $3.str);
-                                                            $$.array_size = $1.array_size + 1;
-                                                            $$.grid_mapping = GRID_MAPPING_INVALID;   // it mustn't have a specific grid mapping, since we won't use this structure alone
-                                                            $$.type.entity_type = TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
-                                                            $$.type.collection = false;
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << ", " << $3->str);
+                                                            $$->array_size = $1->array_size + 1;
+                                                            $$->grid_mapping = GRID_MAPPING_INVALID;   // it mustn't have a specific grid mapping, since we won't use this structure alone
+                                                            $$->type.entity_type = TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
+                                                            $$->type.collection = false;
                                                         }
                                                         break;
                                                     default:
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "The list must contain only of vector entities");
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "The list must contain only of vector entities");
                                                         break;
                                                 }
                                             }
@@ -500,1297 +529,1299 @@ vectors: expression
 
 expression: '-' expression
                                              {
-                                                if(strlen($2.error_str) > 2)
-                                                    $$.error_str = strdup($2.error_str);
+                                                if($2->error_str != NULL)
+                                                    $$->error_str = strdup($2->error_str);
                                                 else
-                                                  switch($2.type.entity_type)
+                                                  switch($2->type.entity_type)
                                                   {
                                                       case TYPE_SCALAR:
-                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str);
-                                                          clone_info_without_name($$, $2);
+														  $$ = $2->clone();
+                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "-" << $2->str);
                                                           break;
                                                       case TYPE_VECTOR:
-                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str);
-                                                          clone_info_without_name($$, $2);
+														  $$ = $2->clone();
+                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "-" << $2->str);
                                                           break;
                                                       default:
-                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "Negation not supported for this type");
+                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Negation not supported for this type");
                                                           break;
                                                   }
                                              }
           | expression '+' expression
                                              {
-                                                if(strlen($1.error_str) > 2)
-                                                    $$.error_str = strdup($1.error_str);
+                                                if($1->error_str != NULL)
+                                                    $$->error_str = strdup($1->error_str);
                                                 else
-                                                if(strlen($3.error_str) > 2)
-                                                    $$.error_str = strdup($3.error_str);
+                                                if($3->error_str != NULL)
+                                                    $$->error_str = strdup($3->error_str);
                                                 else
                                                 {
-                                                    if($1.type.entity_type == TYPE_SCALAR && $3.type.entity_type == TYPE_SCALAR && $1.type.collection == false && $3.type.collection == false)
+                                                    if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == false && $3->type.collection == false)
                                                     {  // both should be scalar
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str);
-                                                        clone_info_without_name($$, $1);
+														$$ = $1->clone();
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " + " << $3->str);
                                                     }
                                                     else
-                                                    if($1.type.entity_type == TYPE_SCALAR && $3.type.entity_type == TYPE_SCALAR && $1.type.collection == true && $3.type.collection == true)
+                                                    if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == true && $3->type.collection == true)
                                                     {  // they both should be scalars
-                                                        if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                        if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
                                                         {
-                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.error_str);
+                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                                         }
                                                         else
                                                         {
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str);
-                                                            clone_info_without_name($$, $1);
+															$$ = $1->clone();
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " + " << $3->str);
                                                         }
                                                     }
                                                     else
-                                                    if($1.type.entity_type == TYPE_VECTOR && $3.type.entity_type == TYPE_VECTOR && $1.type.collection == false && $3.type.collection == false)
+                                                    if($1->type.entity_type == TYPE_VECTOR && $3->type.entity_type == TYPE_VECTOR && $1->type.collection == false && $3->type.collection == false)
                                                     {  // both should be vector
-                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str);
-                                                          clone_info_without_name($$, $1);
+
+														  $$ = $1->clone();
+                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " + " << $3->str);
                                                     }
                                                     else
-                                                    if($1.type.entity_type == TYPE_VECTOR && $3.type.entity_type == TYPE_VECTOR && $1.type.collection == true && $3.type.collection == true)
+                                                    if($1->type.entity_type == TYPE_VECTOR && $3->type.entity_type == TYPE_VECTOR && $1->type.collection == true && $3->type.collection == true)
                                                     {  // both should be vectors
-                                                        if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                        if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
                                                         {
-                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.error_str);
+                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                                         }
                                                         else
                                                         {
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str);
-                                                            clone_info_without_name($$, $1);
+															$$= $1->clone();
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " + " << $3->str);
                                                         }
                                                     }
                                                     else
                                                     {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "Addition not supported for these types");
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Addition not supported for these types");
                                                     }
                                                 }
                                              }
           | expression '-' expression
                                              {
-                                                if(strlen($1.error_str) > 2)
-                                                    $$.error_str = strdup($1.error_str);
+                                                if($1->error_str != NULL)
+                                                    $$->error_str = strdup($1->error_str);
                                                 else
-                                                if(strlen($3.error_str) > 2)
-                                                    $$.error_str = strdup($3.error_str);
+                                                if($3->error_str != NULL)
+                                                    $$->error_str = strdup($3->error_str);
                                                 else
                                                 {
-                                                    if($1.type.entity_type == TYPE_SCALAR && $3.type.entity_type == TYPE_SCALAR && $1.type.collection == false && $3.type.collection == false)
+                                                    if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == false && $3->type.collection == false)
                                                     {  // both should be scalar
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
-                                                        clone_info_without_name($$, $1);
+														$$ = $1->clone();
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " - " << $3->str);
                                                     }
                                                     else
-                                                    if($1.type.entity_type == TYPE_SCALAR && $3.type.entity_type == TYPE_SCALAR && $1.type.collection == true && $3.type.collection == true)
+                                                    if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == true && $3->type.collection == true)
                                                     {  // they both should be scalars
-                                                        if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                        if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
                                                         {
-                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.error_str);
+                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                                         }
                                                         else
                                                         {
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
-                                                            clone_info_without_name($$, $1);
+															$$= $1->clone();
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " - " << $3->str);
                                                         }
                                                     }
                                                     else
-                                                    if($1.type.entity_type == TYPE_VECTOR && $3.type.entity_type == TYPE_VECTOR && $1.type.collection == false && $3.type.collection == false)
+                                                    if($1->type.entity_type == TYPE_VECTOR && $3->type.entity_type == TYPE_VECTOR && $1->type.collection == false && $3->type.collection == false)
                                                     {  // both should be vector
-                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
-                                                          clone_info_without_name($$, $1);
+														$$= $1->clone();
+                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " - " << $3->str);
                                                     }
                                                     else
-                                                    if($1.type.entity_type == TYPE_VECTOR && $3.type.entity_type == TYPE_VECTOR && $1.type.collection == true && $3.type.collection == true)
+                                                    if($1->type.entity_type == TYPE_VECTOR && $3->type.entity_type == TYPE_VECTOR && $1->type.collection == true && $3->type.collection == true)
                                                     {  // both should be vectors
-                                                        if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                        if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
                                                         {
-                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.error_str);
+                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                                         }
                                                         else
                                                         {
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
-                                                            clone_info_without_name($$, $1);
+															$$ = $1->clone();
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " - " << $3->str);
                                                         }
                                                     }
                                                     else
                                                     {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "Subtraction not supported for these types");
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Subtraction not supported for these types");
                                                     }
                                                 }
                                              }
           | expression '*' expression
                                              {
-                                                if(strlen($1.error_str) > 2)
-                                                    $$.error_str = strdup($1.error_str);
+                                                if($1->error_str != NULL)
+                                                    $$->error_str = strdup($1->error_str);
                                                 else
-                                                if(strlen($3.error_str) > 2)
-                                                    $$.error_str = strdup($3.error_str);
+                                                if($3->error_str != NULL)
+                                                    $$->error_str = strdup($3->error_str);
                                                 else
                                                 {
-                                                    if($1.type.entity_type == TYPE_SCALAR && $3.type.entity_type == TYPE_SCALAR && $1.type.collection == false && $3.type.collection == false)
+                                                    if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == false && $3->type.collection == false)
                                                     { // both should be scalar
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " * " << $3.str);
-                                                        clone_info_without_name($$, $1);
+														$$ = $1->clone();
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " * " << $3->str);
                                                     }
                                                     else
-                                                    if($1.type.entity_type == TYPE_SCALAR && $3.type.entity_type == TYPE_SCALAR && $1.type.collection == true && $3.type.collection == true)
+                                                    if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == true && $3->type.collection == true)
                                                     {
                                                         // they both should be scalars
-                                                        if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                        if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
                                                         {
-                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.error_str);
+                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                                         }
                                                         else
                                                         {
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " * " << $3.str);
-                                                            clone_info_without_name($$, $1);
+															$$ = $1->clone();
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " * " << $3->str);
                                                         }
                                                     }
                                                     else
-                                                    if($1.type.entity_type == TYPE_VECTOR && $3.type.entity_type == TYPE_SCALAR && $1.type.collection == false && $3.type.collection == false)
+                                                    if($1->type.entity_type == TYPE_VECTOR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == false && $3->type.collection == false)
                                                     {  // 1st should be vector, 2nd should be scalar
-                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " * " << $3.str);
-                                                          clone_info_without_name($$, $1);
+														$$ = $1->clone();
+                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " * " << $3->str);
                                                     }
                                                     else
-                                                    if($1.type.entity_type == TYPE_SCALAR && $3.type.entity_type == TYPE_VECTOR && $1.type.collection == false && $3.type.collection == false)
+                                                    if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_VECTOR && $1->type.collection == false && $3->type.collection == false)
                                                     {  // 1st should be scalar, 2nd should be vector
-                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " * " << $3.str);
-                                                          clone_info_without_name($$, $3);
+														$$ = $1->clone();
+                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " * " << $3->str);
                                                     }
                                                     else
-                                                    if($1.type.entity_type == TYPE_VECTOR && $3.type.entity_type == TYPE_SCALAR && $1.type.collection == true && $3.type.collection == false)
+                                                    if($1->type.entity_type == TYPE_VECTOR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == true && $3->type.collection == false)
                                                     {  // 1st should be vectors, 2nd should be scalar
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
-                                                        clone_info_without_name($$, $1);
+														$$ = $1->clone();
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " - " << $3->str);
                                                     }
                                                     else
-                                                    if($1.type.entity_type == TYPE_SCALAR && $3.type.entity_type == TYPE_VECTOR && $1.type.collection == false && $3.type.collection == true)
+                                                    if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_VECTOR && $1->type.collection == false && $3->type.collection == true)
                                                     {  // 1st should be scalar, 2nd should be vectors
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
-                                                        clone_info_without_name($$, $3);
+														$$ = $3->clone();
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " - " << $3->str);
                                                     }
                                                     else
                                                     {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "Multiplication not supported for these types");
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Multiplication not supported for these types");
                                                     }
                                                 }
                                              }
           | expression '/' expression
                                              {
-                                                if(strlen($1.error_str) > 2)
-                                                    $$.error_str = strdup($1.error_str);
+                                                if($1->error_str != NULL)
+                                                    $$->error_str = strdup($1->error_str);
                                                 else
-                                                if(strlen($3.error_str) > 2)
-                                                    $$.error_str = strdup($3.error_str);
+                                                if($3->error_str != NULL)
+                                                    $$->error_str = strdup($3->error_str);
                                                 else
                                                 {
-                                                    if($1.type.entity_type == TYPE_SCALAR && $3.type.entity_type == TYPE_SCALAR && $1.type.collection == false && $3.type.collection == false)
+                                                    if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == false && $3->type.collection == false)
                                                     {  // both should be scalar
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " / " << $3.str);
-                                                        clone_info_without_name($$, $1);
+														$$ = $1->clone();
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " / " << $3->str);
                                                     }
                                                     else
-                                                    if($1.type.entity_type == TYPE_SCALAR && $3.type.entity_type == TYPE_SCALAR && $1.type.collection == true && $3.type.collection == true)
+                                                    if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == true && $3->type.collection == true)
                                                     {  // they both should be scalars
-                                                        if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                        if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
                                                         {
-                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.error_str);
+                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                                         }
                                                         else
                                                         {
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " / " << $3.str);
-                                                            clone_info_without_name($$, $1);
+															$$ = $1->clone();
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " / " << $3->str);
                                                         }
                                                     }
                                                     else
-                                                    if($1.type.entity_type == TYPE_VECTOR && $3.type.entity_type == TYPE_SCALAR && $1.type.collection == false && $3.type.collection == false)
+                                                    if($1->type.entity_type == TYPE_VECTOR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == false && $3->type.collection == false)
                                                     {  // 1st should be vector, 2nd should be scalar
-                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " / " << $3.str);
-                                                          clone_info_without_name($$, $1);
+														$$ = $1->clone();
+                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " / " << $3->str);
                                                     }
                                                     else
-                                                    if($1.type.entity_type == TYPE_VECTOR && $3.type.entity_type == TYPE_SCALAR && $1.type.collection == true && $3.type.collection == false)
+                                                    if($1->type.entity_type == TYPE_VECTOR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == true && $3->type.collection == false)
                                                     {  // 1st should be vectors, 2nd should be scalar
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
-                                                        clone_info_without_name($$, $1);
+														 $$ = $1->clone();
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " - " << $3->str);
                                                     }
                                                     else
                                                     {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "Division not supported for these types");
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Division not supported for these types");
                                                     }
                                                 }
                                              }
           | expression '^' expression
                                              {
-                                                if(strlen($1.error_str) > 2)
-                                                    $$.error_str = strdup($1.error_str);
+                                                if($1->error_str != NULL)
+                                                    $$->error_str = strdup($1->error_str);
                                                 else
-                                                if(strlen($3.error_str) > 2)
-                                                    $$.error_str = strdup($3.error_str);
+                                                if($3->error_str != NULL)
+                                                    $$->error_str = strdup($3->error_str);
                                                 else
                                                 {
-                                                    if($1.type.entity_type == TYPE_SCALAR && $3.type.entity_type == TYPE_SCALAR && $1.type.collection == false && $3.type.collection == false)
+                                                    if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == false && $3->type.collection == false)
                                                     {  // both should be scalar
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.pow(" << $1.str << ", " << $3.str << ")");
-                                                        clone_info_without_name($$, $1);
+														$$ = $1->clone();
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.pow(" << $1->str << ", " << $3->str << ")");
                                                     }
                                                     else
-                                                    if($1.type.entity_type == TYPE_SCALAR && $3.type.entity_type == TYPE_SCALAR && $1.type.collection == true && $3.type.collection == false)
+                                                    if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == true && $3->type.collection == false)
                                                     {  // 1st should be scalars, 2nd should be scalar
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.pow(" << $1.str << ", " << $3.str << ")");
-                                                        clone_info_without_name($$, $1);
+														$$ = $1->clone();
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.pow(" << $1->str << ", " << $3->str << ")");
                                                     }
                                                     else
                                                     {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "Power not supported for these types");
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Power not supported for these types");
                                                     }
                                                 }
                                              }
           | number
                                              {
-                                                 clone_info($$, $1);
+                                                 $$ = $1->clone();
                                              }
           | '(' expression ')'
                                              {
-                                                if(strlen($2.error_str) > 2)
-                                                    $$.error_str = strdup($2.error_str);
+                                                if($2->error_str != NULL)
+                                                    $$->error_str = strdup($2->error_str);
                                                 else
                                                 {
-                                                    switch($2.type.entity_type)
+                                                    switch($2->type.entity_type)
                                                     {
                                                         case TYPE_SCALAR:
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")");
-                                                            clone_info_without_name($$, $2);
+															$$ = $2->clone();
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "(" << $2->str << ")");
                                                             break;
                                                         case TYPE_VECTOR:
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str);
-                                                            clone_info_without_name($$, $2);
+															$$ = $2->clone();
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "-" << $2->str);
                                                             break;
                                                         case TYPE_BOOLEAN:
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str);
-                                                            clone_info_without_name($$, $2);
+															$$ = $2->clone();
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "-" << $2->str);
                                                             break;
                                                         default:
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "Paranthesis embedding not supported for this type");
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Paranthesis embedding not supported for this type");
                                                             break;
                                                     }
                                                 }
                                              }
           | EUCLIDEAN_LENGTH '(' expression ')'
                                                      {
-                                                        if(strlen($3.error_str) > 2)
-                                                            $$.error_str = strdup($3.error_str);
+                                                        if($3->error_str != NULL)
+                                                            $$->error_str = strdup($3->error_str);
                                                         else
                                                         {
-                                                            switch($3.type.entity_type)
+                                                            switch($3->type.entity_type)
                                                             {
                                                                 case TYPE_VECTOR:
-                                                                    if($3.type.collection == false)
+                                                                    if($3->type.collection == false)
                                                                     {
-                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.euclideanLength(" << $3.str << ")");
-                                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                                        $$.array_size = 1;
-                                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                                        $$.type.collection = false;
+                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.euclideanLength(" << $3->str << ")");
+                                                                        $$->grid_mapping = GRID_MAPPING_ENTITY;
+                                                                        $$->array_size = 1;
+                                                                        $$->type.entity_type = TYPE_SCALAR;
+                                                                        $$->type.collection = false;
                                                                     }
                                                                     else
                                                                     {
-                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.euclideanLength(" << $3.str << ")");
-                                                                        $$.grid_mapping = $3.grid_mapping;
-                                                                        $$.array_size = $3.array_size;
-                                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                                        $$.type.collection = true;
+                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.euclideanLength(" << $3->str << ")");
+                                                                        $$->grid_mapping = $3->grid_mapping;
+                                                                        $$->array_size = $3->array_size;
+                                                                        $$->type.entity_type = TYPE_SCALAR;
+                                                                        $$->type.collection = true;
                                                                     }
                                                                     break;
                                                                 default:
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "Euclidean length not supported for this type");
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Euclidean length not supported for this type");
                                                                     break;
                                                             }
                                                         }
                                                      }
           | LENGTH '(' expression ')'
                                                      {
-                                                        if(strlen($3.error_str) > 2)
-                                                            $$.error_str = strdup($3.error_str);
+                                                        if($3->error_str != NULL)
+                                                            $$->error_str = strdup($3->error_str);
                                                         else
                                                         {
-                                                            switch($3.type.entity_type)
+                                                            switch($3->type.entity_type)
                                                             {
                                                                 case TYPE_EDGE:
-                                                                    if($3.type.collection == false)
+                                                                    if($3->type.collection == false)
                                                                     {
-                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.length(" << $3.str << ")");
-                                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                                        $$.array_size = 1;
-                                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                                        $$.type.collection = false;
+                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.length(" << $3->str << ")");
+                                                                        $$->grid_mapping = GRID_MAPPING_ENTITY;
+                                                                        $$->array_size = 1;
+                                                                        $$->type.entity_type = TYPE_SCALAR;
+                                                                        $$->type.collection = false;
                                                                     }
                                                                     else
                                                                     {
-                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.length(" << $3.str << ")");
-                                                                        $$.grid_mapping = $3.grid_mapping;
-                                                                        $$.array_size = $3.array_size;
-                                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                                        $$.type.collection = true;
+                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.length(" << $3->str << ")");
+                                                                        $$->grid_mapping = $3->grid_mapping;
+                                                                        $$->array_size = $3->array_size;
+                                                                        $$->type.entity_type = TYPE_SCALAR;
+                                                                        $$->type.collection = true;
                                                                     }
                                                                     break;
                                                                 default:
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "Length not supported for this type");
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Length not supported for this type");
                                                                     break;
                                                             }
                                                         }
                                                      }
           | AREA '(' expression ')'
                                                      {
-                                                        if(strlen($3.error_str) > 2)
-                                                            $$.error_str = strdup($3.error_str);
+                                                        if($3->error_str != NULL)
+                                                            $$->error_str = strdup($3->error_str);
                                                         else
                                                         {
-                                                            switch($3.type.entity_type)
+                                                            switch($3->type.entity_type)
                                                             {
                                                                 case TYPE_FACE:
-                                                                    if($3.type.collection == false)
+                                                                    if($3->type.collection == false)
                                                                     {
-                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.area(" << $3.str << ")");
-                                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                                        $$.array_size = 1;
-                                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                                        $$.type.collection = false;
+                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.area(" << $3->str << ")");
+                                                                        $$->grid_mapping = GRID_MAPPING_ENTITY;
+                                                                        $$->array_size = 1;
+                                                                        $$->type.entity_type = TYPE_SCALAR;
+                                                                        $$->type.collection = false;
                                                                     }
                                                                     else
                                                                     {
-                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.area(" << $3.str << ")");
-                                                                        $$.grid_mapping = $3.grid_mapping;
-                                                                        $$.array_size = $3.array_size;
-                                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                                        $$.type.collection = true;
+                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.area(" << $3->str << ")");
+                                                                        $$->grid_mapping = $3->grid_mapping;
+                                                                        $$->array_size = $3->array_size;
+                                                                        $$->type.entity_type = TYPE_SCALAR;
+                                                                        $$->type.collection = true;
                                                                     }
                                                                     break;
                                                                 default:
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "Area not supported for this type");
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Area not supported for this type");
                                                                     break;
                                                             }
                                                         }
                                                      }
           | VOLUME '(' expression ')'
                                                      {
-                                                        if(strlen($3.error_str) > 2)
-                                                            $$.error_str = strdup($3.error_str);
+                                                        if($3->error_str != NULL) {
+                                                            $$->error_str = strdup($3->error_str);
+														}
                                                         else
                                                         {
-                                                            switch($3.type.entity_type)
+                                                            switch($3->type.entity_type)
                                                             {
                                                                 case TYPE_CELL:
-                                                                    if($3.type.collection == false)
+                                                                    if($3->type.collection == false)
                                                                     {
-                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.volume(" << $3.str << ")");
-                                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                                        $$.array_size = 1;
-                                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                                        $$.type.collection = false;
+                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.volume(" << $3->str << ")");
+                                                                        $$->grid_mapping = GRID_MAPPING_ENTITY;
+                                                                        $$->array_size = 1;
+                                                                        $$->type.entity_type = TYPE_SCALAR;
+                                                                        $$->type.collection = false;
                                                                     }
                                                                     else
                                                                     {
-                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.volume(" << $3.str << ")");
-                                                                        $$.grid_mapping = $3.grid_mapping;
-                                                                        $$.array_size = $3.array_size;
-                                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                                        $$.type.collection = true;
+                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.volume(" << $3->str << ")");
+                                                                        $$->grid_mapping = $3->grid_mapping;
+                                                                        $$->array_size = $3->array_size;
+                                                                        $$->type.entity_type = TYPE_SCALAR;
+                                                                        $$->type.collection = true;
                                                                     }
                                                                     break;
                                                                 default:
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "Volume not supported for this type");
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Volume not supported for this type");
                                                                     break;
                                                             }
                                                         }
                                                      }
           | DOT '(' expression ',' expression ')'
                                                      {
-                                                         if(strlen($3.error_str) > 2)
-                                                            $$.error_str = strdup($3.error_str);
+                                                         if($3->error_str != NULL)
+                                                            $$->error_str = strdup($3->error_str);
                                                          else
-                                                         if(strlen($5.error_str) > 2)
-                                                            $$.error_str = strdup($5.error_str);
+                                                         if($5->error_str != NULL)
+                                                            $$->error_str = strdup($5->error_str);
                                                          else
                                                          {
-                                                             if($3.type.entity_type == TYPE_VECTOR && $5.type.entity_type == TYPE_VECTOR && $3.type.collection == false && $5.type.collection == false)
+                                                             if($3->type.entity_type == TYPE_VECTOR && $5->type.entity_type == TYPE_VECTOR && $3->type.collection == false && $5->type.collection == false)
                                                              {  // both should be vector
-                                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.dot(" << $3.str << ", " << $5.str << ")");
-                                                                  $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                                  $$.array_size = 1;
-                                                                  $$.type.entity_type = TYPE_SCALAR;
-                                                                  $$.type.collection = false;
+                                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.dot(" << $3->str << ", " << $5->str << ")");
+                                                                  $$->grid_mapping = GRID_MAPPING_ENTITY;
+                                                                  $$->array_size = 1;
+                                                                  $$->type.entity_type = TYPE_SCALAR;
+                                                                  $$->type.collection = false;
                                                              }
                                                              else
-                                                             if($3.type.entity_type == TYPE_VECTOR && $5.type.entity_type == TYPE_VECTOR && $3.type.collection == true && $5.type.collection == true)
+                                                             if($3->type.entity_type == TYPE_VECTOR && $5->type.entity_type == TYPE_VECTOR && $3->type.collection == true && $5->type.collection == true)
                                                              {  // they both should be vectors
-                                                                 if($3.grid_mapping != $5.grid_mapping || $3.array_size != $5.array_size)    // check that the lengths of the 2 terms are equal
+                                                                 if($3->grid_mapping != $5->grid_mapping || $3->array_size != $5->array_size)    // check that the lengths of the 2 terms are equal
                                                                  {
-                                                                    LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.error_str);
+                                                                    LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                                                 }
                                                                  else
                                                                  {
-                                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.dot(" << $3.str << ", " << $5.str << ")");
-                                                                     $$.grid_mapping = $3.grid_mapping;
-                                                                     $$.array_size = $3.array_size;
-                                                                     $$.type.entity_type = TYPE_SCALAR;
-                                                                     $$.type.collection = true;
+                                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.dot(" << $3->str << ", " << $5->str << ")");
+                                                                     $$->grid_mapping = $3->grid_mapping;
+                                                                     $$->array_size = $3->array_size;
+                                                                     $$->type.entity_type = TYPE_SCALAR;
+                                                                     $$->type.collection = true;
                                                                  }
                                                              }
                                                              else
                                                              {
-                                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "Dot product not supported for these types");
+                                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Dot product not supported for these types");
                                                              }
                                                           }
                                                       }
           | CEIL '(' expression ')'
                                                      {
-                                                        if(strlen($3.error_str) > 2)
-                                                            $$.error_str = strdup($3.error_str);
+                                                        if($3->error_str != NULL)
+                                                            $$->error_str = strdup($3->error_str);
                                                         else
                                                         {
-                                                            switch($3.type.entity_type)
+                                                            switch($3->type.entity_type)
                                                             {
                                                                 case TYPE_SCALAR:
-                                                                    if($3.type.collection == false)
+                                                                    if($3->type.collection == false)
                                                                     {
-                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.ceil(" << $3.str << ")");
-                                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                                        $$.array_size = 1;
-                                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                                        $$.type.collection = false;
+                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.ceil(" << $3->str << ")");
+                                                                        $$->grid_mapping = GRID_MAPPING_ENTITY;
+                                                                        $$->array_size = 1;
+                                                                        $$->type.entity_type = TYPE_SCALAR;
+                                                                        $$->type.collection = false;
                                                                     }
                                                                     else
                                                                     {
-                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.ceil(" << $3.str << ")");
-                                                                        $$.grid_mapping = $3.grid_mapping;
-                                                                        $$.array_size = $3.array_size;
-                                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                                        $$.type.collection = true;
+                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.ceil(" << $3->str << ")");
+                                                                        $$->grid_mapping = $3->grid_mapping;
+                                                                        $$->array_size = $3->array_size;
+                                                                        $$->type.entity_type = TYPE_SCALAR;
+                                                                        $$->type.collection = true;
                                                                     }
                                                                     break;
                                                                 default:
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "Ceil not supported for this type");
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Ceil not supported for this type");
                                                                     break;
                                                             }
                                                         }
                                                      }
           | FLOOR '(' expression ')'
                                                      {
-                                                        if(strlen($3.error_str) > 2)
-                                                            $$.error_str = strdup($3.error_str);
+                                                        if($3->error_str != NULL)
+                                                            $$->error_str = strdup($3->error_str);
                                                         else
                                                         {
-                                                            switch($3.type.entity_type)
+                                                            switch($3->type.entity_type)
                                                             {
                                                                 case TYPE_SCALAR:
-                                                                    if($3.type.collection == false)
+                                                                    if($3->type.collection == false)
                                                                     {
-                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.floor(" << $3.str << ")");
-                                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                                        $$.array_size = 1;
-                                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                                        $$.type.collection = false;
+                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.floor(" << $3->str << ")");
+                                                                        $$->grid_mapping = GRID_MAPPING_ENTITY;
+                                                                        $$->array_size = 1;
+                                                                        $$->type.entity_type = TYPE_SCALAR;
+                                                                        $$->type.collection = false;
                                                                     }
                                                                     else
                                                                     {
-                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.floor(" << $3.str << ")");
-                                                                        $$.grid_mapping = $3.grid_mapping;
-                                                                        $$.array_size = $3.array_size;
-                                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                                        $$.type.collection = true;
+                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.floor(" << $3->str << ")");
+                                                                        $$->grid_mapping = $3->grid_mapping;
+                                                                        $$->array_size = $3->array_size;
+                                                                        $$->type.entity_type = TYPE_SCALAR;
+                                                                        $$->type.collection = true;
                                                                     }
                                                                     break;
                                                                 default:
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "Floor not supported for this type");
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Floor not supported for this type");
                                                                     break;
                                                             }
                                                         }
                                                      }
           | ABS '(' expression ')'
                                                      {
-                                                        if(strlen($3.error_str) > 2)
-                                                            $$.error_str = strdup($3.error_str);
+                                                        if($3->error_str != NULL)
+                                                            $$->error_str = strdup($3->error_str);
                                                         else
                                                         {
-                                                            switch($3.type.entity_type)
+                                                            switch($3->type.entity_type)
                                                             {
                                                                 case TYPE_SCALAR:
-                                                                    if($3.type.collection == false)
+                                                                    if($3->type.collection == false)
                                                                     {
-                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.abs(" << $3.str << ")");
-                                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                                        $$.array_size = 1;
-                                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                                        $$.type.collection = false;
+                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.abs(" << $3->str << ")");
+                                                                        $$->grid_mapping = GRID_MAPPING_ENTITY;
+                                                                        $$->array_size = 1;
+                                                                        $$->type.entity_type = TYPE_SCALAR;
+                                                                        $$->type.collection = false;
                                                                     }
                                                                     else
                                                                     {
-                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.abs(" << $3.str << ")");
-                                                                        $$.grid_mapping = $3.grid_mapping;
-                                                                        $$.array_size = $3.array_size;
-                                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                                        $$.type.collection = true;
+                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.abs(" << $3->str << ")");
+                                                                        $$->grid_mapping = $3->grid_mapping;
+                                                                        $$->array_size = $3->array_size;
+                                                                        $$->type.entity_type = TYPE_SCALAR;
+                                                                        $$->type.collection = true;
                                                                     }
                                                                     break;
                                                                 default:
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "Abs not supported for this type");
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Abs not supported for this type");
                                                                     break;
                                                             }
                                                         }
                                                      }
           | MIN '(' scalars ')'
                                                      {
-                                                        if(strlen($3.error_str) > 2)
-                                                            $$.error_str = strdup($3.error_str);
+                                                        if($3->error_str != NULL)
+                                                            $$->error_str = strdup($3->error_str);
                                                         else
                                                         {
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.min(" << $3.str << ")");
-                                                            $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                            $$.array_size = 1;
-                                                            $$.type.entity_type = TYPE_SCALAR;
-                                                            $$.type.collection = false;
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.min(" << $3->str << ")");
+                                                            $$->grid_mapping = GRID_MAPPING_ENTITY;
+                                                            $$->array_size = 1;
+                                                            $$->type.entity_type = TYPE_SCALAR;
+                                                            $$->type.collection = false;
                                                         }
                                                      }
           | MAX '(' scalars ')'
                                                      {
-                                                        if(strlen($3.error_str) > 2)
-                                                            $$.error_str = strdup($3.error_str);
+                                                        if($3->error_str != NULL)
+                                                            $$->error_str = strdup($3->error_str);
                                                         else
                                                         {
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.max(" << $3.str << ")");
-                                                            $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                            $$.array_size = 1;
-                                                            $$.type.entity_type = TYPE_SCALAR;
-                                                            $$.type.collection = false;
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.max(" << $3->str << ")");
+                                                            $$->grid_mapping = GRID_MAPPING_ENTITY;
+                                                            $$->array_size = 1;
+                                                            $$->type.entity_type = TYPE_SCALAR;
+                                                            $$->type.collection = false;
                                                         }
                                                      }
           | GRADIENT '(' expression ')'
                                                      {
-                                                        if(strlen($3.error_str) > 2)
-                                                            $$.error_str = strdup($3.error_str);
+                                                        if($3->error_str != NULL)
+                                                            $$->error_str = strdup($3->error_str);
                                                         else
                                                         {
-                                                            switch($3.type.entity_type)
+                                                            switch($3->type.entity_type)
                                                             {
                                                                 case TYPE_SCALAR:
-                                                                    if($3.type.collection == false)
+                                                                    if($3->type.collection == false)
                                                                     {
-                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.gradient(" << $3.str << ")");
-                                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                                        $$.array_size = 1;
-                                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                                        $$.type.collection = false;
+                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.gradient(" << $3->str << ")");
+                                                                        $$->grid_mapping = GRID_MAPPING_ENTITY;
+                                                                        $$->array_size = 1;
+                                                                        $$->type.entity_type = TYPE_SCALAR;
+                                                                        $$->type.collection = false;
                                                                     }
                                                                     else
                                                                     {
-                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.gradient(" << $3.str << ")");
-                                                                        $$.grid_mapping = $3.grid_mapping;
-                                                                        $$.array_size = $3.array_size;
-                                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                                        $$.type.collection = true;
+                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.gradient(" << $3->str << ")");
+                                                                        $$->grid_mapping = $3->grid_mapping;
+                                                                        $$->array_size = $3->array_size;
+                                                                        $$->type.entity_type = TYPE_SCALAR;
+                                                                        $$->type.collection = true;
                                                                     }
                                                                     break;
                                                                 default:
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "Gradient not supported for this type");
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Gradient not supported for this type");
                                                                     break;
                                                             }
                                                         }
                                                      }
           | DIVERGENCE '(' expression ')'
                                                      {
-                                                        if(strlen($3.error_str) > 2)
-                                                            $$.error_str = strdup($3.error_str);
+                                                        if($3->error_str != NULL)
+                                                            $$->error_str = strdup($3->error_str);
                                                         else
                                                         {
-                                                            switch($3.type.entity_type)
+                                                            switch($3->type.entity_type)
                                                             {
                                                                 case TYPE_SCALAR:
-                                                                    if($3.type.collection == false)
+                                                                    if($3->type.collection == false)
                                                                     {
-                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.divergence(" << $3.str << ")");
-                                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                                        $$.array_size = 1;
-                                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                                        $$.type.collection = false;
+                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.divergence(" << $3->str << ")");
+                                                                        $$->grid_mapping = GRID_MAPPING_ENTITY;
+                                                                        $$->array_size = 1;
+                                                                        $$->type.entity_type = TYPE_SCALAR;
+                                                                        $$->type.collection = false;
                                                                     }
                                                                     else
                                                                     {
-                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.divergence(" << $3.str << ")");
-                                                                        $$.grid_mapping = $3.grid_mapping;
-                                                                        $$.array_size = $3.array_size;
-                                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                                        $$.type.collection = true;
+                                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.divergence(" << $3->str << ")");
+                                                                        $$->grid_mapping = $3->grid_mapping;
+                                                                        $$->array_size = $3->array_size;
+                                                                        $$->type.entity_type = TYPE_SCALAR;
+                                                                        $$->type.collection = true;
                                                                     }
                                                                     break;
                                                                 default:
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "Divergence not supported for this type");
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Divergence not supported for this type");
                                                                     break;
                                                             }
                                                         }
                                                      }
           | '[' scalars ']'
                                                   {
-                                                      if(strlen($2.error_str) > 2)
-                                                          $$.error_str = strdup($2.error_str);
+                                                      if($2->error_str != NULL)
+                                                          $$->error_str = strdup($2->error_str);
                                                       else
                                                       {
-                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "[" << $2.str << "]");
-                                                          $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                          $$.array_size = $2.array_size;
-                                                          $$.type.entity_type = TYPE_VECTOR;
-                                                          $$.type.collection = false;
+                                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "[" << $2->str << "]");
+                                                          $$->grid_mapping = GRID_MAPPING_ENTITY;
+                                                          $$->array_size = $2->array_size;
+                                                          $$->type.entity_type = TYPE_VECTOR;
+                                                          $$->type.collection = false;
                                                       }
                                                   }
           | CENTROID '(' expression ')'
                                                   {
-                                                      if(strlen($3.error_str) > 2)
-                                                          $$.error_str = strdup($3.error_str);
+                                                      if($3->error_str != NULL)
+                                                          $$->error_str = strdup($3->error_str);
                                                       else
                                                       {
-                                                          switch($3.type.entity_type)
+                                                          switch($3->type.entity_type)
                                                           {
                                                               case TYPE_FACE:
-                                                                  if($3.type.collection == false)
+                                                                  if($3->type.collection == false)
                                                                   {
-                                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
-                                                                      $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                                      $$.array_size = 1;
-                                                                      $$.type.entity_type = TYPE_VECTOR;
-                                                                      $$.type.collection = false;
+                                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.centroid(" << $3->str << ")");
+                                                                      $$->grid_mapping = GRID_MAPPING_ENTITY;
+                                                                      $$->array_size = 1;
+                                                                      $$->type.entity_type = TYPE_VECTOR;
+                                                                      $$->type.collection = false;
                                                                   }
                                                                   else
                                                                   {
-                                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
-                                                                      $$.grid_mapping = $3.grid_mapping;
-                                                                      $$.array_size = $3.array_size;
-                                                                      $$.type.entity_type = TYPE_VECTOR;
-                                                                      $$.type.collection = true;
+                                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.centroid(" << $3->str << ")");
+                                                                      $$->grid_mapping = $3->grid_mapping;
+                                                                      $$->array_size = $3->array_size;
+                                                                      $$->type.entity_type = TYPE_VECTOR;
+                                                                      $$->type.collection = true;
                                                                   }
                                                                   break;
                                                               case TYPE_CELL:
-                                                                  if($3.type.collection == false)
+                                                                  if($3->type.collection == false)
                                                                   {
-                                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
-                                                                      $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                                      $$.array_size = 1;
-                                                                      $$.type.entity_type = TYPE_VECTOR;
-                                                                      $$.type.collection = false;
+                                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.centroid(" << $3->str << ")");
+                                                                      $$->grid_mapping = GRID_MAPPING_ENTITY;
+                                                                      $$->array_size = 1;
+                                                                      $$->type.entity_type = TYPE_VECTOR;
+                                                                      $$->type.collection = false;
                                                                   }
                                                                   else
                                                                   {
-                                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
-                                                                      $$.grid_mapping = $3.grid_mapping;
-                                                                      $$.array_size = $3.array_size;
-                                                                      $$.type.entity_type = TYPE_VECTOR;
-                                                                      $$.type.collection = true;
+                                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.centroid(" << $3->str << ")");
+                                                                      $$->grid_mapping = $3->grid_mapping;
+                                                                      $$->array_size = $3->array_size;
+                                                                      $$->type.entity_type = TYPE_VECTOR;
+                                                                      $$->type.collection = true;
                                                                   }
                                                               default:
-                                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "Centroid not supported for this type");
+                                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Centroid not supported for this type");
                                                                   break;
                                                           }
                                                       }
                                                   }
           | NORMAL '(' expression ')'
                                                   {
-                                                      if(strlen($3.error_str) > 2)
-                                                          $$.error_str = strdup($3.error_str);
+                                                      if($3->error_str != NULL)
+                                                          $$->error_str = strdup($3->error_str);
                                                       else
                                                       {
-                                                          switch($3.type.entity_type)
+                                                          switch($3->type.entity_type)
                                                           {
                                                               case TYPE_FACE:
-                                                                  if($3.type.collection == false)
+                                                                  if($3->type.collection == false)
                                                                   {
-                                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.normal(" << $3.str << ")");
-                                                                      $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                                      $$.array_size = 1;
-                                                                      $$.type.entity_type = TYPE_VECTOR;
-                                                                      $$.type.collection = false;
+                                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.normal(" << $3->str << ")");
+                                                                      $$->grid_mapping = GRID_MAPPING_ENTITY;
+                                                                      $$->array_size = 1;
+                                                                      $$->type.entity_type = TYPE_VECTOR;
+                                                                      $$->type.collection = false;
                                                                   }
                                                                   else
                                                                   {
-                                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.normal(" << $3.str << ")");
-                                                                      $$.grid_mapping = $3.grid_mapping;
-                                                                      $$.array_size = $3.array_size;
-                                                                      $$.type.entity_type = TYPE_VECTOR;
-                                                                      $$.type.collection = true;
+                                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.normal(" << $3->str << ")");
+                                                                      $$->grid_mapping = $3->grid_mapping;
+                                                                      $$->array_size = $3->array_size;
+                                                                      $$->type.entity_type = TYPE_VECTOR;
+                                                                      $$->type.collection = true;
                                                                   }
                                                                   break;
                                                               default:
-                                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "Normal not supported for this type");
+                                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Normal not supported for this type");
                                                                   break;
                                                           }
                                                       }
                                                  }
           | '[' vectors ']'
                                                  {
-                                                    if(strlen($2.error_str) > 2)
-                                                        $$.error_str = strdup($2.error_str);
+                                                    if($2->error_str != NULL)
+                                                        $$->error_str = strdup($2->error_str);
                                                     else
                                                     {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "[" << $2.str << "]");
-                                                        $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                        $$.array_size = $2.array_size;
-                                                        $$.type.entity_type = TYPE_VECTOR;
-                                                        $$.type.collection = true;
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "[" << $2->str << "]");
+                                                        $$->grid_mapping = GRID_MAPPING_ENTITY;
+                                                        $$->array_size = $2->array_size;
+                                                        $$->type.entity_type = TYPE_VECTOR;
+                                                        $$->type.collection = true;
                                                     }
                                                  }
           | INTERIOR_VERTICES '(' GRID ')'
                                                  {
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorVertices()");
-                                                    $$.grid_mapping = GRID_MAPPING_INTERIORVERTICES;
-                                                    $$.array_size = 1;
-                                                    $$.type.entity_type = TYPE_VERTEX;
-                                                    $$.type.collection = true;
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.interiorVertices()");
+                                                    $$->grid_mapping = GRID_MAPPING_INTERIORVERTICES;
+                                                    $$->array_size = 1;
+                                                    $$->type.entity_type = TYPE_VERTEX;
+                                                    $$->type.collection = true;
                                                  }
           | BOUNDARY_VERTICES '(' GRID ')'
                                                  {
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryVertices()");
-                                                    $$.grid_mapping = GRID_MAPPING_BOUNDARYVERTICES;
-                                                    $$.array_size = 1;
-                                                    $$.type.entity_type = TYPE_VERTEX;
-                                                    $$.type.collection = true;
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.boundaryVertices()");
+                                                    $$->grid_mapping = GRID_MAPPING_BOUNDARYVERTICES;
+                                                    $$->array_size = 1;
+                                                    $$->type.entity_type = TYPE_VERTEX;
+                                                    $$->type.collection = true;
                                                  }
           | ALL_VERTICES '(' GRID ')'
                                                  {
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allVertices()");
-                                                    $$.grid_mapping = GRID_MAPPING_ALLVERTICES;
-                                                    $$.array_size = 1;
-                                                    $$.type.entity_type = TYPE_VERTEX;
-                                                    $$.type.collection = true;
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.allVertices()");
+                                                    $$->grid_mapping = GRID_MAPPING_ALLVERTICES;
+                                                    $$->array_size = 1;
+                                                    $$->type.entity_type = TYPE_VERTEX;
+                                                    $$->type.collection = true;
                                                  }
           | INTERIOR_EDGES '(' GRID ')'
                                                  {
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorEdges()");
-                                                    $$.grid_mapping = GRID_MAPPING_INTERIOREDGES;
-                                                    $$.array_size = 1;
-                                                    $$.type.entity_type = TYPE_EDGE;
-                                                    $$.type.collection = true;
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.interiorEdges()");
+                                                    $$->grid_mapping = GRID_MAPPING_INTERIOREDGES;
+                                                    $$->array_size = 1;
+                                                    $$->type.entity_type = TYPE_EDGE;
+                                                    $$->type.collection = true;
                                                  }
           | BOUNDARY_EDGES '(' GRID ')'
                                                  {
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryEdges()");
-                                                    $$.grid_mapping = GRID_MAPPING_BOUNDARYEDGES;
-                                                    $$.array_size = 1;
-                                                    $$.type.entity_type = TYPE_EDGE;
-                                                    $$.type.collection = true;
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.boundaryEdges()");
+                                                    $$->grid_mapping = GRID_MAPPING_BOUNDARYEDGES;
+                                                    $$->array_size = 1;
+                                                    $$->type.entity_type = TYPE_EDGE;
+                                                    $$->type.collection = true;
                                                  }
           | ALL_EDGES '(' GRID ')'
                                                  {
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allEdges()");
-                                                    $$.grid_mapping = GRID_MAPPING_ALLEDGES;
-                                                    $$.array_size = 1;
-                                                    $$.type.entity_type = TYPE_EDGE;
-                                                    $$.type.collection = true;
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.allEdges()");
+                                                    $$->grid_mapping = GRID_MAPPING_ALLEDGES;
+                                                    $$->array_size = 1;
+                                                    $$->type.entity_type = TYPE_EDGE;
+                                                    $$->type.collection = true;
                                                  }
           | INTERIOR_FACES '(' GRID ')'
                                                  {
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorFaces()");
-                                                    $$.grid_mapping = GRID_MAPPING_INTERIORFACES;
-                                                    $$.array_size = 1;
-                                                    $$.type.entity_type = TYPE_FACE;
-                                                    $$.type.collection = true;
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.interiorFaces()");
+                                                    $$->grid_mapping = GRID_MAPPING_INTERIORFACES;
+                                                    $$->array_size = 1;
+                                                    $$->type.entity_type = TYPE_FACE;
+                                                    $$->type.collection = true;
                                                  }
           | BOUNDARY_FACES '(' GRID ')'
                                                  {
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryFaces()");
-                                                    $$.grid_mapping = GRID_MAPPING_BOUNDARYFACES;
-                                                    $$.array_size = 1;
-                                                    $$.type.entity_type = TYPE_FACE;
-                                                    $$.type.collection = true;
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.boundaryFaces()");
+                                                    $$->grid_mapping = GRID_MAPPING_BOUNDARYFACES;
+                                                    $$->array_size = 1;
+                                                    $$->type.entity_type = TYPE_FACE;
+                                                    $$->type.collection = true;
                                                  }
           | ALL_FACES '(' GRID ')'
                                                  {
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allFaces()");
-                                                    $$.grid_mapping = GRID_MAPPING_ALLFACES;
-                                                    $$.array_size = 1;
-                                                    $$.type.entity_type = TYPE_FACE;
-                                                    $$.type.collection = true;
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.allFaces()");
+                                                    $$->grid_mapping = GRID_MAPPING_ALLFACES;
+                                                    $$->array_size = 1;
+                                                    $$->type.entity_type = TYPE_FACE;
+                                                    $$->type.collection = true;
                                                  }
           | FIRST_CELL '(' expression ')'
                                                  {
-                                                      if(strlen($3.error_str) > 2)
-                                                          $$.error_str = strdup($3.error_str);
+                                                      if($3->error_str != NULL)
+                                                          $$->error_str = strdup($3->error_str);
                                                       else
                                                       {
-                                                          switch($3.type.entity_type)
+                                                          switch($3->type.entity_type)
                                                           {
                                                               case TYPE_FACE:
-                                                                  if($3.type.collection == false)
+                                                                  if($3->type.collection == false)
                                                                   {
-                                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.firstCell(" << $3.str << ")");
-                                                                      $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                                      $$.array_size = 1;
-                                                                      $$.type.entity_type = TYPE_CELL;
-                                                                      $$.type.collection = false;
+                                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.firstCell(" << $3->str << ")");
+                                                                      $$->grid_mapping = GRID_MAPPING_ENTITY;
+                                                                      $$->array_size = 1;
+                                                                      $$->type.entity_type = TYPE_CELL;
+                                                                      $$->type.collection = false;
                                                                   }
                                                                   else
                                                                   {
-                                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.firstCell(" << $3.str << ")");
-                                                                      $$.grid_mapping = $3.grid_mapping;
-                                                                      $$.array_size = 1;
-                                                                      $$.type.entity_type = TYPE_CELL;
-                                                                      $$.type.collection = true;
+                                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.firstCell(" << $3->str << ")");
+                                                                      $$->grid_mapping = $3->grid_mapping;
+                                                                      $$->array_size = 1;
+                                                                      $$->type.entity_type = TYPE_CELL;
+                                                                      $$->type.collection = true;
                                                                   }
                                                                   break;
                                                               default:
-                                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "FirstCell not supported for this type");
+                                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "FirstCell not supported for this type");
                                                                   break;
                                                           }
                                                       }
                                                  }
           | SECOND_CELL '(' expression ')'
                                                  {
-                                                      if(strlen($3.error_str) > 2)
-                                                          $$.error_str = strdup($3.error_str);
+                                                      if($3->error_str != NULL)
+                                                          $$->error_str = strdup($3->error_str);
                                                       else
                                                       {
-                                                          switch($3.type.entity_type)
+                                                          switch($3->type.entity_type)
                                                           {
                                                               case TYPE_FACE:
-                                                                  if($3.type.collection == false)
+                                                                  if($3->type.collection == false)
                                                                   {
-                                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.secondCell(" << $3.str << ")");
-                                                                      $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                                      $$.array_size = 1;
-                                                                      $$.type.entity_type = TYPE_CELL;
-                                                                      $$.type.collection = false;
+                                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.secondCell(" << $3->str << ")");
+                                                                      $$->grid_mapping = GRID_MAPPING_ENTITY;
+                                                                      $$->array_size = 1;
+                                                                      $$->type.entity_type = TYPE_CELL;
+                                                                      $$->type.collection = false;
                                                                   }
                                                                   else
                                                                   {
-                                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.secondCell(" << $3.str << ")");
-                                                                      $$.grid_mapping = $3.grid_mapping;
-                                                                      $$.array_size = 1;
-                                                                      $$.type.entity_type = TYPE_CELL;
-                                                                      $$.type.collection = true;
+                                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.secondCell(" << $3->str << ")");
+                                                                      $$->grid_mapping = $3->grid_mapping;
+                                                                      $$->array_size = 1;
+                                                                      $$->type.entity_type = TYPE_CELL;
+                                                                      $$->type.collection = true;
                                                                   }
                                                                   break;
                                                               default:
-                                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "SecondCell not supported for this type");
+                                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "SecondCell not supported for this type");
                                                                   break;
                                                           }
                                                       }
                                                  }
           | INTERIOR_CELLS '(' GRID ')'
                                                  {
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.interiorCells()");
-                                                    $$.grid_mapping = GRID_MAPPING_INTERIORCELLS;
-                                                    $$.array_size = 1;
-                                                    $$.type.entity_type = TYPE_CELL;
-                                                    $$.type.collection = true;
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.interiorCells()");
+                                                    $$->grid_mapping = GRID_MAPPING_INTERIORCELLS;
+                                                    $$->array_size = 1;
+                                                    $$->type.entity_type = TYPE_CELL;
+                                                    $$->type.collection = true;
                                                  }
           | BOUNDARY_CELLS '(' GRID ')'
                                                  {
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.boundaryCells()");
-                                                    $$.grid_mapping = GRID_MAPPING_BOUNDARYCELLS;
-                                                    $$.array_size = 1;
-                                                    $$.type.entity_type = TYPE_CELL;
-                                                    $$.type.collection = true;
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.boundaryCells()");
+                                                    $$->grid_mapping = GRID_MAPPING_BOUNDARYCELLS;
+                                                    $$->array_size = 1;
+                                                    $$->type.entity_type = TYPE_CELL;
+                                                    $$->type.collection = true;
                                                  }
           | ALL_CELLS '(' GRID ')'
                                                  {
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.allCells()");
-                                                    $$.grid_mapping = GRID_MAPPING_ALLCELLS;
-                                                    $$.array_size = 1;
-                                                    $$.type.entity_type = TYPE_CELL;
-                                                    $$.type.collection = true;
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.allCells()");
+                                                    $$->grid_mapping = GRID_MAPPING_ALLCELLS;
+                                                    $$->array_size = 1;
+                                                    $$->type.entity_type = TYPE_CELL;
+                                                    $$->type.collection = true;
                                                  }
           | NOT expression
                                                  {
-                                                      if(strlen($2.error_str) > 2)
-                                                          $$.error_str = strdup($2.error_str);
+                                                      if($2->error_str != NULL)
+                                                          $$->error_str = strdup($2->error_str);
                                                       else
                                                       {
-                                                          switch($2.type.entity_type)
+                                                          switch($2->type.entity_type)
                                                           {
                                                               case TYPE_BOOLEAN:
-                                                                  if($2.type.collection == false)
+                                                                  if($2->type.collection == false)
                                                                   {
-                                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "!" << $2.str);
-                                                                      clone_info_without_name($$, $2);
+																	  $$ = $2->clone();
+                                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "!" << $2->str);
                                                                   }
                                                                   else
                                                                   {
-                                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "!" << $2.str);
-                                                                      clone_info_without_name($$, $2);
+																	  $$ = $2->clone();
+                                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "!" << $2->str);
                                                                   }
                                                                   break;
                                                               default:
-                                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "Not not supported for this type");
+                                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Not not supported for this type");
                                                                   break;
                                                           }
                                                       }
                                                  }
           | expression AND expression
                                                  {
-                                                    if(strlen($1.error_str) > 2)
-                                                        $$.error_str = strdup($1.error_str);
+                                                    if($1->error_str != NULL)
+                                                        $$->error_str = strdup($1->error_str);
                                                     else
-                                                    if(strlen($3.error_str) > 2)
-                                                        $$.error_str = strdup($3.error_str);
+                                                    if($3->error_str != NULL)
+                                                        $$->error_str = strdup($3->error_str);
                                                     else
                                                     {
-                                                        if($1.type.entity_type == TYPE_BOOLEAN && $3.type.entity_type == TYPE_BOOLEAN && $1.type.collection == false && $3.type.collection == false)
+                                                        if($1->type.entity_type == TYPE_BOOLEAN && $3->type.entity_type == TYPE_BOOLEAN && $1->type.collection == false && $3->type.collection == false)
                                                         {
                                                             // both should be boolean
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " && " << $3.str);
-                                                            clone_info_without_name($$, $1);
+															$$= $1->clone();
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " && " << $3->str);
                                                         }
                                                         else
-                                                        if($1.type.entity_type == TYPE_BOOLEAN && $3.type.entity_type == TYPE_BOOLEAN && $1.type.collection == true && $3.type.collection == true)
+                                                        if($1->type.entity_type == TYPE_BOOLEAN && $3->type.entity_type == TYPE_BOOLEAN && $1->type.collection == true && $3->type.collection == true)
                                                         {
                                                             // they should be booleans
-                                                            if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                            if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
                                                             {
-                                                                LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.error_str);
+                                                                LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                                             }
                                                             else
                                                             {
-                                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " && " << $3.str);
-                                                                clone_info_without_name($$, $1);
+																$$ = $1->clone();
+                                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " && " << $3->str);
                                                             }
                                                         }
                                                         else
                                                         {
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "And not supported for these types");
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "And not supported for these types");
                                                         }
                                                     }
                                                  }
           | expression OR expression
                                                  {
-                                                    if(strlen($1.error_str) > 2)
-                                                        $$.error_str = strdup($1.error_str);
+                                                    if($1->error_str != NULL)
+                                                        $$->error_str = strdup($1->error_str);
                                                     else
-                                                    if(strlen($3.error_str) > 2)
-                                                        $$.error_str = strdup($3.error_str);
+                                                    if($3->error_str != NULL)
+                                                        $$->error_str = strdup($3->error_str);
                                                     else
                                                     {
-                                                        if($1.type.entity_type == TYPE_BOOLEAN && $3.type.entity_type == TYPE_BOOLEAN && $1.type.collection == false && $3.type.collection == false)
+                                                        if($1->type.entity_type == TYPE_BOOLEAN && $3->type.entity_type == TYPE_BOOLEAN && $1->type.collection == false && $3->type.collection == false)
                                                         {
                                                             // both should be boolean
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " || " << $3.str);
-                                                            clone_info_without_name($$, $1);
+															$$ = $1->clone();
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " || " << $3->str);
                                                         }
                                                         else
-                                                        if($1.type.entity_type == TYPE_BOOLEAN && $3.type.entity_type == TYPE_BOOLEAN && $1.type.collection == true && $3.type.collection == true)
+                                                        if($1->type.entity_type == TYPE_BOOLEAN && $3->type.entity_type == TYPE_BOOLEAN && $1->type.collection == true && $3->type.collection == true)
                                                         {
                                                             // they should be booleans
-                                                            if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                            if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
                                                             {
-                                                                LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.error_str);
+                                                                LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                                             }
                                                             else
                                                             {
-                                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " || " << $3.str);
-                                                                clone_info_without_name($$, $1);
+																$$ = $1->clone();
+                                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " || " << $3->str);
                                                             }
                                                         }
                                                         else
                                                         {
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "Or not supported for these types");
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Or not supported for these types");
                                                         }
                                                     }
                                                  }
           | expression XOR expression
                                                  {
-                                                    if(strlen($1.error_str) > 2)
-                                                        $$.error_str = strdup($1.error_str);
+                                                    if($1->error_str != NULL)
+                                                        $$->error_str = strdup($1->error_str);
                                                     else
-                                                    if(strlen($3.error_str) > 2)
-                                                        $$.error_str = strdup($3.error_str);
+                                                    if($3->error_str != NULL)
+                                                        $$->error_str = strdup($3->error_str);
                                                     else
                                                     {
-                                                        if($1.type.entity_type == TYPE_BOOLEAN && $3.type.entity_type == TYPE_BOOLEAN && $1.type.collection == false && $3.type.collection == false)
+                                                        if($1->type.entity_type == TYPE_BOOLEAN && $3->type.entity_type == TYPE_BOOLEAN && $1->type.collection == false && $3->type.collection == false)
                                                         {
                                                             // both should be boolean
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(!" << $1.str << " && " << $3.str << ") || (!" << $3.str << " && " << $1.str << ")");
-                                                            clone_info_without_name($$, $1);
+															$$ = $1->clone();
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "(!" << $1->str << " && " << $3->str << ") || (!" << $3->str << " && " << $1->str << ")");
                                                         }
                                                         else
-                                                        if($1.type.entity_type == TYPE_BOOLEAN && $3.type.entity_type == TYPE_BOOLEAN && $1.type.collection == true && $3.type.collection == true)
+                                                        if($1->type.entity_type == TYPE_BOOLEAN && $3->type.entity_type == TYPE_BOOLEAN && $1->type.collection == true && $3->type.collection == true)
                                                         {
                                                             // they should be booleans
-                                                            if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                            if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
                                                             {
-                                                                LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.error_str);
+                                                                LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                                             }
                                                             else
                                                             {
-                                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(!" << $1.str << " && " << $3.str << ") || (!" << $3.str << " && " << $1.str << ")");
-                                                                clone_info_without_name($$, $1);
+																$$ = $1->clone();
+                                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "(!" << $1->str << " && " << $3->str << ") || (!" << $3->str << " && " << $1->str << ")");
                                                             }
                                                         }
                                                         else
                                                         {
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "Xor not supported for these types");
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Xor not supported for these types");
                                                         }
                                                     }
                                                  }
           | TRUE
                                                  {
-                                                    $$.str = strdup("true");
-                                                    $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                    $$.array_size = 1;
-                                                    $$.type.entity_type = TYPE_BOOLEAN;
-                                                    $$.type.collection = false;
+                                                    $$->str = strdup("true");
+                                                    $$->grid_mapping = GRID_MAPPING_ENTITY;
+                                                    $$->array_size = 1;
+                                                    $$->type.entity_type = TYPE_BOOLEAN;
+                                                    $$->type.collection = false;
                                                  }
           | FALSE
                                                  {
-                                                    $$.str = strdup("false");
-                                                    $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                    $$.array_size = 1;
-                                                    $$.type.entity_type = TYPE_BOOLEAN;
-                                                    $$.type.collection = false;
+                                                    $$->str = strdup("false");
+                                                    $$->grid_mapping = GRID_MAPPING_ENTITY;
+                                                    $$->array_size = 1;
+                                                    $$->type.entity_type = TYPE_BOOLEAN;
+                                                    $$->type.collection = false;
                                                  }
           | expression '>' expression
                                                  {
-                                                    if(strlen($1.error_str) > 2)
-                                                        $$.error_str = strdup($1.error_str);
+                                                    if($1->error_str != NULL)
+                                                        $$->error_str = strdup($1->error_str);
                                                     else
-                                                    if(strlen($3.error_str) > 2)
-                                                        $$.error_str = strdup($3.error_str);
+                                                    if($3->error_str != NULL)
+                                                        $$->error_str = strdup($3->error_str);
                                                     else
                                                     {
-                                                        if($1.type.entity_type == TYPE_SCALAR && $3.type.entity_type == TYPE_SCALAR && $1.type.collection == false && $3.type.collection == false)
+                                                        if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == false && $3->type.collection == false)
                                                         {
                                                             // both should be scalar
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " > " << $3.str);
-                                                            $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                            $$.array_size = 1;
-                                                            $$.type.entity_type = TYPE_BOOLEAN;
-                                                            $$.type.collection = false;
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " > " << $3->str);
+                                                            $$->grid_mapping = GRID_MAPPING_ENTITY;
+                                                            $$->array_size = 1;
+                                                            $$->type.entity_type = TYPE_BOOLEAN;
+                                                            $$->type.collection = false;
                                                         }
                                                         else
-                                                        if($1.type.entity_type == TYPE_BOOLEAN && $3.type.entity_type == TYPE_BOOLEAN && $1.type.collection == true && $3.type.collection == true)
+                                                        if($1->type.entity_type == TYPE_BOOLEAN && $3->type.entity_type == TYPE_BOOLEAN && $1->type.collection == true && $3->type.collection == true)
                                                         {
                                                             // they should be scalars
-                                                            if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                            if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
                                                             {
-                                                                LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.error_str);
+                                                                LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                                             }
                                                             else
                                                             {
-                                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $1.str << ") > (" << $3.str << ")");
-                                                                $$.grid_mapping = $1.grid_mapping;
-                                                                $$.array_size = $1.array_size;
-                                                                $$.type.entity_type = TYPE_BOOLEAN;
-                                                                $$.type.collection = true;
+                                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "(" << $1->str << ") > (" << $3->str << ")");
+                                                                $$->grid_mapping = $1->grid_mapping;
+                                                                $$->array_size = $1->array_size;
+                                                                $$->type.entity_type = TYPE_BOOLEAN;
+                                                                $$->type.collection = true;
                                                             }
                                                         }
                                                         else
                                                         {
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "> not supported for these types");
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "> not supported for these types");
                                                         }
                                                     }
                                                  }
           | expression '<' expression
                                                  {
-                                                    if(strlen($1.error_str) > 2)
-                                                        $$.error_str = strdup($1.error_str);
+                                                    if($1->error_str != NULL)
+                                                        $$->error_str = strdup($1->error_str);
                                                     else
-                                                    if(strlen($3.error_str) > 2)
-                                                        $$.error_str = strdup($3.error_str);
+                                                    if($3->error_str != NULL)
+                                                        $$->error_str = strdup($3->error_str);
                                                     else
                                                     {
-                                                        if($1.type.entity_type == TYPE_SCALAR && $3.type.entity_type == TYPE_SCALAR && $1.type.collection == false && $3.type.collection == false)
+                                                        if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == false && $3->type.collection == false)
                                                         {
                                                             // both should be scalar
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " < " << $3.str);
-                                                            $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                            $$.array_size = 1;
-                                                            $$.type.entity_type = TYPE_BOOLEAN;
-                                                            $$.type.collection = false;
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " < " << $3->str);
+                                                            $$->grid_mapping = GRID_MAPPING_ENTITY;
+                                                            $$->array_size = 1;
+                                                            $$->type.entity_type = TYPE_BOOLEAN;
+                                                            $$->type.collection = false;
                                                         }
                                                         else
-                                                        if($1.type.entity_type == TYPE_BOOLEAN && $3.type.entity_type == TYPE_BOOLEAN && $1.type.collection == true && $3.type.collection == true)
+                                                        if($1->type.entity_type == TYPE_BOOLEAN && $3->type.entity_type == TYPE_BOOLEAN && $1->type.collection == true && $3->type.collection == true)
                                                         {
                                                             // they should be scalars
-                                                            if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                            if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
                                                             {
-                                                                LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.error_str);
+                                                                LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                                             }
                                                             else
                                                             {
-                                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $1.str << ") < (" << $3.str << ")");
-                                                                $$.grid_mapping = $1.grid_mapping;
-                                                                $$.array_size = $1.array_size;
-                                                                $$.type.entity_type = TYPE_BOOLEAN;
-                                                                $$.type.collection = true;
+                                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "(" << $1->str << ") < (" << $3->str << ")");
+                                                                $$->grid_mapping = $1->grid_mapping;
+                                                                $$->array_size = $1->array_size;
+                                                                $$->type.entity_type = TYPE_BOOLEAN;
+                                                                $$->type.collection = true;
                                                             }
                                                         }
                                                         else
                                                         {
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "< not supported for these types");
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "< not supported for these types");
                                                         }
                                                     }
                                                  }
           | expression LESSEQ expression
                                                  {
-                                                    if(strlen($1.error_str) > 2)
-                                                        $$.error_str = strdup($1.error_str);
+                                                    if($1->error_str != NULL)
+                                                        $$->error_str = strdup($1->error_str);
                                                     else
-                                                    if(strlen($3.error_str) > 2)
-                                                        $$.error_str = strdup($3.error_str);
+                                                    if($3->error_str != NULL)
+                                                        $$->error_str = strdup($3->error_str);
                                                     else
                                                     {
-                                                        if($1.type.entity_type == TYPE_SCALAR && $3.type.entity_type == TYPE_SCALAR && $1.type.collection == false && $3.type.collection == false)
+                                                        if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == false && $3->type.collection == false)
                                                         {
                                                             // both should be scalar
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " <= " << $3.str);
-                                                            $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                            $$.array_size = 1;
-                                                            $$.type.entity_type = TYPE_BOOLEAN;
-                                                            $$.type.collection = false;
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " <= " << $3->str);
+                                                            $$->grid_mapping = GRID_MAPPING_ENTITY;
+                                                            $$->array_size = 1;
+                                                            $$->type.entity_type = TYPE_BOOLEAN;
+                                                            $$->type.collection = false;
                                                         }
                                                         else
-                                                        if($1.type.entity_type == TYPE_BOOLEAN && $3.type.entity_type == TYPE_BOOLEAN && $1.type.collection == true && $3.type.collection == true)
+                                                        if($1->type.entity_type == TYPE_BOOLEAN && $3->type.entity_type == TYPE_BOOLEAN && $1->type.collection == true && $3->type.collection == true)
                                                         {
                                                             // they should be scalars
-                                                            if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                            if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
                                                             {
-                                                                LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.error_str);
+                                                                LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                                             }
                                                             else
                                                             {
-                                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $1.str << ") <= (" << $3.str << ")");
-                                                                $$.grid_mapping = $1.grid_mapping;
-                                                                $$.array_size = $1.array_size;
-                                                                $$.type.entity_type = TYPE_BOOLEAN;
-                                                                $$.type.collection = true;
+                                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "(" << $1->str << ") <= (" << $3->str << ")");
+                                                                $$->grid_mapping = $1->grid_mapping;
+                                                                $$->array_size = $1->array_size;
+                                                                $$->type.entity_type = TYPE_BOOLEAN;
+                                                                $$->type.collection = true;
                                                             }
                                                         }
                                                         else
                                                         {
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "<= not supported for these types");
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "<= not supported for these types");
                                                         }
                                                     }
                                                  }
           | expression GREATEREQ expression
                                                  {
-                                                    if(strlen($1.error_str) > 2)
-                                                        $$.error_str = strdup($1.error_str);
+                                                    if($1->error_str != NULL)
+                                                        $$->error_str = strdup($1->error_str);
                                                     else
-                                                    if(strlen($3.error_str) > 2)
-                                                        $$.error_str = strdup($3.error_str);
+                                                    if($3->error_str != NULL)
+                                                        $$->error_str = strdup($3->error_str);
                                                     else
                                                     {
-                                                        if($1.type.entity_type == TYPE_SCALAR && $3.type.entity_type == TYPE_SCALAR && $1.type.collection == false && $3.type.collection == false)
+                                                        if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == false && $3->type.collection == false)
                                                         {
                                                             // both should be scalar
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " >= " << $3.str);
-                                                            $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                            $$.array_size = 1;
-                                                            $$.type.entity_type = TYPE_BOOLEAN;
-                                                            $$.type.collection = false;
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " >= " << $3->str);
+                                                            $$->grid_mapping = GRID_MAPPING_ENTITY;
+                                                            $$->array_size = 1;
+                                                            $$->type.entity_type = TYPE_BOOLEAN;
+                                                            $$->type.collection = false;
                                                         }
                                                         else
-                                                        if($1.type.entity_type == TYPE_BOOLEAN && $3.type.entity_type == TYPE_BOOLEAN && $1.type.collection == true && $3.type.collection == true)
+                                                        if($1->type.entity_type == TYPE_BOOLEAN && $3->type.entity_type == TYPE_BOOLEAN && $1->type.collection == true && $3->type.collection == true)
                                                         {
                                                             // they should be scalars
-                                                            if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                            if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
                                                             {
-                                                                LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.error_str);
+                                                                LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                                             }
                                                             else
                                                             {
-                                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $1.str << ") >= (" << $3.str << ")");
-                                                                $$.grid_mapping = $1.grid_mapping;
-                                                                $$.array_size = $1.array_size;
-                                                                $$.type.entity_type = TYPE_BOOLEAN;
-                                                                $$.type.collection = true;
+                                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "(" << $1->str << ") >= (" << $3->str << ")");
+                                                                $$->grid_mapping = $1->grid_mapping;
+                                                                $$->array_size = $1->array_size;
+                                                                $$->type.entity_type = TYPE_BOOLEAN;
+                                                                $$->type.collection = true;
                                                             }
                                                         }
                                                         else
                                                         {
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, ">= not supported for these types");
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, ">= not supported for these types");
                                                         }
                                                     }
                                                  }
           | expression EQ expression
                                                  {
-                                                    if(strlen($1.error_str) > 2)
-                                                        $$.error_str = strdup($1.error_str);
+                                                    if($1->error_str != NULL)
+                                                        $$->error_str = strdup($1->error_str);
                                                     else
-                                                    if(strlen($3.error_str) > 2)
-                                                        $$.error_str = strdup($3.error_str);
+                                                    if($3->error_str != NULL)
+                                                        $$->error_str = strdup($3->error_str);
                                                     else
                                                     {
-                                                        if($1.type.entity_type == TYPE_SCALAR && $3.type.entity_type == TYPE_SCALAR && $1.type.collection == false && $3.type.collection == false)
+                                                        if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == false && $3->type.collection == false)
                                                         {
                                                             // both should be scalar
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " == " << $3.str);
-                                                            $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                            $$.array_size = 1;
-                                                            $$.type.entity_type = TYPE_BOOLEAN;
-                                                            $$.type.collection = false;
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " == " << $3->str);
+                                                            $$->grid_mapping = GRID_MAPPING_ENTITY;
+                                                            $$->array_size = 1;
+                                                            $$->type.entity_type = TYPE_BOOLEAN;
+                                                            $$->type.collection = false;
                                                         }
                                                         else
-                                                        if($1.type.entity_type == TYPE_BOOLEAN && $3.type.entity_type == TYPE_BOOLEAN && $1.type.collection == true && $3.type.collection == true)
+                                                        if($1->type.entity_type == TYPE_BOOLEAN && $3->type.entity_type == TYPE_BOOLEAN && $1->type.collection == true && $3->type.collection == true)
                                                         {
                                                             // they should be scalars
-                                                            if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                            if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
                                                             {
-                                                                LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.error_str);
+                                                                LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                                             }
                                                             else
                                                             {
-                                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $1.str << ") == (" << $3.str << ")");
-                                                                $$.grid_mapping = $1.grid_mapping;
-                                                                $$.array_size = $1.array_size;
-                                                                $$.type.entity_type = TYPE_BOOLEAN;
-                                                                $$.type.collection = true;
+                                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "(" << $1->str << ") == (" << $3->str << ")");
+                                                                $$->grid_mapping = $1->grid_mapping;
+                                                                $$->array_size = $1->array_size;
+                                                                $$->type.entity_type = TYPE_BOOLEAN;
+                                                                $$->type.collection = true;
                                                             }
                                                         }
                                                         else
                                                         {
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "== not supported for these types");
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "== not supported for these types");
                                                         }
                                                     }
                                                  }
           | expression NOTEQ expression
                                                  {
-                                                    if(strlen($1.error_str) > 2)
-                                                        $$.error_str = strdup($1.error_str);
+                                                    if($1->error_str != NULL)
+                                                        $$->error_str = strdup($1->error_str);
                                                     else
-                                                    if(strlen($3.error_str) > 2)
-                                                        $$.error_str = strdup($3.error_str);
+                                                    if($3->error_str != NULL)
+                                                        $$->error_str = strdup($3->error_str);
                                                     else
                                                     {
-                                                        if($1.type.entity_type == TYPE_SCALAR && $3.type.entity_type == TYPE_SCALAR && $1.type.collection == false && $3.type.collection == false)
+                                                        if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == false && $3->type.collection == false)
                                                         {
                                                             // both should be scalar
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " != " << $3.str);
-                                                            $$.grid_mapping = GRID_MAPPING_ENTITY;
-                                                            $$.array_size = 1;
-                                                            $$.type.entity_type = TYPE_BOOLEAN;
-                                                            $$.type.collection = false;
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " != " << $3->str);
+                                                            $$->grid_mapping = GRID_MAPPING_ENTITY;
+                                                            $$->array_size = 1;
+                                                            $$->type.entity_type = TYPE_BOOLEAN;
+                                                            $$->type.collection = false;
                                                         }
                                                         else
-                                                        if($1.type.entity_type == TYPE_BOOLEAN && $3.type.entity_type == TYPE_BOOLEAN && $1.type.collection == true && $3.type.collection == true)
+                                                        if($1->type.entity_type == TYPE_BOOLEAN && $3->type.entity_type == TYPE_BOOLEAN && $1->type.collection == true && $3->type.collection == true)
                                                         {
                                                             // they should be scalars
-                                                            if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                            if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
                                                             {
-                                                                LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.error_str);
+                                                                LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                                             }
                                                             else
                                                             {
-                                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $1.str << ") != (" << $3.str << ")");
-                                                                $$.grid_mapping = $1.grid_mapping;
-                                                                $$.array_size = $1.array_size;
-                                                                $$.type.entity_type = TYPE_BOOLEAN;
-                                                                $$.type.collection = true;
+                                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "(" << $1->str << ") != (" << $3->str << ")");
+                                                                $$->grid_mapping = $1->grid_mapping;
+                                                                $$->array_size = $1->array_size;
+                                                                $$->type.entity_type = TYPE_BOOLEAN;
+                                                                $$->type.collection = true;
                                                             }
                                                         }
                                                         else
                                                         {
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "!= not supported for these types");
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "!= not supported for these types");
                                                         }
                                                     }
                                                  }
@@ -1799,104 +1830,104 @@ expression: '-' expression
 
 
 /*
-plural: scalar_exprs            { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; }
-      | vector_exprs            { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; }
-      | vertices                { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; }
-      | edges                   { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; }
-      | faces                   { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; }
-      | cells                   { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; }
-      | adbs                    { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; }
-      | boolean_exprs           { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; }
+plural: scalar_exprs            { $$->str = strdup($1->str); $$->grid_mapping = $1->grid_mapping; }
+      | vector_exprs            { $$->str = strdup($1->str); $$->grid_mapping = $1->grid_mapping; }
+      | vertices                { $$->str = strdup($1->str); $$->grid_mapping = $1->grid_mapping; }
+      | edges                   { $$->str = strdup($1->str); $$->grid_mapping = $1->grid_mapping; }
+      | faces                   { $$->str = strdup($1->str); $$->grid_mapping = $1->grid_mapping; }
+      | cells                   { $$->str = strdup($1->str); $$->grid_mapping = $1->grid_mapping; }
+      | adbs                    { $$->str = strdup($1->str); $$->grid_mapping = $1->grid_mapping; }
+      | boolean_exprs           { $$->str = strdup($1->str); $$->grid_mapping = $1->grid_mapping; }
       ;
 
 
-header: VARIABLE HEADER_DECL SCALAR                          { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Scalar " << $1.str); }
-      | VARIABLE HEADER_DECL VECTOR                          { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Vector " << $1.str); }
-      | VARIABLE HEADER_DECL VERTEX                          { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Vertex " << $1.str); }
-      | VARIABLE HEADER_DECL EDGE                            { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Edge " << $1.str); }
-      | VARIABLE HEADER_DECL FACE                            { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Face " << $1.str); }
-      | VARIABLE HEADER_DECL CELL                            { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Cell " << $1.str); }
-      | VARIABLE HEADER_DECL ADB                             { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "ScalarAD " << $1.str); }
-      | VARIABLE HEADER_DECL BOOLEAN                         { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "bool " << $1.str); }
-      | VARIABLE HEADER_DECL COLLECTION OF SCALAR            { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "CollOfScalars " << $1.str); }
-      | VARIABLE HEADER_DECL COLLECTION OF VECTOR            { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "CollOfVectors " << $1.str); }
-      | VARIABLE HEADER_DECL COLLECTION OF VERTEX            { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "CollOfVertices " << $1.str); }
-      | VARIABLE HEADER_DECL COLLECTION OF EDGE              { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "CollOfEdges " << $1.str); }
-      | VARIABLE HEADER_DECL COLLECTION OF FACE              { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "CollOfFaces " << $1.str); }
-      | VARIABLE HEADER_DECL COLLECTION OF CELL              { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "CollOfCells " << $1.str); }
-      | VARIABLE HEADER_DECL COLLECTION OF ADB               { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "CollOfScalarsAD " << $1.str); }
-      | VARIABLE HEADER_DECL COLLECTION OF BOOLEAN           { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "CollOfBools " << $1.str); }
+header: VARIABLE HEADER_DECL SCALAR                          { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Scalar " << $1->str); }
+      | VARIABLE HEADER_DECL VECTOR                          { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Vector " << $1->str); }
+      | VARIABLE HEADER_DECL VERTEX                          { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Vertex " << $1->str); }
+      | VARIABLE HEADER_DECL EDGE                            { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Edge " << $1->str); }
+      | VARIABLE HEADER_DECL FACE                            { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Face " << $1->str); }
+      | VARIABLE HEADER_DECL CELL                            { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Cell " << $1->str); }
+      | VARIABLE HEADER_DECL ADB                             { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "ScalarAD " << $1->str); }
+      | VARIABLE HEADER_DECL BOOLEAN                         { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "bool " << $1->str); }
+      | VARIABLE HEADER_DECL COLLECTION OF SCALAR            { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfScalars " << $1->str); }
+      | VARIABLE HEADER_DECL COLLECTION OF VECTOR            { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfVectors " << $1->str); }
+      | VARIABLE HEADER_DECL COLLECTION OF VERTEX            { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfVertices " << $1->str); }
+      | VARIABLE HEADER_DECL COLLECTION OF EDGE              { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfEdges " << $1->str); }
+      | VARIABLE HEADER_DECL COLLECTION OF FACE              { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfFaces " << $1->str); }
+      | VARIABLE HEADER_DECL COLLECTION OF CELL              { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfCells " << $1->str); }
+      | VARIABLE HEADER_DECL COLLECTION OF ADB               { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfScalarsAD " << $1->str); }
+      | VARIABLE HEADER_DECL COLLECTION OF BOOLEAN           { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfBools " << $1->str); }
       ;
 
 
-parameter_list: header                         { $$.str = strdup($1.str); }
-              | parameter_list ',' header      { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << ", " << $3.str); }
+parameter_list: header                         { $$->str = strdup($1->str); }
+              | parameter_list ',' header      { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << ", " << $3->str); }
               ;
 
 
-commands: command1                              { $$.str = strdup($1.str); }
-        | commands end_lines command1           { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << $2.str << $3.str); }
-        |                                       { $$.str = strdup(""); }     // a function can have only the return instruction
+commands: command1                              { $$->str = strdup($1->str); }
+        | commands end_lines command1           { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << $2->str << $3->str); }
+        |                                       { $$->str = strdup(""); }     // a function can have only the return instruction
         ;
 
 
-type: SCALAR                                { $$.str = strdup("Scalar"); $$.grid_mapping = GRID_MAPPING_ENTITY; }
-    | VECTOR                                { $$.str = strdup("Vector"); $$.grid_mapping = GRID_MAPPING_ENTITY; }
-    | VERTEX                                { $$.str = strdup("Vertex"); $$.grid_mapping = GRID_MAPPING_ENTITY; }
-    | EDGE                                  { $$.str = strdup("Edge"); $$.grid_mapping = GRID_MAPPING_ENTITY; }
-    | FACE                                  { $$.str = strdup("Face"); $$.grid_mapping = GRID_MAPPING_ENTITY; }
-    | CELL                                  { $$.str = strdup("Cell"); $$.grid_mapping = GRID_MAPPING_ENTITY; }
-    | ADB                                   { $$.str = strdup("ScalarAD"); $$.grid_mapping = GRID_MAPPING_ENTITY; }
-    | BOOLEAN                               { $$.str = strdup("bool"); $$.grid_mapping = GRID_MAPPING_ENTITY; }
-    | COLLECTION OF SCALAR                  { $$.str = strdup("CollOfScalars"); $$.grid_mapping = GRID_MAPPING_ANY; }
-    | COLLECTION OF VECTOR                  { $$.str = strdup("CollOfVectors"); $$.grid_mapping = GRID_MAPPING_ANY; }
-    | COLLECTION OF VERTEX                  { $$.str = strdup("CollOfVertices"); $$.grid_mapping = GRID_MAPPING_ANY; }
-    | COLLECTION OF EDGE                    { $$.str = strdup("CollOfEdges"); $$.grid_mapping = GRID_MAPPING_ANY; }
-    | COLLECTION OF FACE                    { $$.str = strdup("CollOfFaces"); $$.grid_mapping = GRID_MAPPING_ANY; }
-    | COLLECTION OF CELL                    { $$.str = strdup("CollOfCells"); $$.grid_mapping = GRID_MAPPING_ANY; }
-    | COLLECTION OF ADB                     { $$.str = strdup("CollOfScalarsAD"); $$.grid_mapping = GRID_MAPPING_ANY; }
-    | COLLECTION OF BOOLEAN                 { $$.str = strdup("CollOfBools"); $$.grid_mapping = GRID_MAPPING_ANY; }
-    | COLLECTION OF SCALAR ON plural        { $$.str = strdup("CollOfScalars"); $$.grid_mapping = $5.grid_mapping; }
-    | COLLECTION OF VECTOR ON plural        { $$.str = strdup("CollOfVectors"); $$.grid_mapping = $5.grid_mapping; }
-    | COLLECTION OF VERTEX ON plural        { $$.str = strdup("CollOfVertices"); $$.grid_mapping = $5.grid_mapping; }
-    | COLLECTION OF EDGE ON plural          { $$.str = strdup("CollOfEdges"); $$.grid_mapping = $5.grid_mapping; }
-    | COLLECTION OF FACE ON plural          { $$.str = strdup("CollOfFaces"); $$.grid_mapping = $5.grid_mapping; }
-    | COLLECTION OF CELL ON plural          { $$.str = strdup("CollOfCells"); $$.grid_mapping = $5.grid_mapping; }
-    | COLLECTION OF ADB ON plural           { $$.str = strdup("CollOfScalarsAD"); $$.grid_mapping = $5.grid_mapping; }
-    | COLLECTION OF BOOLEAN ON plural       { $$.str = strdup("CollOfBools"); $$.grid_mapping = $5.grid_mapping; }
+type: SCALAR                                { $$->str = strdup("Scalar"); $$->grid_mapping = GRID_MAPPING_ENTITY; }
+    | VECTOR                                { $$->str = strdup("Vector"); $$->grid_mapping = GRID_MAPPING_ENTITY; }
+    | VERTEX                                { $$->str = strdup("Vertex"); $$->grid_mapping = GRID_MAPPING_ENTITY; }
+    | EDGE                                  { $$->str = strdup("Edge"); $$->grid_mapping = GRID_MAPPING_ENTITY; }
+    | FACE                                  { $$->str = strdup("Face"); $$->grid_mapping = GRID_MAPPING_ENTITY; }
+    | CELL                                  { $$->str = strdup("Cell"); $$->grid_mapping = GRID_MAPPING_ENTITY; }
+    | ADB                                   { $$->str = strdup("ScalarAD"); $$->grid_mapping = GRID_MAPPING_ENTITY; }
+    | BOOLEAN                               { $$->str = strdup("bool"); $$->grid_mapping = GRID_MAPPING_ENTITY; }
+    | COLLECTION OF SCALAR                  { $$->str = strdup("CollOfScalars"); $$->grid_mapping = GRID_MAPPING_ANY; }
+    | COLLECTION OF VECTOR                  { $$->str = strdup("CollOfVectors"); $$->grid_mapping = GRID_MAPPING_ANY; }
+    | COLLECTION OF VERTEX                  { $$->str = strdup("CollOfVertices"); $$->grid_mapping = GRID_MAPPING_ANY; }
+    | COLLECTION OF EDGE                    { $$->str = strdup("CollOfEdges"); $$->grid_mapping = GRID_MAPPING_ANY; }
+    | COLLECTION OF FACE                    { $$->str = strdup("CollOfFaces"); $$->grid_mapping = GRID_MAPPING_ANY; }
+    | COLLECTION OF CELL                    { $$->str = strdup("CollOfCells"); $$->grid_mapping = GRID_MAPPING_ANY; }
+    | COLLECTION OF ADB                     { $$->str = strdup("CollOfScalarsAD"); $$->grid_mapping = GRID_MAPPING_ANY; }
+    | COLLECTION OF BOOLEAN                 { $$->str = strdup("CollOfBools"); $$->grid_mapping = GRID_MAPPING_ANY; }
+    | COLLECTION OF SCALAR ON plural        { $$->str = strdup("CollOfScalars"); $$->grid_mapping = $5->grid_mapping; }
+    | COLLECTION OF VECTOR ON plural        { $$->str = strdup("CollOfVectors"); $$->grid_mapping = $5->grid_mapping; }
+    | COLLECTION OF VERTEX ON plural        { $$->str = strdup("CollOfVertices"); $$->grid_mapping = $5->grid_mapping; }
+    | COLLECTION OF EDGE ON plural          { $$->str = strdup("CollOfEdges"); $$->grid_mapping = $5->grid_mapping; }
+    | COLLECTION OF FACE ON plural          { $$->str = strdup("CollOfFaces"); $$->grid_mapping = $5->grid_mapping; }
+    | COLLECTION OF CELL ON plural          { $$->str = strdup("CollOfCells"); $$->grid_mapping = $5->grid_mapping; }
+    | COLLECTION OF ADB ON plural           { $$->str = strdup("CollOfScalarsAD"); $$->grid_mapping = $5->grid_mapping; }
+    | COLLECTION OF BOOLEAN ON plural       { $$->str = strdup("CollOfBools"); $$->grid_mapping = $5->grid_mapping; }
     ;
 */
 
 //////////////////////////////////////////////////////////////////////// these support input parameters as expressions with or without ON (option 1)
 /*
-value: scalar            {$$.str = strdup($1.str); $$.grid_mapping = 1;}
-     | vector            {$$.str = strdup($1.str); $$.grid_mapping = 1;}
-     | vertex            {$$.str = strdup($1.str); $$.grid_mapping = 1;}
-     | edge              {$$.str = strdup($1.str); $$.grid_mapping = 1;}
-     | face              {$$.str = strdup($1.str); $$.grid_mapping = 1;}
-     | cell              {$$.str = strdup($1.str); $$.grid_mapping = 1;}
-     | adb               {$$.str = strdup($1.str); $$.grid_mapping = 1;}
-     | boolean           {$$.str = strdup($1.str); $$.grid_mapping = 1;}
-     | scalar_exprs      {$$.str = strdup($1.grid_mapping); $$.grid_mapping = $1.grid_mapping;}
-     | vector_exprs      {$$.str = strdup($1.grid_mapping); $$.grid_mapping = $1.grid_mapping;}
-     | vertices          {$$.str = strdup($1.grid_mapping); $$.grid_mapping = $1.grid_mapping;}
-     | edges             {$$.str = strdup($1.grid_mapping); $$.grid_mapping = $1.grid_mapping;}
-     | faces             {$$.str = strdup($1.grid_mapping); $$.grid_mapping = $1.grid_mapping;}
-     | cells             {$$.str = strdup($1.grid_mapping); $$.grid_mapping = $1.grid_mapping;}
-     | adbs              {$$.str = strdup($1.grid_mapping); $$.grid_mapping = $1.grid_mapping;}
-     | booleans          {$$.str = strdup($1.grid_mapping); $$.grid_mapping = $1.grid_mapping;}
+value: scalar            {$$->str = strdup($1->str); $$->grid_mapping = 1;}
+     | vector            {$$->str = strdup($1->str); $$->grid_mapping = 1;}
+     | vertex            {$$->str = strdup($1->str); $$->grid_mapping = 1;}
+     | edge              {$$->str = strdup($1->str); $$->grid_mapping = 1;}
+     | face              {$$->str = strdup($1->str); $$->grid_mapping = 1;}
+     | cell              {$$->str = strdup($1->str); $$->grid_mapping = 1;}
+     | adb               {$$->str = strdup($1->str); $$->grid_mapping = 1;}
+     | boolean           {$$->str = strdup($1->str); $$->grid_mapping = 1;}
+     | scalar_exprs      {$$->str = strdup($1->grid_mapping); $$->grid_mapping = $1->grid_mapping;}
+     | vector_exprs      {$$->str = strdup($1->grid_mapping); $$->grid_mapping = $1->grid_mapping;}
+     | vertices          {$$->str = strdup($1->grid_mapping); $$->grid_mapping = $1->grid_mapping;}
+     | edges             {$$->str = strdup($1->grid_mapping); $$->grid_mapping = $1->grid_mapping;}
+     | faces             {$$->str = strdup($1->grid_mapping); $$->grid_mapping = $1->grid_mapping;}
+     | cells             {$$->str = strdup($1->grid_mapping); $$->grid_mapping = $1->grid_mapping;}
+     | adbs              {$$->str = strdup($1->grid_mapping); $$->grid_mapping = $1->grid_mapping;}
+     | booleans          {$$->str = strdup($1->grid_mapping); $$->grid_mapping = $1->grid_mapping;}
      ;
 
 
-values: value                   {$$.str = strdup($1.str); itoa($$.grid_mappings, $1.grid_mappings, 100);}
+values: value                   {$$->str = strdup($1->str); itoa($$->grid_mappings, $1->grid_mappings, 100);}
       | values ',' value        {
-                                  char *str = append5($1.str,',',$3.str);
-                                  $$.str = strdup(str);
+                                  char *str = append5($1->str,',',$3->str);
+                                  $$->str = strdup(str);
                                   free(str);
                                   char *temp = (char *)malloc(1000 * sizeof(char));
-                                  itoa(temp, $3.grid_mapping, 100);
-                                  char *str2 = append5($1.grid_mappings,',',temp);
-                                  $$.grid_mappings = strdup(str2);
+                                  itoa(temp, $3->grid_mapping, 100);
+                                  char *str2 = append5($1->grid_mappings,',',temp);
+                                  $$->grid_mappings = strdup(str2);
                                   free(str2);
                                 }
       ;
@@ -1905,70 +1936,70 @@ values: value                   {$$.str = strdup($1.str); itoa($$.grid_mappings,
 
 //////////////////////////////////////////////////////////////////////// these support input parameters as expressions without ON (option 2)
 /*
-value: scalar_expr       {$$.str = strdup($1.str);}
-     | vector_expr       {$$.str = strdup($1.str);}
-     | vertex            {$$.str = strdup($1.str);}
-     | edge              {$$.str = strdup($1.str);}
-     | face              {$$.str = strdup($1.str);}
-     | cell              {$$.str = strdup($1.str);}
-     | adb               {$$.str = strdup($1.str);}
-     | boolean_expr      {$$.str = strdup($1.str);}
-     | scalar_exprs      {$$.str = strdup($1.str);}
-     | vector_exprs      {$$.str = strdup($1.str);}
-     | vertices          {$$.str = strdup($1.str);}
-     | edges             {$$.str = strdup($1.str);}
-     | faces             {$$.str = strdup($1.str);}
-     | cells             {$$.str = strdup($1.str);}
-     | adbs              {$$.str = strdup($1.str);}
-     | boolean_exprs     {$$.str = strdup($1.str);}
+value: scalar_expr       {$$->str = strdup($1->str);}
+     | vector_expr       {$$->str = strdup($1->str);}
+     | vertex            {$$->str = strdup($1->str);}
+     | edge              {$$->str = strdup($1->str);}
+     | face              {$$->str = strdup($1->str);}
+     | cell              {$$->str = strdup($1->str);}
+     | adb               {$$->str = strdup($1->str);}
+     | boolean_expr      {$$->str = strdup($1->str);}
+     | scalar_exprs      {$$->str = strdup($1->str);}
+     | vector_exprs      {$$->str = strdup($1->str);}
+     | vertices          {$$->str = strdup($1->str);}
+     | edges             {$$->str = strdup($1->str);}
+     | faces             {$$->str = strdup($1->str);}
+     | cells             {$$->str = strdup($1->str);}
+     | adbs              {$$->str = strdup($1->str);}
+     | boolean_exprs     {$$->str = strdup($1->str);}
      ;
 
 
 // we need 'values' to be a structure with 2 strings: one which will store the exact output which should be displayed, and another which should store all the terms separated by an unique character ('@')
-values: value                   {$$.cCode = strdup($1.str); $$.sepCode = strdup($1.str);}
-      | values ',' value        {char *str = append5($1.str.cCode,',',$3.str); $$.cCode = strdup(str); free(str); $$.sepCode = append5($1.str.sepCode, '@', $3.str);}
+values: value                   {$$.cCode = strdup($1->str); $$.sepCode = strdup($1->str);}
+      | values ',' value        {char *str = append5($1->str.cCode,',',$3->str); $$.cCode = strdup(str); free(str); $$.sepCode = append5($1->str.sepCode, '@', $3->str);}
       ;
 */
 
 
 /*
 //////////////////////////////////////////////////////////////////////// this supports input parameters as variables
-values: VARIABLE                { $$.str = strdup($1.str); }
-      | values ',' VARIABLE     { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << ", " << $3.str); }
+values: VARIABLE                { $$->str = strdup($1->str); }
+      | values ',' VARIABLE     { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << ", " << $3->str); }
       ;
 
 
-end_lines: '\n'                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "\n"); currentLineNumber++; }
-         | '\n' end_lines       { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "\n" << $2.str); currentLineNumber++; }
-         |                      { $$.str = strdup(""); }
+end_lines: '\n'                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "\n"); currentLineNumber++; }
+         | '\n' end_lines       { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "\n" << $2->str); currentLineNumber++; }
+         |                      { $$->str = strdup(""); }
          ;
 
 
 return_instr: RETURN boolean_expr '?' VARIABLE ':' VARIABLE
                   {
-                    if(check5($4.str) == false || check5($6.str) == false)
+                    if(check5($4->str) == false || check5($6->str) == false)
                     {
-                        $$.str = strdup("Invalid");
-                        $$.grid_mapping = GRID_MAPPING_INVALID;   // we force it to generate an error message at the function's assignment
+                        $$->str = strdup("Invalid");
+                        $$->grid_mapping = GRID_MAPPING_INVALID;   // we force it to generate an error message at the function's assignment
                     }
                     else
                     {
-                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "return " << $2.str << " ? " << $4.str << " : " << $6.str);
-                        $$.grid_mapping = getSize3($4.str);
+                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "return " << $2->str << " ? " << $4->str << " : " << $6->str);
+                        $$->grid_mapping = getSize3($4->str);
                     }
                   }
 
             | RETURN VARIABLE
                   {
-                    if(check5($2.str) == false)
+                    if(check5($2->str) == false)
                     {
-                        $$.str = strdup("Invalid");
-                        $$.grid_mapping = GRID_MAPPING_INVALID;   // we force it to generate an error message at the function's assignment
+                        $$->str = strdup("Invalid");
+                        $$->grid_mapping = GRID_MAPPING_INVALID;   // we force it to generate an error message at the function's assignment
                     }
                     else
                     {
-                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "return " << $2.str << ";");
-                        $$.grid_mapping = getSize3($2.str);
+                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "return " << $2->str << ";");
+                        $$->grid_mapping = getSize3($2->str);
                     }
                   }
             ;
@@ -1977,8 +2008,8 @@ return_instr: RETURN boolean_expr '?' VARIABLE ':' VARIABLE
 function_start: VARIABLE '=' end_lines '{'
                                             {
                                               insideFunction = true;
-                                              currentFunctionIndex = getIndex2($1.str);
-                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " = " << $3.str << "{");
+                                              currentFunctionIndex = getIndex2($1->str);
+                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << " = " << $3->str << "{");
                                             }
 
 
@@ -1989,7 +2020,7 @@ function_declaration: VARIABLE ':' FUNCTION '(' parameter_list ')' RET type
                                                 bool declaredBefore = false;
 
                                                 for(i = 0; i < funNo; i++)
-                                                    if(strcmp(fun[i].name.c_str(), $1.str) == 0)
+                                                    if(strcmp(fun[i].name.c_str(), $1->str) == 0)
                                                     {
                                                         declaredBefore = true;
                                                         break;
@@ -1997,17 +2028,17 @@ function_declaration: VARIABLE ':' FUNCTION '(' parameter_list ')' RET type
 
                                                 if(declaredBefore == true)
                                                 {
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "error at line " << currentLineNumber << ": The function '" << $1.str << "' is redeclared");
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "error at line " << currentLineNumber << ": The function '" << $1->str << "' is redeclared");
                                                 }
                                                 else
                                                 {
-                                                        fun[funNo++].name = strdup($1.str);
-                                                        fun[funNo-1].type = $8.type;
-                                                        fun[funNo-1].grid_mapping = $8.grid_mapping;
+                                                        fun[funNo++].name = strdup($1->str);
+                                                        fun[funNo-1].type = $8->type;
+                                                        fun[funNo-1].grid_mapping = $8->grid_mapping;
                                                         fun[funNo-1].noLocalVariables = 0;
                                                         fun[funNo-1].noParam = 0;
 
-                                                        char *cs1 = strdup($5.str);    // we need to make a copy, because the strtok function modifies the given string
+                                                        char *cs1 = strdup($5->str);    // we need to make a copy, because the strtok function modifies the given string
                                                         char *pch;
                                                         char *pch2;
                                                         char *cs2;
@@ -2029,14 +2060,14 @@ function_declaration: VARIABLE ':' FUNCTION '(' parameter_list ')' RET type
                                                           fun[funNo-1].headerVariables[fun[funNo-1].noParam-1].type = getVariableType(copy);    // the string we have as a parameter list is already transformed in C++, but we need the types' keywords from Equelle
                                                           fun[funNo-1].headerVariables[fun[funNo-1].noParam-1].grid_mapping = getGridMapping(copy);  // the string we have as a parameter list is already transformed in C++, but we need the types' lengths
                                                           fun[funNo-1].headerVariables[fun[funNo-1].noParam-1].assigned = true;
-                                                          fun[funNo-1].signature = strdup($5.str);
+                                                          fun[funNo-1].signature = strdup($5->str);
 
                                                           pch = strtok(NULL, ",");
                                                         }
 
                                                         fun[funNo-1].assigned = false;
-                                                        // STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $8.str << " " << $1.str << "(" << $5.str << ")" << ";");
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "");
+                                                        // STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $8->str << " " << $1->str << "(" << $5->str << ")" << ";");
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "");
                                                 }
                                             }
                     ;
@@ -2049,7 +2080,7 @@ function_assignment: function_start end_lines commands end_lines return_instr en
                                                 bool declaredBefore = false;
 
                                                 for(i = 0; i < funNo; i++)
-                                                    if(strcmp(fun[i].name.c_str(), extract($1.str)) == 0)
+                                                    if(strcmp(fun[i].name.c_str(), extract($1->str)) == 0)
                                                     {
                                                         declaredBefore = true;
                                                         break;
@@ -2060,18 +2091,18 @@ function_assignment: function_start end_lines commands end_lines return_instr en
                                                       {
                                                           stringstream ss;
                                                           ss << "error at line " << currentLineNumber << ": The function '" << fun[i].name << "' is reassigned";
-                                                          $$.str = strdup(ss.str().c_str());
+                                                          $$->str = strdup(ss.str().c_str());
                                                       }
                                                       else
                                                       {
-                                                          if($5.grid_mapping != GRID_MAPPING_INVALID)
+                                                          if($5->grid_mapping != GRID_MAPPING_INVALID)
                                                           {
-                                                              // STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << $2.str << $3.str << $4.str << $5.str << $6.str << "}");
-                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "auto " << fun[i].name << "[&](" << fun[i].signature << ") -> " << getStringFromVariableType(fun[i].type) << " {\n" << $2.str << $3.str << $4.str << $5.str << $6.str << "}");
-                                                              if(fun[i].grid_mapping == GRID_MAPPING_ANY && $5.grid_mapping != GRID_MAPPING_ANY)
-                                                                  fun[i].grid_mapping = $5.grid_mapping;
+                                                              // STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << $2->str << $3->str << $4->str << $5->str << $6->str << "}");
+                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "auto " << fun[i].name << "[&](" << fun[i].signature << ") -> " << getStringFromVariableType(fun[i].type) << " {\n" << $2->str << $3->str << $4->str << $5->str << $6->str << "}");
+                                                              if(fun[i].grid_mapping == GRID_MAPPING_ANY && $5->grid_mapping != GRID_MAPPING_ANY)
+                                                                  fun[i].grid_mapping = $5->grid_mapping;
                                                               else
-                                                                  if(fun[i].grid_mapping != GRID_MAPPING_ANY && $5.grid_mapping == GRID_MAPPING_ANY)
+                                                                  if(fun[i].grid_mapping != GRID_MAPPING_ANY && $5->grid_mapping == GRID_MAPPING_ANY)
                                                                       {;}   // do nothing (the function must keep its return size from the definition)
                                                                   else
                                                                       {;}   // if both are ANY, the function's return type is already correct; if none are ANY, then they should already be equal, otherwise the instruction flow wouldn't enter on this branch
@@ -2079,13 +2110,13 @@ function_assignment: function_start end_lines commands end_lines return_instr en
                                                           }
                                                           else
                                                           {
-                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "error at line " << currentLineNumber << ": At least one of the return variables does not exist within the function or the return type of the function '" << fun[i].name << "' from its assignment differs than the length of the return type from the function's definition");
+                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "error at line " << currentLineNumber << ": At least one of the return variables does not exist within the function or the return type of the function '" << fun[i].name << "' from its assignment differs than the length of the return type from the function's definition");
                                                           }
 
                                                       }
                                                 else
                                                 {
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "error at line " << currentLineNumber << ": The function '" << extract($1.str) <<"' must be declared before being assigned");
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "error at line " << currentLineNumber << ": The function '" << extract($1->str) <<"' must be declared before being assigned");
                                                 }
 
                                                 insideFunction = false;
@@ -2114,7 +2145,7 @@ tuple_declaration_with_assignment: VARIABLE ':' TUPLE OF '(' type ')' '=' '(' en
 
 
 
-output: OUTPUT '(' VARIABLE ')'       { string out = output_function($3.str); $$.str = strdup(out.c_str()); }
+output: OUTPUT '(' VARIABLE ')'       { string out = output_function($3->str); $$->str = strdup(out.c_str()); }
 
 
 
@@ -2123,190 +2154,194 @@ output: OUTPUT '(' VARIABLE ')'       { string out = output_function($3.str); $$
 
 
 
-singular_declaration: VARIABLE ':' SCALAR               { $$.str = declaration_function($1.str, TYPE_SCALAR, false); }
-                    | VARIABLE ':' VECTOR               { $$.str = declaration_function($1.str, TYPE_VECTOR, false); }
-                    | VARIABLE ':' VERTEX               { $$.str = declaration_function($1.str, TYPE_VERTEX, false); }
-                    | VARIABLE ':' EDGE                 { $$.str = declaration_function($1.str, TYPE_EDGE, false); }
-                    | VARIABLE ':' FACE                 { $$.str = declaration_function($1.str, TYPE_FACE, false); }
-                    | VARIABLE ':' CELL                 { $$.str = declaration_function($1.str, TYPE_CELL, false); }
-                    | VARIABLE ':' ADB                  { $$.str = declaration_function($1.str, TYPE_SCALAR_AD, false); }
-                    | VARIABLE ':' BOOLEAN              { $$.str = declaration_function($1.str, TYPE_BOOLEAN, false); }
+singular_declaration: VARIABLE ':' SCALAR               { $$->str = declaration_function($1->str, TYPE_SCALAR, false); }
+                    | VARIABLE ':' VECTOR               { $$->str = declaration_function($1->str, TYPE_VECTOR, false); }
+                    | VARIABLE ':' VERTEX               { $$->str = declaration_function($1->str, TYPE_VERTEX, false); }
+                    | VARIABLE ':' EDGE                 { $$->str = declaration_function($1->str, TYPE_EDGE, false); }
+                    | VARIABLE ':' FACE                 { $$->str = declaration_function($1->str, TYPE_FACE, false); }
+                    | VARIABLE ':' CELL                 { $$->str = declaration_function($1->str, TYPE_CELL, false); }
+                    | VARIABLE ':' ADB                  { $$->str = declaration_function($1->str, TYPE_SCALAR_AD, false); }
+                    | VARIABLE ':' BOOLEAN              { $$->str = declaration_function($1->str, TYPE_BOOLEAN, false); }
                     ;
 
 
-plural_declaration: VARIABLE ':' COLLECTION OF SCALAR       { $$.str = declaration_function($1.str, TYPE_SCALAR, true); }
-                  | VARIABLE ':' COLLECTION OF VECTOR       { $$.str = declaration_function($1.str, TYPE_VECTOR, true); }
-                  | VARIABLE ':' COLLECTION OF VERTEX       { $$.str = declaration_function($1.str, TYPE_VERTEX, true); }
-                  | VARIABLE ':' COLLECTION OF EDGE         { $$.str = declaration_function($1.str, TYPE_EDGE, true); }
-                  | VARIABLE ':' COLLECTION OF FACE         { $$.str = declaration_function($1.str, TYPE_FACE, true); }
-                  | VARIABLE ':' COLLECTION OF CELL         { $$.str = declaration_function($1.str, TYPE_CELL, true); }
-                  | VARIABLE ':' COLLECTION OF ADB          { $$.str = declaration_function($1.str, TYPE_SCALAR_AD, true); }
-                  | VARIABLE ':' COLLECTION OF BOOLEAN      { $$.str = declaration_function($1.str, TYPE_BOOLEAN, true); }
+plural_declaration: VARIABLE ':' COLLECTION OF SCALAR       { $$->str = declaration_function($1->str, TYPE_SCALAR, true); }
+                  | VARIABLE ':' COLLECTION OF VECTOR       { $$->str = declaration_function($1->str, TYPE_VECTOR, true); }
+                  | VARIABLE ':' COLLECTION OF VERTEX       { $$->str = declaration_function($1->str, TYPE_VERTEX, true); }
+                  | VARIABLE ':' COLLECTION OF EDGE         { $$->str = declaration_function($1->str, TYPE_EDGE, true); }
+                  | VARIABLE ':' COLLECTION OF FACE         { $$->str = declaration_function($1->str, TYPE_FACE, true); }
+                  | VARIABLE ':' COLLECTION OF CELL         { $$->str = declaration_function($1->str, TYPE_CELL, true); }
+                  | VARIABLE ':' COLLECTION OF ADB          { $$->str = declaration_function($1->str, TYPE_SCALAR_AD, true); }
+                  | VARIABLE ':' COLLECTION OF BOOLEAN      { $$->str = declaration_function($1->str, TYPE_BOOLEAN, true); }
                   ;
 
 
 //TODO: verify that "expression" is a collection
 extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON expression
                                 {
-                                  if(strlen($7.error_str) > 2)
-                                      $$.str = strdup($7.error_str);
+                                  if($7->error_str != NULL)
+                                      $$->str = strdup($7->error_str);
                                   else
                                   {
-                                      if($7.type.collection == false)
-                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration: should be ON collection");
+                                      if($7->type.collection == false)
+                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration: should be ON collection");
                                       else
                                       {
-                                          string out = extended_plural_declaration_function($1.str, TYPE_SCALAR, $7.str, $7.grid_mapping);
-                                          $$.str = strdup(out.c_str());
+                                          string out = extended_plural_declaration_function($1->str, TYPE_SCALAR, $7->str, $7->grid_mapping);
+                                          $$->str = strdup(out.c_str());
                                       }
                                   }
                                 }
                            | VARIABLE ':' COLLECTION OF VECTOR ON expression
                                 {
-                                  if(strlen($7.error_str) > 2)
-                                      $$.str = strdup($7.error_str);
+                                  if($7->error_str != NULL)
+                                      $$->str = strdup($7->error_str);
                                   else
                                   {
-                                      if($7.type.collection == false)
-                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration: should be ON collection");
+                                      if($7->type.collection == false)
+                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration: should be ON collection");
                                       else
                                       {
-                                          string out = extended_plural_declaration_function($1.str, TYPE_VECTOR, $7.str, $7.grid_mapping);
-                                          $$.str = strdup(out.c_str());
+                                          string out = extended_plural_declaration_function($1->str, TYPE_VECTOR, $7->str, $7->grid_mapping);
+                                          $$->str = strdup(out.c_str());
                                       }
                                   }
                                 }
                            | VARIABLE ':' COLLECTION OF VERTEX ON expression
                                 {
-                                  if(strlen($7.error_str) > 2)
-                                      $$.str = strdup($7.error_str);
+                                  if($7->error_str != NULL)
+                                      $$->str = strdup($7->error_str);
                                   else
                                   {
-                                      if($7.type.collection == false)
-                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration: should be ON collection");
+                                      if($7->type.collection == false)
+                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration: should be ON collection");
                                       else
                                       {
-                                          string out = extended_plural_declaration_function($1.str, TYPE_VERTEX, $7.str, $7.grid_mapping);
-                                          $$.str = strdup(out.c_str());
+                                          string out = extended_plural_declaration_function($1->str, TYPE_VERTEX, $7->str, $7->grid_mapping);
+                                          $$->str = strdup(out.c_str());
                                       }
                                   }
                                 }
                            | VARIABLE ':' COLLECTION OF EDGE ON expression
                                 {
-                                  if(strlen($7.error_str) > 2)
-                                      $$.str = strdup($7.error_str);
+                                  if($7->error_str != NULL)
+                                      $$->str = strdup($7->error_str);
                                   else
                                   {
-                                      if($7.type.collection == false)
-                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration: should be ON collection");
+                                      if($7->type.collection == false)
+                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration: should be ON collection");
                                       else
                                       {
-                                          string out = extended_plural_declaration_function($1.str, TYPE_EDGE, $7.str, $7.grid_mapping);
-                                          $$.str = strdup(out.c_str());
+                                          string out = extended_plural_declaration_function($1->str, TYPE_EDGE, $7->str, $7->grid_mapping);
+                                          $$->str = strdup(out.c_str());
                                       }
                                   }
                                 }
                            | VARIABLE ':' COLLECTION OF FACE ON expression
                                 {
-                                  if(strlen($7.error_str) > 2)
-                                      $$.str = strdup($7.error_str);
+                                  if($7->error_str != NULL)
+                                      $$->str = strdup($7->error_str);
                                   else
                                   {
-                                      if($7.type.collection == false)
-                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration: should be ON collection");
+                                      if($7->type.collection == false)
+                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration: should be ON collection");
                                       else
                                       {
-                                          string out = extended_plural_declaration_function($1.str, TYPE_FACE, $7.str, $7.grid_mapping);
-                                          $$.str = strdup(out.c_str());
+                                          string out = extended_plural_declaration_function($1->str, TYPE_FACE, $7->str, $7->grid_mapping);
+                                          $$->str = strdup(out.c_str());
                                       }
                                   }
                                 }
                            | VARIABLE ':' COLLECTION OF CELL ON expression
                                 {
-                                  if(strlen($7.error_str) > 2)
-                                      $$.str = strdup($7.error_str);
+                                  if($7->error_str != NULL)
+                                      $$->str = strdup($7->error_str);
                                   else
                                   {
-                                      if($7.type.collection == false)
-                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration: should be ON collection");
+                                      if($7->type.collection == false)
+                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration: should be ON collection");
                                       else
                                       {
-                                          string out = extended_plural_declaration_function($1.str, TYPE_CELL, $7.str, $7.grid_mapping);
-                                          $$.str = strdup(out.c_str());
+                                          string out = extended_plural_declaration_function($1->str, TYPE_CELL, $7->str, $7->grid_mapping);
+                                          $$->str = strdup(out.c_str());
                                       }
                                   }
                                 }
                            | VARIABLE ':' COLLECTION OF ADB ON expression
                                 {
-                                  if(strlen($7.error_str) > 2)
-                                      $$.str = strdup($7.error_str);
+                                  if($7->error_str != NULL)
+                                      $$->str = strdup($7->error_str);
                                   else
                                   {
-                                      if($7.type.collection == false)
-                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration: should be ON collection");
+                                      if($7->type.collection == false)
+                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration: should be ON collection");
                                       else
                                       {
-                                          string out = extended_plural_declaration_function($1.str, TYPE_SCALAR_AD, $7.str, $7.grid_mapping);
-                                          $$.str = strdup(out.c_str());
+                                          string out = extended_plural_declaration_function($1->str, TYPE_SCALAR_AD, $7->str, $7->grid_mapping);
+                                          $$->str = strdup(out.c_str());
                                       }
                                   }
                                 }
                            | VARIABLE ':' COLLECTION OF BOOLEAN ON expression
                                 {
-                                  if(strlen($7.error_str) > 2)
-                                      $$.str = strdup($7.error_str);
+                                  if($7->error_str != NULL)
+                                      $$->str = strdup($7->error_str);
                                   else
                                   {
-                                      if($7.type.collection == false)
-                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration: should be ON collection");
+                                      if($7->type.collection == false)
+                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration: should be ON collection");
                                       else
                                       {
-                                          string out = extended_plural_declaration_function($1.str, TYPE_BOOLEAN, $7.str, $7.grid_mapping);
-                                          $$.str = strdup(out.c_str());
+                                          string out = extended_plural_declaration_function($1->str, TYPE_BOOLEAN, $7->str, $7->grid_mapping);
+                                          $$->str = strdup(out.c_str());
                                       }
                                   }
                                 }
                            ;
 
 
-declaration: singular_declaration           { char* out = strdup($1.str); $$.str = out; }
-           | plural_declaration             { char* out = strdup($1.str); $$.str = out; }
-           | extended_plural_declaration    { char* out = strdup($1.str); $$.str = out; }
+declaration: singular_declaration           { char* out = strdup($1->str); $$->str = out; }
+           | plural_declaration             { char* out = strdup($1->str); $$->str = out; }
+           | extended_plural_declaration    { char* out = strdup($1->str); $$->str = out; }
            ;
 
 
-assignment: VARIABLE '=' USS                      { string out = USS_assignment_function($1.str); $$.str = strdup(out.c_str()); }
-          | VARIABLE '=' USSWD '(' number ')'     { string out = USSWD_assignment_function($1.str, $5.str); $$.str = strdup(out.c_str()); }
+assignment: VARIABLE '=' USS                      { 
+					string out = USS_assignment_function($1->str); $$->str = strdup(out.c_str());
+			}
+          | VARIABLE '=' USSWD '(' number ')'     { 
+					string out = USSWD_assignment_function($1->str, $5->str); $$->str = strdup(out.c_str());
+			}
           | VARIABLE '=' USCOS '(' expression ')'
                                                   {
-                                                    if(strlen($5.error_str) > 2)
-                                                        $$.str = strdup($5.error_str);
+                                                    if($5->error_str != NULL)
+                                                        $$->str = strdup($5->error_str);
                                                     else
                                                     {
-                                                        if($5.type.collection == false)
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid assignment: USCOS should receive a collection");
+                                                        if($5->type.collection == false)
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid assignment: USCOS should receive a collection");
                                                         else
                                                         {
-                                                            string out = USCOS_assignment_function($1.str, $5.str, $5.grid_mapping);
-                                                            $$.str = strdup(out.c_str());
+                                                            string out = USCOS_assignment_function($1->str, $5->str, $5->grid_mapping);
+                                                            $$->str = strdup(out.c_str());
                                                         }
                                                     }
                                                   }
           | VARIABLE '=' expression
                                               					   {
-                        																		  if(strlen($3.error_str) > 2)
-                                                                  $$.str = strdup($3.error_str);
+                        									if($3->error_str != NULL)
+                                                                  $$->str = strdup($3->error_str);
                                                               else
                                                               {
-                                                                  if($3.type.collection == false)
+                                                                  if($3->type.collection == false)
                                                                   {
-                                                                      string out = singular_assignment_function($1.str, $3);
-                                                                      $$.str = strdup(out.c_str());
+                                                                      string out = singular_assignment_function($1->str, $3);
+                                                                      $$->str = strdup(out.c_str());
                                                                   }
                                                                   else
                                                                   {
-                                                                      string out = plural_assignment_function($1.str, $3);
-                                                                      $$.str = strdup(out.c_str());
+                                                                      string out = plural_assignment_function($1->str, $3);
+                                                                      $$->str = strdup(out.c_str());
                                                                   }
                         																		  }
                                               					   }
@@ -2316,261 +2351,261 @@ assignment: VARIABLE '=' USS                      { string out = USS_assignment_
 //TODO: verify that "expression" is not a collection
 singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' expression
                                                           {
-                                                            if(strlen($5.error_str) > 2)
-                                                                $$.str = strdup($5.error_str);
+                                                            if($5->error_str != NULL)
+                                                                $$->str = strdup($5->error_str);
                                                             else
                                                             {
-                                                                if($5.type.collection == true)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: the variable should not be assigned to a collection");
+                                                                if($5->type.collection == true)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: the variable should not be assigned to a collection");
                                                                 else
                                                                 {
-                                                                    string out = declaration_with_assignment_function($1.str, $5);
-                                                                    $$.str = strdup(out.c_str());
+                                                                    string out = declaration_with_assignment_function($1->str, $5);
+                                                                    $$->str = strdup(out.c_str());
                                                                 }
                                                             }
                                                           }
                                     | VARIABLE ':' VECTOR '=' expression
                                                           {
-                                                            if(strlen($5.error_str) > 2)
-                                                                $$.str = strdup($5.error_str);
+                                                            if($5->error_str != NULL)
+                                                                $$->str = strdup($5->error_str);
                                                             else
                                                             {
-                                                                if($5.type.collection == true)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: the variable should not be assigned to a collection");
+                                                                if($5->type.collection == true)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: the variable should not be assigned to a collection");
                                                                 else
                                                                 {
-                                                                    string out = declaration_with_assignment_function($1.str, $5);
-                                                                    $$.str = strdup(out.c_str());
+                                                                    string out = declaration_with_assignment_function($1->str, $5);
+                                                                    $$->str = strdup(out.c_str());
                                                                 }
                                                             }
                                                           }
                                     | VARIABLE ':' VERTEX '=' expression
                                                           {
-                                                            if(strlen($5.error_str) > 2)
-                                                                $$.str = strdup($5.error_str);
+                                                            if($5->error_str != NULL)
+                                                                $$->str = strdup($5->error_str);
                                                             else
                                                             {
-                                                                if($5.type.collection == true)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: the variable should not be assigned to a collection");
+                                                                if($5->type.collection == true)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: the variable should not be assigned to a collection");
                                                                 else
                                                                 {
-                                                                    string out = declaration_with_assignment_function($1.str, $5);
-                                                                    $$.str = strdup(out.c_str());
+                                                                    string out = declaration_with_assignment_function($1->str, $5);
+                                                                    $$->str = strdup(out.c_str());
                                                                 }
                                                             }
                                                           }
                                     | VARIABLE ':' EDGE '=' expression
                                                           {
-                                                            if(strlen($5.error_str) > 2)
-                                                                $$.str = strdup($5.error_str);
+                                                            if($5->error_str != NULL)
+                                                                $$->str = strdup($5->error_str);
                                                             else
                                                             {
-                                                                if($5.type.collection == true)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: the variable should not be assigned to a collection");
+                                                                if($5->type.collection == true)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: the variable should not be assigned to a collection");
                                                                 else
                                                                 {
-                                                                    string out = declaration_with_assignment_function($1.str, $5);
-                                                                    $$.str = strdup(out.c_str());
+                                                                    string out = declaration_with_assignment_function($1->str, $5);
+                                                                    $$->str = strdup(out.c_str());
                                                                 }
                                                             }
                                                           }
                                     | VARIABLE ':' FACE '=' expression
                                                           {
-                                                            if(strlen($5.error_str) > 2)
-                                                                $$.str = strdup($5.error_str);
+                                                            if($5->error_str != NULL)
+                                                                $$->str = strdup($5->error_str);
                                                             else
                                                             {
-                                                                if($5.type.collection == true)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: the variable should not be assigned to a collection");
+                                                                if($5->type.collection == true)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: the variable should not be assigned to a collection");
                                                                 else
                                                                 {
-                                                                    string out = declaration_with_assignment_function($1.str, $5);
-                                                                    $$.str = strdup(out.c_str());
+                                                                    string out = declaration_with_assignment_function($1->str, $5);
+                                                                    $$->str = strdup(out.c_str());
                                                                 }
                                                             }
                                                           }
                                     | VARIABLE ':' CELL '=' expression
                                                           {
-                                                            if(strlen($5.error_str) > 2)
-                                                                $$.str = strdup($5.error_str);
+                                                            if($5->error_str != NULL)
+                                                                $$->str = strdup($5->error_str);
                                                             else
                                                             {
-                                                                if($5.type.collection == true)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: the variable should not be assigned to a collection");
+                                                                if($5->type.collection == true)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: the variable should not be assigned to a collection");
                                                                 else
                                                                 {
-                                                                    string out = declaration_with_assignment_function($1.str, $5);
-                                                                    $$.str = strdup(out.c_str());
+                                                                    string out = declaration_with_assignment_function($1->str, $5);
+                                                                    $$->str = strdup(out.c_str());
                                                                 }
                                                             }
                                                           }
                                     | VARIABLE ':' ADB '=' expression
                                                           {
-                                                            if(strlen($5.error_str) > 2)
-                                                                $$.str = strdup($5.error_str);
+                                                            if($5->error_str != NULL)
+                                                                $$->str = strdup($5->error_str);
                                                             else
                                                             {
-                                                                if($5.type.collection == true)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: the variable should not be assigned to a collection");
+                                                                if($5->type.collection == true)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: the variable should not be assigned to a collection");
                                                                 else
                                                                 {
-                                                                    string out = declaration_with_assignment_function($1.str, $5);
-                                                                    $$.str = strdup(out.c_str());
+                                                                    string out = declaration_with_assignment_function($1->str, $5);
+                                                                    $$->str = strdup(out.c_str());
                                                                 }
                                                             }
                                                           }
                                     | VARIABLE ':' BOOLEAN '=' expression
                                                           {
-                                                            if(strlen($5.error_str) > 2)
-                                                                $$.str = strdup($5.error_str);
+                                                            if($5->error_str != NULL)
+                                                                $$->str = strdup($5->error_str);
                                                             else
                                                             {
-                                                                if($5.type.collection == true)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: the variable should not be assigned to a collection");
+                                                                if($5->type.collection == true)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: the variable should not be assigned to a collection");
                                                                 else
                                                                 {
-                                                                    string out = declaration_with_assignment_function($1.str, $5);
-                                                                    $$.str = strdup(out.c_str());
+                                                                    string out = declaration_with_assignment_function($1->str, $5);
+                                                                    $$->str = strdup(out.c_str());
                                                                 }
                                                             }
                                                           }
-                                    | VARIABLE ':' SCALAR '=' USS                   { string out = USS_declaration_with_assignment_function($1.str); $$.str = strdup(out.c_str()); }
-                                    | VARIABLE ':' SCALAR '=' USSWD '(' number ')'  { string out = USSWD_declaration_with_assignment_function($1.str, $7.str); $$.str = strdup(out.c_str()); }
+                                    | VARIABLE ':' SCALAR '=' USS                   { string out = USS_declaration_with_assignment_function($1->str); $$->str = strdup(out.c_str()); }
+                                    | VARIABLE ':' SCALAR '=' USSWD '(' number ')'  { string out = USSWD_declaration_with_assignment_function($1->str, $7->str); $$->str = strdup(out.c_str()); }
                                     ;
 
 
 plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' expression
                                                           {
-                                                            if(strlen($7.error_str) > 2)
-                                                                $$.str = strdup($7.error_str);
+                                                            if($7->error_str != NULL)
+                                                                $$->str = strdup($7->error_str);
                                                             else
                                                             {
-                                                                if($7.type.collection == false)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: the variable should be assigned to a collection");
+                                                                if($7->type.collection == false)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: the variable should be assigned to a collection");
                                                                 else
                                                                 {
-                                                                    string out = declaration_with_assignment_function($1.str, $7);
-                                                                    $$.str = strdup(out.c_str());
+                                                                    string out = declaration_with_assignment_function($1->str, $7);
+                                                                    $$->str = strdup(out.c_str());
                                                                 }
                                                             }
                                                           }
                                   | VARIABLE ':' COLLECTION OF VECTOR '=' expression
                                                           {
-                                                            if(strlen($7.error_str) > 2)
-                                                                $$.str = strdup($7.error_str);
+                                                            if($7->error_str != NULL)
+                                                                $$->str = strdup($7->error_str);
                                                             else
                                                             {
-                                                                if($7.type.collection == false)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: the variable should be assigned to a collection");
+                                                                if($7->type.collection == false)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: the variable should be assigned to a collection");
                                                                 else
                                                                 {
-                                                                    string out = declaration_with_assignment_function($1.str, $7);
-                                                                    $$.str = strdup(out.c_str());
+                                                                    string out = declaration_with_assignment_function($1->str, $7);
+                                                                    $$->str = strdup(out.c_str());
                                                                 }
                                                             }
                                                           }
                                   | VARIABLE ':' COLLECTION OF VERTEX '=' expression
                                                           {
-                                                            if(strlen($7.error_str) > 2)
-                                                                $$.str = strdup($7.error_str);
+                                                            if($7->error_str != NULL)
+                                                                $$->str = strdup($7->error_str);
                                                             else
                                                             {
-                                                                if($7.type.collection == false)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: the variable should be assigned to a collection");
+                                                                if($7->type.collection == false)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: the variable should be assigned to a collection");
                                                                 else
                                                                 {
-                                                                    string out = declaration_with_assignment_function($1.str, $7);
-                                                                    $$.str = strdup(out.c_str());
+                                                                    string out = declaration_with_assignment_function($1->str, $7);
+                                                                    $$->str = strdup(out.c_str());
                                                                 }
                                                             }
                                                           }
                                   | VARIABLE ':' COLLECTION OF EDGE '=' expression
                                                           {
-                                                            if(strlen($7.error_str) > 2)
-                                                                $$.str = strdup($7.error_str);
+                                                            if($7->error_str != NULL)
+                                                                $$->str = strdup($7->error_str);
                                                             else
                                                             {
-                                                                if($7.type.collection == false)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: the variable should be assigned to a collection");
+                                                                if($7->type.collection == false)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: the variable should be assigned to a collection");
                                                                 else
                                                                 {
-                                                                    string out = declaration_with_assignment_function($1.str, $7);
-                                                                    $$.str = strdup(out.c_str());
+                                                                    string out = declaration_with_assignment_function($1->str, $7);
+                                                                    $$->str = strdup(out.c_str());
                                                                 }
                                                             }
                                                           }
                                   | VARIABLE ':' COLLECTION OF FACE '=' expression
                                                           {
-                                                            if(strlen($7.error_str) > 2)
-                                                                $$.str = strdup($7.error_str);
+                                                            if($7->error_str != NULL)
+                                                                $$->str = strdup($7->error_str);
                                                             else
                                                             {
-                                                                if($7.type.collection == false)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: the variable should be assigned to a collection");
+                                                                if($7->type.collection == false)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: the variable should be assigned to a collection");
                                                                 else
                                                                 {
-                                                                    string out = declaration_with_assignment_function($1.str, $7);
-                                                                    $$.str = strdup(out.c_str());
+                                                                    string out = declaration_with_assignment_function($1->str, $7);
+                                                                    $$->str = strdup(out.c_str());
                                                                 }
                                                             }
                                                           }
                                   | VARIABLE ':' COLLECTION OF CELL '=' expression
                                                           {
-                                                            if(strlen($7.error_str) > 2)
-                                                                $$.str = strdup($7.error_str);
+                                                            if($7->error_str != NULL)
+                                                                $$->str = strdup($7->error_str);
                                                             else
                                                             {
-                                                                if($7.type.collection == false)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: the variable should be assigned to a collection");
+                                                                if($7->type.collection == false)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: the variable should be assigned to a collection");
                                                                 else
                                                                 {
-                                                                    string out = declaration_with_assignment_function($1.str, $7);
-                                                                    $$.str = strdup(out.c_str());
+                                                                    string out = declaration_with_assignment_function($1->str, $7);
+                                                                    $$->str = strdup(out.c_str());
                                                                 }
                                                             }
                                                           }
                                   | VARIABLE ':' COLLECTION OF ADB '=' expression
                                                           {
-                                                            if(strlen($7.error_str) > 2)
-                                                                $$.str = strdup($7.error_str);
+                                                            if($7->error_str != NULL)
+                                                                $$->str = strdup($7->error_str);
                                                             else
                                                             {
-                                                                if($7.type.collection == false)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: the variable should be assigned to a collection");
+                                                                if($7->type.collection == false)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: the variable should be assigned to a collection");
                                                                 else
                                                                 {
-                                                                    string out = declaration_with_assignment_function($1.str, $7);
-                                                                    $$.str = strdup(out.c_str());
+                                                                    string out = declaration_with_assignment_function($1->str, $7);
+                                                                    $$->str = strdup(out.c_str());
                                                                 }
                                                             }
                                                           }
                                   | VARIABLE ':' COLLECTION OF BOOLEAN '=' expression
                                                           {
-                                                            if(strlen($7.error_str) > 2)
-                                                                $$.str = strdup($7.error_str);
+                                                            if($7->error_str != NULL)
+                                                                $$->str = strdup($7->error_str);
                                                             else
                                                             {
-                                                                if($7.type.collection == false)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: the variable should be assigned to a collection");
+                                                                if($7->type.collection == false)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: the variable should be assigned to a collection");
                                                                 else
                                                                 {
-                                                                    string out = declaration_with_assignment_function($1.str, $7);
-                                                                    $$.str = strdup(out.c_str());
+                                                                    string out = declaration_with_assignment_function($1->str, $7);
+                                                                    $$->str = strdup(out.c_str());
                                                                 }
                                                             }
                                                           }
                                   | VARIABLE ':' COLLECTION OF SCALAR '=' USCOS '(' expression ')'
                                                           {
-                                                            if(strlen($9.error_str) > 2)
-                                                                $$.str = strdup($9.error_str);
+                                                            if($9->error_str != NULL)
+                                                                $$->str = strdup($9->error_str);
                                                             else
                                                             {
-                                                                if($9.type.collection == false)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: USCOS should receive a collection");
+                                                                if($9->type.collection == false)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: USCOS should receive a collection");
                                                                 else
                                                                 {
-                                                                    string out = USCOS_declaration_with_assignment_function($1.str, $9.str, $9.grid_mapping);
-                                                                    $$.str = strdup(out.c_str());
+                                                                    string out = USCOS_declaration_with_assignment_function($1->str, $9->str, $9->grid_mapping);
+                                                                    $$->str = strdup(out.c_str());
                                                                 }
                                                             }
                                                           }
@@ -2580,239 +2615,239 @@ plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' expres
 //TODO: verify that both "expression"s are collections
 extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR ON expression '=' expression
                                                           {
-                                                            if(strlen($7.error_str) > 2)
-                                                                $$.str = strdup($7.error_str);
+                                                            if($7->error_str != NULL)
+                                                                $$->str = strdup($7->error_str);
                                                             else
-                                                            if(strlen($9.error_str) > 2)
-                                                                $$.str = strdup($9.error_str);
+                                                            if($9->error_str != NULL)
+                                                                $$->str = strdup($9->error_str);
                                                             else
                                                             {
-                                                                if($7.type.collection == false)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: should be ON collection");
+                                                                if($7->type.collection == false)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: should be ON collection");
                                                                 else
-                                                                if($9.type.collection == false)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: the variable should be assigned to a collection");
+                                                                if($9->type.collection == false)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: the variable should be assigned to a collection");
                                                                 else
                                                                 {
-                                                                    string out = extended_plural_declaration_with_assignment_function($1.str, $9, $7.grid_mapping);
-                                                                    $$.str = strdup(out.c_str());
+                                                                    string out = extended_plural_declaration_with_assignment_function($1->str, $9, $7->grid_mapping);
+                                                                    $$->str = strdup(out.c_str());
                                                                 }
                                                             }
                                                           }
                                            | VARIABLE ':' COLLECTION OF VECTOR ON expression '=' expression
                                                           {
-                                                            if(strlen($7.error_str) > 2)
-                                                                $$.str = strdup($7.error_str);
+                                                            if($7->error_str != NULL)
+                                                                $$->str = strdup($7->error_str);
                                                             else
-                                                            if(strlen($9.error_str) > 2)
-                                                                $$.str = strdup($9.error_str);
+                                                            if($9->error_str != NULL)
+                                                                $$->str = strdup($9->error_str);
                                                             else
                                                             {
-                                                                if($7.type.collection == false)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: should be ON collection");
+                                                                if($7->type.collection == false)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: should be ON collection");
                                                                 else
-                                                                if($9.type.collection == false)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: the variable should be assigned to a collection");
+                                                                if($9->type.collection == false)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: the variable should be assigned to a collection");
                                                                 else
                                                                 {
-                                                                    string out = extended_plural_declaration_with_assignment_function($1.str, $9, $7.grid_mapping);
-                                                                    $$.str = strdup(out.c_str());
+                                                                    string out = extended_plural_declaration_with_assignment_function($1->str, $9, $7->grid_mapping);
+                                                                    $$->str = strdup(out.c_str());
                                                                 }
                                                             }
                                                           }
                                            | VARIABLE ':' COLLECTION OF VERTEX ON expression '=' expression
                                                           {
-                                                            if(strlen($7.error_str) > 2)
-                                                                $$.str = strdup($7.error_str);
+                                                            if($7->error_str != NULL)
+                                                                $$->str = strdup($7->error_str);
                                                             else
-                                                            if(strlen($9.error_str) > 2)
-                                                                $$.str = strdup($9.error_str);
+                                                            if($9->error_str != NULL)
+                                                                $$->str = strdup($9->error_str);
                                                             else
                                                             {
-                                                                if($7.type.collection == false)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: should be ON collection");
+                                                                if($7->type.collection == false)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: should be ON collection");
                                                                 else
-                                                                if($9.type.collection == false)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: the variable should be assigned to a collection");
+                                                                if($9->type.collection == false)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: the variable should be assigned to a collection");
                                                                 else
                                                                 {
-                                                                    string out = extended_plural_declaration_with_assignment_function($1.str, $9, $7.grid_mapping);
-                                                                    $$.str = strdup(out.c_str());
+                                                                    string out = extended_plural_declaration_with_assignment_function($1->str, $9, $7->grid_mapping);
+                                                                    $$->str = strdup(out.c_str());
                                                                 }
                                                             }
                                                           }
                                            | VARIABLE ':' COLLECTION OF EDGE ON expression '=' expression
                                                           {
-                                                            if(strlen($7.error_str) > 2)
-                                                                $$.str = strdup($7.error_str);
+                                                            if($7->error_str != NULL)
+                                                                $$->str = strdup($7->error_str);
                                                             else
-                                                            if(strlen($9.error_str) > 2)
-                                                                $$.str = strdup($9.error_str);
+                                                            if($9->error_str != NULL)
+                                                                $$->str = strdup($9->error_str);
                                                             else
                                                             {
-                                                                if($7.type.collection == false)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: should be ON collection");
+                                                                if($7->type.collection == false)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: should be ON collection");
                                                                 else
-                                                                if($9.type.collection == false)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: the variable should be assigned to a collection");
+                                                                if($9->type.collection == false)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: the variable should be assigned to a collection");
                                                                 else
                                                                 {
-                                                                    string out = extended_plural_declaration_with_assignment_function($1.str, $9, $7.grid_mapping);
-                                                                    $$.str = strdup(out.c_str());
+                                                                    string out = extended_plural_declaration_with_assignment_function($1->str, $9, $7->grid_mapping);
+                                                                    $$->str = strdup(out.c_str());
                                                                 }
                                                             }
                                                           }
                                            | VARIABLE ':' COLLECTION OF FACE ON expression '=' expression
                                                           {
-                                                            if(strlen($7.error_str) > 2)
-                                                                $$.str = strdup($7.error_str);
+                                                            if($7->error_str != NULL)
+                                                                $$->str = strdup($7->error_str);
                                                             else
-                                                            if(strlen($9.error_str) > 2)
-                                                                $$.str = strdup($9.error_str);
+                                                            if($9->error_str != NULL)
+                                                                $$->str = strdup($9->error_str);
                                                             else
                                                             {
-                                                                if($7.type.collection == false)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: should be ON collection");
+                                                                if($7->type.collection == false)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: should be ON collection");
                                                                 else
-                                                                if($9.type.collection == false)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: the variable should be assigned to a collection");
+                                                                if($9->type.collection == false)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: the variable should be assigned to a collection");
                                                                 else
                                                                 {
-                                                                    string out = extended_plural_declaration_with_assignment_function($1.str, $9, $7.grid_mapping);
-                                                                    $$.str = strdup(out.c_str());
+                                                                    string out = extended_plural_declaration_with_assignment_function($1->str, $9, $7->grid_mapping);
+                                                                    $$->str = strdup(out.c_str());
                                                                 }
                                                             }
                                                           }
                                            | VARIABLE ':' COLLECTION OF CELL ON expression '=' expression
                                                           {
-                                                            if(strlen($7.error_str) > 2)
-                                                                $$.str = strdup($7.error_str);
+                                                            if($7->error_str != NULL)
+                                                                $$->str = strdup($7->error_str);
                                                             else
-                                                            if(strlen($9.error_str) > 2)
-                                                                $$.str = strdup($9.error_str);
+                                                            if($9->error_str != NULL)
+                                                                $$->str = strdup($9->error_str);
                                                             else
                                                             {
-                                                                if($7.type.collection == false)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: should be ON collection");
+                                                                if($7->type.collection == false)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: should be ON collection");
                                                                 else
-                                                                if($9.type.collection == false)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: the variable should be assigned to a collection");
+                                                                if($9->type.collection == false)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: the variable should be assigned to a collection");
                                                                 else
                                                                 {
-                                                                    string out = extended_plural_declaration_with_assignment_function($1.str, $9, $7.grid_mapping);
-                                                                    $$.str = strdup(out.c_str());
+                                                                    string out = extended_plural_declaration_with_assignment_function($1->str, $9, $7->grid_mapping);
+                                                                    $$->str = strdup(out.c_str());
                                                                 }
                                                             }
                                                           }
                                            | VARIABLE ':' COLLECTION OF ADB ON expression '=' expression
                                                           {
-                                                            if(strlen($7.error_str) > 2)
-                                                                $$.str = strdup($7.error_str);
+                                                            if($7->error_str != NULL)
+                                                                $$->str = strdup($7->error_str);
                                                             else
-                                                            if(strlen($9.error_str) > 2)
-                                                                $$.str = strdup($9.error_str);
+                                                            if($9->error_str != NULL)
+                                                                $$->str = strdup($9->error_str);
                                                             else
                                                             {
-                                                                if($7.type.collection == false)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: should be ON collection");
+                                                                if($7->type.collection == false)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: should be ON collection");
                                                                 else
-                                                                if($9.type.collection == false)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: the variable should be assigned to a collection");
+                                                                if($9->type.collection == false)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: the variable should be assigned to a collection");
                                                                 else
                                                                 {
-                                                                    string out = extended_plural_declaration_with_assignment_function($1.str, $9, $7.grid_mapping);
-                                                                    $$.str = strdup(out.c_str());
+                                                                    string out = extended_plural_declaration_with_assignment_function($1->str, $9, $7->grid_mapping);
+                                                                    $$->str = strdup(out.c_str());
                                                                 }
                                                             }
                                                           }
                                            | VARIABLE ':' COLLECTION OF BOOLEAN ON expression '=' expression
                                                           {
-                                                            if(strlen($7.error_str) > 2)
-                                                                $$.str = strdup($7.error_str);
+                                                            if($7->error_str != NULL)
+                                                                $$->str = strdup($7->error_str);
                                                             else
-                                                            if(strlen($9.error_str) > 2)
-                                                                $$.str = strdup($9.error_str);
+                                                            if($9->error_str != NULL)
+                                                                $$->str = strdup($9->error_str);
                                                             else
                                                             {
-                                                                if($7.type.collection == false)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: should be ON collection");
+                                                                if($7->type.collection == false)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: should be ON collection");
                                                                 else
-                                                                if($9.type.collection == false)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: the variable should be assigned to a collection");
+                                                                if($9->type.collection == false)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: the variable should be assigned to a collection");
                                                                 else
                                                                 {
-                                                                    string out = extended_plural_declaration_with_assignment_function($1.str, $9, $7.grid_mapping);
-                                                                    $$.str = strdup(out.c_str());
+                                                                    string out = extended_plural_declaration_with_assignment_function($1->str, $9, $7->grid_mapping);
+                                                                    $$->str = strdup(out.c_str());
                                                                 }
                                                             }
                                                           }
                                            | VARIABLE ':' COLLECTION OF SCALAR ON expression '=' USCOS '(' expression ')'
                                                           {
-                                                            if(strlen($7.error_str) > 2)
-                                                                $$.str = strdup($7.error_str);
+                                                            if($7->error_str != NULL)
+                                                                $$->str = strdup($7->error_str);
                                                             else
-                                                            if(strlen($11.error_str) > 2)
-                                                                $$.str = strdup($11.error_str);
+                                                            if($11->error_str != NULL)
+                                                                $$->str = strdup($11->error_str);
                                                             else
                                                             {
-                                                                if($7.type.collection == false)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: should be ON collection");
+                                                                if($7->type.collection == false)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: should be ON collection");
                                                                 else
-                                                                if($11.type.collection == false)
-                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "Invalid declaration with assignment: USCOS should receive a collection");
+                                                                if($11->type.collection == false)
+                                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Invalid declaration with assignment: USCOS should receive a collection");
                                                                 else
                                                                 {
-                                                                    string out = USCOS_extended_declaration_with_assignment_function($1.str, $11.str, $7.str, $11.grid_mapping, $7.grid_mapping);
-                                                                    $$.str = strdup(out.c_str());
+                                                                    string out = USCOS_extended_declaration_with_assignment_function($1->str, $11->str, $7->str, $11->grid_mapping, $7->grid_mapping);
+                                                                    $$->str = strdup(out.c_str());
                                                                 }
                                                             }
                                                           }
                                            ;
 
 
- declaration_with_assignment: singular_declaration_with_assignment          { char* out = strdup($1.str); $$.str = out; }
-                            | plural_declaration_with_assignment            { char* out = strdup($1.str); $$.str = out; }
-                            | extended_plural_declaration_with_assignment   { char* out = strdup($1.str); $$.str = out; }
+ declaration_with_assignment: singular_declaration_with_assignment          { char* out = strdup($1->str); $$->str = out; }
+                            | plural_declaration_with_assignment            { char* out = strdup($1->str); $$->str = out; }
+                            | extended_plural_declaration_with_assignment   { char* out = strdup($1->str); $$->str = out; }
                             ;
 
 
 
 
 // instructions which can be used in the program and in a function's body
-command: declaration                    { char* out = strdup($1.str); $$.str = out; }
-       | assignment                     { char* out = strdup($1.str); $$.str = out; }
-       | declaration_with_assignment    { char* out = strdup($1.str); $$.str = out; }
+command: declaration                    { char* out = strdup($1->str); $$->str = out; }
+       | assignment                     { char* out = strdup($1->str); $$->str = out; }
+       | declaration_with_assignment    { char* out = strdup($1->str); $$->str = out; }
        ;
 
 /*
-command1: command                       { char* out = strdup($1.str); $$.str = out; }
-        | command COMMENT               { string st1 = $1.str; string st2 = $2.str; stringstream ss; ss << st1 << " // " << st2.substr(1, st2.size() - 1); $$.str = strdup(ss.str().c_str()); }
-        | COMMENT                       { string st1 = $1.str; stringstream ss; ss << "// " << st1.substr(1, st1.size() - 1); $$.str = strdup(ss.str().c_str()); }
+command1: command                       { char* out = strdup($1->str); $$->str = out; }
+        | command COMMENT               { string st1 = $1->str; string st2 = $2->str; stringstream ss; ss << st1 << " // " << st2.substr(1, st2.size() - 1); $$->str = strdup(ss.str().c_str()); }
+        | COMMENT                       { string st1 = $1->str; stringstream ss; ss << "// " << st1.substr(1, st1.size() - 1); $$->str = strdup(ss.str().c_str()); }
         ;
 */
 
 // instructions which can be used in the program, but not in a function's body (since we must not allow inner functions)
-command2: command                                    { stringstream ss; ss << $1.str; $$.str = strdup(ss.str().c_str()); }
-   //   | function_declaration                       { stringstream ss; ss << $1.str; $$.str = strdup(ss.str().c_str()); }
-   //   | function_assignment                        { stringstream ss; ss << $1.str; $$.str = strdup(ss.str().c_str()); }
-        | output                                     { stringstream ss; ss << $1.str; $$.str = strdup(ss.str().c_str()); }
-   //   | function_declaration_with_assignment       { stringstream ss; ss << $1.str; $$.str = strdup(ss.str().c_str()); }
+command2: command                                    { stringstream ss; ss << $1->str; $$->str = strdup(ss.str().c_str()); }
+   //   | function_declaration                       { stringstream ss; ss << $1->str; $$->str = strdup(ss.str().c_str()); }
+   //   | function_assignment                        { stringstream ss; ss << $1->str; $$->str = strdup(ss.str().c_str()); }
+        | output                                     { stringstream ss; ss << $1->str; $$->str = strdup(ss.str().c_str()); }
+   //   | function_declaration_with_assignment       { stringstream ss; ss << $1->str; $$->str = strdup(ss.str().c_str()); }
         ;
 
 
 pr: pr command2 '\n'                  {
-                                        string out = $2.str;
+                                        string out = $2->str;
                                         cout << out << endl;
                                         currentLineNumber++;
                                       }
   | pr command2 COMMENT '\n'          {
-                                        string out1 = $2.str;
-                                        string out2 = $3.str;
+                                        string out1 = $2->str;
+                                        string out2 = $3->str;
                                         cout << out1 << " // " << out2.substr(1, out2.size() - 1) << endl;   //+1 to skip comment sign (#)
                                         currentLineNumber++;
                                       }
   | pr COMMENT '\n'                   {
-                                        string out = $2.str;
+                                        string out = $2->str;
                                         cout << "// " << out.substr(1, out.size() - 1) << endl;      //+1 to skip comment sign (#)
                                         currentLineNumber++;
                                       }
@@ -4098,7 +4133,7 @@ string extended_plural_declaration_function(char* variable_name, EntityType enti
 /**
   * @param rhs Right hand side of the assignment (a = b+c => rhs is essentially "b+c")
   */
-string singular_assignment_function(char* variable_name, const info& rhs)
+string singular_assignment_function(char* variable_name, const info* rhs)
 {
     HEAP_CHECK();
     string finalString;
@@ -4138,15 +4173,15 @@ string singular_assignment_function(char* variable_name, const info& rhs)
                   }
                   else
                   {
-                      if(check9(rhs.str) != "isOk")
+                      if(check9(rhs->str) != "isOk")
                       {
                           stringstream ss;
-                          ss << "error at line " << currentLineNumber << ": " << check9(rhs.str);
+                          ss << "error at line " << currentLineNumber << ": " << check9(rhs->str);
                           finalString = ss.str();
                       }
                       else
                       {
-                          if(check6(rhs.str) == true)
+                          if(check6(rhs->str) == true)
                           {
                               stringstream ss;
                               ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -4154,7 +4189,7 @@ string singular_assignment_function(char* variable_name, const info& rhs)
                           }
                           else
                           {
-                              if(find1(rhs.str, variable_name))
+                              if(find1(rhs->str, variable_name))
                               {
                                   stringstream ss;
                                   ss << "error at line " << currentLineNumber << ": The variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
@@ -4162,33 +4197,33 @@ string singular_assignment_function(char* variable_name, const info& rhs)
                               }
                               else
                               {
-                                  if(check3(rhs.str) == false)
+                                  if(check3(rhs->str) == false)
                                   {
                                       stringstream ss;
-                                      ss << "error at line " << currentLineNumber << ": The variable '" << find5(rhs.str) << "' contained in the definition of the " << getStringFromVariableType(rhs.type) << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
+                                      ss << "error at line " << currentLineNumber << ": The variable '" << find5(rhs->str) << "' contained in the definition of the " << getStringFromVariableType(rhs->type) << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
                                       finalString = ss.str();
                                   }
                                   else
                                   {
-                                      if(check4(rhs.str) == false)
+                                      if(check4(rhs->str) == false)
                                       {
                                           stringstream ss;
-                                          ss << "error at line " << currentLineNumber << ": The variable '" << find6(rhs.str) << "' contained in the definition of the " << getStringFromVariableType(rhs.type) << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
+                                          ss << "error at line " << currentLineNumber << ": The variable '" << find6(rhs->str) << "' contained in the definition of the " << getStringFromVariableType(rhs->type) << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
                                           finalString = ss.str();
                                       }
                                       else
                                       {
-                                          if(check7(rhs.str) == true)
+                                          if(check7(rhs->str) == true)
                                           {
                                               stringstream ss;
-                                              ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment rhs.str of the variable '" << variable_name << "'";
+                                              ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment rhs->str of the variable '" << variable_name << "'";
                                               finalString = ss.str();
                                           }
                                           else
                                           {
                                               fun[currentFunctionIndex].localVariables[i].assigned = true;
                                               stringstream ss;
-                                              ss << "const " << getStringFromVariableType(rhs.type)  << " " << variable_name << " = " << rhs.str << ";";
+                                              ss << "const " << getStringFromVariableType(rhs->type)  << " " << variable_name << " = " << rhs->str << ";";
                                               finalString = ss.str();
                                           }
                                       }
@@ -4199,15 +4234,15 @@ string singular_assignment_function(char* variable_name, const info& rhs)
                   }
               else
               {   // deduced declaration
-                  if(check9(rhs.str) != "isOk")
+                  if(check9(rhs->str) != "isOk")
                   {
                       stringstream ss;
-                      ss << "error at line " << currentLineNumber << ": " << check9(rhs.str);
+                      ss << "error at line " << currentLineNumber << ": " << check9(rhs->str);
                       finalString = ss.str();
                   }
                   else
                   {
-                      if(check6(rhs.str) == true)
+                      if(check6(rhs->str) == true)
                       {
                           stringstream ss;
                           ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -4215,43 +4250,43 @@ string singular_assignment_function(char* variable_name, const info& rhs)
                       }
                       else
                       {
-                          if(find1(rhs.str, variable_name))
+                          if(find1(rhs->str, variable_name))
                           {
                               stringstream ss;
-                              ss << "error at line " << currentLineNumber << ": The " << getStringFromVariableType(rhs.type)  << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
+                              ss << "error at line " << currentLineNumber << ": The " << getStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
                               finalString = ss.str();
                           }
                           else
                           {
-                              if(check3(rhs.str) == false)
+                              if(check3(rhs->str) == false)
                               {
                                   stringstream ss;
-                                  ss << "error at line " << currentLineNumber << ": The variable '" << find5(rhs.str) << "' contained in the definition of the " << getStringFromVariableType(rhs.type)  << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
+                                  ss << "error at line " << currentLineNumber << ": The variable '" << find5(rhs->str) << "' contained in the definition of the " << getStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
                                   finalString = ss.str();
                               }
                               else
                               {
-                                  if(check4(rhs.str) == false)
+                                  if(check4(rhs->str) == false)
                                   {
                                       stringstream ss;
-                                      ss << "error at line " << currentLineNumber << ": The variable '" << find6(rhs.str) << "' contained in the definition of the " << getStringFromVariableType(rhs.type)  << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
+                                      ss << "error at line " << currentLineNumber << ": The variable '" << find6(rhs->str) << "' contained in the definition of the " << getStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
                                       finalString = ss.str();
                                   }
                                   else
                                   {
-                                      if(check7(rhs.str) == true)
+                                      if(check7(rhs->str) == true)
                                       {
                                           stringstream ss;
-                                          ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment rhs.str of the " << getStringFromVariableType(rhs.type)  << " variable '" << variable_name << "'";
+                                          ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment rhs->str of the " << getStringFromVariableType(rhs->type)  << " variable '" << variable_name << "'";
                                           finalString = ss.str();
                                       }
                                       else
                                       {
                                           stringstream ss;
-                                          ss << "const " << getStringFromVariableType(rhs.type)  << " " << variable_name << " = " << rhs.str << ";";
+                                          ss << "const " << getStringFromVariableType(rhs->type)  << " " << variable_name << " = " << rhs->str << ";";
                                           finalString = ss.str();
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = variable_name;
-                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = rhs.type;
+                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = rhs->type;
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = GRID_MAPPING_ENTITY;
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
                                       }
@@ -4279,20 +4314,20 @@ string singular_assignment_function(char* variable_name, const info& rhs)
               if(var[i].assigned == true)
               {
                   stringstream ss;
-                  ss << "error at line " << currentLineNumber << ": The " << getStringFromVariableType(rhs.type)  << " variable '" << variable_name << "' is reassigned";
+                  ss << "error at line " << currentLineNumber << ": The " << getStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is reassigned";
                   finalString = ss.str();
               }
               else
               {
-                    if(check9(rhs.str) != "isOk")
+                    if(check9(rhs->str) != "isOk")
                     {
                         stringstream ss;
-                        ss << "error at line " << currentLineNumber << ": " << check9(rhs.str);
+                        ss << "error at line " << currentLineNumber << ": " << check9(rhs->str);
                         finalString = ss.str();
                     }
                     else
                     {
-                        if(check6(rhs.str) == true)
+                        if(check6(rhs->str) == true)
                         {
                             stringstream ss;
                             ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -4300,41 +4335,41 @@ string singular_assignment_function(char* variable_name, const info& rhs)
                         }
                         else
                         {
-                            if(find1(rhs.str, variable_name))
+                            if(find1(rhs->str, variable_name))
                             {
                                 stringstream ss;
-                                ss << "error at line " << currentLineNumber << ": The " << getStringFromVariableType(rhs.type)  << " variable '" << variable_name << "' is included in its definition";
+                                ss << "error at line " << currentLineNumber << ": The " << getStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is included in its definition";
                                 finalString = ss.str();
                             }
                             else
                             {
-                                if(check1(rhs.str) == false)
+                                if(check1(rhs->str) == false)
                                 {
                                     stringstream ss;
-                                    ss << "error at line " << currentLineNumber << ": The variable '" << find2(rhs.str) << "' contained in the definition of the " << getStringFromVariableType(rhs.type)  << " variable '" << variable_name << "' is undeclared";
+                                    ss << "error at line " << currentLineNumber << ": The variable '" << find2(rhs->str) << "' contained in the definition of the " << getStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is undeclared";
                                     finalString = ss.str();
                                 }
                                 else
                                 {
-                                    if(check2(rhs.str) == false)
+                                    if(check2(rhs->str) == false)
                                     {
                                         stringstream ss;
-                                        ss << "error at line " << currentLineNumber << ": The variable '" << find3(rhs.str) << "' contained in the definition of the " << getStringFromVariableType(rhs.type)  << " variable '" << variable_name << "' is unassigned";
+                                        ss << "error at line " << currentLineNumber << ": The variable '" << find3(rhs->str) << "' contained in the definition of the " << getStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is unassigned";
                                         finalString = ss.str();
                                     }
                                     else
                                     {
-                                        if(check7(rhs.str) == true)
+                                        if(check7(rhs->str) == true)
                                         {
                                             stringstream ss;
-                                            ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment rhs.str of the " << getStringFromVariableType(rhs.type)  << " variable '" << variable_name << "'";
+                                            ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment rhs->str of the " << getStringFromVariableType(rhs->type)  << " variable '" << variable_name << "'";
                                             finalString = ss.str();
                                         }
                                         else
                                         {
                                             var[i].assigned = true;
                                             stringstream ss;
-                                            ss << "const " << getStringFromVariableType(rhs.type)  << " " << variable_name << " = " << rhs.str << ";";
+                                            ss << "const " << getStringFromVariableType(rhs->type)  << " " << variable_name << " = " << rhs->str << ";";
                                             finalString = ss.str();
                                         }
                                     }
@@ -4346,15 +4381,15 @@ string singular_assignment_function(char* variable_name, const info& rhs)
         else
         {
             // deduced declaration
-            if(check9(rhs.str) != "isOk")
+            if(check9(rhs->str) != "isOk")
             {
                 stringstream ss;
-                ss << "error at line " << currentLineNumber << ": " << check9(rhs.str);
+                ss << "error at line " << currentLineNumber << ": " << check9(rhs->str);
                 finalString = ss.str();
             }
             else
             {
-                if(check6(rhs.str) == true)
+                if(check6(rhs->str) == true)
                 {
                     stringstream ss;
                     ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -4362,43 +4397,43 @@ string singular_assignment_function(char* variable_name, const info& rhs)
                 }
                 else
                 {
-                    if(find1(rhs.str, variable_name))
+                    if(find1(rhs->str, variable_name))
                     {
                         stringstream ss;
-                        ss << "error at line " << currentLineNumber << ": The " << getStringFromVariableType(rhs.type)  << " variable '" << variable_name << "' is included in its definition";
+                        ss << "error at line " << currentLineNumber << ": The " << getStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is included in its definition";
                         finalString = ss.str();
                     }
                     else
                     {
-                        if(check1(rhs.str) == false)
+                        if(check1(rhs->str) == false)
                         {
                             stringstream ss;
-                            ss << "error at line " << currentLineNumber << ": The variable '" << find2(rhs.str) << "' contained in the definition of the " << getStringFromVariableType(rhs.type)  << " variable '" << variable_name << "' is undeclared";
+                            ss << "error at line " << currentLineNumber << ": The variable '" << find2(rhs->str) << "' contained in the definition of the " << getStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is undeclared";
                             finalString = ss.str();
                         }
                         else
                         {
-                            if(check2(rhs.str) == false)
+                            if(check2(rhs->str) == false)
                             {
                                 stringstream ss;
-                                ss << "error at line " << currentLineNumber << ": The variable '" << find3(rhs.str) << "' contained in the definition of the " << getStringFromVariableType(rhs.type)  << " variable '" << variable_name << "' is unassigned";
+                                ss << "error at line " << currentLineNumber << ": The variable '" << find3(rhs->str) << "' contained in the definition of the " << getStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is unassigned";
                                 finalString = ss.str();
                             }
                             else
                             {
-                                if(check7(rhs.str) == true)
+                                if(check7(rhs->str) == true)
                                 {
                                     stringstream ss;
-                                    ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment rhs.str of the " << getStringFromVariableType(rhs.type)  << " variable '" << variable_name << "'";
+                                    ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment rhs->str of the " << getStringFromVariableType(rhs->type)  << " variable '" << variable_name << "'";
                                     finalString = ss.str();
                                 }
                                 else
                                 {
                                     stringstream ss;
-                                    ss << "const " << getStringFromVariableType(rhs.type)  << " " << variable_name << " = " << rhs.str << ";";
+                                    ss << "const " << getStringFromVariableType(rhs->type)  << " " << variable_name << " = " << rhs->str << ";";
                                     finalString = ss.str();
                                     var[varNo++].name = variable_name;
-                                    var[varNo-1].type = rhs.type;
+                                    var[varNo-1].type = rhs->type;
                                     var[varNo-1].grid_mapping = GRID_MAPPING_ENTITY;
                                     var[varNo-1].assigned = true;
                                 }
@@ -4415,7 +4450,7 @@ string singular_assignment_function(char* variable_name, const info& rhs)
 }
 
 
-string plural_assignment_function(char* variable_name, const info& rhs)
+string plural_assignment_function(char* variable_name, const info* rhs)
 {
     HEAP_CHECK();
     string finalString;
@@ -4455,15 +4490,15 @@ string plural_assignment_function(char* variable_name, const info& rhs)
                   }
                   else
                   {
-                        if(check9(rhs.str) != "isOk")
+                        if(check9(rhs->str) != "isOk")
                         {
                             stringstream ss;
-                            ss << "error at line " << currentLineNumber << ": " << check9(rhs.str);
+                            ss << "error at line " << currentLineNumber << ": " << check9(rhs->str);
                             finalString = ss.str();
                         }
                         else
                         {
-                            if(check6(rhs.str) == true)
+                            if(check6(rhs->str) == true)
                             {
                                 stringstream ss;
                                 ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -4471,7 +4506,7 @@ string plural_assignment_function(char* variable_name, const info& rhs)
                             }
                             else
                             {
-                                if(find1(rhs.str, variable_name))
+                                if(find1(rhs->str, variable_name))
                                 {
                                     stringstream ss;
                                     ss << "error at line " << currentLineNumber << ": The variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
@@ -4479,23 +4514,23 @@ string plural_assignment_function(char* variable_name, const info& rhs)
                                 }
                                 else
                                 {
-                                    if(check3(rhs.str) == false)
+                                    if(check3(rhs->str) == false)
                                     {
                                         stringstream ss;
-                                        ss << "error at line " << currentLineNumber << ": The variable '" << find5(rhs.str) << "' contained in the definition of the variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
+                                        ss << "error at line " << currentLineNumber << ": The variable '" << find5(rhs->str) << "' contained in the definition of the variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
                                         finalString = ss.str();
                                     }
                                     else
                                     {
-                                        if(check4(rhs.str) == false)
+                                        if(check4(rhs->str) == false)
                                         {
                                             stringstream ss;
-                                            ss << "error at line " << currentLineNumber << ": The variable '" << find6(rhs.str) << "' contained in the definition of the variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
+                                            ss << "error at line " << currentLineNumber << ": The variable '" << find6(rhs->str) << "' contained in the definition of the variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
                                             finalString = ss.str();
                                         }
                                         else
                                         {
-                                            if(check7(rhs.str) == true)
+                                            if(check7(rhs->str) == true)
                                             {
                                                 stringstream ss;
                                                 ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the variable '" << variable_name << "'";
@@ -4503,13 +4538,13 @@ string plural_assignment_function(char* variable_name, const info& rhs)
                                             }
                                             else
                                             {
-                                                if(getSize3(variable_name) != rhs.grid_mapping)
+                                                if(getSize3(variable_name) != rhs->grid_mapping)
                                                     if(getSize3(variable_name) == GRID_MAPPING_ANY)
                                                     {
-                                                        fun[currentFunctionIndex].localVariables[i].grid_mapping = rhs.grid_mapping;
+                                                        fun[currentFunctionIndex].localVariables[i].grid_mapping = rhs->grid_mapping;
                                                         fun[currentFunctionIndex].localVariables[i].assigned = true;
                                                         stringstream ss;
-                                                        ss << "const " << getStringFromVariableType(rhs.type) << " " << variable_name << " = " << rhs.str << ";";
+                                                        ss << "const " << getStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
                                                         finalString = ss.str();
                                                     }
                                                     else
@@ -4521,7 +4556,7 @@ string plural_assignment_function(char* variable_name, const info& rhs)
                                                 else
                                                 {
                                                     stringstream ss;
-                                                    ss << "const " << getStringFromVariableType(rhs.type) << " " << variable_name << " = " << rhs.str << ";";
+                                                    ss << "const " << getStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
                                                     finalString = ss.str();
                                                     fun[currentFunctionIndex].localVariables[i].assigned = true;
                                                 }
@@ -4534,15 +4569,15 @@ string plural_assignment_function(char* variable_name, const info& rhs)
                   }
               else
               {   // deduced declaration
-                  if(check9(rhs.str) != "isOk")
+                  if(check9(rhs->str) != "isOk")
                   {
                       stringstream ss;
-                      ss << "error at line " << currentLineNumber << ": " << check9(rhs.str);
+                      ss << "error at line " << currentLineNumber << ": " << check9(rhs->str);
                       finalString = ss.str();
                   }
                   else
                   {
-                      if(check6(rhs.str) == true)
+                      if(check6(rhs->str) == true)
                       {
                           stringstream ss;
                           ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -4550,7 +4585,7 @@ string plural_assignment_function(char* variable_name, const info& rhs)
                       }
                       else
                       {
-                          if(find1(rhs.str, variable_name))
+                          if(find1(rhs->str, variable_name))
                           {
                               stringstream ss;
                               ss << "error at line " << currentLineNumber << ": The variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
@@ -4558,23 +4593,23 @@ string plural_assignment_function(char* variable_name, const info& rhs)
                           }
                           else
                           {
-                              if(check3(rhs.str) == false)
+                              if(check3(rhs->str) == false)
                               {
                                   stringstream ss;
-                                  ss << "error at line " << currentLineNumber << ": The variable '" << find5(rhs.str) << "' contained in the definition of the variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
+                                  ss << "error at line " << currentLineNumber << ": The variable '" << find5(rhs->str) << "' contained in the definition of the variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
                                   finalString = ss.str();
                               }
                               else
                               {
-                                  if(check4(rhs.str) == false)
+                                  if(check4(rhs->str) == false)
                                   {
                                       stringstream ss;
-                                      ss << "error at line " << currentLineNumber << ": The variable '" << find6(rhs.str) << "' contained in the definition of the variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
+                                      ss << "error at line " << currentLineNumber << ": The variable '" << find6(rhs->str) << "' contained in the definition of the variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
                                       finalString = ss.str();
                                   }
                                   else
                                   {
-                                      if(check7(rhs.str) == true)
+                                      if(check7(rhs->str) == true)
                                       {
                                           stringstream ss;
                                           ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the variable '" << variable_name << "'";
@@ -4583,11 +4618,11 @@ string plural_assignment_function(char* variable_name, const info& rhs)
                                       else
                                       {
                                           stringstream ss;
-                                          ss << "const " << getStringFromVariableType(rhs.type) << " " << variable_name << " = " << rhs.str << ";";
+                                          ss << "const " << getStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
                                           finalString = ss.str();
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = variable_name;
-                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = rhs.type;
-                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = rhs.grid_mapping;
+                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = rhs->type;
+                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = rhs->grid_mapping;
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
                                       }
                                   }
@@ -4619,15 +4654,15 @@ string plural_assignment_function(char* variable_name, const info& rhs)
               }
               else
               {
-                    if(check9(rhs.str) != "isOk")
+                    if(check9(rhs->str) != "isOk")
                     {
                         stringstream ss;
-                        ss << "error at line " << currentLineNumber << ": " << check9(rhs.str);
+                        ss << "error at line " << currentLineNumber << ": " << check9(rhs->str);
                         finalString = ss.str();
                     }
                     else
                     {
-                        if(check6(rhs.str) == true)
+                        if(check6(rhs->str) == true)
                         {
                             stringstream ss;
                             ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -4635,7 +4670,7 @@ string plural_assignment_function(char* variable_name, const info& rhs)
                         }
                         else
                         {
-                            if(find1(rhs.str, variable_name))
+                            if(find1(rhs->str, variable_name))
                             {
                                 stringstream ss;
                                 ss << "error at line " << currentLineNumber << ": The variable '" << variable_name << "' is included in its definition";
@@ -4643,23 +4678,23 @@ string plural_assignment_function(char* variable_name, const info& rhs)
                             }
                             else
                             {
-                                if(check1(rhs.str) == false)
+                                if(check1(rhs->str) == false)
                                 {
                                     stringstream ss;
-                                    ss << "error at line " << currentLineNumber << ": The variable '" << find2(rhs.str) << "' contained in the definition of the variable '" << variable_name << "' is undeclared";
+                                    ss << "error at line " << currentLineNumber << ": The variable '" << find2(rhs->str) << "' contained in the definition of the variable '" << variable_name << "' is undeclared";
                                     finalString = ss.str();
                                 }
                                 else
                                 {
-                                    if(check2(rhs.str) == false)
+                                    if(check2(rhs->str) == false)
                                     {
                                         stringstream ss;
-                                        ss << "error at line " << currentLineNumber << ": The variable '" << find3(rhs.str) << "' contained in the definition of the variable '" << variable_name << "' is unassigned";
+                                        ss << "error at line " << currentLineNumber << ": The variable '" << find3(rhs->str) << "' contained in the definition of the variable '" << variable_name << "' is unassigned";
                                         finalString = ss.str();
                                     }
                                     else
                                     {
-                                        if(check7(rhs.str) == true)
+                                        if(check7(rhs->str) == true)
                                         {
                                             stringstream ss;
                                             ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the variable '" << variable_name << "'";
@@ -4667,13 +4702,13 @@ string plural_assignment_function(char* variable_name, const info& rhs)
                                         }
                                         else
                                         {
-                                            if(getSize1(variable_name) != rhs.grid_mapping)
+                                            if(getSize1(variable_name) != rhs->grid_mapping)
                                                 if(getSize1(variable_name) == GRID_MAPPING_ANY)
                                                 {
-                                                    var[i].grid_mapping = rhs.grid_mapping;
+                                                    var[i].grid_mapping = rhs->grid_mapping;
                                                     var[i].assigned = true;
                                                     stringstream ss;
-                                                    ss << "const " << getStringFromVariableType(rhs.type) << " " << variable_name << " = " << rhs.str << ";";
+                                                    ss << "const " << getStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
                                                     finalString = ss.str();
                                                 }
                                                 else
@@ -4685,7 +4720,7 @@ string plural_assignment_function(char* variable_name, const info& rhs)
                                             else
                                             {
                                                 stringstream ss;
-                                                ss << "const " << getStringFromVariableType(rhs.type) << " " << variable_name << " = " << rhs.str << ";";
+                                                ss << "const " << getStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
                                                 finalString = ss.str();
                                                 var[i].assigned = true;
                                             }
@@ -4699,15 +4734,15 @@ string plural_assignment_function(char* variable_name, const info& rhs)
         else
         {
             // deduced declaration
-            if(check9(rhs.str) != "isOk")
+            if(check9(rhs->str) != "isOk")
             {
                 stringstream ss;
-                ss << "error at line " << currentLineNumber << ": " << check9(rhs.str);
+                ss << "error at line " << currentLineNumber << ": " << check9(rhs->str);
                 finalString = ss.str();
             }
             else
             {
-                if(check6(rhs.str) == true)
+                if(check6(rhs->str) == true)
                 {
                     stringstream ss;
                     ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -4715,7 +4750,7 @@ string plural_assignment_function(char* variable_name, const info& rhs)
                 }
                 else
                 {
-                    if(find1(rhs.str, variable_name))
+                    if(find1(rhs->str, variable_name))
                     {
                         stringstream ss;
                         ss << "error at line " << currentLineNumber << ": The variable '" << variable_name << "' is included in its definition";
@@ -4723,23 +4758,23 @@ string plural_assignment_function(char* variable_name, const info& rhs)
                     }
                     else
                     {
-                        if(check1(rhs.str) == false)
+                        if(check1(rhs->str) == false)
                         {
                             stringstream ss;
-                            ss << "error at line " << currentLineNumber << ": The variable '" << find2(rhs.str) << "' contained in the definition of the variable '" << variable_name << "' is undeclared";
+                            ss << "error at line " << currentLineNumber << ": The variable '" << find2(rhs->str) << "' contained in the definition of the variable '" << variable_name << "' is undeclared";
                             finalString = ss.str();
                         }
                         else
                         {
-                            if(check2(rhs.str) == false)
+                            if(check2(rhs->str) == false)
                             {
                                 stringstream ss;
-                                ss << "error at line " << currentLineNumber << ": The variable '" << find3(rhs.str) << "' contained in the definition of the variable '" << variable_name << "' is unassigned";
+                                ss << "error at line " << currentLineNumber << ": The variable '" << find3(rhs->str) << "' contained in the definition of the variable '" << variable_name << "' is unassigned";
                                 finalString = ss.str();
                             }
                             else
                             {
-                                if(check7(rhs.str) == true)
+                                if(check7(rhs->str) == true)
                                 {
                                     stringstream ss;
                                     ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the variable '" << variable_name << "'";
@@ -4748,11 +4783,11 @@ string plural_assignment_function(char* variable_name, const info& rhs)
                                 else
                                 {
                                     stringstream ss;
-                                    ss << "const " << getStringFromVariableType(rhs.type) << " " << variable_name << " = " << rhs.str << ";";
+                                    ss << "const " << getStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
                                     finalString = ss.str();
                                     var[varNo++].name = variable_name;
-                                    var[varNo-1].type = rhs.type;
-                                    var[varNo-1].grid_mapping = rhs.grid_mapping;
+                                    var[varNo-1].type = rhs->type;
+                                    var[varNo-1].grid_mapping = rhs->grid_mapping;
                                     var[varNo-1].assigned = true;
                                 }
                             }
@@ -4768,7 +4803,7 @@ string plural_assignment_function(char* variable_name, const info& rhs)
 }
 
 
-string declaration_with_assignment_function(char* variable_name, const info& rhs)
+string declaration_with_assignment_function(char* variable_name, const info* rhs)
 {
     HEAP_CHECK();
     string finalString;
@@ -4807,15 +4842,15 @@ string declaration_with_assignment_function(char* variable_name, const info& rhs
               }
               else
               {
-                    if(check9(rhs.str) != "isOk")
+                    if(check9(rhs->str) != "isOk")
                     {
                         stringstream ss;
-                        ss << "error at line " << currentLineNumber << ": " << check9(rhs.str);
+                        ss << "error at line " << currentLineNumber << ": " << check9(rhs->str);
                         finalString = ss.str();
                     }
                     else
                     {
-                        if(check6(rhs.str) == true)
+                        if(check6(rhs->str) == true)
                         {
                             stringstream ss;
                             ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -4823,7 +4858,7 @@ string declaration_with_assignment_function(char* variable_name, const info& rhs
                         }
                         else
                         {
-                            if(find1(rhs.str, variable_name))
+                            if(find1(rhs->str, variable_name))
                               {
                                   stringstream ss;
                                   ss << "error at line " << currentLineNumber << ": The variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
@@ -4831,23 +4866,23 @@ string declaration_with_assignment_function(char* variable_name, const info& rhs
                               }
                               else
                               {
-                                  if(check3(rhs.str) == false)
+                                  if(check3(rhs->str) == false)
                                   {
                                       stringstream ss;
-                                      ss << "error at line " << currentLineNumber << ": The variable '" << find5(rhs.str) << "' contained in the definition of the variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
+                                      ss << "error at line " << currentLineNumber << ": The variable '" << find5(rhs->str) << "' contained in the definition of the variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
                                       finalString = ss.str();
                                   }
                                   else
                                   {
-                                      if(check4(rhs.str) == false)
+                                      if(check4(rhs->str) == false)
                                       {
                                           stringstream ss;
-                                          ss << "error at line " << currentLineNumber << ": The variable '" << find6(rhs.str) << "' contained in the definition of the variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
+                                          ss << "error at line " << currentLineNumber << ": The variable '" << find6(rhs->str) << "' contained in the definition of the variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
                                           finalString = ss.str();
                                       }
                                       else
                                       {
-                                          if(check7(rhs.str) == true)
+                                          if(check7(rhs->str) == true)
                                           {
                                               stringstream ss;
                                               ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the variable '" << variable_name << "'";
@@ -4856,11 +4891,11 @@ string declaration_with_assignment_function(char* variable_name, const info& rhs
                                           else
                                           {
                                               stringstream ss;
-                                              ss << "const " << getStringFromVariableType(rhs.type) << " " << variable_name << " = " << rhs.str << ";";
+                                              ss << "const " << getStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
                                               finalString = ss.str();
                                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = variable_name;
-                                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = rhs.type;
-                                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = rhs.grid_mapping;
+                                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = rhs->type;
+                                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = rhs->grid_mapping;
                                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
                                           }
                                     }
@@ -4891,15 +4926,15 @@ string declaration_with_assignment_function(char* variable_name, const info& rhs
         }
         else
         {
-            if(check9(rhs.str) != "isOk")
+            if(check9(rhs->str) != "isOk")
             {
                 stringstream ss;
-                ss << "error at line " << currentLineNumber << ": " << check9(rhs.str);
+                ss << "error at line " << currentLineNumber << ": " << check9(rhs->str);
                 finalString = ss.str();
             }
             else
             {
-                if(check6(rhs.str) == true)
+                if(check6(rhs->str) == true)
                 {
                     stringstream ss;
                     ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -4907,7 +4942,7 @@ string declaration_with_assignment_function(char* variable_name, const info& rhs
                 }
                 else
                 {
-                    if(find1(rhs.str, variable_name))
+                    if(find1(rhs->str, variable_name))
                     {
                         stringstream ss;
                         ss << "error at line " << currentLineNumber << ": The variable '" << variable_name << "' is included in its definition";
@@ -4915,23 +4950,23 @@ string declaration_with_assignment_function(char* variable_name, const info& rhs
                     }
                     else
                     {
-                        if(check1(rhs.str) == false)
+                        if(check1(rhs->str) == false)
                         {
                             stringstream ss;
-                            ss << "error at line " << currentLineNumber << ": The variable '" << find2(rhs.str) << "' contained in the definition of the variable '" << variable_name << "' is undeclared";
+                            ss << "error at line " << currentLineNumber << ": The variable '" << find2(rhs->str) << "' contained in the definition of the variable '" << variable_name << "' is undeclared";
                             finalString = ss.str();
                         }
                         else
                         {
-                            if(check2(rhs.str) == false)
+                            if(check2(rhs->str) == false)
                             {
                                 stringstream ss;
-                                ss << "error at line " << currentLineNumber << ": The variable '" << find3(rhs.str) << "' contained in the definition of the variable '" << variable_name << "' is unassigned";
+                                ss << "error at line " << currentLineNumber << ": The variable '" << find3(rhs->str) << "' contained in the definition of the variable '" << variable_name << "' is unassigned";
                                 finalString = ss.str();
                             }
                             else
                             {
-                                if(check7(rhs.str) == true)
+                                if(check7(rhs->str) == true)
                                 {
                                     stringstream ss;
                                     ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the variable '" << variable_name << "'";
@@ -4940,11 +4975,11 @@ string declaration_with_assignment_function(char* variable_name, const info& rhs
                                 else
                                 {
                                     stringstream ss;
-                                    ss << "const " << getStringFromVariableType(rhs.type) << " " << variable_name << " = " << rhs.str << ";";
+                                    ss << "const " << getStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
                                     finalString = ss.str();
                                     var[varNo++].name = variable_name;
-                                    var[varNo-1].type = rhs.type;
-                                    var[varNo-1].grid_mapping = rhs.grid_mapping;
+                                    var[varNo-1].type = rhs->type;
+                                    var[varNo-1].grid_mapping = rhs->grid_mapping;
                                     var[varNo-1].assigned = true;
                                 }
                             }
@@ -4961,7 +4996,7 @@ string declaration_with_assignment_function(char* variable_name, const info& rhs
 
 
 
-string extended_plural_declaration_with_assignment_function(char* variable_name, const info& rhs, const GridMapping& lhs)
+string extended_plural_declaration_with_assignment_function(char* variable_name, const info* rhs, const GridMapping& lhs)
 {
     HEAP_CHECK();
     string finalString;
@@ -5000,15 +5035,15 @@ string extended_plural_declaration_with_assignment_function(char* variable_name,
               }
               else
               {
-                    if(check9(rhs.str) != "isOk")
+                    if(check9(rhs->str) != "isOk")
                     {
                         stringstream ss;
-                        ss << "error at line " << currentLineNumber << ": " << check9(rhs.str);
+                        ss << "error at line " << currentLineNumber << ": " << check9(rhs->str);
                         finalString = ss.str();
                     }
                     else
                     {
-                        if(check6(rhs.str) == true)
+                        if(check6(rhs->str) == true)
                         {
                             stringstream ss;
                             ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -5016,7 +5051,7 @@ string extended_plural_declaration_with_assignment_function(char* variable_name,
                         }
                         else
                         {
-                            if(find1(rhs.str, variable_name))
+                            if(find1(rhs->str, variable_name))
                             {
                                 stringstream ss;
                                 ss << "error at line " << currentLineNumber << ": The variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
@@ -5024,23 +5059,23 @@ string extended_plural_declaration_with_assignment_function(char* variable_name,
                             }
                             else
                             {
-                                if(check3(rhs.str) == false)
+                                if(check3(rhs->str) == false)
                                 {
                                     stringstream ss;
-                                    ss << "error at line " << currentLineNumber << ": The variable '" << find5(rhs.str) << "' contained in the definition of The variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
+                                    ss << "error at line " << currentLineNumber << ": The variable '" << find5(rhs->str) << "' contained in the definition of The variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
                                     finalString = ss.str();
                                 }
                                 else
                                 {
-                                    if(check4(rhs.str) == false)
+                                    if(check4(rhs->str) == false)
                                     {
                                         stringstream ss;
-                                        ss << "error at line " << currentLineNumber << ": The variable '" << find6(rhs.str) << "' contained in the definition of The variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
+                                        ss << "error at line " << currentLineNumber << ": The variable '" << find6(rhs->str) << "' contained in the definition of The variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
                                         finalString = ss.str();
                                     }
                                     else
                                     {
-                                        if(lhs != rhs.grid_mapping)
+                                        if(lhs != rhs->grid_mapping)
                                         {
                                             stringstream ss;
                                             ss << "error at line " << currentLineNumber << ": The length of The variable '" << variable_name << "' from its definition differs than the length of its assignment";
@@ -5049,10 +5084,10 @@ string extended_plural_declaration_with_assignment_function(char* variable_name,
                                         else
                                         {
                                             stringstream ss;
-                                            ss << "const " << getStringFromVariableType(rhs.type) << " " << variable_name << " = " << rhs.str << ";";
+                                            ss << "const " << getStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
                                             finalString = ss.str();
                                             fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = variable_name;
-                                            fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = rhs.type;
+                                            fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = rhs->type;
                                             fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = lhs;
                                             fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
                                         }
@@ -5084,15 +5119,15 @@ string extended_plural_declaration_with_assignment_function(char* variable_name,
         }
         else
         {
-            if(check9(rhs.str) != "isOk")
+            if(check9(rhs->str) != "isOk")
             {
                 stringstream ss;
-                ss << "error at line " << currentLineNumber << ": " << check9(rhs.str);
+                ss << "error at line " << currentLineNumber << ": " << check9(rhs->str);
                 finalString = ss.str();
             }
             else
             {
-                if(check6(rhs.str) == true)
+                if(check6(rhs->str) == true)
                 {
                     stringstream ss;
                     ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -5100,7 +5135,7 @@ string extended_plural_declaration_with_assignment_function(char* variable_name,
                 }
                 else
                 {
-                    if(find1(rhs.str, variable_name))
+                    if(find1(rhs->str, variable_name))
                     {
                         stringstream ss;
                         ss << "error at line " << currentLineNumber << ": The variable '" << variable_name << "' is included in its definition";
@@ -5108,23 +5143,23 @@ string extended_plural_declaration_with_assignment_function(char* variable_name,
                     }
                     else
                     {
-                        if(check1(rhs.str) == false)
+                        if(check1(rhs->str) == false)
                         {
                             stringstream ss;
-                            ss << "error at line " << currentLineNumber << ": The variable '" << find2(rhs.str) << "' contained in the definition of The variable '" << variable_name << "' is undeclared";
+                            ss << "error at line " << currentLineNumber << ": The variable '" << find2(rhs->str) << "' contained in the definition of The variable '" << variable_name << "' is undeclared";
                             finalString = ss.str();
                         }
                         else
                         {
-                            if(check2(rhs.str) == false)
+                            if(check2(rhs->str) == false)
                             {
                                 stringstream ss;
-                                ss << "error at line " << currentLineNumber << ": The variable '" << find3(rhs.str) << "' contained in the definition of The variable '" << variable_name << "' is unassigned";
+                                ss << "error at line " << currentLineNumber << ": The variable '" << find3(rhs->str) << "' contained in the definition of The variable '" << variable_name << "' is unassigned";
                                 finalString = ss.str();
                             }
                             else
                             {
-                                if(lhs != rhs.grid_mapping)
+                                if(lhs != rhs->grid_mapping)
                                 {
                                     stringstream ss;
                                     ss << "error at line " << currentLineNumber << ": The length of The variable '" << variable_name << "' from its definition differs than the length of its assignment";
@@ -5133,10 +5168,10 @@ string extended_plural_declaration_with_assignment_function(char* variable_name,
                                 else
                                 {
                                     stringstream ss;
-                                    ss << "const " << getStringFromVariableType(rhs.type) << " " << variable_name << " = " << rhs.str << ";";
+                                    ss << "const " << getStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
                                     finalString = ss.str();
                                     var[varNo++].name = variable_name;
-                                    var[varNo-1].type = rhs.type;
+                                    var[varNo-1].type = rhs->type;
                                     var[varNo-1].grid_mapping = lhs;
                                     var[varNo-1].assigned = true;
                                 }
@@ -5890,33 +5925,3 @@ string getStringFromVariableType(VariableType v)
 	return ss.str();
 }
 
-
-void clone_info(info& output, const info& input)
-{
-	if (output.str != NULL) {
-		/**
-		  * FIXME: In our case, output and input often contain the same pointer for str....
-		  * We really should be using pointers instead of info structs in the %union...
-		  */
-		//free(output.str);
-		output.str = NULL;
-	}
-
-	if (input.str != NULL) {
-		output.str = strdup(input.str);
-	}
-	else {
-		output.str = NULL;
-	}
-	output.grid_mapping = input.grid_mapping;
-	output.array_size = input.array_size;
-	output.type = input.type;
-}
-
-
-void clone_info_without_name(info& output, const info& input)
-{
-  output.grid_mapping = input.grid_mapping;
-  output.array_size = input.array_size;
-  output.type = input.type;
-}
