@@ -157,6 +157,7 @@
 	{
 		//Why does this not work?: info() : size(GRID_MAPPING_INVALID), array_size(-1), str(NULL), type(TYPE_INVALID), collection(false) {}
         char* str;            // The string which is to be outputted in the C++ file
+		char* error_str;      // All errors go here.
 		GridMapping grid_mapping;  // This defines the mapping of the variable (one value per face, cell, interior face, etc.)
 		int array_size;       // The number of elements in a vector / array
 		VariableType type;    // The type of the variable
@@ -451,36 +452,23 @@ expression: '-' expression
                                                 }
                                              }
           | expression '+' expression
-                                             { // both should be scalar
-                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str);
-                                                clone_info_without_name($$, $1);
-                                             }
-                                             {  // they both should be scalars
-                                                if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                {
-                                                    LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                }
-                                                else
-                                                {
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str);
-                                                    clone_info_without_name($$, $1);
-                                                }
-                                             }
-                                             {   // both should be vector
-                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str);
-                                                  clone_info_without_name($$, $1);
-                                             }
-                                             {  // both should be vectors
-                                                if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                {
-                                                    LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                }
-                                                else
-                                                {
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str);
-                                                    clone_info_without_name($$, $1);
-                                                }
-                                             }
+			  {
+				  //error checking.
+				  if ($1.grid_mapping != $3.grid_mapping)) {
+					  STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "Grid mapping does not match: " << $1.grid_mapping << " and " << $3.grid_mapping);
+				  }
+				  else if (($1.type != $3.type)) {
+					  STREAM_TO_DOLLARS_CHAR_ARRAY($$.error_str, "Types does not match: " << $1.type << " and " << $3.type);
+				  }
+
+				  switch ($1.type.entity_type) {
+				  case TYPE_SCALAR:   
+				  case TYPE_VECTOR:
+                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str);
+                        clone_info_without_name($$, $1);
+						break;
+				  }
+			  }
           | expression '-' expression
                                              { // both should be scalar
                                                 STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
@@ -1711,7 +1699,12 @@ singular_assignment: VARIABLE '=' USS                      { string out = USS_as
                    | VARIABLE '=' expression   //TODO: verify that "expression" is not a collection
                                               					   {
                                                 						  string out = singular_assignment_function($1.str, $3);
-                                                						  $$.str = strdup(out.c_str());
+																		  if ($3.error_str != NULL) {
+                                                							$$.str = strdup(out.c_str());
+																		  }
+																		  else {
+																			$$.str = strdup($3.error_str);
+																		  }
                                               					   }
                    ;
 
