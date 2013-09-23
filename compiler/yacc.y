@@ -909,6 +909,7 @@ expression: '-' expression
                                                      }
           | VOLUME '(' expression ')'
                                                      {
+														 $$ = new info();
                                                         if($3->error_str.size() > 0) {
                                                             $$->error_str = $3->error_str;
 														}
@@ -1322,6 +1323,7 @@ expression: '-' expression
                                                  }
           | INTERIOR_FACES '(' GRID ')'
                                                  {
+													 $$ = new info();
                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.interiorFaces()");
                                                     $$->grid_mapping = GRID_MAPPING_INTERIORFACES;
                                                     $$->array_size = 1;
@@ -1426,6 +1428,7 @@ expression: '-' expression
                                                  }
           | ALL_CELLS '(' GRID ')'
                                                  {
+													 $$ = new info();
                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.allCells()");
                                                     $$->grid_mapping = GRID_MAPPING_ALLCELLS;
                                                     $$->array_size = 1;
