@@ -242,7 +242,7 @@
 
 %code provides
 {
-	void yyerror(const const char* s);
+	void yyerror(const char* s);
 	int yylex(void);
 	bool find1(const char* s1, const char* s2);
 	char* find2(const char* s1);
@@ -378,6 +378,7 @@ bool operator!=(const VariableType& a, const VariableType& b) {
 
 floating_point: INTEGER '.' INTEGER
                                       {
+                                            $$ = new info();
                                       		STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << "." << $3->str.c_str());
                                       		$$->grid_mapping = GRID_MAPPING_ENTITY;
                                       		$$->array_size = 1;
@@ -387,11 +388,12 @@ floating_point: INTEGER '.' INTEGER
               ;
 
 
-number: floating_point                { 
-											$$ = $1->clone(); 
+number: floating_point                {
+											$$ = $1->clone();
 										}
       | INTEGER
                                       {
+                                                $$ = new info();
                               					$$->str = $1->str.c_str();
                               					$$->grid_mapping = GRID_MAPPING_ENTITY;
                               					$$->array_size = 1;
@@ -404,6 +406,7 @@ number: floating_point                {
 
 scalars: expression
                                       {
+                                        $$ = new info();
                                         if($1->error_str.size() > 0)
                                             $$->error_str = $1->error_str;
                                         else
@@ -436,6 +439,7 @@ scalars: expression
                                       }
        | scalars ',' expression
                                       {
+                                        $$ = new info();
                                         if($3->error_str.size() > 0)
                                             $$->error_str = $3->error_str;
                                         else
@@ -472,6 +476,7 @@ scalars: expression
 
 vectors: expression
                                           {
+                                            $$ = new info();
                                             if($1->error_str.size() > 0)
                                                 $$->error_str = $1->error_str;
                                             else
@@ -499,6 +504,7 @@ vectors: expression
                                           }
        | vectors ',' expression
                                           {
+                                            $$ = new info();
                                             if($3->error_str.size() > 0)
                                                 $$->error_str = $3->error_str;
                                             else
@@ -529,6 +535,7 @@ vectors: expression
 
 expression: '-' expression
                                              {
+                                                $$ = new info();
                                                 if($2->error_str.size() > 0)
                                                     $$->error_str = $2->error_str;
                                                 else
@@ -549,6 +556,7 @@ expression: '-' expression
                                              }
           | expression '+' expression
                                              {
+                                                $$ = new info();
                                                 if($1->error_str.size() > 0)
                                                     $$->error_str = $1->error_str;
                                                 else
@@ -602,6 +610,7 @@ expression: '-' expression
                                              }
           | expression '-' expression
                                              {
+                                                $$ = new info();
                                                 if($1->error_str.size() > 0)
                                                     $$->error_str = $1->error_str;
                                                 else
@@ -654,6 +663,7 @@ expression: '-' expression
                                              }
           | expression '*' expression
                                              {
+                                                $$ = new info();
                                                 if($1->error_str.size() > 0)
                                                     $$->error_str = $1->error_str;
                                                 else
@@ -712,6 +722,7 @@ expression: '-' expression
                                              }
           | expression '/' expression
                                              {
+                                                $$ = new info();
                                                 if($1->error_str.size() > 0)
                                                     $$->error_str = $1->error_str;
                                                 else
@@ -757,6 +768,7 @@ expression: '-' expression
                                              }
           | expression '^' expression
                                              {
+                                                $$ = new info();
                                                 if($1->error_str.size() > 0)
                                                     $$->error_str = $1->error_str;
                                                 else
@@ -787,6 +799,7 @@ expression: '-' expression
                                              }
           | '(' expression ')'
                                              {
+                                                $$ = new info();
                                                 if($2->error_str.size() > 0)
                                                     $$->error_str = $2->error_str;
                                                 else
@@ -813,6 +826,7 @@ expression: '-' expression
                                              }
           | EUCLIDEAN_LENGTH '(' expression ')'
                                                      {
+                                                        $$ = new info();
                                                         if($3->error_str.size() > 0)
                                                             $$->error_str = $3->error_str;
                                                         else
@@ -845,6 +859,7 @@ expression: '-' expression
                                                      }
           | LENGTH '(' expression ')'
                                                      {
+                                                        $$ = new info();
                                                         if($3->error_str.size() > 0)
                                                             $$->error_str = $3->error_str;
                                                         else
@@ -877,6 +892,7 @@ expression: '-' expression
                                                      }
           | AREA '(' expression ')'
                                                      {
+                                                        $$ = new info();
                                                         if($3->error_str.size() > 0)
                                                             $$->error_str = $3->error_str;
                                                         else
@@ -943,6 +959,7 @@ expression: '-' expression
                                                      }
           | DOT '(' expression ',' expression ')'
                                                      {
+                                                        $$ = new info();
                                                          if($3->error_str.size() > 0)
                                                             $$->error_str = $3->error_str;
                                                          else
@@ -982,6 +999,7 @@ expression: '-' expression
                                                       }
           | CEIL '(' expression ')'
                                                      {
+                                                        $$ = new info();
                                                         if($3->error_str.size() > 0)
                                                             $$->error_str = $3->error_str;
                                                         else
@@ -1014,6 +1032,7 @@ expression: '-' expression
                                                      }
           | FLOOR '(' expression ')'
                                                      {
+                                                        $$ = new info();
                                                         if($3->error_str.size() > 0)
                                                             $$->error_str = $3->error_str;
                                                         else
@@ -1046,6 +1065,7 @@ expression: '-' expression
                                                      }
           | ABS '(' expression ')'
                                                      {
+                                                        $$ = new info();
                                                         if($3->error_str.size() > 0)
                                                             $$->error_str = $3->error_str;
                                                         else
@@ -1078,6 +1098,7 @@ expression: '-' expression
                                                      }
           | MIN '(' scalars ')'
                                                      {
+                                                        $$ = new info();
                                                         if($3->error_str.size() > 0)
                                                             $$->error_str = $3->error_str;
                                                         else
@@ -1091,6 +1112,7 @@ expression: '-' expression
                                                      }
           | MAX '(' scalars ')'
                                                      {
+                                                        $$ = new info();
                                                         if($3->error_str.size() > 0)
                                                             $$->error_str = $3->error_str;
                                                         else
@@ -1104,6 +1126,7 @@ expression: '-' expression
                                                      }
           | GRADIENT '(' expression ')'
                                                      {
+                                                        $$ = new info();
                                                         if($3->error_str.size() > 0)
                                                             $$->error_str = $3->error_str;
                                                         else
@@ -1136,6 +1159,7 @@ expression: '-' expression
                                                      }
           | DIVERGENCE '(' expression ')'
                                                      {
+                                                        $$ = new info();
                                                         if($3->error_str.size() > 0)
                                                             $$->error_str = $3->error_str;
                                                         else
@@ -1168,6 +1192,7 @@ expression: '-' expression
                                                      }
           | '[' scalars ']'
                                                   {
+                                                     $$ = new info();
                                                       if($2->error_str.size() > 0)
                                                           $$->error_str = $2->error_str;
                                                       else
@@ -1181,6 +1206,7 @@ expression: '-' expression
                                                   }
           | CENTROID '(' expression ')'
                                                   {
+                                                     $$ = new info();
                                                       if($3->error_str.size() > 0)
                                                           $$->error_str = $3->error_str;
                                                       else
@@ -1230,6 +1256,7 @@ expression: '-' expression
                                                   }
           | NORMAL '(' expression ')'
                                                   {
+                                                     $$ = new info();
                                                       if($3->error_str.size() > 0)
                                                           $$->error_str = $3->error_str;
                                                       else
@@ -1262,6 +1289,7 @@ expression: '-' expression
                                                  }
           | '[' vectors ']'
                                                  {
+                                                    $$ = new info();
                                                     if($2->error_str.size() > 0)
                                                         $$->error_str = $2->error_str;
                                                     else
@@ -1275,6 +1303,7 @@ expression: '-' expression
                                                  }
           | INTERIOR_VERTICES '(' GRID ')'
                                                  {
+                                                    $$ = new info();
                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.interiorVertices()");
                                                     $$->grid_mapping = GRID_MAPPING_INTERIORVERTICES;
                                                     $$->array_size = 1;
@@ -1283,6 +1312,7 @@ expression: '-' expression
                                                  }
           | BOUNDARY_VERTICES '(' GRID ')'
                                                  {
+                                                    $$ = new info();
                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.boundaryVertices()");
                                                     $$->grid_mapping = GRID_MAPPING_BOUNDARYVERTICES;
                                                     $$->array_size = 1;
@@ -1291,6 +1321,7 @@ expression: '-' expression
                                                  }
           | ALL_VERTICES '(' GRID ')'
                                                  {
+                                                    $$ = new info();
                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.allVertices()");
                                                     $$->grid_mapping = GRID_MAPPING_ALLVERTICES;
                                                     $$->array_size = 1;
@@ -1299,6 +1330,7 @@ expression: '-' expression
                                                  }
           | INTERIOR_EDGES '(' GRID ')'
                                                  {
+                                                    $$ = new info();
                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.interiorEdges()");
                                                     $$->grid_mapping = GRID_MAPPING_INTERIOREDGES;
                                                     $$->array_size = 1;
@@ -1307,6 +1339,7 @@ expression: '-' expression
                                                  }
           | BOUNDARY_EDGES '(' GRID ')'
                                                  {
+                                                    $$ = new info();
                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.boundaryEdges()");
                                                     $$->grid_mapping = GRID_MAPPING_BOUNDARYEDGES;
                                                     $$->array_size = 1;
@@ -1315,6 +1348,7 @@ expression: '-' expression
                                                  }
           | ALL_EDGES '(' GRID ')'
                                                  {
+                                                    $$ = new info();
                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.allEdges()");
                                                     $$->grid_mapping = GRID_MAPPING_ALLEDGES;
                                                     $$->array_size = 1;
@@ -1332,6 +1366,7 @@ expression: '-' expression
                                                  }
           | BOUNDARY_FACES '(' GRID ')'
                                                  {
+                                                    $$ = new info();
                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.boundaryFaces()");
                                                     $$->grid_mapping = GRID_MAPPING_BOUNDARYFACES;
                                                     $$->array_size = 1;
@@ -1340,6 +1375,7 @@ expression: '-' expression
                                                  }
           | ALL_FACES '(' GRID ')'
                                                  {
+                                                    $$ = new info();
                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.allFaces()");
                                                     $$->grid_mapping = GRID_MAPPING_ALLFACES;
                                                     $$->array_size = 1;
@@ -1348,6 +1384,7 @@ expression: '-' expression
                                                  }
           | FIRST_CELL '(' expression ')'
                                                  {
+                                                     $$ = new info();
                                                       if($3->error_str.size() > 0)
                                                           $$->error_str = $3->error_str;
                                                       else
@@ -1380,6 +1417,7 @@ expression: '-' expression
                                                  }
           | SECOND_CELL '(' expression ')'
                                                  {
+                                                     $$ = new info();
                                                       if($3->error_str.size() > 0)
                                                           $$->error_str = $3->error_str;
                                                       else
@@ -1421,6 +1459,7 @@ expression: '-' expression
                                                  }
           | BOUNDARY_CELLS '(' GRID ')'
                                                  {
+                                                    $$ = new info();
                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.boundaryCells()");
                                                     $$->grid_mapping = GRID_MAPPING_BOUNDARYCELLS;
                                                     $$->array_size = 1;
@@ -1438,6 +1477,7 @@ expression: '-' expression
                                                  }
           | NOT expression
                                                  {
+                                                     $$ = new info();
                                                       if($2->error_str.size() > 0)
                                                           $$->error_str = $2->error_str;
                                                       else
@@ -1464,6 +1504,7 @@ expression: '-' expression
                                                  }
           | expression AND expression
                                                  {
+                                                    $$ = new info();
                                                     if($1->error_str.size() > 0)
                                                         $$->error_str = $1->error_str;
                                                     else
@@ -1499,6 +1540,7 @@ expression: '-' expression
                                                  }
           | expression OR expression
                                                  {
+                                                    $$ = new info();
                                                     if($1->error_str.size() > 0)
                                                         $$->error_str = $1->error_str;
                                                     else
@@ -1534,6 +1576,7 @@ expression: '-' expression
                                                  }
           | expression XOR expression
                                                  {
+                                                    $$ = new info();
                                                     if($1->error_str.size() > 0)
                                                         $$->error_str = $1->error_str;
                                                     else
@@ -1569,6 +1612,7 @@ expression: '-' expression
                                                  }
           | TRUE
                                                  {
+                                                    $$ = new info();
                                                     $$->str = strdup("true");
                                                     $$->grid_mapping = GRID_MAPPING_ENTITY;
                                                     $$->array_size = 1;
@@ -1577,6 +1621,7 @@ expression: '-' expression
                                                  }
           | FALSE
                                                  {
+                                                    $$ = new info();
                                                     $$->str = strdup("false");
                                                     $$->grid_mapping = GRID_MAPPING_ENTITY;
                                                     $$->array_size = 1;
@@ -1585,6 +1630,7 @@ expression: '-' expression
                                                  }
           | expression '>' expression
                                                  {
+                                                    $$ = new info();
                                                     if($1->error_str.size() > 0)
                                                         $$->error_str = $1->error_str;
                                                     else
@@ -1626,6 +1672,7 @@ expression: '-' expression
                                                  }
           | expression '<' expression
                                                  {
+                                                    $$ = new info();
                                                     if($1->error_str.size() > 0)
                                                         $$->error_str = $1->error_str;
                                                     else
@@ -1667,6 +1714,7 @@ expression: '-' expression
                                                  }
           | expression LESSEQ expression
                                                  {
+                                                    $$ = new info();
                                                     if($1->error_str.size() > 0)
                                                         $$->error_str = $1->error_str;
                                                     else
@@ -1708,6 +1756,7 @@ expression: '-' expression
                                                  }
           | expression GREATEREQ expression
                                                  {
+                                                    $$ = new info();
                                                     if($1->error_str.size() > 0)
                                                         $$->error_str = $1->error_str;
                                                     else
@@ -1749,6 +1798,7 @@ expression: '-' expression
                                                  }
           | expression EQ expression
                                                  {
+                                                    $$ = new info();
                                                     if($1->error_str.size() > 0)
                                                         $$->error_str = $1->error_str;
                                                     else
@@ -1790,6 +1840,7 @@ expression: '-' expression
                                                  }
           | expression NOTEQ expression
                                                  {
+                                                    $$ = new info();
                                                     if($1->error_str.size() > 0)
                                                         $$->error_str = $1->error_str;
                                                     else
@@ -2310,11 +2361,11 @@ declaration: singular_declaration           { $$->str = $1->str; }
            ;
 
 
-assignment: VARIABLE '=' USS                      { 
+assignment: VARIABLE '=' USS                      {
 					$$->str = USS_assignment_function($1->str.c_str());
 			}
-          | VARIABLE '=' USSWD '(' number ')'     { 
-					$$->str = USSWD_assignment_function($1->str.c_str(), $5->str.c_str()); 
+          | VARIABLE '=' USSWD '(' number ')'     {
+					$$->str = USSWD_assignment_function($1->str.c_str(), $5->str.c_str());
 			}
           | VARIABLE '=' USCOS '(' expression ')'
                                                   {
