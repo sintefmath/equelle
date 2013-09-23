@@ -404,7 +404,7 @@ number: floating_point                {
 
 scalars: expression
                                       {
-                                        if($1->error_str.size() == 0)
+                                        if($1->error_str.size() > 0)
                                             $$->error_str = $1->error_str;
                                         else
                                           switch($1->type.entity_type)
@@ -436,7 +436,7 @@ scalars: expression
                                       }
        | scalars ',' expression
                                       {
-                                        if($3->error_str.size() == 0)
+                                        if($3->error_str.size() > 0)
                                             $$->error_str = $3->error_str;
                                         else
                                           switch($3->type.entity_type)
@@ -472,7 +472,7 @@ scalars: expression
 
 vectors: expression
                                           {
-                                            if($1->error_str.size() == 0)
+                                            if($1->error_str.size() > 0)
                                                 $$->error_str = $1->error_str;
                                             else
                                             {
@@ -499,7 +499,7 @@ vectors: expression
                                           }
        | vectors ',' expression
                                           {
-                                            if($3->error_str.size() == 0)
+                                            if($3->error_str.size() > 0)
                                                 $$->error_str = $3->error_str;
                                             else
                                             {
@@ -529,7 +529,7 @@ vectors: expression
 
 expression: '-' expression
                                              {
-                                                if($2->error_str.size() == 0)
+                                                if($2->error_str.size() > 0)
                                                     $$->error_str = $2->error_str;
                                                 else
                                                   switch($2->type.entity_type)
@@ -549,10 +549,10 @@ expression: '-' expression
                                              }
           | expression '+' expression
                                              {
-                                                if($1->error_str.size() == 0)
+                                                if($1->error_str.size() > 0)
                                                     $$->error_str = $1->error_str;
                                                 else
-                                                if($3->error_str.size() == 0)
+                                                if($3->error_str.size() > 0)
                                                     $$->error_str = $3->error_str;
                                                 else
                                                 {
@@ -602,10 +602,10 @@ expression: '-' expression
                                              }
           | expression '-' expression
                                              {
-                                                if($1->error_str.size() == 0)
+                                                if($1->error_str.size() > 0)
                                                     $$->error_str = $1->error_str;
                                                 else
-                                                if($3->error_str.size() == 0)
+                                                if($3->error_str.size() > 0)
                                                     $$->error_str = $3->error_str;
                                                 else
                                                 {
@@ -654,10 +654,10 @@ expression: '-' expression
                                              }
           | expression '*' expression
                                              {
-                                                if($1->error_str.size() == 0)
+                                                if($1->error_str.size() > 0)
                                                     $$->error_str = $1->error_str;
                                                 else
-                                                if($3->error_str.size() == 0)
+                                                if($3->error_str.size() > 0)
                                                     $$->error_str = $3->error_str;
                                                 else
                                                 {
@@ -712,10 +712,10 @@ expression: '-' expression
                                              }
           | expression '/' expression
                                              {
-                                                if($1->error_str.size() == 0)
+                                                if($1->error_str.size() > 0)
                                                     $$->error_str = $1->error_str;
                                                 else
-                                                if($3->error_str.size() == 0)
+                                                if($3->error_str.size() > 0)
                                                     $$->error_str = $3->error_str;
                                                 else
                                                 {
@@ -757,10 +757,10 @@ expression: '-' expression
                                              }
           | expression '^' expression
                                              {
-                                                if($1->error_str.size() == 0)
+                                                if($1->error_str.size() > 0)
                                                     $$->error_str = $1->error_str;
                                                 else
-                                                if($3->error_str.size() == 0)
+                                                if($3->error_str.size() > 0)
                                                     $$->error_str = $3->error_str;
                                                 else
                                                 {
@@ -787,7 +787,7 @@ expression: '-' expression
                                              }
           | '(' expression ')'
                                              {
-                                                if($2->error_str.size() == 0)
+                                                if($2->error_str.size() > 0)
                                                     $$->error_str = $2->error_str;
                                                 else
                                                 {
@@ -813,7 +813,7 @@ expression: '-' expression
                                              }
           | EUCLIDEAN_LENGTH '(' expression ')'
                                                      {
-                                                        if($3->error_str.size() == 0)
+                                                        if($3->error_str.size() > 0)
                                                             $$->error_str = $3->error_str;
                                                         else
                                                         {
@@ -845,7 +845,7 @@ expression: '-' expression
                                                      }
           | LENGTH '(' expression ')'
                                                      {
-                                                        if($3->error_str.size() == 0)
+                                                        if($3->error_str.size() > 0)
                                                             $$->error_str = $3->error_str;
                                                         else
                                                         {
@@ -877,7 +877,7 @@ expression: '-' expression
                                                      }
           | AREA '(' expression ')'
                                                      {
-                                                        if($3->error_str.size() == 0)
+                                                        if($3->error_str.size() > 0)
                                                             $$->error_str = $3->error_str;
                                                         else
                                                         {
@@ -909,7 +909,7 @@ expression: '-' expression
                                                      }
           | VOLUME '(' expression ')'
                                                      {
-                                                        if($3->error_str.size() == 0) {
+                                                        if($3->error_str.size() > 0) {
                                                             $$->error_str = $3->error_str;
 														}
                                                         else
@@ -942,10 +942,10 @@ expression: '-' expression
                                                      }
           | DOT '(' expression ',' expression ')'
                                                      {
-                                                         if($3->error_str.size() == 0)
+                                                         if($3->error_str.size() > 0)
                                                             $$->error_str = $3->error_str;
                                                          else
-                                                         if($5->error_str.size() == 0)
+                                                         if($5->error_str.size() > 0)
                                                             $$->error_str = $5->error_str;
                                                          else
                                                          {
@@ -981,7 +981,7 @@ expression: '-' expression
                                                       }
           | CEIL '(' expression ')'
                                                      {
-                                                        if($3->error_str.size() == 0)
+                                                        if($3->error_str.size() > 0)
                                                             $$->error_str = $3->error_str;
                                                         else
                                                         {
@@ -1013,7 +1013,7 @@ expression: '-' expression
                                                      }
           | FLOOR '(' expression ')'
                                                      {
-                                                        if($3->error_str.size() == 0)
+                                                        if($3->error_str.size() > 0)
                                                             $$->error_str = $3->error_str;
                                                         else
                                                         {
@@ -1045,7 +1045,7 @@ expression: '-' expression
                                                      }
           | ABS '(' expression ')'
                                                      {
-                                                        if($3->error_str.size() == 0)
+                                                        if($3->error_str.size() > 0)
                                                             $$->error_str = $3->error_str;
                                                         else
                                                         {
@@ -1077,7 +1077,7 @@ expression: '-' expression
                                                      }
           | MIN '(' scalars ')'
                                                      {
-                                                        if($3->error_str.size() == 0)
+                                                        if($3->error_str.size() > 0)
                                                             $$->error_str = $3->error_str;
                                                         else
                                                         {
@@ -1090,7 +1090,7 @@ expression: '-' expression
                                                      }
           | MAX '(' scalars ')'
                                                      {
-                                                        if($3->error_str.size() == 0)
+                                                        if($3->error_str.size() > 0)
                                                             $$->error_str = $3->error_str;
                                                         else
                                                         {
@@ -1103,7 +1103,7 @@ expression: '-' expression
                                                      }
           | GRADIENT '(' expression ')'
                                                      {
-                                                        if($3->error_str.size() == 0)
+                                                        if($3->error_str.size() > 0)
                                                             $$->error_str = $3->error_str;
                                                         else
                                                         {
@@ -1135,7 +1135,7 @@ expression: '-' expression
                                                      }
           | DIVERGENCE '(' expression ')'
                                                      {
-                                                        if($3->error_str.size() == 0)
+                                                        if($3->error_str.size() > 0)
                                                             $$->error_str = $3->error_str;
                                                         else
                                                         {
@@ -1167,7 +1167,7 @@ expression: '-' expression
                                                      }
           | '[' scalars ']'
                                                   {
-                                                      if($2->error_str.size() == 0)
+                                                      if($2->error_str.size() > 0)
                                                           $$->error_str = $2->error_str;
                                                       else
                                                       {
@@ -1180,7 +1180,7 @@ expression: '-' expression
                                                   }
           | CENTROID '(' expression ')'
                                                   {
-                                                      if($3->error_str.size() == 0)
+                                                      if($3->error_str.size() > 0)
                                                           $$->error_str = $3->error_str;
                                                       else
                                                       {
@@ -1229,7 +1229,7 @@ expression: '-' expression
                                                   }
           | NORMAL '(' expression ')'
                                                   {
-                                                      if($3->error_str.size() == 0)
+                                                      if($3->error_str.size() > 0)
                                                           $$->error_str = $3->error_str;
                                                       else
                                                       {
@@ -1261,7 +1261,7 @@ expression: '-' expression
                                                  }
           | '[' vectors ']'
                                                  {
-                                                    if($2->error_str.size() == 0)
+                                                    if($2->error_str.size() > 0)
                                                         $$->error_str = $2->error_str;
                                                     else
                                                     {
@@ -1346,7 +1346,7 @@ expression: '-' expression
                                                  }
           | FIRST_CELL '(' expression ')'
                                                  {
-                                                      if($3->error_str.size() == 0)
+                                                      if($3->error_str.size() > 0)
                                                           $$->error_str = $3->error_str;
                                                       else
                                                       {
@@ -1378,7 +1378,7 @@ expression: '-' expression
                                                  }
           | SECOND_CELL '(' expression ')'
                                                  {
-                                                      if($3->error_str.size() == 0)
+                                                      if($3->error_str.size() > 0)
                                                           $$->error_str = $3->error_str;
                                                       else
                                                       {
@@ -1434,7 +1434,7 @@ expression: '-' expression
                                                  }
           | NOT expression
                                                  {
-                                                      if($2->error_str.size() == 0)
+                                                      if($2->error_str.size() > 0)
                                                           $$->error_str = $2->error_str;
                                                       else
                                                       {
@@ -1460,10 +1460,10 @@ expression: '-' expression
                                                  }
           | expression AND expression
                                                  {
-                                                    if($1->error_str.size() == 0)
+                                                    if($1->error_str.size() > 0)
                                                         $$->error_str = $1->error_str;
                                                     else
-                                                    if($3->error_str.size() == 0)
+                                                    if($3->error_str.size() > 0)
                                                         $$->error_str = $3->error_str;
                                                     else
                                                     {
@@ -1495,10 +1495,10 @@ expression: '-' expression
                                                  }
           | expression OR expression
                                                  {
-                                                    if($1->error_str.size() == 0)
+                                                    if($1->error_str.size() > 0)
                                                         $$->error_str = $1->error_str;
                                                     else
-                                                    if($3->error_str.size() == 0)
+                                                    if($3->error_str.size() > 0)
                                                         $$->error_str = $3->error_str;
                                                     else
                                                     {
@@ -1530,10 +1530,10 @@ expression: '-' expression
                                                  }
           | expression XOR expression
                                                  {
-                                                    if($1->error_str.size() == 0)
+                                                    if($1->error_str.size() > 0)
                                                         $$->error_str = $1->error_str;
                                                     else
-                                                    if($3->error_str.size() == 0)
+                                                    if($3->error_str.size() > 0)
                                                         $$->error_str = $3->error_str;
                                                     else
                                                     {
@@ -1581,10 +1581,10 @@ expression: '-' expression
                                                  }
           | expression '>' expression
                                                  {
-                                                    if($1->error_str.size() == 0)
+                                                    if($1->error_str.size() > 0)
                                                         $$->error_str = $1->error_str;
                                                     else
-                                                    if($3->error_str.size() == 0)
+                                                    if($3->error_str.size() > 0)
                                                         $$->error_str = $3->error_str;
                                                     else
                                                     {
@@ -1622,10 +1622,10 @@ expression: '-' expression
                                                  }
           | expression '<' expression
                                                  {
-                                                    if($1->error_str.size() == 0)
+                                                    if($1->error_str.size() > 0)
                                                         $$->error_str = $1->error_str;
                                                     else
-                                                    if($3->error_str.size() == 0)
+                                                    if($3->error_str.size() > 0)
                                                         $$->error_str = $3->error_str;
                                                     else
                                                     {
@@ -1663,10 +1663,10 @@ expression: '-' expression
                                                  }
           | expression LESSEQ expression
                                                  {
-                                                    if($1->error_str.size() == 0)
+                                                    if($1->error_str.size() > 0)
                                                         $$->error_str = $1->error_str;
                                                     else
-                                                    if($3->error_str.size() == 0)
+                                                    if($3->error_str.size() > 0)
                                                         $$->error_str = $3->error_str;
                                                     else
                                                     {
@@ -1704,10 +1704,10 @@ expression: '-' expression
                                                  }
           | expression GREATEREQ expression
                                                  {
-                                                    if($1->error_str.size() == 0)
+                                                    if($1->error_str.size() > 0)
                                                         $$->error_str = $1->error_str;
                                                     else
-                                                    if($3->error_str.size() == 0)
+                                                    if($3->error_str.size() > 0)
                                                         $$->error_str = $3->error_str;
                                                     else
                                                     {
@@ -1745,10 +1745,10 @@ expression: '-' expression
                                                  }
           | expression EQ expression
                                                  {
-                                                    if($1->error_str.size() == 0)
+                                                    if($1->error_str.size() > 0)
                                                         $$->error_str = $1->error_str;
                                                     else
-                                                    if($3->error_str.size() == 0)
+                                                    if($3->error_str.size() > 0)
                                                         $$->error_str = $3->error_str;
                                                     else
                                                     {
@@ -1786,10 +1786,10 @@ expression: '-' expression
                                                  }
           | expression NOTEQ expression
                                                  {
-                                                    if($1->error_str.size() == 0)
+                                                    if($1->error_str.size() > 0)
                                                         $$->error_str = $1->error_str;
                                                     else
-                                                    if($3->error_str.size() == 0)
+                                                    if($3->error_str.size() > 0)
                                                         $$->error_str = $3->error_str;
                                                     else
                                                     {
@@ -2179,7 +2179,7 @@ plural_declaration: VARIABLE ':' COLLECTION OF SCALAR       { $$->str = declarat
 //TODO: verify that "expression" is a collection
 extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON expression
                                 {
-                                  if($7->error_str.size() == 0)
+                                  if($7->error_str.size() > 0)
                                       $$->str = $7->error_str;
                                   else
                                   {
@@ -2194,7 +2194,7 @@ extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON expression
                                 }
                            | VARIABLE ':' COLLECTION OF VECTOR ON expression
                                 {
-                                  if($7->error_str.size() == 0)
+                                  if($7->error_str.size() > 0)
                                       $$->str = $7->error_str;
                                   else
                                   {
@@ -2209,7 +2209,7 @@ extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON expression
                                 }
                            | VARIABLE ':' COLLECTION OF VERTEX ON expression
                                 {
-                                  if($7->error_str.size() == 0)
+                                  if($7->error_str.size() > 0)
                                       $$->str = $7->error_str;
                                   else
                                   {
@@ -2224,7 +2224,7 @@ extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON expression
                                 }
                            | VARIABLE ':' COLLECTION OF EDGE ON expression
                                 {
-                                  if($7->error_str.size() == 0)
+                                  if($7->error_str.size() > 0)
                                       $$->str = $7->error_str;
                                   else
                                   {
@@ -2239,7 +2239,7 @@ extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON expression
                                 }
                            | VARIABLE ':' COLLECTION OF FACE ON expression
                                 {
-                                  if($7->error_str.size() == 0)
+                                  if($7->error_str.size() > 0)
                                       $$->str = $7->error_str;
                                   else
                                   {
@@ -2254,7 +2254,7 @@ extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON expression
                                 }
                            | VARIABLE ':' COLLECTION OF CELL ON expression
                                 {
-                                  if($7->error_str.size() == 0)
+                                  if($7->error_str.size() > 0)
                                       $$->str = $7->error_str;
                                   else
                                   {
@@ -2269,7 +2269,7 @@ extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON expression
                                 }
                            | VARIABLE ':' COLLECTION OF ADB ON expression
                                 {
-                                  if($7->error_str.size() == 0)
+                                  if($7->error_str.size() > 0)
                                       $$->str = $7->error_str;
                                   else
                                   {
@@ -2284,7 +2284,7 @@ extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON expression
                                 }
                            | VARIABLE ':' COLLECTION OF BOOLEAN ON expression
                                 {
-                                  if($7->error_str.size() == 0)
+                                  if($7->error_str.size() > 0)
                                       $$->str = $7->error_str;
                                   else
                                   {
@@ -2314,7 +2314,7 @@ assignment: VARIABLE '=' USS                      {
 			}
           | VARIABLE '=' USCOS '(' expression ')'
                                                   {
-                                                    if($5->error_str.size() == 0)
+                                                    if($5->error_str.size() > 0)
                                                         $$->str = $5->error_str;
                                                     else
                                                     {
@@ -2328,7 +2328,7 @@ assignment: VARIABLE '=' USS                      {
                                                   }
           | VARIABLE '=' expression
                                               					   {
-                        									if($3->error_str.size() == 0)
+                        									if($3->error_str.size() > 0)
                                                                   $$->str = $3->error_str;
                                                               else
                                                               {
@@ -2350,7 +2350,7 @@ assignment: VARIABLE '=' USS                      {
 //TODO: verify that "expression" is not a collection
 singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' expression
                                                           {
-                                                            if($5->error_str.size() == 0)
+                                                            if($5->error_str.size() > 0)
                                                                 $$->str = $5->error_str;
                                                             else
                                                             {
@@ -2365,7 +2365,7 @@ singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' expression
                                                           }
                                     | VARIABLE ':' VECTOR '=' expression
                                                           {
-                                                            if($5->error_str.size() == 0)
+                                                            if($5->error_str.size() > 0)
                                                                 $$->str = $5->error_str;
                                                             else
                                                             {
@@ -2380,7 +2380,7 @@ singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' expression
                                                           }
                                     | VARIABLE ':' VERTEX '=' expression
                                                           {
-                                                            if($5->error_str.size() == 0)
+                                                            if($5->error_str.size() > 0)
                                                                 $$->str = $5->error_str;
                                                             else
                                                             {
@@ -2395,7 +2395,7 @@ singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' expression
                                                           }
                                     | VARIABLE ':' EDGE '=' expression
                                                           {
-                                                            if($5->error_str.size() == 0)
+                                                            if($5->error_str.size() > 0)
                                                                 $$->str = $5->error_str;
                                                             else
                                                             {
@@ -2410,7 +2410,7 @@ singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' expression
                                                           }
                                     | VARIABLE ':' FACE '=' expression
                                                           {
-                                                            if($5->error_str.size() == 0)
+                                                            if($5->error_str.size() > 0)
                                                                 $$->str = $5->error_str;
                                                             else
                                                             {
@@ -2425,7 +2425,7 @@ singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' expression
                                                           }
                                     | VARIABLE ':' CELL '=' expression
                                                           {
-                                                            if($5->error_str.size() == 0)
+                                                            if($5->error_str.size() > 0)
                                                                 $$->str = $5->error_str;
                                                             else
                                                             {
@@ -2440,7 +2440,7 @@ singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' expression
                                                           }
                                     | VARIABLE ':' ADB '=' expression
                                                           {
-                                                            if($5->error_str.size() == 0)
+                                                            if($5->error_str.size() > 0)
                                                                 $$->str = $5->error_str;
                                                             else
                                                             {
@@ -2455,7 +2455,7 @@ singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' expression
                                                           }
                                     | VARIABLE ':' BOOLEAN '=' expression
                                                           {
-                                                            if($5->error_str.size() == 0)
+                                                            if($5->error_str.size() > 0)
                                                                 $$->str = $5->error_str;
                                                             else
                                                             {
@@ -2475,7 +2475,7 @@ singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' expression
 
 plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' expression
                                                           {
-                                                            if($7->error_str.size() == 0)
+                                                            if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
                                                             {
@@ -2490,7 +2490,7 @@ plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' expres
                                                           }
                                   | VARIABLE ':' COLLECTION OF VECTOR '=' expression
                                                           {
-                                                            if($7->error_str.size() == 0)
+                                                            if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
                                                             {
@@ -2505,7 +2505,7 @@ plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' expres
                                                           }
                                   | VARIABLE ':' COLLECTION OF VERTEX '=' expression
                                                           {
-                                                            if($7->error_str.size() == 0)
+                                                            if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
                                                             {
@@ -2520,7 +2520,7 @@ plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' expres
                                                           }
                                   | VARIABLE ':' COLLECTION OF EDGE '=' expression
                                                           {
-                                                            if($7->error_str.size() == 0)
+                                                            if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
                                                             {
@@ -2535,7 +2535,7 @@ plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' expres
                                                           }
                                   | VARIABLE ':' COLLECTION OF FACE '=' expression
                                                           {
-                                                            if($7->error_str.size() == 0)
+                                                            if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
                                                             {
@@ -2550,7 +2550,7 @@ plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' expres
                                                           }
                                   | VARIABLE ':' COLLECTION OF CELL '=' expression
                                                           {
-                                                            if($7->error_str.size() == 0)
+                                                            if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
                                                             {
@@ -2565,7 +2565,7 @@ plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' expres
                                                           }
                                   | VARIABLE ':' COLLECTION OF ADB '=' expression
                                                           {
-                                                            if($7->error_str.size() == 0)
+                                                            if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
                                                             {
@@ -2580,7 +2580,7 @@ plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' expres
                                                           }
                                   | VARIABLE ':' COLLECTION OF BOOLEAN '=' expression
                                                           {
-                                                            if($7->error_str.size() == 0)
+                                                            if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
                                                             {
@@ -2595,7 +2595,7 @@ plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' expres
                                                           }
                                   | VARIABLE ':' COLLECTION OF SCALAR '=' USCOS '(' expression ')'
                                                           {
-                                                            if($9->error_str.size() == 0)
+                                                            if($9->error_str.size() > 0)
                                                                 $$->str = $9->error_str;
                                                             else
                                                             {
@@ -2614,10 +2614,10 @@ plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' expres
 //TODO: verify that both "expression"s are collections
 extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR ON expression '=' expression
                                                           {
-                                                            if($7->error_str.size() == 0)
+                                                            if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
-                                                            if($9->error_str.size() == 0)
+                                                            if($9->error_str.size() > 0)
                                                                 $$->str = $9->error_str;
                                                             else
                                                             {
@@ -2635,10 +2635,10 @@ extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR O
                                                           }
                                            | VARIABLE ':' COLLECTION OF VECTOR ON expression '=' expression
                                                           {
-                                                            if($7->error_str.size() == 0)
+                                                            if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
-                                                            if($9->error_str.size() == 0)
+                                                            if($9->error_str.size() > 0)
                                                                 $$->str = $9->error_str;
                                                             else
                                                             {
@@ -2656,10 +2656,10 @@ extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR O
                                                           }
                                            | VARIABLE ':' COLLECTION OF VERTEX ON expression '=' expression
                                                           {
-                                                            if($7->error_str.size() == 0)
+                                                            if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
-                                                            if($9->error_str.size() == 0)
+                                                            if($9->error_str.size() > 0)
                                                                 $$->str = $9->error_str;
                                                             else
                                                             {
@@ -2677,10 +2677,10 @@ extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR O
                                                           }
                                            | VARIABLE ':' COLLECTION OF EDGE ON expression '=' expression
                                                           {
-                                                            if($7->error_str.size() == 0)
+                                                            if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
-                                                            if($9->error_str.size() == 0)
+                                                            if($9->error_str.size() > 0)
                                                                 $$->str = $9->error_str;
                                                             else
                                                             {
@@ -2698,10 +2698,10 @@ extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR O
                                                           }
                                            | VARIABLE ':' COLLECTION OF FACE ON expression '=' expression
                                                           {
-                                                            if($7->error_str.size() == 0)
+                                                            if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
-                                                            if($9->error_str.size() == 0)
+                                                            if($9->error_str.size() > 0)
                                                                 $$->str = $9->error_str;
                                                             else
                                                             {
@@ -2719,10 +2719,10 @@ extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR O
                                                           }
                                            | VARIABLE ':' COLLECTION OF CELL ON expression '=' expression
                                                           {
-                                                            if($7->error_str.size() == 0)
+                                                            if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
-                                                            if($9->error_str.size() == 0)
+                                                            if($9->error_str.size() > 0)
                                                                 $$->str = $9->error_str;
                                                             else
                                                             {
@@ -2740,10 +2740,10 @@ extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR O
                                                           }
                                            | VARIABLE ':' COLLECTION OF ADB ON expression '=' expression
                                                           {
-                                                            if($7->error_str.size() == 0)
+                                                            if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
-                                                            if($9->error_str.size() == 0)
+                                                            if($9->error_str.size() > 0)
                                                                 $$->str = $9->error_str;
                                                             else
                                                             {
@@ -2761,10 +2761,10 @@ extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR O
                                                           }
                                            | VARIABLE ':' COLLECTION OF BOOLEAN ON expression '=' expression
                                                           {
-                                                            if($7->error_str.size() == 0)
+                                                            if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
-                                                            if($9->error_str.size() == 0)
+                                                            if($9->error_str.size() > 0)
                                                                 $$->str = $9->error_str;
                                                             else
                                                             {
@@ -2782,10 +2782,10 @@ extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR O
                                                           }
                                            | VARIABLE ':' COLLECTION OF SCALAR ON expression '=' USCOS '(' expression ')'
                                                           {
-                                                            if($7->error_str.size() == 0)
+                                                            if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
-                                                            if($11->error_str.size() == 0)
+                                                            if($11->error_str.size() > 0)
                                                                 $$->str = $11->error_str;
                                                             else
                                                             {
