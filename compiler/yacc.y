@@ -309,6 +309,7 @@ bool operator!=(const VariableType& a, const VariableType& b) {
 %type<inf> VARIABLE
 %type<inf> COMMENT
 %type<inf> plural
+/*
 %type<inf> header
 %type<inf> parameter_list
 %type<inf> type
@@ -319,6 +320,7 @@ bool operator!=(const VariableType& a, const VariableType& b) {
 %type<inf> function_declaration
 %type<inf> function_assignment
 %type<inf> commands
+*/
 %type<inf> command
 %type<inf> command1
 %type<inf> command2
@@ -436,28 +438,142 @@ expression: '-' expression
                                                 STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str);
                                                 clone_info_without_name($$, $2);
                                              }
+                                             {  // it should be scalars
+                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str);
+                                                clone_info_without_name($$, $2);
+                                             }
+                                             {   // it should be vector
+                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str);
+                                                  clone_info_without_name($$, $2);
+                                             }
+                                             {   // it should be vectors
+                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str);
+                                                  clone_info_without_name($$, $2);
+                                             }            // produces 1 shift/reduce conflict
           | expression '+' expression
                                              { // both should be scalar
                                                 STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str);
                                                 clone_info_without_name($$, $1);
+                                             }
+                                             {  // they both should be scalars
+                                                if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                {
+                                                    LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                }
+                                                else
+                                                {
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str);
+                                                    clone_info_without_name($$, $1);
+                                                }
+                                             }
+                                             {   // both should be vector
+                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str);
+                                                  clone_info_without_name($$, $1);
+                                             }
+                                             {  // both should be vectors
+                                                if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                {
+                                                    LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                }
+                                                else
+                                                {
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str);
+                                                    clone_info_without_name($$, $1);
+                                                }
                                              }
           | expression '-' expression
                                              { // both should be scalar
                                                 STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
                                                 clone_info_without_name($$, $1);
                                              }
+                                             {  // they both should be scalars
+                                                if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                {
+                                                    LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                }
+                                                else
+                                                {
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
+                                                    clone_info_without_name($$, $1);
+                                                }
+                                             }
+                                             {   // both should be vector
+                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
+                                                  clone_info_without_name($$, $1);
+                                             }
+                                             {  // both should be vectors
+                                                if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                {
+                                                    LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                }
+                                                else
+                                                {
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
+                                                    clone_info_without_name($$, $1);
+                                                }
+                                             }
           | expression '*' expression
                                              { // both should be scalar
                                                 STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " * " << $3.str);
                                                 clone_info_without_name($$, $1);
+                                             }
+                                             {  // they both should be scalars
+                                                if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                {
+                                                    LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                }
+                                                else
+                                                {
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " * " << $3.str);
+                                                    clone_info_without_name($$, $1);
+                                                }
+                                             }
+                                             {  // 1st should be vector, 2nd should be scalar
+                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " * " << $3.str);
+                                                  clone_info_without_name($$, $1);
+                                             }
+                                             {  // 1st should be scalar, 2nd should be vector
+                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " * " << $3.str);
+                                                  clone_info_without_name($$, $3);
+                                             }
+                                             {  // 1st should be vectors, 2nd should be scalar
+                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
+                                                clone_info_without_name($$, $1);
+                                             }
+                                             {  // 1st should be scalar, 2nd should be vectors
+                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
+                                                clone_info_without_name($$, $3);
                                              }
           | expression '/' expression
                                              {  // both should be scalar
                                                 STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " / " << $3.str);
                                                 clone_info_without_name($$, $1);
                                              }
+                                             {  // they both should be scalars
+                                                if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                {
+                                                    LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                }
+                                                else
+                                                {
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " / " << $3.str);
+                                                    clone_info_without_name($$, $1);
+                                                }
+                                             }
+                                             {  // 1st should be vector, 2nd should be scalar
+                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " / " << $3.str);
+                                                  clone_info_without_name($$, $1);
+                                             }
+                                             {  // 1st should be vectors, 2nd should be scalar
+                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
+                                                clone_info_without_name($$, $1);
+                                             }
           | expression '^' expression
                                              {  // both should be scalar
+                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.pow(" << $1.str << ", " << $3.str << ")");
+                                                clone_info_without_name($$, $1);
+                                             }
+                                             {  // 1st should be scalars, 2nd should be scalar
                                                 STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.pow(" << $1.str << ", " << $3.str << ")");
                                                 clone_info_without_name($$, $1);
                                              }
@@ -471,6 +587,27 @@ expression: '-' expression
                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")");
                                                  clone_info_without_name($$, $2);
                                              }
+                                             {
+                                                 // it should be scalars
+                                                 STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")");
+                                                 clone_info_without_name($$, $2);
+                                             }
+                                             {  // it should be vector
+                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")");
+                                                  clone_info_without_name($$, $2);
+                                             }
+                                             {  // it should be vectors
+                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")");
+                                                clone_info_without_name($$, $2);
+                                             }
+                                             {  // it should be boolean
+                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")");
+                                                clone_info_without_name($$, $2);
+                                             }
+                                             {  // it should be booleans
+                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")");
+                                                clone_info_without_name($$, $2);
+                                             }
           | EUCLIDEAN_LENGTH '(' expression ')'
                                                      {  // it should be vector
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.euclideanLength(" << $3.str << ")");
@@ -478,6 +615,13 @@ expression: '-' expression
                                                         $$.array_size = 1;
                                                         $$.type.entity_type = TYPE_SCALAR;
                                                         $$.type.collection = false;
+                                                     }
+                                                     {  // it should be vectors
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.euclideanLength(" << $3.str << ")");
+                                                        $$.grid_mapping = $3.grid_mapping;
+                                                        $$.array_size = $3.array_size;
+                                                        $$.type.entity_type = TYPE_SCALAR;
+                                                        $$.type.collection = true;
                                                      }
           | LENGTH '(' expression ')'
                                                      {  // it should be edge
@@ -487,6 +631,13 @@ expression: '-' expression
                                                         $$.type.entity_type = TYPE_SCALAR;
                                                         $$.type.collection = false;
                                                      }
+                                                     {  // it should be edges
+                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.length(" << $3.str << ")");
+                                                         $$.grid_mapping = $3.grid_mapping;
+                                                         $$.array_size = $3.array_size;
+                                                         $$.type.entity_type = TYPE_SCALAR;
+                                                         $$.type.collection = true;
+                                                     }
           | AREA '(' expression ')'
                                                      {  // it should be face
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.area(" << $3.str << ")");
@@ -494,6 +645,13 @@ expression: '-' expression
                                                         $$.array_size = 1;
                                                         $$.type.entity_type = TYPE_SCALAR;
                                                         $$.type.collection = false;
+                                                     }
+                                                     {  // it should be faces
+                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.area(" << $3.str << ")");
+                                                         $$.grid_mapping = $3.grid_mapping;
+                                                         $$.array_size = $3.array_size;
+                                                         $$.type.entity_type = TYPE_SCALAR;
+                                                         $$.type.collection = true;
                                                      }
           | VOLUME '(' expression ')'
                                                      {  // it should be cell
@@ -503,13 +661,34 @@ expression: '-' expression
                                                         $$.type.entity_type = TYPE_SCALAR;
                                                         $$.type.collection = false;
                                                      }
+                                                     { // it should be cells
+                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.volume(" << $3.str << ")");
+                                                         $$.grid_mapping = $3.grid_mapping;
+                                                         $$.array_size = $3.array_size;
+                                                         $$.type.entity_type = TYPE_SCALAR;
+                                                         $$.type.collection = true;
+                                                     }
           | DOT '(' expression ',' expression ')'
-                                                     {  // both should be vectors
+                                                     {  // both should be vector
                                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.dot(" << $3.str << ", " << $5.str << ")");
                                                           $$.grid_mapping = GRID_MAPPING_ENTITY;
                                                           $$.array_size = 1;
                                                           $$.type.entity_type = TYPE_SCALAR;
                                                           $$.type.collection = false;
+                                                     }
+                                                     {  // they both should be vectors
+                                                         if($3.grid_mapping != $5.grid_mapping || $3.array_size != $5.array_size)    // check that the lengths of the 2 terms are equal
+                                                         {
+                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                        }
+                                                         else
+                                                         {
+                                                             STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.dot(" << $3.str << ", " << $5.str << ")");
+                                                             $$.grid_mapping = $3.grid_mapping;
+                                                             $$.array_size = $3.array_size;
+                                                             $$.type.entity_type = TYPE_SCALAR;
+                                                             $$.type.collection = true;
+                                                         }
                                                      }
           | CEIL '(' expression ')'
                                                      {  // it should be scalar
@@ -519,6 +698,13 @@ expression: '-' expression
                                                         $$.type.entity_type = TYPE_SCALAR;
                                                         $$.type.collection = false; ;
                                                      }
+                                                     {   // it should be scalars
+                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.ceil(" << $3.str << ")");
+                                                         $$.grid_mapping = $3.grid_mapping;
+                                                         $$.array_size = $3.array_size;
+                                                         $$.type.entity_type = TYPE_SCALAR;
+                                                         $$.type.collection = true;
+                                                     }
           | FLOOR '(' expression ')'
                                                      {  // it should be scalar
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.floor(" << $3.str << ")");
@@ -527,6 +713,13 @@ expression: '-' expression
                                                         $$.type.entity_type = TYPE_SCALAR;
                                                         $$.type.collection = false;
                                                      }
+                                                     {   // it should be scalars
+                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.floor(" << $3.str << ")");
+                                                         $$.grid_mapping = $3.grid_mapping;
+                                                         $$.array_size = $3.array_size;
+                                                         $$.type.entity_type = TYPE_SCALAR;
+                                                         $$.type.collection = true;
+                                                     }
           | ABS '(' expression ')'
                                                      {  // it should be scalar
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.abs(" << $3.str << ")");
@@ -534,6 +727,13 @@ expression: '-' expression
                                                         $$.array_size = 1;
                                                         $$.type.entity_type = TYPE_SCALAR;
                                                         $$.type.collection = false;
+                                                     }
+                                                     {   // it should be scalars
+                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.abs(" << $3.str << ")");
+                                                         $$.grid_mapping = $3.grid_mapping;
+                                                         $$.array_size = $3.array_size;
+                                                         $$.type.entity_type = TYPE_SCALAR;
+                                                         $$.type.collection = true;
                                                      }
           | MIN '(' scalars ')'
                                                      {
@@ -567,147 +767,6 @@ expression: '-' expression
                                                         $$.type.entity_type = TYPE_SCALAR;
                                                         $$.type.collection = false;
                                                      }
-          | '-' expression
-                                                     {  // it should be scalars
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str);
-                                                        clone_info_without_name($$, $2);
-                                                     }
-          | expression '+' expression
-                                                     {  // they both should be scalars
-                                                        if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                        {
-                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                        }
-                                                        else
-                                                        {
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str);
-                                                            clone_info_without_name($$, $1);
-                                                        }
-                                                     }
-          | expression '-' expression
-                                                     {  // they both should be scalars
-                                                        if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                        {
-                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                        }
-                                                        else
-                                                        {
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
-                                                            clone_info_without_name($$, $1);
-                                                        }
-                                                     }
-          | expression '*' expression
-                                                     {  // they both should be scalars
-                                                        if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                        {
-                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                        }
-                                                        else
-                                                        {
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " * " << $3.str);
-                                                            clone_info_without_name($$, $1);
-                                                        }
-                                                     }
-          | expression '*' expression
-                                                     {  // they both should be scalars
-                                                        if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                        {
-                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                        }
-                                                        else
-                                                        {
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " * " << $3.str);
-                                                            clone_info_without_name($$, $1);
-                                                        }
-                                                     }
-          | expression '/' expression
-                                                     {  // they both should be scalars
-                                                        if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                        {
-                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                        }
-                                                        else
-                                                        {
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " / " << $3.str);
-                                                            clone_info_without_name($$, $1);
-                                                        }
-                                                     }
-          | expression '^' expression
-                                                     {  // they both should be scalars
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.pow(" << $1.str << ", " << $3.str << ")");
-                                                        clone_info_without_name($$, $1);
-                                                     }
-          | EUCLIDEAN_LENGTH '(' expression ')'
-                                                     {  // it should be vector
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.euclideanLength(" << $3.str << ")");
-                                                        $$.grid_mapping = $3.grid_mapping;
-                                                        $$.array_size = $3.array_size;
-                                                        $$.type.entity_type = TYPE_SCALAR;
-                                                        $$.type.collection = true;
-                                                     }
-          | LENGTH '(' expression ')'
-                                                 {  // it should be edges
-                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.length(" << $3.str << ")");
-                                                     $$.grid_mapping = $3.grid_mapping;
-                                                     $$.array_size = $3.array_size;
-                                                     $$.type.entity_type = TYPE_SCALAR;
-                                                     $$.type.collection = true;
-                                                 }
-          | AREA '(' expression ')'
-                                                 {  // it should be faces
-                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.area(" << $3.str << ")");
-                                                     $$.grid_mapping = $3.grid_mapping;
-                                                     $$.array_size = $3.array_size;
-                                                     $$.type.entity_type = TYPE_SCALAR;
-                                                     $$.type.collection = true;
-                                                 }
-          | VOLUME '(' expression ')'
-                                                  { // it should be cells
-                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.volume(" << $3.str << ")");
-                                                     $$.grid_mapping = $3.grid_mapping;
-                                                     $$.array_size = $3.array_size;
-                                                     $$.type.entity_type = TYPE_SCALAR;
-                                                     $$.type.collection = true;
-                                                  }
-          | DOT '(' expression ',' expression ')'
-                                                  {  // they both should be vectors
-                                                     if($3.grid_mapping != $5.grid_mapping || $3.array_size != $5.array_size)    // check that the lengths of the 2 terms are equal
-                                                     {
-                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                    }
-                                                     else
-                                                     {
-                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.dot(" << $3.str << ", " << $5.str << ")");
-                                                         $$.grid_mapping = $3.grid_mapping;
-                                                         $$.array_size = $3.array_size;
-                                                         $$.type.entity_type = TYPE_SCALAR;
-                                                         $$.type.collection = true;
-                                                     }
-                                                  }
-          | CEIL '(' expression ')'
-                                                  {   // it should be scalars
-                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.ceil(" << $3.str << ")");
-                                                     $$.grid_mapping = $3.grid_mapping;
-                                                     $$.array_size = $3.array_size;
-                                                     $$.type.entity_type = TYPE_SCALAR;
-                                                     $$.type.collection = true;
-                                                  }
-          | FLOOR '(' expression ')'
-                                                  {   // it should be scalars
-                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.floor(" << $3.str << ")");
-                                                     $$.grid_mapping = $3.grid_mapping;
-                                                     $$.array_size = $3.array_size;
-                                                     $$.type.entity_type = TYPE_SCALAR;
-                                                     $$.type.collection = true;
-                                                  }
-          | ABS '(' expression ')'
-                                                  {   // it should be scalars
-                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.abs(" << $3.str << ")");
-                                                     $$.grid_mapping = $3.grid_mapping;
-                                                     $$.array_size = $3.array_size;
-                                                     $$.type.entity_type = TYPE_SCALAR;
-                                                     $$.type.collection = true;
-                                                  }
           | GRADIENT '(' expression ')'
                                                   {   // it should be scalars
                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.gradient(" << $3.str << ")");
@@ -723,21 +782,6 @@ expression: '-' expression
                                                      $$.array_size = $3.array_size;
                                                      $$.type.entity_type = TYPE_SCALAR;
                                                      $$.type.collection = true;
-                                                  }
-          | '-' expression
-                                                  {   // it should be vector
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str);
-                                                      clone_info_without_name($$, $2);
-                                                  }
-          | expression '+' expression
-                                                  {   // both should be vector
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str);
-                                                      clone_info_without_name($$, $1);
-                                                  }
-          | expression '-' expression
-                                                  {   // both should be vector
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
-                                                      clone_info_without_name($$, $1);
                                                   }
           | '[' scalars ']'
                                                   {
@@ -755,13 +799,26 @@ expression: '-' expression
                                                       $$.type.entity_type = TYPE_VECTOR;
                                                       $$.type.collection = false;
                                                   }
-          | CENTROID '(' expression ')'
                                                   {  // it should be face
                                                       STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
                                                       $$.grid_mapping = GRID_MAPPING_ENTITY;
                                                       $$.array_size = 1;
                                                       $$.type.entity_type = TYPE_VECTOR;
                                                       $$.type.collection = false;
+                                                  }
+                                                  {  // it should be cells
+                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
+                                                      $$.grid_mapping = $3.grid_mapping;
+                                                      $$.array_size = $3.array_size;
+                                                      $$.type.entity_type = TYPE_VECTOR;
+                                                      $$.type.collection = true;
+                                                  }
+                                                  {  // it should be faces
+                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
+                                                      $$.grid_mapping = $3.grid_mapping;
+                                                      $$.array_size = $3.array_size;
+                                                      $$.type.entity_type = TYPE_VECTOR;
+                                                      $$.type.collection = true;
                                                   }
           | NORMAL '(' expression ')'
                                                   {  // it should be face
@@ -771,55 +828,13 @@ expression: '-' expression
                                                       $$.type.entity_type = TYPE_VECTOR;
                                                       $$.type.collection = false;
                                                   }
-          | '(' expression ')'
-                                                  {  // it should be vector
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")");
-                                                      clone_info_without_name($$, $2);
-                                                  }              // produces 1 shift/reduce conflict
-          | expression '*' expression
-                                                  {  // 1st should be vector, 2nd should be scalar
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " * " << $3.str);
-                                                      clone_info_without_name($$, $1);
-                                                  }             // produces 1 reduce/reduce conflict
-          | expression '*' expression
-                                                  {  // 1st should be scalar, 2nd should be vector
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " * " << $3.str);
-                                                      clone_info_without_name($$, $3);
+                                                  {  // it should be faces
+                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.normal(" << $3.str << ")");
+                                                      $$.grid_mapping = $3.grid_mapping;
+                                                      $$.array_size = $3.array_size;
+                                                      $$.type.entity_type = TYPE_VECTOR;
+                                                      $$.type.collection = true;
                                                   }
-          | expression '/' expression
-                                                  {  // 1st should be vector, 2nd should be scalar
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " / " << $3.str);
-                                                      clone_info_without_name($$, $1);
-                                                  }
-          | '-' expression
-                                                  {   // it should be vectors
-                                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "-" << $2.str);
-                                                      clone_info_without_name($$, $2);
-                                                  }            // produces 1 shift/reduce conflict
-          | expression '+' expression
-                                                 {  // both should be vectors
-                                                    if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                    {
-                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                    }
-                                                    else
-                                                    {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " + " << $3.str);
-                                                        clone_info_without_name($$, $1);
-                                                    }
-                                                 }
-          | expression '-' expression
-                                                 {  // both should be vectors
-                                                    if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                    {
-                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                    }
-                                                    else
-                                                    {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
-                                                        clone_info_without_name($$, $1);
-                                                    }
-                                                 }
           | '[' vectors ']'
                                                  {
                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "[" << $2.str << "]");
@@ -827,50 +842,6 @@ expression: '-' expression
                                                     $$.array_size = $2.array_size;
                                                     $$.type.entity_type = TYPE_VECTOR;
                                                     $$.type.collection = true;
-                                                 }
-          | CENTROID '(' expression ')'
-                                                 {  // it should be cells
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
-                                                    $$.grid_mapping = $3.grid_mapping;
-                                                    $$.array_size = $3.array_size;
-                                                    $$.type.entity_type = TYPE_VECTOR;
-                                                    $$.type.collection = true;
-                                                 }
-          | CENTROID '(' expression ')'
-                                                 {  // it should be faces
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.centroid(" << $3.str << ")");
-                                                    $$.grid_mapping = $3.grid_mapping;
-                                                    $$.array_size = $3.array_size;
-                                                    $$.type.entity_type = TYPE_VECTOR;
-                                                    $$.type.collection = true;
-                                                 }
-          | NORMAL '(' expression ')'
-                                                 {  // it should be faces
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.normal(" << $3.str << ")");
-                                                    $$.grid_mapping = $3.grid_mapping;
-                                                    $$.array_size = $3.array_size;
-                                                    $$.type.entity_type = TYPE_VECTOR;
-                                                    $$.type.collection = true;
-                                                 }
-          | '(' expression ')'
-                                                 {  // it should be vectors
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")");
-                                                    clone_info_without_name($$, $2);
-                                                 }          // produces 1 shift/reduce conflict
-          | expression '*' expression
-                                                 {  // 1st should be vectors, 2nd should be scalar
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
-                                                    clone_info_without_name($$, $1);
-                                                 }         // produces 1 reduce/reduce conflict
-          | expression '*' expression
-                                                 {  // 1st should be scalar, 2nd should be vectors
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
-                                                    clone_info_without_name($$, $3);
-                                                 }
-          | expression '/' expression
-                                                 {  // 1st should be vectors, 2nd should be scalar
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " - " << $3.str);
-                                                    clone_info_without_name($$, $1);
                                                  }
           | INTERIOR_VERTICES '(' GRID ')'
                                                  {
@@ -952,6 +923,13 @@ expression: '-' expression
                                                     $$.type.entity_type = TYPE_CELL;
                                                     $$.type.collection = false;
                                                  }
+                                                 {  // it should be faces
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.firstCell(" << $3.str << ")");
+                                                    $$.grid_mapping = $3.grid_mapping;
+                                                    $$.array_size = 1;
+                                                    $$.type.entity_type = TYPE_CELL;
+                                                    $$.type.collection = true;
+                                                 }
           | SECOND_CELL '(' expression ')'
                                                  {  // it should be face
                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.secondCell(" << $3.str << ")");
@@ -959,6 +937,13 @@ expression: '-' expression
                                                     $$.array_size = 1;
                                                     $$.type.entity_type = TYPE_CELL;
                                                     $$.type.collection = false;
+                                                 }
+                                                 {  // it should be faces
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.secondCell(" << $3.str << ")");
+                                                    $$.grid_mapping = $3.grid_mapping;
+                                                    $$.array_size = 1;
+                                                    $$.type.entity_type = TYPE_CELL;
+                                                    $$.type.collection = true;
                                                  }
           | INTERIOR_CELLS '(' GRID ')'
                                                  {
@@ -984,24 +969,12 @@ expression: '-' expression
                                                     $$.type.entity_type = TYPE_CELL;
                                                     $$.type.collection = true;
                                                  }
-          | FIRST_CELL '(' expression ')'
-                                                 {  // it should be faces
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.firstCell(" << $3.str << ")");
-                                                    $$.grid_mapping = $3.grid_mapping;
-                                                    $$.array_size = 1;
-                                                    $$.type.entity_type = TYPE_CELL;
-                                                    $$.type.collection = true;
-                                                 }
-          | SECOND_CELL '(' expression ')'
-                                                 {  // it should be faces
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "er.secondCell(" << $3.str << ")");
-                                                    $$.grid_mapping = $3.grid_mapping;
-                                                    $$.array_size = 1;
-                                                    $$.type.entity_type = TYPE_CELL;
-                                                    $$.type.collection = true;
-                                                 }
           | NOT expression
                                                  {  // it should be boolean
+                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "!" << $2.str);
+                                                    clone_info_without_name($$, $2);
+                                                 }
+                                                 {  // it should be booleans
                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "!" << $2.str);
                                                     clone_info_without_name($$, $2);
                                                  }
@@ -1010,15 +983,48 @@ expression: '-' expression
                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " && " << $3.str);
                                                     clone_info_without_name($$, $1);
                                                  }
+                                                 {  // they should be booleans
+                                                    if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                    {
+                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                    }
+                                                    else
+                                                    {
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " && " << $3.str);
+                                                        clone_info_without_name($$, $1);
+                                                    }
+                                                 }
           | expression OR expression
                                                  {  // both should be boolean
                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " || " << $3.str);
                                                     clone_info_without_name($$, $1);
                                                  }
+                                                 {  // they should be booleans
+                                                    if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                    {
+                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                    }
+                                                    else
+                                                    {
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " || " << $3.str);
+                                                        clone_info_without_name($$, $1);
+                                                    }
+                                                 }
           | expression XOR expression
                                                  {  // both should be boolean
                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(!" << $1.str << " && " << $3.str << ") || (!" << $3.str << " && " << $1.str << ")");
                                                     clone_info_without_name($$, $1);
+                                                 }
+                                                 {  // they should be booleans
+                                                    if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                    {
+                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                    }
+                                                    else
+                                                    {
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(!" << $1.str << " && " << $3.str << ") || (!" << $3.str << " && " << $1.str << ")");
+                                                        clone_info_without_name($$, $1);
+                                                    }
                                                  }
           | TRUE
                                                  {
@@ -1044,6 +1050,20 @@ expression: '-' expression
                                                     $$.type.entity_type = TYPE_BOOLEAN;
                                                     $$.type.collection = false;
                                                  }
+                                                 {  // they should be scalars
+                                                    if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                    {
+                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                    }
+                                                    else
+                                                    {
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $1.str << ") > (" << $3.str << ")");
+                                                        $$.grid_mapping = $1.grid_mapping;
+                                                        $$.array_size = $1.array_size;
+                                                        $$.type.entity_type = TYPE_BOOLEAN;
+                                                        $$.type.collection = true;
+                                                    }
+                                                 }
           | expression '<' expression
                                                  {  // both should be scalar
                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " < " << $3.str);
@@ -1051,6 +1071,20 @@ expression: '-' expression
                                                     $$.array_size = 1;
                                                     $$.type.entity_type = TYPE_BOOLEAN;
                                                     $$.type.collection = false;
+                                                 }
+                                                 {  // they should be scalars
+                                                    if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                    {
+                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                    }
+                                                    else
+                                                    {
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $1.str << ") < (" << $3.str << ")");
+                                                        $$.grid_mapping = $1.grid_mapping;
+                                                        $$.array_size = $1.array_size;
+                                                        $$.type.entity_type = TYPE_BOOLEAN;
+                                                        $$.type.collection = true;
+                                                    }
                                                  }
           | expression LESSEQ expression
                                                  {  // both should be scalar
@@ -1060,6 +1094,20 @@ expression: '-' expression
                                                     $$.type.entity_type = TYPE_BOOLEAN;
                                                     $$.type.collection = false;
                                                  }
+                                                 {   // they should be scalars
+                                                    if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                    {
+                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                    }
+                                                    else
+                                                    {
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $1.str << ") <= (" << $3.str << ")");
+                                                        $$.grid_mapping = $1.grid_mapping;
+                                                        $$.array_size = $1.array_size;
+                                                        $$.type.entity_type = TYPE_BOOLEAN;
+                                                        $$.type.collection = true;
+                                                    }
+                                                 }
           | expression GREATEREQ expression
                                                  {  // both should be scalar
                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " >= " << $3.str);
@@ -1067,6 +1115,20 @@ expression: '-' expression
                                                     $$.array_size = 1;
                                                     $$.type.entity_type = TYPE_BOOLEAN;
                                                     $$.type.collection = false;
+                                                 }
+                                                 {  // they should be scalars
+                                                    if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                    {
+                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                    }
+                                                    else
+                                                    {
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $1.str << ") >= (" << $3.str << ")");
+                                                        $$.grid_mapping = $1.grid_mapping;
+                                                        $$.array_size = $1.array_size;
+                                                        $$.type.entity_type = TYPE_BOOLEAN;
+                                                        $$.type.collection = true;
+                                                    }
                                                  }
           | expression EQ expression
                                                  {  // both should be scalar
@@ -1076,6 +1138,20 @@ expression: '-' expression
                                                     $$.type.entity_type = TYPE_BOOLEAN;
                                                     $$.type.collection = false;
                                                  }
+                                                 {  // they should be scalars
+                                                    if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
+                                                    {
+                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
+                                                    }
+                                                    else
+                                                    {
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $1.str << ") == (" << $3.str << ")");
+                                                        $$.grid_mapping = $1.grid_mapping;
+                                                        $$.array_size = $1.array_size;
+                                                        $$.type.entity_type = TYPE_BOOLEAN;
+                                                        $$.type.collection = true;
+                                                    }
+                                                 }
           | expression NOTEQ expression
                                                  {  // both should be scalar
                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " != " << $3.str);
@@ -1084,152 +1160,25 @@ expression: '-' expression
                                                     $$.type.entity_type = TYPE_BOOLEAN;
                                                     $$.type.collection = false;
                                                  }
-          | '(' expression ')'
-                                                 {  // it should be boolean
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")");
-                                                    clone_info_without_name($$, $2);
-                                                 }
-          | NOT expression
-                                                 {  // it should be booleans
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "!" << $2.str);
-                                                    clone_info_without_name($$, $2);
-                                                 }
-          | expression AND expression
-                                                 {  // they should be booleans
+                                                 {  // they should be scalars
                                                     if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
                                                     {
                                                         LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
                                                     }
                                                     else
                                                     {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " && " << $3.str);
-                                                        clone_info_without_name($$, $1);
-                                                    }
-                                                 }
-          | expression OR expression
-                                                 {  // they should be booleans
-                                                    if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                    {
-                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                    }
-                                                    else
-                                                    {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << " || " << $3.str);
-                                                        clone_info_without_name($$, $1);
-                                                    }
-                                                 }
-          | expression XOR expression
-                                                 {  // they should be booleans
-                                                    if($1.grid_mapping != $3.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                    {
-                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                    }
-                                                    else
-                                                    {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(!" << $1.str << " && " << $3.str << ") || (!" << $3.str << " && " << $1.str << ")");
-                                                        clone_info_without_name($$, $1);
-                                                    }
-                                                 }
-          | '(' expression ')' '>' '(' expression ')'
-                                                 {  // they should be scalars
-                                                    if($2.grid_mapping != $6.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                    {
-                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                    }
-                                                    else
-                                                    {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") > (" << $6.str << ")");
-                                                        $$.grid_mapping = $2.grid_mapping;
-                                                        $$.array_size = $2.array_size;
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $1.str << ") != (" << $3.str << ")");
+                                                        $$.grid_mapping = $1.grid_mapping;
+                                                        $$.array_size = $1.array_size;
                                                         $$.type.entity_type = TYPE_BOOLEAN;
                                                         $$.type.collection = true;
                                                     }
-                                                 }
-          | '(' expression ')' '<' '(' expression ')'
-                                                 {  // they should be scalars
-                                                    if($2.grid_mapping != $6.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                    {
-                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                    }
-                                                    else
-                                                    {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") < (" << $6.str << ")");
-                                                        $$.grid_mapping = $2.grid_mapping;
-                                                        $$.array_size = $2.array_size;
-                                                        $$.type.entity_type = TYPE_BOOLEAN;
-                                                        $$.type.collection = true;
-                                                    }
-                                                 }
-          | '(' expression ')' LESSEQ '(' expression ')'
-                                                 {   // they should be scalars
-                                                    if($2.grid_mapping != $6.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                    {
-                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                    }
-                                                    else
-                                                    {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") <= (" << $6.str << ")");
-                                                        $$.grid_mapping = $2.grid_mapping;
-                                                        $$.array_size = $2.array_size;
-                                                        $$.type.entity_type = TYPE_BOOLEAN;
-                                                        $$.type.collection = true;
-                                                    }
-                                                 }
-          | '(' expression ')' GREATEREQ '(' expression ')'
-                                                 {  // they should be scalars
-                                                    if($2.grid_mapping != $6.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                    {
-                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                    }
-                                                    else
-                                                    {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") >= (" << $6.str << ")");
-                                                        $$.grid_mapping = $2.grid_mapping;
-                                                        $$.array_size = $2.array_size;
-                                                        $$.type.entity_type = TYPE_BOOLEAN;
-                                                        $$.type.collection = true;
-                                                    }
-                                                 }
-          | '(' expression ')' EQ '(' expression ')'
-                                                 {  // they should be scalars
-                                                    if($2.grid_mapping != $6.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                    {
-                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                    }
-                                                    else
-                                                    {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") == (" << $6.str << ")");
-                                                        $$.grid_mapping = $2.grid_mapping;
-                                                        $$.array_size = $2.array_size;
-                                                        $$.type.entity_type = TYPE_BOOLEAN;
-                                                        $$.type.collection = true;
-                                                    }
-                                                 }
-          | '(' expression ')' NOTEQ '(' expression ')'
-                                                 {  // they should be scalars
-                                                    if($2.grid_mapping != $6.grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                    {
-                                                        LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$.str);
-                                                    }
-                                                    else
-                                                    {
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ") != (" << $6.str << ")");
-                                                        $$.grid_mapping = $2.grid_mapping;
-                                                        $$.array_size = $2.array_size;
-                                                        $$.type.entity_type = TYPE_BOOLEAN;
-                                                        $$.type.collection = true;
-                                                    }
-                                                 }
-          | '(' expression ')'
-                                                 {  // it should be booleans
-                                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, "(" << $2.str << ")");
-                                                    clone_info_without_name($$, $2);
                                                  }
           ;
 
 
 
-
+/*
 plural: scalar_exprs            { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; }
       | vector_exprs            { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; }
       | vertices                { $$.str = strdup($1.str); $$.grid_mapping = $1.grid_mapping; }
@@ -1296,7 +1245,7 @@ type: SCALAR                                { $$.str = strdup("Scalar"); $$.grid
     | COLLECTION OF ADB ON plural           { $$.str = strdup("CollOfScalarsAD"); $$.grid_mapping = $5.grid_mapping; }
     | COLLECTION OF BOOLEAN ON plural       { $$.str = strdup("CollOfBools"); $$.grid_mapping = $5.grid_mapping; }
     ;
-
+*/
 
 //////////////////////////////////////////////////////////////////////// these support input parameters as expressions with or without ON (option 1)
 /*
@@ -1362,6 +1311,7 @@ values: value                   {$$.cCode = strdup($1.str); $$.sepCode = strdup(
 */
 
 
+/*
 //////////////////////////////////////////////////////////////////////// this supports input parameters as variables
 values: VARIABLE                { $$.str = strdup($1.str); }
       | values ',' VARIABLE     { STREAM_TO_DOLLARS_CHAR_ARRAY($$.str, $1.str << ", " << $3.str); }
@@ -1522,7 +1472,7 @@ function_assignment: function_start end_lines commands end_lines return_instr en
                                                 currentFunctionIndex = -1;
                                             }
                    ;
-
+*/
 
 
 
@@ -1575,14 +1525,15 @@ plural_declaration: VARIABLE ':' COLLECTION OF SCALAR       { $$.str = declarati
                   ;
 
 
-extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON plural      { string out = extended_plural_declaration_function($1.str, TYPE_SCALAR, $7.str, $7.grid_mapping); $$.str = strdup(out.c_str()); }
-                           | VARIABLE ':' COLLECTION OF VECTOR ON plural      { string out = extended_plural_declaration_function($1.str, TYPE_VECTOR, $7.str, $7.grid_mapping); $$.str = strdup(out.c_str()); }
-                           | VARIABLE ':' COLLECTION OF VERTEX ON plural      { string out = extended_plural_declaration_function($1.str, TYPE_VERTEX, $7.str, $7.grid_mapping); $$.str = strdup(out.c_str()); }
-                           | VARIABLE ':' COLLECTION OF EDGE ON plural        { string out = extended_plural_declaration_function($1.str, TYPE_EDGE, $7.str, $7.grid_mapping); $$.str = strdup(out.c_str()); }
-                           | VARIABLE ':' COLLECTION OF FACE ON plural        { string out = extended_plural_declaration_function($1.str, TYPE_FACE, $7.str, $7.grid_mapping); $$.str = strdup(out.c_str()); }
-                           | VARIABLE ':' COLLECTION OF CELL ON plural        { string out = extended_plural_declaration_function($1.str, TYPE_CELL, $7.str, $7.grid_mapping); $$.str = strdup(out.c_str()); }
-                           | VARIABLE ':' COLLECTION OF ADB ON plural         { string out = extended_plural_declaration_function($1.str, TYPE_SCALAR_AD, $7.str, $7.grid_mapping); $$.str = strdup(out.c_str()); }
-                           | VARIABLE ':' COLLECTION OF BOOLEAN ON plural     { string out = extended_plural_declaration_function($1.str, TYPE_BOOLEAN, $7.str, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+//TODO: verify that "expression" is a collection
+extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON expression      { string out = extended_plural_declaration_function($1.str, TYPE_SCALAR, $7.str, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                           | VARIABLE ':' COLLECTION OF VECTOR ON expression      { string out = extended_plural_declaration_function($1.str, TYPE_VECTOR, $7.str, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                           | VARIABLE ':' COLLECTION OF VERTEX ON expression      { string out = extended_plural_declaration_function($1.str, TYPE_VERTEX, $7.str, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                           | VARIABLE ':' COLLECTION OF EDGE ON expression        { string out = extended_plural_declaration_function($1.str, TYPE_EDGE, $7.str, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                           | VARIABLE ':' COLLECTION OF FACE ON expression        { string out = extended_plural_declaration_function($1.str, TYPE_FACE, $7.str, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                           | VARIABLE ':' COLLECTION OF CELL ON expression        { string out = extended_plural_declaration_function($1.str, TYPE_CELL, $7.str, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                           | VARIABLE ':' COLLECTION OF ADB ON expression         { string out = extended_plural_declaration_function($1.str, TYPE_SCALAR_AD, $7.str, $7.grid_mapping); $$.str = strdup(out.c_str()); }
+                           | VARIABLE ':' COLLECTION OF BOOLEAN ON expression     { string out = extended_plural_declaration_function($1.str, TYPE_BOOLEAN, $7.str, $7.grid_mapping); $$.str = strdup(out.c_str()); }
                            ;
 
 
@@ -1594,7 +1545,7 @@ declaration: singular_declaration           { char* out = strdup($1.str); $$.str
 
 singular_assignment: VARIABLE '=' USS                      { string out = USS_assignment_function($1.str); $$.str = strdup(out.c_str()); }
                    | VARIABLE '=' USSWD '(' number ')'     { string out = USSWD_assignment_function($1.str, $5.str); $$.str = strdup(out.c_str()); }
-                   | VARIABLE '=' expression
+                   | VARIABLE '=' expression   //TODO: verify that "expression" is not a collection
                                               					   {
                                                 						  string out = singular_assignment_function($1.str, $3);
                                                 						  $$.str = strdup(out.c_str());
@@ -1619,7 +1570,7 @@ assignment: singular_assignment     { char* out = strdup($1.str); $$.str = out; 
 
 
 
-
+//TODO: verify that "expression" is not a collection
 singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' expression            { string out = declaration_with_assignment_function($1.str, $5); $$.str = strdup(out.c_str()); }
                                     | VARIABLE ':' VECTOR '=' expression            { string out = declaration_with_assignment_function($1.str, $5); $$.str = strdup(out.c_str()); }
                                     | VARIABLE ':' VERTEX '=' expression            { string out = declaration_with_assignment_function($1.str, $5); $$.str = strdup(out.c_str()); }
@@ -1633,6 +1584,7 @@ singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' expression        
                                     ;
 
 
+//TODO: verify that "expression" is a collection
 plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' expression            { string out = declaration_with_assignment_function($1.str, $7); $$.str = strdup(out.c_str()); }
                                   | VARIABLE ':' COLLECTION OF VECTOR '=' expression            { string out = declaration_with_assignment_function($1.str, $7); $$.str = strdup(out.c_str()); }
                                   | VARIABLE ':' COLLECTION OF VERTEX '=' expression            { string out = declaration_with_assignment_function($1.str, $7); $$.str = strdup(out.c_str()); }
@@ -1645,6 +1597,7 @@ plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' expres
                                   ;
 
 
+//TODO: verify that both "expression"s are collections
 extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR ON plural '=' expression            { string out = extended_plural_declaration_with_assignment_function($1.str, $9, $7.grid_mapping); $$.str = strdup(out.c_str()); }
                                            | VARIABLE ':' COLLECTION OF VECTOR ON plural '=' expression            { string out = extended_plural_declaration_with_assignment_function($1.str, $9, $7.grid_mapping); $$.str = strdup(out.c_str()); }
                                            | VARIABLE ':' COLLECTION OF VERTEX ON plural '=' expression            { string out = extended_plural_declaration_with_assignment_function($1.str, $9, $7.grid_mapping); $$.str = strdup(out.c_str()); }
@@ -1681,10 +1634,10 @@ command1: command                       { char* out = strdup($1.str); $$.str = o
 
 // instructions which can be used in the program, but not in a function's body (since we must not allow inner functions)
 command2: command                                    { stringstream ss; ss << $1.str; $$.str = strdup(ss.str().c_str()); }
-        | function_declaration                       { stringstream ss; ss << $1.str; $$.str = strdup(ss.str().c_str()); }
-        | function_assignment                        { stringstream ss; ss << $1.str; $$.str = strdup(ss.str().c_str()); }
+   //   | function_declaration                       { stringstream ss; ss << $1.str; $$.str = strdup(ss.str().c_str()); }
+   //   | function_assignment                        { stringstream ss; ss << $1.str; $$.str = strdup(ss.str().c_str()); }
         | output                                     { stringstream ss; ss << $1.str; $$.str = strdup(ss.str().c_str()); }
-    //  | function_declaration_with_assignment       { stringstream ss; ss << $1.str; $$.str = strdup(ss.str().c_str()); }
+   //   | function_declaration_with_assignment       { stringstream ss; ss << $1.str; $$.str = strdup(ss.str().c_str()); }
         ;
 
 
