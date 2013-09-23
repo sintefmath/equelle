@@ -5211,7 +5211,11 @@ string getStringFromVariableType(VariableType v)
 void clone_info(info& output, const info& input)
 {
 	if (output.str != NULL) {
-		//free(output.str);
+		/**
+		  * FIXME: In our case, output and input often contain the same pointer for str....
+		  * We really should be using pointers instead of info structs in the %union...
+		  */
+		//free(output.str); 
 		output.str = NULL;
 	}
 
