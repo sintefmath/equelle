@@ -156,12 +156,11 @@
 	struct info
 	{
 		//Why does this not work?: info() : size(GRID_MAPPING_INVALID), array_size(-1), str(NULL), type(TYPE_INVALID), collection(false) {}
-        char* str;            // The string which is to be outputted in the C++ file
-		char* error_str;      // All errors go here.
+    char* str;            // The string which is to be outputted in the C++ file
+		char* error_str;      // All errors go here; (test if (error != NULL) std::cout << error << std::endl;
 		GridMapping grid_mapping;  // This defines the mapping of the variable (one value per face, cell, interior face, etc.)
 		int array_size;       // The number of elements in a vector / array
 		VariableType type;    // The type of the variable
-		//char* error;	      // The error string to give to a user. (test if (error != NULL) std::cout << error << std::endl;
 		//unsigned int error_code;
 	};
 
@@ -244,16 +243,12 @@
 	string errorTypeToErrorMessage(string errorType);
 	string functionToAnySingularType(char *st1, char *st2, char *st3, const string &st4);
 	string functionToAnyCollectionType(char *st1, char *st2, char *st3, const string &st4);
-
 	char* declaration_function(char* variable_name, EntityType entity, bool collection);
-
 	string extended_plural_declaration_function(char* variable_name, EntityType entity, char* ON_expression, GridMapping ON_expression_grid_mapping);
 	string singular_assignment_function(char* variable_name, const info& right_hand_side);
 	string plural_assignment_function(char* variable_name, const info& right_hand_side);
 	string declaration_with_assignment_function(char* variable_name, const info& right_hand_side);
-
 	string extended_plural_declaration_with_assignment_function(char* variable_name, const info& rhs, const GridMapping& lhs);
-
 	string USS_assignment_function(char* st1);
 	string USS_declaration_with_assignment_function(char* st1);
 	string USSWD_assignment_function(char* st1, char* st2);
