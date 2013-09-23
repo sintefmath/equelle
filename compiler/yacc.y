@@ -212,6 +212,7 @@
 	  string name;           // must begin with a small letter
 	  VariableType type;           // can be: scalar, vector, vertex, scalars etc.
 	  GridMapping grid_mapping; // if the type is a singular type, then the length is 1; otherwise it can be any other number >= 1
+    int array_size;         // if the variable is assigned to a list (vector, tuple etc)
 	  bool assigned;         // we want to know if a variable has been assigned, in order to prevent errors (example: operations with unassigned variables)
 	};
 
@@ -1880,8 +1881,27 @@ expression: '-' expression
                                                         }
                                                     }
                                                  }
+          | VARIABLE
+                                                 {
+                                                    $$ = new info();
+                                                    int i;
+                                                    for(i = 0; i < varNo; i++)
+                                                    {
+                                                        if(var[i].name == $1->str)
+                                                          break;
+                                                    }
+                                                    if(i == varNo)
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "There is an undeclared variable");
+                                                    else
+                                                    {
+                                                        $$->str = var[i].name;
+                                                        $$->grid_mapping = var[i].grid_mapping;
+                                                        $$->array_size = var[i].array_size;
+                                                        $$->type.entity_type = var[i].type.entity_type;
+                                                        $$->type.collection = var[i].type.collection;
+                                                    }
+                                                 }
           ;
-
 
 
 /*
@@ -4005,6 +4025,7 @@ std::string declaration_function(const char* variable_name, EntityType entity, b
           					else {
           						fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = GRID_MAPPING_ENTITY;
           					}
+                    fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].array_size = -1;
                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = false;
               }
         }
@@ -4038,6 +4059,7 @@ std::string declaration_function(const char* variable_name, EntityType entity, b
       			else {
       				var[varNo-1].grid_mapping = GRID_MAPPING_ENTITY;
       			}
+            var[varNo-1].array_size = -1;
             var[varNo-1].assigned = false;
         }
     }
@@ -4118,6 +4140,7 @@ string extended_plural_declaration_function(const char* variable_name, EntityTyp
                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type.entity_type = entity;
                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type.collection = true;
                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = d1;
+                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].array_size = -1;
                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = false;
                           }
                       }
@@ -4173,6 +4196,7 @@ string extended_plural_declaration_function(const char* variable_name, EntityTyp
                           var[varNo-1].type.entity_type = entity;
                           var[varNo-1].grid_mapping = d1;
                           var[varNo-1].assigned = false;
+                          var[varNo-1].array_size = -1;
                           var[varNo-1].type.collection = true;
                       }
                   }
@@ -4276,6 +4300,7 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                                           else
                                           {
                                               fun[currentFunctionIndex].localVariables[i].assigned = true;
+                                              fun[currentFunctionIndex].localVariables[i].array_size = rhs->array_size;
                                               stringstream ss;
                                               ss << "const " << getStringFromVariableType(rhs->type)  << " " << variable_name << " = " << rhs->str << ";";
                                               finalString = ss.str();
@@ -4342,6 +4367,7 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = variable_name;
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = rhs->type;
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = GRID_MAPPING_ENTITY;
+                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].array_size = rhs->array_size;
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
                                       }
                                   }
@@ -4422,6 +4448,7 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                                         else
                                         {
                                             var[i].assigned = true;
+                                            var[i].array_size = rhs->array_size;
                                             stringstream ss;
                                             ss << "const " << getStringFromVariableType(rhs->type)  << " " << variable_name << " = " << rhs->str << ";";
                                             finalString = ss.str();
@@ -4490,6 +4517,7 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                                     var[varNo-1].type = rhs->type;
                                     var[varNo-1].grid_mapping = GRID_MAPPING_ENTITY;
                                     var[varNo-1].assigned = true;
+                                    var[varNo-1].array_size = rhs->array_size;
                                 }
                             }
                         }
@@ -4597,6 +4625,7 @@ string plural_assignment_function(const char* variable_name, const info* rhs)
                                                     {
                                                         fun[currentFunctionIndex].localVariables[i].grid_mapping = rhs->grid_mapping;
                                                         fun[currentFunctionIndex].localVariables[i].assigned = true;
+                                                        fun[currentFunctionIndex].localVariables[i].array_size = rhs->array_size;
                                                         stringstream ss;
                                                         ss << "const " << getStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
                                                         finalString = ss.str();
@@ -4613,6 +4642,7 @@ string plural_assignment_function(const char* variable_name, const info* rhs)
                                                     ss << "const " << getStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
                                                     finalString = ss.str();
                                                     fun[currentFunctionIndex].localVariables[i].assigned = true;
+                                                    fun[currentFunctionIndex].localVariables[i].array_size = rhs->array_size;
                                                 }
                                             }
                                         }
@@ -4678,6 +4708,7 @@ string plural_assignment_function(const char* variable_name, const info* rhs)
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = rhs->type;
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = rhs->grid_mapping;
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
+                                          fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].array_size = rhs->array_size;
                                       }
                                   }
                               }
@@ -4760,6 +4791,7 @@ string plural_assignment_function(const char* variable_name, const info* rhs)
                                                 if(getSize1(variable_name) == GRID_MAPPING_ANY)
                                                 {
                                                     var[i].grid_mapping = rhs->grid_mapping;
+                                                    var[i].array_size = rhs->array_size;
                                                     var[i].assigned = true;
                                                     stringstream ss;
                                                     ss << "const " << getStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
@@ -4777,6 +4809,7 @@ string plural_assignment_function(const char* variable_name, const info* rhs)
                                                 ss << "const " << getStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
                                                 finalString = ss.str();
                                                 var[i].assigned = true;
+                                                var[i].array_size = rhs->array_size;
                                             }
                                         }
                                     }
@@ -4843,6 +4876,7 @@ string plural_assignment_function(const char* variable_name, const info* rhs)
                                     var[varNo-1].type = rhs->type;
                                     var[varNo-1].grid_mapping = rhs->grid_mapping;
                                     var[varNo-1].assigned = true;
+                                    var[varNo-1].array_size = rhs->array_size;
                                 }
                             }
                         }
@@ -4949,6 +4983,7 @@ string declaration_with_assignment_function(const char* variable_name, const inf
                                               finalString = ss.str();
                                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = variable_name;
                                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = rhs->type;
+                                              fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].array_size = rhs->array_size;
                                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = rhs->grid_mapping;
                                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
                                           }
@@ -5034,6 +5069,7 @@ string declaration_with_assignment_function(const char* variable_name, const inf
                                     var[varNo++].name = variable_name;
                                     var[varNo-1].type = rhs->type;
                                     var[varNo-1].grid_mapping = rhs->grid_mapping;
+                                    var[varNo-1].array_size = rhs->array_size;
                                     var[varNo-1].assigned = true;
                                 }
                             }
@@ -5143,6 +5179,7 @@ string extended_plural_declaration_with_assignment_function(const char* variable
                                             fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = variable_name;
                                             fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = rhs->type;
                                             fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = lhs;
+                                            fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].array_size = rhs->array_size;
                                             fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
                                         }
                                     }
@@ -5227,6 +5264,7 @@ string extended_plural_declaration_with_assignment_function(const char* variable
                                     var[varNo++].name = variable_name;
                                     var[varNo-1].type = rhs->type;
                                     var[varNo-1].grid_mapping = lhs;
+                                    var[varNo-1].array_size = rhs->array_size;
                                     var[varNo-1].assigned = true;
                                 }
                             }
