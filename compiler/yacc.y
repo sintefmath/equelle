@@ -101,7 +101,7 @@
 	#endif
 
 	#define STREAM_TO_DOLLARS_CHAR_ARRAY(dd, streamcontent)                 do { stringstream ss; ss << streamcontent; dd = ss.str(); } while (false)
-	#define LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY(dd)           do { stringstream ss; ss << "length_mismatch_error"; dd = ss.str(); } while (false)
+	#define LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY(dd)           do { stringstream ss; ss << "There is a length mismatch between two terms of an operation"; dd = ss.str(); } while (false)
 	// we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
 	#define WRONG_TYPE_ERROR_TO_CHAR_ARRAY(dd, d1)                          do { stringstream ss; ss << "wrong_type_error  " << d1; dd = ss.str(); }  while (false)
 	// we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
@@ -1650,25 +1650,32 @@ expression: '-' expression
                                                             $$->type.collection = false;
                                                         }
                                                         else
-                                                        if($1->type.entity_type == TYPE_BOOLEAN && $3->type.entity_type == TYPE_BOOLEAN && $1->type.collection == true && $3->type.collection == true)
                                                         {
-                                                            // they should be scalars
-                                                            if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                            {
-                                                                LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
-                                                            }
-                                                            else
-                                                            {
-                                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "(" << $1->str.c_str() << ") > (" << $3->str.c_str() << ")");
-                                                                $$->grid_mapping = $1->grid_mapping;
-                                                                $$->array_size = $1->array_size;
-                                                                $$->type.entity_type = TYPE_BOOLEAN;
-                                                                $$->type.collection = true;
-                                                            }
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "> not supported for these types");
+                                                        }
+                                                    }
+                                                 }
+          | '(' scalars ')' '>' '(' scalars ')'
+                                                 {
+                                                    $$ = new info();
+                                                    if($2->error_str.size() > 0)
+                                                        $$->error_str = $2->error_str;
+                                                    else
+                                                    if($6->error_str.size() > 0)
+                                                        $$->error_str = $6->error_str;
+                                                    else
+                                                    {
+                                                        if($2->array_size != $6->array_size)    // check that the lengths of the 2 terms are equal
+                                                        {
+                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                                         }
                                                         else
                                                         {
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "> not supported for these types");
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "(" << $2->str << ") > (" << $6->str << ")");
+                                                            $$->grid_mapping = $2->grid_mapping;
+                                                            $$->array_size = $2->array_size;
+                                                            $$->type.entity_type = TYPE_BOOLEAN;
+                                                            $$->type.collection = true;
                                                         }
                                                     }
                                                  }
@@ -1692,25 +1699,32 @@ expression: '-' expression
                                                             $$->type.collection = false;
                                                         }
                                                         else
-                                                        if($1->type.entity_type == TYPE_BOOLEAN && $3->type.entity_type == TYPE_BOOLEAN && $1->type.collection == true && $3->type.collection == true)
                                                         {
-                                                            // they should be scalars
-                                                            if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
-                                                            {
-                                                                LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
-                                                            }
-                                                            else
-                                                            {
-                                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "(" << $1->str.c_str() << ") < (" << $3->str.c_str() << ")");
-                                                                $$->grid_mapping = $1->grid_mapping;
-                                                                $$->array_size = $1->array_size;
-                                                                $$->type.entity_type = TYPE_BOOLEAN;
-                                                                $$->type.collection = true;
-                                                            }
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "< not supported for these types");
+                                                        }
+                                                    }
+                                                 }
+          | '(' scalars ')' '<' '(' scalars ')'
+                                                 {
+                                                    $$ = new info();
+                                                    if($2->error_str.size() > 0)
+                                                        $$->error_str = $2->error_str;
+                                                    else
+                                                    if($6->error_str.size() > 0)
+                                                        $$->error_str = $6->error_str;
+                                                    else
+                                                    {
+                                                        if($2->array_size != $6->array_size)    // check that the lengths of the 2 terms are equal
+                                                        {
+                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                                         }
                                                         else
                                                         {
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "< not supported for these types");
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "(" << $2->str << ") < (" << $6->str << ")");
+                                                            $$->grid_mapping = $2->grid_mapping;
+                                                            $$->array_size = $2->array_size;
+                                                            $$->type.entity_type = TYPE_BOOLEAN;
+                                                            $$->type.collection = true;
                                                         }
                                                     }
                                                  }
@@ -1756,6 +1770,30 @@ expression: '-' expression
                                                         }
                                                     }
                                                  }
+          | '(' scalars ')' LESSEQ '(' scalars ')'
+                                                 {
+                                                    $$ = new info();
+                                                    if($2->error_str.size() > 0)
+                                                        $$->error_str = $2->error_str;
+                                                    else
+                                                    if($6->error_str.size() > 0)
+                                                        $$->error_str = $6->error_str;
+                                                    else
+                                                    {
+                                                        if($2->array_size != $6->array_size)    // check that the lengths of the 2 terms are equal
+                                                        {
+                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
+                                                        }
+                                                        else
+                                                        {
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "(" << $2->str << ") <= (" << $6->str << ")");
+                                                            $$->grid_mapping = $2->grid_mapping;
+                                                            $$->array_size = $2->array_size;
+                                                            $$->type.entity_type = TYPE_BOOLEAN;
+                                                            $$->type.collection = true;
+                                                        }
+                                                    }
+                                                 }
           | expression GREATEREQ expression
                                                  {
                                                     $$ = new info();
@@ -1795,6 +1833,30 @@ expression: '-' expression
                                                         else
                                                         {
                                                             STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, ">= not supported for these types");
+                                                        }
+                                                    }
+                                                 }
+          | '(' scalars ')' GREATEREQ '(' scalars ')'
+                                                 {
+                                                    $$ = new info();
+                                                    if($2->error_str.size() > 0)
+                                                        $$->error_str = $2->error_str;
+                                                    else
+                                                    if($6->error_str.size() > 0)
+                                                        $$->error_str = $6->error_str;
+                                                    else
+                                                    {
+                                                        if($2->array_size != $6->array_size)    // check that the lengths of the 2 terms are equal
+                                                        {
+                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
+                                                        }
+                                                        else
+                                                        {
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "(" << $2->str << ") >= (" << $6->str << ")");
+                                                            $$->grid_mapping = $2->grid_mapping;
+                                                            $$->array_size = $2->array_size;
+                                                            $$->type.entity_type = TYPE_BOOLEAN;
+                                                            $$->type.collection = true;
                                                         }
                                                     }
                                                  }
@@ -1840,6 +1902,30 @@ expression: '-' expression
                                                         }
                                                     }
                                                  }
+          | '(' scalars ')' EQ '(' scalars ')'
+                                                 {
+                                                    $$ = new info();
+                                                    if($2->error_str.size() > 0)
+                                                        $$->error_str = $2->error_str;
+                                                    else
+                                                    if($6->error_str.size() > 0)
+                                                        $$->error_str = $6->error_str;
+                                                    else
+                                                    {
+                                                        if($2->array_size != $6->array_size)    // check that the lengths of the 2 terms are equal
+                                                        {
+                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
+                                                        }
+                                                        else
+                                                        {
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "(" << $2->str << ") == (" << $6->str << ")");
+                                                            $$->grid_mapping = $2->grid_mapping;
+                                                            $$->array_size = $2->array_size;
+                                                            $$->type.entity_type = TYPE_BOOLEAN;
+                                                            $$->type.collection = true;
+                                                        }
+                                                    }
+                                                 }
           | expression NOTEQ expression
                                                  {
                                                     $$ = new info();
@@ -1879,6 +1965,30 @@ expression: '-' expression
                                                         else
                                                         {
                                                             STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "!= not supported for these types");
+                                                        }
+                                                    }
+                                                 }
+          | '(' scalars ')' NOTEQ '(' scalars ')'
+                                                 {
+                                                    $$ = new info();
+                                                    if($2->error_str.size() > 0)
+                                                        $$->error_str = $2->error_str;
+                                                    else
+                                                    if($6->error_str.size() > 0)
+                                                        $$->error_str = $6->error_str;
+                                                    else
+                                                    {
+                                                        if($2->array_size != $6->array_size)    // check that the lengths of the 2 terms are equal
+                                                        {
+                                                            LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
+                                                        }
+                                                        else
+                                                        {
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "(" << $2->str << ") != (" << $6->str << ")");
+                                                            $$->grid_mapping = $2->grid_mapping;
+                                                            $$->array_size = $2->array_size;
+                                                            $$->type.entity_type = TYPE_BOOLEAN;
+                                                            $$->type.collection = true;
                                                         }
                                                     }
                                                  }
