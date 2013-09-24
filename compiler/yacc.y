@@ -379,7 +379,7 @@ bool operator!=(const VariableType& a, const VariableType& b) {
 
 floating_point: INTEGER '.' INTEGER
                                       {
-                                            $$ = new info();
+                                          $$ = new info();
                                       		STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << "." << $3->str.c_str());
                                       		$$->grid_mapping = GRID_MAPPING_ENTITY;
                                       		$$->array_size = 1;
@@ -390,11 +390,11 @@ floating_point: INTEGER '.' INTEGER
 
 
 number: floating_point                {
-											$$ = $1->clone();
-										}
+											                  $$ = $1->clone();
+										                  }
       | INTEGER
                                       {
-                                                $$ = new info();
+                                        $$ = new info();
                               					$$->str = $1->str.c_str();
                               					$$->grid_mapping = GRID_MAPPING_ENTITY;
                               					$$->array_size = 1;
@@ -543,11 +543,11 @@ expression: '-' expression
                                                   switch($2->type.entity_type)
                                                   {
                                                       case TYPE_SCALAR:
-														  $$ = $2->clone();
+														                              $$ = $2->clone();
                                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "-" << $2->str.c_str());
                                                           break;
                                                       case TYPE_VECTOR:
-														  $$ = $2->clone();
+														                              $$ = $2->clone();
                                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "-" << $2->str.c_str());
                                                           break;
                                                       default:
@@ -567,7 +567,7 @@ expression: '-' expression
                                                 {
                                                     if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == false && $3->type.collection == false)
                                                     {  // both should be scalar
-														$$ = $1->clone();
+														                            $$ = $1->clone();
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " + " << $3->str.c_str());
                                                     }
                                                     else
@@ -579,15 +579,14 @@ expression: '-' expression
                                                         }
                                                         else
                                                         {
-															$$ = $1->clone();
+															                               $$ = $1->clone();
                                                             STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " + " << $3->str.c_str());
                                                         }
                                                     }
                                                     else
                                                     if($1->type.entity_type == TYPE_VECTOR && $3->type.entity_type == TYPE_VECTOR && $1->type.collection == false && $3->type.collection == false)
                                                     {  // both should be vector
-
-														  $$ = $1->clone();
+														                              $$ = $1->clone();
                                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " + " << $3->str.c_str());
                                                     }
                                                     else
@@ -599,7 +598,7 @@ expression: '-' expression
                                                         }
                                                         else
                                                         {
-															$$= $1->clone();
+															                               $$= $1->clone();
                                                             STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " + " << $3->str.c_str());
                                                         }
                                                     }
@@ -621,7 +620,7 @@ expression: '-' expression
                                                 {
                                                     if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == false && $3->type.collection == false)
                                                     {  // both should be scalar
-														$$ = $1->clone();
+														                            $$ = $1->clone();
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " - " << $3->str.c_str());
                                                     }
                                                     else
@@ -633,14 +632,14 @@ expression: '-' expression
                                                         }
                                                         else
                                                         {
-															$$= $1->clone();
+															                             $$= $1->clone();
                                                             STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " - " << $3->str.c_str());
                                                         }
                                                     }
                                                     else
                                                     if($1->type.entity_type == TYPE_VECTOR && $3->type.entity_type == TYPE_VECTOR && $1->type.collection == false && $3->type.collection == false)
                                                     {  // both should be vector
-														$$= $1->clone();
+														                              $$= $1->clone();
                                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " - " << $3->str.c_str());
                                                     }
                                                     else
@@ -652,7 +651,7 @@ expression: '-' expression
                                                         }
                                                         else
                                                         {
-															$$ = $1->clone();
+															                             $$ = $1->clone();
                                                             STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " - " << $3->str.c_str());
                                                         }
                                                     }
@@ -674,7 +673,7 @@ expression: '-' expression
                                                 {
                                                     if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == false && $3->type.collection == false)
                                                     { // both should be scalar
-														$$ = $1->clone();
+														                            $$ = $1->clone();
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " * " << $3->str.c_str());
                                                     }
                                                     else
@@ -687,32 +686,32 @@ expression: '-' expression
                                                         }
                                                         else
                                                         {
-															$$ = $1->clone();
+															                               $$ = $1->clone();
                                                             STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " * " << $3->str.c_str());
                                                         }
                                                     }
                                                     else
                                                     if($1->type.entity_type == TYPE_VECTOR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == false && $3->type.collection == false)
                                                     {  // 1st should be vector, 2nd should be scalar
-														$$ = $1->clone();
+														                              $$ = $1->clone();
                                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " * " << $3->str.c_str());
                                                     }
                                                     else
                                                     if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_VECTOR && $1->type.collection == false && $3->type.collection == false)
                                                     {  // 1st should be scalar, 2nd should be vector
-														$$ = $1->clone();
+														                              $$ = $1->clone();
                                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " * " << $3->str.c_str());
                                                     }
                                                     else
                                                     if($1->type.entity_type == TYPE_VECTOR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == true && $3->type.collection == false)
                                                     {  // 1st should be vectors, 2nd should be scalar
-														$$ = $1->clone();
+														                            $$ = $1->clone();
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " - " << $3->str.c_str());
                                                     }
                                                     else
                                                     if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_VECTOR && $1->type.collection == false && $3->type.collection == true)
                                                     {  // 1st should be scalar, 2nd should be vectors
-														$$ = $3->clone();
+														                            $$ = $3->clone();
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " - " << $3->str.c_str());
                                                     }
                                                     else
@@ -733,7 +732,7 @@ expression: '-' expression
                                                 {
                                                     if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == false && $3->type.collection == false)
                                                     {  // both should be scalar
-														$$ = $1->clone();
+														                            $$ = $1->clone();
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " / " << $3->str.c_str());
                                                     }
                                                     else
@@ -745,20 +744,20 @@ expression: '-' expression
                                                         }
                                                         else
                                                         {
-															$$ = $1->clone();
+															                               $$ = $1->clone();
                                                             STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " / " << $3->str.c_str());
                                                         }
                                                     }
                                                     else
                                                     if($1->type.entity_type == TYPE_VECTOR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == false && $3->type.collection == false)
                                                     {  // 1st should be vector, 2nd should be scalar
-														$$ = $1->clone();
+														                              $$ = $1->clone();
                                                           STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " / " << $3->str.c_str());
                                                     }
                                                     else
                                                     if($1->type.entity_type == TYPE_VECTOR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == true && $3->type.collection == false)
                                                     {  // 1st should be vectors, 2nd should be scalar
-														 $$ = $1->clone();
+														                            $$ = $1->clone();
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " - " << $3->str.c_str());
                                                     }
                                                     else
@@ -779,13 +778,13 @@ expression: '-' expression
                                                 {
                                                     if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == false && $3->type.collection == false)
                                                     {  // both should be scalar
-														$$ = $1->clone();
+														                            $$ = $1->clone();
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.pow(" << $1->str.c_str() << ", " << $3->str.c_str() << ")");
                                                     }
                                                     else
                                                     if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == true && $3->type.collection == false)
                                                     {  // 1st should be scalars, 2nd should be scalar
-														$$ = $1->clone();
+														                            $$ = $1->clone();
                                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.pow(" << $1->str.c_str() << ", " << $3->str.c_str() << ")");
                                                     }
                                                     else
@@ -808,15 +807,15 @@ expression: '-' expression
                                                     switch($2->type.entity_type)
                                                     {
                                                         case TYPE_SCALAR:
-															$$ = $2->clone();
+															                               $$ = $2->clone();
                                                             STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "(" << $2->str.c_str() << ")");
                                                             break;
                                                         case TYPE_VECTOR:
-															$$ = $2->clone();
+															                               $$ = $2->clone();
                                                             STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "-" << $2->str.c_str());
                                                             break;
                                                         case TYPE_BOOLEAN:
-															$$ = $2->clone();
+															                               $$ = $2->clone();
                                                             STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "-" << $2->str.c_str());
                                                             break;
                                                         default:
@@ -926,10 +925,11 @@ expression: '-' expression
                                                      }
           | VOLUME '(' expression ')'
                                                      {
-														 $$ = new info();
-                                                        if($3->error_str.size() > 0) {
+														                            $$ = new info();
+                                                        if($3->error_str.size() > 0)
+                                                        {
                                                             $$->error_str = $3->error_str;
-														}
+														                            }
                                                         else
                                                         {
                                                             switch($3->type.entity_type)
@@ -1249,6 +1249,7 @@ expression: '-' expression
                                                                       $$->type.entity_type = TYPE_VECTOR;
                                                                       $$->type.collection = true;
                                                                   }
+                                                                  break;
                                                               default:
                                                                   STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Centroid not supported for this type");
                                                                   break;
@@ -1358,7 +1359,7 @@ expression: '-' expression
                                                  }
           | INTERIOR_FACES '(' GRID ')'
                                                  {
-													 $$ = new info();
+													                         $$ = new info();
                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.interiorFaces()");
                                                     $$->grid_mapping = GRID_MAPPING_INTERIORFACES;
                                                     $$->array_size = 1;
@@ -1451,7 +1452,7 @@ expression: '-' expression
                                                  }
           | INTERIOR_CELLS '(' GRID ')'
                                                  {
-													 $$ = new info();
+													                           $$ = new info();
                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.interiorCells()");
                                                     $$->grid_mapping = GRID_MAPPING_INTERIORCELLS;
                                                     $$->array_size = 1;
@@ -1469,7 +1470,7 @@ expression: '-' expression
                                                  }
           | ALL_CELLS '(' GRID ')'
                                                  {
-													 $$ = new info();
+													                         $$ = new info();
                                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.allCells()");
                                                     $$->grid_mapping = GRID_MAPPING_ALLCELLS;
                                                     $$->array_size = 1;
@@ -1488,12 +1489,12 @@ expression: '-' expression
                                                               case TYPE_BOOLEAN:
                                                                   if($2->type.collection == false)
                                                                   {
-																	  $$ = $2->clone();
+																	                                    $$ = $2->clone();
                                                                       STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "!" << $2->str.c_str());
                                                                   }
                                                                   else
                                                                   {
-																	  $$ = $2->clone();
+																	                                    $$ = $2->clone();
                                                                       STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "!" << $2->str.c_str());
                                                                   }
                                                                   break;
@@ -1516,7 +1517,7 @@ expression: '-' expression
                                                         if($1->type.entity_type == TYPE_BOOLEAN && $3->type.entity_type == TYPE_BOOLEAN && $1->type.collection == false && $3->type.collection == false)
                                                         {
                                                             // both should be boolean
-															$$= $1->clone();
+															                               $$= $1->clone();
                                                             STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " && " << $3->str.c_str());
                                                         }
                                                         else
@@ -1529,7 +1530,7 @@ expression: '-' expression
                                                             }
                                                             else
                                                             {
-																$$ = $1->clone();
+																                                $$ = $1->clone();
                                                                 STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " && " << $3->str.c_str());
                                                             }
                                                         }
@@ -1552,7 +1553,7 @@ expression: '-' expression
                                                         if($1->type.entity_type == TYPE_BOOLEAN && $3->type.entity_type == TYPE_BOOLEAN && $1->type.collection == false && $3->type.collection == false)
                                                         {
                                                             // both should be boolean
-															$$ = $1->clone();
+															                               $$ = $1->clone();
                                                             STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " || " << $3->str.c_str());
                                                         }
                                                         else
@@ -1565,7 +1566,7 @@ expression: '-' expression
                                                             }
                                                             else
                                                             {
-																$$ = $1->clone();
+																                                $$ = $1->clone();
                                                                 STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " || " << $3->str.c_str());
                                                             }
                                                         }
@@ -1588,7 +1589,7 @@ expression: '-' expression
                                                         if($1->type.entity_type == TYPE_BOOLEAN && $3->type.entity_type == TYPE_BOOLEAN && $1->type.collection == false && $3->type.collection == false)
                                                         {
                                                             // both should be boolean
-															$$ = $1->clone();
+															                               $$ = $1->clone();
                                                             STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "(!" << $1->str.c_str() << " && " << $3->str.c_str() << ") || (!" << $3->str.c_str() << " && " << $1->str.c_str() << ")");
                                                         }
                                                         else
@@ -1601,7 +1602,7 @@ expression: '-' expression
                                                             }
                                                             else
                                                             {
-																$$ = $1->clone();
+																                                $$ = $1->clone();
                                                                 STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "(!" << $1->str.c_str() << " && " << $3->str.c_str() << ") || (!" << $3->str.c_str() << " && " << $1->str.c_str() << ")");
                                                             }
                                                         }
@@ -6012,6 +6013,7 @@ string getStringFromVariableType(VariableType v)
 			break;
 		default:
 			ss << ((v.collection) ? "CollOfUnknownTypes" : "UnknownType");
+      break;
 	}
 
 	return ss.str();
