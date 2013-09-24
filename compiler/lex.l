@@ -24,6 +24,7 @@ using namespace std;
 [}]         return yytext[0];
 [[]			return yytext[0];
 []]			return yytext[0];
+[?]			return yytext[0];
 "<="        return LESSEQ;
 ">="        return GREATEREQ;
 "=="        return EQ;
