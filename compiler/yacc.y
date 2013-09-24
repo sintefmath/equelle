@@ -4095,13 +4095,14 @@ std::string declaration_function(const char* variable_name, EntityType entity, b
         int i;
         bool taken = false;
 
-        for(i = 0; i < fun[currentFunctionIndex].noParam; i++) {
+        for(i = 0; i < fun[currentFunctionIndex].noParam; i++)
+        {
             if(strcmp(fun[currentFunctionIndex].headerVariables[i].name.c_str(), variable_name) == 0)
             {
                 taken = true;
                 break;
             }
-		}
+		    }
 
         if(taken == true)
         {
@@ -4111,13 +4112,14 @@ std::string declaration_function(const char* variable_name, EntityType entity, b
         }
         else
         {
-              for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++) {
+              for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
+              {
                   if(strcmp(fun[currentFunctionIndex].localVariables[i].name.c_str(), variable_name) == 0)
                   {
                       taken = true;
                       break;
                   }
-			  }
+			         }
 
               if(taken == true)
               {
@@ -5467,6 +5469,7 @@ string USS_assignment_function(const char* variable_name)
 			      var[varNo-1].type.collection = false;
             var[varNo-1].grid_mapping = GRID_MAPPING_ENTITY;
             var[varNo-1].assigned = true;
+            var[varNo-1].array_size = 1;
         }
     }
 
@@ -5513,6 +5516,7 @@ string USS_declaration_with_assignment_function(const char* st1)
 			      var[varNo-1].type.collection = false;
             var[varNo-1].grid_mapping = GRID_MAPPING_ENTITY;
             var[varNo-1].assigned = true;
+            var[varNo-1].array_size = 1;
         }
     }
 
@@ -5577,6 +5581,7 @@ string USSWD_assignment_function(const char* st1, const char* st2)
 			      var[varNo-1].type.collection = false;
             var[varNo-1].grid_mapping = GRID_MAPPING_ENTITY;
             var[varNo-1].assigned = true;
+            var[varNo-1].array_size = 1;
         }
     }
 
@@ -5623,6 +5628,7 @@ string USSWD_declaration_with_assignment_function(const char* st1, const char* s
 			      var[varNo-1].type.collection = false;
             var[varNo-1].grid_mapping = GRID_MAPPING_ENTITY;
             var[varNo-1].assigned = true;
+            var[varNo-1].array_size = 1;
         }
     }
 
@@ -5798,6 +5804,7 @@ string USCOS_assignment_function(const char* st1, const char* st2, GridMapping d
                   									var[varNo-1].type.collection = true;
                                     var[varNo-1].grid_mapping = d1;
                                     var[varNo-1].assigned = true;
+                                    var[varNo-1].array_size = -1;
                                 }
                             }
                         }
@@ -5898,6 +5905,7 @@ string USCOS_declaration_with_assignment_function(const char* st1, const char* s
                   									var[varNo-1].type.collection = true;
                                     var[varNo-1].grid_mapping = d1;
                                     var[varNo-1].assigned = true;
+                                    var[varNo-1].array_size = -1;
                                 }
                             }
                         }
@@ -6022,6 +6030,7 @@ string USCOS_extended_declaration_with_assignment_function(const char* st1, cons
                         												  var[varNo-1].type.collection = true;
                                                   var[varNo-1].grid_mapping = d1;
                                                   var[varNo-1].assigned = true;
+                                                  var[varNo-1].array_size = -1;
                                               }
                                           }
                                       }
