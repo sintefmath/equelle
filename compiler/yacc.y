@@ -5464,7 +5464,7 @@ string USS_assignment_function(const char* variable_name)
             finalString = ss.str();
             var[varNo++].name = variable_name;
             var[varNo-1].type.entity_type = TYPE_SCALAR;
-			var[varNo-1].type.collection = false;
+			      var[varNo-1].type.collection = false;
             var[varNo-1].grid_mapping = GRID_MAPPING_ENTITY;
             var[varNo-1].assigned = true;
         }
@@ -5510,7 +5510,7 @@ string USS_declaration_with_assignment_function(const char* st1)
             finalString = ss.str();
             var[varNo++].name = st1;
             var[varNo-1].type.entity_type = TYPE_SCALAR;
-			var[varNo-1].type.collection = false;
+			      var[varNo-1].type.collection = false;
             var[varNo-1].grid_mapping = GRID_MAPPING_ENTITY;
             var[varNo-1].assigned = true;
         }
@@ -5574,7 +5574,7 @@ string USSWD_assignment_function(const char* st1, const char* st2)
             finalString = ss.str();
             var[varNo++].name = st1;
             var[varNo-1].type.entity_type = TYPE_SCALAR;
-			var[varNo-1].type.collection = false;
+			      var[varNo-1].type.collection = false;
             var[varNo-1].grid_mapping = GRID_MAPPING_ENTITY;
             var[varNo-1].assigned = true;
         }
@@ -5620,7 +5620,7 @@ string USSWD_declaration_with_assignment_function(const char* st1, const char* s
             finalString = ss.str();
             var[varNo++].name = st1;
             var[varNo-1].type.entity_type = TYPE_SCALAR;
-			var[varNo-1].type.collection = false;
+			      var[varNo-1].type.collection = false;
             var[varNo-1].grid_mapping = GRID_MAPPING_ENTITY;
             var[varNo-1].assigned = true;
         }
@@ -5794,8 +5794,8 @@ string USCOS_assignment_function(const char* st1, const char* st2, GridMapping d
                                     ss << "const CollOfScalars " << st1 << " = param.get<CollOfScalars>(\"" << st1 << "\", " << st2 << ");";
                                     finalString = ss.str();
                                     var[varNo++].name = st1;
-									var[varNo-1].type.entity_type = TYPE_SCALAR;
-									var[varNo-1].type.collection = true;
+                  									var[varNo-1].type.entity_type = TYPE_SCALAR;
+                  									var[varNo-1].type.collection = true;
                                     var[varNo-1].grid_mapping = d1;
                                     var[varNo-1].assigned = true;
                                 }
@@ -5894,8 +5894,8 @@ string USCOS_declaration_with_assignment_function(const char* st1, const char* s
                                     ss << "const CollOfScalars " << st1 << " = param.get<CollOfScalars>(\"" << st1 << "\", " << st2 << ");";
                                     finalString = ss.str();
                                     var[varNo++].name = st1;
-									var[varNo-1].type.entity_type = TYPE_SCALAR;
-									var[varNo-1].type.collection = false;
+                  									var[varNo-1].type.entity_type = TYPE_SCALAR;
+                  									var[varNo-1].type.collection = true;
                                     var[varNo-1].grid_mapping = d1;
                                     var[varNo-1].assigned = true;
                                 }
@@ -6018,8 +6018,8 @@ string USCOS_extended_declaration_with_assignment_function(const char* st1, cons
                                                   ss << "const CollOfScalars " << st1 << " = param.get<CollOfScalars>(\"" << st1 << "\", " << st3 << ");";
                                                   finalString = ss.str();
                                                   var[varNo++].name = st1;
-												  var[varNo-1].type.entity_type = TYPE_SCALAR;
-												  var[varNo-1].type.collection = false;
+                        												  var[varNo-1].type.entity_type = TYPE_SCALAR;
+                        												  var[varNo-1].type.collection = true;
                                                   var[varNo-1].grid_mapping = d1;
                                                   var[varNo-1].assigned = true;
                                               }
