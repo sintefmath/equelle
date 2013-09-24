@@ -706,13 +706,13 @@ expression: '-' expression
                                                     if($1->type.entity_type == TYPE_VECTOR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == true && $3->type.collection == false)
                                                     {  // 1st should be vectors, 2nd should be scalar
 														                            $$ = $1->clone();
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " - " << $3->str.c_str());
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " * " << $3->str.c_str());
                                                     }
                                                     else
                                                     if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_VECTOR && $1->type.collection == false && $3->type.collection == true)
                                                     {  // 1st should be scalar, 2nd should be vectors
 														                            $$ = $3->clone();
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " - " << $3->str.c_str());
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " * " << $3->str.c_str());
                                                     }
                                                     else
                                                     {
@@ -758,7 +758,7 @@ expression: '-' expression
                                                     if($1->type.entity_type == TYPE_VECTOR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == true && $3->type.collection == false)
                                                     {  // 1st should be vectors, 2nd should be scalar
 														                            $$ = $1->clone();
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " - " << $3->str.c_str());
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " / " << $3->str.c_str());
                                                     }
                                                     else
                                                     {
@@ -812,11 +812,11 @@ expression: '-' expression
                                                             break;
                                                         case TYPE_VECTOR:
 															                               $$ = $2->clone();
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "-" << $2->str.c_str());
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "(" << $2->str.c_str() << ")");
                                                             break;
                                                         case TYPE_BOOLEAN:
 															                               $$ = $2->clone();
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "-" << $2->str.c_str());
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "(" << $2->str.c_str() << ")");
                                                             break;
                                                         default:
                                                             STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Paranthesis embedding not supported for this type");
