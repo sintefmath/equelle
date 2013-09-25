@@ -249,36 +249,67 @@ bool check1(const char* s1)
         {
             if(strncmp(pch, "er.", 3) != 0 && strcmp(pch, "true") != 0 && strcmp(pch, "false") != 0 && strcmp(pch, "return") != 0)  // not a default function or a small letter keyword
             {
-
                 bool found = false;
-                int i;
-                for(i = 0; i < varNo; i++)
-                {
-                    if(strcmp(pch, var[i].name.c_str()) == 0)
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-                if(found == false)
-                {
-                    HEAP_CHECK();
-                    bool found2 = false;
-                    int j;
-                    for(j = 0; j < funNo; j++)
-                    {
-                        if(strcmp(pch, fun[j].name.c_str()) == 0)
-                        {
-                            found2 = true;
-                            break;
-                        }
-                    }
-                    if(found2 == false)   // the unfound name doesn't belong to a user-defined function either
-                        return false;
-                }
+
+				if (found == false) {
+					//Search for global variable
+					for(int i = 0; i < varNo; i++)
+					{
+						if(strcmp(pch, var[i].name.c_str()) == 0)
+						{
+							found = true;
+							break;
+						}
+					}
+				}
+
+
+				//Search for function name
+				if (found == false) {
+					for(int j = 0; j < funNo; j++)
+					{
+						if(strcmp(pch, fun[j].name.c_str()) == 0)
+						{
+							found = true;
+							break;
+						}
+					}
+				}
+
+				//If we are at global scope, we have no further variables: return false
+				if (found == false && insideFunction == false) {
+					return false;
+				}
+
+
+				//Check for "header" variables in current function
+				if (found == false) {
+					for (int i=0; i<fun[currentFunctionIndex].noParam; ++i) {
+						if (strcmp(pch, fun[currentFunctionIndex].headerVariables[i].name.c_str()) == 0) {
+							found = true;
+							break;
+						}
+					}
+				}
+				
+				
+				//Check for function-local variables 
+				if (found == false) {
+					for (int i=0; i<fun[currentFunctionIndex].noLocalVariables; ++i) {
+						if (strcmp(pch, fun[currentFunctionIndex].localVariables[i].name.c_str()) == 0) {
+							found = true;
+							break;
+						}
+					}
+				}
+
+				//Variable could not be found: return false.
+				if (found == false) {
+					return false;
+				}
             }
         }
-        pch = strtok (NULL, " -+*/()<>!=^,");
+		pch = strtok(NULL, " -+*/()<>!=^,");
     }
     HEAP_CHECK();
     return true;
