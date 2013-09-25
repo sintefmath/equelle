@@ -102,10 +102,6 @@
 
 #define STREAM_TO_DOLLARS_CHAR_ARRAY(dd, streamcontent)                 do { stringstream ss; ss << streamcontent; dd = ss.str(); } while (false)
 #define LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY(dd)           do { stringstream ss; ss << "There is a length mismatch between two terms of an operation"; dd = ss.str(); } while (false)
-    // we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
-#define WRONG_TYPE_ERROR_TO_CHAR_ARRAY(dd, d1)                          do { stringstream ss; ss << "wrong_type_error  " << d1; dd = ss.str(); }  while (false)
-    // we print the name of the variable too in order to prioritize the error checking of variable name included in its own definition over the "wrong type variable" error
-#define WRONG_TYPE_ERROR_TO_CHAR_ARRAY(dd, d1)            do { stringstream ss; ss << "wrong_type_error  " << d1; dd = ss.str(); }  while (false)
 
     //using std::cout;
     //using std::endl;
@@ -342,7 +338,7 @@ expression: '-' expression
                         else
                             if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == true && $3->type.collection == true)
                             {  // they both should be scalars
-                                if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
+                                if($1->grid_mapping != $3->grid_mapping && $1->grid_mapping != GRID_MAPPING_ANY && $3->grid_mapping != GRID_MAPPING_ANY)    // check that the lengths of the 2 terms are equal
                                 {
                                     LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                 }
@@ -361,7 +357,7 @@ expression: '-' expression
                                 else
                                     if($1->type.entity_type == TYPE_VECTOR && $3->type.entity_type == TYPE_VECTOR && $1->type.collection == true && $3->type.collection == true)
                                     {  // both should be vectors
-                                        if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
+                                        if($1->grid_mapping != $3->grid_mapping && $1->grid_mapping != GRID_MAPPING_ANY && $3->grid_mapping != GRID_MAPPING_ANY)    // check that the lengths of the 2 terms are equal
                                         {
                                             LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                         }
@@ -395,7 +391,7 @@ expression: '-' expression
                         else
                             if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == true && $3->type.collection == true)
                             {  // they both should be scalars
-                                if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
+                                if($1->grid_mapping != $3->grid_mapping && $1->grid_mapping != GRID_MAPPING_ANY && $3->grid_mapping != GRID_MAPPING_ANY)    // check that the lengths of the 2 terms are equal
                                 {
                                     LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                 }
@@ -414,7 +410,7 @@ expression: '-' expression
                                 else
                                     if($1->type.entity_type == TYPE_VECTOR && $3->type.entity_type == TYPE_VECTOR && $1->type.collection == true && $3->type.collection == true)
                                     {  // both should be vectors
-                                        if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
+                                        if($1->grid_mapping != $3->grid_mapping && $1->grid_mapping != GRID_MAPPING_ANY && $3->grid_mapping != GRID_MAPPING_ANY)    // check that the lengths of the 2 terms are equal
                                         {
                                             LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                         }
@@ -449,7 +445,7 @@ expression: '-' expression
                             if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == true && $3->type.collection == true)
                             {
                                 // they both should be scalars
-                                if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
+                                if($1->grid_mapping != $3->grid_mapping && $1->grid_mapping != GRID_MAPPING_ANY && $3->grid_mapping != GRID_MAPPING_ANY)    // check that the lengths of the 2 terms are equal
                                 {
                                     LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                 }
@@ -519,7 +515,7 @@ expression: '-' expression
                         else
                             if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == true && $3->type.collection == true)
                             {  // they both should be scalars
-                                if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
+                                if($1->grid_mapping != $3->grid_mapping && $1->grid_mapping != GRID_MAPPING_ANY && $3->grid_mapping != GRID_MAPPING_ANY)    // check that the lengths of the 2 terms are equal
                                 {
                                     LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                 }
@@ -766,7 +762,7 @@ expression: '-' expression
                         else
                             if($3->type.entity_type == TYPE_VECTOR && $5->type.entity_type == TYPE_VECTOR && $3->type.collection == true && $5->type.collection == true)
                             {  // they both should be vectors
-                                if($3->grid_mapping != $5->grid_mapping || $3->array_size != $5->array_size)    // check that the lengths of the 2 terms are equal
+                                if(($3->grid_mapping != $5->grid_mapping && $3->grid_mapping != GRID_MAPPING_ANY && $5->grid_mapping != GRID_MAPPING_ANY) || $3->array_size != $5->array_size)    // check that the lengths of the 2 terms are equal
                                 {
                                     LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                 }
@@ -1297,7 +1293,7 @@ expression: '-' expression
                             if($1->type.entity_type == TYPE_BOOLEAN && $3->type.entity_type == TYPE_BOOLEAN && $1->type.collection == true && $3->type.collection == true)
                             {
                                 // they should be booleans
-                                if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
+                                if($1->grid_mapping != $3->grid_mapping && $1->grid_mapping != GRID_MAPPING_ANY && $3->grid_mapping != GRID_MAPPING_ANY)    // check that the lengths of the 2 terms are equal
                                 {
                                     LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                 }
@@ -1333,7 +1329,7 @@ expression: '-' expression
                             if($1->type.entity_type == TYPE_BOOLEAN && $3->type.entity_type == TYPE_BOOLEAN && $1->type.collection == true && $3->type.collection == true)
                             {
                                 // they should be booleans
-                                if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
+                                if($1->grid_mapping != $3->grid_mapping && $1->grid_mapping != GRID_MAPPING_ANY && $3->grid_mapping != GRID_MAPPING_ANY)    // check that the lengths of the 2 terms are equal
                                 {
                                     LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                 }
@@ -1369,7 +1365,7 @@ expression: '-' expression
                             if($1->type.entity_type == TYPE_BOOLEAN && $3->type.entity_type == TYPE_BOOLEAN && $1->type.collection == true && $3->type.collection == true)
                             {
                                 // they should be booleans
-                                if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
+                                if($1->grid_mapping != $3->grid_mapping && $1->grid_mapping != GRID_MAPPING_ANY && $3->grid_mapping != GRID_MAPPING_ANY)    // check that the lengths of the 2 terms are equal
                                 {
                                     LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                 }
@@ -1524,7 +1520,7 @@ expression: '-' expression
                             if($1->type.entity_type == TYPE_BOOLEAN && $3->type.entity_type == TYPE_BOOLEAN && $1->type.collection == true && $3->type.collection == true)
                             {
                                 // they should be scalars
-                                if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
+                                if($1->grid_mapping != $3->grid_mapping && $1->grid_mapping != GRID_MAPPING_ANY && $3->grid_mapping != GRID_MAPPING_ANY)    // check that the lengths of the 2 terms are equal
                                 {
                                     LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                 }
@@ -1590,7 +1586,7 @@ expression: '-' expression
                             if($1->type.entity_type == TYPE_BOOLEAN && $3->type.entity_type == TYPE_BOOLEAN && $1->type.collection == true && $3->type.collection == true)
                             {
                                 // they should be scalars
-                                if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
+                                if($1->grid_mapping != $3->grid_mapping && $1->grid_mapping != GRID_MAPPING_ANY && $3->grid_mapping != GRID_MAPPING_ANY)    // check that the lengths of the 2 terms are equal
                                 {
                                     LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                 }
@@ -1656,7 +1652,7 @@ expression: '-' expression
                             if($1->type.entity_type == TYPE_BOOLEAN && $3->type.entity_type == TYPE_BOOLEAN && $1->type.collection == true && $3->type.collection == true)
                             {
                                 // they should be scalars
-                                if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
+                                if($1->grid_mapping != $3->grid_mapping && $1->grid_mapping != GRID_MAPPING_ANY && $3->grid_mapping != GRID_MAPPING_ANY)    // check that the lengths of the 2 terms are equal
                                 {
                                     LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                 }
@@ -1722,7 +1718,7 @@ expression: '-' expression
                             if($1->type.entity_type == TYPE_BOOLEAN && $3->type.entity_type == TYPE_BOOLEAN && $1->type.collection == true && $3->type.collection == true)
                             {
                                 // they should be scalars
-                                if($1->grid_mapping != $3->grid_mapping)    // check that the lengths of the 2 terms are equal
+                                if($1->grid_mapping != $3->grid_mapping && $1->grid_mapping != GRID_MAPPING_ANY && $3->grid_mapping != GRID_MAPPING_ANY)    // check that the lengths of the 2 terms are equal
                                 {
                                     LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
                                 }
@@ -1809,7 +1805,58 @@ expression: '-' expression
                         break;
                 }
                 if(i == varNo)
-                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "An undeclared variable is used");
+                {
+                    if(insideFunction == false)
+                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "An undeclared variable is used");
+                    else    // it could be a variable from the header or a local variable
+                    {
+                        bool ok = false;
+                        int j;
+                        for(j = 0; j < fun[currentFunctionIndex].noParam; j++)
+                        {
+                            if(fun[currentFunctionIndex].headerVariables[j].name == $1->str)
+                            {
+                                ok = true;
+                                break;
+                            }
+                        }
+                        if(ok == false)   // it could be a local variable
+                        {
+                            int k;
+                            for(k = 0; k < fun[currentFunctionIndex].noLocalVariables; k++)
+                            {
+                                if(fun[currentFunctionIndex].localVariables[k].name == $1->str)
+                                {
+                                    ok = true;
+                                    break;
+                                }
+                            }
+                            if(ok == true)
+                              if(fun[currentFunctionIndex].localVariables[k].assigned == false)
+                              {
+                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "An unassigned local variable is used");
+                              }
+                              else
+                              {
+                                  $$->str = fun[currentFunctionIndex].localVariables[k].name;
+                                  $$->grid_mapping = fun[currentFunctionIndex].localVariables[k].grid_mapping;
+                                  $$->array_size = fun[currentFunctionIndex].localVariables[k].array_size;
+                                  $$->type.entity_type = fun[currentFunctionIndex].localVariables[k].type.entity_type;
+                                  $$->type.collection = fun[currentFunctionIndex].localVariables[k].type.collection;
+                              }
+                            else
+                              STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "An undeclared variable is used inside the function");
+                        }
+                        else
+                        {
+                            $$->str = fun[currentFunctionIndex].headerVariables[j].name;
+                            $$->grid_mapping = fun[currentFunctionIndex].headerVariables[j].grid_mapping;
+                            $$->array_size = fun[currentFunctionIndex].headerVariables[j].array_size;
+                            $$->type.entity_type = fun[currentFunctionIndex].headerVariables[j].type.entity_type;
+                            $$->type.collection = fun[currentFunctionIndex].headerVariables[j].type.collection;
+                        }
+                    }
+                }
                 else
                 {
                     $$->str = var[i].name;
@@ -1951,67 +1998,132 @@ commands: command1                              {
 
 type: SCALAR                                {
           $$ = new info();
-          $$->str = strdup("Scalar"); $$->grid_mapping = GRID_MAPPING_ENTITY;
+          $$->str = strdup("Scalar");
+          $$->grid_mapping = GRID_MAPPING_ENTITY;
+          $$->array_size = 1;
+          $$->type.entity_type = TYPE_SCALAR;
+          $$->type.collection = false;
       }
       | VECTOR                                {
           $$ = new info();
-          $$->str = strdup("Vector"); $$->grid_mapping = GRID_MAPPING_ENTITY;
+          $$->str = strdup("Vector");
+          $$->grid_mapping = GRID_MAPPING_ENTITY;
+          $$->array_size = 1;
+          $$->type.entity_type = TYPE_VECTOR;
+          $$->type.collection = false;
+
       }
       | VERTEX                                {
           $$ = new info();
-          $$->str = strdup("Vertex"); $$->grid_mapping = GRID_MAPPING_ENTITY;
+          $$->str = strdup("Vertex");
+          $$->grid_mapping = GRID_MAPPING_ENTITY;
+          $$->array_size = 1;
+          $$->type.entity_type = TYPE_VERTEX;
+          $$->type.collection = false;
       }
       | EDGE                                  {
           $$ = new info();
-          $$->str = strdup("Edge"); $$->grid_mapping = GRID_MAPPING_ENTITY;
+          $$->str = strdup("Edge");
+          $$->grid_mapping = GRID_MAPPING_ENTITY;
+          $$->array_size = 1;
+          $$->type.entity_type = TYPE_EDGE;
+          $$->type.collection = false;
       }
       | FACE                                  {
           $$ = new info();
-          $$->str = strdup("Face"); $$->grid_mapping = GRID_MAPPING_ENTITY;
+          $$->str = strdup("Face");
+          $$->grid_mapping = GRID_MAPPING_ENTITY;
+          $$->array_size = 1;
+          $$->type.entity_type = TYPE_FACE;
+          $$->type.collection = false;
       }
       | CELL                                  {
           $$ = new info();
-          $$->str = strdup("Cell"); $$->grid_mapping = GRID_MAPPING_ENTITY;
+          $$->str = strdup("Cell");
+          $$->grid_mapping = GRID_MAPPING_ENTITY;
+          $$->array_size = 1;
+          $$->type.entity_type = TYPE_CELL;
+          $$->type.collection = false;
       }
       | ADB                                   {
           $$ = new info();
-          $$->str = strdup("ScalarAD"); $$->grid_mapping = GRID_MAPPING_ENTITY;
+          $$->str = strdup("ScalarAD");
+          $$->grid_mapping = GRID_MAPPING_ENTITY;
+          $$->array_size = 1;
+          $$->type.entity_type = TYPE_SCALAR_AD;
+          $$->type.collection = false;
       }
       | BOOLEAN                               {
           $$ = new info();
-          $$->str = strdup("bool"); $$->grid_mapping = GRID_MAPPING_ENTITY;
+          $$->str = strdup("bool");
+          $$->grid_mapping = GRID_MAPPING_ENTITY;
+          $$->array_size = 1;
+          $$->type.entity_type = TYPE_BOOLEAN;
+          $$->type.collection = false;
       }
       | COLLECTION OF SCALAR                  {
           $$ = new info();
-          $$->str = strdup("CollOfScalars"); $$->grid_mapping = GRID_MAPPING_ANY;
+          $$->str = strdup("CollOfScalars");
+          $$->grid_mapping = GRID_MAPPING_ANY;
+          $$->array_size = 1;
+          $$->type.entity_type = TYPE_SCALAR;
+          $$->type.collection = true;
       }
       | COLLECTION OF VECTOR                  {
           $$ = new info();
-          $$->str = strdup("CollOfVectors"); $$->grid_mapping = GRID_MAPPING_ANY;
+          $$->str = strdup("CollOfVectors");
+          $$->grid_mapping = GRID_MAPPING_ANY;
+          $$->array_size = 1;
+          $$->type.entity_type = TYPE_VECTOR;
+          $$->type.collection = true;
       }
       | COLLECTION OF VERTEX                  {
           $$ = new info();
-          $$->str = strdup("CollOfVertices"); $$->grid_mapping = GRID_MAPPING_ANY;
+          $$->str = strdup("CollOfVertices");
+          $$->grid_mapping = GRID_MAPPING_ANY;
+          $$->array_size = 1;
+          $$->type.entity_type = TYPE_VERTEX;
+          $$->type.collection = true;
       }
       | COLLECTION OF EDGE                    {
           $$ = new info();
-          $$->str = strdup("CollOfEdges"); $$->grid_mapping = GRID_MAPPING_ANY;
+          $$->str = strdup("CollOfEdges");
+          $$->grid_mapping = GRID_MAPPING_ANY;
+          $$->array_size = 1;
+          $$->type.entity_type = TYPE_EDGE;
+          $$->type.collection = true;
       }
       | COLLECTION OF FACE                    {
           $$ = new info();
-          $$->str = strdup("CollOfFaces"); $$->grid_mapping = GRID_MAPPING_ANY;
+          $$->str = strdup("CollOfFaces");
+          $$->grid_mapping = GRID_MAPPING_ANY;
+          $$->array_size = 1;
+          $$->type.entity_type = TYPE_FACE;
+          $$->type.collection = true;
       }
       | COLLECTION OF CELL                    {
           $$ = new info();
-          $$->str = strdup("CollOfCells"); $$->grid_mapping = GRID_MAPPING_ANY;
+          $$->str = strdup("CollOfCells");
+          $$->grid_mapping = GRID_MAPPING_ANY;
+          $$->array_size = 1;
+          $$->type.entity_type = TYPE_CELL;
+          $$->type.collection = true;
       }
       | COLLECTION OF ADB                     {
           $$ = new info();
-          $$->str = strdup("CollOfScalarsAD"); $$->grid_mapping = GRID_MAPPING_ANY;
+          $$->str = strdup("CollOfScalarsAD");
+          $$->grid_mapping = GRID_MAPPING_ANY;
+          $$->array_size = 1;
+          $$->type.entity_type = TYPE_SCALAR_AD;
+          $$->type.collection = true;
       }
       | COLLECTION OF BOOLEAN                 {
           $$ = new info();
-          $$->str = strdup("CollOfBools"); $$->grid_mapping = GRID_MAPPING_ANY;
+          $$->str = strdup("CollOfBools");
+          $$->grid_mapping = GRID_MAPPING_ANY;
+          $$->array_size = 1;
+          $$->type.entity_type = TYPE_BOOLEAN;
+          $$->type.collection = true;
       }
       | COLLECTION OF SCALAR ON expression
       {
@@ -2022,6 +2134,9 @@ type: SCALAR                                {
           {
               $$->str = strdup("CollOfScalars");
               $$->grid_mapping = $5->grid_mapping;
+              $$->array_size = $5->array_size;
+              $$->type.entity_type = TYPE_SCALAR;
+              $$->type.collection = true;
           }
       }
       | COLLECTION OF VECTOR ON expression
@@ -2033,6 +2148,9 @@ type: SCALAR                                {
           {
               $$->str = strdup("CollOfVectors");
               $$->grid_mapping = $5->grid_mapping;
+              $$->array_size = $5->array_size;
+              $$->type.entity_type = TYPE_VECTOR;
+              $$->type.collection = true;
           }
       }
       | COLLECTION OF VERTEX ON expression
@@ -2044,6 +2162,9 @@ type: SCALAR                                {
           {
               $$->str = strdup("CollOfVertices");
               $$->grid_mapping = $5->grid_mapping;
+              $$->array_size = $5->array_size;
+              $$->type.entity_type = TYPE_VERTEX;
+              $$->type.collection = true;
           }
       }
       | COLLECTION OF EDGE ON expression
@@ -2055,6 +2176,9 @@ type: SCALAR                                {
           {
               $$->str = strdup("CollOfEdges");
               $$->grid_mapping = $5->grid_mapping;
+              $$->array_size = $5->array_size;
+              $$->type.entity_type = TYPE_EDGE;
+              $$->type.collection = true;
           }
       }
       | COLLECTION OF FACE ON expression
@@ -2066,6 +2190,9 @@ type: SCALAR                                {
           {
               $$->str = strdup("CollOfFaces");
               $$->grid_mapping = $5->grid_mapping;
+              $$->array_size = $5->array_size;
+              $$->type.entity_type = TYPE_FACE;
+              $$->type.collection = true;
           }
       }
       | COLLECTION OF CELL ON expression
@@ -2077,6 +2204,9 @@ type: SCALAR                                {
           {
               $$->str = strdup("CollOfCells");
               $$->grid_mapping = $5->grid_mapping;
+              $$->array_size = $5->array_size;
+              $$->type.entity_type = TYPE_CELL;
+              $$->type.collection = true;
           }
       }
       | COLLECTION OF ADB ON expression
@@ -2088,6 +2218,9 @@ type: SCALAR                                {
           {
               $$->str = strdup("CollOfScalarsAD");
               $$->grid_mapping = $5->grid_mapping;
+              $$->array_size = $5->array_size;
+              $$->type.entity_type = TYPE_SCALAR_AD;
+              $$->type.collection = true;
           }
       }
       | COLLECTION OF BOOLEAN ON expression
@@ -2099,6 +2232,9 @@ type: SCALAR                                {
           {
               $$->str = strdup("CollOfBools");
               $$->grid_mapping = $5->grid_mapping;
+              $$->array_size = $5->array_size;
+              $$->type.entity_type = TYPE_BOOLEAN;
+              $$->type.collection = true;
           }
       }
       ;

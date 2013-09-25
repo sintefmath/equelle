@@ -249,34 +249,32 @@ bool check1(const char* s1)
         {
             if(strncmp(pch, "er.", 3) != 0 && strcmp(pch, "true") != 0 && strcmp(pch, "false") != 0 && strcmp(pch, "return") != 0)  // not a default function or a small letter keyword
             {
-                if(strcmp(pch, "wrong_type_error") != 0)    // we do this to prioritize the error checking
+
+                bool found = false;
+                int i;
+                for(i = 0; i < varNo; i++)
                 {
-                    bool found = false;
-                    int i;
-                    for(i = 0; i < varNo; i++)
+                    if(strcmp(pch, var[i].name.c_str()) == 0)
                     {
-                        if(strcmp(pch, var[i].name.c_str()) == 0)
+                        found = true;
+                        break;
+                    }
+                }
+                if(found == false)
+                {
+                    HEAP_CHECK();
+                    bool found2 = false;
+                    int j;
+                    for(j = 0; j < funNo; j++)
+                    {
+                        if(strcmp(pch, fun[j].name.c_str()) == 0)
                         {
-                            found = true;
+                            found2 = true;
                             break;
                         }
                     }
-                    if(found == false)
-                    {
-                        HEAP_CHECK();
-                        bool found2 = false;
-                        int j;
-                        for(j = 0; j < funNo; j++)
-                        {
-                            if(strcmp(pch, fun[j].name.c_str()) == 0)
-                            {
-                                found2 = true;
-                                break;
-                            }
-                        }
-                        if(found2 == false)   // the unfound name doesn't belong to a user-defined function either
-                            return false;
-                    }
+                    if(found2 == false)   // the unfound name doesn't belong to a user-defined function either
+                        return false;
                 }
             }
         }
@@ -329,8 +327,6 @@ bool check3(const char* s1)
         {
             if(strncmp(pch, "er.", 3) != 0)  // not a default function
             {
-                if(strcmp(pch, "wrong_type_error") != 0)    // we do this to prioritize the error checking
-                {
                     int i;
                     bool taken = false;
                     for(i = 0; i < fun[currentFunctionIndex].noParam; i++)
@@ -371,7 +367,6 @@ bool check3(const char* s1)
                                                 return false;   // not a header or local or global variable or another function call ==> the variable doesn't exist
                                     }
                                 }
-                }
             }
         }
 
