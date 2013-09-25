@@ -17,7 +17,6 @@ interior_faces = InteriorFaces(Grid)                           # Deduced type:  
 first = FirstCell(interior_faces)                          # Deduced type:  Collection Of Cell On interior_faces
 							   # Equivalent to: Collection Of Cell On InteriorFaces()
 second = SecondCell(interior_faces)                        # Deduced type:  Same as for 'first.'
-
 itrans  = k * Area(interior_faces) / EuclideanLength(Centroid(first) - Centroid(second))	
 
 
@@ -32,7 +31,8 @@ computeInteriorFlux = {
 # Compute the residual for the heat equation.
 computeResidual : Function(u :: Collection Of Scalar) -> Collection Of Scalar
 computeResidual = {
-    ifluxes = computeInteriorFlux(u)    # Deduced type: Collection Of Scalar On AllCells()
+    ifluxes = computeInteriorFlux(u)    
+	# Deduced type: Collection Of Scalar On AllCells()
     residual = u - u0 + (dt / vol) * Divergence(ifluxes)
 	return residual
 }
@@ -40,10 +40,10 @@ computeResidual = {
 
 # NewtonSolve takes a function (that should accept the primary variable as input) and the initial guess for the primary variable.
 explicitu = u0 - computeResidual(u0)
-# u = NewtonSolve(computeResidual, u0)
+u = NewtonSolve(computeResidual, u0)
 
 Output(explicitu)
-# Output(u)
+Output(u)
 
 
 
