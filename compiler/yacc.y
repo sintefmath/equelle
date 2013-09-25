@@ -460,33 +460,45 @@ expression: '-' expression
                                 }
                             }
                             else
-                                if($1->type.entity_type == TYPE_VECTOR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == false && $3->type.collection == false)
-                                {  // 1st should be vector, 2nd should be scalar
-                                    $$ = $1->clone();
-                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " * " << $3->str.c_str());
+                              if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == true && $3->type.collection == false)
+                              {   // 1st should be scalars, 2nd should be scalar
+                                   $$ = $1->clone();
+                                   STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " * " << $3->str.c_str());
+                              }
+                              else
+                                if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == false && $3->type.collection == true)
+                                {   // 1st should be scalar, 2nd should be scalars
+                                     $$ = $3->clone();
+                                     STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " * " << $3->str.c_str());
                                 }
                                 else
-                                    if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_VECTOR && $1->type.collection == false && $3->type.collection == false)
-                                    {  // 1st should be scalar, 2nd should be vector
-                                        $$ = $1->clone();
-                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " * " << $3->str.c_str());
-                                    }
-                                    else
-                                        if($1->type.entity_type == TYPE_VECTOR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == true && $3->type.collection == false)
-                                        {  // 1st should be vectors, 2nd should be scalar
-                                            $$ = $1->clone();
-                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " * " << $3->str.c_str());
-                                        }
-                                        else
-                                            if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_VECTOR && $1->type.collection == false && $3->type.collection == true)
-                                            {  // 1st should be scalar, 2nd should be vectors
-                                                $$ = $3->clone();
-                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " * " << $3->str.c_str());
-                                            }
-                                            else
-                                            {
-                                                STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Multiplication not supported for these types");
-                                            }
+                                  if($1->type.entity_type == TYPE_VECTOR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == false && $3->type.collection == false)
+                                  {  // 1st should be vector, 2nd should be scalar
+                                      $$ = $1->clone();
+                                      STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " * " << $3->str.c_str());
+                                  }
+                                  else
+                                      if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_VECTOR && $1->type.collection == false && $3->type.collection == false)
+                                      {  // 1st should be scalar, 2nd should be vector
+                                          $$ = $1->clone();
+                                          STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " * " << $3->str.c_str());
+                                      }
+                                      else
+                                          if($1->type.entity_type == TYPE_VECTOR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == true && $3->type.collection == false)
+                                          {  // 1st should be vectors, 2nd should be scalar
+                                              $$ = $1->clone();
+                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " * " << $3->str.c_str());
+                                          }
+                                          else
+                                              if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_VECTOR && $1->type.collection == false && $3->type.collection == true)
+                                              {  // 1st should be scalar, 2nd should be vectors
+                                                  $$ = $3->clone();
+                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " * " << $3->str.c_str());
+                                              }
+                                              else
+                                              {
+                                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Multiplication not supported for these types");
+                                              }
                     }
             }
             | expression '/' expression
@@ -518,6 +530,12 @@ expression: '-' expression
                                 }
                             }
                             else
+                              if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == true && $3->type.collection == false)
+                              {  // 1st should be scalars, 2nd should be scalar
+                                  $$ = $1->clone();
+                                  STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " / " << $3->str.c_str());
+                              }
+                              else
                                 if($1->type.entity_type == TYPE_VECTOR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == false && $3->type.collection == false)
                                 {  // 1st should be vector, 2nd should be scalar
                                     $$ = $1->clone();
@@ -1838,162 +1856,162 @@ expression: '-' expression
             ;
 
 
-header: VARIABLE HEADER_DECL SCALAR                          { 
+header: VARIABLE HEADER_DECL SCALAR                          {
             $$ = new info();
-            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Scalar " << $1->str.c_str()); 
+            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Scalar " << $1->str.c_str());
         }
-        | VARIABLE HEADER_DECL VECTOR                          { 
+        | VARIABLE HEADER_DECL VECTOR                          {
             $$ = new info();
-            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Vector " << $1->str.c_str()); 
+            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Vector " << $1->str.c_str());
         }
-        | VARIABLE HEADER_DECL VERTEX                          { 
+        | VARIABLE HEADER_DECL VERTEX                          {
             $$ = new info();
-            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Vertex " << $1->str.c_str()); 
+            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Vertex " << $1->str.c_str());
         }
-        | VARIABLE HEADER_DECL EDGE                            { 
+        | VARIABLE HEADER_DECL EDGE                            {
             $$ = new info();
-            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Edge " << $1->str.c_str()); 
+            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Edge " << $1->str.c_str());
         }
-        | VARIABLE HEADER_DECL FACE                            { 
+        | VARIABLE HEADER_DECL FACE                            {
             $$ = new info();
-            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Face " << $1->str.c_str()); 
+            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Face " << $1->str.c_str());
         }
-        | VARIABLE HEADER_DECL CELL                            { 
+        | VARIABLE HEADER_DECL CELL                            {
             $$ = new info();
-            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Cell " << $1->str.c_str()); 
+            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Cell " << $1->str.c_str());
         }
-        | VARIABLE HEADER_DECL ADB                             { 
+        | VARIABLE HEADER_DECL ADB                             {
             $$ = new info();
-            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "ScalarAD " << $1->str.c_str()); 
+            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "ScalarAD " << $1->str.c_str());
         }
-        | VARIABLE HEADER_DECL BOOLEAN                         { 
+        | VARIABLE HEADER_DECL BOOLEAN                         {
             $$ = new info();
-            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "bool " << $1->str.c_str()); 
+            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "bool " << $1->str.c_str());
         }
-        | VARIABLE HEADER_DECL COLLECTION OF SCALAR            { 
+        | VARIABLE HEADER_DECL COLLECTION OF SCALAR            {
             $$ = new info();
-            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfScalars " << $1->str.c_str()); 
+            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfScalars " << $1->str.c_str());
         }
-        | VARIABLE HEADER_DECL COLLECTION OF VECTOR            { 
+        | VARIABLE HEADER_DECL COLLECTION OF VECTOR            {
             $$ = new info();
-            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfVectors " << $1->str.c_str()); 
+            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfVectors " << $1->str.c_str());
         }
-        | VARIABLE HEADER_DECL COLLECTION OF VERTEX            { 
+        | VARIABLE HEADER_DECL COLLECTION OF VERTEX            {
             $$ = new info();
             STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfVertices " << $1->str.c_str());
         }
-        | VARIABLE HEADER_DECL COLLECTION OF EDGE              { 
+        | VARIABLE HEADER_DECL COLLECTION OF EDGE              {
             $$ = new info();
-            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfEdges " << $1->str.c_str()); 
+            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfEdges " << $1->str.c_str());
         }
-        | VARIABLE HEADER_DECL COLLECTION OF FACE              { 
+        | VARIABLE HEADER_DECL COLLECTION OF FACE              {
             $$ = new info();
-            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfFaces " << $1->str.c_str()); 
+            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfFaces " << $1->str.c_str());
         }
-        | VARIABLE HEADER_DECL COLLECTION OF CELL              { 
+        | VARIABLE HEADER_DECL COLLECTION OF CELL              {
             $$ = new info();
-            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfCells " << $1->str.c_str()); 
+            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfCells " << $1->str.c_str());
         }
-        | VARIABLE HEADER_DECL COLLECTION OF ADB               { 
+        | VARIABLE HEADER_DECL COLLECTION OF ADB               {
             $$ = new info();
-            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfScalarsAD " << $1->str.c_str()); 
+            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfScalarsAD " << $1->str.c_str());
         }
-        | VARIABLE HEADER_DECL COLLECTION OF BOOLEAN           { 
+        | VARIABLE HEADER_DECL COLLECTION OF BOOLEAN           {
             $$ = new info();
-            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfBools " << $1->str.c_str()); 
+            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfBools " << $1->str.c_str());
         }
         ;
 
 
-parameter_list: header                         { 
+parameter_list: header                         {
         $$ = new info();
         $$->str = $1->str;
                 }
-                | parameter_list ',' header      { 
+                | parameter_list ',' header      {
                     $$ = new info();
                     STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << ", " << $3->str);
                 }
                 ;
 
 
-commands: command1                              { 
+commands: command1                              {
                 $$ = new info();
-                $$->str = $1->str.c_str(); 
+                $$->str = $1->str.c_str();
           }
-          | commands end_lines command1           { 
+          | commands end_lines command1           {
               $$ = new info();
-              STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << $2->str.c_str() << $3->str.c_str()); 
+              STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << $2->str.c_str() << $3->str.c_str());
           }
-          |                                       { 
+          |                                       {
               $$ = new info();
-              $$->str = strdup(""); 
+              $$->str = strdup("");
           }     // a function can have only the return instruction
           ;
 
 
-type: SCALAR                                { 
+type: SCALAR                                {
           $$ = new info();
-          $$->str = strdup("Scalar"); $$->grid_mapping = GRID_MAPPING_ENTITY; 
+          $$->str = strdup("Scalar"); $$->grid_mapping = GRID_MAPPING_ENTITY;
       }
-      | VECTOR                                { 
+      | VECTOR                                {
           $$ = new info();
-          $$->str = strdup("Vector"); $$->grid_mapping = GRID_MAPPING_ENTITY; 
+          $$->str = strdup("Vector"); $$->grid_mapping = GRID_MAPPING_ENTITY;
       }
-      | VERTEX                                { 
+      | VERTEX                                {
           $$ = new info();
-          $$->str = strdup("Vertex"); $$->grid_mapping = GRID_MAPPING_ENTITY; 
+          $$->str = strdup("Vertex"); $$->grid_mapping = GRID_MAPPING_ENTITY;
       }
-      | EDGE                                  { 
+      | EDGE                                  {
           $$ = new info();
-          $$->str = strdup("Edge"); $$->grid_mapping = GRID_MAPPING_ENTITY; 
+          $$->str = strdup("Edge"); $$->grid_mapping = GRID_MAPPING_ENTITY;
       }
-      | FACE                                  { 
+      | FACE                                  {
           $$ = new info();
-          $$->str = strdup("Face"); $$->grid_mapping = GRID_MAPPING_ENTITY; 
+          $$->str = strdup("Face"); $$->grid_mapping = GRID_MAPPING_ENTITY;
       }
-      | CELL                                  { 
+      | CELL                                  {
           $$ = new info();
-          $$->str = strdup("Cell"); $$->grid_mapping = GRID_MAPPING_ENTITY; 
+          $$->str = strdup("Cell"); $$->grid_mapping = GRID_MAPPING_ENTITY;
       }
-      | ADB                                   { 
+      | ADB                                   {
           $$ = new info();
-          $$->str = strdup("ScalarAD"); $$->grid_mapping = GRID_MAPPING_ENTITY; 
+          $$->str = strdup("ScalarAD"); $$->grid_mapping = GRID_MAPPING_ENTITY;
       }
-      | BOOLEAN                               { 
+      | BOOLEAN                               {
           $$ = new info();
-          $$->str = strdup("bool"); $$->grid_mapping = GRID_MAPPING_ENTITY; 
+          $$->str = strdup("bool"); $$->grid_mapping = GRID_MAPPING_ENTITY;
       }
-      | COLLECTION OF SCALAR                  { 
+      | COLLECTION OF SCALAR                  {
           $$ = new info();
-          $$->str = strdup("CollOfScalars"); $$->grid_mapping = GRID_MAPPING_ANY; 
+          $$->str = strdup("CollOfScalars"); $$->grid_mapping = GRID_MAPPING_ANY;
       }
-      | COLLECTION OF VECTOR                  { 
+      | COLLECTION OF VECTOR                  {
           $$ = new info();
-          $$->str = strdup("CollOfVectors"); $$->grid_mapping = GRID_MAPPING_ANY; 
+          $$->str = strdup("CollOfVectors"); $$->grid_mapping = GRID_MAPPING_ANY;
       }
-      | COLLECTION OF VERTEX                  { 
+      | COLLECTION OF VERTEX                  {
           $$ = new info();
-          $$->str = strdup("CollOfVertices"); $$->grid_mapping = GRID_MAPPING_ANY; 
+          $$->str = strdup("CollOfVertices"); $$->grid_mapping = GRID_MAPPING_ANY;
       }
-      | COLLECTION OF EDGE                    { 
+      | COLLECTION OF EDGE                    {
           $$ = new info();
-          $$->str = strdup("CollOfEdges"); $$->grid_mapping = GRID_MAPPING_ANY; 
+          $$->str = strdup("CollOfEdges"); $$->grid_mapping = GRID_MAPPING_ANY;
       }
-      | COLLECTION OF FACE                    { 
+      | COLLECTION OF FACE                    {
           $$ = new info();
-          $$->str = strdup("CollOfFaces"); $$->grid_mapping = GRID_MAPPING_ANY; 
+          $$->str = strdup("CollOfFaces"); $$->grid_mapping = GRID_MAPPING_ANY;
       }
-      | COLLECTION OF CELL                    { 
+      | COLLECTION OF CELL                    {
           $$ = new info();
-          $$->str = strdup("CollOfCells"); $$->grid_mapping = GRID_MAPPING_ANY; 
+          $$->str = strdup("CollOfCells"); $$->grid_mapping = GRID_MAPPING_ANY;
       }
-      | COLLECTION OF ADB                     { 
+      | COLLECTION OF ADB                     {
           $$ = new info();
-          $$->str = strdup("CollOfScalarsAD"); $$->grid_mapping = GRID_MAPPING_ANY; 
+          $$->str = strdup("CollOfScalarsAD"); $$->grid_mapping = GRID_MAPPING_ANY;
       }
-      | COLLECTION OF BOOLEAN                 { 
+      | COLLECTION OF BOOLEAN                 {
           $$ = new info();
-          $$->str = strdup("CollOfBools"); $$->grid_mapping = GRID_MAPPING_ANY; 
+          $$->str = strdup("CollOfBools"); $$->grid_mapping = GRID_MAPPING_ANY;
       }
       | COLLECTION OF SCALAR ON expression
       {
@@ -2152,28 +2170,28 @@ type: SCALAR                                {
 
 
       //////////////////////////////////////////////////////////////////////// this supports input parameters as variables
-values: VARIABLE                { 
+values: VARIABLE                {
       $$ = new info();
-      $$->str = $1->str.c_str(); 
+      $$->str = $1->str.c_str();
         }
-        | values ',' VARIABLE     { 
+        | values ',' VARIABLE     {
             $$ = new info();
-            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << ", " << $3->str.c_str()); 
+            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << ", " << $3->str.c_str());
         }
         ;
 
 
-end_lines: '\n'                 { 
+end_lines: '\n'                 {
         $$ = new info();
-        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "\n"); currentLineNumber++; 
+        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "\n"); currentLineNumber++;
            }
-           | '\n' end_lines       { 
+           | '\n' end_lines       {
                $$ = new info();
-               STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "\n" << $2->str.c_str()); currentLineNumber++; 
+               STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "\n" << $2->str.c_str()); currentLineNumber++;
            }
-           |                      { 
+           |                      {
                $$ = new info();
-               $$->str = strdup(""); 
+               $$->str = strdup("");
            }
            ;
 
@@ -2245,8 +2263,6 @@ function_declaration: VARIABLE ':' FUNCTION '(' parameter_list ')' RET type
                                   fun[funNo-1].grid_mapping = $8->grid_mapping;
                                   fun[funNo-1].noLocalVariables = 0;
                                   fun[funNo-1].noParam = 0;
-
-                                  info* a = $5;
 
                                   char *cs1 = strdup($5->str.c_str());    // we need to make a copy, because the strtok function modifies the given string
                                   char *pch;
@@ -2356,7 +2372,7 @@ function_assignment: function_start end_lines commands end_lines return_instr en
 
 
 output: OUTPUT '(' VARIABLE ')'       { $$ = new info();
-                     $$->str = output_function($3->str); 
+                     $$->str = output_function($3->str);
         }
 
 
@@ -2366,72 +2382,72 @@ output: OUTPUT '(' VARIABLE ')'       { $$ = new info();
 
 
 
-singular_declaration: VARIABLE ':' SCALAR               { 
+singular_declaration: VARIABLE ':' SCALAR               {
         $$ = new info();
-        $$->str = declaration_function($1->str.c_str(), TYPE_SCALAR, false); 
+        $$->str = declaration_function($1->str.c_str(), TYPE_SCALAR, false);
                       }
-                      | VARIABLE ':' VECTOR               { 
+                      | VARIABLE ':' VECTOR               {
                           $$ = new info();
-                          $$->str = declaration_function($1->str.c_str(), TYPE_VECTOR, false); 
+                          $$->str = declaration_function($1->str.c_str(), TYPE_VECTOR, false);
                       }
-                      | VARIABLE ':' VERTEX               { 
+                      | VARIABLE ':' VERTEX               {
                           $$ = new info();
-                          $$->str = declaration_function($1->str.c_str(), TYPE_VERTEX, false); 
+                          $$->str = declaration_function($1->str.c_str(), TYPE_VERTEX, false);
                       }
-                      | VARIABLE ':' EDGE                 { 
+                      | VARIABLE ':' EDGE                 {
                           $$ = new info();
                           $$->str = declaration_function($1->str.c_str(), TYPE_EDGE, false);
                       }
-                      | VARIABLE ':' FACE                 { 
+                      | VARIABLE ':' FACE                 {
                           $$ = new info();
-                          $$->str = declaration_function($1->str.c_str(), TYPE_FACE, false); 
+                          $$->str = declaration_function($1->str.c_str(), TYPE_FACE, false);
                       }
-                      | VARIABLE ':' CELL                 { 
+                      | VARIABLE ':' CELL                 {
                           $$ = new info();
-                          $$->str = declaration_function($1->str.c_str(), TYPE_CELL, false); 
+                          $$->str = declaration_function($1->str.c_str(), TYPE_CELL, false);
                       }
-                      | VARIABLE ':' ADB                  { 
+                      | VARIABLE ':' ADB                  {
                           $$ = new info();
-                          $$->str = declaration_function($1->str.c_str(), TYPE_SCALAR_AD, false); 
+                          $$->str = declaration_function($1->str.c_str(), TYPE_SCALAR_AD, false);
                       }
-                      | VARIABLE ':' BOOLEAN              { 
+                      | VARIABLE ':' BOOLEAN              {
                           $$ = new info();
-                          $$->str = declaration_function($1->str.c_str(), TYPE_BOOLEAN, false); 
+                          $$->str = declaration_function($1->str.c_str(), TYPE_BOOLEAN, false);
                       }
                       ;
 
 
-plural_declaration: VARIABLE ':' COLLECTION OF SCALAR       { 
+plural_declaration: VARIABLE ':' COLLECTION OF SCALAR       {
                       $$ = new info();
                       $$->str = declaration_function($1->str.c_str(), TYPE_SCALAR, true);
                     }
-                    | VARIABLE ':' COLLECTION OF VECTOR       { 
+                    | VARIABLE ':' COLLECTION OF VECTOR       {
                         $$ = new info();
                         $$->str = declaration_function($1->str.c_str(), TYPE_VECTOR, true);
                     }
-                    | VARIABLE ':' COLLECTION OF VERTEX       { 
+                    | VARIABLE ':' COLLECTION OF VERTEX       {
                         $$ = new info();
-                        $$->str = declaration_function($1->str.c_str(), TYPE_VERTEX, true); 
+                        $$->str = declaration_function($1->str.c_str(), TYPE_VERTEX, true);
                     }
-                    | VARIABLE ':' COLLECTION OF EDGE         { 
+                    | VARIABLE ':' COLLECTION OF EDGE         {
                         $$ = new info();
-                        $$->str = declaration_function($1->str.c_str(), TYPE_EDGE, true); 
+                        $$->str = declaration_function($1->str.c_str(), TYPE_EDGE, true);
                     }
-                    | VARIABLE ':' COLLECTION OF FACE         { 
+                    | VARIABLE ':' COLLECTION OF FACE         {
                         $$ = new info();
-                        $$->str = declaration_function($1->str.c_str(), TYPE_FACE, true); 
+                        $$->str = declaration_function($1->str.c_str(), TYPE_FACE, true);
                     }
-                    | VARIABLE ':' COLLECTION OF CELL         { 
+                    | VARIABLE ':' COLLECTION OF CELL         {
                         $$ = new info();
-                        $$->str = declaration_function($1->str.c_str(), TYPE_CELL, true); 
+                        $$->str = declaration_function($1->str.c_str(), TYPE_CELL, true);
                     }
-                    | VARIABLE ':' COLLECTION OF ADB          { 
+                    | VARIABLE ':' COLLECTION OF ADB          {
                         $$ = new info();
-                        $$->str = declaration_function($1->str.c_str(), TYPE_SCALAR_AD, true); 
+                        $$->str = declaration_function($1->str.c_str(), TYPE_SCALAR_AD, true);
                     }
-                    | VARIABLE ':' COLLECTION OF BOOLEAN      { 
+                    | VARIABLE ':' COLLECTION OF BOOLEAN      {
                         $$ = new info();
-                        $$->str = declaration_function($1->str.c_str(), TYPE_BOOLEAN, true); 
+                        $$->str = declaration_function($1->str.c_str(), TYPE_BOOLEAN, true);
                     }
                     ;
 
@@ -2568,17 +2584,17 @@ extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON expression
                              ;
 
 
-declaration: singular_declaration           { 
+declaration: singular_declaration           {
                              $$ = new info();
-                             $$->str = $1->str; 
+                             $$->str = $1->str;
              }
-             | plural_declaration             { 
+             | plural_declaration             {
                  $$ = new info();
-                 $$->str = $1->str; 
+                 $$->str = $1->str;
              }
-             | extended_plural_declaration    { 
+             | extended_plural_declaration    {
                  $$ = new info();
-                 $$->str = $1->str; 
+                 $$->str = $1->str;
              }
              ;
 
@@ -2759,13 +2775,13 @@ singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' expression
                                               }
                                           }
                                       }
-                                      | VARIABLE ':' SCALAR '=' USS                   { 
+                                      | VARIABLE ':' SCALAR '=' USS                   {
                                           $$ = new info();
-                                          $$->str = USS_declaration_with_assignment_function($1->str.c_str()); 
+                                          $$->str = USS_declaration_with_assignment_function($1->str.c_str());
                                       }
-                                      | VARIABLE ':' SCALAR '=' USSWD '(' number ')'  { 
+                                      | VARIABLE ':' SCALAR '=' USSWD '(' number ')'  {
                                           $$ = new info();
-                                          $$->str = USSWD_declaration_with_assignment_function($1->str.c_str(), $7->str.c_str()); 
+                                          $$->str = USSWD_declaration_with_assignment_function($1->str.c_str(), $7->str.c_str());
                                       }
                                       ;
 
@@ -3119,11 +3135,11 @@ extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR O
                                              ;
 
 
-declaration_with_assignment: singular_declaration_with_assignment          { 
+declaration_with_assignment: singular_declaration_with_assignment          {
                                              $$ = new info();$$->str = $1->str; }
-                             | plural_declaration_with_assignment            { 
+                             | plural_declaration_with_assignment            {
                                  $$ = new info();$$->str = $1->str; }
-                             | extended_plural_declaration_with_assignment   { 
+                             | extended_plural_declaration_with_assignment   {
                                  $$ = new info();$$->str = $1->str; }
                              ;
 
@@ -3131,20 +3147,20 @@ declaration_with_assignment: singular_declaration_with_assignment          {
 
 
                              // instructions which can be used in the program and in a function's body
-command: declaration                    { 
+command: declaration                    {
                              $$ = new info();$$->str = $1->str; }
-         | assignment                     { 
+         | assignment                     {
              $$ = new info();$$->str = $1->str; }
-         | declaration_with_assignment    { 
+         | declaration_with_assignment    {
              $$ = new info();$$->str = $1->str; }
          ;
 
 
-command1: command                       { 
+command1: command                       {
          $$ = new info();$$->str = $1->str; }
-          | command COMMENT               { 
+          | command COMMENT               {
               $$ = new info();string st1 = $1->str.c_str(); string st2 = $2->str.c_str(); stringstream ss; ss << st1 << " // " << st2.substr(1, st2.size() - 1); $$->str = strdup(ss.str().c_str()); }
-          | COMMENT                       { 
+          | COMMENT                       {
               $$ = new info();string st1 = $1->str.c_str(); stringstream ss; ss << "// " << st1.substr(1, st1.size() - 1); $$->str = strdup(ss.str().c_str()); }
           ;
 
