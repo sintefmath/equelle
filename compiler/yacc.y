@@ -544,9 +544,14 @@ expression: '-' expression
                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " / " << $3->str.c_str());
                                     }
                                     else
-                                    {
-                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Division not supported for these types");
-                                    }
+										if($1->type.entity_type == TYPE_SCALAR && $3->type.entity_type == TYPE_SCALAR && $1->type.collection == false && $3->type.collection == true) {
+											$$ = $3->clone();
+											STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " / " << $3->str.c_str());
+										}
+										else 
+										{
+											STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Division not supported for these types");
+										}
                     }
             }
             | expression '^' expression
