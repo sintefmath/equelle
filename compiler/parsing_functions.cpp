@@ -18,14 +18,15 @@ int main()
     cout << endl;
     cout << "#include \"EquelleRuntimeCPU.hpp\"" << endl;
     cout << endl << endl;
-    cout << "int main()" << endl;
+    cout << "int main(int argc, char** argv)" << endl;
     cout << "{" << endl;
     cout << "Opm::parameter::ParameterGroup param(argc, argv, false);" << endl;
     cout << "EquelleRuntimeCPU er(param);" << endl;
-    cout << "UserParameters up(param, er);" << endl;
+    //cout << "UserParameters up(param, er);" << endl;
     cout << endl;
     HEAP_CHECK();
     yyparse();
+	cout << "return 0;" << endl;
     cout << "}" << endl;
     HEAP_CHECK();
     return 0;
@@ -2790,7 +2791,7 @@ string USCOS_assignment_function(const char* st1, const char* st2, GridMapping d
                                                     var[i].grid_mapping = d1;
                                                     var[i].assigned = true;
                                                     stringstream ss;
-                                                    ss << "const CollOfScalars " << st1 << " = param.get<CollOfScalars>(\"" << st1 << "\", " << st2 << ");";
+                                                    ss << "const CollOfScalars " << st1 << " = er.getUserSpecifiedCollectionOfScalar(param, \"" << st1 << "\", " << st2 << ".size());";
                                                     finalString = ss.str();
                                                 }
                                                 else
@@ -2802,7 +2803,7 @@ string USCOS_assignment_function(const char* st1, const char* st2, GridMapping d
                                             else
                                             {
                                                 stringstream ss;
-                                                ss << "const CollOfScalars " << st1 << " = param.get<CollOfScalars>(\"" << st1 << "\", " << st2 << ");";
+                                                ss << "const CollOfScalars " << st1 << " = er.getUserSpecifiedCollectionOfScalar(param, \"" << st1 << "\", " << st2 << ".size());";
                                                 finalString = ss.str();
                                                 var[i].assigned = true;
                                             }
@@ -2865,7 +2866,7 @@ string USCOS_assignment_function(const char* st1, const char* st2, GridMapping d
                                     else
                                     {
                                         stringstream ss;
-                                        ss << "const CollOfScalars " << st1 << " = param.get<CollOfScalars>(\"" << st1 << "\", " << st2 << ");";
+                                        ss << "const CollOfScalars " << st1 << " = er.getUserSpecifiedCollectionOfScalar(param, \"" << st1 << "\", " << st2 << ".size());";
                                         finalString = ss.str();
                                         var[varNo++].name = st1;
                                         var[varNo-1].type.entity_type = TYPE_SCALAR;
@@ -2966,7 +2967,7 @@ string USCOS_declaration_with_assignment_function(const char* st1, const char* s
                                     else
                                     {
                                         stringstream ss;
-                                        ss << "const CollOfScalars " << st1 << " = param.get<CollOfScalars>(\"" << st1 << "\", " << st2 << ");";
+                                        ss << "const CollOfScalars " << st1 << " = er.getUserSpecifiedCollectionOfScalar(param, \"" << st1 << "\", " << st2 << ".size());";
                                         finalString = ss.str();
                                         var[varNo++].name = st1;
                                         var[varNo-1].type.entity_type = TYPE_SCALAR;
@@ -3091,7 +3092,7 @@ string USCOS_extended_declaration_with_assignment_function(const char* st1, cons
                                                 else
                                                 {
                                                     stringstream ss;
-                                                    ss << "const CollOfScalars " << st1 << " = param.get<CollOfScalars>(\"" << st1 << "\", " << st3 << ");";
+                                                    ss << "const CollOfScalars " << st1 << " = er.getUserSpecifiedCollectionOfScalar(param, \"" << st1 << "\", " << st3 << ".size());";
                                                     finalString = ss.str();
                                                     var[varNo++].name = st1;
                                                     var[varNo-1].type.entity_type = TYPE_SCALAR;
