@@ -14,43 +14,35 @@ u0 : Collection Of Scalar On AllCells(Grid) = UserSpecifiedCollectionOfScalar( A
 # Compute interior transmissibilities.
 vol = Volume(AllCells(Grid))                                         # Deduced type:  Collection Of Scalar On AllCells()
 interior_faces = InteriorFaces(Grid)                           # Deduced type:  Collection Of Face
-#Bug: Tudor fix this: first = FirstCell(interior_faces)                          # Deduced type:  Collection Of Cell On interior_faces
+first = FirstCell(interior_faces)                          # Deduced type:  Collection Of Cell On interior_faces
 							   # Equivalent to: Collection Of Cell On InteriorFaces()
-#Bug: Tudor fix this: second = SecondCell(interior_faces)                        # Deduced type:  Same as for 'first'.
-first =  InteriorCells(Grid) #Tudor: Fix assignment of variables
-second =  InteriorCells(Grid) #Tudor: Fix so that Centroid also works with faces
+second = SecondCell(interior_faces)                        # Deduced type:  Same as for 'first.'
 
-itrans : Collection Of Scalar
-#Bug: Tudur fix this (centroid issue?): itrans  = k * Area(interior_faces) #/ Length(Centroid(first) - Centroid(second))	
+itrans  = k * Area(interior_faces) / EuclideanLength(Centroid(first) - Centroid(second))	
 
 
 # Compute flux for interior faces.
 computeInteriorFlux : Function(u :: Collection Of Scalar) -> Collection Of Scalar
 computeInteriorFlux = {
-    #Bug: Tudor: make sure gradient works for scalars as well: flux = -itrans * Gradient(u)
-	#Bug: return flux
-    return u
+    flux = -itrans * Gradient(u)
+	return flux
 }
 
 
 # Compute the residual for the heat equation.
 computeResidual : Function(u :: Collection Of Scalar) -> Collection Of Scalar
 computeResidual = {
-    #Bug: Tudor fix so that we can call functions from functions: ifluxes = computeInteriorFlux(u)
-	ifluxes = 3
-    # Deduced type: Collection Of Scalar On AllCells()
-    #Bug: Tudor: make sure divergence works for scalars as well: residual = u - u0 + (dt / vol) * Divergence(ifluxes)
-	#residual = u - u0 + (dt / vol) * ifluxes
-	
-    return u
+    ifluxes = computeInteriorFlux(u)    # Deduced type: Collection Of Scalar On AllCells()
+    residual = u - u0 + (dt / vol) * Divergence(ifluxes)
+	return residual
 }
 
 
 # NewtonSolve takes a function (that should accept the primary variable as input) and the initial guess for the primary variable.
-#Bug: Tudor fix this: explicitu = u0 - computeResidual(u0)
+explicitu = u0 - computeResidual(u0)
 # u = NewtonSolve(computeResidual, u0)
 
-#Bug: Tudor fix this: Output(explicitu)
+Output(explicitu)
 # Output(u)
 
 
