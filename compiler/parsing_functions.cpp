@@ -250,13 +250,11 @@ bool check1(const char* s1)
             if(strncmp(pch, "er.", 3) != 0 && strcmp(pch, "true") != 0 && strcmp(pch, "false") != 0 && strcmp(pch, "return") != 0)  // not a default function or a small letter keyword
             {
                 bool found = false;
-
+				
+				//Search for global variable
 				if (found == false) {
-					//Search for global variable
-					for(int i = 0; i < varNo; i++)
-					{
-						if(strcmp(pch, var[i].name.c_str()) == 0)
-						{
+					for(int i = 0; i < varNo; i++) {
+						if(strcmp(pch, var[i].name.c_str()) == 0) {
 							found = true;
 							break;
 						}
@@ -266,10 +264,8 @@ bool check1(const char* s1)
 
 				//Search for function name
 				if (found == false) {
-					for(int j = 0; j < funNo; j++)
-					{
-						if(strcmp(pch, fun[j].name.c_str()) == 0)
-						{
+					for(int j = 0; j < funNo; j++) {
+						if(strcmp(pch, fun[j].name.c_str()) == 0) {
 							found = true;
 							break;
 						}
@@ -585,40 +581,79 @@ bool check7(const char* s1)
 
 
 // function which checks if a given array of variables corresponds to a given array of types
-bool check8(const char *s1, const char *s2)
+bool check8(const char *variable_name_list, const char *variable_type_list)
 {
     HEAP_CHECK();
-    char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
-    char *cs2 = strdup(s2);    // we need to make a copy, because the strtok function modifies the given string
-    char *pch1;
-    pch1 = strtok(cs1, " ,");
-    char *pch2;
-    pch2 = strtok(cs2, " ,");
-    while(pch1 != NULL && pch2 != NULL)   // they should terminate simultaneously
-    {
+    char *cvariable_name_list = strdup(variable_name_list);    // we need to make a copy, because the strtok function modifies the given string
+    char *cvariable_type_list = strdup(variable_type_list);    // we need to make a copy, because the strtok function modifies the given string
+    char *variable_name;
+    variable_name = strtok(cvariable_name_list, " ,");
+    char *variable_type;
+    variable_type = strtok(cvariable_type_list, " ,");
+    while(variable_name != NULL && variable_type != NULL)   // they should terminate simultaneously
+    {		
         bool found = false;
-        int i;
-        for(i = 0; i < varNo; i++)
-        {
-            if(strcmp(pch1, var[i].name.c_str()) == 0)
-            {
-                found = true;
-                break;
-            }
-        }
-        if(found == false)
-        {
-            HEAP_CHECK();
-            return false;
-        }
+				
+		//Search for global variable
+		if (found == false) {
+			for(int i = 0; i < varNo; i++) {
+				if(strcmp(variable_name, var[i].name.c_str()) == 0) {
+					if (var[i].type == getVariableType(variable_type)) {
+						found = true;
+						break;
+					}
+					else {
+						//Wrong type...
+						return false;
+					}
+				}
+			}
+		}
 
-        if(var[i].type != getVariableType(pch2))
-        {
-            return false;
-        }
+		//If we are at global scope, we have no further variables: return false
+		if (found == false && insideFunction == false) {
+			return false;
+		}
 
-        pch1 = strtok (NULL, " ,");
-        pch2 = strtok (NULL, " ,");
+		//Check for "header" variables in current function
+		if (found == false) {
+			for (int i=0; i<fun[currentFunctionIndex].noParam; ++i) {
+				if (strcmp(variable_name, fun[currentFunctionIndex].headerVariables[i].name.c_str()) == 0) {
+					if (fun[currentFunctionIndex].headerVariables[i].type == getVariableType(variable_type)) {
+						found = true;
+						break;
+					}
+					else {
+						//Wrong type...
+						return false;
+					}
+				}
+			}
+		}
+				
+				
+		//Check for function-local variables 
+		if (found == false) {
+			for (int i=0; i<fun[currentFunctionIndex].noLocalVariables; ++i) {
+				if (strcmp(variable_name, fun[currentFunctionIndex].localVariables[i].name.c_str()) == 0) {
+					if (fun[currentFunctionIndex].localVariables[i].type == getVariableType(variable_type)) {
+						found = true;
+						break;
+					}
+					else {
+						return false;
+					}
+				}
+			}
+		}
+
+		//Variable could not be found: return false.
+		if (found == false) {
+			return false;
+		}
+
+        variable_name = strtok (NULL, " ,");
+        variable_type = strtok (NULL, " ,");
     }
     HEAP_CHECK();
     return true;
