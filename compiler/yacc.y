@@ -288,6 +288,7 @@
 	string USCOS_extended_declaration_with_assignment_function(const char* st1, const char* st2, const char* st3, GridMapping d1, GridMapping d2);
 	string output_function(std::string& st1);
 	string getStringFromVariableType(VariableType variable);
+  string CPPToEquelle1(char* st);
 } //Code provides
 
 
@@ -331,11 +332,11 @@ bool operator!=(const VariableType& a, const VariableType& b) {
 %type<inf> INTEGER
 %type<inf> VARIABLE
 %type<inf> COMMENT
-/*
+
 %type<inf> header
 %type<inf> parameter_list
 %type<inf> type
-//%type<inf> values
+%type<inf> values
 %type<inf> end_lines
 %type<inf> return_instr
 %type<inf> function_start
@@ -343,7 +344,7 @@ bool operator!=(const VariableType& a, const VariableType& b) {
 %type<inf> function_assignment
 %type<inf> commands
 %type<inf> command1
-*/
+
 %type<inf> singular_declaration
 %type<inf> plural_declaration
 %type<inf> extended_plural_declaration
@@ -1928,13 +1929,13 @@ expression: '-' expression
                                                     else
                                                     {
                                                         if($2->type.entity_type != TYPE_BOOLEAN)
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "The first term of the ternary assignment must be of boolean type");
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "The first term of the ternary assignment must be of boolean type");
                                                         else
                                                         if($2->type.collection == true)
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "The first term of the ternary assignment must not be a collection");
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "The first term of the ternary assignment must not be a collection");
                                                         else
                                                         if($4->type != $6->type)
-                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "The 2nd and 3rd terms of the ternary assignment must have the same type");
+                                                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "The 2nd and 3rd terms of the ternary assignment must have the same type");
                                                         if($4->array_size != $6->array_size)    // check that the lengths of the 2 terms are equal
                                                         {
                                                             LENGTH_MISMATCH_ERROR_TO_CHAR_ARRAY($$->error_str);
@@ -1958,7 +1959,7 @@ expression: '-' expression
                                                           break;
                                                     }
                                                     if(i == varNo)
-                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "There is an undeclared variable");
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "An undeclared variable is used");
                                                     else
                                                     {
                                                         $$->str = var[i].name;
@@ -1968,9 +1969,43 @@ expression: '-' expression
                                                         $$->type.collection = var[i].type.collection;
                                                     }
                                                  }
+          | VARIABLE '(' values ')'              {
+                                                    $$ = new info();
+                                                    int i;
+                                                    for(i = 0; i < funNo; i++)
+                                                    {
+                                                        if(fun[i].name == $1->str)
+                                                          break;
+                                                    }
+                                                    if(i == funNo)
+                                                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "An undeclared function is called");
+                                                    else
+                                                    {
+                                                        string st;
+                                                        if(fun[i].type.collection == false)
+                                                        {
+                                                          st = functionToAnySingularType($1->str.c_str(), getStringFromVariableType(fun[i].type).c_str(), $3->str.c_str(), CPPToEquelle1(getStringFromVariableType(fun[i].type).c_str()));
+                                                        }
+                                                        else
+                                                        {
+                                                          st = functionToAnyCollectionType($1->str.c_str(), getStringFromVariableType(fun[i].type).c_str(), $3->str.c_str(), CPPToEquelle1(getStringFromVariableType(fun[i].type).c_str()));
+                                                        }
+
+                                                        if(check9(st) != "isOk")
+                                                          $$->error_str = st;
+                                                        else
+                                                        {
+                                                          $$->str = st;
+                                                          $$->grid_mapping = fun[i].grid_mapping;
+                                                          $$->type.entity_type = fun[i].type.entity_type;
+                                                          $$->type.collection = fun[i].type.collection;
+                                                        }
+
+                                                    }
+                                                 }
           ;
 
-/*
+
 header: VARIABLE HEADER_DECL SCALAR                          { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Scalar " << $1->str.c_str()); }
       | VARIABLE HEADER_DECL VECTOR                          { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Vector " << $1->str.c_str()); }
       | VARIABLE HEADER_DECL VERTEX                          { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Vertex " << $1->str.c_str()); }
@@ -1987,14 +2022,6 @@ header: VARIABLE HEADER_DECL SCALAR                          { STREAM_TO_DOLLARS
       | VARIABLE HEADER_DECL COLLECTION OF CELL              { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfCells " << $1->str.c_str()); }
       | VARIABLE HEADER_DECL COLLECTION OF ADB               { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfScalarsAD " << $1->str.c_str()); }
       | VARIABLE HEADER_DECL COLLECTION OF BOOLEAN           { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfBools " << $1->str.c_str()); }
-      | VARIABLE HEADER_DECL COLLECTION OF SCALAR ON expression            { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfScalars " << $1->str.c_str()); }
-      | VARIABLE HEADER_DECL COLLECTION OF VECTOR ON expression            { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfVectors " << $1->str.c_str()); }
-      | VARIABLE HEADER_DECL COLLECTION OF VERTEX ON expression            { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfVertices " << $1->str.c_str()); }
-      | VARIABLE HEADER_DECL COLLECTION OF EDGE ON expression              { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfEdges " << $1->str.c_str()); }
-      | VARIABLE HEADER_DECL COLLECTION OF FACE ON expression              { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfFaces " << $1->str.c_str()); }
-      | VARIABLE HEADER_DECL COLLECTION OF CELL ON expression              { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfCells " << $1->str.c_str()); }
-      | VARIABLE HEADER_DECL COLLECTION OF ADB ON expression               { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfScalarsAD " << $1->str.c_str()); }
-      | VARIABLE HEADER_DECL COLLECTION OF BOOLEAN ON expression           { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfBools " << $1->str.c_str()); }
       ;
 
 
@@ -2025,16 +2052,88 @@ type: SCALAR                                { $$->str = strdup("Scalar"); $$->gr
     | COLLECTION OF CELL                    { $$->str = strdup("CollOfCells"); $$->grid_mapping = GRID_MAPPING_ANY; }
     | COLLECTION OF ADB                     { $$->str = strdup("CollOfScalarsAD"); $$->grid_mapping = GRID_MAPPING_ANY; }
     | COLLECTION OF BOOLEAN                 { $$->str = strdup("CollOfBools"); $$->grid_mapping = GRID_MAPPING_ANY; }
-    | COLLECTION OF SCALAR ON expression        { $$->str = strdup("CollOfScalars"); $$->grid_mapping = $5->grid_mapping; }
-    | COLLECTION OF VECTOR ON expression        { $$->str = strdup("CollOfVectors"); $$->grid_mapping = $5->grid_mapping; }
-    | COLLECTION OF VERTEX ON expression        { $$->str = strdup("CollOfVertices"); $$->grid_mapping = $5->grid_mapping; }
-    | COLLECTION OF EDGE ON expression          { $$->str = strdup("CollOfEdges"); $$->grid_mapping = $5->grid_mapping; }
-    | COLLECTION OF FACE ON expression          { $$->str = strdup("CollOfFaces"); $$->grid_mapping = $5->grid_mapping; }
-    | COLLECTION OF CELL ON expression          { $$->str = strdup("CollOfCells"); $$->grid_mapping = $5->grid_mapping; }
-    | COLLECTION OF ADB ON expression           { $$->str = strdup("CollOfScalarsAD"); $$->grid_mapping = $5->grid_mapping; }
-    | COLLECTION OF BOOLEAN ON expression       { $$->str = strdup("CollOfBools"); $$->grid_mapping = $5->grid_mapping; }
+    | COLLECTION OF SCALAR ON expression
+                                                {
+                                                  if($5->error_str.size() > 0)
+                                                      $$->error_str = $5->error_str;
+                                                  else
+                                                  {
+                                                      $$->str = strdup("CollOfScalars");
+                                                      $$->grid_mapping = $5->grid_mapping;
+                                                  }
+                                                }
+    | COLLECTION OF VECTOR ON expression
+                                                {
+                                                  if($5->error_str.size() > 0)
+                                                      $$->error_str = $5->error_str;
+                                                  else
+                                                  {
+                                                      $$->str = strdup("CollOfVectors");
+                                                      $$->grid_mapping = $5->grid_mapping;
+                                                  }
+                                                }
+    | COLLECTION OF VERTEX ON expression
+                                                {
+                                                  if($5->error_str.size() > 0)
+                                                      $$->error_str = $5->error_str;
+                                                  else
+                                                  {
+                                                      $$->str = strdup("CollOfVertices");
+                                                      $$->grid_mapping = $5->grid_mapping;
+                                                  }
+                                                }
+    | COLLECTION OF EDGE ON expression
+                                                {
+                                                  if($5->error_str.size() > 0)
+                                                      $$->error_str = $5->error_str;
+                                                  else
+                                                  {
+                                                      $$->str = strdup("CollOfEdges");
+                                                      $$->grid_mapping = $5->grid_mapping;
+                                                  }
+                                                }
+    | COLLECTION OF FACE ON expression
+                                                {
+                                                  if($5->error_str.size() > 0)
+                                                      $$->error_str = $5->error_str;
+                                                  else
+                                                  {
+                                                      $$->str = strdup("CollOfFaces");
+                                                      $$->grid_mapping = $5->grid_mapping;
+                                                  }
+                                                }
+    | COLLECTION OF CELL ON expression
+                                                {
+                                                  if($5->error_str.size() > 0)
+                                                      $$->error_str = $5->error_str;
+                                                  else
+                                                  {
+                                                      $$->str = strdup("CollOfCells");
+                                                      $$->grid_mapping = $5->grid_mapping;
+                                                  }
+                                                }
+    | COLLECTION OF ADB ON expression
+                                                {
+                                                  if($5->error_str.size() > 0)
+                                                      $$->error_str = $5->error_str;
+                                                  else
+                                                  {
+                                                      $$->str = strdup("CollOfScalarsAD");
+                                                      $$->grid_mapping = $5->grid_mapping;
+                                                  }
+                                                }
+    | COLLECTION OF BOOLEAN ON expression
+                                                {
+                                                  if($5->error_str.size() > 0)
+                                                      $$->error_str = $5->error_str;
+                                                  else
+                                                  {
+                                                      $$->str = strdup("CollOfBools");
+                                                      $$->grid_mapping = $5->grid_mapping;
+                                                  }
+                                                }
     ;
-*/
+
 
 //////////////////////////////////////////////////////////////////////// these support input parameters as expressions with or without ON (option 1)
 /*
@@ -2100,7 +2199,7 @@ values: value                   {$$.cCode = $1->str.c_str(); $$.sepCode = $1->st
 */
 
 
-/*
+
 //////////////////////////////////////////////////////////////////////// this supports input parameters as variables
 values: VARIABLE                { $$->str = $1->str.c_str(); }
       | values ',' VARIABLE     { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << ", " << $3->str.c_str()); }
@@ -2115,10 +2214,12 @@ end_lines: '\n'                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "\n"); c
 
 return_instr: RETURN expression '?' VARIABLE ':' VARIABLE       // TODO: check that expression is boolean type
                   {
+                    if($2->type.entity_type != TYPE_BOOLEAN || $2->type.collection == false)
+                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "The first term of the ternary expression must be a boolean type and not a collection");
+                    else
                     if(check5($4->str.c_str()) == false || check5($6->str.c_str()) == false)
                     {
-                        $$->str = strdup("Invalid");
-                        $$->grid_mapping = GRID_MAPPING_INVALID;   // we force it to generate an error message at the function's assignment
+                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "One of the return variables from the ternary expression does not meet the requirements");
                     }
                     else
                     {
@@ -2131,8 +2232,7 @@ return_instr: RETURN expression '?' VARIABLE ':' VARIABLE       // TODO: check t
                   {
                     if(check5($2->str.c_str()) == false)
                     {
-                        $$->str = strdup("Invalid");
-                        $$->grid_mapping = GRID_MAPPING_INVALID;   // we force it to generate an error message at the function's assignment
+                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "The return variable from the ternary expression does not meet the requirements");
                     }
                     else
                     {
@@ -2170,7 +2270,7 @@ function_declaration: VARIABLE ':' FUNCTION '(' parameter_list ')' RET type
                                                 }
                                                 else
                                                 {
-                                                        fun[funNo++].name = $1->str.c_str();
+                                                        fun[funNo++].name = $1->str;
                                                         fun[funNo-1].type = $8->type;
                                                         fun[funNo-1].grid_mapping = $8->grid_mapping;
                                                         fun[funNo-1].noLocalVariables = 0;
@@ -2198,7 +2298,7 @@ function_declaration: VARIABLE ':' FUNCTION '(' parameter_list ')' RET type
                                                           fun[funNo-1].headerVariables[fun[funNo-1].noParam-1].type = getVariableType(copy);    // the string we have as a parameter list is already transformed in C++, but we need the types' keywords from Equelle
                                                           fun[funNo-1].headerVariables[fun[funNo-1].noParam-1].grid_mapping = getGridMapping(copy);  // the string we have as a parameter list is already transformed in C++, but we need the types' lengths
                                                           fun[funNo-1].headerVariables[fun[funNo-1].noParam-1].assigned = true;
-                                                          fun[funNo-1].signature = $5->str.c_str();
+                                                          fun[funNo-1].signature = $5->str;
 
                                                           pch = strtok(NULL, ",");
                                                         }
@@ -2235,7 +2335,6 @@ function_assignment: function_start end_lines commands end_lines return_instr en
                                                       {
                                                           if($5->grid_mapping != GRID_MAPPING_INVALID)
                                                           {
-                                                              // STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << $2->str.c_str() << $3->str.c_str() << $4->str.c_str() << $5->str.c_str() << $6->str.c_str() << "}");
                                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "auto " << fun[i].name << "[&](" << fun[i].signature << ") -> " << getStringFromVariableType(fun[i].type) << " {\n" << $2->str.c_str() << $3->str.c_str() << $4->str.c_str() << $5->str.c_str() << $6->str.c_str() << "}");
                                                               if(fun[i].grid_mapping == GRID_MAPPING_ANY && $5->grid_mapping != GRID_MAPPING_ANY)
                                                                   fun[i].grid_mapping = $5->grid_mapping;
@@ -2261,12 +2360,12 @@ function_assignment: function_start end_lines commands end_lines return_instr en
                                                 currentFunctionIndex = -1;
                                             }
                    ;
-*/
+
 
 
 
 // function_declaration_with_assignment: FUNCTION_VARIABLE ':' FUNCTION '(' parameter_list ')' "->" type '=' end_lines '{' end_lines commands end_lines return_instr end_lines '}'    // the end lines are optional
-//                                     ; // tre sa punem booleana globala true inainte sa execute comenzile din functie
+//                                     ; // we must set the global bool variable "insideFunction" to be true before the commands inside the function are parsed
 
 
 
@@ -2958,17 +3057,17 @@ command: declaration                    { $$->str = $1->str; }
        | declaration_with_assignment    { $$->str = $1->str; }
        ;
 
-/*
+
 command1: command                       { $$->str = $1->str; }
         | command COMMENT               { string st1 = $1->str.c_str(); string st2 = $2->str.c_str(); stringstream ss; ss << st1 << " // " << st2.substr(1, st2.size() - 1); $$->str = strdup(ss.str().c_str()); }
         | COMMENT                       { string st1 = $1->str.c_str(); stringstream ss; ss << "// " << st1.substr(1, st1.size() - 1); $$->str = strdup(ss.str().c_str()); }
         ;
-*/
+
 
 // instructions which can be used in the program, but not in a function's body (since we must not allow inner functions)
 command2: command                                    { stringstream ss; ss << $1->str.c_str(); $$->str = strdup(ss.str().c_str()); }
-    //  | function_declaration                       { stringstream ss; ss << $1->str.c_str(); $$->str = strdup(ss.str().c_str()); }
-    //  | function_assignment                        { stringstream ss; ss << $1->str.c_str(); $$->str = strdup(ss.str().c_str()); }
+        | function_declaration                       { stringstream ss; ss << $1->str.c_str(); $$->str = strdup(ss.str().c_str()); }
+        | function_assignment                        { stringstream ss; ss << $1->str.c_str(); $$->str = strdup(ss.str().c_str()); }
         | output                                     { stringstream ss; ss << $1->str.c_str(); $$->str = strdup(ss.str().c_str()); }
     //  | function_declaration_with_assignment       { stringstream ss; ss << $1->str.c_str(); $$->str = strdup(ss.str().c_str()); }
         ;
@@ -3316,7 +3415,7 @@ bool check2(const char* s1)
 }
 
 
-// function which checks if each variable from a given expression (which is inside a function) is declared as a header or local variable in the current function (indicated by a global index)
+// function which checks if each variable from a given expression (which is inside a function) is declared as a header or local variable in the current function (indicated by a global index) or outside the function
 bool check3(const char* s1)
 {
   HEAP_CHECK();
@@ -3339,14 +3438,14 @@ bool check3(const char* s1)
                         taken = true;
                         break;
                     }
-                if(taken == false)
+                if(taken == false)    // not a header variable ==> local or global variable or another function call
                     for(i = 0; i < fun[currentFunctionIndex].noLocalVariables; i++)
                         if(strcmp(fun[currentFunctionIndex].localVariables[i].name.c_str(), pch) == 0)
                         {
                             taken = true;
                             break;
                         }
-                if(taken == false)
+                if(taken == false)    // not a header or local variable ==> function call or global variable
                 {
                     HEAP_CHECK();
                     bool found = false;
@@ -3359,8 +3458,17 @@ bool check3(const char* s1)
                           break;
                         }
                     }
-                    if(found == false)    // the unfound name doesn't belong to a user-defined function either (user-defined functions can be called from inside another function's body)
-                        return false;   // the given variable doesn't exist among the header and local variables of the current function
+                    if(found == false)    // not a header or local variable or another function call ==> global variable
+                    {
+                        for(int i = 0; i < varNo; i++)
+                            if(strcmp(var[i].name.c_str(), pch) == 0)
+                            {
+                               found = true;
+                               break;
+                            }
+                        if(found == false)
+                            return false;   // not a header or local or global variable or another function call ==> the variable doesn't exist
+                    }
                 }
             }
         }
@@ -3373,7 +3481,7 @@ bool check3(const char* s1)
 }
 
 
-// function which checks if each variable from a given expression (which is inside a function) is assigned as a header or local variable in the current function (indicated by a global index)
+// function which checks if each variable from a given expression (which is inside a function) is assigned as a header or local variable in the current function (indicated by a global index) or as a global variable outside the function
 bool check4(const char* s1)
 {
   HEAP_CHECK();
@@ -3399,9 +3507,32 @@ bool check4(const char* s1)
                       HEAP_CHECK();
                       return false;
                   }
+                  else
+                      taken = true;
                   break;
               }
-
+      if(taken == false)    // if it's not a header or local variable, it must be a global variable outside the function or another function call
+      {
+          for(int i = 0; i < varNo; i++)
+            if(strcmp(var[i].name.c_str(), pch) == 0)
+            {
+                if(var[i].assigned == false)
+                    return false;
+                else
+                    taken = true;
+                break;
+            }
+      }
+      if(taken == false)    // if it's not a header or local or global variable, it must be another function call
+      {
+          for(int i = 0; i < funNo; i++)
+            if(strcmp(fun[i].name.c_str(), pch) == 0)
+            {
+                if(fun[i].assigned == false)
+                    return false;
+                break;
+            }
+      }
       pch = strtok (NULL, " -+*/()<>!=,");
   }
   HEAP_CHECK();
@@ -3409,7 +3540,7 @@ bool check4(const char* s1)
 }
 
 
-// function which checks if the given variable corresponds to a header/local variable of the current function and if its type is the same as the current function's return type
+// function which checks if the given variable corresponds to a header/local variable of the current function or to a global variable and if its type is the same as the current function's return type
 bool check5(const char* s1)
 {
   HEAP_CHECK();
@@ -3425,7 +3556,7 @@ bool check5(const char* s1)
   }
   if(found == true)
   {
-    if( (fun[currentFunctionIndex].headerVariables[i].type == fun[currentFunctionIndex].type)
+    if( (fun[currentFunctionIndex].headerVariables[i].type != fun[currentFunctionIndex].type)
 		|| (fun[currentFunctionIndex].headerVariables[i].grid_mapping != fun[currentFunctionIndex].grid_mapping
 			&& fun[currentFunctionIndex].grid_mapping != GRID_MAPPING_ANY
 			&& fun[currentFunctionIndex].headerVariables[i].grid_mapping != GRID_MAPPING_ANY)
@@ -3446,11 +3577,32 @@ bool check5(const char* s1)
     }
   if(found == true)
   {
-    if((fun[currentFunctionIndex].localVariables[i].type == fun[currentFunctionIndex].type)
+    if((fun[currentFunctionIndex].localVariables[i].type != fun[currentFunctionIndex].type)
 		|| (fun[currentFunctionIndex].localVariables[i].grid_mapping != fun[currentFunctionIndex].grid_mapping
 		    && fun[currentFunctionIndex].grid_mapping != GRID_MAPPING_ANY
-			&& fun[currentFunctionIndex].localVariables[i].grid_mapping != GRID_MAPPING_ANY)
+			  && fun[currentFunctionIndex].localVariables[i].grid_mapping != GRID_MAPPING_ANY)
 		)
+    {
+      HEAP_CHECK();
+      return false;
+    }
+    HEAP_CHECK();
+    return true;
+  }
+
+  for(i = 0; i < varNo; i++)
+    if(strcmp(var[i].name.c_str(), s1) == 0)
+    {
+      found = true;
+      break;
+    }
+  if(found == true)
+  {
+    if((var[i].type != fun[currentFunctionIndex].type)
+    || (var[i].grid_mapping != fun[currentFunctionIndex].grid_mapping
+        && fun[currentFunctionIndex].grid_mapping != GRID_MAPPING_ANY
+        && var[i].grid_mapping != GRID_MAPPING_ANY)
+    )
     {
       HEAP_CHECK();
       return false;
@@ -6090,4 +6242,70 @@ string getStringFromVariableType(VariableType v)
 	}
 
 	return ss.str();
+}
+
+
+string CPPToEquelle1(char* st)
+{
+    if(strcmp(st, "Scalar") == 0) {
+      return "scalar";
+    }
+
+    if(strcmp(st, "Vector") == 0) {
+      return "vector";
+    }
+
+    if(strcmp(st, "Vertex") == 0) {
+      return "vertex";
+    }
+
+    if(strcmp(st, "Edge") == 0) {
+      return "edge";
+    }
+
+    if(strcmp(st, "Face") == 0) {
+      return "face";
+    }
+
+    if(strcmp(st, "Cell") == 0) {
+      return "cell";
+    }
+
+    if(strcmp(st, "ScalarAD") == 0) {
+      return "scalarAD";
+    }
+
+    if(strcmp(st, "bool") == 0) {
+      return "bool";
+    }
+
+    if(strcmp(st, "CollOfScalars") == 0) {
+      return "scalars";
+    }
+
+    if(strcmp(st, "CollOfVectors") == 0) {
+      return "vectors";
+    }
+
+    if(strcmp(st, "CollOfVertices") == 0) {
+      return "vertices";
+    }
+
+    if(strcmp(st, "CollOfEdges") == 0) {
+      return "edges";
+    }
+
+    if(strcmp(st, "CollOfCells") == 0) {
+      return "cells";
+    }
+
+    if(strcmp(st, "CollOfScalarsAD") == 0) {
+      return "scalarsAD";
+    }
+
+    if(strcmp(st, "CollOfBools") == 0) {
+      return "bools";
+    }
+
+    return "InvalidType";
 }
