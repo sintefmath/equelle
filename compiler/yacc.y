@@ -287,8 +287,8 @@
 	string USCOS_declaration_with_assignment_function(const char* st1, const char* st2, GridMapping d1);
 	string USCOS_extended_declaration_with_assignment_function(const char* st1, const char* st2, const char* st3, GridMapping d1, GridMapping d2);
 	string output_function(std::string& st1);
-	string getStringFromVariableType(VariableType variable);
-  string CPPToEquelle1(char* st);
+	string getCppTypeStringFromVariableType(VariableType variable);
+	string getEquelleTypeStringFromVariableType(VariableType variable);
 } //Code provides
 
 
@@ -1984,14 +1984,14 @@ expression: '-' expression
                                                         string st;
                                                         if(fun[i].type.collection == false)
                                                         {
-                                                          st = functionToAnySingularType($1->str.c_str(), getStringFromVariableType(fun[i].type).c_str(), $3->str.c_str(), CPPToEquelle1(getStringFromVariableType(fun[i].type).c_str()));
+                                                          st = functionToAnySingularType($1->str.c_str(), getCppTypeStringFromVariableType(fun[i].type).c_str(), $3->str.c_str(), getEquelleTypeStringFromVariableType(fun[i].type));
                                                         }
                                                         else
                                                         {
-                                                          st = functionToAnyCollectionType($1->str.c_str(), getStringFromVariableType(fun[i].type).c_str(), $3->str.c_str(), CPPToEquelle1(getStringFromVariableType(fun[i].type).c_str()));
+                                                          st = functionToAnyCollectionType($1->str.c_str(), getCppTypeStringFromVariableType(fun[i].type).c_str(), $3->str.c_str(), getEquelleTypeStringFromVariableType(fun[i].type));
                                                         }
 
-                                                        if(check9(st) != "isOk")
+                                                        if(check9(st.c_str()) != "isOk")
                                                           $$->error_str = st;
                                                         else
                                                         {
@@ -2006,54 +2006,166 @@ expression: '-' expression
           ;
 
 
-header: VARIABLE HEADER_DECL SCALAR                          { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Scalar " << $1->str.c_str()); }
-      | VARIABLE HEADER_DECL VECTOR                          { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Vector " << $1->str.c_str()); }
-      | VARIABLE HEADER_DECL VERTEX                          { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Vertex " << $1->str.c_str()); }
-      | VARIABLE HEADER_DECL EDGE                            { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Edge " << $1->str.c_str()); }
-      | VARIABLE HEADER_DECL FACE                            { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Face " << $1->str.c_str()); }
-      | VARIABLE HEADER_DECL CELL                            { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Cell " << $1->str.c_str()); }
-      | VARIABLE HEADER_DECL ADB                             { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "ScalarAD " << $1->str.c_str()); }
-      | VARIABLE HEADER_DECL BOOLEAN                         { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "bool " << $1->str.c_str()); }
-      | VARIABLE HEADER_DECL COLLECTION OF SCALAR            { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfScalars " << $1->str.c_str()); }
-      | VARIABLE HEADER_DECL COLLECTION OF VECTOR            { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfVectors " << $1->str.c_str()); }
-      | VARIABLE HEADER_DECL COLLECTION OF VERTEX            { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfVertices " << $1->str.c_str()); }
-      | VARIABLE HEADER_DECL COLLECTION OF EDGE              { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfEdges " << $1->str.c_str()); }
-      | VARIABLE HEADER_DECL COLLECTION OF FACE              { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfFaces " << $1->str.c_str()); }
-      | VARIABLE HEADER_DECL COLLECTION OF CELL              { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfCells " << $1->str.c_str()); }
-      | VARIABLE HEADER_DECL COLLECTION OF ADB               { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfScalarsAD " << $1->str.c_str()); }
-      | VARIABLE HEADER_DECL COLLECTION OF BOOLEAN           { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfBools " << $1->str.c_str()); }
+header: VARIABLE HEADER_DECL SCALAR                          { 
+                                                    $$ = new info();
+													STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Scalar " << $1->str.c_str()); 
+		}
+      | VARIABLE HEADER_DECL VECTOR                          { 
+                                                    $$ = new info();
+													STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Vector " << $1->str.c_str()); 
+	  }
+      | VARIABLE HEADER_DECL VERTEX                          { 
+                                                    $$ = new info();
+													STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Vertex " << $1->str.c_str()); 
+	  }
+      | VARIABLE HEADER_DECL EDGE                            { 
+                                                    $$ = new info();
+													STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Edge " << $1->str.c_str()); 
+	  }
+      | VARIABLE HEADER_DECL FACE                            { 
+                                                    $$ = new info();
+													STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Face " << $1->str.c_str()); 
+	  }
+      | VARIABLE HEADER_DECL CELL                            { 
+                                                    $$ = new info();
+													STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "Cell " << $1->str.c_str()); 
+	  }
+      | VARIABLE HEADER_DECL ADB                             { 
+                                                    $$ = new info();
+													STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "ScalarAD " << $1->str.c_str()); 
+	  }
+      | VARIABLE HEADER_DECL BOOLEAN                         { 
+                                                    $$ = new info();
+													STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "bool " << $1->str.c_str()); 
+	  }
+      | VARIABLE HEADER_DECL COLLECTION OF SCALAR            { 
+                                                    $$ = new info();
+													STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfScalars " << $1->str.c_str()); 
+	  }
+      | VARIABLE HEADER_DECL COLLECTION OF VECTOR            { 
+                                                    $$ = new info();
+													STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfVectors " << $1->str.c_str()); 
+	  }
+      | VARIABLE HEADER_DECL COLLECTION OF VERTEX            { 
+                                                    $$ = new info();
+													STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfVertices " << $1->str.c_str());
+	  }
+      | VARIABLE HEADER_DECL COLLECTION OF EDGE              { 
+                                                    $$ = new info();
+													STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfEdges " << $1->str.c_str()); 
+	  }
+      | VARIABLE HEADER_DECL COLLECTION OF FACE              { 
+                                                    $$ = new info();
+													STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfFaces " << $1->str.c_str()); 
+	  }
+      | VARIABLE HEADER_DECL COLLECTION OF CELL              { 
+                                                    $$ = new info();
+													STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfCells " << $1->str.c_str()); 
+	  }
+      | VARIABLE HEADER_DECL COLLECTION OF ADB               { 
+                                                    $$ = new info();
+													STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfScalarsAD " << $1->str.c_str()); 
+	  }
+      | VARIABLE HEADER_DECL COLLECTION OF BOOLEAN           { 
+                                                    $$ = new info();
+													STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "CollOfBools " << $1->str.c_str()); 
+	  }
       ;
 
 
-parameter_list: header                         { $$->str = $1->str.c_str(); }
-              | parameter_list ',' header      { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << ", " << $3->str.c_str()); }
+parameter_list: header                         { 
+                                                    $$ = new info();
+													$$->str = $1->str;
+				}
+              | parameter_list ',' header      { 
+                                                    $$ = new info();
+													STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << ", " << $3->str);
+			  }
               ;
 
 
-commands: command1                              { $$->str = $1->str.c_str(); }
-        | commands end_lines command1           { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << $2->str.c_str() << $3->str.c_str()); }
-        |                                       { $$->str = strdup(""); }     // a function can have only the return instruction
+commands: command1                              { 
+                                                    $$ = new info();
+													$$->str = $1->str.c_str(); 
+		  }
+        | commands end_lines command1           { 
+                                                    $$ = new info();
+													STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << $2->str.c_str() << $3->str.c_str()); 
+		}
+        |                                       { 
+                                                    $$ = new info();
+													$$->str = strdup(""); 
+		}     // a function can have only the return instruction
         ;
 
 
-type: SCALAR                                { $$->str = strdup("Scalar"); $$->grid_mapping = GRID_MAPPING_ENTITY; }
-    | VECTOR                                { $$->str = strdup("Vector"); $$->grid_mapping = GRID_MAPPING_ENTITY; }
-    | VERTEX                                { $$->str = strdup("Vertex"); $$->grid_mapping = GRID_MAPPING_ENTITY; }
-    | EDGE                                  { $$->str = strdup("Edge"); $$->grid_mapping = GRID_MAPPING_ENTITY; }
-    | FACE                                  { $$->str = strdup("Face"); $$->grid_mapping = GRID_MAPPING_ENTITY; }
-    | CELL                                  { $$->str = strdup("Cell"); $$->grid_mapping = GRID_MAPPING_ENTITY; }
-    | ADB                                   { $$->str = strdup("ScalarAD"); $$->grid_mapping = GRID_MAPPING_ENTITY; }
-    | BOOLEAN                               { $$->str = strdup("bool"); $$->grid_mapping = GRID_MAPPING_ENTITY; }
-    | COLLECTION OF SCALAR                  { $$->str = strdup("CollOfScalars"); $$->grid_mapping = GRID_MAPPING_ANY; }
-    | COLLECTION OF VECTOR                  { $$->str = strdup("CollOfVectors"); $$->grid_mapping = GRID_MAPPING_ANY; }
-    | COLLECTION OF VERTEX                  { $$->str = strdup("CollOfVertices"); $$->grid_mapping = GRID_MAPPING_ANY; }
-    | COLLECTION OF EDGE                    { $$->str = strdup("CollOfEdges"); $$->grid_mapping = GRID_MAPPING_ANY; }
-    | COLLECTION OF FACE                    { $$->str = strdup("CollOfFaces"); $$->grid_mapping = GRID_MAPPING_ANY; }
-    | COLLECTION OF CELL                    { $$->str = strdup("CollOfCells"); $$->grid_mapping = GRID_MAPPING_ANY; }
-    | COLLECTION OF ADB                     { $$->str = strdup("CollOfScalarsAD"); $$->grid_mapping = GRID_MAPPING_ANY; }
-    | COLLECTION OF BOOLEAN                 { $$->str = strdup("CollOfBools"); $$->grid_mapping = GRID_MAPPING_ANY; }
+type: SCALAR                                { 
+                                                    $$ = new info();
+													$$->str = strdup("Scalar"); $$->grid_mapping = GRID_MAPPING_ENTITY; 
+	  }
+    | VECTOR                                { 
+                                                    $$ = new info();
+													$$->str = strdup("Vector"); $$->grid_mapping = GRID_MAPPING_ENTITY; 
+	}
+    | VERTEX                                { 
+                                                    $$ = new info();
+													$$->str = strdup("Vertex"); $$->grid_mapping = GRID_MAPPING_ENTITY; 
+	}
+    | EDGE                                  { 
+                                                    $$ = new info();
+													$$->str = strdup("Edge"); $$->grid_mapping = GRID_MAPPING_ENTITY; 
+	}
+    | FACE                                  { 
+                                                    $$ = new info();
+													$$->str = strdup("Face"); $$->grid_mapping = GRID_MAPPING_ENTITY; 
+	}
+    | CELL                                  { 
+                                                    $$ = new info();
+													$$->str = strdup("Cell"); $$->grid_mapping = GRID_MAPPING_ENTITY; 
+	}
+    | ADB                                   { 
+                                                    $$ = new info();
+													$$->str = strdup("ScalarAD"); $$->grid_mapping = GRID_MAPPING_ENTITY; 
+	}
+    | BOOLEAN                               { 
+                                                    $$ = new info();
+													$$->str = strdup("bool"); $$->grid_mapping = GRID_MAPPING_ENTITY; 
+	}
+    | COLLECTION OF SCALAR                  { 
+                                                    $$ = new info();
+													$$->str = strdup("CollOfScalars"); $$->grid_mapping = GRID_MAPPING_ANY; 
+	}
+    | COLLECTION OF VECTOR                  { 
+                                                    $$ = new info();
+													$$->str = strdup("CollOfVectors"); $$->grid_mapping = GRID_MAPPING_ANY; 
+	}
+    | COLLECTION OF VERTEX                  { 
+                                                    $$ = new info();
+													$$->str = strdup("CollOfVertices"); $$->grid_mapping = GRID_MAPPING_ANY; 
+	}
+    | COLLECTION OF EDGE                    { 
+                                                    $$ = new info();
+													$$->str = strdup("CollOfEdges"); $$->grid_mapping = GRID_MAPPING_ANY; 
+	}
+    | COLLECTION OF FACE                    { 
+                                                    $$ = new info();
+													$$->str = strdup("CollOfFaces"); $$->grid_mapping = GRID_MAPPING_ANY; 
+	}
+    | COLLECTION OF CELL                    { 
+                                                    $$ = new info();
+													$$->str = strdup("CollOfCells"); $$->grid_mapping = GRID_MAPPING_ANY; 
+	}
+    | COLLECTION OF ADB                     { 
+                                                    $$ = new info();
+													$$->str = strdup("CollOfScalarsAD"); $$->grid_mapping = GRID_MAPPING_ANY; 
+	}
+    | COLLECTION OF BOOLEAN                 { 
+                                                    $$ = new info();
+													$$->str = strdup("CollOfBools"); $$->grid_mapping = GRID_MAPPING_ANY; 
+	}
     | COLLECTION OF SCALAR ON expression
                                                 {
+                                                  $$ = new info();
                                                   if($5->error_str.size() > 0)
                                                       $$->error_str = $5->error_str;
                                                   else
@@ -2064,6 +2176,7 @@ type: SCALAR                                { $$->str = strdup("Scalar"); $$->gr
                                                 }
     | COLLECTION OF VECTOR ON expression
                                                 {
+                                                  $$ = new info();
                                                   if($5->error_str.size() > 0)
                                                       $$->error_str = $5->error_str;
                                                   else
@@ -2074,6 +2187,7 @@ type: SCALAR                                { $$->str = strdup("Scalar"); $$->gr
                                                 }
     | COLLECTION OF VERTEX ON expression
                                                 {
+                                                  $$ = new info();
                                                   if($5->error_str.size() > 0)
                                                       $$->error_str = $5->error_str;
                                                   else
@@ -2084,6 +2198,7 @@ type: SCALAR                                { $$->str = strdup("Scalar"); $$->gr
                                                 }
     | COLLECTION OF EDGE ON expression
                                                 {
+                                                  $$ = new info();
                                                   if($5->error_str.size() > 0)
                                                       $$->error_str = $5->error_str;
                                                   else
@@ -2094,6 +2209,7 @@ type: SCALAR                                { $$->str = strdup("Scalar"); $$->gr
                                                 }
     | COLLECTION OF FACE ON expression
                                                 {
+                                                  $$ = new info();
                                                   if($5->error_str.size() > 0)
                                                       $$->error_str = $5->error_str;
                                                   else
@@ -2104,6 +2220,7 @@ type: SCALAR                                { $$->str = strdup("Scalar"); $$->gr
                                                 }
     | COLLECTION OF CELL ON expression
                                                 {
+                                                  $$ = new info();
                                                   if($5->error_str.size() > 0)
                                                       $$->error_str = $5->error_str;
                                                   else
@@ -2114,6 +2231,7 @@ type: SCALAR                                { $$->str = strdup("Scalar"); $$->gr
                                                 }
     | COLLECTION OF ADB ON expression
                                                 {
+                                                  $$ = new info();
                                                   if($5->error_str.size() > 0)
                                                       $$->error_str = $5->error_str;
                                                   else
@@ -2124,6 +2242,7 @@ type: SCALAR                                { $$->str = strdup("Scalar"); $$->gr
                                                 }
     | COLLECTION OF BOOLEAN ON expression
                                                 {
+                                                  $$ = new info();
                                                   if($5->error_str.size() > 0)
                                                       $$->error_str = $5->error_str;
                                                   else
@@ -2201,20 +2320,36 @@ values: value                   {$$.cCode = $1->str.c_str(); $$.sepCode = $1->st
 
 
 //////////////////////////////////////////////////////////////////////// this supports input parameters as variables
-values: VARIABLE                { $$->str = $1->str.c_str(); }
-      | values ',' VARIABLE     { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << ", " << $3->str.c_str()); }
+values: VARIABLE                { 
+                                    $$ = new info();
+									$$->str = $1->str.c_str(); 
+		}
+      | values ',' VARIABLE     { 
+                                    $$ = new info();
+									STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << ", " << $3->str.c_str()); 
+	  }
       ;
 
 
-end_lines: '\n'                 { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "\n"); currentLineNumber++; }
-         | '\n' end_lines       { STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "\n" << $2->str.c_str()); currentLineNumber++; }
-         |                      { $$->str = strdup(""); }
+end_lines: '\n'                 { 
+                                    $$ = new info();
+									STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "\n"); currentLineNumber++; 
+		   }
+         | '\n' end_lines       { 
+                                    $$ = new info();
+									STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "\n" << $2->str.c_str()); currentLineNumber++; 
+		 }
+         |                      { 
+                                    $$ = new info();
+									$$->str = strdup(""); 
+		 }
          ;
 
 
 return_instr: RETURN expression '?' VARIABLE ':' VARIABLE       // TODO: check that expression is boolean type
                   {
-                    if($2->type.entity_type != TYPE_BOOLEAN || $2->type.collection == false)
+                    $$ = new info();
+					if($2->type.entity_type != TYPE_BOOLEAN || $2->type.collection == false)
                         STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "The first term of the ternary expression must be a boolean type and not a collection");
                     else
                     if(check5($4->str.c_str()) == false || check5($6->str.c_str()) == false)
@@ -2230,7 +2365,8 @@ return_instr: RETURN expression '?' VARIABLE ':' VARIABLE       // TODO: check t
 
             | RETURN VARIABLE
                   {
-                    if(check5($2->str.c_str()) == false)
+                    $$ = new info();
+					if(check5($2->str.c_str()) == false)
                     {
                         STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "The return variable from the ternary expression does not meet the requirements");
                     }
@@ -2245,7 +2381,8 @@ return_instr: RETURN expression '?' VARIABLE ':' VARIABLE       // TODO: check t
 
 function_start: VARIABLE '=' end_lines '{'
                                             {
-                                              insideFunction = true;
+                                              $$ = new info();
+										      insideFunction = true;
                                               currentFunctionIndex = getIndex2($1->str.c_str());
                                               STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " = " << $3->str.c_str() << "{");
                                             }
@@ -2254,7 +2391,8 @@ function_start: VARIABLE '=' end_lines '{'
 // these 3 instruction types must not be part of the body of another function ==> we need to separate the commands which can be used inside a function's body from the commands which can be used in the program
 function_declaration: VARIABLE ':' FUNCTION '(' parameter_list ')' RET type
                                             {
-                                                int i;
+                                                $$ = new info();
+												int i;
                                                 bool declaredBefore = false;
 
                                                 for(i = 0; i < funNo; i++)
@@ -2275,6 +2413,8 @@ function_declaration: VARIABLE ':' FUNCTION '(' parameter_list ')' RET type
                                                         fun[funNo-1].grid_mapping = $8->grid_mapping;
                                                         fun[funNo-1].noLocalVariables = 0;
                                                         fun[funNo-1].noParam = 0;
+
+														info* a = $5;
 
                                                         char *cs1 = strdup($5->str.c_str());    // we need to make a copy, because the strtok function modifies the given string
                                                         char *pch;
@@ -2314,7 +2454,8 @@ function_declaration: VARIABLE ':' FUNCTION '(' parameter_list ')' RET type
 function_assignment: function_start end_lines commands end_lines return_instr end_lines '}'    // the end lines are optional
 
                                             {
-                                                int i;
+                                                $$ = new info();
+												int i;
                                                 bool declaredBefore = false;
 
                                                 for(i = 0; i < funNo; i++)
@@ -2335,7 +2476,7 @@ function_assignment: function_start end_lines commands end_lines return_instr en
                                                       {
                                                           if($5->grid_mapping != GRID_MAPPING_INVALID)
                                                           {
-                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "auto " << fun[i].name << "[&](" << fun[i].signature << ") -> " << getStringFromVariableType(fun[i].type) << " {\n" << $2->str.c_str() << $3->str.c_str() << $4->str.c_str() << $5->str.c_str() << $6->str.c_str() << "}");
+                                                              STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "auto " << fun[i].name << "[&](" << fun[i].signature << ") -> " << getCppTypeStringFromVariableType(fun[i].type) << " {\n" << $2->str.c_str() << $3->str.c_str() << $4->str.c_str() << $5->str.c_str() << $6->str.c_str() << "}");
                                                               if(fun[i].grid_mapping == GRID_MAPPING_ANY && $5->grid_mapping != GRID_MAPPING_ANY)
                                                                   fun[i].grid_mapping = $5->grid_mapping;
                                                               else
@@ -2382,7 +2523,9 @@ tuple_declaration_with_assignment: VARIABLE ':' TUPLE OF '(' type ')' '=' '(' en
 
 
 
-output: OUTPUT '(' VARIABLE ')'       { $$->str = output_function($3->str); }
+output: OUTPUT '(' VARIABLE ')'       { $$ = new info();
+					$$->str = output_function($3->str); 
+		}
 
 
 
@@ -2391,31 +2534,80 @@ output: OUTPUT '(' VARIABLE ')'       { $$->str = output_function($3->str); }
 
 
 
-singular_declaration: VARIABLE ':' SCALAR               { $$->str = declaration_function($1->str.c_str(), TYPE_SCALAR, false); }
-                    | VARIABLE ':' VECTOR               { $$->str = declaration_function($1->str.c_str(), TYPE_VECTOR, false); }
-                    | VARIABLE ':' VERTEX               { $$->str = declaration_function($1->str.c_str(), TYPE_VERTEX, false); }
-                    | VARIABLE ':' EDGE                 { $$->str = declaration_function($1->str.c_str(), TYPE_EDGE, false); }
-                    | VARIABLE ':' FACE                 { $$->str = declaration_function($1->str.c_str(), TYPE_FACE, false); }
-                    | VARIABLE ':' CELL                 { $$->str = declaration_function($1->str.c_str(), TYPE_CELL, false); }
-                    | VARIABLE ':' ADB                  { $$->str = declaration_function($1->str.c_str(), TYPE_SCALAR_AD, false); }
-                    | VARIABLE ':' BOOLEAN              { $$->str = declaration_function($1->str.c_str(), TYPE_BOOLEAN, false); }
+singular_declaration: VARIABLE ':' SCALAR               { 
+														  $$ = new info();
+														  $$->str = declaration_function($1->str.c_str(), TYPE_SCALAR, false); 
+					  }
+                    | VARIABLE ':' VECTOR               { 
+														  $$ = new info();
+														  $$->str = declaration_function($1->str.c_str(), TYPE_VECTOR, false); 
+					}
+                    | VARIABLE ':' VERTEX               { 
+														  $$ = new info();
+														  $$->str = declaration_function($1->str.c_str(), TYPE_VERTEX, false); 
+					}
+                    | VARIABLE ':' EDGE                 { 
+														  $$ = new info();
+														  $$->str = declaration_function($1->str.c_str(), TYPE_EDGE, false);
+					}
+                    | VARIABLE ':' FACE                 { 
+														  $$ = new info();
+														  $$->str = declaration_function($1->str.c_str(), TYPE_FACE, false); 
+					}
+                    | VARIABLE ':' CELL                 { 
+														  $$ = new info();
+														  $$->str = declaration_function($1->str.c_str(), TYPE_CELL, false); 
+					}
+                    | VARIABLE ':' ADB                  { 
+														  $$ = new info();
+														  $$->str = declaration_function($1->str.c_str(), TYPE_SCALAR_AD, false); 
+					}
+                    | VARIABLE ':' BOOLEAN              { 
+														  $$ = new info();
+														  $$->str = declaration_function($1->str.c_str(), TYPE_BOOLEAN, false); 
+					}
                     ;
 
 
-plural_declaration: VARIABLE ':' COLLECTION OF SCALAR       { $$->str = declaration_function($1->str.c_str(), TYPE_SCALAR, true); }
-                  | VARIABLE ':' COLLECTION OF VECTOR       { $$->str = declaration_function($1->str.c_str(), TYPE_VECTOR, true); }
-                  | VARIABLE ':' COLLECTION OF VERTEX       { $$->str = declaration_function($1->str.c_str(), TYPE_VERTEX, true); }
-                  | VARIABLE ':' COLLECTION OF EDGE         { $$->str = declaration_function($1->str.c_str(), TYPE_EDGE, true); }
-                  | VARIABLE ':' COLLECTION OF FACE         { $$->str = declaration_function($1->str.c_str(), TYPE_FACE, true); }
-                  | VARIABLE ':' COLLECTION OF CELL         { $$->str = declaration_function($1->str.c_str(), TYPE_CELL, true); }
-                  | VARIABLE ':' COLLECTION OF ADB          { $$->str = declaration_function($1->str.c_str(), TYPE_SCALAR_AD, true); }
-                  | VARIABLE ':' COLLECTION OF BOOLEAN      { $$->str = declaration_function($1->str.c_str(), TYPE_BOOLEAN, true); }
+plural_declaration: VARIABLE ':' COLLECTION OF SCALAR       { 
+														  $$ = new info();
+														  $$->str = declaration_function($1->str.c_str(), TYPE_SCALAR, true);
+					}
+                  | VARIABLE ':' COLLECTION OF VECTOR       { 
+														  $$ = new info();
+														  $$->str = declaration_function($1->str.c_str(), TYPE_VECTOR, true);
+				  }
+                  | VARIABLE ':' COLLECTION OF VERTEX       { 
+														  $$ = new info();
+														  $$->str = declaration_function($1->str.c_str(), TYPE_VERTEX, true); 
+				  }
+                  | VARIABLE ':' COLLECTION OF EDGE         { 
+														  $$ = new info();
+														  $$->str = declaration_function($1->str.c_str(), TYPE_EDGE, true); 
+				  }
+                  | VARIABLE ':' COLLECTION OF FACE         { 
+														  $$ = new info();
+														  $$->str = declaration_function($1->str.c_str(), TYPE_FACE, true); 
+				  }
+                  | VARIABLE ':' COLLECTION OF CELL         { 
+														  $$ = new info();
+														  $$->str = declaration_function($1->str.c_str(), TYPE_CELL, true); 
+				  }
+                  | VARIABLE ':' COLLECTION OF ADB          { 
+														  $$ = new info();
+														  $$->str = declaration_function($1->str.c_str(), TYPE_SCALAR_AD, true); 
+				  }
+                  | VARIABLE ':' COLLECTION OF BOOLEAN      { 
+														  $$ = new info();
+														  $$->str = declaration_function($1->str.c_str(), TYPE_BOOLEAN, true); 
+				  }
                   ;
 
 
 //TODO: verify that "expression" is a collection
 extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON expression
                                 {
+								  $$ = new info();
                                   if($7->error_str.size() > 0)
                                       $$->str = $7->error_str;
                                   else
@@ -2431,6 +2623,7 @@ extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON expression
                                 }
                            | VARIABLE ':' COLLECTION OF VECTOR ON expression
                                 {
+								  $$ = new info();
                                   if($7->error_str.size() > 0)
                                       $$->str = $7->error_str;
                                   else
@@ -2446,6 +2639,7 @@ extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON expression
                                 }
                            | VARIABLE ':' COLLECTION OF VERTEX ON expression
                                 {
+								  $$ = new info();
                                   if($7->error_str.size() > 0)
                                       $$->str = $7->error_str;
                                   else
@@ -2461,6 +2655,7 @@ extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON expression
                                 }
                            | VARIABLE ':' COLLECTION OF EDGE ON expression
                                 {
+								  $$ = new info();
                                   if($7->error_str.size() > 0)
                                       $$->str = $7->error_str;
                                   else
@@ -2476,6 +2671,7 @@ extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON expression
                                 }
                            | VARIABLE ':' COLLECTION OF FACE ON expression
                                 {
+								  $$ = new info();
                                   if($7->error_str.size() > 0)
                                       $$->str = $7->error_str;
                                   else
@@ -2491,6 +2687,7 @@ extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON expression
                                 }
                            | VARIABLE ':' COLLECTION OF CELL ON expression
                                 {
+								  $$ = new info();
                                   if($7->error_str.size() > 0)
                                       $$->str = $7->error_str;
                                   else
@@ -2506,6 +2703,7 @@ extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON expression
                                 }
                            | VARIABLE ':' COLLECTION OF ADB ON expression
                                 {
+								  $$ = new info();
                                   if($7->error_str.size() > 0)
                                       $$->str = $7->error_str;
                                   else
@@ -2521,6 +2719,7 @@ extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON expression
                                 }
                            | VARIABLE ':' COLLECTION OF BOOLEAN ON expression
                                 {
+								  $$ = new info();
                                   if($7->error_str.size() > 0)
                                       $$->str = $7->error_str;
                                   else
@@ -2537,22 +2736,34 @@ extended_plural_declaration: VARIABLE ':' COLLECTION OF SCALAR ON expression
                            ;
 
 
-declaration: singular_declaration           { $$->str = $1->str; }
-           | plural_declaration             { $$->str = $1->str; }
-           | extended_plural_declaration    { $$->str = $1->str; }
+declaration: singular_declaration           { 
+								  $$ = new info();
+								  $$->str = $1->str; 
+			 }
+           | plural_declaration             { 
+								  $$ = new info();
+								  $$->str = $1->str; 
+		   }
+           | extended_plural_declaration    { 
+								  $$ = new info();
+								  $$->str = $1->str; 
+		   }
            ;
 
 
 assignment: VARIABLE '=' USS
                                                   {
+								  $$ = new info();
                                             					$$->str = USS_assignment_function($1->str.c_str());
                                             			}
           | VARIABLE '=' USSWD '(' number ')'
                                                   {
+								  $$ = new info();
                                         					    $$->str = USSWD_assignment_function($1->str.c_str(), $5->str.c_str());
                                         			    }
           | VARIABLE '=' USCOS '(' expression ')'
                                                   {
+								  $$ = new info();
                                                     if($5->error_str.size() > 0)
                                                         $$->str = $5->error_str;
                                                     else
@@ -2567,6 +2778,7 @@ assignment: VARIABLE '=' USS
                                                   }
           | VARIABLE '=' expression
                                               					   {
+								  $$ = new info();
                         									                    if($3->error_str.size() > 0)
                                                                   $$->str = $3->error_str;
                                                               else
@@ -2589,6 +2801,7 @@ assignment: VARIABLE '=' USS
 //TODO: verify that "expression" is not a collection
 singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' expression
                                                           {
+								  $$ = new info();
                                                             if($5->error_str.size() > 0)
                                                                 $$->str = $5->error_str;
                                                             else
@@ -2604,6 +2817,7 @@ singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' expression
                                                           }
                                     | VARIABLE ':' VECTOR '=' expression
                                                           {
+								  $$ = new info();
                                                             if($5->error_str.size() > 0)
                                                                 $$->str = $5->error_str;
                                                             else
@@ -2619,6 +2833,7 @@ singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' expression
                                                           }
                                     | VARIABLE ':' VERTEX '=' expression
                                                           {
+								  $$ = new info();
                                                             if($5->error_str.size() > 0)
                                                                 $$->str = $5->error_str;
                                                             else
@@ -2634,6 +2849,7 @@ singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' expression
                                                           }
                                     | VARIABLE ':' EDGE '=' expression
                                                           {
+								  $$ = new info();
                                                             if($5->error_str.size() > 0)
                                                                 $$->str = $5->error_str;
                                                             else
@@ -2649,6 +2865,7 @@ singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' expression
                                                           }
                                     | VARIABLE ':' FACE '=' expression
                                                           {
+								  $$ = new info();
                                                             if($5->error_str.size() > 0)
                                                                 $$->str = $5->error_str;
                                                             else
@@ -2664,6 +2881,7 @@ singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' expression
                                                           }
                                     | VARIABLE ':' CELL '=' expression
                                                           {
+								  $$ = new info();
                                                             if($5->error_str.size() > 0)
                                                                 $$->str = $5->error_str;
                                                             else
@@ -2679,6 +2897,7 @@ singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' expression
                                                           }
                                     | VARIABLE ':' ADB '=' expression
                                                           {
+								  $$ = new info();
                                                             if($5->error_str.size() > 0)
                                                                 $$->str = $5->error_str;
                                                             else
@@ -2694,6 +2913,7 @@ singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' expression
                                                           }
                                     | VARIABLE ':' BOOLEAN '=' expression
                                                           {
+								  $$ = new info();
                                                             if($5->error_str.size() > 0)
                                                                 $$->str = $5->error_str;
                                                             else
@@ -2707,13 +2927,20 @@ singular_declaration_with_assignment: VARIABLE ':' SCALAR '=' expression
                                                                 }
                                                             }
                                                           }
-                                    | VARIABLE ':' SCALAR '=' USS                   { $$->str = USS_declaration_with_assignment_function($1->str.c_str()); }
-                                    | VARIABLE ':' SCALAR '=' USSWD '(' number ')'  { $$->str = USSWD_declaration_with_assignment_function($1->str.c_str(), $7->str.c_str()); }
+                                    | VARIABLE ':' SCALAR '=' USS                   { 
+								  $$ = new info();
+								  $$->str = USS_declaration_with_assignment_function($1->str.c_str()); 
+									}
+                                    | VARIABLE ':' SCALAR '=' USSWD '(' number ')'  { 
+								  $$ = new info();
+								  $$->str = USSWD_declaration_with_assignment_function($1->str.c_str(), $7->str.c_str()); 
+									}
                                     ;
 
 
 plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' expression
                                                           {
+								  $$ = new info();
                                                             if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
@@ -2729,6 +2956,7 @@ plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' expres
                                                           }
                                   | VARIABLE ':' COLLECTION OF VECTOR '=' expression
                                                           {
+								  $$ = new info();
                                                             if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
@@ -2744,6 +2972,7 @@ plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' expres
                                                           }
                                   | VARIABLE ':' COLLECTION OF VERTEX '=' expression
                                                           {
+								  $$ = new info();
                                                             if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
@@ -2759,6 +2988,7 @@ plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' expres
                                                           }
                                   | VARIABLE ':' COLLECTION OF EDGE '=' expression
                                                           {
+								  $$ = new info();
                                                             if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
@@ -2774,6 +3004,7 @@ plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' expres
                                                           }
                                   | VARIABLE ':' COLLECTION OF FACE '=' expression
                                                           {
+								  $$ = new info();
                                                             if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
@@ -2789,6 +3020,7 @@ plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' expres
                                                           }
                                   | VARIABLE ':' COLLECTION OF CELL '=' expression
                                                           {
+								  $$ = new info();
                                                             if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
@@ -2804,6 +3036,7 @@ plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' expres
                                                           }
                                   | VARIABLE ':' COLLECTION OF ADB '=' expression
                                                           {
+								  $$ = new info();
                                                             if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
@@ -2819,6 +3052,7 @@ plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' expres
                                                           }
                                   | VARIABLE ':' COLLECTION OF BOOLEAN '=' expression
                                                           {
+								  $$ = new info();
                                                             if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
@@ -2834,6 +3068,7 @@ plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' expres
                                                           }
                                   | VARIABLE ':' COLLECTION OF SCALAR '=' USCOS '(' expression ')'
                                                           {
+								  $$ = new info();
                                                             if($9->error_str.size() > 0)
                                                                 $$->str = $9->error_str;
                                                             else
@@ -2853,6 +3088,7 @@ plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR '=' expres
 //TODO: verify that both "expression"s are collections
 extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR ON expression '=' expression
                                                           {
+								  $$ = new info();
                                                             if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
@@ -2874,6 +3110,7 @@ extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR O
                                                           }
                                            | VARIABLE ':' COLLECTION OF VECTOR ON expression '=' expression
                                                           {
+								  $$ = new info();
                                                             if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
@@ -2895,6 +3132,7 @@ extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR O
                                                           }
                                            | VARIABLE ':' COLLECTION OF VERTEX ON expression '=' expression
                                                           {
+								  $$ = new info();
                                                             if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
@@ -2916,6 +3154,7 @@ extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR O
                                                           }
                                            | VARIABLE ':' COLLECTION OF EDGE ON expression '=' expression
                                                           {
+								  $$ = new info();
                                                             if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
@@ -2937,6 +3176,7 @@ extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR O
                                                           }
                                            | VARIABLE ':' COLLECTION OF FACE ON expression '=' expression
                                                           {
+								  $$ = new info();
                                                             if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
@@ -2958,6 +3198,7 @@ extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR O
                                                           }
                                            | VARIABLE ':' COLLECTION OF CELL ON expression '=' expression
                                                           {
+								  $$ = new info();
                                                             if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
@@ -2979,6 +3220,7 @@ extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR O
                                                           }
                                            | VARIABLE ':' COLLECTION OF ADB ON expression '=' expression
                                                           {
+								  $$ = new info();
                                                             if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
@@ -3000,6 +3242,7 @@ extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR O
                                                           }
                                            | VARIABLE ':' COLLECTION OF BOOLEAN ON expression '=' expression
                                                           {
+								  $$ = new info();
                                                             if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
@@ -3021,6 +3264,7 @@ extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR O
                                                           }
                                            | VARIABLE ':' COLLECTION OF SCALAR ON expression '=' USCOS '(' expression ')'
                                                           {
+								  $$ = new info();
                                                             if($7->error_str.size() > 0)
                                                                 $$->str = $7->error_str;
                                                             else
@@ -3043,33 +3287,42 @@ extended_plural_declaration_with_assignment: VARIABLE ':' COLLECTION OF SCALAR O
                                            ;
 
 
- declaration_with_assignment: singular_declaration_with_assignment          { $$->str = $1->str; }
-                            | plural_declaration_with_assignment            { $$->str = $1->str; }
-                            | extended_plural_declaration_with_assignment   { $$->str = $1->str; }
+ declaration_with_assignment: singular_declaration_with_assignment          { 
+								  $$ = new info();$$->str = $1->str; }
+                            | plural_declaration_with_assignment            { 
+								  $$ = new info();$$->str = $1->str; }
+                            | extended_plural_declaration_with_assignment   { 
+								  $$ = new info();$$->str = $1->str; }
                             ;
 
 
 
 
 // instructions which can be used in the program and in a function's body
-command: declaration                    { $$->str = $1->str; }
-       | assignment                     { $$->str = $1->str; }
-       | declaration_with_assignment    { $$->str = $1->str; }
+command: declaration                    { 
+								  $$ = new info();$$->str = $1->str; }
+       | assignment                     { 
+								  $$ = new info();$$->str = $1->str; }
+       | declaration_with_assignment    { 
+								  $$ = new info();$$->str = $1->str; }
        ;
 
 
-command1: command                       { $$->str = $1->str; }
-        | command COMMENT               { string st1 = $1->str.c_str(); string st2 = $2->str.c_str(); stringstream ss; ss << st1 << " // " << st2.substr(1, st2.size() - 1); $$->str = strdup(ss.str().c_str()); }
-        | COMMENT                       { string st1 = $1->str.c_str(); stringstream ss; ss << "// " << st1.substr(1, st1.size() - 1); $$->str = strdup(ss.str().c_str()); }
+command1: command                       { 
+								  $$ = new info();$$->str = $1->str; }
+        | command COMMENT               { 
+								  $$ = new info();string st1 = $1->str.c_str(); string st2 = $2->str.c_str(); stringstream ss; ss << st1 << " // " << st2.substr(1, st2.size() - 1); $$->str = strdup(ss.str().c_str()); }
+        | COMMENT                       { 
+								  $$ = new info();string st1 = $1->str.c_str(); stringstream ss; ss << "// " << st1.substr(1, st1.size() - 1); $$->str = strdup(ss.str().c_str()); }
         ;
 
 
 // instructions which can be used in the program, but not in a function's body (since we must not allow inner functions)
-command2: command                                    { stringstream ss; ss << $1->str.c_str(); $$->str = strdup(ss.str().c_str()); }
-        | function_declaration                       { stringstream ss; ss << $1->str.c_str(); $$->str = strdup(ss.str().c_str()); }
-        | function_assignment                        { stringstream ss; ss << $1->str.c_str(); $$->str = strdup(ss.str().c_str()); }
-        | output                                     { stringstream ss; ss << $1->str.c_str(); $$->str = strdup(ss.str().c_str()); }
-    //  | function_declaration_with_assignment       { stringstream ss; ss << $1->str.c_str(); $$->str = strdup(ss.str().c_str()); }
+command2: command                                    { $$ = new info(); $$->str = $1->str; }
+        | function_declaration                       { $$ = new info(); $$->str = $1->str; }
+        | function_assignment                        { $$ = new info(); $$->str = $1->str; }
+        | output                                     { $$ = new info(); $$->str = $1->str; }
+    //  | function_declaration_with_assignment       { $$ = new info(); $$->str = $1->str; }
         ;
 
 
@@ -4106,7 +4359,7 @@ string functionToAnySingularType(const char *st1, const char *st2, const char *s
     {
       return "error2: The function is not assigned";
     }
-    if(strcmp(getStringFromVariableType(fun[getIndex2(st1)].type).c_str(), st2) != 0)
+    if(strcmp(getCppTypeStringFromVariableType(fun[getIndex2(st1)].type).c_str(), st2) != 0)
     {
       stringstream ss;
       ss << "error3: The return type of the function is not a " << st4 << " type";
@@ -4146,7 +4399,7 @@ string functionToAnyCollectionType(const char *st1, const char *st2, const char 
     {
       return "error2: The function is not assigned";
     }
-    if(strcmp(getStringFromVariableType(fun[getIndex2(st1)].type).c_str(), st2) != 0)
+    if(strcmp(getCppTypeStringFromVariableType(fun[getIndex2(st1)].type).c_str(), st2) != 0)
     {
       stringstream ss;
       ss << "error3: The return type of the function is not a collection of " << st4 << " type";
@@ -4497,7 +4750,7 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                                   if(check3(rhs->str.c_str()) == false)
                                   {
                                       stringstream ss;
-                                      ss << "error at line " << currentLineNumber << ": The variable '" << find5(rhs->str.c_str()) << "' contained in the definition of the " << getStringFromVariableType(rhs->type) << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
+                                      ss << "error at line " << currentLineNumber << ": The variable '" << find5(rhs->str.c_str()) << "' contained in the definition of the " << getCppTypeStringFromVariableType(rhs->type) << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
                                       finalString = ss.str();
                                   }
                                   else
@@ -4505,7 +4758,7 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                                       if(check4(rhs->str.c_str()) == false)
                                       {
                                           stringstream ss;
-                                          ss << "error at line " << currentLineNumber << ": The variable '" << find6(rhs->str.c_str()) << "' contained in the definition of the " << getStringFromVariableType(rhs->type) << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
+                                          ss << "error at line " << currentLineNumber << ": The variable '" << find6(rhs->str.c_str()) << "' contained in the definition of the " << getCppTypeStringFromVariableType(rhs->type) << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
                                           finalString = ss.str();
                                       }
                                       else
@@ -4521,7 +4774,7 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                                               fun[currentFunctionIndex].localVariables[i].assigned = true;
                                               fun[currentFunctionIndex].localVariables[i].array_size = rhs->array_size;
                                               stringstream ss;
-                                              ss << "const " << getStringFromVariableType(rhs->type)  << " " << variable_name << " = " << rhs->str << ";";
+                                              ss << "const " << getCppTypeStringFromVariableType(rhs->type)  << " " << variable_name << " = " << rhs->str << ";";
                                               finalString = ss.str();
                                           }
                                       }
@@ -4551,7 +4804,7 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                           if(find1(rhs->str.c_str(), variable_name))
                           {
                               stringstream ss;
-                              ss << "error at line " << currentLineNumber << ": The " << getStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
+                              ss << "error at line " << currentLineNumber << ": The " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
                               finalString = ss.str();
                           }
                           else
@@ -4559,7 +4812,7 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                               if(check3(rhs->str.c_str()) == false)
                               {
                                   stringstream ss;
-                                  ss << "error at line " << currentLineNumber << ": The variable '" << find5(rhs->str.c_str()) << "' contained in the definition of the " << getStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
+                                  ss << "error at line " << currentLineNumber << ": The variable '" << find5(rhs->str.c_str()) << "' contained in the definition of the " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
                                   finalString = ss.str();
                               }
                               else
@@ -4567,7 +4820,7 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                                   if(check4(rhs->str.c_str()) == false)
                                   {
                                       stringstream ss;
-                                      ss << "error at line " << currentLineNumber << ": The variable '" << find6(rhs->str.c_str()) << "' contained in the definition of the " << getStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
+                                      ss << "error at line " << currentLineNumber << ": The variable '" << find6(rhs->str.c_str()) << "' contained in the definition of the " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
                                       finalString = ss.str();
                                   }
                                   else
@@ -4575,13 +4828,13 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                                       if(check7(rhs->str.c_str()) == true)
                                       {
                                           stringstream ss;
-                                          ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment rhs->str of the " << getStringFromVariableType(rhs->type)  << " variable '" << variable_name << "'";
+                                          ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment rhs->str of the " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "'";
                                           finalString = ss.str();
                                       }
                                       else
                                       {
                                           stringstream ss;
-                                          ss << "const " << getStringFromVariableType(rhs->type)  << " " << variable_name << " = " << rhs->str << ";";
+                                          ss << "const " << getCppTypeStringFromVariableType(rhs->type)  << " " << variable_name << " = " << rhs->str << ";";
                                           finalString = ss.str();
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = variable_name;
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = rhs->type;
@@ -4613,7 +4866,7 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
               if(var[i].assigned == true)
               {
                   stringstream ss;
-                  ss << "error at line " << currentLineNumber << ": The " << getStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is reassigned";
+                  ss << "error at line " << currentLineNumber << ": The " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is reassigned";
                   finalString = ss.str();
               }
               else
@@ -4637,7 +4890,7 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                             if(find1(rhs->str.c_str(), variable_name))
                             {
                                 stringstream ss;
-                                ss << "error at line " << currentLineNumber << ": The " << getStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is included in its definition";
+                                ss << "error at line " << currentLineNumber << ": The " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is included in its definition";
                                 finalString = ss.str();
                             }
                             else
@@ -4645,7 +4898,7 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                                 if(check1(rhs->str.c_str()) == false)
                                 {
                                     stringstream ss;
-                                    ss << "error at line " << currentLineNumber << ": The variable '" << find2(rhs->str.c_str()) << "' contained in the definition of the " << getStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is undeclared";
+                                    ss << "error at line " << currentLineNumber << ": The variable '" << find2(rhs->str.c_str()) << "' contained in the definition of the " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is undeclared";
                                     finalString = ss.str();
                                 }
                                 else
@@ -4653,7 +4906,7 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                                     if(check2(rhs->str.c_str()) == false)
                                     {
                                         stringstream ss;
-                                        ss << "error at line " << currentLineNumber << ": The variable '" << find3(rhs->str.c_str()) << "' contained in the definition of the " << getStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is unassigned";
+                                        ss << "error at line " << currentLineNumber << ": The variable '" << find3(rhs->str.c_str()) << "' contained in the definition of the " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is unassigned";
                                         finalString = ss.str();
                                     }
                                     else
@@ -4661,7 +4914,7 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                                         if(check7(rhs->str.c_str()) == true)
                                         {
                                             stringstream ss;
-                                            ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment rhs->str of the " << getStringFromVariableType(rhs->type)  << " variable '" << variable_name << "'";
+                                            ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment rhs->str of the " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "'";
                                             finalString = ss.str();
                                         }
                                         else
@@ -4669,7 +4922,7 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                                             var[i].assigned = true;
                                             var[i].array_size = rhs->array_size;
                                             stringstream ss;
-                                            ss << "const " << getStringFromVariableType(rhs->type)  << " " << variable_name << " = " << rhs->str << ";";
+                                            ss << "const " << getCppTypeStringFromVariableType(rhs->type)  << " " << variable_name << " = " << rhs->str << ";";
                                             finalString = ss.str();
                                         }
                                     }
@@ -4700,7 +4953,7 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                     if(find1(rhs->str.c_str(), variable_name))
                     {
                         stringstream ss;
-                        ss << "error at line " << currentLineNumber << ": The " << getStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is included in its definition";
+                        ss << "error at line " << currentLineNumber << ": The " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is included in its definition";
                         finalString = ss.str();
                     }
                     else
@@ -4708,7 +4961,7 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                         if(check1(rhs->str.c_str()) == false)
                         {
                             stringstream ss;
-                            ss << "error at line " << currentLineNumber << ": The variable '" << find2(rhs->str.c_str()) << "' contained in the definition of the " << getStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is undeclared";
+                            ss << "error at line " << currentLineNumber << ": The variable '" << find2(rhs->str.c_str()) << "' contained in the definition of the " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is undeclared";
                             finalString = ss.str();
                         }
                         else
@@ -4716,7 +4969,7 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                             if(check2(rhs->str.c_str()) == false)
                             {
                                 stringstream ss;
-                                ss << "error at line " << currentLineNumber << ": The variable '" << find3(rhs->str.c_str()) << "' contained in the definition of the " << getStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is unassigned";
+                                ss << "error at line " << currentLineNumber << ": The variable '" << find3(rhs->str.c_str()) << "' contained in the definition of the " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is unassigned";
                                 finalString = ss.str();
                             }
                             else
@@ -4724,13 +4977,13 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                                 if(check7(rhs->str.c_str()) == true)
                                 {
                                     stringstream ss;
-                                    ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment rhs->str of the " << getStringFromVariableType(rhs->type)  << " variable '" << variable_name << "'";
+                                    ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment rhs->str of the " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "'";
                                     finalString = ss.str();
                                 }
                                 else
                                 {
                                     stringstream ss;
-                                    ss << "const " << getStringFromVariableType(rhs->type)  << " " << variable_name << " = " << rhs->str << ";";
+                                    ss << "const " << getCppTypeStringFromVariableType(rhs->type)  << " " << variable_name << " = " << rhs->str << ";";
                                     finalString = ss.str();
                                     var[varNo++].name = variable_name;
                                     var[varNo-1].type = rhs->type;
@@ -4846,7 +5099,7 @@ string plural_assignment_function(const char* variable_name, const info* rhs)
                                                         fun[currentFunctionIndex].localVariables[i].assigned = true;
                                                         fun[currentFunctionIndex].localVariables[i].array_size = rhs->array_size;
                                                         stringstream ss;
-                                                        ss << "const " << getStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
+                                                        ss << "const " << getCppTypeStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
                                                         finalString = ss.str();
                                                     }
                                                     else
@@ -4858,7 +5111,7 @@ string plural_assignment_function(const char* variable_name, const info* rhs)
                                                 else
                                                 {
                                                     stringstream ss;
-                                                    ss << "const " << getStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
+                                                    ss << "const " << getCppTypeStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
                                                     finalString = ss.str();
                                                     fun[currentFunctionIndex].localVariables[i].assigned = true;
                                                     fun[currentFunctionIndex].localVariables[i].array_size = rhs->array_size;
@@ -4921,7 +5174,7 @@ string plural_assignment_function(const char* variable_name, const info* rhs)
                                       else
                                       {
                                           stringstream ss;
-                                          ss << "const " << getStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
+                                          ss << "const " << getCppTypeStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
                                           finalString = ss.str();
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = variable_name;
                                           fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = rhs->type;
@@ -5013,7 +5266,7 @@ string plural_assignment_function(const char* variable_name, const info* rhs)
                                                     var[i].array_size = rhs->array_size;
                                                     var[i].assigned = true;
                                                     stringstream ss;
-                                                    ss << "const " << getStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
+                                                    ss << "const " << getCppTypeStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
                                                     finalString = ss.str();
                                                 }
                                                 else
@@ -5025,7 +5278,7 @@ string plural_assignment_function(const char* variable_name, const info* rhs)
                                             else
                                             {
                                                 stringstream ss;
-                                                ss << "const " << getStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
+                                                ss << "const " << getCppTypeStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
                                                 finalString = ss.str();
                                                 var[i].assigned = true;
                                                 var[i].array_size = rhs->array_size;
@@ -5089,7 +5342,7 @@ string plural_assignment_function(const char* variable_name, const info* rhs)
                                 else
                                 {
                                     stringstream ss;
-                                    ss << "const " << getStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
+                                    ss << "const " << getCppTypeStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
                                     finalString = ss.str();
                                     var[varNo++].name = variable_name;
                                     var[varNo-1].type = rhs->type;
@@ -5198,7 +5451,7 @@ string declaration_with_assignment_function(const char* variable_name, const inf
                                           else
                                           {
                                               stringstream ss;
-                                              ss << "const " << getStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
+                                              ss << "const " << getCppTypeStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
                                               finalString = ss.str();
                                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = variable_name;
                                               fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = rhs->type;
@@ -5283,7 +5536,7 @@ string declaration_with_assignment_function(const char* variable_name, const inf
                                 else
                                 {
                                     stringstream ss;
-                                    ss << "const " << getStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
+                                    ss << "const " << getCppTypeStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
                                     finalString = ss.str();
                                     var[varNo++].name = variable_name;
                                     var[varNo-1].type = rhs->type;
@@ -5393,7 +5646,7 @@ string extended_plural_declaration_with_assignment_function(const char* variable
                                         else
                                         {
                                             stringstream ss;
-                                            ss << "const " << getStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
+                                            ss << "const " << getCppTypeStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
                                             finalString = ss.str();
                                             fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables++].name = variable_name;
                                             fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].type = rhs->type;
@@ -5478,7 +5731,7 @@ string extended_plural_declaration_with_assignment_function(const char* variable
                                 else
                                 {
                                     stringstream ss;
-                                    ss << "const " << getStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
+                                    ss << "const " << getCppTypeStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
                                     finalString = ss.str();
                                     var[varNo++].name = variable_name;
                                     var[varNo-1].type = rhs->type;
@@ -5553,7 +5806,7 @@ string USS_assignment_function(const char* variable_name)
                   if(var[i].type.entity_type != TYPE_SCALAR && var[i].type.collection != false)
                   {
                       stringstream ss;
-                      ss << "error at line " << currentLineNumber << ": The variable '" << variable_name << "' is declared as a " << getStringFromVariableType(var[i].type) << " and cannot be assigned to a scalar";
+                      ss << "error at line " << currentLineNumber << ": The variable '" << variable_name << "' is declared as a " << getCppTypeStringFromVariableType(var[i].type) << " and cannot be assigned to a scalar";
                       finalString = ss.str();
                   }
                   else
@@ -6204,7 +6457,7 @@ string output_function(std::string& st1)
 }
 
 
-string getStringFromVariableType(VariableType v)
+string getCppTypeStringFromVariableType(VariableType v)
 {
 	std::stringstream ss;
 
@@ -6245,67 +6498,42 @@ string getStringFromVariableType(VariableType v)
 }
 
 
-string CPPToEquelle1(char* st)
+string getEquelleTypeStringFromVariableType(VariableType v)
 {
-    if(strcmp(st, "Scalar") == 0) {
-      return "scalar";
-    }
+	std::stringstream ss;
 
-    if(strcmp(st, "Vector") == 0) {
-      return "vector";
-    }
+	switch(v.entity_type) {
+		case TYPE_SCALAR:
+			ss << ((v.collection) ? "scalars" : "scalar");
+			break;
+		case TYPE_SCALAR_AD:
+			ss << ((v.collection) ? "scalarsAD" : "scalarAD");
+			break;
+		case TYPE_VECTOR:
+			ss << ((v.collection) ? "vectors" : "vector");
+			break;
+		case TYPE_VERTEX:
+			ss << ((v.collection) ? "vertices" : "vertex");
+			break;
+		case TYPE_EDGE:
+			ss << ((v.collection) ? "edges" : "edge");
+			break;
+		case TYPE_FACE:
+			ss << ((v.collection) ? "faces" : "face");
+			break;
+		case TYPE_CELL:
+			ss << ((v.collection) ? "cells" : "cell");
+			break;
+		case TYPE_BOOLEAN:
+			ss << ((v.collection) ? "bools" : "bool");
+			break;
+		case TYPE_INVALID:
+			ss << ((v.collection) ? "invalid_types" : "invalid_type");
+			break;
+		default:
+			ss << ((v.collection) ? "unknown_types" : "unknown_type");
+      break;
+	}
 
-    if(strcmp(st, "Vertex") == 0) {
-      return "vertex";
-    }
-
-    if(strcmp(st, "Edge") == 0) {
-      return "edge";
-    }
-
-    if(strcmp(st, "Face") == 0) {
-      return "face";
-    }
-
-    if(strcmp(st, "Cell") == 0) {
-      return "cell";
-    }
-
-    if(strcmp(st, "ScalarAD") == 0) {
-      return "scalarAD";
-    }
-
-    if(strcmp(st, "bool") == 0) {
-      return "bool";
-    }
-
-    if(strcmp(st, "CollOfScalars") == 0) {
-      return "scalars";
-    }
-
-    if(strcmp(st, "CollOfVectors") == 0) {
-      return "vectors";
-    }
-
-    if(strcmp(st, "CollOfVertices") == 0) {
-      return "vertices";
-    }
-
-    if(strcmp(st, "CollOfEdges") == 0) {
-      return "edges";
-    }
-
-    if(strcmp(st, "CollOfCells") == 0) {
-      return "cells";
-    }
-
-    if(strcmp(st, "CollOfScalarsAD") == 0) {
-      return "scalarsAD";
-    }
-
-    if(strcmp(st, "CollOfBools") == 0) {
-      return "bools";
-    }
-
-    return "InvalidType";
+	return ss.str();
 }
