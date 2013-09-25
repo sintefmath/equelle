@@ -934,7 +934,7 @@ expression: '-' expression
                         else
                         {
                             STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "er.gradient(" << $3->str.c_str() << ")");
-                            $$->grid_mapping = GRID_MAPPING_ALLCELLS;
+                            $$->grid_mapping = GRID_MAPPING_INTERIORFACES;
                             $$->array_size = $3->array_size;
                             $$->type.entity_type = TYPE_SCALAR;
                             $$->type.collection = true;

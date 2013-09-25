@@ -40,10 +40,10 @@ computeResidual = {
 
 # NewtonSolve takes a function (that should accept the primary variable as input) and the initial guess for the primary variable.
 explicitu = u0 - computeResidual(u0)
-u = NewtonSolve(computeResidual, u0)
+#u = NewtonSolve(computeResidual, u0)
 
 Output(explicitu)
-Output(u)
+#Output(u)
 
 
 
