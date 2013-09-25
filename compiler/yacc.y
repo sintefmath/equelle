@@ -1874,8 +1874,9 @@ expression: '-' expression
                     if(fun[i].name == $1->str)
                         break;
                 }
-                if(i == funNo)
+                if(i == funNo) {
                     STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "An undeclared function is called");
+                }
                 else
                 {
                     string st;
@@ -1888,14 +1889,20 @@ expression: '-' expression
                         st = functionToAnyCollectionType($1->str.c_str(), getCppTypeStringFromVariableType(fun[i].type).c_str(), $3->str.c_str(), getEquelleTypeStringFromVariableType(fun[i].type));
                     }
 
-                    if(check9(st.c_str()) != "isOk")
+                    if(check9(st.c_str()) != "isOk") {
                         $$->error_str = st;
+					}
                     else
                     {
-                        $$->str = st;
-                        $$->grid_mapping = fun[i].grid_mapping;
-                        $$->type.entity_type = fun[i].type.entity_type;
-                        $$->type.collection = fun[i].type.collection;
+						if (st == "ok") {
+							STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str << "(" << $3->str << ")");
+							$$->grid_mapping = fun[i].grid_mapping;
+							$$->type.entity_type = fun[i].type.entity_type;
+							$$->type.collection = fun[i].type.collection;
+						}
+						else {
+							$$->error_str = st;
+						}
                     }
 
                 }
