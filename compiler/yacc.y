@@ -1807,7 +1807,7 @@ expression: '-' expression
                         st = functionToAnyCollectionType($1->str.c_str(), getCppTypeStringFromVariableType(fun[i].type).c_str(), $3->str.c_str(), getEquelleTypeStringFromVariableType(fun[i].type));
                     }
 
-                    if(check9(st.c_str()) != "isOk") {
+                    if(getAppropriateErrorIfAny(st.c_str()) != "isOk") {
                         $$->error_str = st;
 					}
                     else
@@ -2263,28 +2263,28 @@ return_instr: RETURN expression '?' VARIABLE ':' VARIABLE       // TODO: check t
                   if($2->type.entity_type != TYPE_BOOLEAN || $2->type.collection == false)
                       STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "The first term of the ternary expression must be a boolean type and not a collection");
                   else
-                      if(check5($4->str.c_str()) == false || check5($6->str.c_str()) == false)
+                      if(isVariableValidAndHasSameReturnTypeAsCurrentFunction($4->str.c_str()) == false || isVariableValidAndHasSameReturnTypeAsCurrentFunction($6->str.c_str()) == false)
                       {
                           STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "One of the return variables from the ternary expression does not meet the requirements");
                       }
                       else
                       {
                           STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "return " << $2->str.c_str() << " ? " << $4->str.c_str() << " : " << $6->str.c_str());
-                          $$->grid_mapping = getSize3($4->str.c_str());
+                          $$->grid_mapping = getGridMappingOfVariableInsideFunction($4->str.c_str());
                       }
               }
 
               | RETURN VARIABLE
               {
                   $$ = new info();
-                  if(check5($2->str.c_str()) == false)
+                  if(isVariableValidAndHasSameReturnTypeAsCurrentFunction($2->str.c_str()) == false)
                   {
                       STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "The return variable from the ternary expression does not meet the requirements");
                   }
                   else
                   {
                       STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "return " << $2->str.c_str() << ";");
-                      $$->grid_mapping = getSize3($2->str.c_str());
+                      $$->grid_mapping = getGridMappingOfVariableInsideFunction($2->str.c_str());
                   }
               }
               ;
@@ -2294,7 +2294,7 @@ function_start: VARIABLE '=' end_lines '{'
                 {
                     $$ = new info();
                     insideFunction = true;
-                    currentFunctionIndex = getIndex2($1->str.c_str());
+                    currentFunctionIndex = getIndexOfFunctionFromGlobalCPPStructure($1->str.c_str());
                     STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " = " << $3->str.c_str() << "{");
                 }
 
@@ -2368,7 +2368,7 @@ function_assignment: function_start end_lines commands end_lines return_instr en
                          bool declaredBefore = false;
 
                          for(i = 0; i < funNo; i++)
-                             if(strcmp(fun[i].name.c_str(), extract($1->str.c_str())) == 0)
+                             if(strcmp(fun[i].name.c_str(), getFunctionNameFromStartOfDeclaration($1->str.c_str())) == 0)
                              {
                                  declaredBefore = true;
                                  break;
@@ -2403,7 +2403,7 @@ function_assignment: function_start end_lines commands end_lines return_instr en
                                  }
                              else
                              {
-                                 STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "error at line " << currentLineNumber << ": The function '" << extract($1->str.c_str()) <<"' must be declared before being assigned");
+                                 STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "error at line " << currentLineNumber << ": The function '" << getFunctionNameFromStartOfDeclaration($1->str.c_str()) <<"' must be declared before being assigned");
                              }
 
                              insideFunction = false;
@@ -2467,7 +2467,7 @@ newton: VARIABLE '=' NEWTON '(' VARIABLE ',' VARIABLE ')'
                         }
                         else
                         {
-                            int z = getIndex1($7->str.c_str());
+                            int z = getIndexOfVariableFromGlobalCPPStructure($7->str.c_str());
                             if(z == -1)
                             {
                                 STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "error at line " << currentLineNumber << ": The variable '" << $7->str <<"' does not even exist");
@@ -2508,13 +2508,13 @@ output: OUTPUT '(' VARIABLE ')'
             else
             {
                 // we check that the input variable is a collection of scalarsAD
-                if(getIndex1($3->str.c_str()) == -1)
+                if(getIndexOfVariableFromGlobalCPPStructure($3->str.c_str()) == -1)
                 {
                     STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "error at line " << currentLineNumber << ": The variable '" << $3->str <<"' does not exist");
                 }
                 else
                 {
-                    int z = getIndex1($3->str.c_str());
+                    int z = getIndexOfVariableFromGlobalCPPStructure($3->str.c_str());
                     if(!((var[z].type.entity_type == TYPE_SCALAR_AD || var[z].type.entity_type == TYPE_SCALAR) && var[z].type.collection == true && var[z].assigned == true))
                     {
                         STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "error at line " << currentLineNumber << ": The variable '" << $3->str <<"' must be a collection of scalars(AD) and must be assigned");

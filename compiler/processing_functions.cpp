@@ -53,7 +53,7 @@ void yyerror(const char* s)
 
 
 // function which returns true if s2 is contained in s1
-bool find1(const char* s1, const char* s2)
+bool isVariableContainedInItsOwnAssignment(const char* s1, const char* s2)
 {
     HEAP_CHECK();
     char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -73,8 +73,8 @@ bool find1(const char* s1, const char* s2)
 }
 
 
-// function which returns the first undeclared variable from a given expression (this function is called after the function "check1" returns false)
-char* find2(const char* s1)
+// function which returns the first undeclared variable from a given expression (this function is called after the function "areAllVariablesInsideAnExpressionDeclared" returns false)
+char* getFirstUndeclaredVariableFromExpression(const char* s1)
 {
     HEAP_CHECK();
     char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -114,8 +114,8 @@ char* find2(const char* s1)
 
 
 
-// function which returns the first unassigned variable from a given expression (this function is called after the function "check2" returns false)
-char* find3(const char* s1)
+// function which returns the first unassigned variable from a given expression (this function is called after the function "areAllVariablesInsideAnExpressionAssigned" returns false)
+char* getFirstUnassignedVariableFromExpression(const char* s1)
 {
     HEAP_CHECK();
     char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -143,26 +143,8 @@ char* find3(const char* s1)
 }
 
 
-// function which returns the number of parameters from a given parameters list
-int find4(const char *s1)
-{
-    HEAP_CHECK();
-    char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
-    char *pch;
-    pch = strtok(cs1, " ,");
-    int counter = 0;
-    while(pch != NULL)
-    {
-        counter++;
-        pch = strtok (NULL, " ,");
-    }
-    HEAP_CHECK();
-    return counter;
-}
-
-
-// function which returns the first undeclared variable from a given expression inside a function (this function is called after the function "check3" returns false)
-char* find5(const char* s1)
+// function which returns the first undeclared variable from a given expression inside a function (this function is called after the function "areAllVariablesInsideAnExpressionInsideFunctionDeclared" returns false)
+char* getFirstUndeclaredVariableFromExpressionInsideFunction(const char* s1)
 {
     HEAP_CHECK();
     char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -208,8 +190,8 @@ char* find5(const char* s1)
 }
 
 
-// function which returns the first unassigned variable from a given expression inside a function (this function is called after the function "check4" returns false)
-char* find6(const char* s1)
+// function which returns the first unassigned variable from a given expression inside a function (this function is called after the function "areAllVariablesInsideAnExpressionInsideFunctionAssigned" returns false)
+char* getFirstUnassignedVariableFromExpressionInsideFunction(const char* s1)
 {
     HEAP_CHECK();
     char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -238,7 +220,7 @@ char* find6(const char* s1)
 
 
 // function which checks if each variable (one that begins with a small letter and it's not a default/user-defined function) from a given expression was declared
-bool check1(const char* s1)
+bool areAllVariablesInsideAnExpressionDeclared(const char* s1)
 {
     HEAP_CHECK();
     char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -314,7 +296,7 @@ bool check1(const char* s1)
 
 
 // function which checks if each variable from a given expression was assigned to a value, and returns false if not
-bool check2(const char* s1)
+bool areAllVariablesInsideAnExpressionAssigned(const char* s1)
 {
     HEAP_CHECK();
     char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -343,7 +325,7 @@ bool check2(const char* s1)
 
 
 // function which checks if each variable from a given expression (which is inside a function) is declared as a header or local variable in the current function (indicated by a global index) or outside the function
-bool check3(const char* s1)
+bool areAllVariablesInsideAnExpressionInsideFunctionDeclared(const char* s1)
 {
     HEAP_CHECK();
     char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -406,7 +388,7 @@ bool check3(const char* s1)
 
 
 // function which checks if each variable from a given expression (which is inside a function) is assigned as a header or local variable in the current function (indicated by a global index) or as a global variable outside the function
-bool check4(const char* s1)
+bool areAllVariablesInsideAnExpressionInsideFunctionAssigned(const char* s1)
 {
     HEAP_CHECK();
     char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -465,7 +447,7 @@ bool check4(const char* s1)
 
 
 // function which checks if the given variable corresponds to a header/local variable of the current function or to a global variable and if its type is the same as the current function's return type
-bool check5(const char* s1)
+bool isVariableValidAndHasSameReturnTypeAsCurrentFunction(const char* s1)
 {
     HEAP_CHECK();
     bool found = false;
@@ -541,7 +523,7 @@ bool check5(const char* s1)
 
 
 // function which checks if the phrase "length_mismatch_error" is found within a string (for error checking of length mismatch operations)
-bool check6(const char* s1)
+bool isLengthMismatchErrorMessageFoundInsideExpression(const char* s1)
 {
     HEAP_CHECK();
     char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -560,29 +542,9 @@ bool check6(const char* s1)
     return false;    // there is no length mismatch error contained in the given expression
 }
 
-// function which checks if the phrase "wrong_type_error" is found within a string (for error checking of operations between variables)
-bool check7(const char* s1)
-{
-    HEAP_CHECK();
-    char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
-    char *pch;
-    pch = strtok(cs1, " -+*/()<>!=,");
-    while(pch != NULL)
-    {
-        if(strcmp(pch, "wrong_type_error") == 0)
-        {
-            HEAP_CHECK();
-            return true;
-        }
-        pch = strtok (NULL, " -+*/()<>!=,");
-    }
-    HEAP_CHECK();
-    return false;
-}
-
 
 // function which checks if a given array of variables corresponds to a given array of types
-bool check8(const char *variable_name_list, const char *variable_type_list)
+bool isValidMappingBetweenListOfVariablesAndListOfTypes(const char *variable_name_list, const char *variable_type_list)
 {
     HEAP_CHECK();
     char *cvariable_name_list = strdup(variable_name_list);    // we need to make a copy, because the strtok function modifies the given string
@@ -662,7 +624,7 @@ bool check8(const char *variable_name_list, const char *variable_type_list)
 
 
 // function which checks if a given string contains any error message and, if so, it returns the appropriate message
-string check9(const char* s1)
+string getAppropriateErrorIfAny(const char* s1)
 {
     HEAP_CHECK();
     char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -744,7 +706,7 @@ VariableType getType(const char* variable_name)
 
 
 // function which returns the index of a variable, based on its name
-int getIndex1(const char* s1)
+int getIndexOfVariableFromGlobalCPPStructure(const char* s1)
 {
     HEAP_CHECK();
     int i;
@@ -762,7 +724,7 @@ int getIndex1(const char* s1)
 
 
 // function which returns the index of a function, based on its name
-int getIndex2(const char* s1)
+int getIndexOfFunctionFromGlobalCPPStructure(const char* s1)
 {
     HEAP_CHECK();
     int i;
@@ -780,7 +742,7 @@ int getIndex2(const char* s1)
 
 
 // function which returns the size of a variable, based on its name
-GridMapping getSize1(const char* s1)
+GridMapping getGridMappingOfVariable(const char* s1)
 {
     HEAP_CHECK();
     int i;
@@ -798,7 +760,7 @@ GridMapping getSize1(const char* s1)
 
 
 // function which returns the return size of a function, based on its name
-GridMapping getSize2(const char* s1)
+GridMapping getGridMappingOfFunction(const char* s1)
 {
     HEAP_CHECK();
     int i;
@@ -816,7 +778,7 @@ GridMapping getSize2(const char* s1)
 
 
 // function which returns the size of a header/local variable inside the current function, based on its name
-GridMapping getSize3(const char* s1)
+GridMapping getGridMappingOfVariableInsideFunction(const char* s1)
 {
     HEAP_CHECK();
     int i;
@@ -842,7 +804,7 @@ GridMapping getSize3(const char* s1)
 
 
 // function which counts the number of given arguments, separated by '@'
-int getSize4(const char* s1)
+int getNumberOfArgumentsFromFunctionCall(const char* s1)
 {
     HEAP_CHECK();
     char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -860,7 +822,7 @@ int getSize4(const char* s1)
 
 
 // function which receives the start of a function declaration and returns its name
-char* extract(const char* s1)
+char* getFunctionNameFromStartOfDeclaration(const char* s1)
 {
     HEAP_CHECK();
     char *cs1 = strdup(s1);    // we need to make a copy, because the strtok function modifies the given string
@@ -868,17 +830,6 @@ char* extract(const char* s1)
     pch = strtok(cs1, " =");
     HEAP_CHECK();
     return pch;
-}
-
-
-// function used to transfer a string within a structure to a separate memory address (of its own)
-char *structureToString(const char* st)
-{
-    HEAP_CHECK();
-    char *strA = (char*)malloc(sizeof(char)*strlen(st)+1);
-    strcpy(strA, st);
-    HEAP_CHECK();
-    return strA;
 }
 
 
@@ -1029,6 +980,7 @@ GridMapping getGridMapping(const char* st)
 // function used to convert possible error types received when assigning a function call to a variable and converts them to explicit messages
 string errorTypeToErrorMessage(string errorType)
 {
+    // FIXME: why it does not work with mapping?
     // map<string, string> myMap;
 
     // myMap["error1"] = "One function from the assignment is not declared";
@@ -1061,33 +1013,33 @@ string errorTypeToErrorMessage(string errorType)
 
 string functionToAnySingularType(const char *st1, const char *st2, const char *st3, const string &st4)
 {
-    if(getIndex2(st1) == -1)
+    if(getIndexOfFunctionFromGlobalCPPStructure(st1) == -1)
     {
         return "error1: This function does not exist";
     }
-    if(fun[getIndex2(st1)].assigned == false)
+    if(fun[getIndexOfFunctionFromGlobalCPPStructure(st1)].assigned == false)
     {
         return "error2: The function is not assigned";
     }
-    if(strcmp(getCppTypeStringFromVariableType(fun[getIndex2(st1)].type).c_str(), st2) != 0)
+    if(strcmp(getCppTypeStringFromVariableType(fun[getIndexOfFunctionFromGlobalCPPStructure(st1)].type).c_str(), st2) != 0)
     {
         stringstream ss;
         ss << "error3: The return type of the function is not a " << st4 << " type";
         return ss.str();
     }
-    if(fun[getIndex2(st1)].noParam != getSize4(st3))
+    if(fun[getIndexOfFunctionFromGlobalCPPStructure(st1)].noParam != getNumberOfArgumentsFromFunctionCall(st3))
     {
         return "error4: The number of arguments of the function does not correspond to the number of arguments sent";
     }
-    if(check1(st3) == false)
+    if(areAllVariablesInsideAnExpressionDeclared(st3) == false)
     {
         return "error5: One input variable from the function's call is undefined";
     }
-    if(check2(st3) == false)
+    if(areAllVariablesInsideAnExpressionAssigned(st3) == false)
     {
         return "error6: One input variable from the function's call is unassigned";
     }
-    if(check8(st3, strdup(fun[getIndex2(st1)].paramList.c_str())) == false)
+    if(isValidMappingBetweenListOfVariablesAndListOfTypes(st3, strdup(fun[getIndexOfFunctionFromGlobalCPPStructure(st1)].paramList.c_str())) == false)
     {
         return "error7: The parameter list of the template of the function does not correspond to the given parameter list";
     }
@@ -1101,33 +1053,33 @@ string functionToAnySingularType(const char *st1, const char *st2, const char *s
 
 string functionToAnyCollectionType(const char *st1, const char *st2, const char *st3, const string &st4)
 {
-    if(getIndex2(st1) == -1)
+    if(getIndexOfFunctionFromGlobalCPPStructure(st1) == -1)
     {
         return "error1: This function does not exist";
     }
-    if(fun[getIndex2(st1)].assigned == false)
+    if(fun[getIndexOfFunctionFromGlobalCPPStructure(st1)].assigned == false)
     {
         return "error2: The function is not assigned";
     }
-    if(strcmp(getCppTypeStringFromVariableType(fun[getIndex2(st1)].type).c_str(), st2) != 0)
+    if(strcmp(getCppTypeStringFromVariableType(fun[getIndexOfFunctionFromGlobalCPPStructure(st1)].type).c_str(), st2) != 0)
     {
         stringstream ss;
         ss << "error3: The return type of the function is not a collection of " << st4 << " type";
         return ss.str();
     }
-    if(fun[getIndex2(st1)].noParam != getSize4(st3))
+    if(fun[getIndexOfFunctionFromGlobalCPPStructure(st1)].noParam != getNumberOfArgumentsFromFunctionCall(st3))
     {
         return "error4: The number of arguments of the function does not correspond to the number of arguments sent";
     }
-    if(check1(st3) == false)
+    if(areAllVariablesInsideAnExpressionDeclared(st3) == false)
     {
         return "error5: One input variable from the function's call is undefined";
     }
-    if(check2(st3) == false)
+    if(areAllVariablesInsideAnExpressionAssigned(st3) == false)
     {
         return "error6: One input variable from the function's call is unassigned";
     }
-    if(check8(st3, strdup(fun[getIndex2(st1)].paramList.c_str())) == false)
+    if(isValidMappingBetweenListOfVariablesAndListOfTypes(st3, strdup(fun[getIndexOfFunctionFromGlobalCPPStructure(st1)].paramList.c_str())) == false)
     {
         return "error7: The parameter list of the template of the function does not correspond to the given parameter list";
     }
@@ -1294,26 +1246,18 @@ string extended_plural_declaration_function(const char* variable_name, EntityTyp
                     }
                     else
                     {
-                        if(check7(st3) == true)
-                        {
-                            stringstream ss;
-                            ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the ON expression of the variable '" << variable_name << "'";
-                            finalString = ss.str();
-                        }
-                        else
-                        {
-                            if(check3(st3) == false)
+                            if(areAllVariablesInsideAnExpressionInsideFunctionDeclared(st3) == false)
                             {
                                 stringstream ss;
-                                ss << "error at line " << currentLineNumber << ": The variable '" << find5(st3) << "' contained in the ON expression of the variable '" << variable_name << "' is undeclared";
+                                ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUndeclaredVariableFromExpressionInsideFunction(st3) << "' contained in the ON expression of the variable '" << variable_name << "' is undeclared";
                                 finalString = ss.str();
                             }
                             else
                             {
-                                if(check4(st3) == false)
+                                if(areAllVariablesInsideAnExpressionInsideFunctionAssigned(st3) == false)
                                 {
                                     stringstream ss;
-                                    ss << "error at line " << currentLineNumber << ": The variable '" << find6(st3) << "' contained in the ON expression of the variable '" << variable_name << "' is unassigned";
+                                    ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUnassignedVariableFromExpressionInsideFunction(st3) << "' contained in the ON expression of the variable '" << variable_name << "' is unassigned";
                                     finalString = ss.str();
                                 }
                                 else
@@ -1326,7 +1270,6 @@ string extended_plural_declaration_function(const char* variable_name, EntityTyp
                                     fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = false;
                                 }
                             }
-                        }
                     }
             }
     }
@@ -1350,26 +1293,18 @@ string extended_plural_declaration_function(const char* variable_name, EntityTyp
             }
             else
             {
-                if(check7(st3) == true)
-                {
-                    stringstream ss;
-                    ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the ON expression of the variable '" << variable_name << "'";
-                    finalString = ss.str();
-                }
-                else
-                {
-                    if(check1(st3) == false)
+                    if(areAllVariablesInsideAnExpressionDeclared(st3) == false)
                     {
                         stringstream ss;
-                        ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the ON expression of the variable '" << variable_name << "' is undeclared";
+                        ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUndeclaredVariableFromExpression(st3) << "' contained in the ON expression of the variable '" << variable_name << "' is undeclared";
                         finalString = ss.str();
                     }
                     else
                     {
-                        if(check2(st3) == false)
+                        if(areAllVariablesInsideAnExpressionAssigned(st3) == false)
                         {
                             stringstream ss;
-                            ss << "error at line " << currentLineNumber << ": The variable '" << find3(st3) << "' contained in the ON expression of the variable '" << variable_name << "' is unassigned";
+                            ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUnassignedVariableFromExpression(st3) << "' contained in the ON expression of the variable '" << variable_name << "' is unassigned";
                             finalString = ss.str();
                         }
                         else
@@ -1382,7 +1317,6 @@ string extended_plural_declaration_function(const char* variable_name, EntityTyp
                             var[varNo-1].type.collection = true;
                         }
                     }
-                }
             }
     }
 
@@ -1433,15 +1367,15 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                         }
                         else
                         {
-                            if(check9(rhs->str.c_str()) != "isOk")
+                            if(getAppropriateErrorIfAny(rhs->str.c_str()) != "isOk")
                             {
                                 stringstream ss;
-                                ss << "error at line " << currentLineNumber << ": " << check9(rhs->str.c_str());
+                                ss << "error at line " << currentLineNumber << ": " << getAppropriateErrorIfAny(rhs->str.c_str());
                                 finalString = ss.str();
                             }
                             else
                             {
-                                if(check6(rhs->str.c_str()) == true)
+                                if(isLengthMismatchErrorMessageFoundInsideExpression(rhs->str.c_str()) == true)
                                 {
                                     stringstream ss;
                                     ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -1449,7 +1383,7 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                                 }
                                 else
                                 {
-                                    if(find1(rhs->str.c_str(), variable_name))
+                                    if(isVariableContainedInItsOwnAssignment(rhs->str.c_str(), variable_name))
                                     {
                                         stringstream ss;
                                         ss << "error at line " << currentLineNumber << ": The variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
@@ -1457,36 +1391,27 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                                     }
                                     else
                                     {
-                                        if(check3(rhs->str.c_str()) == false)
+                                        if(areAllVariablesInsideAnExpressionInsideFunctionDeclared(rhs->str.c_str()) == false)
                                         {
                                             stringstream ss;
-                                            ss << "error at line " << currentLineNumber << ": The variable '" << find5(rhs->str.c_str()) << "' contained in the definition of the " << getCppTypeStringFromVariableType(rhs->type) << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
+                                            ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUndeclaredVariableFromExpressionInsideFunction(rhs->str.c_str()) << "' contained in the definition of the " << getCppTypeStringFromVariableType(rhs->type) << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
                                             finalString = ss.str();
                                         }
                                         else
                                         {
-                                            if(check4(rhs->str.c_str()) == false)
+                                            if(areAllVariablesInsideAnExpressionInsideFunctionAssigned(rhs->str.c_str()) == false)
                                             {
                                                 stringstream ss;
-                                                ss << "error at line " << currentLineNumber << ": The variable '" << find6(rhs->str.c_str()) << "' contained in the definition of the " << getCppTypeStringFromVariableType(rhs->type) << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
+                                                ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUnassignedVariableFromExpressionInsideFunction(rhs->str.c_str()) << "' contained in the definition of the " << getCppTypeStringFromVariableType(rhs->type) << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
                                                 finalString = ss.str();
                                             }
                                             else
                                             {
-                                                if(check7(rhs->str.c_str()) == true)
-                                                {
-                                                    stringstream ss;
-                                                    ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment rhs->str of the variable '" << variable_name << "'";
-                                                    finalString = ss.str();
-                                                }
-                                                else
-                                                {
                                                     fun[currentFunctionIndex].localVariables[i].assigned = true;
                                                     fun[currentFunctionIndex].localVariables[i].array_size = rhs->array_size;
                                                     stringstream ss;
                                                     ss << "const " << getCppTypeStringFromVariableType(rhs->type)  << " " << variable_name << " = " << rhs->str << ";";
                                                     finalString = ss.str();
-                                                }
                                             }
                                         }
                                     }
@@ -1495,15 +1420,15 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                         }
                     else
                     {   // deduced declaration
-                        if(check9(rhs->str.c_str()) != "isOk")
+                        if(getAppropriateErrorIfAny(rhs->str.c_str()) != "isOk")
                         {
                             stringstream ss;
-                            ss << "error at line " << currentLineNumber << ": " << check9(rhs->str.c_str());
+                            ss << "error at line " << currentLineNumber << ": " << getAppropriateErrorIfAny(rhs->str.c_str());
                             finalString = ss.str();
                         }
                         else
                         {
-                            if(check6(rhs->str.c_str()) == true)
+                            if(isLengthMismatchErrorMessageFoundInsideExpression(rhs->str.c_str()) == true)
                             {
                                 stringstream ss;
                                 ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -1511,7 +1436,7 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                             }
                             else
                             {
-                                if(find1(rhs->str.c_str(), variable_name))
+                                if(isVariableContainedInItsOwnAssignment(rhs->str.c_str(), variable_name))
                                 {
                                     stringstream ss;
                                     ss << "error at line " << currentLineNumber << ": The " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
@@ -1519,30 +1444,22 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                                 }
                                 else
                                 {
-                                    if(check3(rhs->str.c_str()) == false)
+                                    if(areAllVariablesInsideAnExpressionInsideFunctionDeclared(rhs->str.c_str()) == false)
                                     {
                                         stringstream ss;
-                                        ss << "error at line " << currentLineNumber << ": The variable '" << find5(rhs->str.c_str()) << "' contained in the definition of the " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
+                                        ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUndeclaredVariableFromExpressionInsideFunction(rhs->str.c_str()) << "' contained in the definition of the " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
                                         finalString = ss.str();
                                     }
                                     else
                                     {
-                                        if(check4(rhs->str.c_str()) == false)
+                                        if(areAllVariablesInsideAnExpressionInsideFunctionAssigned(rhs->str.c_str()) == false)
                                         {
                                             stringstream ss;
-                                            ss << "error at line " << currentLineNumber << ": The variable '" << find6(rhs->str.c_str()) << "' contained in the definition of the " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
+                                            ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUnassignedVariableFromExpressionInsideFunction(rhs->str.c_str()) << "' contained in the definition of the " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
                                             finalString = ss.str();
                                         }
                                         else
                                         {
-                                            if(check7(rhs->str.c_str()) == true)
-                                            {
-                                                stringstream ss;
-                                                ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment rhs->str of the " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "'";
-                                                finalString = ss.str();
-                                            }
-                                            else
-                                            {
                                                 stringstream ss;
                                                 ss << "const " << getCppTypeStringFromVariableType(rhs->type)  << " " << variable_name << " = " << rhs->str << ";";
                                                 finalString = ss.str();
@@ -1551,7 +1468,6 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                                                 fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = GRID_MAPPING_ENTITY;
                                                 fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].array_size = rhs->array_size;
                                                 fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
-                                            }
                                         }
                                     }
                                 }
@@ -1581,15 +1497,15 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                 }
                 else
                 {
-                    if(check9(rhs->str.c_str()) != "isOk")
+                    if(getAppropriateErrorIfAny(rhs->str.c_str()) != "isOk")
                     {
                         stringstream ss;
-                        ss << "error at line " << currentLineNumber << ": " << check9(rhs->str.c_str());
+                        ss << "error at line " << currentLineNumber << ": " << getAppropriateErrorIfAny(rhs->str.c_str());
                         finalString = ss.str();
                     }
                     else
                     {
-                        if(check6(rhs->str.c_str()) == true)
+                        if(isLengthMismatchErrorMessageFoundInsideExpression(rhs->str.c_str()) == true)
                         {
                             stringstream ss;
                             ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -1597,7 +1513,7 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                         }
                         else
                         {
-                            if(find1(rhs->str.c_str(), variable_name))
+                            if(isVariableContainedInItsOwnAssignment(rhs->str.c_str(), variable_name))
                             {
                                 stringstream ss;
                                 ss << "error at line " << currentLineNumber << ": The " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is included in its definition";
@@ -1605,36 +1521,27 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                             }
                             else
                             {
-                                if(check1(rhs->str.c_str()) == false)
+                                if(areAllVariablesInsideAnExpressionDeclared(rhs->str.c_str()) == false)
                                 {
                                     stringstream ss;
-                                    ss << "error at line " << currentLineNumber << ": The variable '" << find2(rhs->str.c_str()) << "' contained in the definition of the " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is undeclared";
+                                    ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUndeclaredVariableFromExpression(rhs->str.c_str()) << "' contained in the definition of the " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is undeclared";
                                     finalString = ss.str();
                                 }
                                 else
                                 {
-                                    if(check2(rhs->str.c_str()) == false)
+                                    if(areAllVariablesInsideAnExpressionAssigned(rhs->str.c_str()) == false)
                                     {
                                         stringstream ss;
-                                        ss << "error at line " << currentLineNumber << ": The variable '" << find3(rhs->str.c_str()) << "' contained in the definition of the " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is unassigned";
+                                        ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUnassignedVariableFromExpression(rhs->str.c_str()) << "' contained in the definition of the " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is unassigned";
                                         finalString = ss.str();
                                     }
                                     else
                                     {
-                                        if(check7(rhs->str.c_str()) == true)
-                                        {
-                                            stringstream ss;
-                                            ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment rhs->str of the " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "'";
-                                            finalString = ss.str();
-                                        }
-                                        else
-                                        {
                                             var[i].assigned = true;
                                             var[i].array_size = rhs->array_size;
                                             stringstream ss;
                                             ss << "const " << getCppTypeStringFromVariableType(rhs->type)  << " " << variable_name << " = " << rhs->str << ";";
                                             finalString = ss.str();
-                                        }
                                     }
                                 }
                             }
@@ -1644,15 +1551,15 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
             else
             {
                 // deduced declaration
-                if(check9(rhs->str.c_str()) != "isOk")
+                if(getAppropriateErrorIfAny(rhs->str.c_str()) != "isOk")
                 {
                     stringstream ss;
-                    ss << "error at line " << currentLineNumber << ": " << check9(rhs->str.c_str());
+                    ss << "error at line " << currentLineNumber << ": " << getAppropriateErrorIfAny(rhs->str.c_str());
                     finalString = ss.str();
                 }
                 else
                 {
-                    if(check6(rhs->str.c_str()) == true)
+                    if(isLengthMismatchErrorMessageFoundInsideExpression(rhs->str.c_str()) == true)
                     {
                         stringstream ss;
                         ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -1660,7 +1567,7 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                     }
                     else
                     {
-                        if(find1(rhs->str.c_str(), variable_name))
+                        if(isVariableContainedInItsOwnAssignment(rhs->str.c_str(), variable_name))
                         {
                             stringstream ss;
                             ss << "error at line " << currentLineNumber << ": The " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is included in its definition";
@@ -1668,30 +1575,22 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                         }
                         else
                         {
-                            if(check1(rhs->str.c_str()) == false)
+                            if(areAllVariablesInsideAnExpressionDeclared(rhs->str.c_str()) == false)
                             {
                                 stringstream ss;
-                                ss << "error at line " << currentLineNumber << ": The variable '" << find2(rhs->str.c_str()) << "' contained in the definition of the " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is undeclared";
+                                ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUndeclaredVariableFromExpression(rhs->str.c_str()) << "' contained in the definition of the " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is undeclared";
                                 finalString = ss.str();
                             }
                             else
                             {
-                                if(check2(rhs->str.c_str()) == false)
+                                if(areAllVariablesInsideAnExpressionAssigned(rhs->str.c_str()) == false)
                                 {
                                     stringstream ss;
-                                    ss << "error at line " << currentLineNumber << ": The variable '" << find3(rhs->str.c_str()) << "' contained in the definition of the " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is unassigned";
+                                    ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUnassignedVariableFromExpression(rhs->str.c_str()) << "' contained in the definition of the " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "' is unassigned";
                                     finalString = ss.str();
                                 }
                                 else
                                 {
-                                    if(check7(rhs->str.c_str()) == true)
-                                    {
-                                        stringstream ss;
-                                        ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment rhs->str of the " << getCppTypeStringFromVariableType(rhs->type)  << " variable '" << variable_name << "'";
-                                        finalString = ss.str();
-                                    }
-                                    else
-                                    {
                                         stringstream ss;
                                         ss << "const " << getCppTypeStringFromVariableType(rhs->type)  << " " << variable_name << " = " << rhs->str << ";";
                                         finalString = ss.str();
@@ -1700,7 +1599,6 @@ string singular_assignment_function(const char* variable_name, const info* rhs)
                                         var[varNo-1].grid_mapping = GRID_MAPPING_ENTITY;
                                         var[varNo-1].assigned = true;
                                         var[varNo-1].array_size = rhs->array_size;
-                                    }
                                 }
                             }
                         }
@@ -1754,15 +1652,15 @@ string plural_assignment_function(const char* variable_name, const info* rhs)
                         }
                         else
                         {
-                            if(check9(rhs->str.c_str()) != "isOk")
+                            if(getAppropriateErrorIfAny(rhs->str.c_str()) != "isOk")
                             {
                                 stringstream ss;
-                                ss << "error at line " << currentLineNumber << ": " << check9(rhs->str.c_str());
+                                ss << "error at line " << currentLineNumber << ": " << getAppropriateErrorIfAny(rhs->str.c_str());
                                 finalString = ss.str();
                             }
                             else
                             {
-                                if(check6(rhs->str.c_str()) == true)
+                                if(isLengthMismatchErrorMessageFoundInsideExpression(rhs->str.c_str()) == true)
                                 {
                                     stringstream ss;
                                     ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -1770,7 +1668,7 @@ string plural_assignment_function(const char* variable_name, const info* rhs)
                                 }
                                 else
                                 {
-                                    if(find1(rhs->str.c_str(), variable_name))
+                                    if(isVariableContainedInItsOwnAssignment(rhs->str.c_str(), variable_name))
                                     {
                                         stringstream ss;
                                         ss << "error at line " << currentLineNumber << ": The variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
@@ -1778,32 +1676,24 @@ string plural_assignment_function(const char* variable_name, const info* rhs)
                                     }
                                     else
                                     {
-                                        if(check3(rhs->str.c_str()) == false)
+                                        if(areAllVariablesInsideAnExpressionInsideFunctionDeclared(rhs->str.c_str()) == false)
                                         {
                                             stringstream ss;
-                                            ss << "error at line " << currentLineNumber << ": The variable '" << find5(rhs->str.c_str()) << "' contained in the definition of the variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
+                                            ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUndeclaredVariableFromExpressionInsideFunction(rhs->str.c_str()) << "' contained in the definition of the variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
                                             finalString = ss.str();
                                         }
                                         else
                                         {
-                                            if(check4(rhs->str.c_str()) == false)
+                                            if(areAllVariablesInsideAnExpressionInsideFunctionAssigned(rhs->str.c_str()) == false)
                                             {
                                                 stringstream ss;
-                                                ss << "error at line " << currentLineNumber << ": The variable '" << find6(rhs->str.c_str()) << "' contained in the definition of the variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
+                                                ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUnassignedVariableFromExpressionInsideFunction(rhs->str.c_str()) << "' contained in the definition of the variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
                                                 finalString = ss.str();
                                             }
                                             else
                                             {
-                                                if(check7(rhs->str.c_str()) == true)
-                                                {
-                                                    stringstream ss;
-                                                    ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the variable '" << variable_name << "'";
-                                                    finalString = ss.str();
-                                                }
-                                                else
-                                                {
-                                                    if(getSize3(variable_name) != rhs->grid_mapping)
-                                                        if(getSize3(variable_name) == GRID_MAPPING_ANY)
+                                                    if(getGridMappingOfVariableInsideFunction(variable_name) != rhs->grid_mapping)
+                                                        if(getGridMappingOfVariableInsideFunction(variable_name) == GRID_MAPPING_ANY)
                                                         {
                                                             fun[currentFunctionIndex].localVariables[i].grid_mapping = rhs->grid_mapping;
                                                             fun[currentFunctionIndex].localVariables[i].assigned = true;
@@ -1826,7 +1716,6 @@ string plural_assignment_function(const char* variable_name, const info* rhs)
                                                         fun[currentFunctionIndex].localVariables[i].assigned = true;
                                                         fun[currentFunctionIndex].localVariables[i].array_size = rhs->array_size;
                                                     }
-                                                }
                                             }
                                         }
                                     }
@@ -1835,15 +1724,15 @@ string plural_assignment_function(const char* variable_name, const info* rhs)
                         }
                     else
                     {   // deduced declaration
-                        if(check9(rhs->str.c_str()) != "isOk")
+                        if(getAppropriateErrorIfAny(rhs->str.c_str()) != "isOk")
                         {
                             stringstream ss;
-                            ss << "error at line " << currentLineNumber << ": " << check9(rhs->str.c_str());
+                            ss << "error at line " << currentLineNumber << ": " << getAppropriateErrorIfAny(rhs->str.c_str());
                             finalString = ss.str();
                         }
                         else
                         {
-                            if(check6(rhs->str.c_str()) == true)
+                            if(isLengthMismatchErrorMessageFoundInsideExpression(rhs->str.c_str()) == true)
                             {
                                 stringstream ss;
                                 ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -1851,7 +1740,7 @@ string plural_assignment_function(const char* variable_name, const info* rhs)
                             }
                             else
                             {
-                                if(find1(rhs->str.c_str(), variable_name))
+                                if(isVariableContainedInItsOwnAssignment(rhs->str.c_str(), variable_name))
                                 {
                                     stringstream ss;
                                     ss << "error at line " << currentLineNumber << ": The variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
@@ -1859,30 +1748,22 @@ string plural_assignment_function(const char* variable_name, const info* rhs)
                                 }
                                 else
                                 {
-                                    if(check3(rhs->str.c_str()) == false)
+                                    if(areAllVariablesInsideAnExpressionInsideFunctionDeclared(rhs->str.c_str()) == false)
                                     {
                                         stringstream ss;
-                                        ss << "error at line " << currentLineNumber << ": The variable '" << find5(rhs->str.c_str()) << "' contained in the definition of the variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
+                                        ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUndeclaredVariableFromExpressionInsideFunction(rhs->str.c_str()) << "' contained in the definition of the variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
                                         finalString = ss.str();
                                     }
                                     else
                                     {
-                                        if(check4(rhs->str.c_str()) == false)
+                                        if(areAllVariablesInsideAnExpressionInsideFunctionAssigned(rhs->str.c_str()) == false)
                                         {
                                             stringstream ss;
-                                            ss << "error at line " << currentLineNumber << ": The variable '" << find6(rhs->str.c_str()) << "' contained in the definition of the variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
+                                            ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUnassignedVariableFromExpressionInsideFunction(rhs->str.c_str()) << "' contained in the definition of the variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
                                             finalString = ss.str();
                                         }
                                         else
                                         {
-                                            if(check7(rhs->str.c_str()) == true)
-                                            {
-                                                stringstream ss;
-                                                ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the variable '" << variable_name << "'";
-                                                finalString = ss.str();
-                                            }
-                                            else
-                                            {
                                                 stringstream ss;
                                                 ss << "const " << getCppTypeStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
                                                 finalString = ss.str();
@@ -1891,7 +1772,6 @@ string plural_assignment_function(const char* variable_name, const info* rhs)
                                                 fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = rhs->grid_mapping;
                                                 fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
                                                 fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].array_size = rhs->array_size;
-                                            }
                                         }
                                     }
                                 }
@@ -1921,15 +1801,15 @@ string plural_assignment_function(const char* variable_name, const info* rhs)
                 }
                 else
                 {
-                    if(check9(rhs->str.c_str()) != "isOk")
+                    if(getAppropriateErrorIfAny(rhs->str.c_str()) != "isOk")
                     {
                         stringstream ss;
-                        ss << "error at line " << currentLineNumber << ": " << check9(rhs->str.c_str());
+                        ss << "error at line " << currentLineNumber << ": " << getAppropriateErrorIfAny(rhs->str.c_str());
                         finalString = ss.str();
                     }
                     else
                     {
-                        if(check6(rhs->str.c_str()) == true)
+                        if(isLengthMismatchErrorMessageFoundInsideExpression(rhs->str.c_str()) == true)
                         {
                             stringstream ss;
                             ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -1937,7 +1817,7 @@ string plural_assignment_function(const char* variable_name, const info* rhs)
                         }
                         else
                         {
-                            if(find1(rhs->str.c_str(), variable_name))
+                            if(isVariableContainedInItsOwnAssignment(rhs->str.c_str(), variable_name))
                             {
                                 stringstream ss;
                                 ss << "error at line " << currentLineNumber << ": The variable '" << variable_name << "' is included in its definition";
@@ -1945,32 +1825,24 @@ string plural_assignment_function(const char* variable_name, const info* rhs)
                             }
                             else
                             {
-                                if(check1(rhs->str.c_str()) == false)
+                                if(areAllVariablesInsideAnExpressionDeclared(rhs->str.c_str()) == false)
                                 {
                                     stringstream ss;
-                                    ss << "error at line " << currentLineNumber << ": The variable '" << find2(rhs->str.c_str()) << "' contained in the definition of the variable '" << variable_name << "' is undeclared";
+                                    ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUndeclaredVariableFromExpression(rhs->str.c_str()) << "' contained in the definition of the variable '" << variable_name << "' is undeclared";
                                     finalString = ss.str();
                                 }
                                 else
                                 {
-                                    if(check2(rhs->str.c_str()) == false)
+                                    if(areAllVariablesInsideAnExpressionAssigned(rhs->str.c_str()) == false)
                                     {
                                         stringstream ss;
-                                        ss << "error at line " << currentLineNumber << ": The variable '" << find3(rhs->str.c_str()) << "' contained in the definition of the variable '" << variable_name << "' is unassigned";
+                                        ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUnassignedVariableFromExpression(rhs->str.c_str()) << "' contained in the definition of the variable '" << variable_name << "' is unassigned";
                                         finalString = ss.str();
                                     }
                                     else
                                     {
-                                        if(check7(rhs->str.c_str()) == true)
-                                        {
-                                            stringstream ss;
-                                            ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the variable '" << variable_name << "'";
-                                            finalString = ss.str();
-                                        }
-                                        else
-                                        {
-                                            if(getSize1(variable_name) != rhs->grid_mapping)
-                                                if(getSize1(variable_name) == GRID_MAPPING_ANY)
+                                            if(getGridMappingOfVariable(variable_name) != rhs->grid_mapping)
+                                                if(getGridMappingOfVariable(variable_name) == GRID_MAPPING_ANY)
                                                 {
                                                     var[i].grid_mapping = rhs->grid_mapping;
                                                     var[i].array_size = rhs->array_size;
@@ -1993,7 +1865,6 @@ string plural_assignment_function(const char* variable_name, const info* rhs)
                                                 var[i].assigned = true;
                                                 var[i].array_size = rhs->array_size;
                                             }
-                                        }
                                     }
                                 }
                             }
@@ -2003,15 +1874,15 @@ string plural_assignment_function(const char* variable_name, const info* rhs)
             else
             {
                 // deduced declaration
-                if(check9(rhs->str.c_str()) != "isOk")
+                if(getAppropriateErrorIfAny(rhs->str.c_str()) != "isOk")
                 {
                     stringstream ss;
-                    ss << "error at line " << currentLineNumber << ": " << check9(rhs->str.c_str());
+                    ss << "error at line " << currentLineNumber << ": " << getAppropriateErrorIfAny(rhs->str.c_str());
                     finalString = ss.str();
                 }
                 else
                 {
-                    if(check6(rhs->str.c_str()) == true)
+                    if(isLengthMismatchErrorMessageFoundInsideExpression(rhs->str.c_str()) == true)
                     {
                         stringstream ss;
                         ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -2019,7 +1890,7 @@ string plural_assignment_function(const char* variable_name, const info* rhs)
                     }
                     else
                     {
-                        if(find1(rhs->str.c_str(), variable_name))
+                        if(isVariableContainedInItsOwnAssignment(rhs->str.c_str(), variable_name))
                         {
                             stringstream ss;
                             ss << "error at line " << currentLineNumber << ": The variable '" << variable_name << "' is included in its definition";
@@ -2027,30 +1898,22 @@ string plural_assignment_function(const char* variable_name, const info* rhs)
                         }
                         else
                         {
-                            if(check1(rhs->str.c_str()) == false)
+                            if(areAllVariablesInsideAnExpressionDeclared(rhs->str.c_str()) == false)
                             {
                                 stringstream ss;
-                                ss << "error at line " << currentLineNumber << ": The variable '" << find2(rhs->str.c_str()) << "' contained in the definition of the variable '" << variable_name << "' is undeclared";
+                                ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUndeclaredVariableFromExpression(rhs->str.c_str()) << "' contained in the definition of the variable '" << variable_name << "' is undeclared";
                                 finalString = ss.str();
                             }
                             else
                             {
-                                if(check2(rhs->str.c_str()) == false)
+                                if(areAllVariablesInsideAnExpressionAssigned(rhs->str.c_str()) == false)
                                 {
                                     stringstream ss;
-                                    ss << "error at line " << currentLineNumber << ": The variable '" << find3(rhs->str.c_str()) << "' contained in the definition of the variable '" << variable_name << "' is unassigned";
+                                    ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUnassignedVariableFromExpression(rhs->str.c_str()) << "' contained in the definition of the variable '" << variable_name << "' is unassigned";
                                     finalString = ss.str();
                                 }
                                 else
                                 {
-                                    if(check7(rhs->str.c_str()) == true)
-                                    {
-                                        stringstream ss;
-                                        ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the variable '" << variable_name << "'";
-                                        finalString = ss.str();
-                                    }
-                                    else
-                                    {
                                         stringstream ss;
                                         ss << "const " << getCppTypeStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
                                         finalString = ss.str();
@@ -2059,7 +1922,6 @@ string plural_assignment_function(const char* variable_name, const info* rhs)
                                         var[varNo-1].grid_mapping = rhs->grid_mapping;
                                         var[varNo-1].assigned = true;
                                         var[varNo-1].array_size = rhs->array_size;
-                                    }
                                 }
                             }
                         }
@@ -2112,15 +1974,15 @@ string declaration_with_assignment_function(const char* variable_name, const inf
                     }
                     else
                     {
-                        if(check9(rhs->str.c_str()) != "isOk")
+                        if(getAppropriateErrorIfAny(rhs->str.c_str()) != "isOk")
                         {
                             stringstream ss;
-                            ss << "error at line " << currentLineNumber << ": " << check9(rhs->str.c_str());
+                            ss << "error at line " << currentLineNumber << ": " << getAppropriateErrorIfAny(rhs->str.c_str());
                             finalString = ss.str();
                         }
                         else
                         {
-                            if(check6(rhs->str.c_str()) == true)
+                            if(isLengthMismatchErrorMessageFoundInsideExpression(rhs->str.c_str()) == true)
                             {
                                 stringstream ss;
                                 ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -2128,7 +1990,7 @@ string declaration_with_assignment_function(const char* variable_name, const inf
                             }
                             else
                             {
-                                if(find1(rhs->str.c_str(), variable_name))
+                                if(isVariableContainedInItsOwnAssignment(rhs->str.c_str(), variable_name))
                                 {
                                     stringstream ss;
                                     ss << "error at line " << currentLineNumber << ": The variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
@@ -2136,30 +1998,22 @@ string declaration_with_assignment_function(const char* variable_name, const inf
                                 }
                                 else
                                 {
-                                    if(check3(rhs->str.c_str()) == false)
+                                    if(areAllVariablesInsideAnExpressionInsideFunctionDeclared(rhs->str.c_str()) == false)
                                     {
                                         stringstream ss;
-                                        ss << "error at line " << currentLineNumber << ": The variable '" << find5(rhs->str.c_str()) << "' contained in the definition of the variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
+                                        ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUndeclaredVariableFromExpressionInsideFunction(rhs->str.c_str()) << "' contained in the definition of the variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
                                         finalString = ss.str();
                                     }
                                     else
                                     {
-                                        if(check4(rhs->str.c_str()) == false)
+                                        if(areAllVariablesInsideAnExpressionInsideFunctionAssigned(rhs->str.c_str()) == false)
                                         {
                                             stringstream ss;
-                                            ss << "error at line " << currentLineNumber << ": The variable '" << find6(rhs->str.c_str()) << "' contained in the definition of the variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
+                                            ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUnassignedVariableFromExpressionInsideFunction(rhs->str.c_str()) << "' contained in the definition of the variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
                                             finalString = ss.str();
                                         }
                                         else
                                         {
-                                            if(check7(rhs->str.c_str()) == true)
-                                            {
-                                                stringstream ss;
-                                                ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the variable '" << variable_name << "'";
-                                                finalString = ss.str();
-                                            }
-                                            else
-                                            {
                                                 stringstream ss;
                                                 ss << "const " << getCppTypeStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
                                                 finalString = ss.str();
@@ -2168,7 +2022,6 @@ string declaration_with_assignment_function(const char* variable_name, const inf
                                                 fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].array_size = rhs->array_size;
                                                 fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].grid_mapping = rhs->grid_mapping;
                                                 fun[currentFunctionIndex].localVariables[fun[currentFunctionIndex].noLocalVariables-1].assigned = true;
-                                            }
                                         }
                                     }
                                 }
@@ -2197,15 +2050,15 @@ string declaration_with_assignment_function(const char* variable_name, const inf
             }
             else
             {
-                if(check9(rhs->str.c_str()) != "isOk")
+                if(getAppropriateErrorIfAny(rhs->str.c_str()) != "isOk")
                 {
                     stringstream ss;
-                    ss << "error at line " << currentLineNumber << ": " << check9(rhs->str.c_str());
+                    ss << "error at line " << currentLineNumber << ": " << getAppropriateErrorIfAny(rhs->str.c_str());
                     finalString = ss.str();
                 }
                 else
                 {
-                    if(check6(rhs->str.c_str()) == true)
+                    if(isLengthMismatchErrorMessageFoundInsideExpression(rhs->str.c_str()) == true)
                     {
                         stringstream ss;
                         ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -2213,7 +2066,7 @@ string declaration_with_assignment_function(const char* variable_name, const inf
                     }
                     else
                     {
-                        if(find1(rhs->str.c_str(), variable_name))
+                        if(isVariableContainedInItsOwnAssignment(rhs->str.c_str(), variable_name))
                         {
                             stringstream ss;
                             ss << "error at line " << currentLineNumber << ": The variable '" << variable_name << "' is included in its definition";
@@ -2221,30 +2074,22 @@ string declaration_with_assignment_function(const char* variable_name, const inf
                         }
                         else
                         {
-                            if(check1(rhs->str.c_str()) == false)
+                            if(areAllVariablesInsideAnExpressionDeclared(rhs->str.c_str()) == false)
                             {
                                 stringstream ss;
-                                ss << "error at line " << currentLineNumber << ": The variable '" << find2(rhs->str.c_str()) << "' contained in the definition of the variable '" << variable_name << "' is undeclared";
+                                ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUndeclaredVariableFromExpression(rhs->str.c_str()) << "' contained in the definition of the variable '" << variable_name << "' is undeclared";
                                 finalString = ss.str();
                             }
                             else
                             {
-                                if(check2(rhs->str.c_str()) == false)
+                                if(areAllVariablesInsideAnExpressionAssigned(rhs->str.c_str()) == false)
                                 {
                                     stringstream ss;
-                                    ss << "error at line " << currentLineNumber << ": The variable '" << find3(rhs->str.c_str()) << "' contained in the definition of the variable '" << variable_name << "' is unassigned";
+                                    ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUnassignedVariableFromExpression(rhs->str.c_str()) << "' contained in the definition of the variable '" << variable_name << "' is unassigned";
                                     finalString = ss.str();
                                 }
                                 else
                                 {
-                                    if(check7(rhs->str.c_str()) == true)
-                                    {
-                                        stringstream ss;
-                                        ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the variable '" << variable_name << "'";
-                                        finalString = ss.str();
-                                    }
-                                    else
-                                    {
                                         stringstream ss;
                                         ss << "const " << getCppTypeStringFromVariableType(rhs->type) << " " << variable_name << " = " << rhs->str << ";";
                                         finalString = ss.str();
@@ -2253,7 +2098,6 @@ string declaration_with_assignment_function(const char* variable_name, const inf
                                         var[varNo-1].grid_mapping = rhs->grid_mapping;
                                         var[varNo-1].array_size = rhs->array_size;
                                         var[varNo-1].assigned = true;
-                                    }
                                 }
                             }
                         }
@@ -2307,15 +2151,15 @@ string extended_plural_declaration_with_assignment_function(const char* variable
                     }
                     else
                     {
-                        if(check9(rhs->str.c_str()) != "isOk")
+                        if(getAppropriateErrorIfAny(rhs->str.c_str()) != "isOk")
                         {
                             stringstream ss;
-                            ss << "error at line " << currentLineNumber << ": " << check9(rhs->str.c_str());
+                            ss << "error at line " << currentLineNumber << ": " << getAppropriateErrorIfAny(rhs->str.c_str());
                             finalString = ss.str();
                         }
                         else
                         {
-                            if(check6(rhs->str.c_str()) == true)
+                            if(isLengthMismatchErrorMessageFoundInsideExpression(rhs->str.c_str()) == true)
                             {
                                 stringstream ss;
                                 ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -2323,7 +2167,7 @@ string extended_plural_declaration_with_assignment_function(const char* variable
                             }
                             else
                             {
-                                if(find1(rhs->str.c_str(), variable_name))
+                                if(isVariableContainedInItsOwnAssignment(rhs->str.c_str(), variable_name))
                                 {
                                     stringstream ss;
                                     ss << "error at line " << currentLineNumber << ": The variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is included in its definition";
@@ -2331,18 +2175,18 @@ string extended_plural_declaration_with_assignment_function(const char* variable
                                 }
                                 else
                                 {
-                                    if(check3(rhs->str.c_str()) == false)
+                                    if(areAllVariablesInsideAnExpressionInsideFunctionDeclared(rhs->str.c_str()) == false)
                                     {
                                         stringstream ss;
-                                        ss << "error at line " << currentLineNumber << ": The variable '" << find5(rhs->str.c_str()) << "' contained in the definition of The variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
+                                        ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUndeclaredVariableFromExpressionInsideFunction(rhs->str.c_str()) << "' contained in the definition of The variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is undeclared";
                                         finalString = ss.str();
                                     }
                                     else
                                     {
-                                        if(check4(rhs->str.c_str()) == false)
+                                        if(areAllVariablesInsideAnExpressionInsideFunctionAssigned(rhs->str.c_str()) == false)
                                         {
                                             stringstream ss;
-                                            ss << "error at line " << currentLineNumber << ": The variable '" << find6(rhs->str.c_str()) << "' contained in the definition of The variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
+                                            ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUnassignedVariableFromExpressionInsideFunction(rhs->str.c_str()) << "' contained in the definition of The variable '" << variable_name << "' from the function '" << fun[currentFunctionIndex].name << "' is unassigned";
                                             finalString = ss.str();
                                         }
                                         else
@@ -2392,15 +2236,15 @@ string extended_plural_declaration_with_assignment_function(const char* variable
             }
             else
             {
-                if(check9(rhs->str.c_str()) != "isOk")
+                if(getAppropriateErrorIfAny(rhs->str.c_str()) != "isOk")
                 {
                     stringstream ss;
-                    ss << "error at line " << currentLineNumber << ": " << check9(rhs->str.c_str());
+                    ss << "error at line " << currentLineNumber << ": " << getAppropriateErrorIfAny(rhs->str.c_str());
                     finalString = ss.str();
                 }
                 else
                 {
-                    if(check6(rhs->str.c_str()) == true)
+                    if(isLengthMismatchErrorMessageFoundInsideExpression(rhs->str.c_str()) == true)
                     {
                         stringstream ss;
                         ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -2408,7 +2252,7 @@ string extended_plural_declaration_with_assignment_function(const char* variable
                     }
                     else
                     {
-                        if(find1(rhs->str.c_str(), variable_name))
+                        if(isVariableContainedInItsOwnAssignment(rhs->str.c_str(), variable_name))
                         {
                             stringstream ss;
                             ss << "error at line " << currentLineNumber << ": The variable '" << variable_name << "' is included in its definition";
@@ -2416,18 +2260,18 @@ string extended_plural_declaration_with_assignment_function(const char* variable
                         }
                         else
                         {
-                            if(check1(rhs->str.c_str()) == false)
+                            if(areAllVariablesInsideAnExpressionDeclared(rhs->str.c_str()) == false)
                             {
                                 stringstream ss;
-                                ss << "error at line " << currentLineNumber << ": The variable '" << find2(rhs->str.c_str()) << "' contained in the definition of The variable '" << variable_name << "' is undeclared";
+                                ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUndeclaredVariableFromExpression(rhs->str.c_str()) << "' contained in the definition of The variable '" << variable_name << "' is undeclared";
                                 finalString = ss.str();
                             }
                             else
                             {
-                                if(check2(rhs->str.c_str()) == false)
+                                if(areAllVariablesInsideAnExpressionAssigned(rhs->str.c_str()) == false)
                                 {
                                     stringstream ss;
-                                    ss << "error at line " << currentLineNumber << ": The variable '" << find3(rhs->str.c_str()) << "' contained in the definition of The variable '" << variable_name << "' is unassigned";
+                                    ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUnassignedVariableFromExpression(rhs->str.c_str()) << "' contained in the definition of The variable '" << variable_name << "' is unassigned";
                                     finalString = ss.str();
                                 }
                                 else
@@ -2737,15 +2581,15 @@ string USCOS_assignment_function(const char* st1, const char* st2, GridMapping d
                 }
                 else
                 {
-                    if(check9(st2) != "isOk")
+                    if(getAppropriateErrorIfAny(st2) != "isOk")
                     {
                         stringstream ss;
-                        ss << "error at line " << currentLineNumber << ": " << check9(st2);
+                        ss << "error at line " << currentLineNumber << ": " << getAppropriateErrorIfAny(st2);
                         finalString = ss.str();
                     }
                     else
                     {
-                        if(check6(st2) == true)
+                        if(isLengthMismatchErrorMessageFoundInsideExpression(st2) == true)
                         {
                             stringstream ss;
                             ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -2753,7 +2597,7 @@ string USCOS_assignment_function(const char* st1, const char* st2, GridMapping d
                         }
                         else
                         {
-                            if(find1(st2, st1))
+                            if(isVariableContainedInItsOwnAssignment(st2, st1))
                             {
                                 stringstream ss;
                                 ss << "error at line " << currentLineNumber << ": The variable '" << st1 << "' is included in its definition";
@@ -2761,32 +2605,24 @@ string USCOS_assignment_function(const char* st1, const char* st2, GridMapping d
                             }
                             else
                             {
-                                if(check1(st2) == false)
+                                if(areAllVariablesInsideAnExpressionDeclared(st2) == false)
                                 {
                                     stringstream ss;
-                                    ss << "error at line " << currentLineNumber << ": The variable '" << find2(st2) << "' contained in the definition of the variable '" << st1 << "' is undeclared";
+                                    ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUndeclaredVariableFromExpression(st2) << "' contained in the definition of the variable '" << st1 << "' is undeclared";
                                     finalString = ss.str();
                                 }
                                 else
                                 {
-                                    if(check2(st2) == false)
+                                    if(areAllVariablesInsideAnExpressionAssigned(st2) == false)
                                     {
                                         stringstream ss;
-                                        ss << "error at line " << currentLineNumber << ": The variable '" << find3(st2) << "' contained in the definition of the variable '" << st1 << "' is unassigned";
+                                        ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUnassignedVariableFromExpression(st2) << "' contained in the definition of the variable '" << st1 << "' is unassigned";
                                         finalString = ss.str();
                                     }
                                     else
                                     {
-                                        if(check7(st2) == true)
-                                        {
-                                            stringstream ss;
-                                            ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the variable '" << st1 << "'";
-                                            finalString = ss.str();
-                                        }
-                                        else
-                                        {
-                                            if(getSize1(st1) != d1)
-                                                if(getSize1(st1) == GRID_MAPPING_ANY)
+                                            if(getGridMappingOfVariable(st1) != d1)
+                                                if(getGridMappingOfVariable(st1) == GRID_MAPPING_ANY)
                                                 {
                                                     var[i].grid_mapping = d1;
                                                     var[i].assigned = true;
@@ -2807,7 +2643,6 @@ string USCOS_assignment_function(const char* st1, const char* st2, GridMapping d
                                                 finalString = ss.str();
                                                 var[i].assigned = true;
                                             }
-                                        }
                                     }
                                 }
                             }
@@ -2817,15 +2652,15 @@ string USCOS_assignment_function(const char* st1, const char* st2, GridMapping d
             else
             {
                 // deduced declaration
-                if(check9(st2) != "isOk")
+                if(getAppropriateErrorIfAny(st2) != "isOk")
                 {
                     stringstream ss;
-                    ss << "error at line " << currentLineNumber << ": " << check9(st2);
+                    ss << "error at line " << currentLineNumber << ": " << getAppropriateErrorIfAny(st2);
                     finalString = ss.str();
                 }
                 else
                 {
-                    if(check6(st2) == true)
+                    if(isLengthMismatchErrorMessageFoundInsideExpression(st2) == true)
                     {
                         stringstream ss;
                         ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -2833,7 +2668,7 @@ string USCOS_assignment_function(const char* st1, const char* st2, GridMapping d
                     }
                     else
                     {
-                        if(find1(st2, st1))
+                        if(isVariableContainedInItsOwnAssignment(st2, st1))
                         {
                             stringstream ss;
                             ss << "error at line " << currentLineNumber << ": The variable '" << st1 << "' is included in its definition";
@@ -2841,30 +2676,22 @@ string USCOS_assignment_function(const char* st1, const char* st2, GridMapping d
                         }
                         else
                         {
-                            if(check1(st2) == false)
+                            if(areAllVariablesInsideAnExpressionDeclared(st2) == false)
                             {
                                 stringstream ss;
-                                ss << "error at line " << currentLineNumber << ": The variable '" << find2(st2) << "' contained in the definition of the variable '" << st1 << "' is undeclared";
+                                ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUndeclaredVariableFromExpression(st2) << "' contained in the definition of the variable '" << st1 << "' is undeclared";
                                 finalString = ss.str();
                             }
                             else
                             {
-                                if(check2(st2) == false)
+                                if(areAllVariablesInsideAnExpressionAssigned(st2) == false)
                                 {
                                     stringstream ss;
-                                    ss << "error at line " << currentLineNumber << ": The variable '" << find3(st2) << "' contained in the definition of the variable '" << st1 << "' is unassigned";
+                                    ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUnassignedVariableFromExpression(st2) << "' contained in the definition of the variable '" << st1 << "' is unassigned";
                                     finalString = ss.str();
                                 }
                                 else
                                 {
-                                    if(check7(st2) == true)
-                                    {
-                                        stringstream ss;
-                                        ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the variable '" << st1 << "'";
-                                        finalString = ss.str();
-                                    }
-                                    else
-                                    {
                                         stringstream ss;
                                         ss << "const CollOfScalars " << st1 << " = er.getUserSpecifiedCollectionOfScalar(param, \"" << st1 << "\", " << st2 << ".size());";
                                         finalString = ss.str();
@@ -2874,7 +2701,6 @@ string USCOS_assignment_function(const char* st1, const char* st2, GridMapping d
                                         var[varNo-1].grid_mapping = d1;
                                         var[varNo-1].assigned = true;
                                         var[varNo-1].array_size = -1;
-                                    }
                                 }
                             }
                         }
@@ -2918,15 +2744,15 @@ string USCOS_declaration_with_assignment_function(const char* st1, const char* s
             }
             else
             {
-                if(check9(st2) != "isOk")
+                if(getAppropriateErrorIfAny(st2) != "isOk")
                 {
                     stringstream ss;
-                    ss << "error at line " << currentLineNumber << ": " << check9(st2);
+                    ss << "error at line " << currentLineNumber << ": " << getAppropriateErrorIfAny(st2);
                     finalString = ss.str();
                 }
                 else
                 {
-                    if(check6(st2) == true)
+                    if(isLengthMismatchErrorMessageFoundInsideExpression(st2) == true)
                     {
                         stringstream ss;
                         ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -2934,7 +2760,7 @@ string USCOS_declaration_with_assignment_function(const char* st1, const char* s
                     }
                     else
                     {
-                        if(find1(st2, st1))
+                        if(isVariableContainedInItsOwnAssignment(st2, st1))
                         {
                             stringstream ss;
                             ss << "error at line " << currentLineNumber << ": The variable '" << st1 << "' is included in its definition";
@@ -2942,30 +2768,22 @@ string USCOS_declaration_with_assignment_function(const char* st1, const char* s
                         }
                         else
                         {
-                            if(check1(st2) == false)
+                            if(areAllVariablesInsideAnExpressionDeclared(st2) == false)
                             {
                                 stringstream ss;
-                                ss << "error at line " << currentLineNumber << ": The variable '" << find2(st2) << "' contained in the definition of the variable '" << st1 << "' is undeclared";
+                                ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUndeclaredVariableFromExpression(st2) << "' contained in the definition of the variable '" << st1 << "' is undeclared";
                                 finalString = ss.str();
                             }
                             else
                             {
-                                if(check2(st2) == false)
+                                if(areAllVariablesInsideAnExpressionAssigned(st2) == false)
                                 {
                                     stringstream ss;
-                                    ss << "error at line " << currentLineNumber << ": The variable '" << find3(st2) << "' contained in the definition of the variable '" << st1 << "' is unassigned";
+                                    ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUnassignedVariableFromExpression(st2) << "' contained in the definition of the variable '" << st1 << "' is unassigned";
                                     finalString = ss.str();
                                 }
                                 else
                                 {
-                                    if(check7(st2) == true)
-                                    {
-                                        stringstream ss;
-                                        ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the assignment expression of the variable '" << st1 << "'";
-                                        finalString = ss.str();
-                                    }
-                                    else
-                                    {
                                         stringstream ss;
                                         ss << "const CollOfScalars " << st1 << " = er.getUserSpecifiedCollectionOfScalar(param, \"" << st1 << "\", " << st2 << ".size());";
                                         finalString = ss.str();
@@ -2975,7 +2793,6 @@ string USCOS_declaration_with_assignment_function(const char* st1, const char* s
                                         var[varNo-1].grid_mapping = d1;
                                         var[varNo-1].assigned = true;
                                         var[varNo-1].array_size = -1;
-                                    }
                                 }
                             }
                         }
@@ -3019,15 +2836,15 @@ string USCOS_extended_declaration_with_assignment_function(const char* st1, cons
             }
             else
             {
-                if(check9(st2) != "isOk")
+                if(getAppropriateErrorIfAny(st2) != "isOk")
                 {
                     stringstream ss;
-                    ss << "error at line " << currentLineNumber << ": " << check9(st2);
+                    ss << "error at line " << currentLineNumber << ": " << getAppropriateErrorIfAny(st2);
                     finalString = ss.str();
                 }
                 else
                 {
-                    if(check6(st2) == true)
+                    if(isLengthMismatchErrorMessageFoundInsideExpression(st2) == true)
                     {
                         stringstream ss;
                         ss << "error at line " << currentLineNumber << ": Length mismatch found between two terms of an operation";
@@ -3035,7 +2852,7 @@ string USCOS_extended_declaration_with_assignment_function(const char* st1, cons
                     }
                     else
                     {
-                        if(find1(st2, st1))
+                        if(isVariableContainedInItsOwnAssignment(st2, st1))
                         {
                             stringstream ss;
                             ss << "error at line " << currentLineNumber << ": The variable '" << st1 << "' is included in its definition";
@@ -3043,46 +2860,38 @@ string USCOS_extended_declaration_with_assignment_function(const char* st1, cons
                         }
                         else
                         {
-                            if(check1(st2) == false)
+                            if(areAllVariablesInsideAnExpressionDeclared(st2) == false)
                             {
                                 stringstream ss;
-                                ss << "error at line " << currentLineNumber << ": The variable '" << find2(st2) << "' contained in the definition of the variable '" << st1 << "' is undeclared";
+                                ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUndeclaredVariableFromExpression(st2) << "' contained in the definition of the variable '" << st1 << "' is undeclared";
                                 finalString = ss.str();
                             }
                             else
                             {
-                                if(check2(st2) == false)
+                                if(areAllVariablesInsideAnExpressionAssigned(st2) == false)
                                 {
                                     stringstream ss;
-                                    ss << "error at line " << currentLineNumber << ": The variable '" << find3(st2) << "' contained in the definition of the variable '" << st1 << "' is unassigned";
+                                    ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUnassignedVariableFromExpression(st2) << "' contained in the definition of the variable '" << st1 << "' is unassigned";
                                     finalString = ss.str();
                                 }
                                 else
                                 {
-                                    if(check1(st3) == false)
+                                    if(areAllVariablesInsideAnExpressionDeclared(st3) == false)
                                     {
                                         stringstream ss;
-                                        ss << "error at line " << currentLineNumber << ": The variable '" << find2(st3) << "' contained in the definition of the variable '" << st1 << "' is undeclared";
+                                        ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUndeclaredVariableFromExpression(st3) << "' contained in the definition of the variable '" << st1 << "' is undeclared";
                                         finalString = ss.str();
                                     }
                                     else
                                     {
-                                        if(check2(st3) == false)
+                                        if(areAllVariablesInsideAnExpressionAssigned(st3) == false)
                                         {
                                             stringstream ss;
-                                            ss << "error at line " << currentLineNumber << ": The variable '" << find3(st3) << "' contained in the definition of the variable '" << st1 << "' is unassigned";
+                                            ss << "error at line " << currentLineNumber << ": The variable '" << getFirstUnassignedVariableFromExpression(st3) << "' contained in the definition of the variable '" << st1 << "' is unassigned";
                                             finalString = ss.str();
                                         }
                                         else
                                         {
-                                            if(check7(st3) == true)
-                                            {
-                                                stringstream ss;
-                                                ss << "error at line " << currentLineNumber << ": There is a wrong used variable contained in the ON expression of the variable '" << st1 << "'";
-                                                finalString = ss.str();
-                                            }
-                                            else
-                                            {
                                                 if(d2 != d1)
                                                 {
                                                     stringstream ss;
@@ -3101,7 +2910,6 @@ string USCOS_extended_declaration_with_assignment_function(const char* st1, cons
                                                     var[varNo-1].assigned = true;
                                                     var[varNo-1].array_size = -1;
                                                 }
-                                            }
                                         }
                                     }
                                 }
@@ -3202,14 +3010,14 @@ string getEquelleTypeStringFromVariableType(VariableType v)
 
 bool checkIfFunctionHasAnyScalars(string& st1)
 {
-    int z = getIndex2(st1.c_str());
+    int z = getIndexOfFunctionFromGlobalCPPStructure(st1.c_str());
     if(z == -1) {
         return false;
 	}
 
     // we check if the function has collection of scalars in its signature
     for(int i = 0; i < fun[z].noParam; i++) {
-        if(fun[z].headerVariables[i].type.entity_type == TYPE_SCALAR 
+        if(fun[z].headerVariables[i].type.entity_type == TYPE_SCALAR
 				&& fun[z].headerVariables[i].type.collection == true) {
             return true;
         }
@@ -3219,7 +3027,7 @@ bool checkIfFunctionHasAnyScalars(string& st1)
 	if(fun[z].type.entity_type == TYPE_SCALAR && fun[z].type.collection == true) {
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -3240,7 +3048,7 @@ string duplicateFunction(string& st1)
     {
         string brother = st1;
         size_t index = 0;
-		
+
 		//Replace CollOfScalars with CollOfScalarsAD
         while (true)
         {
