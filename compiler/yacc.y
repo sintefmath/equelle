@@ -2472,7 +2472,7 @@ function_assignment: function_start end_lines commands end_lines return_instr en
                                  {
                                      if($5->grid_mapping != GRID_MAPPING_INVALID)
                                      {
-                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "auto " << fun[i].name << " = [&](" << fun[i].signature << ") -> " << getCppTypeStringFromVariableType(fun[i].type) << " {\n" << $2->str.c_str() << $3->str.c_str() << $4->str.c_str() << $5->str.c_str() << $6->str.c_str() << "}");
+                                         STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "auto " << fun[i].name << " = [&](" << fun[i].signature << ") -> " << getCppTypeStringFromVariableType(fun[i].type) << " {\n" << $2->str.c_str() << $3->str.c_str() << $4->str.c_str() << $5->str.c_str() << $6->str.c_str() << "};");
                                          if(fun[i].grid_mapping == GRID_MAPPING_ANY && $5->grid_mapping != GRID_MAPPING_ANY)
                                              fun[i].grid_mapping = $5->grid_mapping;
                                          else
