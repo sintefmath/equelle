@@ -3249,9 +3249,8 @@ string getEquelleTypeStringFromVariableType(VariableType v)
 }
 
 
-string duplicateFunction(string& st1)
+bool checkIfFunctionHasOnlyScalars(string& st1)
 {
-    HEAP_CHECK();
     char *cs1 = strdup(st1.c_str());    // we need to make a copy, because the strtok function modifies the given string
     char *pch;
     pch = strtok(cs1, " ");     // the first found word will be "auto"
@@ -3275,7 +3274,15 @@ string duplicateFunction(string& st1)
             onlyScalars = false;
     }
 
-    if(onlyScalars)     // we create the function's brother, having ColOfScalarsAD instead of ColOfScalars everywhere
+    return onlyScalars;
+}
+
+
+string duplicateFunction(string& st1)
+{
+    HEAP_CHECK();
+
+    if(checkIfFunctionHasOnlyScalars(st1))     // we create the function's brother, having ColOfScalarsAD instead of ColOfScalars everywhere
     {
         string brother = st1;
         size_t index = 0;

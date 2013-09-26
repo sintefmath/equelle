@@ -46,4 +46,5 @@ string USCOS_extended_declaration_with_assignment_function(const char* st1, cons
 string output_function(std::string& st1);
 string getCppTypeStringFromVariableType(VariableType variable);
 string getEquelleTypeStringFromVariableType(VariableType variable);
+bool checkIfFunctionHasOnlyScalars(string& st1);
 string duplicateFunction(string& st1);
