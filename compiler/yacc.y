@@ -208,73 +208,8 @@
 floating_point: INTEGER '.' INTEGER { $$ = createFloatingPoint($1, $3); };
 number: floating_point        { $$ = $1->clone(); }
         | INTEGER             { $$ = createInteger($1); };
-scalars: expression
-         {
-             $$ = new info();
-             if($1->error_str.size() > 0)
-                 $$->error_str = $1->error_str;
-             else
-                 switch($1->type.entity_type)
-             {
-                 case TYPE_SCALAR:
-                     if($1->type.collection == false)
-                     {
-                         // it should be scalar
-                         $$->str = $1->str.c_str();
-                         $$->grid_mapping = GRID_MAPPING_INVALID;   // it mustn't have a specific grid mapping, since we won't use this structure alone
-                         $$->array_size = 1;
-                         $$->type.entity_type = TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
-                         $$->type.collection = false;
-                     }
-                     else
-                     {
-                         // it should be scalars
-                         $$->str = $1->str.c_str();
-                         $$->grid_mapping = GRID_MAPPING_INVALID;   // it mustn't have a specific grid mapping, since we won't use this structure alone
-                         $$->array_size = $1->array_size;
-                         $$->type.entity_type = TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
-                         $$->type.collection = false;
-                     }
-                     break;
-                 default:
-                     STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "The list must contain only of scalars");
-                     break;
-             }
-         }
-         | scalars ',' expression
-         {
-             $$ = new info();
-             if($3->error_str.size() > 0)
-                 $$->error_str = $3->error_str;
-             else
-                 switch($3->type.entity_type)
-             {
-                 case TYPE_SCALAR:
-                     if($3->type.collection == false)
-                     {
-                         // 2nd should be scalar
-                         STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << ", " << $3->str.c_str());
-                         $$->grid_mapping = GRID_MAPPING_INVALID;   // it mustn't have a specific grid mapping, since we won't use this structure alone
-                         $$->array_size = $1->array_size + 1;
-                         $$->type.entity_type = TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
-                         $$->type.collection = false;
-                     }
-                     else
-                     {
-                         // 2nd should be scalars
-                         STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << ", " << $3->str.c_str());
-                         $$->grid_mapping = GRID_MAPPING_INVALID;   // it mustn't have a specific grid mapping, since we won't use this structure alone
-                         $$->array_size = $1->array_size + $3->array_size;
-                         $$->type.entity_type = TYPE_INVALID;     // it mustn't have a specific type, since we won't use this structure alone
-                         $$->type.collection = false;
-                     }
-                     break;
-                 default:
-                     STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "The list must contain only of scalar/scalars entities");
-                     break;
-             }
-         }
-         ;
+scalars: expression				   { $$ = createScalarsFromExpression($1); }
+		| scalars ',' expression  { $$ = createScalarsFromScalarsAndExpression($1, $3); };
 
 
 expression: '-' expression
