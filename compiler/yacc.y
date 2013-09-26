@@ -548,7 +548,7 @@ expression: '-' expression
 											$$ = $3->clone();
 											STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << " / " << $3->str.c_str());
 										}
-										else 
+										else
 										{
 											STREAM_TO_DOLLARS_CHAR_ARRAY($$->error_str, "Division not supported for these types");
 										}
@@ -3314,11 +3314,11 @@ command1: command                       {
 
 
           // instructions which can be used in the program, but not in a function's body (since we must not allow inner functions)
-command2: command                                    { $$ = new info(); $$->str = $1->str; }
+command2: command                                      { $$ = new info(); $$->str = $1->str; }
           | function_declaration                       { $$ = new info(); $$->str = $1->str; }
-          | function_assignment                        { $$ = new info(); $$->str = $1->str; }
+          | function_assignment                        { $$ = new info(); $$->str = duplicateFunction($1->str); }
           | output                                     { $$ = new info(); $$->str = $1->str; }
-          //  | function_declaration_with_assignment       { $$ = new info(); $$->str = $1->str; }
+      //  | function_declaration_with_assignment       { $$ = new info(); $$->str = $1->str; }
           ;
 
 

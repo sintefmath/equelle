@@ -251,7 +251,7 @@ bool check1(const char* s1)
             if(strncmp(pch, "er.", 3) != 0 && strcmp(pch, "true") != 0 && strcmp(pch, "false") != 0 && strcmp(pch, "return") != 0)  // not a default function or a small letter keyword
             {
                 bool found = false;
-				
+
 				//Search for global variable
 				if (found == false) {
 					for(int i = 0; i < varNo; i++) {
@@ -288,9 +288,9 @@ bool check1(const char* s1)
 						}
 					}
 				}
-				
-				
-				//Check for function-local variables 
+
+
+				//Check for function-local variables
 				if (found == false) {
 					for (int i=0; i<fun[currentFunctionIndex].noLocalVariables; ++i) {
 						if (strcmp(pch, fun[currentFunctionIndex].localVariables[i].name.c_str()) == 0) {
@@ -592,9 +592,9 @@ bool check8(const char *variable_name_list, const char *variable_type_list)
     char *variable_type;
     variable_type = strtok(cvariable_type_list, " ,");
     while(variable_name != NULL && variable_type != NULL)   // they should terminate simultaneously
-    {		
+    {
         bool found = false;
-				
+
 		//Search for global variable
 		if (found == false) {
 			for(int i = 0; i < varNo; i++) {
@@ -631,9 +631,9 @@ bool check8(const char *variable_name_list, const char *variable_type_list)
 				}
 			}
 		}
-				
-				
-		//Check for function-local variables 
+
+
+		//Check for function-local variables
 		if (found == false) {
 			for (int i=0; i<fun[currentFunctionIndex].noLocalVariables; ++i) {
 				if (strcmp(variable_name, fun[currentFunctionIndex].localVariables[i].name.c_str()) == 0) {
@@ -3246,4 +3246,57 @@ string getEquelleTypeStringFromVariableType(VariableType v)
     }
 
     return ss.str();
+}
+
+
+string duplicateFunction(string& st1)
+{
+    HEAP_CHECK();
+    char *cs1 = strdup(st1.c_str());    // we need to make a copy, because the strtok function modifies the given string
+    char *pch;
+    pch = strtok(cs1, " ");     // the first found word will be "auto"
+    pch = strtok (NULL, " ");   // the 2nd found word will be the function's name
+
+    int z = getIndex2(pch);
+
+    // we check if the function has only collection of scalars in its signature
+    bool onlyScalars = true;
+    for(int i = 0; i < fun[z].noParam; i++)
+    {
+        if(!(fun[z].headerVariables[i].type.entity_type == TYPE_SCALAR && fun[z].headerVariables[i].type.collection == true))
+        {
+            onlyScalars = false;
+            break;
+        }
+    }
+    if(onlyScalars)
+    {
+        if(!(fun[z].type.entity_type == TYPE_SCALAR && fun[z].type.collection == true))
+            onlyScalars = false;
+    }
+
+    if(onlyScalars)     // we create the function's brother, having ColOfScalarsAD instead of ColOfScalars everywhere
+    {
+        string brother = st1;
+        size_t index = 0;
+        while (true)
+        {
+             /* Locate the substring to replace. */
+             index = brother.find("CollOfScalars", index);
+             if (index == string::npos) break;
+
+             /* Make the replacement. */
+             brother.replace(index, 13, "CollOfScalarsAD");
+
+             /* Advance index forward so the next iteration doesn't pick it up as well. */
+             index += 15;
+        }
+
+        stringstream ss;
+        ss << st1 << endl << endl << brother;
+        return ss.str();
+    }
+
+    HEAP_CHECK();
+    return st1;
 }
