@@ -1,6 +1,6 @@
 #include "parsing_functions.h"
 
-info* createFloatingPoint(const info* integral_part, const info* remainder) {
+info* createFloatingPoint(info* integral_part, info* remainder) {
     info* floating_point = new info();
     floating_point->str = integral_part->str + "." + remainder->str;
     floating_point->grid_mapping = GRID_MAPPING_ENTITY;
@@ -8,18 +8,19 @@ info* createFloatingPoint(const info* integral_part, const info* remainder) {
     floating_point->type.entity_type =  TYPE_SCALAR;
     floating_point->type.collection = false;
 
+	delete integral_part;
+	delete remainder;
+
     return floating_point;
 }
 
-info* createInteger(const info* number) {
-    info* integer = new info();
-    integer->str = number->str;
-    integer->grid_mapping = GRID_MAPPING_ENTITY;
-    integer->array_size = 1;
-    integer->type.entity_type = TYPE_SCALAR;
-    integer->type.collection = false;
+info* createInteger(info* number) {
+    number->grid_mapping = GRID_MAPPING_ENTITY;
+    number->array_size = 1;
+    number->type.entity_type = TYPE_SCALAR;
+    number->type.collection = false;
 
-    return integer;
+    return number;
 }
 
 info* createScalarsFromExpression(const info* expression) {
