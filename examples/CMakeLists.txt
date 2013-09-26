@@ -31,6 +31,7 @@ include_directories(
   ${OPM_AUTODIFF_ROOT}
   ${OPM_CORE_ROOT}
   ${EIGEN3_ROOT}
+  ${DUNE_CORNERPOINT_ROOT}
   "/usr/include/superlu"
   "/usr/include/suitesparse"
   "./include"
@@ -39,6 +40,7 @@ include_directories(
 link_directories(
   ${OPM_CORE_LIB_DIR}
   ${OPM_AUTODIFF_LIB_DIR}
+  ${DUNE_CORNERPOINT_LIB_DIR}
 )
 
 file( GLOB sources     "src/*.cpp" )
@@ -54,6 +56,7 @@ foreach( app ${app_sources} )
     ${app} ${sources} ${headers} ${DSL_sources} ${other_files}
     )
   target_link_libraries( ${target}
+    "libdunecornerpoint.a"
     "libopmautodiff.a"
     "libopmcore.a"
     "boost_filesystem-mt"
