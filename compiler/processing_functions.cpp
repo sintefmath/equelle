@@ -3200,32 +3200,30 @@ string getEquelleTypeStringFromVariableType(VariableType v)
 }
 
 
-bool checkIfFunctionHasOnlyScalars(string& st1)
+bool checkIfFunctionHasAnyScalars(string& st1)
 {
     int z = getIndex2(st1.c_str());
-    if(z == -1)
+    if(z == -1) {
         return false;
+	}
 
-    // we check if the function has only collection of scalars in its signature
-    bool onlyScalars = true;
-    for(int i = 0; i < fun[z].noParam; i++)
-    {
-        if(!(fun[z].headerVariables[i].type.entity_type == TYPE_SCALAR && fun[z].headerVariables[i].type.collection == true))
-        {
-            onlyScalars = false;
-            break;
+    // we check if the function has collection of scalars in its signature
+    for(int i = 0; i < fun[z].noParam; i++) {
+        if(fun[z].headerVariables[i].type.entity_type == TYPE_SCALAR 
+				&& fun[z].headerVariables[i].type.collection == true) {
+            return true;
         }
     }
-    if(onlyScalars)
-    {
-        if(!(fun[z].type.entity_type == TYPE_SCALAR && fun[z].type.collection == true))
-            onlyScalars = false;
-    }
 
-    return onlyScalars;
+	//Check if the return type is collection of scalars
+	if(fun[z].type.entity_type == TYPE_SCALAR && fun[z].type.collection == true) {
+		return true;
+	}
+	
+	return false;
 }
 
-
+//FIXME: THis will break down once you have a function called "a", and a variable called "astma" etc.
 string duplicateFunction(string& st1)
 {
     HEAP_CHECK();
@@ -3238,10 +3236,12 @@ string duplicateFunction(string& st1)
     ss << pch;
     string str = ss.str();
 
-    if(checkIfFunctionHasOnlyScalars(str))     // we create the function's brother, having ColOfScalarsAD instead of ColOfScalars everywhere
+    if(checkIfFunctionHasAnyScalars(str))     // we create the function's brother, having ColOfScalarsAD instead of ColOfScalars everywhere
     {
         string brother = st1;
         size_t index = 0;
+		
+		//Replace CollOfScalars with CollOfScalarsAD
         while (true)
         {
              /* Locate the substring to replace. */
@@ -3254,6 +3254,21 @@ string duplicateFunction(string& st1)
              /* Advance index forward so the next iteration doesn't pick it up as well. */
              index += 15;
         }
+
+		//Replace all function calls (including "self")
+		for (int i=0; i<funNo; ++i) {
+			string::size_type index = brother.find(fun[i].name);
+
+			//If function call is found
+			while (index != string::npos) {
+				//And this function uses scalars
+				if (checkIfFunctionHasAnyScalars(fun[i].name)) {
+					brother.replace(index, fun[i].name.size(), fun[i].name + "AD");
+				}
+
+				index = brother.find(fun[i].name, index + fun[i].name.size());
+			}
+		}
 
         stringstream ss;
         ss << st1 << endl << endl << brother;

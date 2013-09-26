@@ -52,5 +52,5 @@ string USCOS_declaration_with_assignment_function(const char* st1, const char* s
 string USCOS_extended_declaration_with_assignment_function(const char* st1, const char* st2, const char* st3, GridMapping d1, GridMapping d2);
 string getCppTypeStringFromVariableType(VariableType variable);
 string getEquelleTypeStringFromVariableType(VariableType variable);
-bool checkIfFunctionHasOnlyScalars(string& st1);
+bool checkIfFunctionHasAnyScalars(string& st1);
 string duplicateFunction(string& st1);

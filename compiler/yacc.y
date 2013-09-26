@@ -2461,7 +2461,7 @@ newton: VARIABLE '=' NEWTON '(' VARIABLE ',' VARIABLE ')'
                     else
                     {
                         // we check that the passed parameters are correct
-                        if(checkIfFunctionHasOnlyScalars($5->str) == false)
+                        if(checkIfFunctionHasAnyScalars($5->str) == false)
                         {
                             STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "error at line " << currentLineNumber << ": The function '" << $5->str <<"' is incompatible with the 'NewtonSolve', since its signature does not contain only collection of scalarsAD");
                         }
@@ -2481,7 +2481,7 @@ newton: VARIABLE '=' NEWTON '(' VARIABLE ',' VARIABLE ')'
                                 else
                                 {
                                     stringstream ss;
-                                    ss << "const ScalarsAD " << $1->str << " = NewtonSolve(" << $5->str << ", " << $7->str << ");";
+                                    ss << "const ScalarsAD " << $1->str << " = NewtonSolve(" << $5->str << "AD, " << $7->str << ");";
                                     $$->str = ss.str();
                                     var[varNo++].name = $1->str;
                                     var[varNo-1].type.entity_type = TYPE_SCALAR_AD;
