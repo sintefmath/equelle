@@ -36,9 +36,11 @@ typedef TopologicalEntity<1> Face;
 typedef std::vector<Cell> CollOfCells;
 typedef std::vector<Face> CollOfFaces;
 
+// Scalar type
+typedef double Scalar;
 
 /// Types from opm-autodiff and Eigen.
-typedef Opm::AutoDiffBlock<double> CollOfScalarsAD;
+typedef Opm::AutoDiffBlock<Scalar> CollOfScalarsAD;
 typedef CollOfScalarsAD::V CollOfScalars;
 
 class CollOfScalarsOnColl
@@ -76,7 +78,7 @@ private:
     const void *on_collection_;
 };
 
-typedef Eigen::Array<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> CollOfVectors;
+typedef Eigen::Array<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> CollOfVectors;
 typedef Eigen::Array<bool, Eigen::Dynamic, 1> CollOfBooleans;
 
 
@@ -126,7 +128,7 @@ public:
     CollOfBooleans isEmpty(const CollOfCells& cells) const;
     CollOfBooleans isEmpty(const CollOfFaces& faces) const;
     template <class EntityCollection>
-    CollOfScalars operatorOn(const double data, const EntityCollection& to_set);
+    CollOfScalars operatorOn(const Scalar data, const EntityCollection& to_set);
     template <class SomeCollection, class EntityCollection>
     SomeCollection operatorOn(const SomeCollection& data, const EntityCollection& from_set, const EntityCollection& to_set);
 
@@ -141,7 +143,7 @@ public:
 				const CollOfScalars& u_initialguess) const;
 
     /// Output.
-    void output(const std::string& tag, double val) const;
+    void output(const std::string& tag, Scalar val) const;
     void output(const std::string& tag, const CollOfScalars& vals) const;
     void output(const std::string& tag, const CollOfScalarsOnColl& vals) const;
     void output(const std::string& tag, const CollOfScalarsAD& vals) const;
@@ -166,8 +168,8 @@ private:
     CollOfScalars solveForUpdate(const CollOfScalarsAD& residual) const;
 
     /// Norms.
-    double twoNorm(const CollOfScalars& vals) const;
-    double twoNorm(const CollOfScalarsAD& vals) const;
+    Scalar twoNorm(const CollOfScalars& vals) const;
+    Scalar twoNorm(const CollOfScalarsAD& vals) const;
 
     /// Data members.
     bool grid_from_file_;
