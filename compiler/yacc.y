@@ -2604,9 +2604,9 @@ output: OUTPUT '(' VARIABLE ')'
                 else
                 {
                     int z = getIndex1($3->str.c_str());
-                    if(!(var[z].type.entity_type == TYPE_SCALAR_AD && var[z].type.collection == true && var[z].assigned == true))
+                    if(!((var[z].type.entity_type == TYPE_SCALAR_AD || var[z].type.entity_type == TYPE_SCALAR) && var[z].type.collection == true && var[z].assigned == true))
                     {
-                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "error at line " << currentLineNumber << ": The variable '" << $3->str <<"' must be a collection of scalarsAD and must be assigned");
+                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "error at line " << currentLineNumber << ": The variable '" << $3->str <<"' must be a collection of scalars(AD) and must be assigned");
                     }
                     else
                     {
