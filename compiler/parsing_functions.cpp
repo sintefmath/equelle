@@ -3117,55 +3117,6 @@ string USCOS_extended_declaration_with_assignment_function(const char* st1, cons
 }
 
 
-string output_function(std::string& st1)
-{
-    HEAP_CHECK();
-    string finalString;
-    if(insideFunction == true)
-    {
-        stringstream ss;
-        ss << "error at line " << currentLineNumber << ": The variable '" << st1 << "' cannot be outputted inside a function";
-        finalString = ss.str();
-    }
-    else
-    {
-        int i;
-        bool declaredBefore = false;
-
-        for(i = 0; i < varNo; i++)
-            if(var[i].name == st1)
-            {
-                declaredBefore = true;
-                break;
-            }
-
-            if(declaredBefore != true)
-            {
-                stringstream ss;
-                ss << "error at line " << currentLineNumber << ": The variable '" << st1 << "' needs to be declared first";
-                finalString = ss.str();
-            }
-            else
-            {
-                if(var[i].assigned != true)
-                {
-                    stringstream ss;
-                    ss << "error at line " << currentLineNumber << ": The variable '" << st1 << "' needs to be assigned first";
-                    finalString = ss.str();
-                }
-                else
-                {
-                    stringstream ss;
-                    ss << "er.output(\"" << st1 << "\", " << st1 << ");";
-                    finalString = ss.str();
-                }
-            }
-    }
-
-    HEAP_CHECK();
-    return finalString;
-}
-
 
 string getCppTypeStringFromVariableType(VariableType v)
 {
@@ -3251,12 +3202,9 @@ string getEquelleTypeStringFromVariableType(VariableType v)
 
 bool checkIfFunctionHasOnlyScalars(string& st1)
 {
-    char *cs1 = strdup(st1.c_str());    // we need to make a copy, because the strtok function modifies the given string
-    char *pch;
-    pch = strtok(cs1, " ");     // the first found word will be "auto"
-    pch = strtok (NULL, " ");   // the 2nd found word will be the function's name
-
-    int z = getIndex2(pch);
+    int z = getIndex2(st1.c_str());
+    if(z == -1)
+        return false;
 
     // we check if the function has only collection of scalars in its signature
     bool onlyScalars = true;
@@ -3281,8 +3229,16 @@ bool checkIfFunctionHasOnlyScalars(string& st1)
 string duplicateFunction(string& st1)
 {
     HEAP_CHECK();
+    char *cs1 = strdup(st1.c_str());    // we need to make a copy, because the strtok function modifies the given string
+    char *pch;
+    pch = strtok(cs1, " ");     // the first found word will be "auto"
+    pch = strtok (NULL, " ");   // the 2nd found word will be the function's name
 
-    if(checkIfFunctionHasOnlyScalars(st1))     // we create the function's brother, having ColOfScalarsAD instead of ColOfScalars everywhere
+    stringstream ss;
+    ss << pch;
+    string str = ss.str();
+
+    if(checkIfFunctionHasOnlyScalars(str))     // we create the function's brother, having ColOfScalarsAD instead of ColOfScalars everywhere
     {
         string brother = st1;
         size_t index = 0;

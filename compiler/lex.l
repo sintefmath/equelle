@@ -86,6 +86,7 @@ using namespace std;
 "UserSpecifiedScalar"				return USS;
 "UserSpecifiedScalarWithDefault"	return USSWD;
 "UserSpecifiedCollectionOfScalar"	return USCOS;
+"NewtonSolve"						return NEWTON;
 "Output"							return OUTPUT;
 
 

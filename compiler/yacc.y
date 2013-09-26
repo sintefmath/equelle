@@ -59,6 +59,7 @@
 %token USS
 %token USSWD
 %token USCOS
+%token NEWTON
 %token OUTPUT
 
 
@@ -178,6 +179,7 @@
 %type<inf> declaration
 %type<inf> assignment
 %type<inf> declaration_with_assignment
+%type<inf> newton
 %type<inf> output
 %type<inf> command
 %type<inf> command2
@@ -2516,11 +2518,104 @@ function_assignment: function_start end_lines commands end_lines return_instr en
 
 
 
+newton: VARIABLE '=' NEWTON '(' VARIABLE ',' VARIABLE ')'
+        {
+            $$ = new info();
+            if(insideFunction)
+            {
+                $$->str = "The function 'NewtonSolve' cannot be called from inside a user defined function";
+            }
+            else
+            {
+                // it must be a deduced type, so we'll check if the variable hasn't been declared anywhere else
+                bool unique = true;
+                for(int i = 0; i < varNo; i++)
+                    if(var[i].name == $1->str)
+                    {
+                        unique = false;
+                        break;
+                    }
+                if(unique == false)
+                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "error at line " << currentLineNumber << ": The variable '" << $1->str <<"' is already taken");
+                else
+                {
+                    for(int i = 0; i < funNo; i++)
+                        if(fun[i].name == $1->str)
+                        {
+                            unique = false;
+                            break;
+                        }
+                    if(unique == false)
+                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "error at line " << currentLineNumber << ": The variable '" << $1->str <<"' is already taken");
+                    else
+                    {
+                        // we check that the passed parameters are correct
+                        if(checkIfFunctionHasOnlyScalars($5->str) == false)
+                        {
+                            STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "error at line " << currentLineNumber << ": The function '" << $5->str <<"' is incompatible with the 'NewtonSolve', since its signature does not contain only collection of scalarsAD");
+                        }
+                        else
+                        {
+                            int z = getIndex1($7->str.c_str());
+                            if(z == -1)
+                            {
+                                STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "error at line " << currentLineNumber << ": The variable '" << $7->str <<"' does not even exist");
+                            }
+                            else
+                            {
+                                if(!(var[z].type.entity_type == TYPE_SCALAR && var[z].type.collection == true && var[z].assigned == true))
+                                {
+                                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "error at line " << currentLineNumber << ": The variable '" << $7->str <<"' is incompatible with the 'NewtonSolve', since it is not a collection of scalars or has not been yet assigned");
+                                }
+                                else
+                                {
+                                    stringstream ss;
+                                    ss << "const ScalarsAD " << $1->str << " = NewtonSolve(" << $5->str << ", " << $7->str << ");";
+                                    $$->str = ss.str();
+                                    var[varNo++].name = $1->str;
+                                    var[varNo-1].type.entity_type = TYPE_SCALAR_AD;
+                                    var[varNo-1].type.collection = true;
+                                    var[varNo-1].grid_mapping = GRID_MAPPING_INVALID;   // it's not important, since we won't check it
+                                    var[varNo-1].assigned = true;
+                                    var[varNo-1].array_size = -1;       // it's not important, since we won't check it
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
 
-
-output: OUTPUT '(' VARIABLE ')'       { $$ = new info();
-                     $$->str = output_function($3->str);
+output: OUTPUT '(' VARIABLE ')'
+        {
+            $$ = new info();
+            if(insideFunction)
+            {
+                STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "error at line " << currentLineNumber << ": The function 'Output' cannot be called from inside a function");
+            }
+            else
+            {
+                // we check that the input variable is a collection of scalarsAD
+                if(getIndex1($3->str.c_str()) == -1)
+                {
+                    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "error at line " << currentLineNumber << ": The variable '" << $3->str <<"' does not exist");
+                }
+                else
+                {
+                    int z = getIndex1($3->str.c_str());
+                    if(!(var[z].type.entity_type == TYPE_SCALAR_AD && var[z].type.collection == true && var[z].assigned == true))
+                    {
+                        STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, "error at line " << currentLineNumber << ": The variable '" << $3->str <<"' must be a collection of scalarsAD and must be assigned");
+                    }
+                    else
+                    {
+                        stringstream ss;
+                        ss << "er.output(\"" << $3->str << "\", " << $3->str << ");";
+                        $$->str = ss.str();
+                    }
+                }
+            }
         }
 
 
@@ -3318,6 +3413,7 @@ command2: command                                      { $$ = new info(); $$->st
           | function_declaration                       { $$ = new info(); $$->str = $1->str; }
           | function_assignment                        { $$ = new info(); $$->str = duplicateFunction($1->str); }
           | output                                     { $$ = new info(); $$->str = $1->str; }
+          | newton                                     { $$ = new info(); $$->str = $1->str; }
       //  | function_declaration_with_assignment       { $$ = new info(); $$->str = $1->str; }
           ;
 

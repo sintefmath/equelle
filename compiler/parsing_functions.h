@@ -43,7 +43,6 @@ string USSWD_declaration_with_assignment_function(const char* st1, const char* s
 string USCOS_assignment_function(const char* st1, const char* st2, GridMapping d1);
 string USCOS_declaration_with_assignment_function(const char* st1, const char* st2, GridMapping d1);
 string USCOS_extended_declaration_with_assignment_function(const char* st1, const char* st2, const char* st3, GridMapping d1, GridMapping d2);
-string output_function(std::string& st1);
 string getCppTypeStringFromVariableType(VariableType variable);
 string getEquelleTypeStringFromVariableType(VariableType variable);
 bool checkIfFunctionHasOnlyScalars(string& st1);

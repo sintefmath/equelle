@@ -1,110 +1,45 @@
-pf0 : Collection Of Face = AllFaces(Grid)		
-# pf0a : Collection Of Face = AllFaces(Grid)		
-pf0a : Collection Of Face = InteriorFaces(Grid)		
+#! -*-sh-*-
+# Heat conduction with no boundary conditions or source terms.
+
+# Physics that requires specification
+k : Scalar = UserSpecifiedScalarWithDefault(0.3) # Heat diffusion constant.
+
+# @afr: time step strategy assumed given outside.
+dt : Scalar = UserSpecifiedScalarWithDefault(0.5) # Time step length.
+
+# u0 should be given initial values (in user input)
+u0 : Collection Of Scalar On AllCells(Grid) = UserSpecifiedCollectionOfScalar( AllCells(Grid) )
 
 
+# Compute interior transmissibilities.
+vol = Volume(AllCells(Grid))                                         # Deduced type:  Collection Of Scalar On AllCells()
+interior_faces = InteriorFaces(Grid)                           # Deduced type:  Collection Of Face
+first = FirstCell(interior_faces)                          # Deduced type:  Collection Of Cell On interior_faces
+							   # Equivalent to: Collection Of Cell On InteriorFaces()
+second = SecondCell(interior_faces)                        # Deduced type:  Same as for 'first.'
+itrans  = k * Area(interior_faces) / EuclideanLength(Centroid(first) - Centroid(second))	
 
 
-# ps = Area(InteriorFaces(Grid)) 
-# ps1 = Length(AllEdges(Grid))
-
-# ps2 = Area(InteriorFaces(Grid)) 
-# ps3 = Volume(FirstCell(BoundaryFaces(Grid)))	
-# ps4 = Volume(FirstCell(AllFaces(Grid)))		
-
-s1 = 4 + 11
-s2 = s1
-
-ps11 = Volume(AllCells(Grid)) ^ 2
-ps12 = ps11
-
-v1 = [1,2,3,4]
-v2 = v1
-
-pv1 = Centroid(AllCells(Grid))
-pv2 = pv1				
-
-px1 = InteriorVertices(Grid)
-px2 = px1
-
-pe1 = AllEdges(Grid)
-pe2 = pe1
-
-pf1 = BoundaryFaces(Grid)
-pf2 = pf1
-
-# pc1 = FirstCell(pf1)
-pc1 = AllCells(Grid)
-pc2 = pc1
-
-b1 = True And False Or (True And 1 > 2 Xor (3 < 4))
-b2 = b1
-
-pb1 = (1,2,3) > (4,5,6) Xor (1,1,1)>(2,2,2)
-pb2 = pb1
-
-
-
-
-
-
-sc0 = Max(4,5,6)				
-sc1 = Min(4,5,6,Area(AllFaces(Grid)))	
-
-min = Min(1,2,3,4,5)
-
-v = Centroid(AllCells(Grid)) + Centroid(BoundaryCells(Grid))
-
-pb3 = ((1,2,3) > (2,3,4)) Xor pb1
-
-a = 2
-
-g : Function(s :: Scalar) -> Scalar  
-g : Function(v :: Vector) -> Vector
-vec1 = func(sc0)
-vec2 = g(sc0)
-
-g = 
-{
-	a = 5
-	b = 9
-	c = 12
-	# d = [1,2,3]
-	# return d
-	return c
+# Compute flux for interior faces.
+computeInteriorFlux : Function(u :: Collection Of Scalar) -> Collection Of Scalar
+computeInteriorFlux = {
+    flux = -itrans * Gradient(u)
+	return flux
 }
 
-scal = g(sc0)
-vec3 : Vector = g(sc0)
-scal2 = g(sc0, sc0)
-scal3 = g(sc2)
-sc2 : Scalar
-scal4 = g(sc2)
-scal5 = g(b1)
+
+# Compute the residual for the heat equation.
+computeResidual : Function(u :: Collection Of Scalar) -> Collection Of Scalar
+computeResidual = {
+    ifluxes = computeInteriorFlux(u)    
+	# Deduced type: Collection Of Scalar On AllCells()
+    residual = u - u0 + (dt / vol) * Divergence(ifluxes)
+	return residual
+}
 
 
+# NewtonSolve takes a function (that should accept the primary variable as input) and the initial guess for the primary variable.
+explicitu = u0 - computeResidual(u0)
+u = NewtonSolve(computeResidual, u0)
 
-
-scal6 = UserSpecifiedScalar
-scal7 : Scalar = UserSpecifiedScalar
-scal8 = UserSpecifiedScalarWithDefault(0.3)
-scal9 : Scalar = UserSpecifiedScalarWithDefault(0.3)
-
-scal10 = UserSpecifiedCollectionOfScalar(AllCells(Grid))
-scal11 : Collection Of Scalar
-scal11 = UserSpecifiedCollectionOfScalar(BoundaryFaces(Grid))
-scal12 : Collection Of Scalar = UserSpecifiedCollectionOfScalar(scal11)
-scal13 : Collection Of Scalar On BoundaryFaces(Grid) = UserSpecifiedCollectionOfScalar(scal12)
-
-
-
-
-computeResidual : Function(u :: Collection Of Scalar) -> Collection Of Scalar 
-
-b = a
-
-c = Gradient(5)
-d = Divergence(10)
-
-Output(c)
-
+Output(u)
