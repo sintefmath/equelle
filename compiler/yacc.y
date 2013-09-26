@@ -206,7 +206,7 @@
 
 
 floating_point: INTEGER '.' INTEGER { $$ = createFloatingPoint($1, $3); };
-number: floating_point        { $$ = $1->clone(); };
+number: floating_point        { $$ = $1->clone(); }
         | INTEGER             { $$ = createInteger($1); };
 scalars: expression
          {
