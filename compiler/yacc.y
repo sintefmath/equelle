@@ -128,6 +128,7 @@
 %code provides
 {
 #include "processing_functions.h"
+#include "parsing_functions.h"
 } //Code provides
 
 
@@ -204,34 +205,9 @@
   */
 
 
-floating_point: INTEGER '.' INTEGER
-{
-    $$ = new info();
-    STREAM_TO_DOLLARS_CHAR_ARRAY($$->str, $1->str.c_str() << "." << $3->str.c_str());
-    $$->grid_mapping = GRID_MAPPING_ENTITY;
-    $$->array_size = 1;
-    $$->type.entity_type =  TYPE_SCALAR;
-    $$->type.collection = false;
-}
-;
-
-
-number: floating_point                {
-$$ = $1->clone();
-        }
-        | INTEGER
-        {
-            $$ = new info();
-            $$->str = $1->str.c_str();
-            $$->grid_mapping = GRID_MAPPING_ENTITY;
-            $$->array_size = 1;
-            $$->type.entity_type = TYPE_SCALAR;
-            $$->type.collection = false;
-        }
-        ;
-
-
-
+floating_point: INTEGER '.' INTEGER { $$ = createFloatingPoint($1, $3); };
+number: floating_point        { $$ = $1->clone(); };
+        | INTEGER             { $$ = createInteger($1); };
 scalars: expression
          {
              $$ = new info();
@@ -3446,4 +3422,5 @@ extern int yylex();
 extern int yyparse();
 
 #include "processing_functions.cpp"
+#include "parsing_functions.cpp"
 #include "compiler_types.cpp"
