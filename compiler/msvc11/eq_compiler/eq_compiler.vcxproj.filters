@@ -37,7 +37,7 @@
     <ClInclude Include="..\..\compiler_types.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\parsing_functions.h">
+    <ClInclude Include="..\..\processing_functions.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -48,10 +48,10 @@
     <ClCompile Include="lex.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\parsing_functions.cpp">
+    <ClCompile Include="..\..\compiler_types.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\compiler_types.cpp">
+    <ClCompile Include="..\..\processing_functions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

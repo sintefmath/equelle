@@ -127,7 +127,7 @@
 
 %code provides
 {
-#include "parsing_functions.h"
+#include "processing_functions.h"
 } //Code provides
 
 
@@ -3445,5 +3445,5 @@ pr: pr command2 '\n'                  {
 extern int yylex();
 extern int yyparse();
 
-#include "parsing_functions.cpp"
+#include "processing_functions.cpp"
 #include "compiler_types.cpp"

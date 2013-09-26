@@ -1,5 +1,12 @@
 #pragma once
 
+
+/**
+  * This file contains signatures for functions that process part of the program.
+  * These functions typically handle error messages, type checking etc.
+  */
+
+
 void yyerror(const char* s);
 int yylex(void);
 bool find1(const char* s1, const char* s2);
