@@ -14,9 +14,16 @@
 #include <iostream>
 #include <cmath>
 
+#define DO_IMPLICIT 0
+#define USE_DUNE_ER 1
+
+#if USE_DUNE_ER
+#include "EquelleRuntimeDune.hpp"
+typedef EquelleRuntimeDune EquelleRuntime;
+#else
 #include "EquelleRuntimeCPU.hpp"
-
-
+typedef EquelleRuntimeCPU EquelleRuntime;
+#endif
 
 
 int main(int argc, char** argv)
@@ -25,7 +32,7 @@ int main(int argc, char** argv)
     Opm::parameter::ParameterGroup param(argc, argv, false);
 
     // Create the Equelle runtime.
-    EquelleRuntimeCPU er(param);
+    EquelleRuntime er(param);
 
     // ============= Generated code starts here ================
 
@@ -65,10 +72,12 @@ int main(int argc, char** argv)
         const CollOfScalars flux = -itrans * er.gradient(u);
         return flux;
     };
-    // auto computeInteriorFluxAD = [&](const CollOfScalarsAD u) -> CollOfScalarsAD {
-    //     const CollOfScalarsAD flux = -itrans * er.gradient(u);
-    //     return flux;
-    // };
+#if DO_IMPLICIT
+    auto computeInteriorFluxAD = [&](const CollOfScalarsAD u) -> CollOfScalarsAD {
+        const CollOfScalarsAD flux = -itrans * er.gradient(u);
+        return flux;
+    };
+#endif
 
     // --------------------------------------------------------------------------------
     // # Compute the residual for the heat equation.
@@ -85,25 +94,31 @@ int main(int argc, char** argv)
         const CollOfScalars residual = u - u0 + (dt / vol) * er.divergence(ifluxes);
         return residual;
     };
-    // auto computeResidualAD = [&](const CollOfScalarsAD u) -> CollOfScalarsAD {
-    //     const CollOfScalarsAD ifluxes = computeInteriorFluxAD(u);
-    //     const CollOfScalarsAD residual = u - u0 + (dt / vol) * er.divergence(ifluxes);
-    //     return residual;
-    // };
+#if DO_IMPLICIT
+    auto computeResidualAD = [&](const CollOfScalarsAD u) -> CollOfScalarsAD {
+        const CollOfScalarsAD ifluxes = computeInteriorFluxAD(u);
+        const CollOfScalarsAD residual = u - u0 + (dt / vol) * er.divergence(ifluxes);
+        return residual;
+    };
+#endif
 
     // --------------------------------------------------------------------------------
     // explicitu = u0 - computeResidual(u0)
     // u = NewtonSolve(computeResidual, u0)
     // --------------------------------------------------------------------------------
     const CollOfScalars explicitu = u0 - computeResidual(u0);
-    // const CollOfScalarsAD u = er.newtonSolve(computeResidualAD, u0);
+#if DO_IMPLICIT
+    const CollOfScalarsAD u = er.newtonSolve(computeResidualAD, u0);
+#endif
 
     // --------------------------------------------------------------------------------
     // Output(explixitu)
     // Output(u)
     // --------------------------------------------------------------------------------
     er.output("explicitu", explicitu);
-    // er.output("u", u);
+#if DO_IMPLICIT
+    er.output("u", u);
+#endif
 
     // ============= Generated code ends here ================
 
