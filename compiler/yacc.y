@@ -2481,7 +2481,7 @@ newton: VARIABLE '=' NEWTON '(' VARIABLE ',' VARIABLE ')'
                                 else
                                 {
                                     stringstream ss;
-                                    ss << "const ScalarsAD " << $1->str << " = NewtonSolve(" << $5->str << "AD, " << $7->str << ");";
+                                    ss << "const CollOfScalarsAD " << $1->str << " = er.newtonSolve(" << $5->str << "AD, " << $7->str << ");";
                                     $$->str = ss.str();
                                     var[varNo++].name = $1->str;
                                     var[varNo-1].type.entity_type = TYPE_SCALAR_AD;
