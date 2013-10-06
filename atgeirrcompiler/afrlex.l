@@ -1,5 +1,15 @@
 %{
 #include <iostream>
+
+#if RETURN_TOKENS
+#include "afryacc.hpp"
+#define TOKS(x) do { return x; } while(false)
+#define TOK(x) do { return x; } while(false)
+#else
+#define TOKS(x) do { std::cout << x << std::endl; } while(false)
+#define TOK(x) do { TOKS(#x); } while(false)
+#endif
+
 %}
 
 DIGIT    [0-9]
@@ -14,11 +24,7 @@ INT      {DIGIT}+
 FLOAT    {INT}[.]{INT}
 BLANKS   [\t ]+
 COMMENT  #.*
-LE       <=
-GE       >=
-EQ       ==
-RETURNS  ->
-SINGLES  [:=()+\-*/^<>{},|]
+SINGLES  [:=()+\-*/^<>{},|?\[\]]
 
 %option yylineno
 %option outfile="afrlex.cpp"
@@ -27,34 +33,40 @@ SINGLES  [:=()+\-*/^<>{},|]
 %%
 
 
-Collection       { std::cout << "COLLECTION" << std::endl; }
-Of               { std::cout << "OF" << std::endl; }
-On               { std::cout << "ON" << std::endl; }
-Subset           { std::cout << "SUBSET" << std::endl; }
-Scalar           { std::cout << "SCALAR" << std::endl; }
-Vector           { std::cout << "VECTOR" << std::endl; }
-Bool             { std::cout << "BOOL" << std::endl; }
-Function         { std::cout << "FUNCTION" << std::endl; }
-Cell             { std::cout << "CELL" << std::endl; }
-Face             { std::cout << "FACE" << std::endl; }
-Edge             { std::cout << "EDGE" << std::endl; }
-Vertex           { std::cout << "VERTEX" << std::endl; }
-Return           { std::cout << "RETURN" << std::endl; }
-{BUILTIN}        { std::cout << "BUILTIN" << std::endl; }
-{ID}             { std::cout << "ID" << std::endl; }
-{INT}            { std::cout << "INT" << std::endl; }
-{FLOAT}          { std::cout << "FLOAT" << std::endl; }
-{COMMENT}        { std::cout << "COMMENT" << std::endl; }
-{LE}             { std::cout << "LE" << std::endl; }
-{GE}             { std::cout << "GE" << std::endl; }
-{EQ}             { std::cout << "EQ" << std::endl; }
-{RETURNS}        { std::cout << "RETURNS" << std::endl; }
-{SINGLES}        { std::cout << yytext[0] << std::endl; }
-\n               { std::cout << "EOL" << std::endl; }
+Collection       { TOK(COLLECTION); }
+Of               { TOK(OF); }
+On               { TOK(ON); }
+Subset           { TOK(SUBSET); }
+Scalar           { TOK(SCALAR); }
+Vector           { TOK(VECTOR); }
+Bool             { TOK(BOOL); }
+Cell             { TOK(CELL); }
+Face             { TOK(FACE); }
+Edge             { TOK(EDGE); }
+Vertex           { TOK(VERTEX); }
+Function         { TOK(FUNCTION); }
+And              { TOK(AND); }
+Or               { TOK(OR); }
+Not              { TOK(NOT); }
+Xor              { TOK(XOR); }
+True             { TOK(TRUE); }
+False            { TOK(FALSE); }
+{BUILTIN}        { TOK(BUILTIN); }
+{ID}             { TOK(ID); }
+{INT}            { TOK(INT); }
+{FLOAT}          { TOK(FLOAT); }
+{COMMENT}        { TOK(COMMENT); }
+'<='             { TOK(LEQ); }
+'>='             { TOK(GEQ); }
+'=='             { TOK(EQ); }
+'!='             { TOK(NEQ); }
+'->'             { TOK(RET); }
+{SINGLES}        { TOKS(yytext[0]); }
+\n               { TOK(EOL); }
 {BLANKS}
-{INT}{IDCHAR}+   { std::cout << "Error on line " << yylineno << ": this is not a number \'" << yytext << "\'" << std::endl; }
-{FLOAT}{IDCHAR}+ { std::cout << "Error on line " << yylineno << ": this is not a number \'" << yytext << "\'" << std::endl; }
-.                {  std::cout << "Error on line " << yylineno << ": unexpected character \'" << yytext << "\'" << std::endl; }
+{INT}{IDCHAR}+   { std::cerr << "Lexer error on line " << yylineno << ": this is not a number \'" << yytext << "\'" << std::endl; }
+{FLOAT}{IDCHAR}+ { std::cerr << "Lexer error on line " << yylineno << ": this is not a number \'" << yytext << "\'" << std::endl; }
+.                {  std::cerr << "Lexer error on line " << yylineno << ": unexpected character \'" << yytext << "\'" << std::endl; }
 
 %%
 

@@ -9,18 +9,18 @@ CXXFLAGS = -g -Wall -Wextra -Wno-sign-compare -ansi -pedantic
 
 all:		ac al
 
-ac:		afrlex.cpp afryacc.c
-		$(CXX) $(CXXFLAGS) afrlex.cpp afryacc.c -o ac
+ac:		afrlex.cpp afryacc.cpp
+		$(CXX) $(CXXFLAGS) -DRETURN_TOKENS=1 afrlex.cpp afryacc.cpp ac.cpp -o ac
 
 afrlex.cpp:	afrlex.l
 		$(FLEX) afrlex.l
 
-afryacc.c:	afryacc.y
+afryacc.cpp:	afryacc.y Parser.hpp
 		$(BISON) -dy afryacc.y
 
 al:		afrlex.cpp
 		$(CXX) $(CXXFLAGS) afrlex.cpp al.cpp -o al
 
 clean:
-	rm -f *.o *~ afrlex.cpp afryacc.c afryacc.h ac al
+	rm -f *.o *~ afrlex.cpp afryacc.cpp afryacc.hpp ac al
 	rm -rf ac.dSYM al.dSYM
