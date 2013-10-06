@@ -14,8 +14,8 @@
 #include <iostream>
 #include <cmath>
 
-#define DO_IMPLICIT 0
-#define USE_DUNE_ER 1
+#define DO_IMPLICIT 1
+#define USE_DUNE_ER 0
 
 #if USE_DUNE_ER
 #include "EquelleRuntimeDune.hpp"

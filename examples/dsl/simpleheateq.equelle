@@ -12,8 +12,8 @@ u0 : Collection Of Scalar On AllCells(Grid) = UserSpecifiedCollectionOfScalar( A
 
 
 # Compute interior transmissibilities.
-vol = Volume(AllCells(Grid))                                         # Deduced type:  Collection Of Scalar On AllCells()
-interior_faces = InteriorFaces(Grid)                           # Deduced type:  Collection Of Face
+vol = Volume(AllCells(Grid))                               # Deduced type:  Collection Of Scalar On AllCells()
+interior_faces = InteriorFaces(Grid)                       # Deduced type:  Collection Of Face
 first = FirstCell(interior_faces)                          # Deduced type:  Collection Of Cell On interior_faces
 							   # Equivalent to: Collection Of Cell On InteriorFaces()
 second = SecondCell(interior_faces)                        # Deduced type:  Same as for 'first.'
