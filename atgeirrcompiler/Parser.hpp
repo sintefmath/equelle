@@ -28,7 +28,7 @@ public:
 typedef Node* NodePtr;
 
 
-NodePtr createNumber() { return new Node(); }
+inline NodePtr createNumber(const double) { return new Node(); }
 
 inline double numFromString(const std::string& s)
 {

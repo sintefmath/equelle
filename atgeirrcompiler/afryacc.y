@@ -16,11 +16,11 @@
 %token XOR
 %token TRUE
 %token FALSE
-%token BUILTIN
-%token ID
-%token INT
-%token FLOAT
-%token COMMENT
+%token <str> BUILTIN
+%token <str> ID
+%token <str> INT
+%token <str> FLOAT
+%token <str> COMMENT
 %token LEQ
 %token GEQ
 %token EQ
@@ -28,6 +28,8 @@
 %token RET
 %token EOL
 
+%type <node> program
+%type <node> number
 
 %output "afryacc.cpp"
 %defines "afryacc.hpp"
@@ -52,10 +54,12 @@
 
 %code requires{
 #include "Parser.hpp"
-#define YYSTYPE NodePtr
 }
 
-
+%union{
+    NodePtr node;
+    std::string* str;
+}
 
 
 %%
@@ -64,8 +68,8 @@ program: number                 { $$ = new Node(); }
        | COMMENT                { $$ = new Node(); }
        ;
 
-number: INT                     { $$ = createNumber(numFromString(yytext)); }
-      | FLOAT                   { $$ = createNumber(numFromString(yytext)); }
+number: INT                     { $$ = createNumber(numFromString(*($1))); delete $1; }
+      | FLOAT                   { $$ = createNumber(numFromString(*($1))); delete $1; }
       ;
 
 

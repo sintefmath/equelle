@@ -51,11 +51,11 @@ Not              { TOK(NOT); }
 Xor              { TOK(XOR); }
 True             { TOK(TRUE); }
 False            { TOK(FALSE); }
-{BUILTIN}        { TOK(BUILTIN); }
-{ID}             { TOK(ID); }
-{INT}            { TOK(INT); }
-{FLOAT}          { TOK(FLOAT); }
-{COMMENT}        { TOK(COMMENT); }
+{BUILTIN}        { yylval.str = new std::string(yytext); TOK(BUILTIN); }
+{ID}             { yylval.str = new std::string(yytext); TOK(ID); }
+{INT}            { yylval.str = new std::string(yytext); TOK(INT); }
+{FLOAT}          { yylval.str = new std::string(yytext); TOK(FLOAT); }
+{COMMENT}        { yylval.str = new std::string(yytext); TOK(COMMENT); }
 '<='             { TOK(LEQ); }
 '>='             { TOK(GEQ); }
 '=='             { TOK(EQ); }
