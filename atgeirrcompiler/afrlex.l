@@ -56,11 +56,11 @@ False            { TOK(FALSE); }
 {INT}            { yylval.str = new std::string(yytext); TOK(INT); }
 {FLOAT}          { yylval.str = new std::string(yytext); TOK(FLOAT); }
 {COMMENT}        { yylval.str = new std::string(yytext); TOK(COMMENT); }
-'<='             { TOK(LEQ); }
-'>='             { TOK(GEQ); }
-'=='             { TOK(EQ); }
-'!='             { TOK(NEQ); }
-'->'             { TOK(RET); }
+"<="             { TOK(LEQ); }
+">="             { TOK(GEQ); }
+"=="             { TOK(EQ); }
+"!="             { TOK(NEQ); }
+"->"             { TOK(RET); }
 {SINGLES}        { TOKS(yytext[0]); }
 \n               { TOK(EOL); }
 {BLANKS}
