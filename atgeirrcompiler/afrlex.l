@@ -5,9 +5,11 @@
 #include "afryacc.hpp"
 #define TOKS(x) do { return x; } while(false)
 #define TOK(x) do { return x; } while(false)
+#define STORE do { yylval.str = new std::string(yytext); } while(false)
 #else
 #define TOKS(x) do { std::cout << x << std::endl; } while(false)
 #define TOK(x) do { TOKS(#x); } while(false)
+#define STORE do { std::cout << "\'" << yytext << "\'   "; } while(false)
 #endif
 
 %}
@@ -51,11 +53,11 @@ Not              { TOK(NOT); }
 Xor              { TOK(XOR); }
 True             { TOK(TRUE); }
 False            { TOK(FALSE); }
-{BUILTIN}        { yylval.str = new std::string(yytext); TOK(BUILTIN); }
-{ID}             { yylval.str = new std::string(yytext); TOK(ID); }
-{INT}            { yylval.str = new std::string(yytext); TOK(INT); }
-{FLOAT}          { yylval.str = new std::string(yytext); TOK(FLOAT); }
-{COMMENT}        { yylval.str = new std::string(yytext); TOK(COMMENT); }
+{BUILTIN}        { STORE; TOK(BUILTIN); }
+{ID}             { STORE; TOK(ID); }
+{INT}            { STORE; TOK(INT); }
+{FLOAT}          { STORE; TOK(FLOAT); }
+{COMMENT}        { STORE; TOK(COMMENT); }
 "<="             { TOK(LEQ); }
 ">="             { TOK(GEQ); }
 "=="             { TOK(EQ); }
