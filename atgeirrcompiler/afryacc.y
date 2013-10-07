@@ -41,6 +41,7 @@
 %type <node> number
 %type <node> function_call
 %type <node> f_call_args
+%type <node> fbody
 
 
 %output "afryacc.cpp"
@@ -86,15 +87,20 @@ line: statement EOL             { $$ = new Node(); }
     | EOL                       { $$ = new Node(); }
     ;
 
+fbody: '{' EOL program '}'      { $$ = new Node(); }
+
 statement: declaration          { $$ = new Node(); }
          | assignment           { $$ = new Node(); }
          | comb_decl_assign     { $$ = new Node(); }
-         | expr           { $$ = new Node(); }
+         | expr                 { $$ = new Node(); }
+         | RET expr             { $$ = new Node(); }
 ;
 
 declaration: ID ':' type_expr  { $$ = new Node(); }
 
 assignment: ID '=' expr   { $$ = new Node(); }
+          | ID '(' f_call_args ')' '=' fbody  { $$ = new Node(); }
+          ;
 
 comb_decl_assign: ID ':' type_expr '=' expr  { $$ = new Node(); }
 
@@ -144,7 +150,7 @@ function_call: BUILTIN '(' f_call_args ')'  { $$ = new Node(); }
 
 f_call_args: f_call_args ',' expr     { $$ = new Node(); }
            | expr                     { $$ = new Node(); }
-           |                                { $$ = new Node(); }
+           |                          { $$ = new Node(); }
            ;
 
 %%
