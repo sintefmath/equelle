@@ -37,8 +37,11 @@
 %type <node> expression
 %type <node> type_expression
 %type <node> basic_type
-%type <node> f_arg_list
+%type <node> f_decl_args
 %type <node> number
+%type <node> function_call
+%type <node> f_call_args
+
 
 %output "afryacc.cpp"
 %defines "afryacc.hpp"
@@ -96,25 +99,40 @@ assignment: ID '=' expression   { $$ = new Node(); }
 comb_decl_assign: ID ':' type_expression '=' expression  { $$ = new Node(); }
 
 expression: number              { $$ = new Node(); }
+          | function_call       { $$ = new Node(); }
+          ;
 
 type_expression: basic_type     { $$ = new Node(); }
                | COLLECTION OF basic_type     { $$ = new Node(); }
                | COLLECTION OF basic_type ON expression { $$ = new Node(); }
                | COLLECTION OF basic_type SUBSET OF expression { $$ = new Node(); }
                | COLLECTION OF basic_type ON expression SUBSET OF expression { $$ = new Node(); }
-               | FUNCTION '(' f_arg_list ')' RET type_expression    { $$ = new Node(); }
+               | FUNCTION '(' f_decl_args ')' RET type_expression    { $$ = new Node(); }
                ;
 
 basic_type: SCALAR  { $$ = new Node(); }
-
-f_arg_list: f_arg_list declaration { $$ = new Node(); }
-          |                        { $$ = new Node(); }
+          | VECTOR  { $$ = new Node(); }
+          | BOOL    { $$ = new Node(); }
+          | CELL    { $$ = new Node(); }
+          | FACE    { $$ = new Node(); }
+          | EDGE    { $$ = new Node(); }
+          | VERTEX  { $$ = new Node(); }
           ;
+
+f_decl_args: f_decl_args ',' declaration { $$ = new Node(); }
+           | declaration                 { $$ = new Node(); }
+           |                             { $$ = new Node(); }
+           ;
 
 number: INT                     { $$ = createNumber(numFromString(*($1))); delete $1; }
       | FLOAT                   { $$ = createNumber(numFromString(*($1))); delete $1; }
       ;
 
+function_call: BUILTIN '(' f_call_args ')'  { $$ = new Node(); }
+             | ID '(' f_call_args ')'       { $$ = new Node(); }
+             ;
+
+f_call_args: expression                     { $$ = new Node(); }
 
 %%
 
