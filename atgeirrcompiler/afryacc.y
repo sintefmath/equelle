@@ -34,8 +34,8 @@
 %type <node> declaration
 %type <node> assignment
 %type <node> comb_decl_assign
-%type <node> expression
-%type <node> type_expression
+%type <node> expr
+%type <node> type_expr
 %type <node> basic_type
 %type <node> f_decl_args
 %type <node> number
@@ -89,26 +89,36 @@ line: statement EOL             { $$ = new Node(); }
 statement: declaration          { $$ = new Node(); }
          | assignment           { $$ = new Node(); }
          | comb_decl_assign     { $$ = new Node(); }
-         | expression           { $$ = new Node(); }
+         | expr           { $$ = new Node(); }
 ;
 
-declaration: ID ':' type_expression  { $$ = new Node(); }
+declaration: ID ':' type_expr  { $$ = new Node(); }
 
-assignment: ID '=' expression   { $$ = new Node(); }
+assignment: ID '=' expr   { $$ = new Node(); }
 
-comb_decl_assign: ID ':' type_expression '=' expression  { $$ = new Node(); }
+comb_decl_assign: ID ':' type_expr '=' expr  { $$ = new Node(); }
 
-expression: number              { $$ = new Node(); }
-          | function_call       { $$ = new Node(); }
-          ;
+expr: number              { $$ = new Node(); }
+    | function_call       { $$ = new Node(); }
+    | '(' expr ')'        { $$ = new Node(); }
+    | '|' expr '|'        { $$ = new Node(); }
+    | expr '/' expr       { $$ = new Node(); }
+    | expr '*' expr       { $$ = new Node(); }
+    | expr '-' expr       { $$ = new Node(); }
+    | '-' expr %prec UMINUS  { $$ = new Node(); }
+    | expr '+' expr       { $$ = new Node(); }
+    | expr '?' expr ':' expr { $$ = new Node(); }
+    | expr ON expr        { $$ = new Node(); }
+    | ID                  { $$ = new Node(); }
+    ;
 
-type_expression: basic_type     { $$ = new Node(); }
-               | COLLECTION OF basic_type     { $$ = new Node(); }
-               | COLLECTION OF basic_type ON expression { $$ = new Node(); }
-               | COLLECTION OF basic_type SUBSET OF expression { $$ = new Node(); }
-               | COLLECTION OF basic_type ON expression SUBSET OF expression { $$ = new Node(); }
-               | FUNCTION '(' f_decl_args ')' RET type_expression    { $$ = new Node(); }
-               ;
+type_expr: basic_type     { $$ = new Node(); }
+         | COLLECTION OF basic_type     { $$ = new Node(); }
+         | COLLECTION OF basic_type ON expr { $$ = new Node(); }
+         | COLLECTION OF basic_type SUBSET OF expr { $$ = new Node(); }
+         | COLLECTION OF basic_type ON expr SUBSET OF expr { $$ = new Node(); }
+         | FUNCTION '(' f_decl_args ')' RET type_expr    { $$ = new Node(); }
+         ;
 
 basic_type: SCALAR  { $$ = new Node(); }
           | VECTOR  { $$ = new Node(); }
@@ -132,7 +142,10 @@ function_call: BUILTIN '(' f_call_args ')'  { $$ = new Node(); }
              | ID '(' f_call_args ')'       { $$ = new Node(); }
              ;
 
-f_call_args: expression                     { $$ = new Node(); }
+f_call_args: f_call_args ',' expr     { $$ = new Node(); }
+           | expr                     { $$ = new Node(); }
+           |                                { $$ = new Node(); }
+           ;
 
 %%
 
