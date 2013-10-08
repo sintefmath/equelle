@@ -50,18 +50,18 @@
 %start program
 %error-verbose
 
-
+%nonassoc '?'
+%nonassoc ON
 %left OR
-%left AND
 %nonassoc XOR
+%left AND
 %nonassoc EQ NEQ
 %nonassoc LEQ GEQ '<' '>'
 %left '+' '-'
 %left '*'
 %nonassoc '/'
 %nonassoc '^'
-%nonassoc NOT
-%left UMINUS
+%nonassoc NOT UMINUS
 
 
 
@@ -113,7 +113,7 @@ expr: number              { $$ = new Node(); }
     | expr '-' expr       { $$ = new Node(); }
     | '-' expr %prec UMINUS  { $$ = new Node(); }
     | expr '+' expr       { $$ = new Node(); }
-    | expr '?' expr ':' expr { $$ = new Node(); }
+    | expr '?' expr ':' expr %prec '?' { $$ = new Node(); }
     | expr ON expr        { $$ = new Node(); }
     | ID                  { $$ = new Node(); }
     ;
