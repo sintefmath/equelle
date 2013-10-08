@@ -5,7 +5,7 @@ FLEX     = flex
 BISON    = bison3
 CXX	 = g++-4.7.0
 # The -Wno-sign-compare is because flex generates a scanner with signed/unsigned comparison!
-CXXFLAGS = -g -Wall -Wextra -Wno-sign-compare -ansi -pedantic
+CXXFLAGS = -std=c++11 -g -Wall -Wextra -Wno-sign-compare -pedantic
 
 all:		ac al
 
