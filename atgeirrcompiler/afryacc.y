@@ -96,7 +96,7 @@ statement: declaration          { $$ = new Node(); }
          | RET expr             { $$ = new Node(); }
 ;
 
-declaration: ID ':' type_expr  { $$ = new Node(); }
+declaration: ID ':' type_expr  { $$ = handleDeclaration(*($1), $3); delete $1; }
 
 assignment: ID '=' expr   { $$ = new Node(); }
           | ID '(' f_call_args ')' '=' fbody  { $$ = new Node(); }
@@ -140,8 +140,8 @@ f_decl_args: f_decl_args ',' declaration { $$ = new Node(); }
            |                             { $$ = new Node(); }
            ;
 
-number: INT                     { $$ = createNumber(numFromString(*($1))); delete $1; }
-      | FLOAT                   { $$ = createNumber(numFromString(*($1))); delete $1; }
+number: INT                     { $$ = handleNumber(numFromString(*($1))); delete $1; }
+      | FLOAT                   { $$ = handleNumber(numFromString(*($1))); delete $1; }
       ;
 
 function_call: BUILTIN '(' f_call_args ')'  { $$ = new Node(); }
