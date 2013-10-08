@@ -16,11 +16,11 @@ afrlex.cpp:	afrlex.l
 		$(FLEX) afrlex.l
 
 afryacc.cpp:	afryacc.y Parser.hpp
-		$(BISON) -dy afryacc.y
+		$(BISON) -v afryacc.y
 
 al:		afrlex.cpp
 		$(CXX) $(CXXFLAGS) afrlex.cpp al.cpp -o al
 
 clean:
-	rm -f *.o *~ afrlex.cpp afryacc.cpp afryacc.hpp ac al
+	rm -f *.o *~ afrlex.cpp afryacc.cpp afryacc.hpp afryacc.output ac al
 	rm -rf ac.dSYM al.dSYM
