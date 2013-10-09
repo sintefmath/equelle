@@ -154,8 +154,8 @@ number: INT                     { $$ = handleNumber(numFromString(*($1))); delet
       | FLOAT                   { $$ = handleNumber(numFromString(*($1))); delete $1; }
       ;
 
-function_call: BUILTIN '(' f_call_args ')'  { $$ = new FuncCallNode(*($1), $3); delete $1; }
-             | ID '(' f_call_args ')'       { $$ = new FuncCallNode(*($1), $3); delete $1; }
+function_call: BUILTIN '(' f_call_args ')'  { $$ = handleFuncCall(*($1), $3); delete $1; }
+             | ID '(' f_call_args ')'       { $$ = handleFuncCall(*($1), $3); delete $1; }
              ;
 
 f_call_args: f_call_args ',' expr     { $$ = $1; $$->addArg($3); }

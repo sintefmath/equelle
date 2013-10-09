@@ -243,14 +243,22 @@ private:
     bool assigned_;
 };
 
+enum { InvalidIndex = -1 };
 
 struct DynamicReturnSpecification
 {
     DynamicReturnSpecification()
         : active(false),
-          arg_index_for_basic_type(-1),
-          arg_index_for_gridmapping(-1),
-          arg_index_for_subset(-1)
+          arg_index_for_basic_type(InvalidIndex),
+          arg_index_for_gridmapping(InvalidIndex),
+          arg_index_for_subset(InvalidIndex)
+    {
+    }
+    DynamicReturnSpecification(const int bt_ix, const int gm_ix, const int ss_ix)
+        : active(true),
+          arg_index_for_basic_type(bt_ix),
+          arg_index_for_gridmapping(gm_ix),
+          arg_index_for_subset(ss_ix)
     {
     }
     bool active;
@@ -277,9 +285,42 @@ public:
     {
     }
 
-    const EquelleType& returnType(/*const std::vector<EquelleType>& argtypes*/) const
+    FunctionType(const std::vector<Variable>& args,
+                 const EquelleType& return_type,
+                 const DynamicReturnSpecification& dynamic)
+        : arguments_(args),
+          return_type_(return_type),
+          dynamic_(dynamic)
     {
-        return return_type_;
+    }
+
+    EquelleType returnType(const std::vector<EquelleType>& argtypes) const
+    {
+        if (dynamic_.active) {
+            const BasicType bt = dynamic_.arg_index_for_basic_type == InvalidIndex ?
+                return_type_.basicType() : argtypes[dynamic_.arg_index_for_basic_type].basicType();
+            const bool coll = return_type_.isCollection();
+            const int gridmapping = dynamic_.arg_index_for_gridmapping == InvalidIndex ?
+                return_type_.gridMapping() : argtypes[dynamic_.arg_index_for_gridmapping].gridMapping();
+            return EquelleType(bt, coll, gridmapping);
+        } else {
+            return return_type_;
+        }
+    }
+
+    int dynamicSubsetReturn(const std::vector<EquelleType>& argtypes) const
+    {
+        if (dynamic_.active) {
+            const BasicType bt = dynamic_.arg_index_for_basic_type == InvalidIndex ?
+                return_type_.basicType() : argtypes[dynamic_.arg_index_for_basic_type].basicType();
+            const bool coll = return_type_.isCollection();
+            if (isEntityType(bt) && coll) {
+                const int subset = dynamic_.arg_index_for_subset == InvalidIndex ?
+                    NotApplicable : argtypes[dynamic_.arg_index_for_subset].gridMapping();
+                return subset;
+            }
+        }
+        return NotApplicable;
     }
 
     const std::vector<Variable>& arguments() const
@@ -374,9 +415,15 @@ public:
     {
         return name_;
     }
-    EquelleType returnType() const
+
+    const FunctionType& functionType() const
     {
-        return type_.returnType();
+        return type_;
+    }
+
+    EquelleType returnType(const std::vector<EquelleType>& argtypes) const
+    {
+        return type_.returnType(argtypes);
     }
 
 private:
@@ -474,7 +521,12 @@ private:
         functions_.emplace_back("AllVertices", FunctionType(EquelleType(Cell, true, AllVertices)));
         // 2. User input functions.
         functions_.emplace_back("UserSpecifiedScalarWithDefault",
-                                FunctionType({ Variable("default", EquelleType(Scalar)) }, EquelleType(Scalar)));
+                                FunctionType({ Variable("default", EquelleType(Scalar)) },
+                                             EquelleType(Scalar)));
+        functions_.emplace_back("UserSpecifiedCollectionOfScalar",
+                                FunctionType({ Variable("entities", EquelleType()) },
+                                             EquelleType(Scalar, true),
+                                             { 0, 0, InvalidIndex}));
 
         // Set main function ref and current (initially equal to main).
         main_function_ = functions_.begin();
@@ -589,10 +641,6 @@ class FuncTypeNode : public Node
 {
 public:
     FuncTypeNode(const FunctionType ft) : ft_(ft) {}
-    EquelleType type() const
-    {
-        return ft_.returnType();
-    }
     FunctionType funcType() const
     {
         return ft_;
@@ -775,15 +823,25 @@ private:
 class FuncCallNode : public Node
 {
 public:
-    FuncCallNode(const std::string& funcname, FuncArgsNode* funcargs)
-        : funcname_(funcname), funcargs_(funcargs) {}
+    FuncCallNode(const std::string& funcname,
+                 FuncArgsNode* funcargs,
+                 const int dynamic_subset_return = NotApplicable)
+        : funcname_(funcname), funcargs_(funcargs), dsr_(dynamic_subset_return)
+    {}
     EquelleType type() const
     {
-        return SymbolTable::getFunction(funcname_).returnType(/*funcargs_->argumentTypes()*/);
+        EquelleType t = SymbolTable::getFunction(funcname_).returnType(funcargs_->argumentTypes());
+        if (dsr_ != NotApplicable) {
+            assert(t.isEntityCollection());
+            return EquelleType(t.basicType(), true, dsr_);
+        } else {
+            return t;
+        }
     }
 private:
     std::string funcname_;
     FuncArgsNode* funcargs_;
+    int dsr_;
 };
 
 
@@ -871,6 +929,19 @@ inline TypeNodePtr handleCollection(TypeNodePtr btype, NodePtr gridmapping, Node
 inline FuncTypeNodePtr handleFuncType(FuncArgsDeclNode* argtypes, TypeNodePtr rtype)
 {
     return new FuncTypeNode(FunctionType(argtypes->arguments(), rtype->type()));
+}
+
+inline FuncCallNode* handleFuncCall(const std::string& name, FuncArgsNode* args)
+{
+    const Function& f = SymbolTable::getFunction(name);
+    int dynsubret = f.functionType().dynamicSubsetReturn(args->argumentTypes());
+    if (dynsubret != NotApplicable) {
+        // Create a new entity collection.
+        const int gm = SymbolTable::declareEntitySet(dynsubret);
+        return new FuncCallNode(name, args, gm);
+    } else {
+        return new FuncCallNode(name, args);
+    }
 }
 
 
