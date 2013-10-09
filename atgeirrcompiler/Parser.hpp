@@ -9,9 +9,12 @@
 #include <string>
 #include <sstream>
 #include <map>
+#include <set>
 #include <vector>
+#include <list>
 #include <algorithm>
 #include <stdexcept>
+#include <cassert>
 
 
 // ------ Declarations needed for bison parser ------ 
@@ -174,6 +177,11 @@ public:
             && gridmapping_ == et.gridmapping_;
     }
 
+    bool operator!=(const EquelleType& et) const
+    {
+        return !operator==(et);
+    }
+
 private:
     BasicType basic_type_;
     bool collection_;
@@ -189,46 +197,83 @@ private:
 
 class EntitySet
 {
+public:
+    EntitySet(const int index, const int subset_index)
+        : index_(index), subset_index_(subset_index)
+    {
+    }
+private:
+    int index_;
+    int subset_index_;
+};
+
+
+class Variable
+{
+public:
+    Variable(const std::string& name,
+             const EquelleType type = EquelleType(),
+             bool assigned = false)
+        : name_(name), type_(type), assigned_(assigned)
+    {
+    }
+    const std::string& name() const
+    {
+        return name_;
+    }
+    const EquelleType& type() const
+    {
+        return type_;
+    }
+    bool assigned() const
+    {
+        return assigned_;
+    }
+    void setAssigned(const bool assigned)
+    {
+        assigned_ = assigned;
+    }
+    bool operator<(const Variable& v) const
+    {
+        return name_ < v.name_;
+    }
+private:
+    std::string name_;
+    EquelleType type_;
+    bool assigned_;
 };
 
 
 class FunctionType
 {
 public:
-    typedef std::pair<std::string, EquelleType> ArgumentType;
-
-    FunctionType(const EquelleType return_type)
+    /// Construct FunctionType taking no arguments.
+    /// Equelle type: Function() -> returntype
+    explicit FunctionType(const EquelleType& return_type)
         : return_type_(return_type)
     {
     }
 
-    FunctionType(const EquelleType return_type,
-                 const std::string arg1_name, const EquelleType arg1_type)
-        : return_type_(return_type),
-          arguments_(1, std::make_pair(arg1_name, arg1_type))
-    {
-    }
-
-    FunctionType(const EquelleType return_type,
-                 const std::vector<ArgumentType>& args)
+    FunctionType(const EquelleType& return_type,
+                 const std::vector<Variable>& args)
         : return_type_(return_type),
           arguments_(args)
     {
     }
 
-    EquelleType returnType() const
+    const EquelleType& returnType() const
     {
         return return_type_;
     }
 
-    const std::vector<ArgumentType> arguments() const
+    const std::vector<Variable>& arguments() const
     {
         return arguments_;
     }
 
 private:
     EquelleType return_type_;
-    std::vector<ArgumentType> arguments_;
+    std::vector<Variable> arguments_;
 };
 
 
@@ -241,15 +286,21 @@ public:
     {
     }
 
-    void declareVariable(const std::string name, const EquelleType type)
+    void declareVariable(const std::string& name, const EquelleType& type)
     {
         if (!declared(name).first) {
-            local_variable_types_[name] = type;
+            local_variables_.insert(Variable(name, type, false));
         } else {
             std::string errmsg = "redeclared variable: ";
             errmsg += name;
             yyerror(errmsg.c_str());
         }
+    }
+
+    int declareEntitySet(const int new_entity_index, const int subset_entity_index)
+    {
+        local_entitysets_.emplace_back(new_entity_index, subset_entity_index);
+        return new_entity_index;
     }
 
     EquelleType variableType(const std::string name) const
@@ -265,6 +316,43 @@ public:
         }
     }
 
+    bool isVariableDeclared(const std::string& name) const
+    {
+        return declared(name).first;
+    }
+
+    bool isVariableAssigned(const std::string& name) const
+    {
+        auto lit = local_variables_.find(Variable(name));
+        if (lit != local_variables_.end()) {
+            return lit->assigned();
+        } else {
+            auto ait = std::find_if(type_.arguments().begin(), type_.arguments().end(),
+                                    [&](const Variable& a) { return a.name() == name; });
+            if (ait != type_.arguments().end()) {
+                return ait->assigned();
+            } else {
+                yyerror("internal compiler error in Function::isVariableAssigned()");
+                return false;
+            }
+        }
+    }
+
+    void setVariableAssigned(const std::string& name, const bool assigned)
+    {
+        auto lit = local_variables_.find(Variable(name));
+        if (lit != local_variables_.end()) {
+            // Set members are immutable, must
+            // copy, erase and reinsert.
+            Variable copy = *lit;
+            copy.setAssigned(assigned);
+            local_variables_.erase(lit);
+            local_variables_.insert(copy);
+        } else {
+            yyerror("internal compiler error in Function::setVariableAssigned()");
+        }
+    }
+
     std::string name() const
     {
         return name_;
@@ -273,22 +361,23 @@ public:
     {
         return type_.returnType();
     }
+
 private:
     std::pair<bool, EquelleType> declared(const std::string& name) const
     {
-        auto lit = local_variable_types_.find(name);
-        if (lit != local_variable_types_.end()) {
-            return std::make_pair(true, lit->second);
+        auto lit = local_variables_.find(name);
+        if (lit != local_variables_.end()) {
+            return std::make_pair(true, lit->type());
         }
         auto ait = std::find_if(type_.arguments().begin(), type_.arguments().end(),
-                                [&](const FunctionType::ArgumentType& a) { return a.first == name; });
+                                [&](const Variable& a) { return a.name() == name; });
         if (ait != type_.arguments().end()) {
-            return std::make_pair(true, ait->second);
+            return std::make_pair(true, ait->type());
         }
         return std::make_pair(false, EquelleType());
     }
     std::string name_;
-    std::map<std::string, EquelleType> local_variable_types_;
+    std::set<Variable> local_variables_;
     std::vector<EntitySet> local_entitysets_;
     FunctionType type_;
 };
@@ -307,6 +396,36 @@ public:
         instance().declareFunctionImpl(name, ftype);
     }
 
+    static int declareEntitySet(const int subset_entity_index)
+    {
+        return instance().current_function_->declareEntitySet(instance().next_subset_index_++, subset_entity_index);
+    }
+
+    static bool isVariableDeclared(const std::string& name)
+    {
+        return instance().current_function_->isVariableDeclared(name);
+    }
+
+    static bool isVariableAssigned(const std::string& name)
+    {
+        return instance().current_function_->isVariableAssigned(name);
+    }
+
+    static void setVariableAssigned(const std::string& name, const bool assigned)
+    {
+        return instance().current_function_->setVariableAssigned(name, assigned);
+    }
+
+    static EquelleType variableType(const std::string& name)
+    {
+        return instance().current_function_->variableType(name);
+    }
+
+    static bool isFunctionDeclared(const std::string& name)
+    {
+        return instance().isFunctionDeclaredImpl(name);
+    }
+
     static const Function& getFunction(const std::string& name)
     {
         return instance().getFunctionImpl(name);
@@ -319,21 +438,26 @@ public:
 
 private:
     SymbolTable()
+        : next_subset_index_(FirstRuntimeEntitySet)
     {
-        functions_.emplace_back("InteriorCells", EquelleType(Cell, true, InteriorCells));
-        functions_.emplace_back("BoundaryCells", EquelleType(Cell, true, BoundaryCells));
-        functions_.emplace_back("AllCells", EquelleType(Cell, true, AllCells));
-        functions_.emplace_back("InteriorFaces", EquelleType(Cell, true, InteriorFaces));
-        functions_.emplace_back("BoundaryFaces", EquelleType(Cell, true, BoundaryFaces));
-        functions_.emplace_back("AllFaces", EquelleType(Cell, true, AllFaces));
-        functions_.emplace_back("InteriorEdges", EquelleType(Cell, true, InteriorEdges));
-        functions_.emplace_back("BoundaryEdges", EquelleType(Cell, true, BoundaryEdges));
-        functions_.emplace_back("AllEdges", EquelleType(Cell, true, AllEdges));
-        functions_.emplace_back("InteriorVertices", EquelleType(Cell, true, InteriorVertices));
-        functions_.emplace_back("BoundaryVertices", EquelleType(Cell, true, BoundaryVertices));
-        functions_.emplace_back("AllVertices", EquelleType(Cell, true, AllVertices));
-        functions_.emplace_back("Main", EquelleType());
-        current_function_ = functions_.end() - 1;
+        // Add built-in functions to function table.
+        functions_.emplace_back("Main", FunctionType(EquelleType()));
+        functions_.emplace_back("InteriorCells", FunctionType(EquelleType(Cell, true, InteriorCells)));
+        functions_.emplace_back("BoundaryCells", FunctionType(EquelleType(Cell, true, BoundaryCells)));
+        functions_.emplace_back("AllCells", FunctionType(EquelleType(Cell, true, AllCells)));
+        functions_.emplace_back("InteriorFaces", FunctionType(EquelleType(Cell, true, InteriorFaces)));
+        functions_.emplace_back("BoundaryFaces", FunctionType(EquelleType(Cell, true, BoundaryFaces)));
+        functions_.emplace_back("AllFaces", FunctionType(EquelleType(Cell, true, AllFaces)));
+        functions_.emplace_back("InteriorEdges", FunctionType(EquelleType(Cell, true, InteriorEdges)));
+        functions_.emplace_back("BoundaryEdges", FunctionType(EquelleType(Cell, true, BoundaryEdges)));
+        functions_.emplace_back("AllEdges", FunctionType(EquelleType(Cell, true, AllEdges)));
+        functions_.emplace_back("InteriorVertices", FunctionType(EquelleType(Cell, true, InteriorVertices)));
+        functions_.emplace_back("BoundaryVertices", FunctionType(EquelleType(Cell, true, BoundaryVertices)));
+        functions_.emplace_back("AllVertices", FunctionType(EquelleType(Cell, true, AllVertices)));
+
+        // Set main function ref and current (initially equal to main).
+        main_function_ = functions_.begin();
+        current_function_ = main_function_;
     }
 
     static SymbolTable& instance()
@@ -358,6 +482,11 @@ private:
         }
     }
 
+    bool isFunctionDeclaredImpl(const std::string& name) const
+    {
+        return findFunction(name) != functions_.end();
+    }
+
     const Function& getFunctionImpl(const std::string& name) const
     {
         auto it = findFunction(name);
@@ -371,15 +500,17 @@ private:
         }
     }
 
-    std::vector<Function>::const_iterator findFunction(const std::string& name) const
+    std::list<Function>::const_iterator findFunction(const std::string& name) const
     {
         auto it = std::find_if(functions_.begin(), functions_.end(),
                                [&](const Function& f) { return f.name() == name; });
         return it;
     }
 
-    std::vector<Function> functions_;
-    std::vector<Function>::iterator current_function_;
+    int next_subset_index_;
+    std::list<Function> functions_;
+    std::list<Function>::iterator main_function_;
+    std::list<Function>::iterator current_function_;
 };
 
 
@@ -549,12 +680,12 @@ public:
     {
         decls_.push_back(vardecl);
     }
-    std::vector<FunctionType::ArgumentType> arguments() const
+    std::vector<Variable> arguments() const
     {
-        std::vector<FunctionType::ArgumentType> args;
+        std::vector<Variable> args;
         args.reserve(decls_.size());
         for (auto vdn : decls_) {
-            args.push_back(std::make_pair(vdn->name(), vdn->type()));
+            args.push_back(Variable(vdn->name(), vdn->type(), true));
         }
         return args;
     }
@@ -611,6 +742,33 @@ inline VarDeclNode* handleDeclaration(const std::string name, TypeNodePtr type)
     return new VarDeclNode(name, type);
 }
 
+inline VarAssignNode* handleAssignment(const std::string name, NodePtr expr)
+{
+    // If already declared...
+    if (SymbolTable::isVariableDeclared(name)) {
+        // Check if already assigned.
+        if (SymbolTable::isVariableAssigned(name)) {
+            std::string err_msg = "variable already assigned, cannot re-assign ";
+            err_msg += name;
+            yyerror(err_msg.c_str());
+            return nullptr;
+        }
+        // Check that declared type matches right hand side.
+        if (SymbolTable::variableType(name) != expr->type()) {
+            std::string err_msg = "mismatch between type in assignment and declaration for ";
+            err_msg += name;
+            yyerror(err_msg.c_str());
+            return nullptr;
+        }
+    } else {
+        SymbolTable::declareVariable(name, expr->type());
+    }
+
+    // Set variable to assigned and return.
+    SymbolTable::setVariableAssigned(name, true);
+    return new VarAssignNode(name, expr);
+}
+
 inline NodePtr handleFuncDeclaration(const std::string name, FuncTypeNodePtr ftype)
 {
     SymbolTable::declareFunction(name, ftype->funcType());
@@ -626,19 +784,30 @@ inline NodePtr handleDeclarationAssign(const std::string name, TypeNodePtr, Node
     return new Node();
 }
 
-inline TypeNodePtr handleCollection(TypeNodePtr btype, NodePtr gridmapping, NodePtr /*subsetof*/)
+inline TypeNodePtr handleCollection(TypeNodePtr btype, NodePtr gridmapping, NodePtr subsetof)
 {
+    assert(gridmapping == nullptr || subsetof == nullptr);
     EquelleType bt = btype->type();
     if (!bt.isBasic()) {
         std::string errmsg = "attempting to declare a Collection Of <nonsense>";
         yyerror(errmsg.c_str());
     }
+    int gm = NotApplicable;
     if (gridmapping) {
         if (!gridmapping->type().isEntityCollection() || gridmapping->type().gridMapping() == NotApplicable) {
             yyerror("a Collection must be On a Collection of Cell, Face etc.");
+        } else {
+            gm = gridmapping->type().gridMapping();
         }
     }
-    const int gm = gridmapping ? gridmapping->type().gridMapping() : NotApplicable;
+    if (subsetof) {
+        // We are creating a new entity collection.
+        if (!subsetof->type().isEntityCollection() || subsetof->type().gridMapping() == NotApplicable) {
+            yyerror("a Collection must be Subset Of a Collection of Cell, Face etc.");
+        } else {
+            gm = SymbolTable::declareEntitySet(subsetof->type().gridMapping());
+        }
+    }
     return new TypeNode(EquelleType(bt.basicType(), true, gm));
 }
 
