@@ -42,7 +42,7 @@
 %type <fargdecl> f_decl_args
 %type <node> number
 %type <node> function_call
-%type <node> f_call_args
+%type <farg> f_call_args
 %type <node> fbody
 
 
@@ -76,6 +76,7 @@
     TypeNodePtr type;
     VarDeclNode* vardecl;
     FuncTypeNodePtr ftype;
+    FuncArgsNode* farg;
     FuncArgsDeclNode* fargdecl;
     std::string* str;
 }
@@ -157,14 +158,14 @@ function_call: BUILTIN '(' f_call_args ')'  { $$ = new FuncCallNode(*($1), $3); 
              | ID '(' f_call_args ')'       { $$ = new FuncCallNode(*($1), $3); delete $1; }
              ;
 
-f_call_args: f_call_args ',' expr     { $$ = new Node(); }
-           | expr                     { $$ = new Node(); }
-           |                          { $$ = new Node(); }
+f_call_args: f_call_args ',' expr     { $$ = $1; $$->addArg($3); }
+           | expr                     { $$ = new FuncArgsNode($1); }
+           |                          { $$ = new FuncArgsNode(); }
            ;
 
 %%
 
 void yyerror(const char* err)
 {
-    std::cerr << "Parser error on line " << yylineno << ": " << err << std::endl;
+    std::cerr << "Parser error near line " << yylineno << ": " << err << std::endl;
 }

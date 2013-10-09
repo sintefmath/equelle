@@ -244,6 +244,22 @@ private:
 };
 
 
+struct DynamicReturnSpecification
+{
+    DynamicReturnSpecification()
+        : active(false),
+          arg_index_for_basic_type(-1),
+          arg_index_for_gridmapping(-1),
+          arg_index_for_subset(-1)
+    {
+    }
+    bool active;
+    int arg_index_for_basic_type;
+    int arg_index_for_gridmapping;
+    int arg_index_for_subset;
+};
+
+
 class FunctionType
 {
 public:
@@ -254,14 +270,14 @@ public:
     {
     }
 
-    FunctionType(const EquelleType& return_type,
-                 const std::vector<Variable>& args)
-        : return_type_(return_type),
-          arguments_(args)
+    FunctionType(const std::vector<Variable>& args,
+                 const EquelleType& return_type)
+        : arguments_(args),
+          return_type_(return_type)
     {
     }
 
-    const EquelleType& returnType() const
+    const EquelleType& returnType(/*const std::vector<EquelleType>& argtypes*/) const
     {
         return return_type_;
     }
@@ -272,8 +288,9 @@ public:
     }
 
 private:
-    EquelleType return_type_;
     std::vector<Variable> arguments_;
+    EquelleType return_type_;
+    DynamicReturnSpecification dynamic_;
 };
 
 
@@ -440,7 +457,8 @@ private:
     SymbolTable()
         : next_subset_index_(FirstRuntimeEntitySet)
     {
-        // Add built-in functions to function table.
+        // ----- Add built-in functions to function table. -----
+        // 1. Grid functions.
         functions_.emplace_back("Main", FunctionType(EquelleType()));
         functions_.emplace_back("InteriorCells", FunctionType(EquelleType(Cell, true, InteriorCells)));
         functions_.emplace_back("BoundaryCells", FunctionType(EquelleType(Cell, true, BoundaryCells)));
@@ -454,6 +472,9 @@ private:
         functions_.emplace_back("InteriorVertices", FunctionType(EquelleType(Cell, true, InteriorVertices)));
         functions_.emplace_back("BoundaryVertices", FunctionType(EquelleType(Cell, true, BoundaryVertices)));
         functions_.emplace_back("AllVertices", FunctionType(EquelleType(Cell, true, AllVertices)));
+        // 2. User input functions.
+        functions_.emplace_back("UserSpecifiedScalarWithDefault",
+                                FunctionType({ Variable("default", EquelleType(Scalar)) }, EquelleType(Scalar)));
 
         // Set main function ref and current (initially equal to main).
         main_function_ = functions_.begin();
@@ -530,6 +551,17 @@ public:
 };
 
 typedef Node* NodePtr;
+
+class SequenceNode : public Node
+{
+public:
+    void pushNode(Node* node)
+    {
+        nodes_.push_back(node);
+    }
+private:
+    std::vector<Node*> nodes_;
+};
 
 class NumberNode : public Node
 {
@@ -714,18 +746,44 @@ private:
     NodePtr funcbody_;
 };
 
+class FuncArgsNode : public Node
+{
+public:
+    FuncArgsNode(Node* expr = 0)
+    {
+        if (expr) {
+            args_.push_back(expr);
+        }
+    }
+    void addArg(Node* expr)
+    {
+        args_.push_back(expr);
+    }
+    std::vector<EquelleType> argumentTypes() const
+    {
+        std::vector<EquelleType> argtypes;
+        argtypes.reserve(args_.size());
+        for (auto np : args_) {
+            argtypes.push_back(np->type());
+        }
+        return argtypes;
+    }
+private:
+    std::vector<Node*> args_;
+};
+
 class FuncCallNode : public Node
 {
 public:
-    FuncCallNode(std::string funcname, NodePtr funcargs)
+    FuncCallNode(const std::string& funcname, FuncArgsNode* funcargs)
         : funcname_(funcname), funcargs_(funcargs) {}
     EquelleType type() const
     {
-        return SymbolTable::getFunction(funcname_).returnType();
+        return SymbolTable::getFunction(funcname_).returnType(/*funcargs_->argumentTypes()*/);
     }
 private:
     std::string funcname_;
-    NodePtr funcargs_;
+    FuncArgsNode* funcargs_;
 };
 
 
@@ -775,13 +833,12 @@ inline NodePtr handleFuncDeclaration(const std::string name, FuncTypeNodePtr fty
     return new FuncDeclNode(name, ftype);
 }
 
-inline NodePtr handleDeclarationAssign(const std::string name, TypeNodePtr, NodePtr)
+inline NodePtr handleDeclarationAssign(const std::string name, TypeNodePtr type, NodePtr expr)
 {
-    if (false){//SymbolTable::functionMode()) {
-    } else {
-        SymbolTable::declareVariable(name, EquelleType());
-    }
-    return new Node();
+    SequenceNode* seq = new SequenceNode;
+    seq->pushNode(handleDeclaration(name, type));
+    seq->pushNode(handleAssignment(name, expr));
+    return seq;
 }
 
 inline TypeNodePtr handleCollection(TypeNodePtr btype, NodePtr gridmapping, NodePtr subsetof)
@@ -813,7 +870,7 @@ inline TypeNodePtr handleCollection(TypeNodePtr btype, NodePtr gridmapping, Node
 
 inline FuncTypeNodePtr handleFuncType(FuncArgsDeclNode* argtypes, TypeNodePtr rtype)
 {
-    return new FuncTypeNode(FunctionType(rtype->type(), argtypes->arguments()));
+    return new FuncTypeNode(FunctionType(argtypes->arguments(), rtype->type()));
 }
 
 
