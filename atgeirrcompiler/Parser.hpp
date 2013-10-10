@@ -91,6 +91,7 @@ enum CanonicalEntitySet { InteriorCells = 0, BoundaryCells, AllCells,
                           InteriorEdges, BoundaryEdges, AllEdges,
                           InteriorVertices, BoundaryVertices, AllVertices,
                           NotApplicable,
+                          PostponedDefinition,
                           FirstRuntimeEntitySet };
 
 inline std::string canonicalEntitySetString(const int gridmapping)
@@ -122,8 +123,9 @@ class EquelleType
 public:
     EquelleType(const BasicType bt = Invalid,
                 const bool collection = false,
-                const int gridmapping = NotApplicable)
-        : basic_type_(bt), collection_(collection), gridmapping_(gridmapping)
+                const int gridmapping = NotApplicable,
+                const int subset_of = NotApplicable)
+        : basic_type_(bt), collection_(collection), gridmapping_(gridmapping), subset_of_(subset_of)
     {
     }
 
@@ -154,27 +156,17 @@ public:
         return gridmapping_;
     }
 
-    std::string equelleString() const
+    int subsetOf() const
     {
-        std::string es = collection_ ? "Collection Of " : "";
-        es += basicTypeString(basic_type_);
-        if (gridmapping_ != NotApplicable) {
-            es += " On ";
-            // es += SymbolTable::instance().entitySetName(gridmapping_);
-        }
-        return es;
-    }
-
-    std::string backendString() const
-    {
-        return "No backend string yet.";
+        return subset_of_;
     }
 
     bool operator==(const EquelleType& et) const
     {
         return basic_type_ == et.basic_type_
             && collection_ == et.collection_
-            && gridmapping_ == et.gridmapping_;
+            && gridmapping_ == et.gridmapping_
+            && subset_of_ == et.subset_of_;
     }
 
     bool operator!=(const EquelleType& et) const
@@ -186,12 +178,13 @@ private:
     BasicType basic_type_;
     bool collection_;
     int gridmapping_;
+    int subset_of_;
 };
 
 
 
 
-// ------ SymbolTable singleton ------ 
+// ------ SymbolTable singleton and classes used by it. ------ 
 
 
 
@@ -202,6 +195,15 @@ public:
         : index_(index), subset_index_(subset_index)
     {
     }
+    int index() const
+    {
+        return index_;
+    }
+    int subsetIndex() const
+    {
+        return subset_index_;
+    }
+
 private:
     int index_;
     int subset_index_;
@@ -224,6 +226,10 @@ public:
     const EquelleType& type() const
     {
         return type_;
+    }
+    void setType(const EquelleType& type)
+    {
+        type_ = type;
     }
     bool assigned() const
     {
@@ -411,6 +417,40 @@ public:
         }
     }
 
+    void setVariableType(const std::string& name, const EquelleType& type)
+    {
+        auto lit = local_variables_.find(Variable(name));
+        if (lit != local_variables_.end()) {
+            // Set members are immutable, must
+            // copy, erase and reinsert.
+            Variable copy = *lit;
+            copy.setType(type);
+            local_variables_.erase(lit);
+            local_variables_.insert(copy);
+        } else {
+            yyerror("internal compiler error in Function::setVariableType()");
+        }
+    }
+
+    bool isSubset(const int set1, const int set2) const
+    {
+        if (set1 == set2) {
+            return true;
+        }
+        auto it = findSet(set1);
+        if (it == local_entitysets_.end()) {
+            yyerror("internal compiler error in Function::isSubset()");
+            return false;
+        }
+        if (it->subsetIndex() == set2) {
+            return true;
+        }
+        if (it->subsetIndex() == set1) {
+            return false;
+        }
+        return isSubset(it->subsetIndex(), set2);
+    }
+
     std::string name() const
     {
         return name_;
@@ -440,6 +480,12 @@ private:
         }
         return std::make_pair(false, EquelleType());
     }
+
+    std::vector<EntitySet>::const_iterator findSet(const int index) const
+    {
+        return std::find_if(local_entitysets_.begin(), local_entitysets_.end(),
+                            [&](const EntitySet& es) { return es.index() == index; });
+    }
     std::string name_;
     std::set<Variable> local_variables_;
     std::vector<EntitySet> local_entitysets_;
@@ -460,7 +506,7 @@ public:
         instance().declareFunctionImpl(name, ftype);
     }
 
-    static int declareEntitySet(const int subset_entity_index)
+    static int declareNewEntitySet(const int subset_entity_index)
     {
         return instance().current_function_->declareEntitySet(instance().next_subset_index_++, subset_entity_index);
     }
@@ -485,6 +531,11 @@ public:
         return instance().current_function_->variableType(name);
     }
 
+    static void setVariableType(const std::string& name, const EquelleType& type)
+    {
+        return instance().current_function_->setVariableType(name, type);
+    }
+
     static bool isFunctionDeclared(const std::string& name)
     {
         return instance().isFunctionDeclaredImpl(name);
@@ -498,6 +549,12 @@ public:
     static const Function& getCurrentFunction()
     {
         return *instance().current_function_;
+    }
+
+    /// Returns true if set1 is a (non-strict) subset of set2.
+    static bool isSubset(const int set1, const int set2)
+    {
+        return instance().current_function_->isSubset(set1, set2);
     }
 
 private:
@@ -526,17 +583,41 @@ private:
         functions_.emplace_back("UserSpecifiedCollectionOfScalar",
                                 FunctionType({ Variable("entities", EquelleType()) },
                                              EquelleType(Scalar, true),
-                                             { 0, 0, InvalidIndex}));
+                                             { InvalidIndex, 0, InvalidIndex}));
+        functions_.emplace_back("UserSpecifiedCollectionOfFaceSubsetOf",
+                                FunctionType({ Variable("entities", EquelleType()) },
+                                             EquelleType(Face, true),
+                                             { InvalidIndex, InvalidIndex, 0}));
 
-        // Set main function ref and current (initially equal to main).
+        // ----- Set main function ref and current (initially equal to main). -----
         main_function_ = functions_.begin();
         current_function_ = main_function_;
+
+        // ----- Add built-in entity sets to entity set table. -----
+        main_function_->declareEntitySet(InteriorCells, AllCells);
+        main_function_->declareEntitySet(BoundaryCells, AllCells);
+        main_function_->declareEntitySet(AllCells, AllCells);
+        main_function_->declareEntitySet(InteriorFaces, AllFaces);
+        main_function_->declareEntitySet(BoundaryFaces, AllFaces);
+        main_function_->declareEntitySet(AllFaces, AllFaces);
+        main_function_->declareEntitySet(InteriorEdges, AllEdges);
+        main_function_->declareEntitySet(BoundaryEdges, AllEdges);
+        main_function_->declareEntitySet(AllEdges, AllEdges);
+        main_function_->declareEntitySet(InteriorVertices, AllVertices);
+        main_function_->declareEntitySet(BoundaryVertices, AllVertices);
+        main_function_->declareEntitySet(AllVertices, AllVertices);
     }
 
     static SymbolTable& instance()
     {
         static SymbolTable s;
         return s;
+    }
+
+    /// Used only for setting up initial built-in entity sets.
+    static int declareEntitySet(const int entity_index, const int subset_entity_index)
+    {
+        return instance().current_function_->declareEntitySet(entity_index, subset_entity_index);
     }
 
     void declareFunctionImpl(const std::string& name, const FunctionType& ftype)
@@ -870,11 +951,26 @@ inline VarAssignNode* handleAssignment(const std::string name, NodePtr expr)
             return nullptr;
         }
         // Check that declared type matches right hand side.
-        if (SymbolTable::variableType(name) != expr->type()) {
-            std::string err_msg = "mismatch between type in assignment and declaration for ";
-            err_msg += name;
-            yyerror(err_msg.c_str());
-            return nullptr;
+        EquelleType lhs_type = SymbolTable::variableType(name);
+        EquelleType rhs_type = expr->type();
+        if (lhs_type != rhs_type) {
+            // Check for special case: variable declared to have type
+            // 'Collection Of <Entity> Subset Of <Some entityset>',
+            // actual setting its grid mapping is postponed until the entityset
+            // has been created by a function call.
+            // That means we have to set the actual grid mapping here.
+            if (lhs_type.gridMapping() == PostponedDefinition
+                && lhs_type.basicType() == rhs_type.basicType()
+                && lhs_type.isCollection() && rhs_type.isCollection()
+                && SymbolTable::isSubset(rhs_type.gridMapping(), lhs_type.subsetOf())) {
+                // OK, should make postponed definition of the variable.
+                SymbolTable::setVariableType(name, rhs_type);
+            } else {
+                std::string err_msg = "mismatch between type in assignment and declaration for ";
+                err_msg += name;
+                yyerror(err_msg.c_str());
+                return nullptr;
+            }
         }
     } else {
         SymbolTable::declareVariable(name, expr->type());
@@ -915,15 +1011,17 @@ inline TypeNodePtr handleCollection(TypeNodePtr btype, NodePtr gridmapping, Node
             gm = gridmapping->type().gridMapping();
         }
     }
+    int subset = NotApplicable;
     if (subsetof) {
         // We are creating a new entity collection.
         if (!subsetof->type().isEntityCollection() || subsetof->type().gridMapping() == NotApplicable) {
             yyerror("a Collection must be Subset Of a Collection of Cell, Face etc.");
         } else {
-            gm = SymbolTable::declareEntitySet(subsetof->type().gridMapping());
+            gm = PostponedDefinition;
+            subset = subsetof->type().gridMapping();
         }
     }
-    return new TypeNode(EquelleType(bt.basicType(), true, gm));
+    return new TypeNode(EquelleType(bt.basicType(), true, gm, subset));
 }
 
 inline FuncTypeNodePtr handleFuncType(FuncArgsDeclNode* argtypes, TypeNodePtr rtype)
@@ -936,8 +1034,8 @@ inline FuncCallNode* handleFuncCall(const std::string& name, FuncArgsNode* args)
     const Function& f = SymbolTable::getFunction(name);
     int dynsubret = f.functionType().dynamicSubsetReturn(args->argumentTypes());
     if (dynsubret != NotApplicable) {
-        // Create a new entity collection.
-        const int gm = SymbolTable::declareEntitySet(dynsubret);
+        // Create a new entity collection. This is the only place this can happen.
+        const int gm = SymbolTable::declareNewEntitySet(dynsubret);
         return new FuncCallNode(name, args, gm);
     } else {
         return new FuncCallNode(name, args);
