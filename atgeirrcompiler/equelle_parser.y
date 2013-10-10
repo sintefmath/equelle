@@ -130,7 +130,7 @@ expr: number              { $$ = $1; }
     | '-' expr %prec UMINUS  { $$ = new UnaryNegationNode($2); }
     | expr '?' expr ':' expr %prec '?' { $$ = new TrinaryIfNode($1, $3, $5); }
     | expr ON expr        { $$ = new OnNode($1, $3); }
-    | ID                  { $$ = new VarNode(*($1)); delete $1; }
+    | ID                  { $$ = handleIdentifier(*($1)); delete $1; }
     ;
 
 type_expr: basic_type                                      { $$ = $1; }

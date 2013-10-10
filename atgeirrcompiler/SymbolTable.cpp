@@ -351,6 +351,11 @@ void SymbolTable::renameCurrentFunction(const std::string& name)
     instance().current_function_->setName(name);
 }
 
+void SymbolTable::retypeCurrentFunction(const FunctionType& ftype)
+{
+    instance().current_function_->setFunctionType(ftype);
+}
+
 /// Returns true if set1 is a (non-strict) subset of set2.
 bool SymbolTable::isSubset(const int set1, const int set2)
 {

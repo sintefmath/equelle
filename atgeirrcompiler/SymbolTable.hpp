@@ -183,6 +183,8 @@ public:
 
     static void renameCurrentFunction(const std::string& name);
 
+    static void retypeCurrentFunction(const FunctionType& ftype);
+
     /// Returns true if set1 is a (non-strict) subset of set2.
     static bool isSubset(const int set1, const int set2);
 

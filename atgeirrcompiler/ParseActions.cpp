@@ -20,7 +20,22 @@ Node* handleNumber(const double num)
 
 
 
-VarDeclNode* handleDeclaration(const std::string name, TypeNode* type)
+Node* handleIdentifier(const std::string& name)
+{
+    if (SymbolTable::isVariableDeclared(name)) {
+        return new VarNode(name);
+    } else {
+        if (SymbolTable::isFunctionDeclared(name)) {
+            return new FuncRefNode(name);
+        } else {
+            return new JustAnIdentifierNode(name);
+        }
+    }
+}
+
+
+
+VarDeclNode* handleDeclaration(const std::string& name, TypeNode* type)
 {
     SymbolTable::declareVariable(name, type->type());
     return new VarDeclNode(name, type);
@@ -28,7 +43,7 @@ VarDeclNode* handleDeclaration(const std::string name, TypeNode* type)
 
 
 
-VarAssignNode* handleAssignment(const std::string name, Node* expr)
+VarAssignNode* handleAssignment(const std::string& name, Node* expr)
 {
     // If already declared...
     if (SymbolTable::isVariableDeclared(name)) {
@@ -72,16 +87,17 @@ VarAssignNode* handleAssignment(const std::string name, Node* expr)
 
 
 
-Node* handleFuncDeclaration(const std::string name, FuncTypeNode* ftype)
+Node* handleFuncDeclaration(const std::string& name, FuncTypeNode* ftype)
 {
     SymbolTable::renameCurrentFunction(name);
+    SymbolTable::retypeCurrentFunction(ftype->funcType());
     SymbolTable::setCurrentFunction("Main");
     return new FuncDeclNode(name, ftype);
 }
 
 
 
-Node* handleFuncStart(const std::string name, Node* funcargs)
+Node* handleFuncStart(const std::string& name, Node* funcargs)
 {
     SymbolTable::setCurrentFunction(name);
     return new FuncStartNode(name, funcargs);
@@ -119,7 +135,7 @@ ReturnStatementNode* handleReturnStatement(Node* expr)
 
 
 
-Node* handleDeclarationAssign(const std::string name, TypeNode* type, Node* expr)
+Node* handleDeclarationAssign(const std::string& name, TypeNode* type, Node* expr)
 {
     SequenceNode* seq = new SequenceNode;
     seq->pushNode(handleDeclaration(name, type));

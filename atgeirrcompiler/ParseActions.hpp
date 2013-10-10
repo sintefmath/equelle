@@ -14,13 +14,15 @@
 
 Node* handleNumber(const double num);
 
-VarDeclNode* handleDeclaration(const std::string name, TypeNode* type);
+Node* handleIdentifier(const std::string& name);
 
-VarAssignNode* handleAssignment(const std::string name, Node* expr);
+VarDeclNode* handleDeclaration(const std::string& name, TypeNode* type);
 
-Node* handleFuncDeclaration(const std::string name, FuncTypeNode* ftype);
+VarAssignNode* handleAssignment(const std::string& name, Node* expr);
 
-Node* handleFuncStart(const std::string name, Node* funcargs);
+Node* handleFuncDeclaration(const std::string& name, FuncTypeNode* ftype);
+
+Node* handleFuncStart(const std::string& name, Node* funcargs);
 
 void handleFuncStartType();
 
@@ -30,7 +32,7 @@ FuncAssignNode* handleFuncAssignment(Node* funcstart, SequenceNode* fbody);
 
 ReturnStatementNode* handleReturnStatement(Node* expr);
 
-Node* handleDeclarationAssign(const std::string name, TypeNode* type, Node* expr);
+Node* handleDeclarationAssign(const std::string& name, TypeNode* type, Node* expr);
 
 TypeNode* handleCollection(TypeNode* btype, Node* gridmapping, Node* subsetof);
 

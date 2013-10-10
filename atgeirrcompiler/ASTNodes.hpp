@@ -240,7 +240,7 @@ public:
     VarNode(const std::string& varname) : varname_(varname) {}
     EquelleType type() const
     {
-        return SymbolTable::getCurrentFunction().variableType(varname_);
+        return SymbolTable::variableType(varname_);
     }
     const std::string& name() const
     {
@@ -248,6 +248,41 @@ public:
     }
 private:
     std::string varname_;
+};
+
+
+
+
+class FuncRefNode : public Node
+{
+public:
+    FuncRefNode(const std::string& funcname) : funcname_(funcname) {}
+    EquelleType type() const
+    {
+        // Functions' types cannot be expressed as an EquelleType
+        return EquelleType();
+    }
+    const std::string& name() const
+    {
+        return funcname_;
+    }
+private:
+    std::string funcname_;
+};
+
+
+
+
+class JustAnIdentifierNode : public Node
+{
+public:
+    JustAnIdentifierNode(const std::string& id) : id_(id) {}
+    const std::string& name() const
+    {
+        return id_;
+    }
+private:
+    std::string id_;
 };
 
 
