@@ -23,22 +23,20 @@
 
 
 
+// ------ Parsing event handlers ------
 
-
-// ------ Handle parse events ------
-
-inline NodePtr handleNumber(const double num)
+inline Node* handleNumber(const double num)
 {
     return new NumberNode(num);
 }
 
-inline VarDeclNode* handleDeclaration(const std::string name, TypeNodePtr type)
+inline VarDeclNode* handleDeclaration(const std::string name, TypeNode* type)
 {
     SymbolTable::declareVariable(name, type->type());
     return new VarDeclNode(name, type);
 }
 
-inline VarAssignNode* handleAssignment(const std::string name, NodePtr expr)
+inline VarAssignNode* handleAssignment(const std::string name, Node* expr)
 {
     // If already declared...
     if (SymbolTable::isVariableDeclared(name)) {
@@ -80,13 +78,13 @@ inline VarAssignNode* handleAssignment(const std::string name, NodePtr expr)
     return new VarAssignNode(name, expr);
 }
 
-inline NodePtr handleFuncDeclaration(const std::string name, FuncTypeNodePtr ftype)
+inline Node* handleFuncDeclaration(const std::string name, FuncTypeNode* ftype)
 {
     SymbolTable::declareFunction(name, ftype->funcType());
     return new FuncDeclNode(name, ftype);
 }
 
-inline NodePtr handleDeclarationAssign(const std::string name, TypeNodePtr type, NodePtr expr)
+inline Node* handleDeclarationAssign(const std::string name, TypeNode* type, Node* expr)
 {
     SequenceNode* seq = new SequenceNode;
     seq->pushNode(handleDeclaration(name, type));
@@ -94,7 +92,7 @@ inline NodePtr handleDeclarationAssign(const std::string name, TypeNodePtr type,
     return seq;
 }
 
-inline TypeNodePtr handleCollection(TypeNodePtr btype, NodePtr gridmapping, NodePtr subsetof)
+inline TypeNode* handleCollection(TypeNode* btype, Node* gridmapping, Node* subsetof)
 {
     assert(gridmapping == nullptr || subsetof == nullptr);
     EquelleType bt = btype->type();
@@ -123,7 +121,7 @@ inline TypeNodePtr handleCollection(TypeNodePtr btype, NodePtr gridmapping, Node
     return new TypeNode(EquelleType(bt.basicType(), true, gm, subset));
 }
 
-inline FuncTypeNodePtr handleFuncType(FuncArgsDeclNode* argtypes, TypeNodePtr rtype)
+inline FuncTypeNode* handleFuncType(FuncArgsDeclNode* argtypes, TypeNode* rtype)
 {
     return new FuncTypeNode(FunctionType(argtypes->arguments(), rtype->type()));
 }
@@ -178,7 +176,7 @@ inline BinaryOpNode* handleBinaryOp(BinaryOp op, Node* left, Node* right)
     return new BinaryOpNode(op, left, right);
 }
 
-inline NormNode* handleNorm(NodePtr expr_to_norm)
+inline NormNode* handleNorm(Node* expr_to_norm)
 {
     const BasicType bt = expr_to_norm->type().basicType();
     if (isEntityType(bt) || bt == Scalar || bt == Vector) {

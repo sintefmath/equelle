@@ -11,8 +11,11 @@
 
 #include <vector>
 
+
 // ------ Abstract syntax tree classes ------ 
 
+
+/// Base class for all AST classes.
 class Node
 {
 public:
@@ -24,7 +27,8 @@ public:
     }
 };
 
-typedef Node* NodePtr;
+
+
 
 class SequenceNode : public Node
 {
@@ -36,6 +40,9 @@ public:
 private:
     std::vector<Node*> nodes_;
 };
+
+
+
 
 class NumberNode : public Node
 {
@@ -49,6 +56,9 @@ private:
     double num_;
 };
 
+
+
+
 class TypeNode : public Node
 {
 public:
@@ -61,7 +71,8 @@ private:
     EquelleType et_;
 };
 
-typedef TypeNode* TypeNodePtr;
+
+
 
 class FuncTypeNode : public Node
 {
@@ -75,14 +86,16 @@ private:
     FunctionType ft_;
 };
 
-typedef FuncTypeNode* FuncTypeNodePtr;
+
+
 
 enum BinaryOp { Add, Subtract, Multiply, Divide };
+
 
 class BinaryOpNode : public Node
 {
 public:
-    BinaryOpNode(BinaryOp op, NodePtr left, NodePtr right) : op_(op), left_(left), right_(right) {}
+    BinaryOpNode(BinaryOp op, Node* left, Node* right) : op_(op), left_(left), right_(right) {}
     EquelleType type() const
     {
         EquelleType lt = left_->type();
@@ -112,14 +125,17 @@ public:
     }
 private:
     BinaryOp op_;
-    NodePtr left_;
-    NodePtr right_;
+    Node* left_;
+    Node* right_;
 };
+
+
+
 
 class NormNode : public Node
 {
 public:
-    NormNode(NodePtr expr_to_norm) : expr_to_norm_(expr_to_norm){}
+    NormNode(Node* expr_to_norm) : expr_to_norm_(expr_to_norm){}
     EquelleType type() const
     {
         return EquelleType(Scalar,
@@ -127,38 +143,47 @@ public:
                            expr_to_norm_->type().gridMapping());
     }
 private:
-    NodePtr expr_to_norm_;
+    Node* expr_to_norm_;
 };
+
+
+
 
 class UnaryNegationNode : public Node
 {
 public:
-    UnaryNegationNode(NodePtr expr_to_negate) : expr_to_negate_(expr_to_negate) {}
+    UnaryNegationNode(Node* expr_to_negate) : expr_to_negate_(expr_to_negate) {}
     EquelleType type() const
     {
         return expr_to_negate_->type();
     }
 private:
-    NodePtr expr_to_negate_;
+    Node* expr_to_negate_;
 };
+
+
+
 
 class OnNode : public Node
 {
 public:
-    OnNode(NodePtr left, NodePtr right) : left_(left), right_(right) {}
+    OnNode(Node* left, Node* right) : left_(left), right_(right) {}
     EquelleType type() const
     {
         return EquelleType(left_->type().basicType(), true, right_->type().gridMapping());
     }
 private:
-    NodePtr left_;
-    NodePtr right_;
+    Node* left_;
+    Node* right_;
 };
+
+
+
 
 class TrinaryIfNode : public Node
 {
 public:
-    TrinaryIfNode(NodePtr predicate, NodePtr iftrue, NodePtr iffalse)
+    TrinaryIfNode(Node* predicate, Node* iftrue, Node* iffalse)
         : predicate_(predicate), iftrue_(iftrue), iffalse_(iffalse)
     {}
     EquelleType type() const
@@ -166,15 +191,18 @@ public:
         return iftrue_->type();
     }
 private:
-    NodePtr predicate_;
-    NodePtr iftrue_;
-    NodePtr iffalse_;
+    Node* predicate_;
+    Node* iftrue_;
+    Node* iffalse_;
 };
+
+
+
 
 class VarDeclNode : public Node
 {
 public:
-    VarDeclNode(std::string varname, TypeNodePtr type)
+    VarDeclNode(std::string varname, TypeNode* type)
         : varname_(varname), type_(type) {}
     EquelleType type() const
     {
@@ -186,17 +214,23 @@ public:
     }
 private:
     std::string varname_;
-    TypeNodePtr type_;
+    TypeNode* type_;
 };
+
+
+
 
 class VarAssignNode : public Node
 {
 public:
-    VarAssignNode(std::string varname, NodePtr expr) : varname_(varname), expr_(expr) {}
+    VarAssignNode(std::string varname, Node* expr) : varname_(varname), expr_(expr) {}
 private:
     std::string varname_;
-    NodePtr expr_;
+    Node* expr_;
 };
+
+
+
 
 class VarNode : public Node
 {
@@ -213,6 +247,9 @@ public:
 private:
     std::string varname_;
 };
+
+
+
 
 class FuncArgsDeclNode : public Node
 {
@@ -240,26 +277,35 @@ private:
     std::vector<VarDeclNode*> decls_;
 };
 
+
+
+
 class FuncDeclNode : public Node
 {
 public:
-    FuncDeclNode(std::string funcname, FuncTypeNodePtr ftype)
+    FuncDeclNode(std::string funcname, FuncTypeNode* ftype)
         : funcname_(funcname), ftype_(ftype) {}
 private:
     std::string funcname_;
-    FuncTypeNodePtr ftype_;
+    FuncTypeNode* ftype_;
 };
+
+
+
 
 class FuncAssignNode : public Node
 {
 public:
-    FuncAssignNode(std::string funcname, NodePtr funcargs, NodePtr funcbody)
+    FuncAssignNode(std::string funcname, Node* funcargs, Node* funcbody)
         : funcname_(funcname), funcargs_(funcargs), funcbody_(funcbody) {}
 private:
     std::string funcname_;
-    NodePtr funcargs_;
-    NodePtr funcbody_;
+    Node* funcargs_;
+    Node* funcbody_;
 };
+
+
+
 
 class FuncArgsNode : public Node
 {
@@ -286,6 +332,9 @@ public:
 private:
     std::vector<Node*> args_;
 };
+
+
+
 
 class FuncCallNode : public Node
 {

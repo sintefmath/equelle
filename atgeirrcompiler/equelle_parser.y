@@ -72,10 +72,10 @@
 }
 
 %union{
-    NodePtr node;
-    TypeNodePtr type;
+    Node* node;
+    TypeNode* type;
     VarDeclNode* vardecl;
-    FuncTypeNodePtr ftype;
+    FuncTypeNode* ftype;
     FuncArgsNode* farg;
     FuncArgsDeclNode* fargdecl;
     std::string* str;
