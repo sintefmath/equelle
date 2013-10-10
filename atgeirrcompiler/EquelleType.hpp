@@ -28,6 +28,8 @@ bool isEntityType(const BasicType bt);
 
 bool isNumericType(const BasicType bt);
 
+BasicType canonicalGridMappingEntity(const int gridmapping);
+
 std::string canonicalEntitySetString(const int gridmapping);
 
 

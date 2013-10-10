@@ -44,4 +44,10 @@ BinaryOpNode* handleBinaryOp(BinaryOp op, Node* left, Node* right);
 
 NormNode* handleNorm(Node* expr_to_norm);
 
+UnaryNegationNode* handleUnaryNegation(Node* expr_to_negate);
+
+TrinaryIfNode* handleTrinaryIf(Node* predicate, Node* iftrue, Node* iffalse);
+
+OnNode* handleOn(Node* left, Node* right);
+
 #endif // PARSEACTIONS_HEADER_INCLUDED

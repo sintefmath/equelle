@@ -247,3 +247,68 @@ NormNode* handleNorm(Node* expr_to_norm)
         return new NormNode(expr_to_norm);
     }
 }
+
+
+
+UnaryNegationNode* handleUnaryNegation(Node* expr_to_negate)
+{
+    if (!isNumericType(expr_to_negate->type().basicType())) {
+        yyerror("unary minus can only be applied to numeric types.");
+    }
+    return new UnaryNegationNode(expr_to_negate);
+}
+
+
+
+TrinaryIfNode* handleTrinaryIf(Node* predicate, Node* iftrue, Node* iffalse)
+{
+    const EquelleType pt = predicate->type();
+    const EquelleType tt = iftrue->type();
+    const EquelleType ft = iffalse->type();
+    if (pt.basicType() != Bool) {
+        yyerror("in trinary if '<predicate> ? <iftrue> : <iffalse>' "
+                "<predicate> must be a Bool type.");
+    }
+    if (tt != ft) {
+        yyerror("in trinary if '<predicate> ? <iftrue> : <iffalse>' "
+                "<iftrue> and <iffalse> must have the same type.");
+    }
+    if ((pt.isCollection() != tt.isCollection()) ||
+        (pt.gridMapping() != tt.gridMapping())) {
+        yyerror("in trinary if '<predicate> ? <iftrue> : <iffalse>' "
+                "all three expressions must be 'On' the same set.");
+    }
+    return new TrinaryIfNode(predicate, iftrue, iffalse);
+}
+
+
+
+OnNode* handleOn(Node* left, Node* right)
+{
+    if (!right->type().isEntityCollection()) {
+        yyerror("in a '<left> On <right>' expression "
+                "the expression <right> must be a Collection Of Cell, Face, Edge or Vertex.");
+    }
+
+    // Bug: this test is not quite true. <left> can be a Scalar for example.
+    //
+    // if (canonicalGridMappingEntity(left->type().gridMapping()) != right->type().basicType()) {
+    //     yyerror("in a '<left> On <right>' expression "
+    //             "the expression <right> must be a collection of the same kind of that which <left> is On.");
+    // }
+
+    // Bug: this test is not quite good, since we do not want to compare the two sets <left> and
+    // <right> are On, but the one <left> is On with <right> itself. This is not really doable
+    // currently.
+    //
+    // const int gml = left->type().gridMapping();
+    // const int gmr = right->type().gridMapping();
+    // if (left->type().isCollection()
+    //     && !SymbolTable::isSubset(gml, gmr)
+    //     && !SymbolTable::isSubset(gmr, gml)) {
+    //     yyerror("in a '<left> On <right>' expression "
+    //             "the entityset <right> must be a (non-strict) super- or sub-set of "
+    //             "the set which <left> is 'On'.");
+    // }
+    return new OnNode(left, right);
+}

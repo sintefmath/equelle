@@ -93,8 +93,8 @@ program: program line           { $$ = $1; $$->pushNode($2); }
 
 line: statement EOL             { $$ = $1; }
     | statement COMMENT EOL     { $$ = $1; }
-    | COMMENT EOL               { $$ = 0; }
-    | EOL                       { $$ = 0; }
+    | COMMENT EOL               { $$ = nullptr; }
+    | EOL                       { $$ = nullptr; }
     ;
 
 f_body: '{' EOL program '}'     { $$ = handleFuncBody($3); }
@@ -127,16 +127,16 @@ expr: number              { $$ = $1; }
     | expr '*' expr       { $$ = handleBinaryOp(Multiply, $1, $3); }
     | expr '-' expr       { $$ = handleBinaryOp(Subtract, $1, $3); }
     | expr '+' expr       { $$ = handleBinaryOp(Add, $1, $3); }
-    | '-' expr %prec UMINUS  { $$ = new UnaryNegationNode($2); }
-    | expr '?' expr ':' expr %prec '?' { $$ = new TrinaryIfNode($1, $3, $5); }
-    | expr ON expr        { $$ = new OnNode($1, $3); }
+    | '-' expr %prec UMINUS  { $$ = handleUnaryNegation($2); }
+    | expr '?' expr ':' expr %prec '?' { $$ = handleTrinaryIf($1, $3, $5); }
+    | expr ON expr        { $$ = handleOn($1, $3); }
     | ID                  { $$ = handleIdentifier(*($1)); delete $1; }
     ;
 
-type_expr: basic_type                                      { $$ = $1; }
-         | COLLECTION OF basic_type                        { $$ = handleCollection($3,  0,  0); }
-         | COLLECTION OF basic_type ON expr                { $$ = handleCollection($3, $5,  0); }
-         | COLLECTION OF basic_type SUBSET OF expr         { $$ = handleCollection($3,  0, $6); }
+type_expr: basic_type                                  { $$ = $1; }
+         | COLLECTION OF basic_type                    { $$ = handleCollection($3, nullptr,  nullptr); }
+         | COLLECTION OF basic_type ON expr            { $$ = handleCollection($3,      $5,  nullptr); }
+         | COLLECTION OF basic_type SUBSET OF expr     { $$ = handleCollection($3, nullptr,       $6); }
          ;
 
 f_type_expr: f_starttype '(' f_decl_args ')' RET type_expr      { $$ = handleFuncType($3, $6); }

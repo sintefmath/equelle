@@ -103,6 +103,34 @@ std::string canonicalEntitySetString(const int gridmapping)
 }
 
 
+
+BasicType canonicalGridMappingEntity(const int gridmapping)
+{
+    switch (gridmapping) {
+    case InteriorCells:
+    case BoundaryCells:
+    case AllCells:
+        return Cell;
+    case InteriorFaces:
+    case BoundaryFaces:
+    case AllFaces:
+        return Face;
+    case InteriorEdges:
+    case BoundaryEdges:
+    case AllEdges:
+        return Edge;
+    case InteriorVertices:
+    case BoundaryVertices:
+    case AllVertices:
+        return Vertex;
+    default:
+        return Invalid;
+    }
+}
+
+
+
+
 // ----- Implementation of class EquelleType's methods -----
 
 
