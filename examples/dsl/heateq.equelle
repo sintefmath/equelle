@@ -27,16 +27,15 @@ itrans : Collection Of Scalar On interior_faces = k * |interior_faces| / |Centro
 # Compute boundary transmissibilities.
 bf = BoundaryFaces()
 bf_cells = IsEmpty(FirstCell(bf)) ? SecondCell(bf) : FirstCell(bf)
-bf_sign = IsEmpty(FirstCell(bf))) ? (-1 On bf) : (1 On bf)
+bf_sign = IsEmpty(FirstCell(bf)) ? (-1 On bf) : (1 On bf)
 btrans = k * |bf| / |Centroid(bf) - Centroid(bf_cells)|
 
 # Compute quantities needed for boundary conditions.
 dir_sign = bf_sign On dirichlet_boundary
-
 # Compute flux for interior faces.
 computeInteriorFlux : Function(u : Collection Of Scalar On AllCells()) -> Collection Of Scalar On InteriorFaces()
 computeInteriorFlux(u) = {
-    return -itrans * Gradient(u)
+    -> -itrans * Gradient(u)
 }
 
 # Compute flux for boundary faces.
@@ -44,9 +43,9 @@ computeBoundaryFlux : Function(u : Collection Of Scalar On AllCells()) -> Collec
 computeBoundaryFlux(u) = {
     # Compute flux at Dirichlet boundaries.
     u_dirbdycells = u On (bf_cells On dirichlet_boundary)
-    dir_fluxes = btrans * dir_sign * (u_dirbdycells - dirichlet_val)
+    dir_fluxes = (btrans On dirichlet_boundary) * dir_sign * (u_dirbdycells - dirichlet_val)
     # Extending with zero away from Dirichlet boundaries (i.e. assuming no-flow elsewhere).
-    return dir_fluxes On BoundaryFaces()
+    -> dir_fluxes On BoundaryFaces()
 }
 
 # Compute the residual for the heat equation.
@@ -58,7 +57,7 @@ computeResidual(u) = {
     fluxes = (ifluxes On AllFaces()) + (bfluxes On AllFaces())
     # Deduced type: Collection Of Scalar On AllCells()
     residual = u - u0 + (dt / vol) * Divergence(fluxes)
-    return residual
+    -> residual
 }
 
 # NewtonSolve takes a function (that should accept the primary variable as input) and the initial guess for the primary variable.
@@ -67,35 +66,3 @@ u = NewtonSolve(computeResidual, u0)
 
 Output(u)
 Output(fluxes)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
