@@ -68,7 +68,7 @@
 
 
 %code requires{
-#include "Parser.hpp"
+#include "ParseActions.hpp"
 }
 
 %union{

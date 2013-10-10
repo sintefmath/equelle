@@ -16,7 +16,7 @@ extern int yylineno;
 
 // ------ Utilities used in bison parser ------ 
 
-inline double numFromString(const std::string& s);
+double numFromString(const std::string& s);
 
 
 #endif // COMMON_HEADER_INCLUDED

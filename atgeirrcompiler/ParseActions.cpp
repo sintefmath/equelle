@@ -2,13 +2,11 @@
   Copyright 2013 SINTEF ICT, Applied Mathematics.
 */
 
-#ifndef PARSER_HEADER_INCLUDED
-#define PARSER_HEADER_INCLUDED
-
 #include "Common.hpp"
 #include "EquelleType.hpp"
 #include "SymbolTable.hpp"
 #include "ASTNodes.hpp"
+#include "ParseActions.hpp"
 
 #include <iostream>
 #include <string>
@@ -25,18 +23,18 @@
 
 // ------ Parsing event handlers ------
 
-inline Node* handleNumber(const double num)
+Node* handleNumber(const double num)
 {
     return new NumberNode(num);
 }
 
-inline VarDeclNode* handleDeclaration(const std::string name, TypeNode* type)
+VarDeclNode* handleDeclaration(const std::string name, TypeNode* type)
 {
     SymbolTable::declareVariable(name, type->type());
     return new VarDeclNode(name, type);
 }
 
-inline VarAssignNode* handleAssignment(const std::string name, Node* expr)
+VarAssignNode* handleAssignment(const std::string name, Node* expr)
 {
     // If already declared...
     if (SymbolTable::isVariableDeclared(name)) {
@@ -78,13 +76,13 @@ inline VarAssignNode* handleAssignment(const std::string name, Node* expr)
     return new VarAssignNode(name, expr);
 }
 
-inline Node* handleFuncDeclaration(const std::string name, FuncTypeNode* ftype)
+Node* handleFuncDeclaration(const std::string name, FuncTypeNode* ftype)
 {
     SymbolTable::declareFunction(name, ftype->funcType());
     return new FuncDeclNode(name, ftype);
 }
 
-inline Node* handleDeclarationAssign(const std::string name, TypeNode* type, Node* expr)
+Node* handleDeclarationAssign(const std::string name, TypeNode* type, Node* expr)
 {
     SequenceNode* seq = new SequenceNode;
     seq->pushNode(handleDeclaration(name, type));
@@ -92,7 +90,7 @@ inline Node* handleDeclarationAssign(const std::string name, TypeNode* type, Nod
     return seq;
 }
 
-inline TypeNode* handleCollection(TypeNode* btype, Node* gridmapping, Node* subsetof)
+TypeNode* handleCollection(TypeNode* btype, Node* gridmapping, Node* subsetof)
 {
     assert(gridmapping == nullptr || subsetof == nullptr);
     EquelleType bt = btype->type();
@@ -121,12 +119,12 @@ inline TypeNode* handleCollection(TypeNode* btype, Node* gridmapping, Node* subs
     return new TypeNode(EquelleType(bt.basicType(), true, gm, subset));
 }
 
-inline FuncTypeNode* handleFuncType(FuncArgsDeclNode* argtypes, TypeNode* rtype)
+FuncTypeNode* handleFuncType(FuncArgsDeclNode* argtypes, TypeNode* rtype)
 {
     return new FuncTypeNode(FunctionType(argtypes->arguments(), rtype->type()));
 }
 
-inline FuncCallNode* handleFuncCall(const std::string& name, FuncArgsNode* args)
+FuncCallNode* handleFuncCall(const std::string& name, FuncArgsNode* args)
 {
     const Function& f = SymbolTable::getFunction(name);
     int dynsubret = f.functionType().dynamicSubsetReturn(args->argumentTypes());
@@ -139,7 +137,7 @@ inline FuncCallNode* handleFuncCall(const std::string& name, FuncArgsNode* args)
     }
 }
 
-inline BinaryOpNode* handleBinaryOp(BinaryOp op, Node* left, Node* right)
+BinaryOpNode* handleBinaryOp(BinaryOp op, Node* left, Node* right)
 {
     EquelleType lt = left->type();
     EquelleType rt = right->type();
@@ -176,7 +174,7 @@ inline BinaryOpNode* handleBinaryOp(BinaryOp op, Node* left, Node* right)
     return new BinaryOpNode(op, left, right);
 }
 
-inline NormNode* handleNorm(Node* expr_to_norm)
+NormNode* handleNorm(Node* expr_to_norm)
 {
     const BasicType bt = expr_to_norm->type().basicType();
     if (isEntityType(bt) || bt == Scalar || bt == Vector) {
@@ -186,5 +184,3 @@ inline NormNode* handleNorm(Node* expr_to_norm)
         return new NormNode(expr_to_norm);
     }
 }
-
-#endif // PARSER_HEADER_INCLUDED
