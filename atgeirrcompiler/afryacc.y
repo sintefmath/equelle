@@ -117,12 +117,12 @@ comb_decl_assign: ID ':' type_expr '=' expr  { $$ = handleDeclarationAssign(*($1
 expr: number              { $$ = $1; }
     | function_call       { $$ = $1; }
     | '(' expr ')'        { $$ = $2; }
-    | '|' expr '|'        { $$ = new NormNode($2); }
-    | expr '/' expr       { $$ = new BinaryOpNode(Divide, $1, $3); }
-    | expr '*' expr       { $$ = new BinaryOpNode(Multiply, $1, $3); }
-    | expr '-' expr       { $$ = new BinaryOpNode(Subtract, $1, $3); }
+    | '|' expr '|'        { $$ = handleNorm($2); }
+    | expr '/' expr       { $$ = handleBinaryOp(Divide, $1, $3); }
+    | expr '*' expr       { $$ = handleBinaryOp(Multiply, $1, $3); }
+    | expr '-' expr       { $$ = handleBinaryOp(Subtract, $1, $3); }
+    | expr '+' expr       { $$ = handleBinaryOp(Add, $1, $3); }
     | '-' expr %prec UMINUS  { $$ = new UnaryNegationNode($2); }
-    | expr '+' expr       { $$ = new BinaryOpNode(Add, $1, $3); }
     | expr '?' expr ':' expr %prec '?' { $$ = new TrinaryIfNode($1, $3, $5); }
     | expr ON expr        { $$ = new OnNode($1, $3); }
     | ID                  { $$ = new VarNode(*($1)); delete $1; }

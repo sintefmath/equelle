@@ -87,6 +87,25 @@ inline bool isEntityType(const BasicType bt)
     }
 }
 
+inline bool isNumericType(const BasicType bt)
+{
+    switch (bt) {
+    case Bool:
+    case Cell:
+    case Face:
+    case Edge:
+    case Vertex:
+    case Invalid:
+        return false;
+    case Scalar:
+    case Vector:
+        return true;
+    default:
+        yyerror("internal compiler error in isNumericType().");
+        return false;
+    }
+}
+
 enum CanonicalEntitySet { InteriorCells = 0, BoundaryCells, AllCells,
                           InteriorFaces, BoundaryFaces, AllFaces,
                           InteriorEdges, BoundaryEdges, AllEdges,
@@ -751,6 +770,33 @@ class BinaryOpNode : public Node
 {
 public:
     BinaryOpNode(BinaryOp op, NodePtr left, NodePtr right) : op_(op), left_(left), right_(right) {}
+    EquelleType type() const
+    {
+        EquelleType lt = left_->type();
+        EquelleType rt = right_->type();
+        switch (op_) {
+        case Add:
+            return lt; // should be identical to rt.
+        case Subtract:
+            return lt; // should be identical to rt.
+        case Multiply: {
+            const bool isvec = lt.basicType() == Vector || rt.basicType() == Vector; 
+            const BasicType bt = isvec ? Vector : Scalar;
+            const bool coll = lt.isCollection() || rt.isCollection();
+            const int gm = lt.isCollection() ? lt.gridMapping() : rt.gridMapping();
+            return EquelleType(bt, coll, gm);
+        }
+        case Divide: {
+            const BasicType bt = lt.basicType();
+            const bool coll = lt.isCollection() || rt.isCollection();
+            const int gm = lt.isCollection() ? lt.gridMapping() : rt.gridMapping();
+            return EquelleType(bt, coll, gm);
+        }
+        default:
+            yyerror("internal compiler error in BinaryOpNode::type().");
+            return EquelleType();
+        }
+    }
 private:
     BinaryOp op_;
     NodePtr left_;
@@ -760,7 +806,13 @@ private:
 class NormNode : public Node
 {
 public:
-    NormNode(NodePtr expr_to_norm) : expr_to_norm_(expr_to_norm) {}
+    NormNode(NodePtr expr_to_norm) : expr_to_norm_(expr_to_norm){}
+    EquelleType type() const
+    {
+        return EquelleType(Scalar,
+                           expr_to_norm_->type().isCollection(),
+                           expr_to_norm_->type().gridMapping());
+    }
 private:
     NodePtr expr_to_norm_;
 };
@@ -1055,5 +1107,52 @@ inline FuncCallNode* handleFuncCall(const std::string& name, FuncArgsNode* args)
     }
 }
 
+inline BinaryOpNode* handleBinaryOp(BinaryOp op, Node* left, Node* right)
+{
+    EquelleType lt = left->type();
+    EquelleType rt = right->type();
+    if (!isNumericType(lt.basicType()) || !(isNumericType(rt.basicType()))) {
+        yyerror("arithmetic binary operators only apply to numeric types");
+    }
+    if (lt.isCollection() && rt.isCollection()) {
+        if (lt.gridMapping() != rt.gridMapping()) {
+            yyerror("arithmetic binary operators on 'Collection's only acceptable "
+                    "if both sides are 'On' the same set.");
+        }
+    }
+    switch (op) {
+    case Add:
+        // Intentional fall-through.
+    case Subtract:
+        if (lt != rt) {
+            yyerror("addition and subtraction only allowed between identical types.");
+        }
+        break;
+    case Multiply:
+        if (lt.basicType() == Vector && rt.basicType() == Vector) {
+            yyerror("cannot multiply two 'Vector' types.");
+        }
+        break;
+    case Divide:
+        if (rt.basicType() != Scalar) {
+            yyerror("can only divide by 'Scalar' types");
+        }
+        break;
+    default:
+        yyerror("internal compiler error in handleBinaryOp().");
+    }
+    return new BinaryOpNode(op, left, right);
+}
+
+inline NormNode* handleNorm(NodePtr expr_to_norm)
+{
+    const BasicType bt = expr_to_norm->type().basicType();
+    if (isEntityType(bt) || bt == Scalar || bt == Vector) {
+        return new NormNode(expr_to_norm);
+    } else {
+        yyerror("can only take norm of Scalar, Vector, Cell, Face, Edge and Vertex types.");
+        return new NormNode(expr_to_norm);
+    }
+}
 
 #endif // PARSER_HEADER_INCLUDED
