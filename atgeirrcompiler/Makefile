@@ -8,7 +8,7 @@ CXX	 = g++-4.7.0
 CXXFLAGS = -std=c++11 -g -Wall -Wextra -Wno-sign-compare -pedantic
 
 ECHEADERS = Common.hpp EquelleType.hpp SymbolTable.hpp Parser.hpp
-ECOBJS = equelle_lexer_tok.o equelle_parser.o EquelleType.o SymbolTable.o
+ECOBJS = equelle_lexer_tok.o equelle_parser.o EquelleType.o SymbolTable.o ASTNodes.hpp
 
 all:		ec el
 
