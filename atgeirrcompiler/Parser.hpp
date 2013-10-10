@@ -604,8 +604,16 @@ private:
                                 FunctionType({ Variable("faces", EquelleType()) },
                                              EquelleType(Cell, true),
                                              { InvalidIndex, 0, InvalidIndex}));
+        functions_.emplace_back("IsEmpty",
+                                FunctionType({ Variable("entities", EquelleType()) },
+                                             EquelleType(Bool, true),
+                                             { InvalidIndex, 0, InvalidIndex}));
         functions_.emplace_back("Centroid",
                                 FunctionType({ Variable("entities", EquelleType()) },
+                                             EquelleType(Vector, true),
+                                             { InvalidIndex, 0, InvalidIndex}));
+        functions_.emplace_back("Normal",
+                                FunctionType({ Variable("faces", EquelleType()) },
                                              EquelleType(Vector, true),
                                              { InvalidIndex, 0, InvalidIndex}));
         // 2. User input functions.
@@ -620,6 +628,14 @@ private:
                                 FunctionType({ Variable("entities", EquelleType()) },
                                              EquelleType(Face, true),
                                              { InvalidIndex, InvalidIndex, 0}));
+        // 3. Discrete operators.
+        functions_.emplace_back("Gradient",
+                                FunctionType({ Variable("values", EquelleType(Scalar, true, AllCells)) },
+                                             EquelleType(Scalar, true, InteriorFaces)));
+        functions_.emplace_back("Divergence",
+                                FunctionType({ Variable("values", EquelleType()) },
+                                             EquelleType(Scalar, true, AllCells)));
+
 
         // ----- Set main function ref and current (initially equal to main). -----
         main_function_ = functions_.begin();
