@@ -76,6 +76,10 @@ bool Variable::operator<(const Variable& v) const
 // ============ Methods of FunctionType ============
 
 
+FunctionType::FunctionType()
+{
+}
+
 /// Construct FunctionType taking no arguments.
 /// Equelle type: Function() -> returntype
 FunctionType::FunctionType(const EquelleType& return_type)
@@ -138,6 +142,11 @@ const std::vector<Variable>& FunctionType::arguments() const
 // ============ Methods of Function ============
 
 
+Function::Function(const std::string& name)
+    : name_(name)
+{
+}
+
 Function::Function(const std::string& name, const FunctionType& type)
     : name_(name),
       type_(type)
@@ -153,12 +162,6 @@ void Function::declareVariable(const std::string& name, const EquelleType& type)
         errmsg += name;
         yyerror(errmsg.c_str());
     }
-}
-
-int Function::declareEntitySet(const int new_entity_index, const int subset_entity_index)
-{
-    local_entitysets_.emplace_back(new_entity_index, subset_entity_index);
-    return new_entity_index;
 }
 
 EquelleType Function::variableType(const std::string name) const
@@ -226,33 +229,24 @@ void Function::setVariableType(const std::string& name, const EquelleType& type)
     }
 }
 
-bool Function::isSubset(const int set1, const int set2) const
-{
-    if (set1 == set2) {
-        return true;
-    }
-    auto it = findSet(set1);
-    if (it == local_entitysets_.end()) {
-        yyerror("internal compiler error in Function::isSubset()");
-        return false;
-    }
-    if (it->subsetIndex() == set2) {
-        return true;
-    }
-    if (it->subsetIndex() == set1) {
-        return false;
-    }
-    return isSubset(it->subsetIndex(), set2);
-}
-
-std::string Function::name() const
+const std::string& Function::name() const
 {
     return name_;
+}
+
+void Function::setName(const std::string& name)
+{
+    name_ = name;
 }
 
 const FunctionType& Function::functionType() const
 {
     return type_;
+}
+
+void Function::setFunctionType(const FunctionType& ftype)
+{
+    type_ = ftype;
 }
 
 EquelleType Function::returnType(const std::vector<EquelleType>& argtypes) const
@@ -274,12 +268,6 @@ std::pair<bool, EquelleType> Function::declared(const std::string& name) const
     return std::make_pair(false, EquelleType());
 }
 
-std::vector<EntitySet>::const_iterator Function::findSet(const int index) const
-{
-    return std::find_if(local_entitysets_.begin(), local_entitysets_.end(),
-                        [&](const EntitySet& es) { return es.index() == index; });
-}
-
 
 
 // ============ Methods of SymbolTable ============
@@ -290,6 +278,11 @@ void SymbolTable::declareVariable(const std::string& name, const EquelleType& ty
     instance().current_function_->declareVariable(name, type);
 }
 
+void SymbolTable::declareFunction(const std::string& name)
+{
+    instance().declareFunctionImpl(name, FunctionType());
+}
+
 void SymbolTable::declareFunction(const std::string& name, const FunctionType& ftype)
 {
     instance().declareFunctionImpl(name, ftype);
@@ -297,17 +290,21 @@ void SymbolTable::declareFunction(const std::string& name, const FunctionType& f
 
 int SymbolTable::declareNewEntitySet(const int subset_entity_index)
 {
-    return instance().current_function_->declareEntitySet(instance().next_subset_index_++, subset_entity_index);
+    const int new_entityset_index = instance().next_entityset_index_++;
+    instance().declareEntitySet(new_entityset_index, subset_entity_index);
+    return new_entityset_index;
 }
 
 bool SymbolTable::isVariableDeclared(const std::string& name)
 {
-    return instance().current_function_->isVariableDeclared(name);
+    return instance().current_function_->isVariableDeclared(name)
+        || instance().main_function_->isVariableDeclared(name);
 }
 
 bool SymbolTable::isVariableAssigned(const std::string& name)
 {
-    return instance().current_function_->isVariableAssigned(name);
+    return instance().current_function_->isVariableAssigned(name)
+        || instance().main_function_->isVariableAssigned(name);
 }
 
 void SymbolTable::setVariableAssigned(const std::string& name, const bool assigned)
@@ -317,7 +314,11 @@ void SymbolTable::setVariableAssigned(const std::string& name, const bool assign
 
 EquelleType SymbolTable::variableType(const std::string& name)
 {
-    return instance().current_function_->variableType(name);
+    if (instance().current_function_->isVariableDeclared(name)) {
+        return instance().current_function_->variableType(name);
+    } else {
+        return instance().main_function_->variableType(name);
+    }
 }
 
 void SymbolTable::setVariableType(const std::string& name, const EquelleType& type)
@@ -345,14 +346,19 @@ void SymbolTable::setCurrentFunction(const std::string& name)
     instance().setCurrentFunctionImpl(name);
 }
 
+void SymbolTable::renameCurrentFunction(const std::string& name)
+{
+    instance().current_function_->setName(name);
+}
+
 /// Returns true if set1 is a (non-strict) subset of set2.
 bool SymbolTable::isSubset(const int set1, const int set2)
 {
-    return instance().current_function_->isSubset(set1, set2);
+    return instance().isSubsetImpl(set1, set2);
 }
 
 SymbolTable::SymbolTable()
-    : next_subset_index_(FirstRuntimeEntitySet)
+    : next_entityset_index_(FirstRuntimeEntitySet)
 {
     // ----- Add built-in functions to function table. -----
     // 1. Grid functions.
@@ -422,18 +428,18 @@ SymbolTable::SymbolTable()
     current_function_ = main_function_;
 
     // ----- Add built-in entity sets to entity set table. -----
-    main_function_->declareEntitySet(InteriorCells, AllCells);
-    main_function_->declareEntitySet(BoundaryCells, AllCells);
-    main_function_->declareEntitySet(AllCells, AllCells);
-    main_function_->declareEntitySet(InteriorFaces, AllFaces);
-    main_function_->declareEntitySet(BoundaryFaces, AllFaces);
-    main_function_->declareEntitySet(AllFaces, AllFaces);
-    main_function_->declareEntitySet(InteriorEdges, AllEdges);
-    main_function_->declareEntitySet(BoundaryEdges, AllEdges);
-    main_function_->declareEntitySet(AllEdges, AllEdges);
-    main_function_->declareEntitySet(InteriorVertices, AllVertices);
-    main_function_->declareEntitySet(BoundaryVertices, AllVertices);
-    main_function_->declareEntitySet(AllVertices, AllVertices);
+    declareEntitySet(InteriorCells, AllCells);
+    declareEntitySet(BoundaryCells, AllCells);
+    declareEntitySet(AllCells, AllCells);
+    declareEntitySet(InteriorFaces, AllFaces);
+    declareEntitySet(BoundaryFaces, AllFaces);
+    declareEntitySet(AllFaces, AllFaces);
+    declareEntitySet(InteriorEdges, AllEdges);
+    declareEntitySet(BoundaryEdges, AllEdges);
+    declareEntitySet(AllEdges, AllEdges);
+    declareEntitySet(InteriorVertices, AllVertices);
+    declareEntitySet(BoundaryVertices, AllVertices);
+    declareEntitySet(AllVertices, AllVertices);
 }
 
 SymbolTable& SymbolTable::instance()
@@ -443,9 +449,9 @@ SymbolTable& SymbolTable::instance()
 }
 
 /// Used only for setting up initial built-in entity sets.
-int SymbolTable::declareEntitySet(const int entity_index, const int subset_entity_index)
+void SymbolTable::declareEntitySet(const int entity_index, const int subset_entity_index)
 {
-    return instance().current_function_->declareEntitySet(entity_index, subset_entity_index);
+    entitysets_.emplace_back(entity_index, subset_entity_index);
 }
 
 void SymbolTable::declareFunctionImpl(const std::string& name, const FunctionType& ftype)
@@ -494,6 +500,25 @@ void SymbolTable::setCurrentFunctionImpl(const std::string& name)
     }
 }
 
+bool SymbolTable::isSubsetImpl(const int set1, const int set2) const
+{
+    if (set1 == set2) {
+        return true;
+    }
+    auto it = findSet(set1);
+    if (it == entitysets_.end()) {
+        yyerror("internal compiler error in Function::isSubset()");
+        return false;
+    }
+    if (it->subsetIndex() == set2) {
+        return true;
+    }
+    if (it->subsetIndex() == set1) {
+        return false;
+    }
+    return isSubsetImpl(it->subsetIndex(), set2);
+}
+
 std::list<Function>::iterator SymbolTable::findFunction(const std::string& name)
 {
     auto it = std::find_if(functions_.begin(), functions_.end(),
@@ -506,4 +531,11 @@ std::list<Function>::const_iterator SymbolTable::findFunction(const std::string&
     auto it = std::find_if(functions_.begin(), functions_.end(),
                            [&](const Function& f) { return f.name() == name; });
     return it;
+}
+
+
+std::vector<EntitySet>::const_iterator SymbolTable::findSet(const int index) const
+{
+    return std::find_if(entitysets_.begin(), entitysets_.end(),
+                        [&](const EntitySet& es) { return es.index() == index; });
 }

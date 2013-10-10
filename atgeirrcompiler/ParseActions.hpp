@@ -22,7 +22,11 @@ Node* handleFuncDeclaration(const std::string name, FuncTypeNode* ftype);
 
 Node* handleFuncStart(const std::string name, Node* funcargs);
 
+void handleFuncStartType();
+
 SequenceNode* handleFuncBody(SequenceNode* fbody);
+
+FuncAssignNode* handleFuncAssignment(Node* funcstart, SequenceNode* fbody);
 
 ReturnStatementNode* handleReturnStatement(Node* expr);
 

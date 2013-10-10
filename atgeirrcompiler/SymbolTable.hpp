@@ -84,6 +84,8 @@ struct DynamicReturnSpecification
 class FunctionType
 {
 public:
+    FunctionType();
+
     /// Construct FunctionType taking no arguments.
     /// Equelle type: Function() -> returntype
     explicit FunctionType(const EquelleType& return_type);
@@ -113,11 +115,11 @@ private:
 class Function
 {
 public:
+    Function(const std::string& name);
+
     Function(const std::string& name, const FunctionType& type);
 
     void declareVariable(const std::string& name, const EquelleType& type);
-
-    int declareEntitySet(const int new_entity_index, const int subset_entity_index);
 
     EquelleType variableType(const std::string name) const;
 
@@ -129,22 +131,21 @@ public:
 
     void setVariableType(const std::string& name, const EquelleType& type);
 
-    bool isSubset(const int set1, const int set2) const;
+    const std::string& name() const;
 
-    std::string name() const;
+    void setName(const std::string& name);
 
     const FunctionType& functionType() const;
+
+    void setFunctionType(const FunctionType& ftype);
 
     EquelleType returnType(const std::vector<EquelleType>& argtypes) const;
 
 private:
     std::pair<bool, EquelleType> declared(const std::string& name) const;
 
-    std::vector<EntitySet>::const_iterator findSet(const int index) const;
-
     std::string name_;
     std::set<Variable> local_variables_;
-    std::vector<EntitySet> local_entitysets_;
     FunctionType type_;
 };
 
@@ -155,6 +156,8 @@ class SymbolTable
 {
 public:
     static void declareVariable(const std::string& name, const EquelleType& type);
+
+    static void declareFunction(const std::string& name);
 
     static void declareFunction(const std::string& name, const FunctionType& ftype);
 
@@ -178,6 +181,8 @@ public:
 
     static void setCurrentFunction(const std::string& name);
 
+    static void renameCurrentFunction(const std::string& name);
+
     /// Returns true if set1 is a (non-strict) subset of set2.
     static bool isSubset(const int set1, const int set2);
 
@@ -187,7 +192,7 @@ private:
     static SymbolTable& instance();
 
     /// Used only for setting up initial built-in entity sets.
-    static int declareEntitySet(const int entity_index, const int subset_entity_index);
+    void declareEntitySet(const int entity_index, const int subset_entity_index);
 
     void declareFunctionImpl(const std::string& name, const FunctionType& ftype);
 
@@ -197,10 +202,15 @@ private:
 
     const Function& getFunctionImpl(const std::string& name) const;
 
+    bool isSubsetImpl(const int set1, const int set2) const;
+
     std::list<Function>::iterator findFunction(const std::string& name);
     std::list<Function>::const_iterator findFunction(const std::string& name) const;
 
-    int next_subset_index_;
+    std::vector<EntitySet>::const_iterator findSet(const int index) const;
+
+    int next_entityset_index_;
+    std::vector<EntitySet> entitysets_;
     std::list<Function> functions_;
     std::list<Function>::iterator main_function_;
     std::list<Function>::iterator current_function_;

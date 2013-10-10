@@ -74,7 +74,8 @@ VarAssignNode* handleAssignment(const std::string name, Node* expr)
 
 Node* handleFuncDeclaration(const std::string name, FuncTypeNode* ftype)
 {
-    SymbolTable::declareFunction(name, ftype->funcType());
+    SymbolTable::renameCurrentFunction(name);
+    SymbolTable::setCurrentFunction("Main");
     return new FuncDeclNode(name, ftype);
 }
 
@@ -88,10 +89,25 @@ Node* handleFuncStart(const std::string name, Node* funcargs)
 
 
 
+void handleFuncStartType()
+{
+    SymbolTable::declareFunction("TemporaryFunction");
+    SymbolTable::setCurrentFunction("TemporaryFunction");
+}
+
+
+
 SequenceNode* handleFuncBody(SequenceNode* fbody)
 {
     SymbolTable::setCurrentFunction("Main");
     return fbody;
+}
+
+
+
+FuncAssignNode* handleFuncAssignment(Node* funcstart, SequenceNode* fbody)
+{
+    return new FuncAssignNode(funcstart, fbody);
 }
 
 

@@ -43,7 +43,7 @@
 %type <node> number
 %type <node> function_call
 %type <farg> f_call_args
-%type <node> f_body
+%type <seq> f_body
 %type <node> f_startdef
 
 
@@ -112,7 +112,7 @@ declaration: ID ':' type_expr  { $$ = handleDeclaration(*($1), $3); delete $1; }
 f_declaration: ID ':' f_type_expr  { $$ = handleFuncDeclaration(*($1), $3); delete $1; }
 
 assignment: ID '=' expr   { $$ = handleAssignment(*($1), $3); delete $1; }
-          | f_startdef f_body  { $$ = new FuncAssignNode($1, $2); }
+          | f_startdef f_body  { $$ = handleFuncAssignment($1, $2); }
           ;
 
 f_startdef: ID '(' f_call_args ')' '='       { $$ = handleFuncStart(*($1), $3); delete $1; }
@@ -139,7 +139,9 @@ type_expr: basic_type                                      { $$ = $1; }
          | COLLECTION OF basic_type SUBSET OF expr         { $$ = handleCollection($3,  0, $6); }
          ;
 
-f_type_expr: FUNCTION '(' f_decl_args ')' RET type_expr      { $$ = handleFuncType($3, $6); }
+f_type_expr: f_starttype '(' f_decl_args ')' RET type_expr      { $$ = handleFuncType($3, $6); }
+
+f_starttype: FUNCTION                                           { handleFuncStartType(); }
 
 basic_type: SCALAR  { $$ = new TypeNode(EquelleType(Scalar)); }
           | VECTOR  { $$ = new TypeNode(EquelleType(Vector)); }
