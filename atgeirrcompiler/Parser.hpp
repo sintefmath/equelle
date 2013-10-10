@@ -639,6 +639,9 @@ private:
         functions_.emplace_back("NewtonSolve",
                                 FunctionType({ Variable("u", EquelleType()) },
                                              EquelleType(Scalar, true, AllCells)));
+        functions_.emplace_back("Output",
+                                FunctionType({ Variable("data", EquelleType()) },
+                                             EquelleType()));
 
 
         // ----- Set main function ref and current (initially equal to main). -----
