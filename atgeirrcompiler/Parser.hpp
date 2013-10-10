@@ -635,6 +635,10 @@ private:
         functions_.emplace_back("Divergence",
                                 FunctionType({ Variable("values", EquelleType()) },
                                              EquelleType(Scalar, true, AllCells)));
+        // 4. Other functions
+        functions_.emplace_back("NewtonSolve",
+                                FunctionType({ Variable("u", EquelleType()) },
+                                             EquelleType(Scalar, true, AllCells)));
 
 
         // ----- Set main function ref and current (initially equal to main). -----
