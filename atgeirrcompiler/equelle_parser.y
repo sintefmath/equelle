@@ -28,7 +28,7 @@
 %token RET
 %token EOL
 
-%type <node> program
+%type <seq> program
 %type <node> line
 %type <node> statement
 %type <vardecl> declaration
@@ -43,7 +43,8 @@
 %type <node> number
 %type <node> function_call
 %type <farg> f_call_args
-%type <node> fbody
+%type <node> f_body
+%type <node> f_startdef
 
 
 %output "equelle_parser.cpp"
@@ -79,14 +80,15 @@
     FuncTypeNode* ftype;
     FuncArgsNode* farg;
     FuncArgsDeclNode* fargdecl;
+    SequenceNode* seq;
     std::string* str;
 }
 
 
 %%
 
-program: program line           { $$ = new Node(); }
-       |                        { $$ = new Node(); }
+program: program line           { $$ = $1; $$->pushNode($2); }
+       |                        { $$ = new SequenceNode(); }
        ;
 
 line: statement EOL             { $$ = $1; }
@@ -95,14 +97,14 @@ line: statement EOL             { $$ = $1; }
     | EOL                       { $$ = 0; }
     ;
 
-fbody: '{' EOL program '}'      { $$ = new Node(); }
+f_body: '{' EOL program '}'     { $$ = handleFuncBody($3); }
 
-statement: declaration          { $$ = new Node(); }
-         | f_declaration        { $$ = new Node(); }
-         | assignment           { $$ = new Node(); }
-         | comb_decl_assign     { $$ = new Node(); }
-         | function_call        { $$ = new Node(); }
-         | RET expr             { $$ = new Node(); }
+statement: declaration          { $$ = $1; }
+         | f_declaration        { $$ = $1; }
+         | assignment           { $$ = $1; }
+         | comb_decl_assign     { $$ = $1; }
+         | function_call        { $$ = $1; }
+         | RET expr             { $$ = handleReturnStatement($2); }
          ;
 
 declaration: ID ':' type_expr  { $$ = handleDeclaration(*($1), $3); delete $1; }
@@ -110,8 +112,10 @@ declaration: ID ':' type_expr  { $$ = handleDeclaration(*($1), $3); delete $1; }
 f_declaration: ID ':' f_type_expr  { $$ = handleFuncDeclaration(*($1), $3); delete $1; }
 
 assignment: ID '=' expr   { $$ = handleAssignment(*($1), $3); delete $1; }
-          | ID '(' f_call_args ')' '=' fbody  { $$ = new FuncAssignNode(*($1), $3, $6); delete $1; }
+          | f_startdef f_body  { $$ = new FuncAssignNode($1, $2); }
           ;
+
+f_startdef: ID '(' f_call_args ')' '='       { $$ = handleFuncStart(*($1), $3); delete $1; }
 
 comb_decl_assign: ID ':' type_expr '=' expr  { $$ = handleDeclarationAssign(*($1), $3, $5); delete $1; }
 

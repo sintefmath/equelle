@@ -12,16 +12,21 @@
 
 // ------ Parsing event handlers ------
 
+
 Node* handleNumber(const double num)
 {
     return new NumberNode(num);
 }
+
+
 
 VarDeclNode* handleDeclaration(const std::string name, TypeNode* type)
 {
     SymbolTable::declareVariable(name, type->type());
     return new VarDeclNode(name, type);
 }
+
+
 
 VarAssignNode* handleAssignment(const std::string name, Node* expr)
 {
@@ -65,11 +70,38 @@ VarAssignNode* handleAssignment(const std::string name, Node* expr)
     return new VarAssignNode(name, expr);
 }
 
+
+
 Node* handleFuncDeclaration(const std::string name, FuncTypeNode* ftype)
 {
     SymbolTable::declareFunction(name, ftype->funcType());
     return new FuncDeclNode(name, ftype);
 }
+
+
+
+Node* handleFuncStart(const std::string name, Node* funcargs)
+{
+    SymbolTable::setCurrentFunction(name);
+    return new FuncStartNode(name, funcargs);
+}
+
+
+
+SequenceNode* handleFuncBody(SequenceNode* fbody)
+{
+    SymbolTable::setCurrentFunction("Main");
+    return fbody;
+}
+
+
+
+ReturnStatementNode* handleReturnStatement(Node* expr)
+{
+    return new ReturnStatementNode(expr);
+}
+
+
 
 Node* handleDeclarationAssign(const std::string name, TypeNode* type, Node* expr)
 {
@@ -78,6 +110,8 @@ Node* handleDeclarationAssign(const std::string name, TypeNode* type, Node* expr
     seq->pushNode(handleAssignment(name, expr));
     return seq;
 }
+
+
 
 TypeNode* handleCollection(TypeNode* btype, Node* gridmapping, Node* subsetof)
 {
@@ -108,10 +142,14 @@ TypeNode* handleCollection(TypeNode* btype, Node* gridmapping, Node* subsetof)
     return new TypeNode(EquelleType(bt.basicType(), true, gm, subset));
 }
 
+
+
 FuncTypeNode* handleFuncType(FuncArgsDeclNode* argtypes, TypeNode* rtype)
 {
     return new FuncTypeNode(FunctionType(argtypes->arguments(), rtype->type()));
 }
+
+
 
 FuncCallNode* handleFuncCall(const std::string& name, FuncArgsNode* args)
 {
@@ -125,6 +163,8 @@ FuncCallNode* handleFuncCall(const std::string& name, FuncArgsNode* args)
         return new FuncCallNode(name, args);
     }
 }
+
+
 
 BinaryOpNode* handleBinaryOp(BinaryOp op, Node* left, Node* right)
 {
@@ -162,6 +202,8 @@ BinaryOpNode* handleBinaryOp(BinaryOp op, Node* left, Node* right)
     }
     return new BinaryOpNode(op, left, right);
 }
+
+
 
 NormNode* handleNorm(Node* expr_to_norm)
 {

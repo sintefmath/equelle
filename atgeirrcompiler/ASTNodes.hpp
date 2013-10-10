@@ -35,7 +35,9 @@ class SequenceNode : public Node
 public:
     void pushNode(Node* node)
     {
-        nodes_.push_back(node);
+        if (node) {
+            nodes_.push_back(node);
+        }
     }
 private:
     std::vector<Node*> nodes_;
@@ -293,14 +295,25 @@ private:
 
 
 
-class FuncAssignNode : public Node
+class FuncStartNode : public Node
 {
 public:
-    FuncAssignNode(std::string funcname, Node* funcargs, Node* funcbody)
-        : funcname_(funcname), funcargs_(funcargs), funcbody_(funcbody) {}
+    FuncStartNode(std::string funcname, Node* funcargs)
+        : funcname_(funcname), funcargs_(funcargs) {}
 private:
     std::string funcname_;
     Node* funcargs_;
+};
+
+
+
+class FuncAssignNode : public Node
+{
+public:
+    FuncAssignNode(Node* funcstart, Node* funcbody)
+        : funcstart_(funcstart), funcbody_(funcbody) {}
+private:
+    Node* funcstart_;
     Node* funcbody_;
 };
 
@@ -333,6 +346,22 @@ private:
     std::vector<Node*> args_;
 };
 
+
+
+
+class ReturnStatementNode : public Node
+{
+public:
+    ReturnStatementNode(Node* expr)
+        : expr_(expr)
+    {}
+    EquelleType type() const
+    {
+        return expr_->type();
+    }
+private:
+    Node* expr_;
+};
 
 
 

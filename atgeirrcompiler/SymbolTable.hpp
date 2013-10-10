@@ -176,6 +176,8 @@ public:
 
     static const Function& getCurrentFunction();
 
+    static void setCurrentFunction(const std::string& name);
+
     /// Returns true if set1 is a (non-strict) subset of set2.
     static bool isSubset(const int set1, const int set2);
 
@@ -191,8 +193,11 @@ private:
 
     bool isFunctionDeclaredImpl(const std::string& name) const;
 
+    void setCurrentFunctionImpl(const std::string& name);
+
     const Function& getFunctionImpl(const std::string& name) const;
 
+    std::list<Function>::iterator findFunction(const std::string& name);
     std::list<Function>::const_iterator findFunction(const std::string& name) const;
 
     int next_subset_index_;

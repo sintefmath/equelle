@@ -20,6 +20,12 @@ VarAssignNode* handleAssignment(const std::string name, Node* expr);
 
 Node* handleFuncDeclaration(const std::string name, FuncTypeNode* ftype);
 
+Node* handleFuncStart(const std::string name, Node* funcargs);
+
+SequenceNode* handleFuncBody(SequenceNode* fbody);
+
+ReturnStatementNode* handleReturnStatement(Node* expr);
+
 Node* handleDeclarationAssign(const std::string name, TypeNode* type, Node* expr);
 
 TypeNode* handleCollection(TypeNode* btype, Node* gridmapping, Node* subsetof);

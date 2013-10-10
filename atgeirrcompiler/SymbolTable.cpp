@@ -340,6 +340,11 @@ const Function& SymbolTable::getCurrentFunction()
     return *instance().current_function_;
 }
 
+void SymbolTable::setCurrentFunction(const std::string& name)
+{
+    instance().setCurrentFunctionImpl(name);
+}
+
 /// Returns true if set1 is a (non-strict) subset of set2.
 bool SymbolTable::isSubset(const int set1, const int set2)
 {
@@ -475,6 +480,25 @@ const Function& SymbolTable::getFunctionImpl(const std::string& name) const
     } else {
         return *it;
     }
+}
+
+void SymbolTable::setCurrentFunctionImpl(const std::string& name)
+{
+    auto func = findFunction(name);
+    if (func == functions_.end()) {
+        std::string err_msg("internal compiler error: could not find function ");
+        err_msg += name;
+        yyerror(err_msg.c_str());
+    } else {
+        current_function_ = func;
+    }
+}
+
+std::list<Function>::iterator SymbolTable::findFunction(const std::string& name)
+{
+    auto it = std::find_if(functions_.begin(), functions_.end(),
+                           [&](const Function& f) { return f.name() == name; });
+    return it;
 }
 
 std::list<Function>::const_iterator SymbolTable::findFunction(const std::string& name) const
