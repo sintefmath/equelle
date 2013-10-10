@@ -15,6 +15,10 @@ all:		ec el
 ec:		$(ECHEADERS) $(ECOBJS)
 		$(CXX) $(CXXFLAGS) $(ECOBJS) ec.cpp -o ec
 
+el:		equelle_lexer.o el.cpp
+		$(CXX) $(CXXFLAGS) equelle_lexer.o el.cpp -o el
+
+# This is needed because ec and el need different settings for the RETURN_TOKENS macro.
 equelle_lexer_tok.o: equelle_lexer.cpp equelle_parser.cpp
 		$(CXX) $(CXXFLAGS) -DRETURN_TOKENS=1 equelle_lexer.cpp -c -o equelle_lexer_tok.o
 
@@ -24,8 +28,6 @@ equelle_lexer.cpp:	equelle_lexer.l
 equelle_parser.cpp:	equelle_parser.y Parser.hpp
 		$(BISON) -v equelle_parser.y
 
-el:		equelle_lexer.o el.cpp
-		$(CXX) $(CXXFLAGS) equelle_lexer.o el.cpp -o el
 
 clean:
 		rm -f *.o *~ equelle_lexer.cpp equelle_parser.cpp equelle_parser.hpp equelle_parser.output ec el
