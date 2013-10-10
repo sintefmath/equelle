@@ -6,7 +6,6 @@
 #define COMMON_HEADER_INCLUDED
 
 #include <string>
-#include <sstream>
 
 
 // ------ Declarations needed for bison parser ------ 
@@ -17,16 +16,7 @@ extern int yylineno;
 
 // ------ Utilities used in bison parser ------ 
 
-inline double numFromString(const std::string& s)
-{
-    std::istringstream iss(s);
-    double num;
-    iss >> num;
-    if (!iss) {
-        yyerror("error in string-to-number conversion.");
-    }
-    return num;
-}
+inline double numFromString(const std::string& s);
 
 
 #endif // COMMON_HEADER_INCLUDED
