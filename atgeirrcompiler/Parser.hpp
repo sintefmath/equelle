@@ -74,6 +74,7 @@ inline bool isEntityType(const BasicType bt)
     case Bool:
     case Scalar:
     case Vector:
+    case Invalid:
         return false;
     case Cell:
     case Face:
@@ -576,6 +577,18 @@ private:
         functions_.emplace_back("InteriorVertices", FunctionType(EquelleType(Cell, true, InteriorVertices)));
         functions_.emplace_back("BoundaryVertices", FunctionType(EquelleType(Cell, true, BoundaryVertices)));
         functions_.emplace_back("AllVertices", FunctionType(EquelleType(Cell, true, AllVertices)));
+        functions_.emplace_back("FirstCell",
+                                FunctionType({ Variable("faces", EquelleType()) },
+                                             EquelleType(Cell, true),
+                                             { InvalidIndex, 0, InvalidIndex}));
+        functions_.emplace_back("SecondCell",
+                                FunctionType({ Variable("faces", EquelleType()) },
+                                             EquelleType(Cell, true),
+                                             { InvalidIndex, 0, InvalidIndex}));
+        functions_.emplace_back("Centroid",
+                                FunctionType({ Variable("entities", EquelleType()) },
+                                             EquelleType(Vector, true),
+                                             { InvalidIndex, 0, InvalidIndex}));
         // 2. User input functions.
         functions_.emplace_back("UserSpecifiedScalarWithDefault",
                                 FunctionType({ Variable("default", EquelleType(Scalar)) },
