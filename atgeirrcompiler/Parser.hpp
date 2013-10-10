@@ -748,6 +748,10 @@ class NumberNode : public Node
 {
 public:
     NumberNode(const double num) : num_(num) {}
+    EquelleType type() const
+    {
+        return EquelleType(Scalar);
+    }
 private:
     double num_;
 };
@@ -837,6 +841,10 @@ class UnaryNegationNode : public Node
 {
 public:
     UnaryNegationNode(NodePtr expr_to_negate) : expr_to_negate_(expr_to_negate) {}
+    EquelleType type() const
+    {
+        return expr_to_negate_->type();
+    }
 private:
     NodePtr expr_to_negate_;
 };
@@ -845,6 +853,10 @@ class OnNode : public Node
 {
 public:
     OnNode(NodePtr left, NodePtr right) : left_(left), right_(right) {}
+    EquelleType type() const
+    {
+        return EquelleType(left_->type().basicType(), true, right_->type().gridMapping());
+    }
 private:
     NodePtr left_;
     NodePtr right_;
