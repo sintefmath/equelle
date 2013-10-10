@@ -6,6 +6,7 @@
 #define EQUELLETYPE_HEADER_INCLUDED
 
 #include "Common.hpp"
+
 #include <string>
 
 

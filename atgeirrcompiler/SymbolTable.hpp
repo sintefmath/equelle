@@ -9,16 +9,9 @@
 #include "Common.hpp"
 #include "EquelleType.hpp"
 
-#include <iostream>
-#include <string>
-#include <sstream>
-#include <map>
 #include <set>
 #include <vector>
 #include <list>
-#include <algorithm>
-#include <stdexcept>
-#include <cassert>
 
 // ------ SymbolTable singleton and classes used by it. ------ 
 

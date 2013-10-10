@@ -7,16 +7,8 @@
 #include "EquelleType.hpp"
 #include "SymbolTable.hpp"
 
-#include <iostream>
-#include <string>
-#include <sstream>
-#include <map>
-#include <set>
-#include <vector>
-#include <list>
 #include <algorithm>
 #include <stdexcept>
-#include <cassert>
 
 
 

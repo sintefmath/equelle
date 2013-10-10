@@ -10,7 +10,7 @@
 #include "SymbolTable.hpp"
 
 #include <vector>
-
+#include <cassert>
 
 // ------ Abstract syntax tree classes ------ 
 
