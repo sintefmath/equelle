@@ -103,7 +103,7 @@ statement: declaration          { $$ = new Node(); }
          | comb_decl_assign     { $$ = new Node(); }
          | function_call        { $$ = new Node(); }
          | RET expr             { $$ = new Node(); }
-;
+         ;
 
 declaration: ID ':' type_expr  { $$ = handleDeclaration(*($1), $3); delete $1; }
 
