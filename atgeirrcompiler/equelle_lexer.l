@@ -2,7 +2,7 @@
 #include <iostream>
 
 #if RETURN_TOKENS
-#include "afryacc.hpp"
+#include "equelle_parser.hpp"
 #define TOKS(x) do { return x; } while(false)
 #define TOK(x) do { return x; } while(false)
 #define STORE do { yylval.str = new std::string(yytext); } while(false)
@@ -29,7 +29,7 @@ COMMENT  #.*
 SINGLES  [:=()+\-*/^<>{},|?\[\]]
 
 %option yylineno
-%option outfile="afrlex.cpp"
+%option outfile="equelle_lexer.cpp"
 %option nounput
 
 %%

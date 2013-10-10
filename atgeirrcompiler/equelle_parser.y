@@ -46,8 +46,8 @@
 %type <node> fbody
 
 
-%output "afryacc.cpp"
-%defines "afryacc.hpp"
+%output "equelle_parser.cpp"
+%defines "equelle_parser.hpp"
 
 %start program
 %error-verbose
