@@ -4,7 +4,7 @@
 
 
 #include "EquelleType.hpp"
-
+#include <sstream>
 
 // ----- Implementation of utility functions -----
 
@@ -79,8 +79,11 @@ bool isNumericType(const BasicType bt)
 
 std::string canonicalEntitySetString(const int gridmapping)
 {
-    if (gridmapping >= NotApplicable) {
-        return "canonicalEntitySetString() error -- NotApplicable";
+    if (gridmapping >= FirstRuntimeEntitySet) {
+        const int index_of_set = gridmapping - FirstRuntimeEntitySet;
+        std::ostringstream oss;
+        oss << "RuntimeEntityset<" << index_of_set << ">";
+        return oss.str();
     }
     if (gridmapping < NotApplicable) {
         std::string gs;
@@ -99,7 +102,13 @@ std::string canonicalEntitySetString(const int gridmapping)
         }
         return gs;
     }
-    return "canonicalEntitySetString() error";
+    if (gridmapping == NotApplicable) {
+        return "<NotApplicable>";
+    }
+    if (gridmapping == PostponedDefinition) {
+        return "<PostponedDefinition>";
+    }
+    return "<Error in canonicalEntitySetString>";
 }
 
 
@@ -172,6 +181,24 @@ int EquelleType::gridMapping() const
 int EquelleType::subsetOf() const
 {
     return subset_of_;
+}
+
+std::string EquelleType::equelleString() const
+{
+    std::string retval;
+    if (isCollection()) {
+        retval += "Collection Of ";
+    }
+    retval += basicTypeString(basicType());
+    if (gridmapping_ != NotApplicable) {
+        retval += " On ";
+        retval += canonicalEntitySetString(gridmapping_);
+    }
+    if (subset_of_ != NotApplicable) {
+        retval += " Subset Of ";
+        retval += canonicalEntitySetString(subset_of_);
+    }
+    return retval;
 }
 
 bool EquelleType::operator==(const EquelleType& et) const

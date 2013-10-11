@@ -54,6 +54,8 @@ public:
 
     int subsetOf() const;
 
+    std::string equelleString() const;
+
     bool operator==(const EquelleType& et) const;
 
     bool operator!=(const EquelleType& et) const;
