@@ -7,11 +7,13 @@ extern int yyparse();
 
 #include "SymbolTable.hpp"
 #include "PrintASTVisitor.hpp"
+#include "PrintEquelleASTVisitor.hpp"
 #include "ASTNodes.hpp"
 
 int main()
 {
     yyparse();
-    PrintASTVisitor v;
+    // PrintASTVisitor v;
+    PrintEquelleASTVisitor v;
     SymbolTable::program()->accept(v);
 }
