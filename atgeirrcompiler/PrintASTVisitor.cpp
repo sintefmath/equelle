@@ -241,7 +241,7 @@ void PrintASTVisitor::postVisit(FuncCallNode& node)
 
 
 
-std::string PrintASTVisitor::indent()
+std::string PrintASTVisitor::indent() const
 {
-    return std::string(indent_*4, ' ');    
+    return std::string(indent_*4, ' ');
 }

@@ -55,7 +55,7 @@ public:
 
 private:
     int indent_;
-    std::string indent();
+    std::string indent() const;
 };
 
 
