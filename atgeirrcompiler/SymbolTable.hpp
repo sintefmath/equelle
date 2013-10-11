@@ -13,6 +13,11 @@
 #include <vector>
 #include <list>
 
+
+// Must forward-declare the AST node type for SymbolType::program() and SymbolTable::setProgram().
+class Node;
+
+
 // ------ SymbolTable singleton and classes used by it. ------ 
 
 
@@ -103,6 +108,8 @@ public:
 
     const std::vector<Variable>& arguments() const;
 
+    std::string equelleString() const;
+
 private:
     std::vector<Variable> arguments_;
     EquelleType return_type_;
@@ -188,6 +195,10 @@ public:
     /// Returns true if set1 is a (non-strict) subset of set2.
     static bool isSubset(const int set1, const int set2);
 
+    static Node* program();
+
+    static void setProgram(Node* astroot);
+
 private:
     SymbolTable();
 
@@ -216,6 +227,7 @@ private:
     std::list<Function> functions_;
     std::list<Function>::iterator main_function_;
     std::list<Function>::iterator current_function_;
+    Node* ast_root_;
 };
 
 

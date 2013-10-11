@@ -12,6 +12,7 @@
 
 
 
+
 // ============ Methods of EntitySet ============
 
 EntitySet::EntitySet(const int index, const int subset_index)
@@ -137,6 +138,22 @@ const std::vector<Variable>& FunctionType::arguments() const
     return arguments_;
 }
 
+
+std::string FunctionType::equelleString() const
+{
+    std::string retval = "Function(";
+    for (auto var : arguments_) {
+        retval += var.name();
+        retval += " : ";
+        retval += var.type().equelleString();
+        retval += ',';
+    }
+    // Chop the extra comma.
+    retval.erase(retval.end() - 1);
+    retval += ") -> ";
+    retval += return_type_.equelleString();
+    return retval;
+}
 
 
 // ============ Methods of Function ============
@@ -360,6 +377,16 @@ void SymbolTable::retypeCurrentFunction(const FunctionType& ftype)
 bool SymbolTable::isSubset(const int set1, const int set2)
 {
     return instance().isSubsetImpl(set1, set2);
+}
+
+Node* SymbolTable::program()
+{
+    return instance().ast_root_;
+}
+
+void SymbolTable::setProgram(Node* ast_root)
+{
+    instance().ast_root_ = ast_root;
 }
 
 SymbolTable::SymbolTable()

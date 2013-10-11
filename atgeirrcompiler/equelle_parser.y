@@ -29,6 +29,7 @@
 %token EOL
 
 %type <seq> program
+%type <seq> lineblock
 %type <node> line
 %type <node> statement
 %type <vardecl> declaration
@@ -87,9 +88,11 @@
 
 %%
 
-program: program line           { $$ = $1; $$->pushNode($2); }
-       |                        { $$ = new SequenceNode(); }
-       ;
+program: lineblock                { $$ = handleProgram($1); }
+
+lineblock: lineblock line         { $$ = $1; $$->pushNode($2); }
+         |                        { $$ = new SequenceNode(); }
+         ;
 
 line: statement EOL             { $$ = $1; }
     | statement COMMENT EOL     { $$ = $1; }
@@ -97,7 +100,7 @@ line: statement EOL             { $$ = $1; }
     | EOL                       { $$ = nullptr; }
     ;
 
-f_body: '{' EOL program '}'     { $$ = handleFuncBody($3); }
+f_body: '{' EOL lineblock '}'     { $$ = handleFuncBody($3); }
 
 statement: declaration          { $$ = $1; }
          | f_declaration        { $$ = $1; }

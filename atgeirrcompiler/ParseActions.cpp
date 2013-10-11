@@ -13,6 +13,14 @@
 // ------ Parsing event handlers ------
 
 
+SequenceNode* handleProgram(SequenceNode* lineblocknode)
+{
+    SymbolTable::setProgram(lineblocknode);
+    return lineblocknode;
+}
+
+
+
 Node* handleNumber(const double num)
 {
     return new NumberNode(num);

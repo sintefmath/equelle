@@ -12,6 +12,8 @@
 
 // ------ Parsing event handlers ------
 
+SequenceNode* handleProgram(SequenceNode* lineblocknode);
+
 Node* handleNumber(const double num);
 
 Node* handleIdentifier(const std::string& name);
