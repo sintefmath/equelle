@@ -22,7 +22,7 @@ PrintASTVisitor::~PrintASTVisitor()
 
 
 
-void PrintASTVisitor::visit(SequenceNode& node)
+void PrintASTVisitor::visit(SequenceNode&)
 {
     std::cout << indent() << "SequenceNode\n";
     ++indent_;
@@ -67,25 +67,25 @@ void PrintASTVisitor::visit(BinaryOpNode& node)
     ++indent_;
 }
 
-void PrintASTVisitor::visit(NormNode& node)
+void PrintASTVisitor::visit(NormNode&)
 {
     std::cout << indent() << "NormNode\n";
     ++indent_;
 }
 
-void PrintASTVisitor::visit(UnaryNegationNode& node)
+void PrintASTVisitor::visit(UnaryNegationNode&)
 {
     std::cout << indent() << "UnaryNegationNode\n";
     ++indent_;
 }
 
-void PrintASTVisitor::visit(OnNode& node)
+void PrintASTVisitor::visit(OnNode&)
 {
     std::cout << indent() << "OnNode\n";
     ++indent_;
 }
 
-void PrintASTVisitor::visit(TrinaryIfNode& node)
+void PrintASTVisitor::visit(TrinaryIfNode&)
 {
     std::cout << indent() << "TrinaryIfNode\n";
     ++indent_;
@@ -118,7 +118,7 @@ void PrintASTVisitor::visit(JustAnIdentifierNode& node)
     std::cout << indent() << "JustAnIdentifierNode: " << node.name() << '\n';
 }
 
-void PrintASTVisitor::visit(FuncArgsDeclNode& node)
+void PrintASTVisitor::visit(FuncArgsDeclNode&)
 {
     std::cout << indent() << "FuncArgsDeclNode\n";
     ++indent_;
@@ -136,19 +136,19 @@ void PrintASTVisitor::visit(FuncStartNode& node)
     ++indent_;
 }
 
-void PrintASTVisitor::visit(FuncAssignNode& node)
+void PrintASTVisitor::visit(FuncAssignNode&)
 {
     std::cout << indent() << "FuncAssignNode\n";
     ++indent_;
 }
 
-void PrintASTVisitor::visit(FuncArgsNode& node)
+void PrintASTVisitor::visit(FuncArgsNode&)
 {
     std::cout << indent() << "FuncArgsNode\n";
     ++indent_;
 }
 
-void PrintASTVisitor::visit(ReturnStatementNode& node)
+void PrintASTVisitor::visit(ReturnStatementNode&)
 {
     std::cout << indent() << "ReturnStatementNode\n";
     ++indent_;
@@ -163,77 +163,77 @@ void PrintASTVisitor::visit(FuncCallNode& node)
 
 
 
-void PrintASTVisitor::postVisit(SequenceNode& node)
+void PrintASTVisitor::postVisit(SequenceNode&)
 {
     --indent_;
 }
 
-void PrintASTVisitor::postVisit(BinaryOpNode& node)
+void PrintASTVisitor::postVisit(BinaryOpNode&)
 {
     --indent_;
 }
 
-void PrintASTVisitor::postVisit(NormNode& node)
+void PrintASTVisitor::postVisit(NormNode&)
 {
     --indent_;
 }
 
-void PrintASTVisitor::postVisit(UnaryNegationNode& node)
+void PrintASTVisitor::postVisit(UnaryNegationNode&)
 {
     --indent_;
 }
 
-void PrintASTVisitor::postVisit(OnNode& node)
+void PrintASTVisitor::postVisit(OnNode&)
 {
     --indent_;
 }
 
-void PrintASTVisitor::postVisit(TrinaryIfNode& node)
+void PrintASTVisitor::postVisit(TrinaryIfNode&)
 {
     --indent_;
 }
 
-void PrintASTVisitor::postVisit(VarDeclNode& node)
+void PrintASTVisitor::postVisit(VarDeclNode&)
 {
     --indent_;
 }
 
-void PrintASTVisitor::postVisit(VarAssignNode& node)
+void PrintASTVisitor::postVisit(VarAssignNode&)
 {
     --indent_;
 }
 
-void PrintASTVisitor::postVisit(FuncArgsDeclNode& node)
+void PrintASTVisitor::postVisit(FuncArgsDeclNode&)
 {
     --indent_;
 }
 
-void PrintASTVisitor::postVisit(FuncDeclNode& node)
+void PrintASTVisitor::postVisit(FuncDeclNode&)
 {
     --indent_;
 }
 
-void PrintASTVisitor::postVisit(FuncStartNode& node)
+void PrintASTVisitor::postVisit(FuncStartNode&)
 {
     --indent_;
 }
 
-void PrintASTVisitor::postVisit(FuncAssignNode& node)
+void PrintASTVisitor::postVisit(FuncAssignNode&)
 {
     --indent_;
 }
 
-void PrintASTVisitor::postVisit(FuncArgsNode& node)
+void PrintASTVisitor::postVisit(FuncArgsNode&)
 {
     --indent_;
 }
 
-void PrintASTVisitor::postVisit(ReturnStatementNode& node)
+void PrintASTVisitor::postVisit(ReturnStatementNode&)
 {
     --indent_;
 }
 
-void PrintASTVisitor::postVisit(FuncCallNode& node)
+void PrintASTVisitor::postVisit(FuncCallNode&)
 {
     --indent_;
 }

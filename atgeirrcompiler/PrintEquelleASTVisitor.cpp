@@ -22,11 +22,11 @@ PrintEquelleASTVisitor::~PrintEquelleASTVisitor()
 
 
 
-void PrintEquelleASTVisitor::visit(SequenceNode& node)
+void PrintEquelleASTVisitor::visit(SequenceNode&)
 {
 }
 
-void PrintEquelleASTVisitor::postVisit(SequenceNode& node)
+void PrintEquelleASTVisitor::postVisit(SequenceNode&)
 {
 }
 
@@ -68,46 +68,46 @@ void PrintEquelleASTVisitor::visit(BinaryOpNode& node)
     std::cout << "[[ " << op << " ";
 }
 
-void PrintEquelleASTVisitor::postVisit(BinaryOpNode& node)
+void PrintEquelleASTVisitor::postVisit(BinaryOpNode&)
 {
     std::cout << " ]]";
 }
 
-void PrintEquelleASTVisitor::visit(NormNode& node)
+void PrintEquelleASTVisitor::visit(NormNode&)
 {
     std::cout << '|';
 }
 
-void PrintEquelleASTVisitor::postVisit(NormNode& node)
+void PrintEquelleASTVisitor::postVisit(NormNode&)
 {
     std::cout << '|';
 }
 
-void PrintEquelleASTVisitor::visit(UnaryNegationNode& node)
+void PrintEquelleASTVisitor::visit(UnaryNegationNode&)
 {
     std::cout << '-';
 }
 
-void PrintEquelleASTVisitor::postVisit(UnaryNegationNode& node)
+void PrintEquelleASTVisitor::postVisit(UnaryNegationNode&)
 {
 }
 
-void PrintEquelleASTVisitor::visit(OnNode& node)
+void PrintEquelleASTVisitor::visit(OnNode&)
 {
     std::cout << "[[ On ";
 }
 
-void PrintEquelleASTVisitor::postVisit(OnNode& node)
+void PrintEquelleASTVisitor::postVisit(OnNode&)
 {
     std::cout << " ]]";
 }
 
-void PrintEquelleASTVisitor::visit(TrinaryIfNode& node)
+void PrintEquelleASTVisitor::visit(TrinaryIfNode&)
 {
     std::cout << "[[ ?: ";
 }
 
-void PrintEquelleASTVisitor::postVisit(TrinaryIfNode& node)
+void PrintEquelleASTVisitor::postVisit(TrinaryIfNode&)
 {
     std::cout << " ]]";
 }
@@ -117,7 +117,7 @@ void PrintEquelleASTVisitor::visit(VarDeclNode& node)
     std::cout << node.name() << " : ";
 }
 
-void PrintEquelleASTVisitor::postVisit(VarDeclNode& node)
+void PrintEquelleASTVisitor::postVisit(VarDeclNode&)
 {
     endl();
 }
@@ -127,7 +127,7 @@ void PrintEquelleASTVisitor::visit(VarAssignNode& node)
     std::cout << node.name() << " = ";
 }
 
-void PrintEquelleASTVisitor::postVisit(VarAssignNode& node)
+void PrintEquelleASTVisitor::postVisit(VarAssignNode&)
 {
     endl();
 }
@@ -147,12 +147,12 @@ void PrintEquelleASTVisitor::visit(JustAnIdentifierNode& node)
     std::cout << node.name();
 }
 
-void PrintEquelleASTVisitor::visit(FuncArgsDeclNode& node)
+void PrintEquelleASTVisitor::visit(FuncArgsDeclNode&)
 {
     std::cout << "{FuncArgsDeclNode::visit()}";
 }
 
-void PrintEquelleASTVisitor::postVisit(FuncArgsDeclNode& node)
+void PrintEquelleASTVisitor::postVisit(FuncArgsDeclNode&)
 {
     std::cout << "{FuncArgsDeclNode::postVisit()}";
 }
@@ -162,7 +162,7 @@ void PrintEquelleASTVisitor::visit(FuncDeclNode& node)
     std::cout << node.name() << " : ";
 }
 
-void PrintEquelleASTVisitor::postVisit(FuncDeclNode& node)
+void PrintEquelleASTVisitor::postVisit(FuncDeclNode&)
 {
     endl();
 }
@@ -172,39 +172,39 @@ void PrintEquelleASTVisitor::visit(FuncStartNode& node)
     std::cout << node.name() << '(';
 }
 
-void PrintEquelleASTVisitor::postVisit(FuncStartNode& node)
+void PrintEquelleASTVisitor::postVisit(FuncStartNode&)
 {
     std::cout << ") = {";
     endl();
 }
 
-void PrintEquelleASTVisitor::visit(FuncAssignNode& node)
+void PrintEquelleASTVisitor::visit(FuncAssignNode&)
 {
     ++indent_;
 }
 
-void PrintEquelleASTVisitor::postVisit(FuncAssignNode& node)
+void PrintEquelleASTVisitor::postVisit(FuncAssignNode&)
 {
     std::cout << "}";
     endl();
 }
 
-void PrintEquelleASTVisitor::visit(FuncArgsNode& node)
+void PrintEquelleASTVisitor::visit(FuncArgsNode&)
 {
     // std::cout << "{FuncArgsNode::visit()}";
 }
 
-void PrintEquelleASTVisitor::postVisit(FuncArgsNode& node)
+void PrintEquelleASTVisitor::postVisit(FuncArgsNode&)
 {
     // std::cout << "{FuncArgsNode::postVisit()}";
 }
 
-void PrintEquelleASTVisitor::visit(ReturnStatementNode& node)
+void PrintEquelleASTVisitor::visit(ReturnStatementNode&)
 {
     std::cout << "-> ";
 }
 
-void PrintEquelleASTVisitor::postVisit(ReturnStatementNode& node)
+void PrintEquelleASTVisitor::postVisit(ReturnStatementNode&)
 {
     --indent_;
     endl();
@@ -215,7 +215,7 @@ void PrintEquelleASTVisitor::visit(FuncCallNode& node)
     std::cout << node.name() << '(';
 }
 
-void PrintEquelleASTVisitor::postVisit(FuncCallNode& node)
+void PrintEquelleASTVisitor::postVisit(FuncCallNode&)
 {
     std::cout << ')';
 }
