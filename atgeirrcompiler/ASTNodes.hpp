@@ -8,11 +8,12 @@
 #include "Common.hpp"
 #include "EquelleType.hpp"
 #include "SymbolTable.hpp"
+#include "ASTVisitorInterface.hpp"
 
 #include <vector>
 #include <cassert>
 
-// ------ Abstract syntax tree classes ------ 
+// ------ Abstract syntax tree classes ------
 
 
 /// Base class for all AST classes.
@@ -25,6 +26,7 @@ public:
     {
         return EquelleType();
     }
+    virtual void accept(ASTVisitorInterface& visitor) = 0;
 };
 
 
@@ -38,6 +40,14 @@ public:
         if (node) {
             nodes_.push_back(node);
         }
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        for (auto np : nodes_) {
+            np->accept(visitor);
+        }
+        visitor.postVisit(*this);
     }
 private:
     std::vector<Node*> nodes_;
@@ -54,6 +64,14 @@ public:
     {
         return EquelleType(Scalar);
     }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+    }
+    double number() const
+    {
+        return num_;
+    }
 private:
     double num_;
 };
@@ -69,6 +87,10 @@ public:
     {
         return et_;
     }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+    }
 private:
     EquelleType et_;
 };
@@ -83,6 +105,10 @@ public:
     FunctionType funcType() const
     {
         return ft_;
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
     }
 private:
     FunctionType ft_;
@@ -125,6 +151,17 @@ public:
             return EquelleType();
         }
     }
+    BinaryOp op() const
+    {
+        return op_;
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        left_->accept(visitor);
+        right_->accept(visitor);
+        visitor.postVisit(*this);
+    }
 private:
     BinaryOp op_;
     Node* left_;
@@ -144,6 +181,12 @@ public:
                            expr_to_norm_->type().isCollection(),
                            expr_to_norm_->type().gridMapping());
     }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        expr_to_norm_->accept(visitor);
+        visitor.postVisit(*this);
+    }
 private:
     Node* expr_to_norm_;
 };
@@ -159,6 +202,12 @@ public:
     {
         return expr_to_negate_->type();
     }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        expr_to_negate_->accept(visitor);
+        visitor.postVisit(*this);
+    }
 private:
     Node* expr_to_negate_;
 };
@@ -173,6 +222,13 @@ public:
     EquelleType type() const
     {
         return EquelleType(left_->type().basicType(), true, right_->type().gridMapping());
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        left_->accept(visitor);
+        right_->accept(visitor);
+        visitor.postVisit(*this);
     }
 private:
     Node* left_;
@@ -192,6 +248,14 @@ public:
     {
         return iftrue_->type();
     }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        predicate_->accept(visitor);
+        iftrue_->accept(visitor);
+        iffalse_->accept(visitor);
+        visitor.postVisit(*this);
+    }
 private:
     Node* predicate_;
     Node* iftrue_;
@@ -205,7 +269,9 @@ class VarDeclNode : public Node
 {
 public:
     VarDeclNode(std::string varname, TypeNode* type)
-        : varname_(varname), type_(type) {}
+        : varname_(varname), type_(type)
+    {
+    }
     EquelleType type() const
     {
         return type_->type();
@@ -213,6 +279,12 @@ public:
     const std::string& name() const
     {
         return varname_;
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        type_->accept(visitor);
+        visitor.postVisit(*this);
     }
 private:
     std::string varname_;
@@ -225,7 +297,19 @@ private:
 class VarAssignNode : public Node
 {
 public:
-    VarAssignNode(std::string varname, Node* expr) : varname_(varname), expr_(expr) {}
+    VarAssignNode(std::string varname, Node* expr) : varname_(varname), expr_(expr)
+    {
+    }
+    const std::string& name() const
+    {
+        return varname_;
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        expr_->accept(visitor);
+        visitor.postVisit(*this);
+    }
 private:
     std::string varname_;
     Node* expr_;
@@ -237,7 +321,9 @@ private:
 class VarNode : public Node
 {
 public:
-    VarNode(const std::string& varname) : varname_(varname) {}
+    VarNode(const std::string& varname) : varname_(varname)
+    {
+    }
     EquelleType type() const
     {
         return SymbolTable::variableType(varname_);
@@ -245,6 +331,10 @@ public:
     const std::string& name() const
     {
         return varname_;
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
     }
 private:
     std::string varname_;
@@ -256,7 +346,9 @@ private:
 class FuncRefNode : public Node
 {
 public:
-    FuncRefNode(const std::string& funcname) : funcname_(funcname) {}
+    FuncRefNode(const std::string& funcname) : funcname_(funcname)
+    {
+    }
     EquelleType type() const
     {
         // Functions' types cannot be expressed as an EquelleType
@@ -265,6 +357,10 @@ public:
     const std::string& name() const
     {
         return funcname_;
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
     }
 private:
     std::string funcname_;
@@ -276,10 +372,16 @@ private:
 class JustAnIdentifierNode : public Node
 {
 public:
-    JustAnIdentifierNode(const std::string& id) : id_(id) {}
+    JustAnIdentifierNode(const std::string& id) : id_(id)
+    {
+    }
     const std::string& name() const
     {
         return id_;
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
     }
 private:
     std::string id_;
@@ -310,6 +412,14 @@ public:
         }
         return args;
     }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        for (auto np : decls_) {
+            np->accept(visitor);
+        }
+        visitor.postVisit(*this);
+    }
 private:
     std::vector<VarDeclNode*> decls_;
 };
@@ -321,7 +431,19 @@ class FuncDeclNode : public Node
 {
 public:
     FuncDeclNode(std::string funcname, FuncTypeNode* ftype)
-        : funcname_(funcname), ftype_(ftype) {}
+        : funcname_(funcname), ftype_(ftype)
+    {
+    }
+    const std::string& name() const
+    {
+        return funcname_;
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        ftype_->accept(visitor);
+        visitor.postVisit(*this);
+    }
 private:
     std::string funcname_;
     FuncTypeNode* ftype_;
@@ -334,7 +456,19 @@ class FuncStartNode : public Node
 {
 public:
     FuncStartNode(std::string funcname, Node* funcargs)
-        : funcname_(funcname), funcargs_(funcargs) {}
+        : funcname_(funcname), funcargs_(funcargs)
+    {
+    }
+    const std::string& name() const
+    {
+        return funcname_;
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        funcargs_->accept(visitor);
+        visitor.postVisit(*this);
+    }
 private:
     std::string funcname_;
     Node* funcargs_;
@@ -346,7 +480,16 @@ class FuncAssignNode : public Node
 {
 public:
     FuncAssignNode(Node* funcstart, Node* funcbody)
-        : funcstart_(funcstart), funcbody_(funcbody) {}
+        : funcstart_(funcstart), funcbody_(funcbody)
+    {
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        funcstart_->accept(visitor);
+        funcbody_->accept(visitor);
+        visitor.postVisit(*this);
+    }
 private:
     Node* funcstart_;
     Node* funcbody_;
@@ -377,6 +520,14 @@ public:
         }
         return argtypes;
     }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        for (auto np : args_) {
+            np->accept(visitor);
+        }
+        visitor.postVisit(*this);
+    }
 private:
     std::vector<Node*> args_;
 };
@@ -393,6 +544,12 @@ public:
     EquelleType type() const
     {
         return expr_->type();
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        expr_->accept(visitor);
+        visitor.postVisit(*this);
     }
 private:
     Node* expr_;
@@ -417,6 +574,16 @@ public:
         } else {
             return t;
         }
+    }
+    const std::string& name() const
+    {
+        return funcname_;
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        funcargs_->accept(visitor);
+        visitor.postVisit(*this);
     }
 private:
     std::string funcname_;
