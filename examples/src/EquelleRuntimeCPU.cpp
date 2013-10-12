@@ -286,10 +286,10 @@ CollOfScalarAD EquelleRuntimeCPU::interiorDivergence(const CollOfScalarAD& face_
 }
 
 
-CollOfBooleans EquelleRuntimeCPU::isEmpty(const CollOfCell& cells) const
+CollOfBool EquelleRuntimeCPU::isEmpty(const CollOfCell& cells) const
 {
     const size_t sz = cells.size();
-    CollOfBooleans retval = CollOfBooleans::Constant(sz, false);
+    CollOfBool retval = CollOfBool::Constant(sz, false);
     for (size_t i = 0; i < sz; ++i) {
         if (cells[i].index < 0) {
             retval[i] = true;
@@ -299,10 +299,10 @@ CollOfBooleans EquelleRuntimeCPU::isEmpty(const CollOfCell& cells) const
 }
 
 
-CollOfBooleans EquelleRuntimeCPU::isEmpty(const CollOfFace& faces) const
+CollOfBool EquelleRuntimeCPU::isEmpty(const CollOfFace& faces) const
 {
     const size_t sz = faces.size();
-    CollOfBooleans retval = CollOfBooleans::Constant(sz, false);
+    CollOfBool retval = CollOfBool::Constant(sz, false);
     for (size_t i = 0; i < sz; ++i) {
         if (faces[i].index < 0) {
             retval[i] = true;
@@ -368,13 +368,6 @@ void EquelleRuntimeCPU::output(const std::string& tag, const CollOfScalar& vals)
         }
         std::cout << std::endl;
     }
-}
-
-
-void EquelleRuntimeCPU::output(const std::string& tag, const CollOfScalarOnColl& vals) const
-{
-    output(tag, vals.getColl());
-    std::cout << "(This was On Collection " << vals.getOnColl() << ")" << std::endl;
 }
 
 
