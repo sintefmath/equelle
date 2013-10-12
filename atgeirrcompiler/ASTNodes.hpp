@@ -44,8 +44,13 @@ public:
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
-        for (auto np : nodes_) {
-            np->accept(visitor);
+
+        const size_t n = nodes_.size();
+        for (size_t i = 0; i < n; ++i) {
+            nodes_[i]->accept(visitor);
+            if (i < n - 1) {
+                visitor.midVisit(*this);
+            }
         }
         visitor.postVisit(*this);
     }
@@ -419,8 +424,12 @@ public:
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
-        for (auto np : decls_) {
-            np->accept(visitor);
+        const size_t n = decls_.size();
+        for (size_t i = 0; i < n; ++i) {
+            decls_[i]->accept(visitor);
+            if (i < n - 1) {
+                visitor.midVisit(*this);
+            }
         }
         visitor.postVisit(*this);
     }
@@ -527,8 +536,12 @@ public:
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
-        for (auto np : args_) {
-            np->accept(visitor);
+        const size_t n = args_.size();
+        for (size_t i = 0; i < n; ++i) {
+            args_[i]->accept(visitor);
+            if (i < n - 1) {
+                visitor.midVisit(*this);
+            }
         }
         visitor.postVisit(*this);
     }

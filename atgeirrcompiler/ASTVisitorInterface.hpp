@@ -34,6 +34,7 @@ class ASTVisitorInterface
 {
 public:
     virtual void visit(SequenceNode& node) = 0;
+    virtual void midVisit(SequenceNode& node) = 0;
     virtual void postVisit(SequenceNode& node) = 0;
     virtual void visit(NumberNode& node) = 0;
     virtual void visit(TypeNode& node) = 0;
@@ -60,6 +61,7 @@ public:
     virtual void visit(FuncRefNode& node) = 0;
     virtual void visit(JustAnIdentifierNode& node) = 0;
     virtual void visit(FuncArgsDeclNode& node) = 0;
+    virtual void midVisit(FuncArgsDeclNode& node) = 0;
     virtual void postVisit(FuncArgsDeclNode& node) = 0;
     virtual void visit(FuncDeclNode& node) = 0;
     virtual void postVisit(FuncDeclNode& node) = 0;
@@ -68,6 +70,7 @@ public:
     virtual void visit(FuncAssignNode& node) = 0;
     virtual void postVisit(FuncAssignNode& node) = 0;
     virtual void visit(FuncArgsNode& node) = 0;
+    virtual void midVisit(FuncArgsNode& node) = 0;
     virtual void postVisit(FuncArgsNode& node) = 0;
     virtual void visit(ReturnStatementNode& node) = 0;
     virtual void postVisit(ReturnStatementNode& node) = 0;

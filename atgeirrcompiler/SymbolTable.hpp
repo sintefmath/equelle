@@ -104,6 +104,10 @@ public:
                  const EquelleType& return_type,
                  const DynamicReturnSpecification& dynamic);
 
+    /// Only for function with non-dynamic return types.
+    EquelleType returnType() const;
+
+    /// This version of returnType() is necessary to handle dynamic return types.
     EquelleType returnType(const std::vector<EquelleType>& argtypes) const;
 
     int dynamicSubsetReturn(const std::vector<EquelleType>& argtypes) const;

@@ -6,6 +6,7 @@
 #define PRINTCPUBACKENDASTVISITOR_HEADER_INCLUDED
 
 #include "ASTVisitorInterface.hpp"
+#include "EquelleType.hpp"
 #include <string>
 
 class PrintCPUBackendASTVisitor : public ASTVisitorInterface
@@ -15,6 +16,7 @@ public:
     ~PrintCPUBackendASTVisitor();
 
     void visit(SequenceNode& node);
+    void midVisit(SequenceNode& node);
     void postVisit(SequenceNode& node);
     void visit(NumberNode& node);
     void visit(TypeNode& node);
@@ -41,6 +43,7 @@ public:
     void visit(FuncRefNode& node);
     void visit(JustAnIdentifierNode& node);
     void visit(FuncArgsDeclNode& node);
+    void midVisit(FuncArgsDeclNode& node);
     void postVisit(FuncArgsDeclNode& node);
     void visit(FuncDeclNode& node);
     void postVisit(FuncDeclNode& node);
@@ -49,6 +52,7 @@ public:
     void visit(FuncAssignNode& node);
     void postVisit(FuncAssignNode& node);
     void visit(FuncArgsNode& node);
+    void midVisit(FuncArgsNode& node);
     void postVisit(FuncArgsNode& node);
     void visit(ReturnStatementNode& node);
     void postVisit(ReturnStatementNode& node);
@@ -58,9 +62,14 @@ public:
     void postVisit(FuncCallStatementNode& node);
 
 private:
+    bool suppressed_;
+    bool vars_with_types_;
     int indent_;
     void endl() const;
     std::string indent() const;
+    void suppress();
+    void unsuppress();
+    std::string cppTypeString(const EquelleType& et) const;
 };
 
 #endif // PRINTCPUBACKENDASTVISITOR_HEADER_INCLUDED

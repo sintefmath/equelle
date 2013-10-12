@@ -27,6 +27,10 @@ void PrintEquelleASTVisitor::visit(SequenceNode&)
 {
 }
 
+void PrintEquelleASTVisitor::midVisit(SequenceNode&)
+{
+}
+
 void PrintEquelleASTVisitor::postVisit(SequenceNode&)
 {
 }
@@ -173,6 +177,11 @@ void PrintEquelleASTVisitor::visit(FuncArgsDeclNode&)
     std::cout << "{FuncArgsDeclNode::visit()}";
 }
 
+void PrintEquelleASTVisitor::midVisit(FuncArgsDeclNode&)
+{
+    std::cout << "{FuncArgsDeclNode::postVisit()}";
+}
+
 void PrintEquelleASTVisitor::postVisit(FuncArgsDeclNode&)
 {
     std::cout << "{FuncArgsDeclNode::postVisit()}";
@@ -213,6 +222,11 @@ void PrintEquelleASTVisitor::postVisit(FuncAssignNode&)
 void PrintEquelleASTVisitor::visit(FuncArgsNode&)
 {
     // std::cout << "{FuncArgsNode::visit()}";
+}
+
+void PrintEquelleASTVisitor::midVisit(FuncArgsNode&)
+{
+    // std::cout << "{FuncArgsNode::midVisit()}";
 }
 
 void PrintEquelleASTVisitor::postVisit(FuncArgsNode&)

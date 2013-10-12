@@ -113,6 +113,16 @@ FunctionType::FunctionType(const std::vector<Variable>& args,
 {
 }
 
+EquelleType FunctionType::returnType() const
+{
+    if (dynamic_.active) {
+        throw std::logic_error("Should not call FunctionType::returnType() with no arguments "
+                               "when the function has dynamic return type.");
+    } else {
+        return return_type_;
+    }
+}
+
 EquelleType FunctionType::returnType(const std::vector<EquelleType>& argtypes) const
 {
     if (dynamic_.active) {

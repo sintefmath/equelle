@@ -6,12 +6,12 @@
 #include "ASTNodes.hpp"
 #include "SymbolTable.hpp"
 #include <iostream>
-
+#include <cctype>
 
 
 
 PrintCPUBackendASTVisitor::PrintCPUBackendASTVisitor()
-    : indent_(0)
+    : suppressed_(false), vars_with_types_(false), indent_(0)
 {
 }
 
@@ -25,26 +25,33 @@ PrintCPUBackendASTVisitor::~PrintCPUBackendASTVisitor()
 
 void PrintCPUBackendASTVisitor::visit(SequenceNode&)
 {
+    // std::cout << "{SequenceNode::visit()}";
+}
+
+void PrintCPUBackendASTVisitor::midVisit(SequenceNode&)
+{
+    // std::cout << "{SequenceNode::midVisit()}";
 }
 
 void PrintCPUBackendASTVisitor::postVisit(SequenceNode&)
 {
+    // std::cout << "{SequenceNode::postVisit()}";
 }
 
 void PrintCPUBackendASTVisitor::visit(NumberNode& node)
 {
     std::cout.precision(16);
-    std::cout << node.number();
+    std::cout << "double(" << node.number() << ")";
 }
 
-void PrintCPUBackendASTVisitor::visit(TypeNode& node)
+void PrintCPUBackendASTVisitor::visit(TypeNode&)
 {
-    std::cout << SymbolTable::equelleString(node.type());
+    // std::cout << SymbolTable::equelleString(node.type());
 }
 
-void PrintCPUBackendASTVisitor::visit(FuncTypeNode& node)
+void PrintCPUBackendASTVisitor::visit(FuncTypeNode&)
 {
-    std::cout << node.funcType().equelleString();
+    // std::cout << node.funcType().equelleString();
 }
 
 void PrintCPUBackendASTVisitor::visit(BinaryOpNode&)
@@ -81,12 +88,12 @@ void PrintCPUBackendASTVisitor::postVisit(BinaryOpNode&)
 
 void PrintCPUBackendASTVisitor::visit(NormNode&)
 {
-    std::cout << '|';
+    std::cout << "er.norm(";
 }
 
 void PrintCPUBackendASTVisitor::postVisit(NormNode&)
 {
-    std::cout << '|';
+    std::cout << ')';
 }
 
 void PrintCPUBackendASTVisitor::visit(UnaryNegationNode&)
@@ -100,12 +107,12 @@ void PrintCPUBackendASTVisitor::postVisit(UnaryNegationNode&)
 
 void PrintCPUBackendASTVisitor::visit(OnNode&)
 {
-    std::cout << '(';
+    std::cout << "er.On(";
 }
 
 void PrintCPUBackendASTVisitor::midVisit(OnNode&)
 {
-    std::cout << " On ";
+    std::cout << ", ";
 }
 
 void PrintCPUBackendASTVisitor::postVisit(OnNode&)
@@ -115,17 +122,17 @@ void PrintCPUBackendASTVisitor::postVisit(OnNode&)
 
 void PrintCPUBackendASTVisitor::visit(TrinaryIfNode&)
 {
-    std::cout << '(';
+    std::cout << "er.trinaryIf(";
 }
 
 void PrintCPUBackendASTVisitor::questionMarkVisit(TrinaryIfNode&)
 {
-    std::cout << " ? ";
+    std::cout << ", ";
 }
 
 void PrintCPUBackendASTVisitor::colonVisit(TrinaryIfNode&)
 {
-    std::cout << " : ";
+    std::cout << ", ";
 }
 
 void PrintCPUBackendASTVisitor::postVisit(TrinaryIfNode&)
@@ -133,29 +140,34 @@ void PrintCPUBackendASTVisitor::postVisit(TrinaryIfNode&)
     std::cout << ')';
 }
 
-void PrintCPUBackendASTVisitor::visit(VarDeclNode& node)
+void PrintCPUBackendASTVisitor::visit(VarDeclNode&)
 {
-    std::cout << node.name() << " : ";
+    suppress();
 }
 
 void PrintCPUBackendASTVisitor::postVisit(VarDeclNode&)
 {
-    endl();
+    unsuppress();
 }
 
 void PrintCPUBackendASTVisitor::visit(VarAssignNode& node)
 {
-    std::cout << node.name() << " = ";
+    std::cout << "const auto " << node.name() << " = ";
 }
 
 void PrintCPUBackendASTVisitor::postVisit(VarAssignNode&)
 {
+    std::cout << ';';
     endl();
 }
 
 void PrintCPUBackendASTVisitor::visit(VarNode& node)
 {
-    std::cout << node.name();
+    if (vars_with_types_) {
+        std::cout << "<Type...>" << node.name();
+    } {
+        std::cout << node.name();
+    }
 }
 
 void PrintCPUBackendASTVisitor::visit(FuncRefNode& node)
@@ -163,9 +175,8 @@ void PrintCPUBackendASTVisitor::visit(FuncRefNode& node)
     std::cout << node.name();
 }
 
-void PrintCPUBackendASTVisitor::visit(JustAnIdentifierNode& node)
+void PrintCPUBackendASTVisitor::visit(JustAnIdentifierNode&)
 {
-    std::cout << node.name();
 }
 
 void PrintCPUBackendASTVisitor::visit(FuncArgsDeclNode&)
@@ -173,29 +184,46 @@ void PrintCPUBackendASTVisitor::visit(FuncArgsDeclNode&)
     std::cout << "{FuncArgsDeclNode::visit()}";
 }
 
+void PrintCPUBackendASTVisitor::midVisit(FuncArgsDeclNode&)
+{
+    std::cout << "{FuncArgsDeclNode::midVisit()}";
+}
+
 void PrintCPUBackendASTVisitor::postVisit(FuncArgsDeclNode&)
 {
     std::cout << "{FuncArgsDeclNode::postVisit()}";
 }
 
-void PrintCPUBackendASTVisitor::visit(FuncDeclNode& node)
+void PrintCPUBackendASTVisitor::visit(FuncDeclNode&)
 {
-    std::cout << node.name() << " : ";
+    // std::cout << node.name() << " : ";
 }
 
 void PrintCPUBackendASTVisitor::postVisit(FuncDeclNode&)
 {
-    endl();
+    // endl();
 }
 
 void PrintCPUBackendASTVisitor::visit(FuncStartNode& node)
 {
-    std::cout << node.name() << '(';
+    std::cout << "auto " << node.name() << " = [&](";
+    const FunctionType& ft = SymbolTable::getFunction(node.name()).functionType();
+    const size_t n = ft.arguments().size();
+    for (int i = 0; i < n; ++i) {
+        std::cout << cppTypeString(ft.arguments()[i].type())
+                  << ' ' << ft.arguments()[i].name() << std::flush;
+        if (i < n - 1) {
+            std::cout << ", " << std::flush;
+        }
+    }
+    suppress();
 }
 
-void PrintCPUBackendASTVisitor::postVisit(FuncStartNode&)
+void PrintCPUBackendASTVisitor::postVisit(FuncStartNode& node)
 {
-    std::cout << ") = {";
+    unsuppress();
+    const FunctionType& ft = SymbolTable::getFunction(node.name()).functionType();
+    std::cout << ") -> " << cppTypeString(ft.returnType()) << " {";
     endl();
 }
 
@@ -212,28 +240,39 @@ void PrintCPUBackendASTVisitor::postVisit(FuncAssignNode&)
 
 void PrintCPUBackendASTVisitor::visit(FuncArgsNode&)
 {
-    // std::cout << "{FuncArgsNode::visit()}";
+}
+
+void PrintCPUBackendASTVisitor::midVisit(FuncArgsNode&)
+{
+    if (!suppressed_) {
+        std::cout << ", ";
+    }
 }
 
 void PrintCPUBackendASTVisitor::postVisit(FuncArgsNode&)
 {
-    // std::cout << "{FuncArgsNode::postVisit()}";
 }
 
 void PrintCPUBackendASTVisitor::visit(ReturnStatementNode&)
 {
-    std::cout << "-> ";
+    std::cout << "return ";
 }
 
 void PrintCPUBackendASTVisitor::postVisit(ReturnStatementNode&)
 {
+    std::cout << ';';
     --indent_;
     endl();
 }
 
 void PrintCPUBackendASTVisitor::visit(FuncCallNode& node)
 {
-    std::cout << node.name() << '(';
+    const std::string fname = node.name();
+    const char first = fname[0];
+    std::string cppname = std::isupper(first) ?
+        std::string("er.") + char(std::tolower(first)) + fname.substr(1)
+        : fname;
+    std::cout << cppname << '(';
 }
 
 void PrintCPUBackendASTVisitor::postVisit(FuncCallNode&)
@@ -247,6 +286,7 @@ void PrintCPUBackendASTVisitor::visit(FuncCallStatementNode&)
 
 void PrintCPUBackendASTVisitor::postVisit(FuncCallStatementNode&)
 {
+    std::cout << ';';
     endl();
 }
 
@@ -260,4 +300,21 @@ void PrintCPUBackendASTVisitor::endl() const
 std::string PrintCPUBackendASTVisitor::indent() const
 {
     return std::string(indent_*4, ' ');
+}
+
+void PrintCPUBackendASTVisitor::suppress()
+{
+    suppressed_ = true;
+}
+
+void PrintCPUBackendASTVisitor::unsuppress()
+{
+    suppressed_ = false;
+}
+
+std::string PrintCPUBackendASTVisitor::cppTypeString(const EquelleType& et) const
+{
+    std::string cppstring = et.isCollection() ? "CollOf" : "";
+    cppstring += basicTypeString(et.basicType());
+    return cppstring;
 }

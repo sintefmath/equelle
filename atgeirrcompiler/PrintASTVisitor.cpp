@@ -168,6 +168,10 @@ void PrintASTVisitor::visit(FuncCallStatementNode&)
 }
 
 
+void PrintASTVisitor::midVisit(SequenceNode&)
+{
+}
+
 void PrintASTVisitor::postVisit(SequenceNode&)
 {
     --indent_;
@@ -224,6 +228,10 @@ void PrintASTVisitor::postVisit(VarAssignNode&)
     --indent_;
 }
 
+void PrintASTVisitor::midVisit(FuncArgsDeclNode&)
+{
+}
+
 void PrintASTVisitor::postVisit(FuncArgsDeclNode&)
 {
     --indent_;
@@ -242,6 +250,10 @@ void PrintASTVisitor::postVisit(FuncStartNode&)
 void PrintASTVisitor::postVisit(FuncAssignNode&)
 {
     --indent_;
+}
+
+void PrintASTVisitor::midVisit(FuncArgsNode&)
+{
 }
 
 void PrintASTVisitor::postVisit(FuncArgsNode&)

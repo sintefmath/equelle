@@ -38,6 +38,7 @@ public:
     void visit(FuncCallNode& node);
     void visit(FuncCallStatementNode& node);
 
+    void midVisit(SequenceNode& node);
     void postVisit(SequenceNode& node);
     void midVisit(BinaryOpNode& node);
     void postVisit(BinaryOpNode& node);
@@ -50,10 +51,12 @@ public:
     void postVisit(TrinaryIfNode& node);
     void postVisit(VarDeclNode& node);
     void postVisit(VarAssignNode& node);
+    void midVisit(FuncArgsDeclNode& node);
     void postVisit(FuncArgsDeclNode& node);
     void postVisit(FuncDeclNode& node);
     void postVisit(FuncStartNode& node);
     void postVisit(FuncAssignNode& node);
+    void midVisit(FuncArgsNode& node);
     void postVisit(FuncArgsNode& node);
     void postVisit(ReturnStatementNode& node);
     void postVisit(FuncCallNode& node);

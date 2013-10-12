@@ -11,11 +11,25 @@ extern int yyparse();
 #include "PrintCPUBackendASTVisitor.hpp"
 #include "ASTNodes.hpp"
 
-int main()
+int main(int argc, char** argv)
 {
     yyparse();
-    // PrintASTVisitor v;
-    // PrintEquelleASTVisitor v;
-    PrintCPUBackendASTVisitor v;
-    SymbolTable::program()->accept(v);
+    PrintASTVisitor v0;
+    PrintEquelleASTVisitor v1;
+    PrintCPUBackendASTVisitor v2;
+    int which = 2;
+    if (argc > 1) {
+        which = std::atoi(argv[1]);
+    }
+    switch (which) {
+    case 0:
+        SymbolTable::program()->accept(v0);
+        break;
+    case 1:
+        SymbolTable::program()->accept(v1);
+        break;
+    case 2:
+        SymbolTable::program()->accept(v2);
+        break;
+    }
 }

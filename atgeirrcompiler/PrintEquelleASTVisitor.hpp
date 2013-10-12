@@ -15,6 +15,7 @@ public:
     ~PrintEquelleASTVisitor();
 
     void visit(SequenceNode& node);
+    void midVisit(SequenceNode& node);
     void postVisit(SequenceNode& node);
     void visit(NumberNode& node);
     void visit(TypeNode& node);
@@ -41,6 +42,7 @@ public:
     void visit(FuncRefNode& node);
     void visit(JustAnIdentifierNode& node);
     void visit(FuncArgsDeclNode& node);
+    void midVisit(FuncArgsDeclNode& node);
     void postVisit(FuncArgsDeclNode& node);
     void visit(FuncDeclNode& node);
     void postVisit(FuncDeclNode& node);
@@ -49,6 +51,7 @@ public:
     void visit(FuncAssignNode& node);
     void postVisit(FuncAssignNode& node);
     void visit(FuncArgsNode& node);
+    void midVisit(FuncArgsNode& node);
     void postVisit(FuncArgsNode& node);
     void visit(ReturnStatementNode& node);
     void postVisit(ReturnStatementNode& node);
