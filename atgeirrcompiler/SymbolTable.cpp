@@ -35,6 +35,10 @@ int EntitySet::subsetIndex() const
     return subset_index_;
 }
 
+void EntitySet::setName(const std::string& name)
+{
+    name_ = name;
+}
 
 
 // ============ Methods of Variable ============
@@ -404,15 +408,18 @@ std::string SymbolTable::equelleString(const EquelleType& type)
     if (type.gridMapping() != NotApplicable
         && type.gridMapping() != PostponedDefinition) {
         retval += " On ";
-        retval += canonicalEntitySetString(type.gridMapping());
-        retval += "()";
+        retval += instance().findSet(type.gridMapping())->name();
     }
     if (type.subsetOf() != NotApplicable) {
         retval += " Subset Of ";
-        retval += canonicalEntitySetString(type.subsetOf());
-        retval += "()";
+        retval += instance().findSet(type.subsetOf())->name();
     }
     return retval;
+}
+
+void SymbolTable::setEntitySetName(const int entity_set_index, const std::string& name)
+{
+    instance().findSet(entity_set_index)->setName(name);
 }
 
 SymbolTable::SymbolTable()
@@ -486,18 +493,18 @@ SymbolTable::SymbolTable()
     current_function_ = main_function_;
 
     // ----- Add built-in entity sets to entity set table. -----
-    declareEntitySet("InteriorCells", InteriorCells, AllCells);
-    declareEntitySet("BoundaryCells",BoundaryCells, AllCells);
-    declareEntitySet("AllCells", AllCells, AllCells);
-    declareEntitySet("InteriorFaces", InteriorFaces, AllFaces);
-    declareEntitySet("BoundaryFaces", BoundaryFaces, AllFaces);
-    declareEntitySet("AllFaces", AllFaces, AllFaces);
-    declareEntitySet("InteriorEdges", InteriorEdges, AllEdges);
-    declareEntitySet("BoundaryEdges", BoundaryEdges, AllEdges);
-    declareEntitySet("AllEdges", AllEdges, AllEdges);
-    declareEntitySet("InteriorVertices", InteriorVertices, AllVertices);
-    declareEntitySet("BoundaryVertices", BoundaryVertices, AllVertices);
-    declareEntitySet("AllVertices", AllVertices, AllVertices);
+    declareEntitySet("InteriorCells()", InteriorCells, AllCells);
+    declareEntitySet("BoundaryCells()",BoundaryCells, AllCells);
+    declareEntitySet("AllCells()", AllCells, AllCells);
+    declareEntitySet("InteriorFaces()", InteriorFaces, AllFaces);
+    declareEntitySet("BoundaryFaces()", BoundaryFaces, AllFaces);
+    declareEntitySet("AllFaces()", AllFaces, AllFaces);
+    declareEntitySet("InteriorEdges()", InteriorEdges, AllEdges);
+    declareEntitySet("BoundaryEdges()", BoundaryEdges, AllEdges);
+    declareEntitySet("AllEdges()", AllEdges, AllEdges);
+    declareEntitySet("InteriorVertices()", InteriorVertices, AllVertices);
+    declareEntitySet("BoundaryVertices()", BoundaryVertices, AllVertices);
+    declareEntitySet("AllVertices()", AllVertices, AllVertices);
 }
 
 SymbolTable& SymbolTable::instance()
@@ -591,6 +598,12 @@ std::list<Function>::const_iterator SymbolTable::findFunction(const std::string&
     return it;
 }
 
+
+std::vector<EntitySet>::iterator SymbolTable::findSet(const int index)
+{
+    return std::find_if(entitysets_.begin(), entitysets_.end(),
+                        [&](const EntitySet& es) { return es.index() == index; });
+}
 
 std::vector<EntitySet>::const_iterator SymbolTable::findSet(const int index) const
 {

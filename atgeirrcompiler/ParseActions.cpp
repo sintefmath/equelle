@@ -45,7 +45,8 @@ Node* handleIdentifier(const std::string& name)
 
 VarDeclNode* handleDeclaration(const std::string& name, TypeNode* type)
 {
-    SymbolTable::declareVariable(name, type->type());
+    EquelleType t = type->type();
+    SymbolTable::declareVariable(name, t);
     return new VarDeclNode(name, type);
 }
 
@@ -77,6 +78,7 @@ VarAssignNode* handleAssignment(const std::string& name, Node* expr)
                 && SymbolTable::isSubset(rhs_type.gridMapping(), lhs_type.subsetOf())) {
                 // OK, should make postponed definition of the variable.
                 SymbolTable::setVariableType(name, rhs_type);
+                SymbolTable::setEntitySetName(rhs_type.gridMapping(), name);
             } else {
                 std::string err_msg = "mismatch between type in assignment and declaration for ";
                 err_msg += name;

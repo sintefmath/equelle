@@ -29,7 +29,7 @@ public:
     const std::string& name() const;
     int index() const;
     int subsetIndex() const;
-
+    void setName(const std::string& name);
 private:
     std::string name_;
     int index_;
@@ -203,6 +203,8 @@ public:
 
     static std::string equelleString(const EquelleType& type);
 
+    static void setEntitySetName(const int entity_set_index, const std::string& name);
+
 private:
     SymbolTable();
 
@@ -223,6 +225,7 @@ private:
     std::list<Function>::iterator findFunction(const std::string& name);
     std::list<Function>::const_iterator findFunction(const std::string& name) const;
 
+    std::vector<EntitySet>::iterator findSet(const int index);
     std::vector<EntitySet>::const_iterator findSet(const int index) const;
 
     int next_entityset_index_;
