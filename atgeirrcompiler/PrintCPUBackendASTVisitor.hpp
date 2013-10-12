@@ -63,8 +63,8 @@ public:
 
 private:
     bool suppressed_;
-    bool vars_with_types_;
     int indent_;
+    int sequence_depth_;
     void endl() const;
     std::string indent() const;
     void suppress();

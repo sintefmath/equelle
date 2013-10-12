@@ -9,9 +9,16 @@
 #include <cctype>
 
 
+namespace
+{
+    const char* cppStartString();
+    const char* cppEndString();
+}
+
+
 
 PrintCPUBackendASTVisitor::PrintCPUBackendASTVisitor()
-    : suppressed_(false), vars_with_types_(false), indent_(0)
+    : suppressed_(false), indent_(1), sequence_depth_(0)
 {
 }
 
@@ -25,17 +32,25 @@ PrintCPUBackendASTVisitor::~PrintCPUBackendASTVisitor()
 
 void PrintCPUBackendASTVisitor::visit(SequenceNode&)
 {
-    // std::cout << "{SequenceNode::visit()}";
+    if (sequence_depth_ == 0) {
+        // This is the root node of the program.
+        std::cout << cppStartString();
+        endl();
+    }
+    ++sequence_depth_;
 }
 
 void PrintCPUBackendASTVisitor::midVisit(SequenceNode&)
 {
-    // std::cout << "{SequenceNode::midVisit()}";
 }
 
 void PrintCPUBackendASTVisitor::postVisit(SequenceNode&)
 {
-    // std::cout << "{SequenceNode::postVisit()}";
+    --sequence_depth_;
+    if (sequence_depth_ == 0) {
+        // We are back at the root node.
+        std::cout << cppEndString();
+    }
 }
 
 void PrintCPUBackendASTVisitor::visit(NumberNode& node)
@@ -163,11 +178,7 @@ void PrintCPUBackendASTVisitor::postVisit(VarAssignNode&)
 
 void PrintCPUBackendASTVisitor::visit(VarNode& node)
 {
-    if (vars_with_types_) {
-        std::cout << "<Type...>" << node.name();
-    } {
-        std::cout << node.name();
-    }
+    std::cout << node.name();
 }
 
 void PrintCPUBackendASTVisitor::visit(FuncRefNode& node)
@@ -317,4 +328,49 @@ std::string PrintCPUBackendASTVisitor::cppTypeString(const EquelleType& et) cons
     std::string cppstring = et.isCollection() ? "CollOf" : "";
     cppstring += basicTypeString(et.basicType());
     return cppstring;
+}
+
+
+
+namespace
+{
+    const char* cppStartString()
+    {
+        return
+"\n"
+"// This program was created by the Equelle compiler from SINTEF.\n"
+"\n"
+"#include <opm/core/utility/parameters/ParameterGroup.hpp>\n"
+"#include <opm/core/linalg/LinearSolverFactory.hpp>\n"
+"#include <opm/core/utility/ErrorMacros.hpp>\n"
+"#include <opm/autodiff/AutoDiffBlock.hpp>\n"
+"#include <opm/autodiff/AutoDiffHelpers.hpp>\n"
+"#include <opm/core/grid.h>\n"
+"#include <opm/core/grid/GridManager.hpp>\n"
+"#include <algorithm>\n"
+"#include <iterator>\n"
+"#include <iostream>\n"
+"#include <cmath>\n"
+"\n"
+"#include \"EquelleRuntimeCPU.hpp\"\n"
+"\n"
+"int main(int argc, char** argv)\n"
+"{\n"
+"    // Get user parameters.\n"
+"    Opm::parameter::ParameterGroup param(argc, argv, false);\n"
+"\n"
+"    // Create the Equelle runtime.\n"
+"    EquelleRuntimeCPU er(param);\n"
+"\n"
+"    // ============= Generated code starts here ================\n";
+    }
+
+    const char* cppEndString()
+    {
+        return "\n"
+"    // ============= Generated code ends here ================\n"
+"\n"
+"    return 0;\n"
+"}\n";
+    }
 }
