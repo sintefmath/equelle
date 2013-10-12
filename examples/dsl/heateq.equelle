@@ -8,7 +8,8 @@ k : Scalar = UserSpecifiedScalarWithDefault(0.3) # Heat diffusion constant.
 dt : Scalar = UserSpecifiedScalarWithDefault(0.5) # Time step length.
 
 # u0 should be given initial values (in user input)
-u0 : Collection Of Scalar On AllCells() = UserSpecifiedCollectionOfScalar( AllCells() )
+u0 : Collection Of Scalar On AllCells()
+u0 = UserSpecifiedCollectionOfScalar( AllCells() )
 
 # Trying to add support for Dirichlet boundaries
 dirichlet_boundary : Collection Of Face Subset Of (BoundaryFaces())
@@ -65,4 +66,3 @@ explicitu = u0 - computeResidual(u0)
 u = NewtonSolve(computeResidual, u0)
 
 Output(u)
-Output(fluxes)
