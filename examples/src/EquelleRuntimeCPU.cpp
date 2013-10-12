@@ -19,15 +19,16 @@ EquelleRuntimeCPU::EquelleRuntimeCPU(const Opm::parameter::ParameterGroup& param
       grid_(*(grid_manager_->c_grid())),
       ops_(grid_),
       linsolver_(param),
-      output_to_file_(param.getDefault("output_to_file", false))
+      output_to_file_(param.getDefault("output_to_file", false)),
+      param_(param)
 {
 }
 
 
-CollOfCells EquelleRuntimeCPU::allCells() const
+CollOfCell EquelleRuntimeCPU::allCells() const
 {
     const int nc = grid_.number_of_cells;
-    CollOfCells cells(nc);
+    CollOfCell cells(nc);
     for (int c = 0; c < nc; ++c) {
         cells[c].index = c;
     }
@@ -67,9 +68,9 @@ bool EquelleRuntimeCPU::boundaryCell(const int cell_index) const
 }
 
 
-CollOfCells EquelleRuntimeCPU::boundaryCells() const
+CollOfCell EquelleRuntimeCPU::boundaryCells() const
 {
-    CollOfCells cells;
+    CollOfCell cells;
     const int nc = grid_.number_of_cells;
     cells.reserve(nc);
     for (int c = 0; c < nc; ++c) {
@@ -81,9 +82,9 @@ CollOfCells EquelleRuntimeCPU::boundaryCells() const
 }
 
 
-CollOfCells EquelleRuntimeCPU::interiorCells() const
+CollOfCell EquelleRuntimeCPU::interiorCells() const
 {
-    CollOfCells cells;
+    CollOfCell cells;
     const int nc = grid_.number_of_cells;
     cells.reserve(nc);
     for (int c = 0; c < nc; ++c) {
@@ -95,10 +96,10 @@ CollOfCells EquelleRuntimeCPU::interiorCells() const
 }
 
 
-CollOfFaces EquelleRuntimeCPU::allFaces() const
+CollOfFace EquelleRuntimeCPU::allFaces() const
 {
     const int nf = grid_.number_of_faces;
-    CollOfFaces faces(nf);
+    CollOfFace faces(nf);
     for (int f = 0; f < nf; ++f) {
         faces[f].index = f;
     }
@@ -108,11 +109,11 @@ CollOfFaces EquelleRuntimeCPU::allFaces() const
 
 // Again... this is kind of botched for a 1D grid implemented as a 2D(n, 1) or 2D(1, n) grid...
 
-CollOfFaces EquelleRuntimeCPU::boundaryFaces() const
+CollOfFace EquelleRuntimeCPU::boundaryFaces() const
 {
     const int nif = ops_.internal_faces.size();
     const int nbf = grid_.number_of_faces - nif;
-    CollOfFaces bfaces(nbf);
+    CollOfFace bfaces(nbf);
     int if_cursor = 0;
     int bf_cursor = 0;
 
@@ -136,10 +137,10 @@ CollOfFaces EquelleRuntimeCPU::boundaryFaces() const
 }
 
 
-CollOfFaces EquelleRuntimeCPU::interiorFaces() const
+CollOfFace EquelleRuntimeCPU::interiorFaces() const
 {
     const int nif = ops_.internal_faces.size();
-    CollOfFaces ifaces(nif);
+    CollOfFace ifaces(nif);
     for (int i = 0; i < nif; ++i) {
         ifaces[i].index = ops_.internal_faces(i);
     }
@@ -147,10 +148,10 @@ CollOfFaces EquelleRuntimeCPU::interiorFaces() const
 }
 
 
-CollOfCells EquelleRuntimeCPU::firstCell(const CollOfFaces& faces) const
+CollOfCell EquelleRuntimeCPU::firstCell(const CollOfFace& faces) const
 {
     const int n = faces.size();
-    CollOfCells fcells(n);
+    CollOfCell fcells(n);
     for (int i = 0; i < n; ++i) {
         fcells[i].index = grid_.face_cells[2*faces[i].index];
     }
@@ -158,10 +159,10 @@ CollOfCells EquelleRuntimeCPU::firstCell(const CollOfFaces& faces) const
 }
 
 
-CollOfCells EquelleRuntimeCPU::secondCell(const CollOfFaces& faces) const
+CollOfCell EquelleRuntimeCPU::secondCell(const CollOfFace& faces) const
 {
     const int n = faces.size();
-    CollOfCells fcells(n);
+    CollOfCell fcells(n);
     for (int i = 0; i < n; ++i) {
         fcells[i].index = grid_.face_cells[2*faces[i].index + 1];
     }
@@ -169,10 +170,10 @@ CollOfCells EquelleRuntimeCPU::secondCell(const CollOfFaces& faces) const
 }
 
 
-CollOfScalars EquelleRuntimeCPU::norm(const CollOfFaces& faces) const
+CollOfScalar EquelleRuntimeCPU::norm(const CollOfFace& faces) const
 {
     const int n = faces.size();
-    CollOfScalars areas(n);
+    CollOfScalar areas(n);
     for (int i = 0; i < n; ++i) {
         areas[i] = grid_.face_areas[faces[i].index];
     }
@@ -180,10 +181,10 @@ CollOfScalars EquelleRuntimeCPU::norm(const CollOfFaces& faces) const
 }
 
 
-CollOfScalars EquelleRuntimeCPU::norm(const CollOfCells& cells) const
+CollOfScalar EquelleRuntimeCPU::norm(const CollOfCell& cells) const
 {
     const int n = cells.size();
-    CollOfScalars volumes(n);
+    CollOfScalar volumes(n);
     for (int i = 0; i < n; ++i) {
         volumes[i] = grid_.cell_volumes[cells[i].index];
     }
@@ -191,17 +192,17 @@ CollOfScalars EquelleRuntimeCPU::norm(const CollOfCells& cells) const
 }
 
 
-CollOfScalars EquelleRuntimeCPU::norm(const CollOfVectors& vectors) const
+CollOfScalar EquelleRuntimeCPU::norm(const CollOfVector& vectors) const
 {
     return vectors.matrix().rowwise().norm();
 }
 
 
-CollOfVectors EquelleRuntimeCPU::centroid(const CollOfFaces& faces) const
+CollOfVector EquelleRuntimeCPU::centroid(const CollOfFace& faces) const
 {
     const int n = faces.size();
     const int dim = grid_.dimensions;
-    CollOfVectors centroids(n, dim);
+    CollOfVector centroids(n, dim);
     for (int i = 0; i < n; ++i) {
         const double* fc = grid_.face_centroids + dim * faces[i].index;
         for (int d = 0; d < dim; ++d) {
@@ -212,11 +213,11 @@ CollOfVectors EquelleRuntimeCPU::centroid(const CollOfFaces& faces) const
 }
 
 
-CollOfVectors EquelleRuntimeCPU::centroid(const CollOfCells& cells) const
+CollOfVector EquelleRuntimeCPU::centroid(const CollOfCell& cells) const
 {
     const int n = cells.size();
     const int dim = grid_.dimensions;
-    CollOfVectors centroids(n, dim);
+    CollOfVector centroids(n, dim);
     for (int i = 0; i < n; ++i) {
         const double* fc = grid_.cell_centroids + dim * cells[i].index;
         for (int d = 0; d < dim; ++d) {
@@ -227,31 +228,31 @@ CollOfVectors EquelleRuntimeCPU::centroid(const CollOfCells& cells) const
 }
 
 
-CollOfScalars EquelleRuntimeCPU::gradient(const CollOfScalars& cell_scalarfield) const
+CollOfScalar EquelleRuntimeCPU::gradient(const CollOfScalar& cell_scalarfield) const
 {
     return ops_.grad * cell_scalarfield.matrix();
 }
 
 
-CollOfScalarsAD EquelleRuntimeCPU::gradient(const CollOfScalarsAD& cell_scalarfield) const
+CollOfScalarAD EquelleRuntimeCPU::gradient(const CollOfScalarAD& cell_scalarfield) const
 {
     return ops_.grad * cell_scalarfield;
 }
 
 
-CollOfScalars EquelleRuntimeCPU::negGradient(const CollOfScalars& cell_scalarfield) const
+CollOfScalar EquelleRuntimeCPU::negGradient(const CollOfScalar& cell_scalarfield) const
 {
     return ops_.ngrad * cell_scalarfield.matrix();
 }
 
 
-CollOfScalarsAD EquelleRuntimeCPU::negGradient(const CollOfScalarsAD& cell_scalarfield) const
+CollOfScalarAD EquelleRuntimeCPU::negGradient(const CollOfScalarAD& cell_scalarfield) const
 {
     return ops_.ngrad * cell_scalarfield;
 }
 
 
-CollOfScalars EquelleRuntimeCPU::divergence(const CollOfScalars& face_fluxes) const
+CollOfScalar EquelleRuntimeCPU::divergence(const CollOfScalar& face_fluxes) const
 {
     if (face_fluxes.size() == ops_.internal_faces.size()) {
         // This is actually a hack, the compiler should know to emit interiorDivergence()
@@ -262,7 +263,7 @@ CollOfScalars EquelleRuntimeCPU::divergence(const CollOfScalars& face_fluxes) co
 }
 
 
-CollOfScalarsAD EquelleRuntimeCPU::divergence(const CollOfScalarsAD& face_fluxes) const
+CollOfScalarAD EquelleRuntimeCPU::divergence(const CollOfScalarAD& face_fluxes) const
 {
     if (face_fluxes.size() == ops_.internal_faces.size()) {
         // This is actually a hack, the compiler should know to emit interiorDivergence()
@@ -273,19 +274,19 @@ CollOfScalarsAD EquelleRuntimeCPU::divergence(const CollOfScalarsAD& face_fluxes
 }
 
 
-CollOfScalars EquelleRuntimeCPU::interiorDivergence(const CollOfScalars& face_fluxes) const
+CollOfScalar EquelleRuntimeCPU::interiorDivergence(const CollOfScalar& face_fluxes) const
 {
     return ops_.div * face_fluxes.matrix();
 }
 
 
-CollOfScalarsAD EquelleRuntimeCPU::interiorDivergence(const CollOfScalarsAD& face_fluxes) const
+CollOfScalarAD EquelleRuntimeCPU::interiorDivergence(const CollOfScalarAD& face_fluxes) const
 {
     return ops_.div * face_fluxes;
 }
 
 
-CollOfBooleans EquelleRuntimeCPU::isEmpty(const CollOfCells& cells) const
+CollOfBooleans EquelleRuntimeCPU::isEmpty(const CollOfCell& cells) const
 {
     const size_t sz = cells.size();
     CollOfBooleans retval = CollOfBooleans::Constant(sz, false);
@@ -298,7 +299,7 @@ CollOfBooleans EquelleRuntimeCPU::isEmpty(const CollOfCells& cells) const
 }
 
 
-CollOfBooleans EquelleRuntimeCPU::isEmpty(const CollOfFaces& faces) const
+CollOfBooleans EquelleRuntimeCPU::isEmpty(const CollOfFace& faces) const
 {
     const size_t sz = faces.size();
     CollOfBooleans retval = CollOfBooleans::Constant(sz, false);
@@ -311,11 +312,11 @@ CollOfBooleans EquelleRuntimeCPU::isEmpty(const CollOfFaces& faces) const
 }
 
 
-CollOfScalars EquelleRuntimeCPU::solveForUpdate(const CollOfScalarsAD& residual) const
+CollOfScalar EquelleRuntimeCPU::solveForUpdate(const CollOfScalarAD& residual) const
 {
     Eigen::SparseMatrix<double, Eigen::RowMajor> matr = residual.derivative()[0];
 
-    CollOfScalars du = CollOfScalars::Zero(residual.size());
+    CollOfScalar du = CollOfScalar::Zero(residual.size());
 
     // solve(n, # nonzero values ("val"), ptr to col indices
     // ("col_ind"), ptr to row locations in val array ("row_ind")
@@ -333,13 +334,13 @@ CollOfScalars EquelleRuntimeCPU::solveForUpdate(const CollOfScalarsAD& residual)
 }
 
 
-double EquelleRuntimeCPU::twoNorm(const CollOfScalars& vals) const
+double EquelleRuntimeCPU::twoNorm(const CollOfScalar& vals) const
 {
     return vals.matrix().norm();
 }
 
 
-double EquelleRuntimeCPU::twoNorm(const CollOfScalarsAD& vals) const
+double EquelleRuntimeCPU::twoNorm(const CollOfScalarAD& vals) const
 {
     return twoNorm(vals.value());
 }
@@ -351,7 +352,7 @@ void EquelleRuntimeCPU::output(const std::string& tag, const double val) const
 }
 
 
-void EquelleRuntimeCPU::output(const std::string& tag, const CollOfScalars& vals) const
+void EquelleRuntimeCPU::output(const std::string& tag, const CollOfScalar& vals) const
 {
     if (output_to_file_) {
         std::string filename = tag + ".output";
@@ -370,26 +371,25 @@ void EquelleRuntimeCPU::output(const std::string& tag, const CollOfScalars& vals
 }
 
 
-void EquelleRuntimeCPU::output(const std::string& tag, const CollOfScalarsOnColl& vals) const
+void EquelleRuntimeCPU::output(const std::string& tag, const CollOfScalarOnColl& vals) const
 {
     output(tag, vals.getColl());
     std::cout << "(This was On Collection " << vals.getOnColl() << ")" << std::endl;
 }
 
 
-void EquelleRuntimeCPU::output(const std::string& tag, const CollOfScalarsAD& vals) const
+void EquelleRuntimeCPU::output(const std::string& tag, const CollOfScalarAD& vals) const
 {
     output(tag, vals.value());
 }
 
 
-CollOfScalars EquelleRuntimeCPU::getUserSpecifiedCollectionOfScalar(const Opm::parameter::ParameterGroup& param,
-                                                                    const std::string& name,
-                                                                    const int size)
+CollOfScalar EquelleRuntimeCPU::userSpecifiedCollectionOfScalar(const std::string& name,
+                                                                 const int size)
 {
-    const bool from_file = param.getDefault(name + "_from_file", false);
+    const bool from_file = param_.getDefault(name + "_from_file", false);
     if (from_file) {
-        const std::string filename = param.get<std::string>(name + "_filename");
+        const std::string filename = param_.get<std::string>(name + "_filename");
         std::ifstream is(filename.c_str());
         if (!is) {
             OPM_THROW(std::runtime_error, "Could not find file " << filename);
@@ -400,26 +400,25 @@ CollOfScalars EquelleRuntimeCPU::getUserSpecifiedCollectionOfScalar(const Opm::p
         if (int(data.size()) != size) {
             OPM_THROW(std::runtime_error, "Unexpected size of input data for " << name << " in file " << filename);
         }
-        return CollOfScalars(Eigen::Map<CollOfScalars>(&data[0], size));
+        return CollOfScalar(Eigen::Map<CollOfScalar>(&data[0], size));
     } else {
         // Uniform values.
-        return CollOfScalars::Constant(size, param.get<double>(name));
+        return CollOfScalar::Constant(size, param_.get<double>(name));
     }
 }
 
 
-CollOfFaces EquelleRuntimeCPU::getUserSpecifiedCollectionOfFaceSubsetOf(const Opm::parameter::ParameterGroup& param,
-                                                                        const std::string& name,
-                                                                        const CollOfFaces& face_superset)
+CollOfFace EquelleRuntimeCPU::userSpecifiedCollectionOfFaceSubsetOf(const std::string& name,
+                                                                     const CollOfFace& face_superset)
 {
-    const std::string filename = param.get<std::string>(name + "_filename");
+    const std::string filename = param_.get<std::string>(name + "_filename");
     std::ifstream is(filename.c_str());
     if (!is) {
         OPM_THROW(std::runtime_error, "Could not find file " << filename);
     }
     std::istream_iterator<int> beg(is);
     std::istream_iterator<int> end;
-    CollOfFaces data;
+    CollOfFace data;
     for (auto it = beg; it != end; ++it) {
         data.push_back(Face(*it));
     }
@@ -433,10 +432,10 @@ CollOfFaces EquelleRuntimeCPU::getUserSpecifiedCollectionOfFaceSubsetOf(const Op
 }
 
 
-CollOfScalarsAD EquelleRuntimeCPU::singlePrimaryVariable(const CollOfScalars& initial_values)
+CollOfScalarAD EquelleRuntimeCPU::singlePrimaryVariable(const CollOfScalar& initial_values)
 {
     std::vector<int> block_pattern;
     block_pattern.push_back(initial_values.size());
-    // Syntax below is: CollOfScalarsAD::variable(block index, initialized from, block structure)
-    return CollOfScalarsAD::variable(0, initial_values, block_pattern);
+    // Syntax below is: CollOfScalarAD::variable(block index, initialized from, block structure)
+    return CollOfScalarAD::variable(0, initial_values, block_pattern);
 }

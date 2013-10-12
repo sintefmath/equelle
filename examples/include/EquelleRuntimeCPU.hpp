@@ -33,61 +33,23 @@ typedef TopologicalEntity<0> Cell;
 typedef TopologicalEntity<1> Face;
 
 /// Topological collections.
-typedef std::vector<Cell> CollOfCells;
-typedef std::vector<Face> CollOfFaces;
+typedef std::vector<Cell> CollOfCell;
+typedef std::vector<Face> CollOfFace;
 
 // Scalar type
 typedef double Scalar;
 
 /// Types from opm-autodiff and Eigen.
-typedef Opm::AutoDiffBlock<Scalar> CollOfScalarsAD;
-typedef CollOfScalarsAD::V CollOfScalars;
-
-class CollOfScalarsOnColl
-{
-public:
-    // This constructor makes this class operate exactly like the old one, as a fallback solution if we do not want to be strict about the "On-ness".
-    CollOfScalarsOnColl(const CollOfScalars &c)
-    {
-        coll_ = c;
-        on_collection_ = 0;
-    }
-    template<typename ONCOLL>
-    CollOfScalarsOnColl(const CollOfScalars &c, const ONCOLL &oncoll)
-    {
-        coll_ = c;
-        on_collection_ = &oncoll;
-    }
-    CollOfScalarsOnColl operator-(const CollOfScalarsOnColl &rhs) const
-    {
-        if ( on_collection_ != rhs.getOnColl() ) {
-            std::cout << "\n\nKABOOM!!! This should not be allowed... Trying to subtract Collection Of Scalar *On* different Collections!\n\n" << std::endl;
-        }
-        return CollOfScalarsOnColl( coll_ - rhs.coll_, 0 );
-    }
-    CollOfScalars getColl(void) const
-    {
-        return coll_;
-    }
-    const void *getOnColl(void) const
-    {
-        return on_collection_;
-    }
-private:
-    CollOfScalars coll_;
-    const void *on_collection_;
-};
-
-typedef Eigen::Array<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> CollOfVectors;
-typedef Eigen::Array<bool, Eigen::Dynamic, 1> CollOfBooleans;
-
-
+typedef Opm::AutoDiffBlock<Scalar> CollOfScalarAD;
+typedef CollOfScalarAD::V CollOfScalar;
+typedef Eigen::Array<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> CollOfVector;
+typedef Eigen::Array<bool, Eigen::Dynamic, 1> CollOfBool;
 
 /// Interface for residual computer class.
 class ResidualComputerInterface
 {
 public:
-    virtual CollOfScalarsAD compute(const CollOfScalarsAD& u) const = 0;
+    virtual CollOfScalarAD compute(const CollOfScalarAD& u) const = 0;
 };
 
 
@@ -102,59 +64,58 @@ public:
     EquelleRuntimeCPU(const Opm::parameter::ParameterGroup& param);
 
     /// Topology and geometry related.
-    CollOfCells allCells() const;
-    CollOfCells boundaryCells() const;
-    CollOfCells interiorCells() const;
-    CollOfFaces allFaces() const;
-    CollOfFaces boundaryFaces() const;
-    CollOfFaces interiorFaces() const;
-    CollOfCells firstCell(const CollOfFaces& faces) const;
-    CollOfCells secondCell(const CollOfFaces& faces) const;
-    CollOfScalars norm(const CollOfFaces& faces) const;
-    CollOfScalars norm(const CollOfCells& cells) const;
-    CollOfScalars norm(const CollOfVectors& vectors) const;
-    CollOfVectors centroid(const CollOfFaces& faces) const;
-    CollOfVectors centroid(const CollOfCells& cells) const;
+    CollOfCell allCells() const;
+    CollOfCell boundaryCells() const;
+    CollOfCell interiorCells() const;
+    CollOfFace allFaces() const;
+    CollOfFace boundaryFaces() const;
+    CollOfFace interiorFaces() const;
+    CollOfCell firstCell(const CollOfFace& faces) const;
+    CollOfCell secondCell(const CollOfFace& faces) const;
+    CollOfScalar norm(const CollOfFace& faces) const;
+    CollOfScalar norm(const CollOfCell& cells) const;
+    CollOfScalar norm(const CollOfVector& vectors) const;
+    CollOfVector centroid(const CollOfFace& faces) const;
+    CollOfVector centroid(const CollOfCell& cells) const;
 
     /// Operators.
-    CollOfScalars gradient(const CollOfScalars& cell_scalarfield) const;
-    CollOfScalarsAD gradient(const CollOfScalarsAD& cell_scalarfield) const;
-    CollOfScalars negGradient(const CollOfScalars& cell_scalarfield) const;
-    CollOfScalarsAD negGradient(const CollOfScalarsAD& cell_scalarfield) const;
-    CollOfScalars divergence(const CollOfScalars& face_fluxes) const;
-    CollOfScalarsAD divergence(const CollOfScalarsAD& face_fluxes) const;
-    CollOfScalars interiorDivergence(const CollOfScalars& face_fluxes) const;
-    CollOfScalarsAD interiorDivergence(const CollOfScalarsAD& face_fluxes) const;
-    CollOfBooleans isEmpty(const CollOfCells& cells) const;
-    CollOfBooleans isEmpty(const CollOfFaces& faces) const;
+    CollOfScalar gradient(const CollOfScalar& cell_scalarfield) const;
+    CollOfScalarAD gradient(const CollOfScalarAD& cell_scalarfield) const;
+    CollOfScalar negGradient(const CollOfScalar& cell_scalarfield) const;
+    CollOfScalarAD negGradient(const CollOfScalarAD& cell_scalarfield) const;
+    CollOfScalar divergence(const CollOfScalar& face_fluxes) const;
+    CollOfScalarAD divergence(const CollOfScalarAD& face_fluxes) const;
+    CollOfScalar interiorDivergence(const CollOfScalar& face_fluxes) const;
+    CollOfScalarAD interiorDivergence(const CollOfScalarAD& face_fluxes) const;
+    CollOfBool isEmpty(const CollOfCell& cells) const;
+    CollOfBool isEmpty(const CollOfFace& faces) const;
     template <class EntityCollection>
-    CollOfScalars operatorOn(const Scalar data, const EntityCollection& to_set);
+    CollOfScalar operatorOn(const Scalar data, const EntityCollection& to_set);
     template <class SomeCollection, class EntityCollection>
     SomeCollection operatorOn(const SomeCollection& data, const EntityCollection& from_set, const EntityCollection& to_set);
 
     template <class SomeCollection>
-    SomeCollection trinaryIf(const CollOfBooleans& predicate,
+    SomeCollection trinaryIf(const CollOfBool& predicate,
                              const SomeCollection& iftrue,
                              const SomeCollection& iffalse) const;
 
     /// Solver function.
     template <class ResidualFunctor>
-    CollOfScalarsAD newtonSolve(const ResidualFunctor& rescomp,
-				const CollOfScalars& u_initialguess) const;
+    CollOfScalarAD newtonSolve(const ResidualFunctor& rescomp,
+                               const CollOfScalar& u_initialguess) const;
 
     /// Output.
     void output(const std::string& tag, Scalar val) const;
-    void output(const std::string& tag, const CollOfScalars& vals) const;
-    void output(const std::string& tag, const CollOfScalarsOnColl& vals) const;
-    void output(const std::string& tag, const CollOfScalarsAD& vals) const;
+    void output(const std::string& tag, const CollOfScalar& vals) const;
+    void output(const std::string& tag, const CollOfScalarAD& vals) const;
 
     /// Input.
-    static CollOfFaces getUserSpecifiedCollectionOfFaceSubsetOf(const Opm::parameter::ParameterGroup& param,
-                                                                const std::string& name,
-                                                                const CollOfFaces& superset);
-    static CollOfScalars getUserSpecifiedCollectionOfScalar(const Opm::parameter::ParameterGroup& param,
-							    const std::string& name,
-							    const int size);
+    Scalar userSpecifiedScalarWithDefault(const std::string& name,
+                                          const double default_value);
+    CollOfFace userSpecifiedCollectionOfFaceSubsetOf(const std::string& name,
+                                                     const CollOfFace& superset);
+    CollOfScalar userSpecifiedCollectionOfScalar(const std::string& name,
+                                                 const int size);
 
 
 private:
@@ -162,14 +123,14 @@ private:
     bool boundaryCell(const int cell_index) const;
 
     /// Creating primary variables.
-    static CollOfScalarsAD singlePrimaryVariable(const CollOfScalars& initial_values);
+    static CollOfScalarAD singlePrimaryVariable(const CollOfScalar& initial_values);
 
     /// Solver helper.
-    CollOfScalars solveForUpdate(const CollOfScalarsAD& residual) const;
+    CollOfScalar solveForUpdate(const CollOfScalarAD& residual) const;
 
     /// Norms.
-    Scalar twoNorm(const CollOfScalars& vals) const;
-    Scalar twoNorm(const CollOfScalarsAD& vals) const;
+    Scalar twoNorm(const CollOfScalar& vals) const;
+    Scalar twoNorm(const CollOfScalarAD& vals) const;
 
     /// Data members.
     bool grid_from_file_;
@@ -178,6 +139,7 @@ private:
     Opm::HelperOps ops_;
     Opm::LinearSolverFactory linsolver_;
     bool output_to_file_;
+    const Opm::parameter::ParameterGroup& param_;
 };
 
 // Include the implementations of template members.
