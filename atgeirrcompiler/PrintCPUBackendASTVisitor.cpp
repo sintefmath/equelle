@@ -122,7 +122,7 @@ void PrintCPUBackendASTVisitor::postVisit(UnaryNegationNode&)
 
 void PrintCPUBackendASTVisitor::visit(OnNode&)
 {
-    std::cout << "er.On(";
+    std::cout << "er.operatorOn(";
 }
 
 void PrintCPUBackendASTVisitor::midVisit(OnNode&)
