@@ -111,11 +111,12 @@ public:
 
     /// Input.
     Scalar userSpecifiedScalarWithDefault(const std::string& name,
-                                          const double default_value);
+                                          const Scalar default_value);
     CollOfFace userSpecifiedCollectionOfFaceSubsetOf(const std::string& name,
                                                      const CollOfFace& superset);
+    template <class SomeCollection>
     CollOfScalar userSpecifiedCollectionOfScalar(const std::string& name,
-                                                 const int size);
+                                                 const SomeCollection& coll);
 
 
 private:

@@ -6,6 +6,10 @@
 #define EQUELLERUNTIMECPU_IMPL_HEADER_INCLUDED
 
 
+#include <fstream>
+#include <iterator>
+
+
 template <class EntityCollection>
 CollOfScalar EquelleRuntimeCPU::operatorOn(const double data,
                                            const EntityCollection& to_set)
@@ -170,5 +174,32 @@ CollOfScalarAD EquelleRuntimeCPU::newtonSolve(const ResidualFunctor& rescomp,
     }
     return u;
 }
+
+
+template <class SomeCollection>
+CollOfScalar EquelleRuntimeCPU::userSpecifiedCollectionOfScalar(const std::string& name,
+                                                                const SomeCollection& coll)
+{
+    const int size = coll.size();
+    const bool from_file = param_.getDefault(name + "_from_file", false);
+    if (from_file) {
+        const std::string filename = param_.get<std::string>(name + "_filename");
+        std::ifstream is(filename.c_str());
+        if (!is) {
+            OPM_THROW(std::runtime_error, "Could not find file " << filename);
+        }
+        std::istream_iterator<double> beg(is);
+        std::istream_iterator<double> end;
+        std::vector<double> data(beg, end);
+        if (int(data.size()) != size) {
+            OPM_THROW(std::runtime_error, "Unexpected size of input data for " << name << " in file " << filename);
+        }
+        return CollOfScalar(Eigen::Map<CollOfScalar>(&data[0], size));
+    } else {
+        // Uniform values.
+        return CollOfScalar::Constant(size, param_.get<double>(name));
+    }
+}
+
 
 #endif // EQUELLERUNTIMECPU_IMPL_HEADER_INCLUDED
