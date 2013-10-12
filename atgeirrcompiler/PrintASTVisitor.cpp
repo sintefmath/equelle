@@ -4,6 +4,7 @@
 
 #include "PrintASTVisitor.hpp"
 #include "ASTNodes.hpp"
+#include "SymbolTable.hpp"
 #include <iostream>
 
 
@@ -35,7 +36,7 @@ void PrintASTVisitor::visit(NumberNode& node)
 
 void PrintASTVisitor::visit(TypeNode& node)
 {
-    std::cout << indent() << "TypeNode: " << node.type().equelleString() << '\n';
+    std::cout << indent() << "TypeNode: " << SymbolTable::equelleString(node.type()) << '\n';
 }
 
 void PrintASTVisitor::visit(FuncTypeNode& node)
@@ -160,12 +161,20 @@ void PrintASTVisitor::visit(FuncCallNode& node)
     ++indent_;
 }
 
-
+void PrintASTVisitor::visit(FuncCallStatementNode&)
+{
+    std::cout << indent() << "FuncCallStatementNode\n";
+    ++indent_;
+}
 
 
 void PrintASTVisitor::postVisit(SequenceNode&)
 {
     --indent_;
+}
+
+void PrintASTVisitor::midVisit(BinaryOpNode&)
+{
 }
 
 void PrintASTVisitor::postVisit(BinaryOpNode&)
@@ -183,9 +192,21 @@ void PrintASTVisitor::postVisit(UnaryNegationNode&)
     --indent_;
 }
 
+void PrintASTVisitor::midVisit(OnNode&)
+{
+}
+
 void PrintASTVisitor::postVisit(OnNode&)
 {
     --indent_;
+}
+
+void PrintASTVisitor::questionMarkVisit(TrinaryIfNode&)
+{
+}
+
+void PrintASTVisitor::colonVisit(TrinaryIfNode&)
+{
 }
 
 void PrintASTVisitor::postVisit(TrinaryIfNode&)
@@ -238,6 +259,10 @@ void PrintASTVisitor::postVisit(FuncCallNode&)
     --indent_;
 }
 
+void PrintASTVisitor::postVisit(FuncCallStatementNode&)
+{
+    --indent_;
+}
 
 
 

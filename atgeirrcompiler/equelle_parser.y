@@ -42,7 +42,7 @@
 %type <type> basic_type
 %type <fargdecl> f_decl_args
 %type <node> number
-%type <node> function_call
+%type <fcall> function_call
 %type <farg> f_call_args
 %type <seq> f_body
 %type <node> f_startdef
@@ -81,6 +81,7 @@
     FuncTypeNode* ftype;
     FuncArgsNode* farg;
     FuncArgsDeclNode* fargdecl;
+    FuncCallNode* fcall;
     SequenceNode* seq;
     std::string* str;
 }
@@ -106,7 +107,7 @@ statement: declaration          { $$ = $1; }
          | f_declaration        { $$ = $1; }
          | assignment           { $$ = $1; }
          | comb_decl_assign     { $$ = $1; }
-         | function_call        { $$ = $1; }
+         | function_call        { $$ = handleFuncCallStatement($1); }
          | RET expr             { $$ = handleReturnStatement($2); }
          ;
 

@@ -36,12 +36,17 @@ public:
     void visit(FuncArgsNode& node);
     void visit(ReturnStatementNode& node);
     void visit(FuncCallNode& node);
+    void visit(FuncCallStatementNode& node);
 
     void postVisit(SequenceNode& node);
+    void midVisit(BinaryOpNode& node);
     void postVisit(BinaryOpNode& node);
     void postVisit(NormNode& node);
     void postVisit(UnaryNegationNode& node);
+    void midVisit(OnNode& node);
     void postVisit(OnNode& node);
+    void questionMarkVisit(TrinaryIfNode& node);
+    void colonVisit(TrinaryIfNode& node);
     void postVisit(TrinaryIfNode& node);
     void postVisit(VarDeclNode& node);
     void postVisit(VarAssignNode& node);
@@ -52,6 +57,7 @@ public:
     void postVisit(FuncArgsNode& node);
     void postVisit(ReturnStatementNode& node);
     void postVisit(FuncCallNode& node);
+    void postVisit(FuncCallStatementNode& node);
 
 private:
     int indent_;

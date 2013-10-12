@@ -25,11 +25,13 @@ class Node;
 class EntitySet
 {
 public:
-    EntitySet(const int index, const int subset_index);
+    EntitySet(const std::string& name, const int index, const int subset_index);
+    const std::string& name() const;
     int index() const;
     int subsetIndex() const;
 
 private:
+    std::string name_;
     int index_;
     int subset_index_;
 };
@@ -168,7 +170,7 @@ public:
 
     static void declareFunction(const std::string& name, const FunctionType& ftype);
 
-    static int declareNewEntitySet(const int subset_entity_index);
+    static int declareNewEntitySet(const std::string& name, const int subset_entity_index);
 
     static bool isVariableDeclared(const std::string& name);
 
@@ -199,13 +201,14 @@ public:
 
     static void setProgram(Node* astroot);
 
+    static std::string equelleString(const EquelleType& type);
+
 private:
     SymbolTable();
 
     static SymbolTable& instance();
 
-    /// Used only for setting up initial built-in entity sets.
-    void declareEntitySet(const int entity_index, const int subset_entity_index);
+    void declareEntitySet(const std::string& name, const int entity_index, const int subset_entity_index);
 
     void declareFunctionImpl(const std::string& name, const FunctionType& ftype);
 

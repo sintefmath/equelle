@@ -15,9 +15,14 @@
 
 // ============ Methods of EntitySet ============
 
-EntitySet::EntitySet(const int index, const int subset_index)
-    : index_(index), subset_index_(subset_index)
+EntitySet::EntitySet(const std::string& name, const int index, const int subset_index)
+    : name_(name), index_(index), subset_index_(subset_index)
 {
+}
+
+const std::string& EntitySet::name() const
+{
+    return name_;
 }
 
 int EntitySet::index() const
@@ -145,13 +150,13 @@ std::string FunctionType::equelleString() const
     for (auto var : arguments_) {
         retval += var.name();
         retval += " : ";
-        retval += var.type().equelleString();
+        retval += SymbolTable::equelleString(var.type());
         retval += ',';
     }
     // Chop the extra comma.
     retval.erase(retval.end() - 1);
     retval += ") -> ";
-    retval += return_type_.equelleString();
+    retval += SymbolTable::equelleString(return_type_);
     return retval;
 }
 
@@ -305,10 +310,10 @@ void SymbolTable::declareFunction(const std::string& name, const FunctionType& f
     instance().declareFunctionImpl(name, ftype);
 }
 
-int SymbolTable::declareNewEntitySet(const int subset_entity_index)
+int SymbolTable::declareNewEntitySet(const std::string& name, const int subset_entity_index)
 {
     const int new_entityset_index = instance().next_entityset_index_++;
-    instance().declareEntitySet(new_entityset_index, subset_entity_index);
+    instance().declareEntitySet(name, new_entityset_index, subset_entity_index);
     return new_entityset_index;
 }
 
@@ -389,6 +394,27 @@ void SymbolTable::setProgram(Node* ast_root)
     instance().ast_root_ = ast_root;
 }
 
+std::string SymbolTable::equelleString(const EquelleType& type)
+{
+    std::string retval;
+    if (type.isCollection()) {
+        retval += "Collection Of ";
+    }
+    retval += basicTypeString(type.basicType());
+    if (type.gridMapping() != NotApplicable
+        && type.gridMapping() != PostponedDefinition) {
+        retval += " On ";
+        retval += canonicalEntitySetString(type.gridMapping());
+        retval += "()";
+    }
+    if (type.subsetOf() != NotApplicable) {
+        retval += " Subset Of ";
+        retval += canonicalEntitySetString(type.subsetOf());
+        retval += "()";
+    }
+    return retval;
+}
+
 SymbolTable::SymbolTable()
     : next_entityset_index_(FirstRuntimeEntitySet)
 {
@@ -460,18 +486,18 @@ SymbolTable::SymbolTable()
     current_function_ = main_function_;
 
     // ----- Add built-in entity sets to entity set table. -----
-    declareEntitySet(InteriorCells, AllCells);
-    declareEntitySet(BoundaryCells, AllCells);
-    declareEntitySet(AllCells, AllCells);
-    declareEntitySet(InteriorFaces, AllFaces);
-    declareEntitySet(BoundaryFaces, AllFaces);
-    declareEntitySet(AllFaces, AllFaces);
-    declareEntitySet(InteriorEdges, AllEdges);
-    declareEntitySet(BoundaryEdges, AllEdges);
-    declareEntitySet(AllEdges, AllEdges);
-    declareEntitySet(InteriorVertices, AllVertices);
-    declareEntitySet(BoundaryVertices, AllVertices);
-    declareEntitySet(AllVertices, AllVertices);
+    declareEntitySet("InteriorCells", InteriorCells, AllCells);
+    declareEntitySet("BoundaryCells",BoundaryCells, AllCells);
+    declareEntitySet("AllCells", AllCells, AllCells);
+    declareEntitySet("InteriorFaces", InteriorFaces, AllFaces);
+    declareEntitySet("BoundaryFaces", BoundaryFaces, AllFaces);
+    declareEntitySet("AllFaces", AllFaces, AllFaces);
+    declareEntitySet("InteriorEdges", InteriorEdges, AllEdges);
+    declareEntitySet("BoundaryEdges", BoundaryEdges, AllEdges);
+    declareEntitySet("AllEdges", AllEdges, AllEdges);
+    declareEntitySet("InteriorVertices", InteriorVertices, AllVertices);
+    declareEntitySet("BoundaryVertices", BoundaryVertices, AllVertices);
+    declareEntitySet("AllVertices", AllVertices, AllVertices);
 }
 
 SymbolTable& SymbolTable::instance()
@@ -481,9 +507,9 @@ SymbolTable& SymbolTable::instance()
 }
 
 /// Used only for setting up initial built-in entity sets.
-void SymbolTable::declareEntitySet(const int entity_index, const int subset_entity_index)
+void SymbolTable::declareEntitySet(const std::string& name, const int entity_index, const int subset_entity_index)
 {
-    entitysets_.emplace_back(entity_index, subset_entity_index);
+    entitysets_.emplace_back(name, entity_index, subset_entity_index);
 }
 
 void SymbolTable::declareFunctionImpl(const std::string& name, const FunctionType& ftype)

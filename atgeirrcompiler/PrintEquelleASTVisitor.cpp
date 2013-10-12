@@ -4,6 +4,7 @@
 
 #include "PrintEquelleASTVisitor.hpp"
 #include "ASTNodes.hpp"
+#include "SymbolTable.hpp"
 #include <iostream>
 
 
@@ -38,7 +39,7 @@ void PrintEquelleASTVisitor::visit(NumberNode& node)
 
 void PrintEquelleASTVisitor::visit(TypeNode& node)
 {
-    std::cout << node.type().equelleString();
+    std::cout << SymbolTable::equelleString(node.type());
 }
 
 void PrintEquelleASTVisitor::visit(FuncTypeNode& node)
@@ -46,7 +47,12 @@ void PrintEquelleASTVisitor::visit(FuncTypeNode& node)
     std::cout << node.funcType().equelleString();
 }
 
-void PrintEquelleASTVisitor::visit(BinaryOpNode& node)
+void PrintEquelleASTVisitor::visit(BinaryOpNode&)
+{
+    std::cout << '(';
+}
+
+void PrintEquelleASTVisitor::midVisit(BinaryOpNode& node)
 {
     char op = ' ';
     switch (node.op()) {
@@ -65,12 +71,12 @@ void PrintEquelleASTVisitor::visit(BinaryOpNode& node)
     default:
         break;
     }
-    std::cout << "[[ " << op << " ";
+    std::cout << ' ' << op << ' ';
 }
 
 void PrintEquelleASTVisitor::postVisit(BinaryOpNode&)
 {
-    std::cout << " ]]";
+    std::cout << ')';
 }
 
 void PrintEquelleASTVisitor::visit(NormNode&)
@@ -94,22 +100,37 @@ void PrintEquelleASTVisitor::postVisit(UnaryNegationNode&)
 
 void PrintEquelleASTVisitor::visit(OnNode&)
 {
-    std::cout << "[[ On ";
+    std::cout << '(';
+}
+
+void PrintEquelleASTVisitor::midVisit(OnNode&)
+{
+    std::cout << " On ";
 }
 
 void PrintEquelleASTVisitor::postVisit(OnNode&)
 {
-    std::cout << " ]]";
+    std::cout << ')';
 }
 
 void PrintEquelleASTVisitor::visit(TrinaryIfNode&)
 {
-    std::cout << "[[ ?: ";
+    std::cout << '(';
+}
+
+void PrintEquelleASTVisitor::questionMarkVisit(TrinaryIfNode&)
+{
+    std::cout << " ? ";
+}
+
+void PrintEquelleASTVisitor::colonVisit(TrinaryIfNode&)
+{
+    std::cout << " : ";
 }
 
 void PrintEquelleASTVisitor::postVisit(TrinaryIfNode&)
 {
-    std::cout << " ]]";
+    std::cout << ')';
 }
 
 void PrintEquelleASTVisitor::visit(VarDeclNode& node)
@@ -218,6 +239,15 @@ void PrintEquelleASTVisitor::visit(FuncCallNode& node)
 void PrintEquelleASTVisitor::postVisit(FuncCallNode&)
 {
     std::cout << ')';
+}
+
+void PrintEquelleASTVisitor::visit(FuncCallStatementNode&)
+{
+}
+
+void PrintEquelleASTVisitor::postVisit(FuncCallStatementNode&)
+{
+    endl();
 }
 
 

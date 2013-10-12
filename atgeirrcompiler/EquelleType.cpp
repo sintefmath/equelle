@@ -183,24 +183,6 @@ int EquelleType::subsetOf() const
     return subset_of_;
 }
 
-std::string EquelleType::equelleString() const
-{
-    std::string retval;
-    if (isCollection()) {
-        retval += "Collection Of ";
-    }
-    retval += basicTypeString(basicType());
-    if (gridmapping_ != NotApplicable) {
-        retval += " On ";
-        retval += canonicalEntitySetString(gridmapping_);
-    }
-    if (subset_of_ != NotApplicable) {
-        retval += " Subset Of ";
-        retval += canonicalEntitySetString(subset_of_);
-    }
-    return retval;
-}
-
 bool EquelleType::operator==(const EquelleType& et) const
 {
     return basic_type_ == et.basic_type_

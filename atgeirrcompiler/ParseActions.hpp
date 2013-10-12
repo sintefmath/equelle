@@ -42,6 +42,8 @@ FuncTypeNode* handleFuncType(FuncArgsDeclNode* argtypes, TypeNode* rtype);
 
 FuncCallNode* handleFuncCall(const std::string& name, FuncArgsNode* args);
 
+FuncCallStatementNode* handleFuncCallStatement(FuncCallNode* fcall);
+
 BinaryOpNode* handleBinaryOp(BinaryOp op, Node* left, Node* right);
 
 NormNode* handleNorm(Node* expr_to_norm);

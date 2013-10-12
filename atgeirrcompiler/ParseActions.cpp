@@ -196,12 +196,19 @@ FuncCallNode* handleFuncCall(const std::string& name, FuncArgsNode* args)
     const Function& f = SymbolTable::getFunction(name);
     int dynsubret = f.functionType().dynamicSubsetReturn(args->argumentTypes());
     if (dynsubret != NotApplicable) {
-        // Create a new entity collection. This is the only place this can happen.
-        const int gm = SymbolTable::declareNewEntitySet(dynsubret);
+        // Create a new entity collection.
+        const int gm = SymbolTable::declareNewEntitySet("AnonymousEntitySet", dynsubret);
         return new FuncCallNode(name, args, gm);
     } else {
         return new FuncCallNode(name, args);
     }
+}
+
+
+
+FuncCallStatementNode* handleFuncCallStatement(FuncCallNode* fcall)
+{
+    return new FuncCallStatementNode(fcall);
 }
 
 

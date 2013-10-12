@@ -159,6 +159,7 @@ public:
     {
         visitor.visit(*this);
         left_->accept(visitor);
+        visitor.midVisit(*this);
         right_->accept(visitor);
         visitor.postVisit(*this);
     }
@@ -227,6 +228,7 @@ public:
     {
         visitor.visit(*this);
         left_->accept(visitor);
+        visitor.midVisit(*this);
         right_->accept(visitor);
         visitor.postVisit(*this);
     }
@@ -252,7 +254,9 @@ public:
     {
         visitor.visit(*this);
         predicate_->accept(visitor);
+        visitor.questionMarkVisit(*this);
         iftrue_->accept(visitor);
+        visitor.colonVisit(*this);
         iffalse_->accept(visitor);
         visitor.postVisit(*this);
     }
@@ -589,6 +593,24 @@ private:
     std::string funcname_;
     FuncArgsNode* funcargs_;
     int dsr_;
+};
+
+
+
+class FuncCallStatementNode : public Node
+{
+public:
+    FuncCallStatementNode(FuncCallNode* fcall)
+    : fcall_(fcall)
+    {}
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        fcall_->accept(visitor);
+        visitor.postVisit(*this);
+    }
+private:
+    FuncCallNode* fcall_;
 };
 
 
