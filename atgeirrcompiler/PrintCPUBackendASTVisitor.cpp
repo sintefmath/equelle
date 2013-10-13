@@ -250,7 +250,7 @@ void PrintCPUBackendASTVisitor::visit(FuncAssignNode&)
 
 void PrintCPUBackendASTVisitor::postVisit(FuncAssignNode&)
 {
-    std::cout << "}";
+    std::cout << "};";
     endl();
 }
 
