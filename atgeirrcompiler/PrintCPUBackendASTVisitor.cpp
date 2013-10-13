@@ -167,7 +167,7 @@ void PrintCPUBackendASTVisitor::postVisit(VarDeclNode&)
 
 void PrintCPUBackendASTVisitor::visit(VarAssignNode& node)
 {
-    std::cout << "const auto " << node.name() << " = ";
+    std::cout << "const " << cppTypeString(node.type()) << " " << node.name() << " = ";
 }
 
 void PrintCPUBackendASTVisitor::postVisit(VarAssignNode&)
