@@ -226,17 +226,15 @@ void PrintEquelleASTVisitor::postVisit(FuncAssignNode&)
 
 void PrintEquelleASTVisitor::visit(FuncArgsNode&)
 {
-    // std::cout << "{FuncArgsNode::visit()}";
 }
 
 void PrintEquelleASTVisitor::midVisit(FuncArgsNode&)
 {
-    // std::cout << "{FuncArgsNode::midVisit()}";
+        std::cout << ", ";
 }
 
 void PrintEquelleASTVisitor::postVisit(FuncArgsNode&)
 {
-    // std::cout << "{FuncArgsNode::postVisit()}";
 }
 
 void PrintEquelleASTVisitor::visit(ReturnStatementNode&)
