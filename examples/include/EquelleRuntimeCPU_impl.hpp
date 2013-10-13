@@ -136,7 +136,7 @@ inline CollOfScalarAD EquelleRuntimeCPU::trinaryIf(const CollOfBool& predicate,
 
 
 template <class ResidualFunctor>
-CollOfScalarAD EquelleRuntimeCPU::newtonSolve(const ResidualFunctor& rescomp,
+CollOfScalar EquelleRuntimeCPU::newtonSolve(const ResidualFunctor& rescomp,
                                               const CollOfScalar& u_initialguess) const
 {
     // Set up Newton loop.
@@ -172,7 +172,7 @@ CollOfScalarAD EquelleRuntimeCPU::newtonSolve(const ResidualFunctor& rescomp,
 
         ++iter;
     }
-    return u;
+    return u.value();
 }
 
 

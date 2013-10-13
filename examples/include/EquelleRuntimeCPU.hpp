@@ -102,8 +102,8 @@ public:
 
     /// Solver function.
     template <class ResidualFunctor>
-    CollOfScalarAD newtonSolve(const ResidualFunctor& rescomp,
-                               const CollOfScalar& u_initialguess) const;
+    CollOfScalar newtonSolve(const ResidualFunctor& rescomp,
+                             const CollOfScalar& u_initialguess) const;
 
     /// Output.
     void output(const String& tag, Scalar val) const;
