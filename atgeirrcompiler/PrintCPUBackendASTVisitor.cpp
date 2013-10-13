@@ -130,9 +130,27 @@ void PrintCPUBackendASTVisitor::visit(OnNode&)
     std::cout << "er.operatorOn(";
 }
 
-void PrintCPUBackendASTVisitor::midVisit(OnNode&)
+void PrintCPUBackendASTVisitor::midVisit(OnNode& node)
 {
+    // Backend's operatorOn has three arguments when the left argument
+    // is a collection, not two. The middle argument (that we will
+    // write in this method) should be the set that the first argument
+    // is On. Example:
+    // a : Collection Of Scalar On InteriorFaces()
+    // a On AllFaces() ===> er.operatorOn(a, InteriorFaces(), AllFaces()).
     std::cout << ", ";
+    if (node.lefttype().isCollection()) {
+        const std::string esname = SymbolTable::entitySetName(node.lefttype().gridMapping());
+        // Now esname can be either a user-created named set or an Equelle built-in
+        // function call such as AllCells(). If the second, we must transform to
+        // proper call syntax for the C++ backend.
+        const char first = esname[0];
+        const std::string cppterm = std::isupper(first) ?
+            std::string("er.") + char(std::tolower(first)) + esname.substr(1)
+            : esname;
+        std::cout << cppterm;
+        std::cout << ", ";
+    }
 }
 
 void PrintCPUBackendASTVisitor::postVisit(OnNode&)
