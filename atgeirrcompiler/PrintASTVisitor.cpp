@@ -25,6 +25,9 @@ PrintASTVisitor::~PrintASTVisitor()
 
 void PrintASTVisitor::visit(SequenceNode&)
 {
+    if (indent_ == 0) {
+        SymbolTable::dump();
+    }
     std::cout << indent() << "SequenceNode\n";
     ++indent_;
 }
@@ -127,7 +130,7 @@ void PrintASTVisitor::visit(FuncArgsDeclNode&)
 
 void PrintASTVisitor::visit(FuncDeclNode& node)
 {
-    std::cout << indent() << "FuncDeclNod: " << node.name() << '\n';
+    std::cout << indent() << "FuncDeclNode: " << node.name() << '\n';
     ++indent_;
 }
 
