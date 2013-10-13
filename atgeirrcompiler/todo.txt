@@ -24,6 +24,8 @@ Make all such handleSomething() functions do type checking.
 Make Node::type() pure virtual?
 Add ExpressionNode class, move type() there, add to %union?
 Type checking of function args at call site.
+Type check return statements.
+Ensure single return statement, at the end of each function.
 Make the "subset of" part of all entity collection types?
 Add all created (named or not?) entity sets to symbol table?
 Function types vs. variable types?
