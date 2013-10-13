@@ -455,15 +455,15 @@ SymbolTable::SymbolTable()
     functions_.emplace_back("InteriorCells", FunctionType(EquelleType(Cell, true, InteriorCells)));
     functions_.emplace_back("BoundaryCells", FunctionType(EquelleType(Cell, true, BoundaryCells)));
     functions_.emplace_back("AllCells", FunctionType(EquelleType(Cell, true, AllCells)));
-    functions_.emplace_back("InteriorFaces", FunctionType(EquelleType(Cell, true, InteriorFaces)));
-    functions_.emplace_back("BoundaryFaces", FunctionType(EquelleType(Cell, true, BoundaryFaces)));
-    functions_.emplace_back("AllFaces", FunctionType(EquelleType(Cell, true, AllFaces)));
-    functions_.emplace_back("InteriorEdges", FunctionType(EquelleType(Cell, true, InteriorEdges)));
-    functions_.emplace_back("BoundaryEdges", FunctionType(EquelleType(Cell, true, BoundaryEdges)));
-    functions_.emplace_back("AllEdges", FunctionType(EquelleType(Cell, true, AllEdges)));
-    functions_.emplace_back("InteriorVertices", FunctionType(EquelleType(Cell, true, InteriorVertices)));
-    functions_.emplace_back("BoundaryVertices", FunctionType(EquelleType(Cell, true, BoundaryVertices)));
-    functions_.emplace_back("AllVertices", FunctionType(EquelleType(Cell, true, AllVertices)));
+    functions_.emplace_back("InteriorFaces", FunctionType(EquelleType(Face, true, InteriorFaces)));
+    functions_.emplace_back("BoundaryFaces", FunctionType(EquelleType(Face, true, BoundaryFaces)));
+    functions_.emplace_back("AllFaces", FunctionType(EquelleType(Face, true, AllFaces)));
+    functions_.emplace_back("InteriorEdges", FunctionType(EquelleType(Edge, true, InteriorEdges)));
+    functions_.emplace_back("BoundaryEdges", FunctionType(EquelleType(Edge, true, BoundaryEdges)));
+    functions_.emplace_back("AllEdges", FunctionType(EquelleType(Edge, true, AllEdges)));
+    functions_.emplace_back("InteriorVertices", FunctionType(EquelleType(Vertex, true, InteriorVertices)));
+    functions_.emplace_back("BoundaryVertices", FunctionType(EquelleType(Vertex, true, BoundaryVertices)));
+    functions_.emplace_back("AllVertices", FunctionType(EquelleType(Vertex, true, AllVertices)));
     functions_.emplace_back("FirstCell",
                             FunctionType({ Variable("faces", EquelleType()) },
                                          EquelleType(Cell, true),
