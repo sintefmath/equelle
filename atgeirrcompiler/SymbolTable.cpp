@@ -9,7 +9,7 @@
 
 #include <algorithm>
 #include <stdexcept>
-
+#include <iostream>
 
 
 
@@ -290,6 +290,15 @@ EquelleType Function::returnType(const std::vector<EquelleType>& argtypes) const
     return type_.returnType(argtypes);
 }
 
+void Function::dump() const
+{
+    std::cout << "================== Dump of function: " << name() << " ==================\n";
+    std::cout << "Local variables:\n";
+    for (const Variable& v : local_variables_) {
+        std::cout << v.name() << " : " << SymbolTable::equelleString(v.type()) << "    assigned: " << v.assigned() << '\n';
+    }
+}
+
 std::pair<bool, EquelleType> Function::declared(const std::string& name) const
 {
     auto lit = local_variables_.find(name);
@@ -359,7 +368,7 @@ EquelleType SymbolTable::variableType(const std::string& name)
 
 void SymbolTable::setVariableType(const std::string& name, const EquelleType& type)
 {
-    return instance().current_function_->setVariableType(name, type);
+    instance().current_function_->setVariableType(name, type);
 }
 
 bool SymbolTable::isFunctionDeclared(const std::string& name)
@@ -430,6 +439,11 @@ std::string SymbolTable::equelleString(const EquelleType& type)
 void SymbolTable::setEntitySetName(const int entity_set_index, const std::string& name)
 {
     instance().findSet(entity_set_index)->setName(name);
+}
+
+void SymbolTable::dump()
+{
+    instance().dumpImpl();
 }
 
 SymbolTable::SymbolTable()
@@ -593,6 +607,14 @@ bool SymbolTable::isSubsetImpl(const int set1, const int set2) const
     }
     return isSubsetImpl(it->subsetIndex(), set2);
 }
+
+void SymbolTable::dumpImpl() const
+{
+    for (const Function& f : functions_) {
+        f.dump();
+    }
+}
+
 
 std::list<Function>::iterator SymbolTable::findFunction(const std::string& name)
 {

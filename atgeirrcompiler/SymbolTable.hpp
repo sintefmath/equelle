@@ -154,6 +154,8 @@ public:
 
     EquelleType returnType(const std::vector<EquelleType>& argtypes) const;
 
+    void dump() const;
+
 private:
     std::pair<bool, EquelleType> declared(const std::string& name) const;
 
@@ -209,6 +211,8 @@ public:
 
     static void setEntitySetName(const int entity_set_index, const std::string& name);
 
+    static void dump();
+
 private:
     SymbolTable();
 
@@ -225,6 +229,8 @@ private:
     const Function& getFunctionImpl(const std::string& name) const;
 
     bool isSubsetImpl(const int set1, const int set2) const;
+
+    void dumpImpl() const;
 
     std::list<Function>::iterator findFunction(const std::string& name);
     std::list<Function>::const_iterator findFunction(const std::string& name) const;
