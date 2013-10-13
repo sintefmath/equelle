@@ -436,6 +436,11 @@ std::string SymbolTable::equelleString(const EquelleType& type)
     return retval;
 }
 
+const std::string& SymbolTable::entitySetName(const int entity_set_index)
+{
+    return instance().findSet(entity_set_index)->name();
+}
+
 void SymbolTable::setEntitySetName(const int entity_set_index, const std::string& name)
 {
     instance().findSet(entity_set_index)->setName(name);

@@ -209,6 +209,8 @@ public:
 
     static std::string equelleString(const EquelleType& type);
 
+    static const std::string& entitySetName(const int entity_set_index);
+
     static void setEntitySetName(const int entity_set_index, const std::string& name);
 
     static void dump();
