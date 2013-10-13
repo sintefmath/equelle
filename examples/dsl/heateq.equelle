@@ -65,4 +65,5 @@ computeResidual(u) = {
 explicitu = u0 - computeResidual(u0)
 u = NewtonSolve(computeResidual, u0)
 
-Output(u)
+Output("explicitu", explicitu)
+Output("u", u)
