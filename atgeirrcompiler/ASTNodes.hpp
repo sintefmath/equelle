@@ -252,6 +252,10 @@ public:
     {
         return EquelleType(left_->type().basicType(), true, right_->type().gridMapping());
     }
+    EquelleType lefttype() const
+    {
+        return left_->type();
+    }
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
