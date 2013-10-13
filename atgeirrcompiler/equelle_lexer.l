@@ -14,6 +14,7 @@
 
 %}
 
+COMMENT  #.*
 DIGIT    [0-9]
 LCASE    [a-z]
 UCASE    [A-Z]
@@ -25,7 +26,7 @@ BUILTIN  {UCASE}{IDCHAR}*
 INT      {DIGIT}+
 FLOAT    {INT}[.]{INT}
 BLANKS   [\t ]+
-COMMENT  #.*
+STRING   \"(\\.|[^\\"])*\"
 SINGLES  [:=()+\-*/^<>{},|?\[\]]
 
 %option yylineno
@@ -34,7 +35,7 @@ SINGLES  [:=()+\-*/^<>{},|?\[\]]
 
 %%
 
-
+{STRING}         { STORE; TOK(STRING_LITERAL); }
 Collection       { TOK(COLLECTION); }
 Of               { TOK(OF); }
 On               { TOK(ON); }
@@ -68,7 +69,7 @@ False            { TOK(FALSE); }
 {BLANKS}
 {INT}{IDCHAR}+   { std::cerr << "Lexer error on line " << yylineno << ": this is not a number \'" << yytext << "\'" << std::endl; }
 {FLOAT}{IDCHAR}+ { std::cerr << "Lexer error on line " << yylineno << ": this is not a number \'" << yytext << "\'" << std::endl; }
-.                {  std::cerr << "Lexer error on line " << yylineno << ": unexpected character \'" << yytext << "\'" << std::endl; }
+.                { std::cerr << "Lexer error on line " << yylineno << ": unexpected character \'" << yytext << "\'" << std::endl; }
 
 %%
 

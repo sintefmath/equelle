@@ -25,6 +25,8 @@ std::string basicTypeString(const BasicType bt)
         return "Edge";
     case Vertex:
         return "Vertex";
+    case String:
+        return "String";
     default:
         return "basicTypeString() error";
     }
@@ -39,6 +41,7 @@ bool isEntityType(const BasicType bt)
     case Bool:
     case Scalar:
     case Vector:
+    case String:
     case Invalid:
         return false;
     case Cell:
@@ -63,6 +66,7 @@ bool isNumericType(const BasicType bt)
     case Face:
     case Edge:
     case Vertex:
+    case String:
     case Invalid:
         return false;
     case Scalar:

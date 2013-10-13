@@ -12,7 +12,7 @@
 
 // ------ EquelleType class and type-related utilities ------ 
 
-enum BasicType { Bool, Scalar, Vector, Cell, Face, Edge, Vertex, Invalid };
+enum BasicType { Bool, Scalar, Vector, Cell, Face, Edge, Vertex, String, Invalid };
 
 enum CanonicalEntitySet { InteriorCells = 0, BoundaryCells, AllCells,
                           InteriorFaces, BoundaryFaces, AllFaces,

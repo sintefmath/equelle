@@ -329,3 +329,10 @@ OnNode* handleOn(Node* left, Node* right)
     // }
     return new OnNode(left, right);
 }
+
+
+
+StringNode* handleString(const std::string& content)
+{
+    return new StringNode(content);
+}

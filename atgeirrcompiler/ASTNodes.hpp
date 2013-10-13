@@ -84,6 +84,29 @@ private:
 
 
 
+class StringNode : public Node
+{
+public:
+    StringNode(const std::string& content) : content_(content) {}
+    EquelleType type() const
+    {
+        return EquelleType(String);
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+    }
+    const std::string& content() const
+    {
+        return content_;
+    }
+private:
+    std::string content_;
+};
+
+
+
+
 class TypeNode : public Node
 {
 public:

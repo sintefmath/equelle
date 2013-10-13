@@ -59,6 +59,11 @@ void PrintCPUBackendASTVisitor::visit(NumberNode& node)
     std::cout << "double(" << node.number() << ")";
 }
 
+void PrintCPUBackendASTVisitor::visit(StringNode& node)
+{
+    std::cout << node.content();
+}
+
 void PrintCPUBackendASTVisitor::visit(TypeNode&)
 {
     // std::cout << SymbolTable::equelleString(node.type());

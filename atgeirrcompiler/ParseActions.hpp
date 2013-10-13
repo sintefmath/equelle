@@ -54,4 +54,6 @@ TrinaryIfNode* handleTrinaryIf(Node* predicate, Node* iftrue, Node* iffalse);
 
 OnNode* handleOn(Node* left, Node* right);
 
+StringNode* handleString(const std::string& content);
+
 #endif // PARSEACTIONS_HEADER_INCLUDED

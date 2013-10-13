@@ -17,6 +17,7 @@ public:
 
     void visit(SequenceNode& node);
     void visit(NumberNode& node);
+    void visit(StringNode& node);
     void visit(TypeNode& node);
     void visit(FuncTypeNode& node);
     void visit(BinaryOpNode& node);

@@ -37,6 +37,11 @@ void PrintASTVisitor::visit(NumberNode& node)
     std::cout << indent() << "NumberNode: " << node.number() << '\n';
 }
 
+void PrintASTVisitor::visit(StringNode& node)
+{
+    std::cout << indent() << "StringNode: " << node.content() << '\n';
+}
+
 void PrintASTVisitor::visit(TypeNode& node)
 {
     std::cout << indent() << "TypeNode: " << SymbolTable::equelleString(node.type()) << '\n';

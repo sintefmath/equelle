@@ -486,16 +486,19 @@ SymbolTable::SymbolTable()
                                          { InvalidIndex, 0, InvalidIndex}));
     // 2. User input functions.
     functions_.emplace_back("UserSpecifiedScalarWithDefault",
-                            FunctionType({ Variable("default", EquelleType(Scalar)) },
+                            FunctionType({ Variable("name", EquelleType(String)),
+                                           Variable("default", EquelleType(Scalar)) },
                                          EquelleType(Scalar)));
     functions_.emplace_back("UserSpecifiedCollectionOfScalar",
-                            FunctionType({ Variable("entities", EquelleType()) },
+                            FunctionType({ Variable("name", EquelleType(String)),
+                                           Variable("entities", EquelleType()) },
                                          EquelleType(Scalar, true),
-                                         { InvalidIndex, 0, InvalidIndex}));
+                                         { InvalidIndex, 1, InvalidIndex}));
     functions_.emplace_back("UserSpecifiedCollectionOfFaceSubsetOf",
-                            FunctionType({ Variable("entities", EquelleType()) },
+                            FunctionType({ Variable("name", EquelleType(String)),
+                                           Variable("entities", EquelleType()) },
                                          EquelleType(Face, true),
-                                         { InvalidIndex, InvalidIndex, 0}));
+                                         { InvalidIndex, InvalidIndex, 1}));
     // 3. Discrete operators.
     functions_.emplace_back("Gradient",
                             FunctionType({ Variable("values", EquelleType(Scalar, true, AllCells)) },

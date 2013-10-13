@@ -21,6 +21,7 @@
 %token <str> INT
 %token <str> FLOAT
 %token <str> COMMENT
+%token <str> STRING_LITERAL
 %token LEQ
 %token GEQ
 %token EQ
@@ -135,6 +136,7 @@ expr: number              { $$ = $1; }
     | expr '?' expr ':' expr %prec '?' { $$ = handleTrinaryIf($1, $3, $5); }
     | expr ON expr        { $$ = handleOn($1, $3); }
     | ID                  { $$ = handleIdentifier(*($1)); delete $1; }
+    | STRING_LITERAL      { $$ = handleString(*($1)); delete $1; }
     ;
 
 type_expr: basic_type                                  { $$ = $1; }

@@ -41,6 +41,11 @@ void PrintEquelleASTVisitor::visit(NumberNode& node)
     std::cout << node.number();
 }
 
+void PrintEquelleASTVisitor::visit(StringNode& node)
+{
+    std::cout << node.content();
+}
+
 void PrintEquelleASTVisitor::visit(TypeNode& node)
 {
     std::cout << SymbolTable::equelleString(node.type());
