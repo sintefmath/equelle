@@ -313,6 +313,10 @@ public:
     {
         return varname_;
     }
+    EquelleType type() const
+    {
+        return expr_->type();
+    }
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
@@ -453,9 +457,11 @@ public:
     }
     virtual void accept(ASTVisitorInterface& visitor)
     {
+        SymbolTable::setCurrentFunction(funcname_);
         visitor.visit(*this);
         ftype_->accept(visitor);
         visitor.postVisit(*this);
+        SymbolTable::setCurrentFunction("Main");
     }
 private:
     std::string funcname_;
@@ -478,6 +484,7 @@ public:
     }
     virtual void accept(ASTVisitorInterface& visitor)
     {
+        SymbolTable::setCurrentFunction(funcname_);
         visitor.visit(*this);
         funcargs_->accept(visitor);
         visitor.postVisit(*this);
@@ -501,6 +508,7 @@ public:
         visitor.visit(*this);
         funcstart_->accept(visitor);
         funcbody_->accept(visitor);
+        SymbolTable::setCurrentFunction("Main");
         visitor.postVisit(*this);
     }
 private:
