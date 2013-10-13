@@ -1,0 +1,50 @@
+Language:
+---------
+Loops, for the ability to do more timesteps: Sequence? For? While? Loop?
+Related to the above: mutable variables? Other ways?
+Literals for Vector (and eventually tuples)?
+Allow assigning functions to variables? Should be allowed.
+Functions as first-order objects?
+Use Restrict and Prolong for On in 'a On b' expressions?
+Add reductions such as 'Sum : Function(Collection Of Scalar) -> Scalar'.
+Mechanism for including application libs/constrained interfaces: Require?
+
+
+Lexer/Grammar:
+--------------
+Line continuation ('...').
+Tuples (also needs work in parser etc.)
+Check and fix multi-argument functions.
+
+
+Parsing, type checking and building AST:
+----------------------------------------
+Make all parse actions $$ = handleSomething().
+Make all such handleSomething() functions do type checking.
+Make Node::type() pure virtual?
+Add ExpressionNode class, move type() there, add to %union?
+Type checking of function args at call site.
+Make the "subset of" part of all entity collection types?
+Add all created (named or not?) entity sets to symbol table?
+Function types vs. variable types?
+Check that variables used have been assigned.
+
+
+Code generation, processing of AST:
+-----------------------------------
+Consider emitting inner class with template operator() instead of two
+lambdas for each function (AD/non-AD).
+
+Backend:
+--------
+Complete current backend.
+Investigate why auto fails with Eigen expr. templates.
+Parallel backend.
+
+
+Simulator prototypes:
+---------------------
+Incomp 2p sim
+CO2 sim
+Shallow water sim
+
