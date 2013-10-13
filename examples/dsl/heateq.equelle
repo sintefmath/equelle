@@ -33,6 +33,7 @@ btrans = k * |bf| / |Centroid(bf) - Centroid(bf_cells)|
 
 # Compute quantities needed for boundary conditions.
 dir_sign = bf_sign On dirichlet_boundary
+
 # Compute flux for interior faces.
 computeInteriorFlux : Function(u : Collection Of Scalar On AllCells()) -> Collection Of Scalar On InteriorFaces()
 computeInteriorFlux(u) = {

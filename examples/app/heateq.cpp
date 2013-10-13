@@ -2,6 +2,14 @@
   Copyright 2013 SINTEF ICT, Applied Mathematics.
 */
 
+////////////////////////////////////////////////////////////////////////
+// NOTE
+// This file is written to be similar to the intended output from the
+// Equelle compiler. It is not actually output from the compiler,
+// although it has beem modified to better match the compiler output
+// as that has changed.
+////////////////////////////////////////////////////////////////////////
+
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <opm/core/linalg/LinearSolverFactory.hpp>
 #include <opm/core/utility/ErrorMacros.hpp>
@@ -16,9 +24,6 @@
 
 #include "EquelleRuntimeCPU.hpp"
 
-
-
-
 int main(int argc, char** argv)
 {
     // Get user parameters.
@@ -30,17 +35,20 @@ int main(int argc, char** argv)
     // ============= Generated code starts here ================
 
     // --------------------------------------------------------------------------------
-    // k : Scalar = UserSpecifiedScalarWithDefault(0.3) # Heat diffusion constant.
-    // dt : Scalar = UserSpecifiedScalarWithDefault(0.5) # Time step length.
-    // u0 : Collection Of Scalar On AllCells() = UserSpecifiedCollectionOfScalar( AllCells() )
-    // dirichlet_boundary : Collection Of Face On BoundaryFaces() = UserSpecifiedCollectionOfFace( BoundaryFaces() )
-    // dirichlet_val : Collection Of Scalar On dirichlet_boundary = UserSpecifiedCollectionOfScalar( dirichlet_boundary )
+    // k : Scalar = UserSpecifiedScalarWithDefault("k", 0.3) # Heat diffusion constant.
+    // dt : Scalar = UserSpecifiedScalarWithDefault("dt", 0.5) # Time step length.
+    // u0 : Collection Of Scalar On AllCells()
+    // u0 = UserSpecifiedCollectionOfScalar("u0", AllCells())
+    // dirichlet_boundary : Collection Of Face On BoundaryFaces()
+    // dirichlet_boundary = UserSpecifiedCollectionOfFace( BoundaryFaces() )
+    // dirichlet_val : Collection Of Scalar On dirichlet_boundary
+    // dirichlet_val = UserSpecifiedCollectionOfScalar("dirichlet_val", dirichlet_boundary)
     // --------------------------------------------------------------------------------
-    const auto k = param.getDefault("k", 0.3);
-    const auto dt = param.getDefault("dt", 0.5);
-    const auto u0 = er.getUserSpecifiedCollectionOfScalar(param, "u0", er.allCells().size());
-    const auto dirichlet_boundary = er.getUserSpecifiedCollectionOfFaceSubsetOf(param, "dirichlet_boundary", er.boundaryFaces());
-    const auto dirichlet_val = er.getUserSpecifiedCollectionOfScalar(param, "dirichlet_val", dirichlet_boundary.size());
+    const Scalar k = er.userSpecifiedScalarWithDefault("k", double(0.3));
+    const Scalar dt = er.userSpecifiedScalarWithDefault("dt", double(0.5));
+    const CollOfScalar u0 = er.userSpecifiedCollectionOfScalar("u0", er.allCells());
+    const CollOfFace dirichlet_boundary = er.userSpecifiedCollectionOfFaceSubsetOf("dirichlet_boundary", er.boundaryFaces());
+    const CollOfScalar dirichlet_val = er.userSpecifiedCollectionOfScalar("dirichlet_val", dirichlet_boundary);
 
     // --------------------------------------------------------------------------------
     // # Compute interior transmissibilities.
@@ -51,42 +59,42 @@ int main(int argc, char** argv)
     // second = SecondCell(interior_faces)                        # Deduced type:  Same as for 'first'.
     // itrans : Collection Of Scalar On interior_faces = k * |interior_faces| / |Centroid(first) - Centroid(second)|
     // --------------------------------------------------------------------------------
-    const auto vol = er.norm(er.allCells());
-    const auto interior_faces = er.interiorFaces();
-    const auto first = er.firstCell(interior_faces);
-    const auto second = er.secondCell(interior_faces);
-    const CollOfScalars itrans = k * er.norm(interior_faces) / er.norm(er.centroid(first) - er.centroid(second));
+    const CollOfScalar vol = er.norm(er.allCells());
+    const CollOfFace interior_faces = er.interiorFaces();
+    const CollOfCell first = er.firstCell(interior_faces);
+    const CollOfCell second = er.secondCell(interior_faces);
+    const CollOfScalar itrans = (k * (er.norm(interior_faces) / er.norm((er.centroid(first) - er.centroid(second)))));
 
     // --------------------------------------------------------------------------------
     // # Compute boundary transmissibilities.
     // bf = BoundaryFaces()
     // bf_cells = IsEmpty(FirstCell(bf)) ? SecondCell(bf) : FirstCell(bf)
-    // bf_sign = IsEmpty(FirstCell(bf))) ? (-1 On bf_cells) : (1 On bf_cells)
+    // bf_sign = IsEmpty(FirstCell(bf)) ? (-1 On bf) : (1 On bf)
     // btrans = k * |bf| / |Centroid(bf) - Centroid(bf_cells)|
     // --------------------------------------------------------------------------------
-    const auto bf = er.boundaryFaces();
-    const auto bf_cells = er.trinaryIf(er.isEmpty(er.firstCell(bf)), er.secondCell(bf), er.firstCell(bf));
-    const auto bf_sign = er.trinaryIf(er.isEmpty(er.firstCell(bf)), er.operatorOn(double(-1), bf_cells), er.operatorOn(double(1), bf_cells));
-    const CollOfScalars btrans = k * er.norm(bf) / er.norm(er.centroid(bf) - er.centroid(bf_cells));
+    const CollOfFace bf = er.boundaryFaces();
+    const CollOfCell bf_cells = er.trinaryIf(er.isEmpty(er.firstCell(bf)), er.secondCell(bf), er.firstCell(bf));
+    const CollOfScalar bf_sign = er.trinaryIf(er.isEmpty(er.firstCell(bf)), er.operatorOn(-double(1), bf), er.operatorOn(double(1), bf));
+    const CollOfScalar btrans = (k * (er.norm(bf) / er.norm((er.centroid(bf) - er.centroid(bf_cells)))));
 
     // --------------------------------------------------------------------------------
     // # Compute quantities needed for boundary conditions.
     // dir_sign = bf_sign On dirichlet_boundary
     // --------------------------------------------------------------------------------
-    const auto dir_sign = er.operatorOn(bf_sign, bf, dirichlet_boundary);
+    const CollOfScalar dir_sign = er.operatorOn(bf_sign, er.boundaryFaces(), dirichlet_boundary);
 
     // --------------------------------------------------------------------------------
     // # Compute flux for interior faces.
     // computeInteriorFlux : Function(u : Collection Of Scalar On AllCells()) -> Collection Of Scalar On InteriorFaces()
     // computeInteriorFlux(u) = {
-    //     return -itrans * Gradient(u)
+    //     -> -itrans * Gradient(u)
     // }
     // --------------------------------------------------------------------------------
-    auto computeInteriorFlux = [&](const CollOfScalars u) -> CollOfScalars {
-        return -itrans * er.gradient(u);
+    auto computeInteriorFlux = [&](CollOfScalar u) -> CollOfScalar {
+        return (-itrans * er.gradient(u));
     };
-    auto computeInteriorFluxAD = [&](const CollOfScalarsAD u) -> CollOfScalarsAD {
-        return -itrans * er.gradient(u);
+    auto ADcomputeInteriorFlux = [&](CollOfScalarAD u) -> CollOfScalarAD {
+        return (-itrans * er.gradient(u));
     };
 
     // --------------------------------------------------------------------------------
@@ -94,19 +102,20 @@ int main(int argc, char** argv)
     // computeBoundaryFlux : Function(u : Collection Of Scalar On AllCells()) -> Collection Of Scalar On BoundaryFaces()
     // computeBoundaryFlux(u) = {
     //     # Compute flux at Dirichlet boundaries.
-    //     dir_fluxes = btrans * dir_sign * (u_dirbdycells - dirichlet_val)
+    //     u_dirbdycells = u On (bf_cells On dirichlet_boundary)
+    //     dir_fluxes = (btrans on dirichlet_boundary) * dir_sign * (u_dirbdycells - dirichlet_val)
     //     # Extending with zero away from Dirichlet boundaries (i.e. assuming no-flow elsewhere).
-    //     return dir_fluxes On BoundaryFaces()
+    //     -> dir_fluxes On BoundaryFaces()
     // }
     // --------------------------------------------------------------------------------
-    auto computeBoundaryFlux = [&](const CollOfScalars u) -> CollOfScalars {
-        const CollOfScalars u_dirbdycells = er.operatorOn(u, er.allCells(), er.operatorOn(bf_cells, bf, dirichlet_boundary));
-        const CollOfScalars dir_fluxes = btrans * dir_sign * (u_dirbdycells - dirichlet_val);
+    auto computeBoundaryFlux = [&](CollOfScalar u) -> CollOfScalar {
+        const CollOfScalar u_dirbdycells = er.operatorOn(u, er.allCells(), er.operatorOn(bf_cells, er.boundaryFaces(), dirichlet_boundary));
+        const CollOfScalar dir_fluxes = ((er.operatorOn(btrans, er.boundaryFaces(), dirichlet_boundary) * dir_sign) * (u_dirbdycells - dirichlet_val));
         return er.operatorOn(dir_fluxes, dirichlet_boundary, er.boundaryFaces());
     };
-    auto computeBoundaryFluxAD = [&](const CollOfScalarsAD u) -> CollOfScalarsAD {
-        const CollOfScalarsAD u_dirbdycells = er.operatorOn(u, er.allCells(), er.operatorOn(bf_cells, bf, dirichlet_boundary));
-        const CollOfScalarsAD dir_fluxes = btrans * dir_sign * (u_dirbdycells - dirichlet_val);
+    auto ADcomputeBoundaryFlux = [&](CollOfScalarAD u) -> CollOfScalarAD {
+        const CollOfScalarAD u_dirbdycells = er.operatorOn(u, er.allCells(), er.operatorOn(bf_cells, er.boundaryFaces(), dirichlet_boundary));
+        const CollOfScalarAD dir_fluxes = ((er.operatorOn(btrans, er.boundaryFaces(), dirichlet_boundary) * dir_sign) * (u_dirbdycells - dirichlet_val));
         return er.operatorOn(dir_fluxes, dirichlet_boundary, er.boundaryFaces());
     };
 
@@ -120,21 +129,21 @@ int main(int argc, char** argv)
     //     fluxes = (ifluxes On AllFaces()) + (bfluxes On AllFaces())
     //     # Deduced type: Collection Of Scalar On AllCells()
     //     residual = u - u0 + (dt / vol) * Divergence(fluxes)
-    //     return residual
+    //     -> residual
     // }
     // --------------------------------------------------------------------------------
-    auto computeResidual = [&](const CollOfScalars u) -> CollOfScalars {
-        const CollOfScalars ifluxes = computeInteriorFlux(u);
-        const CollOfScalars bfluxes = computeBoundaryFlux(u);
-        const CollOfScalars fluxes = er.operatorOn(ifluxes, er.interiorFaces(), er.allFaces()) + er.operatorOn(bfluxes, er.boundaryFaces(), er.allFaces());
-        const CollOfScalars residual = u - u0 + (dt / vol) * er.divergence(fluxes);
+    auto computeResidual = [&](CollOfScalar u) -> CollOfScalar {
+        const CollOfScalar ifluxes = computeInteriorFlux(u);
+        const CollOfScalar bfluxes = computeBoundaryFlux(u);
+        const CollOfScalar fluxes = (er.operatorOn(ifluxes, er.interiorFaces(), er.allFaces()) + er.operatorOn(bfluxes, er.boundaryFaces(), er.allFaces()));
+        const CollOfScalar residual = ((u - u0) + ((dt / vol) * er.divergence(fluxes)));
         return residual;
     };
-    auto computeResidualAD = [&](const CollOfScalarsAD u) -> CollOfScalarsAD {
-        const auto ifluxes = computeInteriorFluxAD(u);
-        const auto bfluxes = computeBoundaryFluxAD(u);
-        const auto fluxes = er.operatorOn(ifluxes, er.interiorFaces(), er.allFaces()) + er.operatorOn(bfluxes, er.boundaryFaces(), er.allFaces());
-        const CollOfScalarsAD residual = u - u0 + (dt / vol) * er.divergence(fluxes);
+    auto ADcomputeResidual = [&](CollOfScalarAD u) -> CollOfScalarAD {
+        const CollOfScalarAD ifluxes = ADcomputeInteriorFlux(u);
+        const CollOfScalarAD bfluxes = ADcomputeBoundaryFlux(u);
+        const CollOfScalarAD fluxes = (er.operatorOn(ifluxes, er.interiorFaces(), er.allFaces()) + er.operatorOn(bfluxes, er.boundaryFaces(), er.allFaces()));
+        const CollOfScalarAD residual = ((u - u0) + ((dt / vol) * er.divergence(fluxes)));
         return residual;
     };
 
@@ -142,38 +151,17 @@ int main(int argc, char** argv)
     // explicitu = u0 - computeResidual(u0)
     // u = NewtonSolve(computeResidual, u0)
     // --------------------------------------------------------------------------------
-    const CollOfScalars explicitu = u0 - computeResidual(u0);
-    const CollOfScalarsAD u = er.newtonSolve(computeResidualAD, u0);
+    const CollOfScalar explicitu = (u0 - computeResidual(u0));
+    const CollOfScalar u = er.newtonSolve(ADcomputeResidual, u0);
 
     // --------------------------------------------------------------------------------
-    // Output(u)
-    // Output(fluxes)
+    // Output("explicitu", explicitu)
+    // Output("u", u)
     // --------------------------------------------------------------------------------
-    // Not handling output of fluxes currently, since they are not in scope here.
-    er.output("Explicit u is equal to: ", explicitu);
-    er.output("Implicit u is equal to: ", u);
+    er.output("explicitu", explicitu);
+    er.output("u", u);
 
     // ============= Generated code ends here ================
 
     return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
