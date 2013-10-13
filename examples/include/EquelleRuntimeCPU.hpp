@@ -36,8 +36,10 @@ typedef TopologicalEntity<1> Face;
 typedef std::vector<Cell> CollOfCell;
 typedef std::vector<Face> CollOfFace;
 
-// Scalar type
+// Basic types. Note that we do not have Vector type defined
+// although the CollOfVector type is.
 typedef double Scalar;
+typedef bool Bool;
 typedef std::string String;
 
 /// Types from opm-autodiff and Eigen.
@@ -45,13 +47,6 @@ typedef Opm::AutoDiffBlock<Scalar> CollOfScalarAD;
 typedef CollOfScalarAD::V CollOfScalar;
 typedef Eigen::Array<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> CollOfVector;
 typedef Eigen::Array<bool, Eigen::Dynamic, 1> CollOfBool;
-
-/// Interface for residual computer class.
-class ResidualComputerInterface
-{
-public:
-    virtual CollOfScalarAD compute(const CollOfScalarAD& u) const = 0;
-};
 
 
 
