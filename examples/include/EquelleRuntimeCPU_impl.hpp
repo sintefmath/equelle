@@ -177,13 +177,13 @@ CollOfScalarAD EquelleRuntimeCPU::newtonSolve(const ResidualFunctor& rescomp,
 
 
 template <class SomeCollection>
-CollOfScalar EquelleRuntimeCPU::userSpecifiedCollectionOfScalar(const std::string& name,
+CollOfScalar EquelleRuntimeCPU::userSpecifiedCollectionOfScalar(const String& name,
                                                                 const SomeCollection& coll)
 {
     const int size = coll.size();
     const bool from_file = param_.getDefault(name + "_from_file", false);
     if (from_file) {
-        const std::string filename = param_.get<std::string>(name + "_filename");
+        const String filename = param_.get<String>(name + "_filename");
         std::ifstream is(filename.c_str());
         if (!is) {
             OPM_THROW(std::runtime_error, "Could not find file " << filename);

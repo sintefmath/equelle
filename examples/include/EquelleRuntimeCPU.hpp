@@ -38,6 +38,7 @@ typedef std::vector<Face> CollOfFace;
 
 // Scalar type
 typedef double Scalar;
+typedef std::string String;
 
 /// Types from opm-autodiff and Eigen.
 typedef Opm::AutoDiffBlock<Scalar> CollOfScalarAD;
@@ -105,17 +106,17 @@ public:
                                const CollOfScalar& u_initialguess) const;
 
     /// Output.
-    void output(const std::string& tag, Scalar val) const;
-    void output(const std::string& tag, const CollOfScalar& vals) const;
-    void output(const std::string& tag, const CollOfScalarAD& vals) const;
+    void output(const String& tag, Scalar val) const;
+    void output(const String& tag, const CollOfScalar& vals) const;
+    void output(const String& tag, const CollOfScalarAD& vals) const;
 
     /// Input.
-    Scalar userSpecifiedScalarWithDefault(const std::string& name,
+    Scalar userSpecifiedScalarWithDefault(const String& name,
                                           const Scalar default_value);
-    CollOfFace userSpecifiedCollectionOfFaceSubsetOf(const std::string& name,
+    CollOfFace userSpecifiedCollectionOfFaceSubsetOf(const String& name,
                                                      const CollOfFace& superset);
     template <class SomeCollection>
-    CollOfScalar userSpecifiedCollectionOfScalar(const std::string& name,
+    CollOfScalar userSpecifiedCollectionOfScalar(const String& name,
                                                  const SomeCollection& coll);
 
 

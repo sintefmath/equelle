@@ -346,16 +346,16 @@ double EquelleRuntimeCPU::twoNorm(const CollOfScalarAD& vals) const
 }
 
 
-void EquelleRuntimeCPU::output(const std::string& tag, const double val) const
+void EquelleRuntimeCPU::output(const String& tag, const double val) const
 {
     std::cout << tag << " = " << val << std::endl;
 }
 
 
-void EquelleRuntimeCPU::output(const std::string& tag, const CollOfScalar& vals) const
+void EquelleRuntimeCPU::output(const String& tag, const CollOfScalar& vals) const
 {
     if (output_to_file_) {
-        std::string filename = tag + ".output";
+        String filename = tag + ".output";
         std::ofstream os(filename.c_str());
         for (int i = 0; i < vals.size(); ++i) {
             os << std::setw(15) << std::left << ( vals[i] ) << " ";
@@ -371,22 +371,22 @@ void EquelleRuntimeCPU::output(const std::string& tag, const CollOfScalar& vals)
 }
 
 
-void EquelleRuntimeCPU::output(const std::string& tag, const CollOfScalarAD& vals) const
+void EquelleRuntimeCPU::output(const String& tag, const CollOfScalarAD& vals) const
 {
     output(tag, vals.value());
 }
 
 
-Scalar EquelleRuntimeCPU::userSpecifiedScalarWithDefault(const std::string& name,
+Scalar EquelleRuntimeCPU::userSpecifiedScalarWithDefault(const String& name,
                                                          const Scalar default_value)
 {
     return param_.getDefault(name, default_value);
 }
 
-CollOfFace EquelleRuntimeCPU::userSpecifiedCollectionOfFaceSubsetOf(const std::string& name,
+CollOfFace EquelleRuntimeCPU::userSpecifiedCollectionOfFaceSubsetOf(const String& name,
                                                                      const CollOfFace& face_superset)
 {
-    const std::string filename = param_.get<std::string>(name + "_filename");
+    const String filename = param_.get<String>(name + "_filename");
     std::ifstream is(filename.c_str());
     if (!is) {
         OPM_THROW(std::runtime_error, "Could not find file " << filename);
