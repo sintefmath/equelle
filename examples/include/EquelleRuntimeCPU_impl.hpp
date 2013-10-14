@@ -6,11 +6,15 @@
 #define EQUELLERUNTIMECPU_IMPL_HEADER_INCLUDED
 
 
+#include <fstream>
+#include <iterator>
+
+
 template <class EntityCollection>
-CollOfScalars EquelleRuntimeCPU::operatorOn(const double data,
-                                            const EntityCollection& to_set)
+CollOfScalar EquelleRuntimeCPU::operatorOn(const double data,
+                                           const EntityCollection& to_set)
 {
-    return CollOfScalars::Constant(to_set.size(), data);
+    return CollOfScalar::Constant(to_set.size(), data);
 }
 
 
@@ -95,7 +99,7 @@ SomeCollection EquelleRuntimeCPU::operatorOn(const SomeCollection& data,
 
 
 template <class SomeCollection>
-SomeCollection EquelleRuntimeCPU::trinaryIf(const CollOfBooleans& predicate,
+SomeCollection EquelleRuntimeCPU::trinaryIf(const CollOfBool& predicate,
                                             const SomeCollection& iftrue,
                                             const SomeCollection& iffalse) const
 {
@@ -112,34 +116,34 @@ SomeCollection EquelleRuntimeCPU::trinaryIf(const CollOfBooleans& predicate,
 
 
 template <>
-inline CollOfScalarsAD EquelleRuntimeCPU::trinaryIf(const CollOfBooleans& predicate,
-                                             const CollOfScalarsAD& iftrue,
-                                             const CollOfScalarsAD& iffalse) const
+inline CollOfScalarAD EquelleRuntimeCPU::trinaryIf(const CollOfBool& predicate,
+                                                   const CollOfScalarAD& iftrue,
+                                                   const CollOfScalarAD& iffalse) const
 {
     const size_t sz = predicate.size();
     assert(sz == iftrue.size() && sz == iffalse.size());
-    CollOfScalars trueones = CollOfScalars::Constant(sz, 1.0);
-    CollOfScalars falseones = CollOfScalars::Constant(sz, 0.0);
+    CollOfScalar trueones = CollOfScalar::Constant(sz, 1.0);
+    CollOfScalar falseones = CollOfScalar::Constant(sz, 0.0);
     for (size_t i = 0; i < sz; ++i) {
         if (!predicate[i]) {
             trueones[i] = 0.0;
             falseones[i] = 1.0;
         }
     }
-    CollOfScalarsAD retval = iftrue * trueones + iffalse * falseones;
+    CollOfScalarAD retval = iftrue * trueones + iffalse * falseones;
     return retval;
 }
 
 
 template <class ResidualFunctor>
-CollOfScalarsAD EquelleRuntimeCPU::newtonSolve(const ResidualFunctor& rescomp,
-					       const CollOfScalars& u_initialguess) const
+CollOfScalar EquelleRuntimeCPU::newtonSolve(const ResidualFunctor& rescomp,
+                                              const CollOfScalar& u_initialguess) const
 {
     // Set up Newton loop.
-    CollOfScalarsAD u = singlePrimaryVariable(u_initialguess);
+    CollOfScalarAD u = singlePrimaryVariable(u_initialguess);
     output("Initial u", u);
     output("norm", twoNorm(u));
-    CollOfScalarsAD residual = rescomp(u); //  Generated code in here
+    CollOfScalarAD residual = rescomp(u); //  Generated code in here
     output("Initial residual", residual);
     output("norm", twoNorm(residual));
     const int max_iter = 10;
@@ -154,7 +158,7 @@ CollOfScalarsAD EquelleRuntimeCPU::newtonSolve(const ResidualFunctor& rescomp,
                   << " (tol = " << tol << ")" << std::endl;
 
         // Solve linear equations for du, apply update.
-        const CollOfScalars du = solveForUpdate(residual);
+        const CollOfScalar du = solveForUpdate(residual);
         u = u - du;
 
         // Recompute residual.
@@ -168,7 +172,34 @@ CollOfScalarsAD EquelleRuntimeCPU::newtonSolve(const ResidualFunctor& rescomp,
 
         ++iter;
     }
-    return u;
+    return u.value();
 }
+
+
+template <class SomeCollection>
+CollOfScalar EquelleRuntimeCPU::userSpecifiedCollectionOfScalar(const String& name,
+                                                                const SomeCollection& coll)
+{
+    const int size = coll.size();
+    const bool from_file = param_.getDefault(name + "_from_file", false);
+    if (from_file) {
+        const String filename = param_.get<String>(name + "_filename");
+        std::ifstream is(filename.c_str());
+        if (!is) {
+            OPM_THROW(std::runtime_error, "Could not find file " << filename);
+        }
+        std::istream_iterator<double> beg(is);
+        std::istream_iterator<double> end;
+        std::vector<double> data(beg, end);
+        if (int(data.size()) != size) {
+            OPM_THROW(std::runtime_error, "Unexpected size of input data for " << name << " in file " << filename);
+        }
+        return CollOfScalar(Eigen::Map<CollOfScalar>(&data[0], size));
+    } else {
+        // Uniform values.
+        return CollOfScalar::Constant(size, param_.get<double>(name));
+    }
+}
+
 
 #endif // EQUELLERUNTIMECPU_IMPL_HEADER_INCLUDED

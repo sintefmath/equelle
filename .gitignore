@@ -41,3 +41,11 @@ compiler/msvc11/eq_compiler/Debug/link.read.1.tlog
 compiler/msvc11/eq_compiler/Debug/link.write.1.tlog
 *.tlog
 *.lastbuildstate
+
+ec
+el
+*.dSYM
+equelle_lexer.cpp
+equelle_parser.cpp
+equelle_parser.hpp
+equelle_parser.output

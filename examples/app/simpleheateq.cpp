@@ -14,8 +14,8 @@
 #include <iostream>
 #include <cmath>
 
-#define DO_IMPLICIT 0
-#define USE_DUNE_ER 1
+#define DO_IMPLICIT 1
+#define USE_DUNE_ER 0
 
 #if USE_DUNE_ER
 #include "EquelleRuntimeDune.hpp"
@@ -43,7 +43,7 @@ int main(int argc, char** argv)
     // --------------------------------------------------------------------------------
     const auto k = param.getDefault("k", 0.3);
     const auto dt = param.getDefault("dt", 0.5);
-    const auto u0 = er.getUserSpecifiedCollectionOfScalar(param, "u0", er.allCells().size());
+    const auto u0 = er.userSpecifiedCollectionOfScalar("u0", er.allCells());
 
     // --------------------------------------------------------------------------------
     // # Compute interior transmissibilities.
@@ -58,7 +58,7 @@ int main(int argc, char** argv)
     const auto interior_faces = er.interiorFaces();
     const auto first = er.firstCell(interior_faces);
     const auto second = er.secondCell(interior_faces);
-    const CollOfScalars itrans = k * er.norm(interior_faces) / er.norm(er.centroid(first) - er.centroid(second));
+    const CollOfScalar itrans = k * er.norm(interior_faces) / er.norm(er.centroid(first) - er.centroid(second));
 
     // --------------------------------------------------------------------------------
     // # Compute flux for interior faces.
@@ -68,13 +68,13 @@ int main(int argc, char** argv)
     //     return flux
     // }
     // --------------------------------------------------------------------------------
-    auto computeInteriorFlux = [&](const CollOfScalars u) -> CollOfScalars {
-        const CollOfScalars flux = -itrans * er.gradient(u);
+    auto computeInteriorFlux = [&](const CollOfScalar u) -> CollOfScalar {
+        const CollOfScalar flux = -itrans * er.gradient(u);
         return flux;
     };
 #if DO_IMPLICIT
-    auto computeInteriorFluxAD = [&](const CollOfScalarsAD u) -> CollOfScalarsAD {
-        const CollOfScalarsAD flux = -itrans * er.gradient(u);
+    auto computeInteriorFluxAD = [&](const CollOfScalarAD u) -> CollOfScalarAD {
+        const CollOfScalarAD flux = -itrans * er.gradient(u);
         return flux;
     };
 #endif
@@ -89,15 +89,15 @@ int main(int argc, char** argv)
     //     return residual
     // }
     // --------------------------------------------------------------------------------
-    auto computeResidual = [&](const CollOfScalars u) -> CollOfScalars {
-        const CollOfScalars ifluxes = computeInteriorFlux(u);
-        const CollOfScalars residual = u - u0 + (dt / vol) * er.divergence(ifluxes);
+    auto computeResidual = [&](const CollOfScalar u) -> CollOfScalar {
+        const CollOfScalar ifluxes = computeInteriorFlux(u);
+        const CollOfScalar residual = u - u0 + (dt / vol) * er.divergence(ifluxes);
         return residual;
     };
 #if DO_IMPLICIT
-    auto computeResidualAD = [&](const CollOfScalarsAD u) -> CollOfScalarsAD {
-        const CollOfScalarsAD ifluxes = computeInteriorFluxAD(u);
-        const CollOfScalarsAD residual = u - u0 + (dt / vol) * er.divergence(ifluxes);
+    auto computeResidualAD = [&](const CollOfScalarAD u) -> CollOfScalarAD {
+        const CollOfScalarAD ifluxes = computeInteriorFluxAD(u);
+        const CollOfScalarAD residual = u - u0 + (dt / vol) * er.divergence(ifluxes);
         return residual;
     };
 #endif
@@ -106,9 +106,9 @@ int main(int argc, char** argv)
     // explicitu = u0 - computeResidual(u0)
     // u = NewtonSolve(computeResidual, u0)
     // --------------------------------------------------------------------------------
-    const CollOfScalars explicitu = u0 - computeResidual(u0);
+    const CollOfScalar explicitu = u0 - computeResidual(u0);
 #if DO_IMPLICIT
-    const CollOfScalarsAD u = er.newtonSolve(computeResidualAD, u0);
+    const CollOfScalar u = er.newtonSolve(computeResidualAD, u0);
 #endif
 
     // --------------------------------------------------------------------------------
