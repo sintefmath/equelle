@@ -1,4 +1,3 @@
-#! -*-sh-*-
 # Heat conduction with no boundary conditions or source terms.
 
 # Physics that requires specification
