@@ -110,6 +110,7 @@ line: statement EOL             { $$ = $1; }
     ;
 
 block: '{' EOL lineblock '}'     { $$ = handleBlock($3); }
+     | EOL '{' EOL lineblock '}' { $$ = handleBlock($4); }
 
 statement: declaration          { $$ = $1; }
          | f_declaration        { $$ = $1; }
