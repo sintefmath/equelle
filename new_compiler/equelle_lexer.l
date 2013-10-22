@@ -28,6 +28,8 @@ FLOAT    {INT}[.]{INT}
 BLANKS   [\t ]+
 STRING   \"(\\.|[^\\"])*\"
 SINGLES  [:=()+\-*/^<>{},|?\[\]]
+ELLIPSIS [...]
+LINECONT {ELLIPSIS}[\t ]*\n
 
 %option yylineno
 %option outfile="equelle_lexer.cpp"
@@ -70,6 +72,7 @@ Mutable          { TOK(MUTABLE); }
 "->"             { TOK(RET); }
 {SINGLES}        { TOKS(yytext[0]); }
 \n               { TOK(EOL); }
+{LINECONT}
 {BLANKS}
 {INT}{IDCHAR}+   { std::cerr << "Lexer error on line " << yylineno << ": this is not a number \'" << yytext << "\'" << std::endl; }
 {FLOAT}{IDCHAR}+ { std::cerr << "Lexer error on line " << yylineno << ": this is not a number \'" << yytext << "\'" << std::endl; }
