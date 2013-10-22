@@ -278,7 +278,8 @@ void PrintEquelleASTVisitor::visit(LoopNode& node)
 void PrintEquelleASTVisitor::postVisit(LoopNode&)
 {
     --indent_;
-    std::cout << indent() << "}\n";
+    std::cout << indent() << "}";
+    endl();
 }
 
 
