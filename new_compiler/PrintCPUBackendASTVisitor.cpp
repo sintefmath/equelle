@@ -354,6 +354,15 @@ void PrintCPUBackendASTVisitor::postVisit(FuncCallStatementNode&)
     endl();
 }
 
+void PrintCPUBackendASTVisitor::visit(LoopNode& node)
+{
+    std::cout << "for (auto " << node.loopVariable() << " : " << node.loopSet() << ") ";
+}
+
+void PrintCPUBackendASTVisitor::postVisit(LoopNode&)
+{
+}
+
 
 
 void PrintCPUBackendASTVisitor::endl() const

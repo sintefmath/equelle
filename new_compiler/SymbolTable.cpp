@@ -128,10 +128,9 @@ EquelleType FunctionType::returnType(const std::vector<EquelleType>& argtypes) c
     if (dynamic_.active) {
         const BasicType bt = dynamic_.arg_index_for_basic_type == InvalidIndex ?
             return_type_.basicType() : argtypes[dynamic_.arg_index_for_basic_type].basicType();
-        const bool coll = return_type_.isCollection();
         const int gridmapping = dynamic_.arg_index_for_gridmapping == InvalidIndex ?
             return_type_.gridMapping() : argtypes[dynamic_.arg_index_for_gridmapping].gridMapping();
-        return EquelleType(bt, coll, gridmapping);
+        return EquelleType(bt, return_type_.compositeType(), gridmapping);
     } else {
         return return_type_;
     }
@@ -422,6 +421,8 @@ std::string SymbolTable::equelleString(const EquelleType& type)
     std::string retval;
     if (type.isCollection()) {
         retval += "Collection Of ";
+    } else if (type.isSequence()) {
+        retval += "Sequence Of ";
     }
     retval += basicTypeString(type.basicType());
     if (type.gridMapping() != NotApplicable
@@ -457,37 +458,37 @@ SymbolTable::SymbolTable()
     // ----- Add built-in functions to function table. -----
     // 1. Grid functions.
     functions_.emplace_back("Main", FunctionType(EquelleType()));
-    functions_.emplace_back("InteriorCells", FunctionType(EquelleType(Cell, true, InteriorCells)));
-    functions_.emplace_back("BoundaryCells", FunctionType(EquelleType(Cell, true, BoundaryCells)));
-    functions_.emplace_back("AllCells", FunctionType(EquelleType(Cell, true, AllCells)));
-    functions_.emplace_back("InteriorFaces", FunctionType(EquelleType(Face, true, InteriorFaces)));
-    functions_.emplace_back("BoundaryFaces", FunctionType(EquelleType(Face, true, BoundaryFaces)));
-    functions_.emplace_back("AllFaces", FunctionType(EquelleType(Face, true, AllFaces)));
-    functions_.emplace_back("InteriorEdges", FunctionType(EquelleType(Edge, true, InteriorEdges)));
-    functions_.emplace_back("BoundaryEdges", FunctionType(EquelleType(Edge, true, BoundaryEdges)));
-    functions_.emplace_back("AllEdges", FunctionType(EquelleType(Edge, true, AllEdges)));
-    functions_.emplace_back("InteriorVertices", FunctionType(EquelleType(Vertex, true, InteriorVertices)));
-    functions_.emplace_back("BoundaryVertices", FunctionType(EquelleType(Vertex, true, BoundaryVertices)));
-    functions_.emplace_back("AllVertices", FunctionType(EquelleType(Vertex, true, AllVertices)));
+    functions_.emplace_back("InteriorCells", FunctionType(EquelleType(Cell, Collection, InteriorCells)));
+    functions_.emplace_back("BoundaryCells", FunctionType(EquelleType(Cell, Collection, BoundaryCells)));
+    functions_.emplace_back("AllCells", FunctionType(EquelleType(Cell, Collection, AllCells)));
+    functions_.emplace_back("InteriorFaces", FunctionType(EquelleType(Face, Collection, InteriorFaces)));
+    functions_.emplace_back("BoundaryFaces", FunctionType(EquelleType(Face, Collection, BoundaryFaces)));
+    functions_.emplace_back("AllFaces", FunctionType(EquelleType(Face, Collection, AllFaces)));
+    functions_.emplace_back("InteriorEdges", FunctionType(EquelleType(Edge, Collection, InteriorEdges)));
+    functions_.emplace_back("BoundaryEdges", FunctionType(EquelleType(Edge, Collection, BoundaryEdges)));
+    functions_.emplace_back("AllEdges", FunctionType(EquelleType(Edge, Collection, AllEdges)));
+    functions_.emplace_back("InteriorVertices", FunctionType(EquelleType(Vertex, Collection, InteriorVertices)));
+    functions_.emplace_back("BoundaryVertices", FunctionType(EquelleType(Vertex, Collection, BoundaryVertices)));
+    functions_.emplace_back("AllVertices", FunctionType(EquelleType(Vertex, Collection, AllVertices)));
     functions_.emplace_back("FirstCell",
                             FunctionType({ Variable("faces", EquelleType()) },
-                                         EquelleType(Cell, true),
+                                         EquelleType(Cell, Collection),
                                          { InvalidIndex, 0, InvalidIndex}));
     functions_.emplace_back("SecondCell",
                             FunctionType({ Variable("faces", EquelleType()) },
-                                         EquelleType(Cell, true),
+                                         EquelleType(Cell, Collection),
                                          { InvalidIndex, 0, InvalidIndex}));
     functions_.emplace_back("IsEmpty",
                             FunctionType({ Variable("entities", EquelleType()) },
-                                         EquelleType(Bool, true),
+                                         EquelleType(Bool, Collection),
                                          { InvalidIndex, 0, InvalidIndex}));
     functions_.emplace_back("Centroid",
                             FunctionType({ Variable("entities", EquelleType()) },
-                                         EquelleType(Vector, true),
+                                         EquelleType(Vector, Collection),
                                          { InvalidIndex, 0, InvalidIndex}));
     functions_.emplace_back("Normal",
                             FunctionType({ Variable("faces", EquelleType()) },
-                                         EquelleType(Vector, true),
+                                         EquelleType(Vector, Collection),
                                          { InvalidIndex, 0, InvalidIndex}));
     // 2. User input functions.
     functions_.emplace_back("UserSpecifiedScalarWithDefault",
@@ -497,24 +498,28 @@ SymbolTable::SymbolTable()
     functions_.emplace_back("UserSpecifiedCollectionOfScalar",
                             FunctionType({ Variable("name", EquelleType(String)),
                                            Variable("entities", EquelleType()) },
-                                         EquelleType(Scalar, true),
+                                         EquelleType(Scalar, Collection),
                                          { InvalidIndex, 1, InvalidIndex}));
     functions_.emplace_back("UserSpecifiedCollectionOfFaceSubsetOf",
                             FunctionType({ Variable("name", EquelleType(String)),
                                            Variable("entities", EquelleType()) },
-                                         EquelleType(Face, true),
+                                         EquelleType(Face, Collection),
                                          { InvalidIndex, InvalidIndex, 1}));
+    functions_.emplace_back("UserSpecifiedSequenceOfScalar",
+                            FunctionType({ Variable("name", EquelleType(String)) },
+                                         EquelleType(Scalar, Sequence)));
+
     // 3. Discrete operators.
     functions_.emplace_back("Gradient",
-                            FunctionType({ Variable("values", EquelleType(Scalar, true, AllCells)) },
-                                         EquelleType(Scalar, true, InteriorFaces)));
+                            FunctionType({ Variable("values", EquelleType(Scalar, Collection, AllCells)) },
+                                         EquelleType(Scalar, Collection, InteriorFaces)));
     functions_.emplace_back("Divergence",
                             FunctionType({ Variable("values", EquelleType()) },
-                                         EquelleType(Scalar, true, AllCells)));
+                                         EquelleType(Scalar, Collection, AllCells)));
     // 4. Other functions
     functions_.emplace_back("NewtonSolve",
                             FunctionType({ Variable("u", EquelleType()) },
-                                         EquelleType(Scalar, true, AllCells)));
+                                         EquelleType(Scalar, Collection, AllCells)));
     functions_.emplace_back("Output",
                             FunctionType({ Variable("data", EquelleType()) },
                                          EquelleType()));

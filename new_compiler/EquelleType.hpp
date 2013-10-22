@@ -22,6 +22,8 @@ enum CanonicalEntitySet { InteriorCells = 0, BoundaryCells, AllCells,
                           PostponedDefinition,
                           FirstRuntimeEntitySet };
 
+enum CompositeType { None, Collection, Sequence };
+
 std::string basicTypeString(const BasicType bt);
 
 bool isEntityType(const BasicType bt);
@@ -38,9 +40,10 @@ class EquelleType
 {
 public:
     EquelleType(const BasicType bt = Invalid,
-                const bool collection = false,
+                const CompositeType composite = None,
                 const int gridmapping = NotApplicable,
-                const int subset_of = NotApplicable);
+                const int subset_of = NotApplicable,
+                const bool is_mutable = false);
 
     bool isBasic() const;
 
@@ -48,11 +51,19 @@ public:
 
     BasicType basicType() const;
 
+    CompositeType compositeType() const;
+
     bool isCollection() const;
+
+    bool isSequence() const;
 
     int gridMapping() const;
 
     int subsetOf() const;
+
+    bool isMutable() const;
+
+    void setMutable(const bool is_mutable);
 
     bool operator==(const EquelleType& et) const;
 
@@ -60,9 +71,10 @@ public:
 
 private:
     BasicType basic_type_;
-    bool collection_;
+    CompositeType composite_;
     int gridmapping_;
     int subset_of_;
+    bool mutable_;
 };
 
 

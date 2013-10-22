@@ -29,6 +29,7 @@ class FuncArgsNode;
 class ReturnStatementNode;
 class FuncCallNode;
 class FuncCallStatementNode;
+class LoopNode;
 
 
 class ASTVisitorInterface
@@ -80,6 +81,8 @@ public:
     virtual void postVisit(FuncCallNode& node) = 0;
     virtual void visit(FuncCallStatementNode& node) = 0;
     virtual void postVisit(FuncCallStatementNode& node) = 0;
+    virtual void visit(LoopNode& node) = 0;
+    virtual void postVisit(LoopNode& node) = 0;
 
     virtual ~ASTVisitorInterface()
     {

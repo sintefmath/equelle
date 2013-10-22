@@ -61,6 +61,8 @@ public:
     void postVisit(FuncCallNode& node);
     void visit(FuncCallStatementNode& node);
     void postVisit(FuncCallStatementNode& node);
+    void visit(LoopNode& node);
+    void postVisit(LoopNode& node);
 
 private:
     bool suppressed_;

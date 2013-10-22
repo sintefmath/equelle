@@ -176,6 +176,15 @@ void PrintASTVisitor::visit(FuncCallStatementNode&)
 }
 
 
+void PrintASTVisitor::visit(LoopNode& node)
+{
+    std::cout << indent() << "LoopNode: For " << node.loopVariable() << " In " << node.loopSet() << "\n";
+    ++indent_;
+}
+
+
+
+
 void PrintASTVisitor::midVisit(SequenceNode&)
 {
 }
@@ -280,6 +289,11 @@ void PrintASTVisitor::postVisit(FuncCallNode&)
 }
 
 void PrintASTVisitor::postVisit(FuncCallStatementNode&)
+{
+    --indent_;
+}
+
+void PrintASTVisitor::postVisit(LoopNode&)
 {
     --indent_;
 }

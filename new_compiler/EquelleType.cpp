@@ -148,23 +148,28 @@ BasicType canonicalGridMappingEntity(const int gridmapping)
 
 
 EquelleType::EquelleType(const BasicType bt,
-                         const bool collection,
+                         const CompositeType composite,
                          const int gridmapping,
-                         const int subset_of)
-    : basic_type_(bt), collection_(collection), gridmapping_(gridmapping), subset_of_(subset_of)
+                         const int subset_of,
+                         const bool is_mutable)
+    : basic_type_(bt),
+      composite_(composite),
+      gridmapping_(gridmapping),
+      subset_of_(subset_of),
+      mutable_(is_mutable)
 {
 }
 
 bool EquelleType::isBasic() const
 {
     return (basic_type_ != Invalid)
-        && (collection_ == false)
+        && (composite_ == None)
         && (gridmapping_ == NotApplicable);
 }
 
 bool EquelleType::isEntityCollection() const
 {
-    return isEntityType(basic_type_) && collection_;
+    return isEntityType(basic_type_) && composite_ == Collection;
 }
 
 BasicType EquelleType::basicType() const
@@ -172,9 +177,19 @@ BasicType EquelleType::basicType() const
     return basic_type_;
 }
 
+CompositeType EquelleType::compositeType() const
+{
+    return composite_;
+}
+
 bool EquelleType::isCollection() const
 {
-    return collection_;
+    return composite_ == Collection;
+}
+
+bool EquelleType::isSequence() const
+{
+    return composite_ == Sequence;
 }
 
 int EquelleType::gridMapping() const
@@ -187,10 +202,23 @@ int EquelleType::subsetOf() const
     return subset_of_;
 }
 
+bool EquelleType::isMutable() const
+{
+    return mutable_;
+}
+
+void EquelleType::setMutable(const bool is_mutable)
+{
+    mutable_ = is_mutable;
+}
+
 bool EquelleType::operator==(const EquelleType& et) const
 {
+    // Note that we explicitly keep mutable_ out
+    // of the equality consideration. That must be
+    // checked by logic elsewhere.
     return basic_type_ == et.basic_type_
-        && collection_ == et.collection_
+        && composite_ == et.composite_
         && gridmapping_ == et.gridmapping_
         && subset_of_ == et.subset_of_;
 }

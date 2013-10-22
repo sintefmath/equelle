@@ -38,6 +38,7 @@ public:
     void visit(ReturnStatementNode& node);
     void visit(FuncCallNode& node);
     void visit(FuncCallStatementNode& node);
+    void visit(LoopNode& node);
 
     void midVisit(SequenceNode& node);
     void postVisit(SequenceNode& node);
@@ -62,6 +63,7 @@ public:
     void postVisit(ReturnStatementNode& node);
     void postVisit(FuncCallNode& node);
     void postVisit(FuncCallStatementNode& node);
+    void postVisit(LoopNode& node);
 
 private:
     int indent_;

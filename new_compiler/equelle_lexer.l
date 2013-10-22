@@ -37,6 +37,7 @@ SINGLES  [:=()+\-*/^<>{},|?\[\]]
 
 {STRING}         { STORE; TOK(STRING_LITERAL); }
 Collection       { TOK(COLLECTION); }
+Sequence         { TOK(SEQUENCE); }
 Of               { TOK(OF); }
 On               { TOK(ON); }
 Subset           { TOK(SUBSET); }
@@ -54,6 +55,9 @@ Not              { TOK(NOT); }
 Xor              { TOK(XOR); }
 True             { TOK(TRUE); }
 False            { TOK(FALSE); }
+For              { TOK(FOR); }
+In               { TOK(IN); }
+Mutable          { TOK(MUTABLE); }
 {BUILTIN}        { STORE; TOK(BUILTIN); }
 {ID}             { STORE; TOK(ID); }
 {INT}            { STORE; TOK(INT); }

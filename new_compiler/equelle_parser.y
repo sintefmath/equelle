@@ -1,4 +1,5 @@
 %token COLLECTION
+%token SEQUENCE
 %token OF
 %token ON
 %token SUBSET
@@ -16,6 +17,9 @@
 %token XOR
 %token TRUE
 %token FALSE
+%token FOR
+%token IN
+%token MUTABLE
 %token <str> BUILTIN
 %token <str> ID
 %token <str> INT
@@ -45,8 +49,9 @@
 %type <node> number
 %type <fcall> function_call
 %type <farg> f_call_args
-%type <seq> f_body
+%type <seq> block
 %type <node> f_startdef
+%type <loop> loop_start
 
 
 %output "equelle_parser.cpp"
@@ -55,6 +60,7 @@
 %start program
 %error-verbose
 
+%nonassoc MUTABLE
 %nonassoc '?'
 %nonassoc ON
 %left OR
@@ -84,6 +90,7 @@
     FuncArgsDeclNode* fargdecl;
     FuncCallNode* fcall;
     SequenceNode* seq;
+    LoopNode* loop;
     std::string* str;
 }
 
@@ -102,7 +109,7 @@ line: statement EOL             { $$ = $1; }
     | EOL                       { $$ = nullptr; }
     ;
 
-f_body: '{' EOL lineblock '}'     { $$ = handleFuncBody($3); }
+block: '{' EOL lineblock '}'     { $$ = handleBlock($3); }
 
 statement: declaration          { $$ = $1; }
          | f_declaration        { $$ = $1; }
@@ -110,14 +117,15 @@ statement: declaration          { $$ = $1; }
          | comb_decl_assign     { $$ = $1; }
          | function_call        { $$ = handleFuncCallStatement($1); }
          | RET expr             { $$ = handleReturnStatement($2); }
+         | loop_start block     { $$ = handleLoopStatement($1, $2); }
          ;
 
 declaration: ID ':' type_expr  { $$ = handleDeclaration(*($1), $3); delete $1; }
 
 f_declaration: ID ':' f_type_expr  { $$ = handleFuncDeclaration(*($1), $3); delete $1; }
 
-assignment: ID '=' expr   { $$ = handleAssignment(*($1), $3); delete $1; }
-          | f_startdef f_body  { $$ = handleFuncAssignment($1, $2); }
+assignment: ID '=' expr       { $$ = handleAssignment(*($1), $3); delete $1; }
+          | f_startdef block  { $$ = handleFuncAssignment($1, $2); }
           ;
 
 f_startdef: ID '(' f_call_args ')' '='       { $$ = handleFuncStart(*($1), $3); delete $1; }
@@ -137,12 +145,15 @@ expr: number              { $$ = $1; }
     | expr ON expr        { $$ = handleOn($1, $3); }
     | ID                  { $$ = handleIdentifier(*($1)); delete $1; }
     | STRING_LITERAL      { $$ = handleString(*($1)); delete $1; }
+    | MUTABLE expr        { $$ = handleMutableExpr($2); }
     ;
 
 type_expr: basic_type                                  { $$ = $1; }
          | COLLECTION OF basic_type                    { $$ = handleCollection($3, nullptr,  nullptr); }
          | COLLECTION OF basic_type ON expr            { $$ = handleCollection($3,      $5,  nullptr); }
          | COLLECTION OF basic_type SUBSET OF expr     { $$ = handleCollection($3, nullptr,       $6); }
+         | SEQUENCE OF basic_type                      { $$ = handleSequence($3); }
+         | MUTABLE type_expr                           { $$ = handleMutableType($2); }
          ;
 
 f_type_expr: f_starttype '(' f_decl_args ')' RET type_expr      { $$ = handleFuncType($3, $6); }
@@ -175,6 +186,10 @@ f_call_args: f_call_args ',' expr     { $$ = $1; $$->addArg($3); }
            | expr                     { $$ = new FuncArgsNode($1); }
            |                          { $$ = new FuncArgsNode(); }
            ;
+
+loop_start: FOR ID IN ID              { $$ = handleLoopStart(*($2), *($4)); delete $2; delete $4; }
+
+
 
 %%
 

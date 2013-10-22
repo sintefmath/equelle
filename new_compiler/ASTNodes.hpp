@@ -26,7 +26,10 @@ public:
     {
         return EquelleType();
     }
-    virtual void accept(ASTVisitorInterface& visitor) = 0;
+    virtual void accept(ASTVisitorInterface&)
+    {
+        // Do nothing.
+    }
 };
 
 
@@ -156,6 +159,10 @@ public:
     {
         EquelleType lt = left_->type();
         EquelleType rt = right_->type();
+        if (lt.isSequence() || rt.isSequence()) {
+            yyerror("internal compiler error in BinaryOpNode::type(), sequences not allowed");
+            return EquelleType();
+        }
         switch (op_) {
         case Add:
             return lt; // should be identical to rt.
@@ -166,13 +173,13 @@ public:
             const BasicType bt = isvec ? Vector : Scalar;
             const bool coll = lt.isCollection() || rt.isCollection();
             const int gm = lt.isCollection() ? lt.gridMapping() : rt.gridMapping();
-            return EquelleType(bt, coll, gm);
+            return EquelleType(bt, coll ? Collection : None, gm);
         }
         case Divide: {
             const BasicType bt = lt.basicType();
             const bool coll = lt.isCollection() || rt.isCollection();
             const int gm = lt.isCollection() ? lt.gridMapping() : rt.gridMapping();
-            return EquelleType(bt, coll, gm);
+            return EquelleType(bt, coll ? Collection : None, gm);
         }
         default:
             yyerror("internal compiler error in BinaryOpNode::type().");
@@ -207,7 +214,7 @@ public:
     EquelleType type() const
     {
         return EquelleType(Scalar,
-                           expr_to_norm_->type().isCollection(),
+                           expr_to_norm_->type().compositeType(),
                            expr_to_norm_->type().gridMapping());
     }
     virtual void accept(ASTVisitorInterface& visitor)
@@ -250,7 +257,7 @@ public:
     OnNode(Node* left, Node* right) : left_(left), right_(right) {}
     EquelleType type() const
     {
-        return EquelleType(left_->type().basicType(), true, right_->type().gridMapping());
+        return EquelleType(left_->type().basicType(), Collection, right_->type().gridMapping());
     }
     EquelleType lefttype() const
     {
@@ -622,7 +629,7 @@ public:
         EquelleType t = SymbolTable::getFunction(funcname_).returnType(funcargs_->argumentTypes());
         if (dsr_ != NotApplicable) {
             assert(t.isEntityCollection());
-            return EquelleType(t.basicType(), true, dsr_);
+            return EquelleType(t.basicType(), Collection, dsr_);
         } else {
             return t;
         }
@@ -661,5 +668,42 @@ private:
     FuncCallNode* fcall_;
 };
 
+
+
+class LoopNode : public Node
+{
+public:
+    LoopNode(const std::string& loop_variable,
+             const std::string& loop_set,
+             SequenceNode* loop_block = 0)
+        : loop_variable_(loop_variable),
+          loop_set_(loop_set),
+          loop_block_(loop_block)
+    {
+    }
+
+    const std::string& loopVariable() const
+    {
+        return loop_variable_;
+    }
+    const std::string& loopSet() const
+    {
+        return loop_set_;
+    }
+    void setBlock(SequenceNode* loop_block)
+    {
+        loop_block_ = loop_block;
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        loop_block_->accept(visitor);
+        visitor.postVisit(*this);
+    }
+private:
+    std::string loop_variable_;
+    std::string loop_set_;
+    SequenceNode* loop_block_;
+};
 
 #endif // ASTNODES_HEADER_INCLUDED

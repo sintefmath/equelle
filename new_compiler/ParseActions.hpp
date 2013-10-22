@@ -28,7 +28,7 @@ Node* handleFuncStart(const std::string& name, Node* funcargs);
 
 void handleFuncStartType();
 
-SequenceNode* handleFuncBody(SequenceNode* fbody);
+SequenceNode* handleBlock(SequenceNode* fbody);
 
 FuncAssignNode* handleFuncAssignment(Node* funcstart, SequenceNode* fbody);
 
@@ -55,5 +55,16 @@ TrinaryIfNode* handleTrinaryIf(Node* predicate, Node* iftrue, Node* iffalse);
 OnNode* handleOn(Node* left, Node* right);
 
 StringNode* handleString(const std::string& content);
+
+TypeNode* handleMutableType(TypeNode* type_expr);
+
+Node* handleMutableExpr(Node* expr);
+
+TypeNode* handleSequence(TypeNode* basic_type);
+
+LoopNode* handleLoopStart(const std::string& loop_variable, const std::string& loop_set);
+
+LoopNode* handleLoopStatement(LoopNode* loop_start, SequenceNode* loop_block);
+
 
 #endif // PARSEACTIONS_HEADER_INCLUDED

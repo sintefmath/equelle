@@ -267,6 +267,17 @@ void PrintEquelleASTVisitor::postVisit(FuncCallStatementNode&)
     endl();
 }
 
+void PrintEquelleASTVisitor::visit(LoopNode& node)
+{
+    std::cout << "For " << node.loopVariable() << " In " << node.loopSet() << ' ';
+
+}
+
+void PrintEquelleASTVisitor::postVisit(LoopNode&)
+{
+    endl();
+}
+
 
 
 void PrintEquelleASTVisitor::endl() const

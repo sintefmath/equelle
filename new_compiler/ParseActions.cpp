@@ -123,10 +123,12 @@ void handleFuncStartType()
 
 
 
-SequenceNode* handleFuncBody(SequenceNode* fbody)
+SequenceNode* handleBlock(SequenceNode* block)
 {
+    // This is called after the block AST has been constructed,
+    // so we should switch back to Main scope.
     SymbolTable::setCurrentFunction("Main");
-    return fbody;
+    return block;
 }
 
 
@@ -181,7 +183,10 @@ TypeNode* handleCollection(TypeNode* btype, Node* gridmapping, Node* subsetof)
             subset = subsetof->type().gridMapping();
         }
     }
-    return new TypeNode(EquelleType(bt.basicType(), true, gm, subset));
+    delete btype;
+    delete gridmapping;
+    delete subsetof;
+    return new TypeNode(EquelleType(bt.basicType(), Collection, gm, subset));
 }
 
 
@@ -336,3 +341,49 @@ StringNode* handleString(const std::string& content)
 {
     return new StringNode(content);
 }
+
+
+
+TypeNode* handleMutableType(TypeNode* type_expr)
+{
+    EquelleType et = type_expr->type();
+    et.setMutable(true);
+    TypeNode* tn = new TypeNode(et);
+    delete type_expr;
+    return tn;
+}
+
+
+
+Node* handleMutableExpr(Node* expr)
+{
+    yyerror("Cannot handle Mutable expressions yet.");
+    return expr;
+}
+
+
+
+TypeNode* handleSequence(TypeNode* basic_type)
+{
+    const EquelleType et = basic_type->type();
+    if (!et.isBasic()) {
+        yyerror("cannot create a Sequence of non-basic types.");
+    }
+    return new TypeNode(EquelleType(et.basicType(), Sequence, et.gridMapping(), et.subsetOf()));
+}
+
+
+
+LoopNode* handleLoopStart(const std::string& loop_variable, const std::string& loop_set)
+{
+    return new LoopNode(loop_variable, loop_set);
+}
+
+
+
+LoopNode* handleLoopStatement(LoopNode* loop_start, SequenceNode* loop_block)
+{
+    loop_start->setBlock(loop_block);
+    return loop_start;
+}
+
