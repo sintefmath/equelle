@@ -144,7 +144,7 @@ void PrintEquelleASTVisitor::postVisit(TrinaryIfNode&)
 
 void PrintEquelleASTVisitor::visit(VarDeclNode& node)
 {
-    std::cout << node.name() << " : ";
+    std::cout << indent() << node.name() << " : ";
 }
 
 void PrintEquelleASTVisitor::postVisit(VarDeclNode&)
@@ -154,7 +154,7 @@ void PrintEquelleASTVisitor::postVisit(VarDeclNode&)
 
 void PrintEquelleASTVisitor::visit(VarAssignNode& node)
 {
-    std::cout << node.name() << " = ";
+    std::cout << indent() << node.name() << " = ";
 }
 
 void PrintEquelleASTVisitor::postVisit(VarAssignNode&)
@@ -194,7 +194,7 @@ void PrintEquelleASTVisitor::postVisit(FuncArgsDeclNode&)
 
 void PrintEquelleASTVisitor::visit(FuncDeclNode& node)
 {
-    std::cout << node.name() << " : ";
+    std::cout << indent() << node.name() << " : ";
 }
 
 void PrintEquelleASTVisitor::postVisit(FuncDeclNode&)
@@ -204,7 +204,8 @@ void PrintEquelleASTVisitor::postVisit(FuncDeclNode&)
 
 void PrintEquelleASTVisitor::visit(FuncStartNode& node)
 {
-    std::cout << node.name() << '(';
+    std::cout << indent() << node.name() << '(';
+    ++indent_;
 }
 
 void PrintEquelleASTVisitor::postVisit(FuncStartNode&)
@@ -215,12 +216,12 @@ void PrintEquelleASTVisitor::postVisit(FuncStartNode&)
 
 void PrintEquelleASTVisitor::visit(FuncAssignNode&)
 {
-    ++indent_;
 }
 
 void PrintEquelleASTVisitor::postVisit(FuncAssignNode&)
 {
-    std::cout << "}";
+    --indent_;
+    std::cout << indent() << "}";
     endl();
 }
 
@@ -239,12 +240,11 @@ void PrintEquelleASTVisitor::postVisit(FuncArgsNode&)
 
 void PrintEquelleASTVisitor::visit(ReturnStatementNode&)
 {
-    std::cout << "-> ";
+    std::cout << indent() << "-> ";
 }
 
 void PrintEquelleASTVisitor::postVisit(ReturnStatementNode&)
 {
-    --indent_;
     endl();
 }
 
@@ -260,6 +260,7 @@ void PrintEquelleASTVisitor::postVisit(FuncCallNode&)
 
 void PrintEquelleASTVisitor::visit(FuncCallStatementNode&)
 {
+    std::cout << indent();
 }
 
 void PrintEquelleASTVisitor::postVisit(FuncCallStatementNode&)
@@ -269,20 +270,22 @@ void PrintEquelleASTVisitor::postVisit(FuncCallStatementNode&)
 
 void PrintEquelleASTVisitor::visit(LoopNode& node)
 {
-    std::cout << "For " << node.loopVariable() << " In " << node.loopSet() << ' ';
-
+    std::cout << indent() << "For " << node.loopVariable() << " In " << node.loopSet() << " {";
+    ++indent_;
+    endl();
 }
 
 void PrintEquelleASTVisitor::postVisit(LoopNode&)
 {
-    endl();
+    --indent_;
+    std::cout << indent() << "}\n";
 }
 
 
 
 void PrintEquelleASTVisitor::endl() const
 {
-    std::cout << '\n' << indent();
+    std::cout << '\n';
 }
 
 std::string PrintEquelleASTVisitor::indent() const
