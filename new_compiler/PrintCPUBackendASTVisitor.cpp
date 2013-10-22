@@ -256,8 +256,9 @@ void PrintCPUBackendASTVisitor::visit(FuncStartNode& node)
     const FunctionType& ft = SymbolTable::getFunction(node.name()).functionType();
     const size_t n = ft.arguments().size();
     for (int i = 0; i < n; ++i) {
-        std::cout << cppTypeString(ft.arguments()[i].type())
-                  << ' ' << ft.arguments()[i].name();
+        std::cout << "const "
+                  << cppTypeString(ft.arguments()[i].type())
+                  << "& " << ft.arguments()[i].name();
         if (i < n - 1) {
             std::cout << ", ";
         }
