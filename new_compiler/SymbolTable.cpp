@@ -164,10 +164,10 @@ std::string FunctionType::equelleString() const
         retval += var.name();
         retval += " : ";
         retval += SymbolTable::equelleString(var.type());
-        retval += ',';
+        retval += ", ";
     }
-    // Chop the extra comma.
-    retval.erase(retval.end() - 1);
+    // Chop the extra comma and space.
+    retval.erase(retval.end() - 2);
     retval += ") -> ";
     retval += SymbolTable::equelleString(return_type_);
     return retval;
