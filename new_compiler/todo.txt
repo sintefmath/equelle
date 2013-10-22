@@ -2,13 +2,23 @@ Language:
 ---------
 Loops, for the ability to do more timesteps: Sequence? For? While? Loop?
 Related to the above: mutable variables? Other ways?
+Nested function/loop scopes. What is allowed?
 Literals for Vector (and eventually tuples)?
 Allow assigning functions to variables? Should be allowed.
 Functions as first-order objects?
 Use Restrict and Prolong for On in 'a On b' expressions?
 Add reductions such as 'Sum : Function(Collection Of Scalar) -> Scalar'.
 Mechanism for including application libs/constrained interfaces: Require?
-
+What happens with On and sets containing an entity multiple times?
+-> accept for restriction only and not for prolongation?
+-> what does Subset Of mean?
+Separate On into Restrict and Prolong?
+Function templates and instantiation:
+-> instantiation means: fixing types of a template
+-> codegen typically emits function at instantiation
+-> a function (instantiated, typed) is a type that can be passed etc.
+-> a function template cannot be passed as an argument (but consider
+ok for other templates).
 
 Lexer/Grammar:
 --------------
