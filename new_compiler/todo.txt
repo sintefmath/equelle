@@ -1,8 +1,24 @@
+Things that are noted as an issue, problem or wanted feature at some
+level typically also must be handled at lower levels (language
+features for example must also be lexed, parsed, ASTed, CodeGen'd and
+have backend support).
+
+
 Language:
 ---------
-Loops, for the ability to do more timesteps: Sequence? For? While? Loop?
+Loops, for the ability to do more timesteps.
+- Current suggested notation:
+  For loop_var In some_sequence {
+      ... use loop_var ...
+  }
+- New type: Sequence Of <basic type> (for things that must be looped
+  over in order)
 Related to the above: mutable variables? Other ways?
+- Current suggestion: allow vars to be declared Mutable
+  (unlike regular immutables, Mutable vars MUST be declared)
 Nested function/loop scopes. What is allowed?
+- no function in function scopes, all else ok. Implementable? Perhaps
+  not easily?
 Literals for Vector (and eventually tuples)?
 Allow assigning functions to variables? Should be allowed.
 Functions as first-order objects?
