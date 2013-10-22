@@ -195,7 +195,7 @@ void PrintCPUBackendASTVisitor::postVisit(VarDeclNode&)
 
 void PrintCPUBackendASTVisitor::visit(VarAssignNode& node)
 {
-    std::cout << "const " << cppTypeString(node.type()) << " " << node.name() << " = ";
+    std::cout << indent() << "const " << cppTypeString(node.type()) << " " << node.name() << " = ";
 }
 
 void PrintCPUBackendASTVisitor::postVisit(VarAssignNode&)
@@ -248,7 +248,7 @@ void PrintCPUBackendASTVisitor::postVisit(FuncDeclNode&)
 
 void PrintCPUBackendASTVisitor::visit(FuncStartNode& node)
 {
-    std::cout << "auto ";
+    std::cout << indent() << "auto ";
     if (emit_ad_) {
         std::cout << "AD";
     }
@@ -263,6 +263,7 @@ void PrintCPUBackendASTVisitor::visit(FuncStartNode& node)
         }
     }
     suppress();
+    ++indent_;
 }
 
 void PrintCPUBackendASTVisitor::postVisit(FuncStartNode& node)
@@ -280,13 +281,13 @@ void PrintCPUBackendASTVisitor::visit(FuncAssignNode& node)
         node.accept(*this);
         in_extra_funcassign_accept_ = false;
     }
-    ++indent_;
 }
 
 void PrintCPUBackendASTVisitor::postVisit(FuncAssignNode&)
 {
     emit_ad_ = !emit_ad_;
-    std::cout << "};";
+    --indent_;
+    std::cout << indent() << "};";
     endl();
 }
 
@@ -307,13 +308,12 @@ void PrintCPUBackendASTVisitor::postVisit(FuncArgsNode&)
 
 void PrintCPUBackendASTVisitor::visit(ReturnStatementNode&)
 {
-    std::cout << "return ";
+    std::cout << indent() << "return ";
 }
 
 void PrintCPUBackendASTVisitor::postVisit(ReturnStatementNode&)
 {
     std::cout << ';';
-    --indent_;
     endl();
 }
 
@@ -346,6 +346,7 @@ void PrintCPUBackendASTVisitor::postVisit(FuncCallNode&)
 
 void PrintCPUBackendASTVisitor::visit(FuncCallStatementNode&)
 {
+    std::cout << indent();
 }
 
 void PrintCPUBackendASTVisitor::postVisit(FuncCallStatementNode&)
@@ -356,18 +357,25 @@ void PrintCPUBackendASTVisitor::postVisit(FuncCallStatementNode&)
 
 void PrintCPUBackendASTVisitor::visit(LoopNode& node)
 {
-    std::cout << "for (auto " << node.loopVariable() << " : " << node.loopSet() << ") ";
+    BasicType loopvartype = SymbolTable::variableType(node.loopSet()).basicType();
+    std::cout << indent() << "for (const " << cppTypeString(loopvartype) << "& "
+              << node.loopVariable() << " : " << node.loopSet() << ") {";
+    ++indent_;
+    endl();
 }
 
 void PrintCPUBackendASTVisitor::postVisit(LoopNode&)
 {
+    --indent_;
+    std::cout << indent() << "}";
+    endl();
 }
 
 
 
 void PrintCPUBackendASTVisitor::endl() const
 {
-    std::cout << '\n' << indent();
+    std::cout << '\n';
 }
 
 std::string PrintCPUBackendASTVisitor::indent() const
