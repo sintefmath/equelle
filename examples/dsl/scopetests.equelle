@@ -1,0 +1,25 @@
+a = 5
+b = 6
+
+foo : Function(x : Scalar, y : Scalar) -> Scalar
+foo(x, y) = {
+    -> a*x + b*y
+}
+
+seq = UserSpecifiedSequenceOfScalar("seq")
+For elem In seq {
+    r = a + 3 + elem
+    seq2 = UserSpecifiedSequenceOfScalar("seq2")
+    For e2 In seq2 {
+        foo3 : Function(y : Scalar) -> Scalar
+        foo3(y) = {
+            three : Function() -> Scalar
+            three() = {
+                -> 3
+            }
+            -> foo(three(), y)
+        }
+        q = b + foo3(e2) + r
+        Output("q", q)
+    }
+}
