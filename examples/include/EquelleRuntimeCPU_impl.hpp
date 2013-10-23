@@ -141,11 +141,15 @@ CollOfScalar EquelleRuntimeCPU::newtonSolve(const ResidualFunctor& rescomp,
 {
     // Set up Newton loop.
     CollOfScalarAD u = singlePrimaryVariable(u_initialguess);
-    output("Initial u", u);
-    output("norm", twoNorm(u));
-    CollOfScalarAD residual = rescomp(u); //  Generated code in here
-    output("Initial residual", residual);
-    output("norm", twoNorm(residual));
+    if (verbose_ > 1) {
+        output("Initial u", u);
+        output("norm", twoNorm(u));
+    }
+    CollOfScalarAD residual = rescomp(u);
+    if (verbose_ > 1) {
+        output("Initial residual", residual);
+        output("norm", twoNorm(residual));
+    }
     const int max_iter = 10;
     const double tol = 1e-6;
     int iter = 0;
@@ -153,9 +157,11 @@ CollOfScalar EquelleRuntimeCPU::newtonSolve(const ResidualFunctor& rescomp,
     // Execute newton loop until residual is small or we have used too many iterations.
     while ( (twoNorm(residual) > tol) && (iter < max_iter) ) {
         // Debugging output not specified in Equelle.
-        std::cout << "\niter = " << iter << " (max = " << max_iter
-                  << "), norm(residual) = " << twoNorm(residual)
-                  << " (tol = " << tol << ")" << std::endl;
+        if (verbose_ > 0) {
+            std::cout << "\niter = " << iter << " (max = " << max_iter
+                      << "), norm(residual) = " << twoNorm(residual)
+                      << " (tol = " << tol << ")" << std::endl;
+        }
 
         // Solve linear equations for du, apply update.
         const CollOfScalar du = solveForUpdate(residual);
@@ -164,11 +170,13 @@ CollOfScalar EquelleRuntimeCPU::newtonSolve(const ResidualFunctor& rescomp,
         // Recompute residual.
         residual = rescomp(u);
 
-        // Debugging output not specified in Equelle.
-        output("u", u);
-        output("norm(u)", twoNorm(u));
-        output("residual", residual);
-        output("norm(residual)", twoNorm(residual));
+        if (verbose_ > 1) {
+            // Debugging output not specified in Equelle.
+            output("u", u);
+            output("norm(u)", twoNorm(u));
+            output("residual", residual);
+            output("norm(residual)", twoNorm(residual));
+        }
 
         ++iter;
     }

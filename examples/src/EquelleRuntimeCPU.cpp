@@ -20,6 +20,7 @@ EquelleRuntimeCPU::EquelleRuntimeCPU(const Opm::parameter::ParameterGroup& param
       ops_(grid_),
       linsolver_(param),
       output_to_file_(param.getDefault("output_to_file", false)),
+      verbose_(param.getDefault("verbose", 0)),
       param_(param)
 {
 }

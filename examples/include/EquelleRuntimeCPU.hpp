@@ -152,6 +152,7 @@ private:
     Opm::HelperOps ops_;
     Opm::LinearSolverFactory linsolver_;
     bool output_to_file_;
+    int verbose_;
     const Opm::parameter::ParameterGroup& param_;
 };
 
