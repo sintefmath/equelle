@@ -383,6 +383,7 @@ Scalar EquelleRuntimeCPU::userSpecifiedScalarWithDefault(const String& name,
     return param_.getDefault(name, default_value);
 }
 
+
 CollOfFace EquelleRuntimeCPU::userSpecifiedCollectionOfFaceSubsetOf(const String& name,
                                                                      const CollOfFace& face_superset)
 {
@@ -403,6 +404,20 @@ CollOfFace EquelleRuntimeCPU::userSpecifiedCollectionOfFaceSubsetOf(const String
     if (!includes(face_superset.begin(), face_superset.end(), data.begin(), data.end())) {
         OPM_THROW(std::runtime_error, "Given faces are not in the assumed subset.");
     }
+    return data;
+}
+
+
+SeqOfScalar EquelleRuntimeCPU::userSpecifiedSequenceOfScalar(const String& name)
+{
+    const String filename = param_.get<String>(name + "_filename");
+    std::ifstream is(filename.c_str());
+    if (!is) {
+        OPM_THROW(std::runtime_error, "Could not find file " << filename);
+    }
+    std::istream_iterator<Scalar> beg(is);
+    std::istream_iterator<Scalar> end;
+    SeqOfScalar data(beg, end);
     return data;
 }
 

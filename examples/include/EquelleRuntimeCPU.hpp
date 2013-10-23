@@ -47,6 +47,7 @@ typedef Opm::AutoDiffBlock<Scalar> CollOfScalarAD;
 typedef CollOfScalarAD::V CollOfScalar;
 typedef Eigen::Array<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> CollOfVector;
 typedef Eigen::Array<bool, Eigen::Dynamic, 1> CollOfBool;
+typedef std::vector<Scalar> SeqOfScalar;
 
 
 
@@ -114,6 +115,7 @@ public:
     CollOfScalar userSpecifiedCollectionOfScalar(const String& name,
                                                  const SomeCollection& coll);
 
+    SeqOfScalar userSpecifiedSequenceOfScalar(const String& name);
 
 private:
     /// Topology helpers
