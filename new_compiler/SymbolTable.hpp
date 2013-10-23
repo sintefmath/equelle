@@ -154,6 +154,8 @@ public:
 
     EquelleType returnType(const std::vector<EquelleType>& argtypes) const;
 
+    void setParentScope(const Function* parent_scope);
+
     void dump() const;
 
 private:
@@ -162,6 +164,7 @@ private:
     std::string name_;
     std::set<Variable> local_variables_;
     FunctionType type_;
+    const Function* parent_scope_;
 };
 
 

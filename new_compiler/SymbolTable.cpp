@@ -178,13 +178,15 @@ std::string FunctionType::equelleString() const
 
 
 Function::Function(const std::string& name)
-    : name_(name)
+    : name_(name),
+      parent_scope_(0)
 {
 }
 
 Function::Function(const std::string& name, const FunctionType& type)
     : name_(name),
-      type_(type)
+      type_(type),
+      parent_scope_(0)
 {
 }
 
@@ -287,6 +289,11 @@ void Function::setFunctionType(const FunctionType& ftype)
 EquelleType Function::returnType(const std::vector<EquelleType>& argtypes) const
 {
     return type_.returnType(argtypes);
+}
+
+void Function::setParentScope(const Function* parent_scope)
+{
+    parent_scope_ = parent_scope;
 }
 
 void Function::dump() const
