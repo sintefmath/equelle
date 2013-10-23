@@ -58,7 +58,7 @@ VarAssignNode* handleAssignment(const std::string& name, Node* expr)
     // If already declared...
     if (SymbolTable::isVariableDeclared(name)) {
         // Check if already assigned.
-        if (SymbolTable::isVariableAssigned(name)) {
+        if (SymbolTable::isVariableAssigned(name) && !SymbolTable::variableType(name).isMutable()) {
             std::string err_msg = "variable already assigned, cannot re-assign ";
             err_msg += name;
             yyerror(err_msg.c_str());
@@ -91,8 +91,10 @@ VarAssignNode* handleAssignment(const std::string& name, Node* expr)
         SymbolTable::declareVariable(name, expr->type());
     }
 
-    // Set variable to assigned and return.
-    SymbolTable::setVariableAssigned(name, true);
+    // Set variable to assigned (unless mutable) and return.
+    if (!SymbolTable::variableType(name).isMutable()) {
+        SymbolTable::setVariableAssigned(name, true);
+    }
     return new VarAssignNode(name, expr);
 }
 

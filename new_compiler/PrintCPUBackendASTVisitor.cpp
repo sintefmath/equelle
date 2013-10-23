@@ -183,19 +183,27 @@ void PrintCPUBackendASTVisitor::postVisit(TrinaryIfNode&)
     std::cout << ')';
 }
 
-void PrintCPUBackendASTVisitor::visit(VarDeclNode&)
+void PrintCPUBackendASTVisitor::visit(VarDeclNode& node)
 {
-    suppress();
+    if (node.type().isMutable()) {
+        std::cout << indent() << cppTypeString(node.type()) << " " << node.name() << ';';
+        endl();
+    }
+    // suppress();
 }
 
 void PrintCPUBackendASTVisitor::postVisit(VarDeclNode&)
 {
-    unsuppress();
+    // unsuppress();
 }
 
 void PrintCPUBackendASTVisitor::visit(VarAssignNode& node)
 {
-    std::cout << indent() << "const " << cppTypeString(node.type()) << " " << node.name() << " = ";
+    std::cout << indent();
+    if (!SymbolTable::variableType(node.name()).isMutable()) {
+        std::cout << "const " << cppTypeString(node.type()) << " ";
+    }
+    std::cout << node.name() << " = ";
 }
 
 void PrintCPUBackendASTVisitor::postVisit(VarAssignNode&)

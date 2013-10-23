@@ -373,7 +373,13 @@ public:
     }
     EquelleType type() const
     {
-        return SymbolTable::variableType(varname_);
+        // We do not want mutability of a variable to be passed on to
+        // expressions involving that variable.
+        EquelleType et = SymbolTable::variableType(varname_);
+        if (et.isMutable()) {
+            et.setMutable(false);
+        }
+        return et;
     }
     const std::string& name() const
     {
