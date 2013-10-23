@@ -146,7 +146,6 @@ expr: number              { $$ = $1; }
     | expr ON expr        { $$ = handleOn($1, $3); }
     | ID                  { $$ = handleIdentifier(*($1)); delete $1; }
     | STRING_LITERAL      { $$ = handleString(*($1)); delete $1; }
-    | MUTABLE expr        { $$ = handleMutableExpr($2); }
     ;
 
 type_expr: basic_type                                  { $$ = $1; }

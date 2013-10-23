@@ -356,14 +356,6 @@ TypeNode* handleMutableType(TypeNode* type_expr)
 
 
 
-Node* handleMutableExpr(Node* expr)
-{
-    yyerror("Cannot handle Mutable expressions yet.");
-    return expr;
-}
-
-
-
 TypeNode* handleSequence(TypeNode* basic_type)
 {
     const EquelleType et = basic_type->type();

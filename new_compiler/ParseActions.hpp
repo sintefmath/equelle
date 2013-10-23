@@ -58,8 +58,6 @@ StringNode* handleString(const std::string& content);
 
 TypeNode* handleMutableType(TypeNode* type_expr);
 
-Node* handleMutableExpr(Node* expr);
-
 TypeNode* handleSequence(TypeNode* basic_type);
 
 LoopNode* handleLoopStart(const std::string& loop_variable, const std::string& loop_set);
