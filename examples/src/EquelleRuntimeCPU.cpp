@@ -36,35 +36,18 @@ CollOfCell EquelleRuntimeCPU::allCells() const
 }
 
 
-// Note that this will not produce the expected results for a 1D grid realized as a 2D grid of dimension (n, 1) or (1, n), since all cells
+// Note that this will not produce what some would consider the expected results for a 1D grid realized as a 2D grid of dimension (n, 1) or (1, n), since all cells
 // of such a grid are boundary cells.
-//
-// A hack could be made by testing for "three boundary faces" instead of "at least one boundary face" in the test inside the inner loop.
-
+// That points out that communicating the grid concepts is very important.
 bool EquelleRuntimeCPU::boundaryCell(const int cell_index) const
 {
-    const int fp = grid_.cell_facepos[cell_index];
-    bool boundary_cell = false;
-    const int f_per_c = grid_.dimensions*2; // Can we assume this, or should we use cell_facepos[c+1]-cell_facepos[c]?!
-#if 1
-    for (int i=0; (i<f_per_c) && (!boundary_cell); ++i) {
-        const int f = grid_.cell_faces[ fp+i ];
-        boundary_cell = (grid_.face_cells[2*f]==-1) || (grid_.face_cells[2*f + 1]==-1);
-    }
-#else
-    // Hack for 1D grid realized as 2D (n, 1) or (1, n)
-    int num_of_boundary_faces = 0;
-    for (int i=0; i<f_per_c; ++i) {
-        const int f = grid_.cell_faces[ fp+i ];
-        if ( (grid_.face_cells[2*f]==-1) || (grid_.face_cells[2*f + 1]==-1) ) {
-            ++num_of_boundary_faces;
+    for (int hface = grid_.cell_facepos[cell_index]; hface < grid_.cell_facepos[cell_index + 1]; ++hface) {
+        const int face = grid_.cell_faces[hface];
+        if (grid_.face_cells[2*face] < 0 || grid_.face_cells[2*face + 1] < 0) {
+            return true;
         }
     }
-    if (num_of_boundary_faces>=3) {
-        boundary_cell = true;
-    }
-#endif
-    return boundary_cell;
+    return false;
 }
 
 
