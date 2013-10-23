@@ -43,8 +43,22 @@ typedef bool Bool;
 typedef std::string String;
 
 /// Types from opm-autodiff and Eigen.
-typedef Opm::AutoDiffBlock<Scalar> CollOfScalarAD;
-typedef CollOfScalarAD::V CollOfScalar;
+
+// The following trick lets us automatically convert CollOfScalar to CollOfScalarAD
+//typedef Opm::AutoDiffBlock<Scalar> CollOfScalarAD;
+typedef Opm::AutoDiffBlock<Scalar> ADB;
+struct CollOfScalarAD : public ADB
+{
+    CollOfScalarAD(const ADB& adb)
+        : ADB(adb)
+    {
+    }
+    CollOfScalarAD(const ADB::V& x)
+        : ADB(ADB::constant(x))
+    {
+    }
+};
+typedef ADB::V CollOfScalar;
 typedef Eigen::Array<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> CollOfVector;
 typedef Eigen::Array<bool, Eigen::Dynamic, 1> CollOfBool;
 typedef std::vector<Scalar> SeqOfScalar;
