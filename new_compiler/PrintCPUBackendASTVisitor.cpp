@@ -397,6 +397,7 @@ void PrintCPUBackendASTVisitor::unsuppress()
 std::string PrintCPUBackendASTVisitor::cppTypeString(const EquelleType& et) const
 {
     std::string cppstring = et.isCollection() ? "CollOf" : "";
+    cppstring += et.isSequence() ? "SeqOf" : "";
     cppstring += basicTypeString(et.basicType());
     if (emit_ad_ && et.isCollection() && et.basicType() == Scalar) {
         cppstring += "AD";
