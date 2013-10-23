@@ -154,6 +154,8 @@ public:
 
     EquelleType returnType(const std::vector<EquelleType>& argtypes) const;
 
+    const std::string& parentScope() const;
+
     void setParentScope(const Function* parent_scope);
 
     void dump() const;

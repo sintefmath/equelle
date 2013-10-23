@@ -205,10 +205,14 @@ EquelleType Function::variableType(const std::string name) const
 {
     auto foundvar = declared(name);
     if (!foundvar.first) {
-        std::string err_msg = "could not find variable ";
-        err_msg += name;
-        yyerror(err_msg.c_str());
-        return EquelleType();
+        if (parent_scope_) {
+            return parent_scope_->variableType(name);
+        } else {
+            std::string err_msg = "could not find variable ";
+            err_msg += name;
+            yyerror(err_msg.c_str());
+            return EquelleType();
+        }
     } else {
         return foundvar.second;
     }
@@ -216,7 +220,14 @@ EquelleType Function::variableType(const std::string name) const
 
 bool Function::isVariableDeclared(const std::string& name) const
 {
-    return declared(name).first;
+    auto it = declared(name);
+    if (it.first) {
+        return true;
+    } else if (parent_scope_) {
+        return parent_scope_->isVariableDeclared(name);
+    } else {
+        return false;
+    }
 }
 
 bool Function::isVariableAssigned(const std::string& name) const
@@ -230,8 +241,12 @@ bool Function::isVariableAssigned(const std::string& name) const
         if (ait != type_.arguments().end()) {
             return ait->assigned();
         } else {
-            yyerror("internal compiler error in Function::isVariableAssigned()");
-            return false;
+            if (parent_scope_) {
+                return parent_scope_->isVariableAssigned(name);
+            } else {
+                yyerror("internal compiler error in Function::isVariableAssigned()");
+                return false;
+            }
         }
     }
 }
@@ -296,6 +311,15 @@ void Function::setParentScope(const Function* parent_scope)
     parent_scope_ = parent_scope;
 }
 
+const std::string& Function::parentScope() const
+{
+    if (parent_scope_) {
+        return parent_scope_->name();
+    } else {
+        throw std::runtime_error("Internal compiler error in Function::parentScope().");
+    }
+}
+
 void Function::dump() const
 {
     std::cout << "------------------ Dump of function: " << name() << " ------------------\n";
@@ -351,14 +375,12 @@ int SymbolTable::declareNewEntitySet(const std::string& name, const int subset_e
 
 bool SymbolTable::isVariableDeclared(const std::string& name)
 {
-    return instance().current_function_->isVariableDeclared(name)
-        || instance().main_function_->isVariableDeclared(name);
+    return instance().current_function_->isVariableDeclared(name);
 }
 
 bool SymbolTable::isVariableAssigned(const std::string& name)
 {
-    return instance().current_function_->isVariableAssigned(name)
-        || instance().main_function_->isVariableAssigned(name);
+    return instance().current_function_->isVariableAssigned(name);
 }
 
 void SymbolTable::setVariableAssigned(const std::string& name, const bool assigned)
@@ -368,11 +390,7 @@ void SymbolTable::setVariableAssigned(const std::string& name, const bool assign
 
 EquelleType SymbolTable::variableType(const std::string& name)
 {
-    if (instance().current_function_->isVariableDeclared(name)) {
-        return instance().current_function_->variableType(name);
-    } else {
-        return instance().main_function_->variableType(name);
-    }
+    return instance().current_function_->variableType(name);
 }
 
 void SymbolTable::setVariableType(const std::string& name, const EquelleType& type)

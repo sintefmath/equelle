@@ -495,7 +495,7 @@ public:
         visitor.visit(*this);
         ftype_->accept(visitor);
         visitor.postVisit(*this);
-        SymbolTable::setCurrentFunction("Main");
+        SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
     }
 private:
     std::string funcname_;
@@ -542,8 +542,8 @@ public:
         visitor.visit(*this);
         funcstart_->accept(visitor);
         funcbody_->accept(visitor);
-        SymbolTable::setCurrentFunction("Main");
         visitor.postVisit(*this);
+        SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
     }
 private:
     Node* funcstart_;
@@ -690,19 +690,30 @@ public:
     {
         return loop_set_;
     }
+    const std::string& loopName() const
+    {
+        return loop_name_;
+    }
+    void setName(const std::string& loop_name)
+    {
+        loop_name_ = loop_name;
+    }
     void setBlock(SequenceNode* loop_block)
     {
         loop_block_ = loop_block;
     }
     virtual void accept(ASTVisitorInterface& visitor)
     {
+        SymbolTable::setCurrentFunction(loop_name_);
         visitor.visit(*this);
         loop_block_->accept(visitor);
         visitor.postVisit(*this);
+        SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
     }
 private:
     std::string loop_variable_;
     std::string loop_set_;
+    std::string loop_name_;
     SequenceNode* loop_block_;
 };
 

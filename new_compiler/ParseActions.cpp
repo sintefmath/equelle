@@ -7,6 +7,7 @@
 #include "SymbolTable.hpp"
 #include "ASTNodes.hpp"
 #include "ParseActions.hpp"
+#include <sstream>
 
 
 
@@ -101,7 +102,7 @@ Node* handleFuncDeclaration(const std::string& name, FuncTypeNode* ftype)
 {
     SymbolTable::renameCurrentFunction(name);
     SymbolTable::retypeCurrentFunction(ftype->funcType());
-    SymbolTable::setCurrentFunction("Main");
+    SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
     return new FuncDeclNode(name, ftype);
 }
 
@@ -127,7 +128,7 @@ SequenceNode* handleBlock(SequenceNode* block)
 {
     // This is called after the block AST has been constructed,
     // so we should switch back to Main scope.
-    SymbolTable::setCurrentFunction("Main");
+    SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
     return block;
 }
 
@@ -376,7 +377,34 @@ TypeNode* handleSequence(TypeNode* basic_type)
 
 LoopNode* handleLoopStart(const std::string& loop_variable, const std::string& loop_set)
 {
-    return new LoopNode(loop_variable, loop_set);
+    // Check that loop_set is a sequence, extract its type.
+    EquelleType loop_set_type;
+    if (SymbolTable::isVariableDeclared(loop_set)) {
+        loop_set_type = SymbolTable::variableType(loop_set);
+        if (!loop_set_type.isSequence()) {
+            std::string err_msg = "loop set must be a Sequence: ";
+            err_msg += loop_set;
+            yyerror(err_msg.c_str());
+        }
+    } else {
+        std::string err_msg = "unknown variable used: ";
+        err_msg += loop_set;
+        yyerror(err_msg.c_str());
+    }
+    // Create LoopNode
+    LoopNode* ln = new LoopNode(loop_variable, loop_set);
+    // Create a name for the loop scope.
+    static int next_loop_index = 0;
+    std::ostringstream os;
+    os << "ForLoopWithIndex" << next_loop_index++;
+    // Set name in loop node, declare scope and
+    // set to current.
+    ln->setName(os.str());
+    SymbolTable::declareFunction(os.str());
+    SymbolTable::setCurrentFunction(os.str());
+    // Declare loop variable
+    SymbolTable::declareVariable(loop_variable, loop_set_type.basicType());
+    return ln;
 }
 
 
