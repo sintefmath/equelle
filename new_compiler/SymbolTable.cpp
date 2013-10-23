@@ -298,10 +298,13 @@ void Function::setParentScope(const Function* parent_scope)
 
 void Function::dump() const
 {
-    std::cout << "================== Dump of function: " << name() << " ==================\n";
+    std::cout << "------------------ Dump of function: " << name() << " ------------------\n";
     std::cout << "Local variables:\n";
     for (const Variable& v : local_variables_) {
         std::cout << v.name() << " : " << SymbolTable::equelleString(v.type()) << "    assigned: " << v.assigned() << '\n';
+    }
+    if (parent_scope_) {
+        std::cout << "Parent scope is: " << parent_scope_->name() << '\n';
     }
 }
 
@@ -565,17 +568,15 @@ void SymbolTable::declareEntitySet(const std::string& name, const int entity_ind
 
 void SymbolTable::declareFunctionImpl(const std::string& name, const FunctionType& ftype)
 {
-    if (current_function_->name() != "Main") {
-        std::string err_msg = "cannot define new function ";
-        err_msg += name;
-        err_msg += " inside function ";
-        err_msg += current_function_->name();
-        yyerror(err_msg.c_str());
+    auto it = findFunction(name);
+    if (it == functions_.end()) {
+        functions_.emplace_back(name, ftype);
+        functions_.back().setParentScope(&*current_function_);
     } else {
-        auto it = findFunction(name);
-        if (it == functions_.end()) {
-            functions_.emplace_back(name, ftype);
-        }
+        std::string errmsg = "function already declared: ";
+        errmsg += name;
+        yyerror(errmsg.c_str());
+        throw std::logic_error("Function already declared.");
     }
 }
 
@@ -630,9 +631,11 @@ bool SymbolTable::isSubsetImpl(const int set1, const int set2) const
 
 void SymbolTable::dumpImpl() const
 {
+    std::cout << "================== Dump of symbol table ==================\n";
     for (const Function& f : functions_) {
         f.dump();
     }
+    std::cout << "================== End of symbol table dump ==================\n";
 }
 
 
