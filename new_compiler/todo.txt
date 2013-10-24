@@ -6,20 +6,10 @@ have backend support).
 
 Language:
 ---------
-Loops, for the ability to do more timesteps.
-- Current suggested notation:
-  For loop_var In some_sequence {
-      ... use loop_var ...
-  }
-- New type: Sequence Of <basic type> (for things that must be looped
-  over in order)
-Related to the above: mutable variables? Other ways?
-- Current suggestion: allow vars to be declared Mutable
-  (unlike regular immutables, Mutable vars MUST be declared)
-Nested function/loop scopes. What is allowed?
-- no function in function scopes, all else ok. Implementable? Perhaps
-  not easily?
+Syntax for Tuples. Are they any different from statically-sized arrays?
 Literals for Vector (and eventually tuples)?
+Figure out how to do "Require Implicit", "Require 2D", "Require
+Cartesian", "Require Twophase", "Require PorousMedia" or similar things.
 Allow assigning functions to variables? Should be allowed.
 Functions as first-order objects?
 Use Restrict and Prolong for On in 'a On b' expressions?
@@ -28,7 +18,7 @@ Mechanism for including application libs/constrained interfaces: Require?
 What happens with On and sets containing an entity multiple times?
 -> accept for restriction only and not for prolongation?
 -> what does Subset Of mean?
-Separate On into Restrict and Prolong?
+Separate On into Restrict and Prolong? Make strict and precise definition!
 Function templates and instantiation:
 -> instantiation means: fixing types of a template
 -> codegen typically emits function at instantiation
@@ -38,7 +28,6 @@ ok for other templates).
 
 Lexer/Grammar:
 --------------
-Line continuation ('...').
 Tuples (also needs work in parser etc.)
 Check and fix multi-argument functions.
 
@@ -60,12 +49,12 @@ Check that variables used have been assigned.
 
 Code generation, processing of AST:
 -----------------------------------
-Consider emitting inner class with template operator() instead of two
-lambdas for each function (AD/non-AD).
+Consider tracing AD requirement through program instead of
+making all functions take AD types as currently done.
 
 Backend:
 --------
-Complete current backend.
+Complete current backend (several builtins not implemented).
 Investigate why auto fails with Eigen expr. templates.
 Parallel backend.
 
