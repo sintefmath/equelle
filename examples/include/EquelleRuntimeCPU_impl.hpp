@@ -141,12 +141,12 @@ CollOfScalar EquelleRuntimeCPU::newtonSolve(const ResidualFunctor& rescomp,
 {
     // Set up Newton loop.
     CollOfScalarAD u = singlePrimaryVariable(u_initialguess);
-    if (verbose_ > 1) {
+    if (verbose_ > 2) {
         output("Initial u", u);
         output("norm", twoNorm(u));
     }
     CollOfScalarAD residual = rescomp(u);
-    if (verbose_ > 1) {
+    if (verbose_ > 2) {
         output("Initial residual", residual);
         output("norm", twoNorm(residual));
     }
@@ -154,14 +154,15 @@ CollOfScalar EquelleRuntimeCPU::newtonSolve(const ResidualFunctor& rescomp,
     const double tol = 1e-6;
     int iter = 0;
 
+    // Debugging output not specified in Equelle.
+    if (verbose_ > 1) {
+        std::cout << "iter = " << iter << " (max = " << max_iter
+                  << "), norm(residual) = " << twoNorm(residual)
+                  << " (tol = " << tol << ")" << std::endl;
+    }
+
     // Execute newton loop until residual is small or we have used too many iterations.
     while ( (twoNorm(residual) > tol) && (iter < max_iter) ) {
-        // Debugging output not specified in Equelle.
-        if (verbose_ > 0) {
-            std::cout << "\niter = " << iter << " (max = " << max_iter
-                      << "), norm(residual) = " << twoNorm(residual)
-                      << " (tol = " << tol << ")" << std::endl;
-        }
 
         // Solve linear equations for du, apply update.
         const CollOfScalar du = solveForUpdate(residual);
@@ -170,7 +171,7 @@ CollOfScalar EquelleRuntimeCPU::newtonSolve(const ResidualFunctor& rescomp,
         // Recompute residual.
         residual = rescomp(u);
 
-        if (verbose_ > 1) {
+        if (verbose_ > 2) {
             // Debugging output not specified in Equelle.
             output("u", u);
             output("norm(u)", twoNorm(u));
@@ -179,6 +180,21 @@ CollOfScalar EquelleRuntimeCPU::newtonSolve(const ResidualFunctor& rescomp,
         }
 
         ++iter;
+
+        // Debugging output not specified in Equelle.
+        if (verbose_ > 1) {
+            std::cout << "iter = " << iter << " (max = " << max_iter
+                      << "), norm(residual) = " << twoNorm(residual)
+                      << " (tol = " << tol << ")" << std::endl;
+        }
+
+    }
+    if (verbose_ > 0) {
+        if (twoNorm(residual) > tol) {
+            std::cout << "Newton solver failed to converge in " << max_iter << " iterations" << std::endl;
+        } else {
+            std::cout << "Newton solver converged in " << iter << " iterations" << std::endl;
+        }
     }
     return u.value();
 }
