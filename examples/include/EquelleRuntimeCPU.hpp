@@ -13,6 +13,7 @@
 #include <opm/core/linalg/LinearSolverFactory.hpp>
 #include <vector>
 #include <string>
+#include <map>
 
 
 /// Topological entities.
@@ -113,12 +114,12 @@ public:
     /// Solver function.
     template <class ResidualFunctor>
     CollOfScalar newtonSolve(const ResidualFunctor& rescomp,
-                             const CollOfScalar& u_initialguess) const;
+                             const CollOfScalar& u_initialguess);
 
     /// Output.
     void output(const String& tag, Scalar val) const;
-    void output(const String& tag, const CollOfScalar& vals) const;
-    void output(const String& tag, const CollOfScalarAD& vals) const;
+    void output(const String& tag, const CollOfScalar& vals);
+    void output(const String& tag, const CollOfScalarAD& vals);
 
     /// Input.
     Scalar userSpecifiedScalarWithDefault(const String& name,
@@ -146,7 +147,6 @@ private:
     Scalar twoNorm(const CollOfScalarAD& vals) const;
 
     /// Data members.
-    bool grid_from_file_;
     std::unique_ptr<Opm::GridManager> grid_manager_;
     const UnstructuredGrid& grid_;
     Opm::HelperOps ops_;
@@ -154,6 +154,7 @@ private:
     bool output_to_file_;
     int verbose_;
     const Opm::parameter::ParameterGroup& param_;
+    std::map<std::string, int> outputcount_;
 };
 
 // Include the implementations of template members.

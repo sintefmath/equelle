@@ -12,10 +12,45 @@
 #include <set>
 
 
+
+namespace
+{
+    Opm::GridManager* createGridManager(const Opm::parameter::ParameterGroup& param)
+    {
+        if (param.has("grid_filename")) {
+            return new Opm::GridManager(param.get<std::string>("grid_filename"));
+        }
+        const int grid_dim = param.getDefault("grid_dim", 2);
+        int num[3] = { 1, 1, 1 };
+        double size[3] = { 1.0, 1.0, 1.0 };
+        switch (grid_dim) { // Fall-throughs are intentional in this
+        case 3:
+            num[2] = param.getDefault("nz", num[2]);
+            size[2] = param.getDefault("dz", size[2]);
+        case 2:
+            num[1] = param.getDefault("ny", num[2]);
+            size[1] = param.getDefault("dy", size[2]);
+            num[0] = param.getDefault("nx", num[2]);
+            size[0] = param.getDefault("dx", size[2]);
+            break;
+        default:
+            OPM_THROW(std::runtime_error, "Cannot handle " << grid_dim << " dimensions.");
+        }
+        switch (grid_dim) {
+        case 2:
+            return new Opm::GridManager(num[0], num[1], size[0], size[1]);
+        case 3:
+            return new Opm::GridManager(num[0], num[1], num[2], size[0], size[1], size[2]);
+        default:
+            OPM_THROW(std::runtime_error, "Cannot handle " << grid_dim << " dimensions.");
+        }
+    }
+} // anonymous namespace
+
+
+
 EquelleRuntimeCPU::EquelleRuntimeCPU(const Opm::parameter::ParameterGroup& param)
-    : grid_from_file_(param.has("grid_filename")),
-      grid_manager_(grid_from_file_ ? new Opm::GridManager(param.get<std::string>("grid_filename"))
-                    : new Opm::GridManager(param.getDefault("n", 6), 1)),
+    : grid_manager_(createGridManager(param)),
       grid_(*(grid_manager_->c_grid())),
       ops_(grid_),
       linsolver_(param),
@@ -336,15 +371,26 @@ void EquelleRuntimeCPU::output(const String& tag, const double val) const
 }
 
 
-void EquelleRuntimeCPU::output(const String& tag, const CollOfScalar& vals) const
+void EquelleRuntimeCPU::output(const String& tag, const CollOfScalar& vals)
 {
     if (output_to_file_) {
-        String filename = tag + ".output";
-        std::ofstream os(filename.c_str());
-        for (int i = 0; i < vals.size(); ++i) {
-            os << std::setw(15) << std::left << ( vals[i] ) << " ";
+        int count = -1;
+        auto it = outputcount_.find(tag);
+        if (it == outputcount_.end()) {
+            count = 0;
+            outputcount_[tag] = 1; // should contain the count to be used next time for same tag.
+        } else {
+            count = outputcount_[tag];
+            ++outputcount_[tag];
         }
-        os << std::endl;
+        std::ostringstream fname;
+        fname << tag << "-" << std::setw(5) << std::setfill('0') << count << ".output";
+        std::ofstream file(fname.str().c_str());
+        if (!file) {
+            OPM_THROW(std::runtime_error, "Failed to open " << fname.str());
+        }
+        file.precision(16);
+        std::copy(vals.data(), vals.data() + vals.size(), std::ostream_iterator<double>(file, "\n"));
     } else {
         std::cout << tag << " =\n";
         for (int i = 0; i < vals.size(); ++i) {
@@ -355,7 +401,8 @@ void EquelleRuntimeCPU::output(const String& tag, const CollOfScalar& vals) cons
 }
 
 
-void EquelleRuntimeCPU::output(const String& tag, const CollOfScalarAD& vals) const
+
+void EquelleRuntimeCPU::output(const String& tag, const CollOfScalarAD& vals)
 {
     output(tag, vals.value());
 }
