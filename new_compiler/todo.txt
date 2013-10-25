@@ -45,12 +45,15 @@ Make the "subset of" part of all entity collection types?
 Add all created (named or not?) entity sets to symbol table?
 Function types vs. variable types?
 Check that variables used have been assigned.
+AST nodes do not clean up properly, destructors etc. must be added.
 
 
 Code generation, processing of AST:
 -----------------------------------
 Consider tracing AD requirement through program instead of
 making all functions take AD types as currently done.
+How to support explicit and implicit methods in single program, which
+would require both AD and non-AD types for functions?
 
 Backend:
 --------
