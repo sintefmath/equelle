@@ -8,7 +8,6 @@ cmake_minimum_required(VERSION 2.8)
 add_definitions( -DDUNE_COMMON_FIELDVECTOR_SIZE_IS_METHOD=1 )
 add_definitions( -DENABLE_SUPERLU=1 )
 add_definitions( -DHAVE_CONFIG_H=1 )
-add_definitions( -DNDEBUG ) # A bit strange that this was combined with -ggdb3?!
 
 set( CMAKE_CXX_FLAGS "-std=c++0x -O1 -Wall -Wno-unknown-pragmas" )
 
