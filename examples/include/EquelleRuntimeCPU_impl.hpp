@@ -185,19 +185,18 @@ CollOfScalar EquelleRuntimeCPU::newtonSolve(const ResidualFunctor& rescomp,
         output("Initial residual", residual);
         output("norm", twoNorm(residual));
     }
-    const int max_iter = 10;
-    const double tol = 1e-6;
+
     int iter = 0;
 
     // Debugging output not specified in Equelle.
     if (verbose_ > 1) {
-        std::cout << "iter = " << iter << " (max = " << max_iter
+        std::cout << "iter = " << iter << " (max = " << max_iter_
                   << "), norm(residual) = " << twoNorm(residual)
-                  << " (tol = " << tol << ")" << std::endl;
+                  << " (tol = " << abs_res_tol_ << ")" << std::endl;
     }
 
     // Execute newton loop until residual is small or we have used too many iterations.
-    while ( (twoNorm(residual) > tol) && (iter < max_iter) ) {
+    while ( (twoNorm(residual) > abs_res_tol_) && (iter < max_iter_) ) {
 
         // Solve linear equations for du, apply update.
         const CollOfScalar du = solveForUpdate(residual);
@@ -218,15 +217,15 @@ CollOfScalar EquelleRuntimeCPU::newtonSolve(const ResidualFunctor& rescomp,
 
         // Debugging output not specified in Equelle.
         if (verbose_ > 1) {
-            std::cout << "iter = " << iter << " (max = " << max_iter
+            std::cout << "iter = " << iter << " (max = " << max_iter_
                       << "), norm(residual) = " << twoNorm(residual)
-                      << " (tol = " << tol << ")" << std::endl;
+                      << " (tol = " << abs_res_tol_ << ")" << std::endl;
         }
 
     }
     if (verbose_ > 0) {
-        if (twoNorm(residual) > tol) {
-            std::cout << "Newton solver failed to converge in " << max_iter << " iterations" << std::endl;
+        if (twoNorm(residual) > abs_res_tol_) {
+            std::cout << "Newton solver failed to converge in " << max_iter_ << " iterations" << std::endl;
         } else {
             std::cout << "Newton solver converged in " << iter << " iterations" << std::endl;
         }

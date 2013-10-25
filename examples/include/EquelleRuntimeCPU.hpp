@@ -155,6 +155,9 @@ private:
     int verbose_;
     const Opm::parameter::ParameterGroup& param_;
     std::map<std::string, int> outputcount_;
+    // For newtonSolve().
+    int max_iter_;
+    double abs_res_tol_;
 };
 
 // Include the implementations of template members.
