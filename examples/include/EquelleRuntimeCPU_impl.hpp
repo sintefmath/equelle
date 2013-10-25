@@ -27,19 +27,54 @@ namespace
     std::vector<int> subsetIndices(const EntityCollection& superset,
                                    const EntityCollection& subset)
     {
-        const size_t super_sz = superset.size();
-        const size_t sub_sz = subset.size();
-        assert(sub_sz <= super_sz);
-        std::vector<int> indices;
-        indices.reserve(sub_sz);
-        size_t sub_index = 0;
-        for (size_t i = 0; i < super_sz; ++i) {
-            if (subset[sub_index] == superset[i]) {
-                indices.push_back(i);
+        if (subset.empty()) {
+            return std::vector<int>();
+        }
+
+        assert(superset.size() >= subset.size());
+        assert(std::is_sorted(superset.begin(), superset.end()));
+        assert(std::adjacent_find(superset.begin(), superset.end()) == superset.end());
+        assert(superset[0].index >= 0);
+
+        const std::size_t sub_sz = subset.size();
+        typedef typename EntityCollection::value_type Entity;
+        std::vector<std::pair<Entity, int> > sub_indexed(sub_sz);
+        for (std::size_t elem = 0; elem < sub_sz; ++elem) {
+            sub_indexed[elem] = std::make_pair(subset[elem], elem);
+        }
+        std::sort(sub_indexed.begin(), sub_indexed.end());
+        assert(sub_indexed[0].first.index >= 0);
+
+        const std::size_t super_sz = superset.size();
+        std::vector<int> indices(sub_sz);
+        std::size_t sub_index = 0;
+        for (std::size_t i = 0; i < super_sz; ++i) {
+            while (sub_indexed[sub_index].first == superset[i]) {
+                indices[sub_indexed[sub_index].second] = i;
                 ++sub_index;
             }
         }
-        assert(indices.size() == sub_sz);
+        assert(sub_index == sub_sz);
+
+#if 0
+        // Debugging output.
+        std::cout << "Superset:\n";
+        for (auto e : superset) {
+            std::cout << e.index << ' ';
+        }
+        std::cout << std::endl;
+        std::cout << "Subset:\n";
+        for (auto e : subset) {
+            std::cout << e.index << ' ';
+        }
+        std::cout << std::endl;
+        std::cout << "Indices:\n";
+        for (auto i : indices) {
+            std::cout << i << ' ';
+        }
+        std::cout << std::endl;
+        std::cout << "Sizes = " << indices.size() << ' ' << subset.size() << std::endl;
+#endif
         return indices;
     }
 
