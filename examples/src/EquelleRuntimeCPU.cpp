@@ -56,7 +56,9 @@ EquelleRuntimeCPU::EquelleRuntimeCPU(const Opm::parameter::ParameterGroup& param
       linsolver_(param),
       output_to_file_(param.getDefault("output_to_file", false)),
       verbose_(param.getDefault("verbose", 0)),
-      param_(param)
+      param_(param),
+      max_iter_(param.getDefault("max_iter", 10)),
+      abs_res_tol_(param.getDefault("abs_res_tol", 1e-6))
 {
 }
 
