@@ -5,6 +5,7 @@
 
 #include "EquelleRuntimeCPU.hpp"
 #include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/core/utility/StopWatch.hpp>
 #include <iomanip>
 #include <fstream>
 #include <iterator>
@@ -339,6 +340,9 @@ CollOfScalar EquelleRuntimeCPU::solveForUpdate(const CollOfScalarAD& residual) c
 
     CollOfScalar du = CollOfScalar::Zero(residual.size());
 
+    Opm::time::StopWatch clock;
+    clock.start();
+
     // solve(n, # nonzero values ("val"), ptr to col indices
     // ("col_ind"), ptr to row locations in val array ("row_ind")
     // (these two may be swapped, not sure about the naming convention
@@ -348,6 +352,10 @@ CollOfScalar EquelleRuntimeCPU::solveForUpdate(const CollOfScalarAD& residual) c
         = linsolver_.solve(matr.rows(), matr.nonZeros(),
                            matr.outerIndexPtr(), matr.innerIndexPtr(), matr.valuePtr(),
                            residual.value().data(), du.data());
+
+    if (verbose_ > 1) {
+        std::cout << "Linear solver took: " << clock.secsSinceLast() << " seconds." << std::endl;
+    }
     if (!rep.converged) {
         OPM_THROW(std::runtime_error, "Linear solver convergence failure.");
     }

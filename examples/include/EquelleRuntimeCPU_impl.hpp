@@ -8,6 +8,7 @@
 
 #include <fstream>
 #include <iterator>
+#include <opm/core/utility/StopWatch.hpp>
 
 
 template <class EntityCollection>
@@ -174,6 +175,9 @@ template <class ResidualFunctor>
 CollOfScalar EquelleRuntimeCPU::newtonSolve(const ResidualFunctor& rescomp,
                                             const CollOfScalar& u_initialguess)
 {
+    Opm::time::StopWatch clock;
+    clock.start();
+
     // Set up Newton loop.
     CollOfScalarAD u = singlePrimaryVariable(u_initialguess);
     if (verbose_ > 2) {
@@ -230,6 +234,11 @@ CollOfScalar EquelleRuntimeCPU::newtonSolve(const ResidualFunctor& rescomp,
             std::cout << "Newton solver converged in " << iter << " iterations" << std::endl;
         }
     }
+
+    if (verbose_ > 1) {
+        std::cout << "Newton solver took: " << clock.secsSinceLast() << " seconds." << std::endl;
+    }
+
     return u.value();
 }
 
