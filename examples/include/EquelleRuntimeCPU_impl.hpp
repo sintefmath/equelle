@@ -139,7 +139,7 @@ SomeCollection EquelleRuntimeCPU::trinaryIf(const CollOfBool& predicate,
                                             const SomeCollection& iffalse) const
 {
     const size_t sz = predicate.size();
-    assert(sz == iftrue.size() && sz == iffalse.size());
+    assert(sz == size_t(iftrue.size()) && sz == size_t(iffalse.size()));
     SomeCollection retval = iftrue;
     for (size_t i = 0; i < sz; ++i) {
         if (!predicate[i]) {
@@ -155,11 +155,11 @@ inline CollOfScalarAD EquelleRuntimeCPU::trinaryIf(const CollOfBool& predicate,
                                                    const CollOfScalarAD& iftrue,
                                                    const CollOfScalarAD& iffalse) const
 {
-    const size_t sz = predicate.size();
+    const int sz = predicate.size();
     assert(sz == iftrue.size() && sz == iffalse.size());
     CollOfScalar trueones = CollOfScalar::Constant(sz, 1.0);
     CollOfScalar falseones = CollOfScalar::Constant(sz, 0.0);
-    for (size_t i = 0; i < sz; ++i) {
+    for (int i = 0; i < sz; ++i) {
         if (!predicate[i]) {
             trueones[i] = 0.0;
             falseones[i] = 1.0;
