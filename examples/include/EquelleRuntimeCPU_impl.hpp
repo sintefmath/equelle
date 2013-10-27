@@ -54,9 +54,11 @@ namespace
                 indices[sub_indexed[sub_index].second] = i;
                 ++sub_index;
             }
+            if (sub_index == sub_sz) {
+                // All subset elements have been matched.
+                break;
+            }
         }
-        assert(sub_index == sub_sz);
-
 #if 0
         // Debugging output.
         std::cout << "Superset:\n";
@@ -76,6 +78,7 @@ namespace
         std::cout << std::endl;
         std::cout << "Sizes = " << indices.size() << ' ' << subset.size() << std::endl;
 #endif
+        assert(sub_index == sub_sz);
         return indices;
     }
 
