@@ -18,13 +18,18 @@ an example collection.
 The following types exist in Equelle:
 
 
-a. Basic numeric types.
+a. Basic numeric types. Referred to collectively as
+<BasicNumericType>.
 
    Scalar    --   a single number, typically a double-precision floating-point number
    Vector    --   a (geometric) vector, with one number for each dimension (typically 2 or 3)
 
+b. Boolean type
 
-b. Entities (basic topological, grid-related types).
+   Bool      --   a flag, which is True or False
+
+c. Entities (basic topological, grid-related types). Referred to
+collectively as <EntityType>.
 
    Cell      --   a single cell of the computational grid (entity of dimension == world dimension)
    Face      --   a single face
@@ -32,17 +37,24 @@ b. Entities (basic topological, grid-related types).
    Vertex    --   a single vertex
 
 For 2d grids, Face == Edge. For 1d grids, Face == Edge == Vertex.
-An entity can be Empty.
+An entity is either Empty, or it refers to an actual entity of the
+grid.
+
+Collectively, the types in categories a-c are referred to as
+<BasicType>.
 
 
-c. Entity collections.
+d. Entity collections.
 
    Collection Of <Entity>  --  contains zero or more elements that are instances of <Entity>
+
+It can contain multiple elements referring to the same entity, and elements that are Empty.
+
    Collection Of <Entity> Subset Of (Collection Of <Entity> 1, Collection Of <Entity> 2, ...)
    --  this collection is a subset of one or more indicated collections
 
 
-d. Collections mapped to entity collections.
+e. Collections mapped to entity collections.
 
    Collection Of <Type> On <Collection Of Entity>
    --  contains zero or more elements that are instances of <Type>,
@@ -66,17 +78,13 @@ InteriorFaces()', and not 'Collection Of Face on AllFaces()', even though a vari
 type can be assigned the value of InteriorFaces() with the help of the Super function, see below.
 
 
-e. Functions.
+f. Functions.
 
    Function(arg1 : Type1, arg2 : Type2, ...) -> Return type
 
 Note that a function given without explicit type declaration should be treated as a
 template, and its types deduced at the instantiation point if possible.
 
-
-f. Boolean type
-
-   Bool      --   a flag, which is True or False
 
 
 g. Type conversions
