@@ -10,80 +10,99 @@
 # Use type deduction by default, optional type declarations used to improve readability and detect errors.
 
 # Physics that requires specification
-perm : Scalar On AllCells() = UserSpecifiedScalars(AllCells())
-poro : Scalar On AllCells() = UserSpecifiedScalars(AllCells())
-
-# @afr: time step strategy assumed given outside.
-dt : Scalar = UserSpecifiedScalarWithDefault(Days(1.0)) # Time step length.
+perm : Collection Of Scalar On AllCells()
+perm = UserSpecifiedCollectionOfScalar("perm", AllCells())
+poro : Collection Of Scalar On AllCells()
+poro = UserSpecifiedCollectionOfScalar("poro", AllCells())
 
 # s0 should be given initial values (in user input)
-s0 : Scalar On Cells(Grid) = UserSpecifiedScalars()
+s0 : Collection Of Scalar On AllCells()
+s0 = UserSpecifiedCollectionOfScalar("s0", AllCells())
 
-s : Scalar On Cells(Grid) = s0
-p : Scalar On Cells(Grid) = 0
+s : Collection Of Scalar On AllCells()
+s = s0
+p : Collection Of Scalar On AllCells()
+p = 0.0 On AllCells()
 
 # Constants
-vol = Volume(Cells(Grid))                                  # Deduced type: Scalar On Cells(Grid)
+vol = |AllCells()|
 
-# EntitySet : Collection Of <Entity> On <XXX>
-# Collection Of <Type> On <Entityset> == Collection Of <Type> On <XXX>
 
-# computeTransmissibilities : Function(permeability : Collection Of Scalar On Cells(Grid)) -> Collection Of Scalar On InternalFaces(Grid)
+computeTransmissibilities : Function(permeability : Collection Of Scalar On AllCells()) -> Collection Of Scalar On InteriorFaces()
 computeTransmissibilities(permeability) = {
-    # InternalFaces : Function() -> Collection Of Face
-    # internal_faces : Collection Of Face
-    internal_faces = InternalFaces(Grid)
+    # InteriorFaces : Function() -> Collection Of Face
+    # interior_faces : Collection Of Face
+    interior_faces = InteriorFaces()
     # FirstCell : Function(facecoll : Collection Of Face) -> Collection Of Cell On facecoll
-    # first : Collection Of Cell On internal_faces
-    first = FirstCell(internal_faces)
+    # first : Collection Of Cell On interior_faces
+    first = FirstCell(interior_faces)
     # SecondCell : Function(facecoll : Collection Of Face) -> Collection Of Cell On facecoll
-    # second : Collection Of Cell On internal_faces
-    second = SecondCell(internal_faces)
+    # second : Collection Of Cell On interior_faces
+    second = SecondCell(interior_faces)
     # Centroid : Function(cellcoll : Collection Of Cell) -> Collection of Vector On cellcoll
     # Centroid : Function(facecoll : Collection Of Face) -> Collection of Vector On facecoll
     # Centroid(first) : Collection of Vector On first
-    # Centroid(internal_faces) : Collection of Vector On internal_faces
-    # cdiff1 : Collection of Vector On internal_faces (since first is 'On' internal_faces)
-    cdiff1 = Centroid(first) - Centroid(internal_faces)        # Deduced type: Vector On internal_faces
-    cdiff2 = Centroid(second) - Centroid(internal_faces)       # Deduced type: Vector On internal_faces
-    p1 = permeability(first)                                   # Deduced type: Scalar On internal_faces
-    p2 = permeability(second)                                  # Deduced type: Scalar On internal_faces
-    a = Area(internal_faces)                                   # Deduced type: Scalar On internal_faces
-    halftrans1 = a * p1 * Dot(Normal(internal_faces), cdiff1) / Length(cdiff1)^2
-    halftrans2 = a * p2 * Dot(Normal(internal_faces), cdiff2) / Length(cdiff2)^2
+    # Centroid(interior_faces) : Collection of Vector On interior_faces
+    # cdiff1 : Collection of Vector On interior_faces (since first is 'On' interior_faces)
+    cdiff1 = Centroid(first) - Centroid(interior_faces)        # Deduced type: Vector On interior_faces
+    cdiff2 = Centroid(second) - Centroid(interior_faces)       # Deduced type: Vector On interior_faces
+    p1 = permeability On first                                 # Deduced type: Scalar On interior_faces
+    p2 = permeability On second                                # Deduced type: Scalar On interior_faces
+    a = |interior_faces|                                       # Deduced type: Scalar On interior_faces
+    halftrans1 = a * p1 * Dot(Normal(interior_faces), cdiff1) / Dot(cdiff1, cdiff1)
+    halftrans2 = a * p2 * Dot(Normal(interior_faces), cdiff2) / Dot(cdiff2, cdiff2)
     trans = 1.0 / (1.0/halftrans1 + 1.0/halftrans2)
-    return trans
+    -> trans
 }
 
-upstream : Function(flux : Scalar On InternalFaces(Grid),
-                    x    : Scalar On Cells(Grid))
-           -> Scalar On InternalFaces(Grid)
+upstream : Function(flux : Collection Of Scalar On InteriorFaces(), ...
+                    x    : Collection Of Scalar On AllCells()) ...
+                    -> Collection Of Scalar On InteriorFaces()
 upstream(flux, x) = {
-    x1 = x(FirstCell(InternalFaces(Grid)))
-    x2 = x(SecondCell(InternalFaces(Grid)))
-    return flux > 0 ? x1 : x2
+    x1 = x On FirstCell(InteriorFaces())
+    x2 = x On SecondCell(InteriorFaces())
+    -> flux# > 0 ? x1 : x2
 }
 
-# Deduced (and declared) type: Scalar On internal_faces
-trans : Scalar On internal_faces = computeTransmissibilities(perm)
+# Deduced (and declared) type: Scalar On interior_faces
+trans : Collection Of Scalar On InteriorFaces()
+trans = computeTransmissibilities(perm)
 
 # Variable quantities
-# Deduced (and declared) type: Scalar On internal_faces
-fluxes : Scalar On internal_faces = - trans * Gradient(p)
+# Deduced (and declared) type: Scalar On interior_faces
+computeFluxes : Function(p : Collection Of Scalar On AllCells()) ...
+                         -> Collection Of Scalar On InteriorFaces()
+computeFluxes(p) = {
+    -> - trans * Gradient(p)
+}
+
 # Deduced (and declared) type: Scalar On Cells(Grid)
-residual : Scalar On Cells(Grid) = u - u0 + (dt / vol) * Divergence(fluxes)
+computeResidual : Function(u  : Collection Of Scalar On AllCells(), ...
+                           u0 : Collection Of Scalar On AllCells(), ...
+                           dt : Scalar) ...
+                           -> Collection Of Scalar On AllCells()
+computeResidual(u, u0, dt) = 
+{
+    fluxes = computeFluxes(u)
+    -> u - u0 + (dt / vol) * Divergence(fluxes)
+}
 
 
-# solve takes a residual and the primary variable. The primary variable decides which objects need to be AD objects in
-# the back-end, the rule is the following:
-#  1. The primary variable must be AD.
-#  2. All objects that depend on an AD variable must be AD.
-# In this concrete case, { u, fluxes, residual } must be AD.
-NewtonSolve(residual, u)
+timesteps = UserSpecifiedSequenceOfScalar("timesteps")
+u_initial = UserSpecifiedCollectionOfScalar("u_initial", AllCells())
+u0 : Mutable Collection Of Scalar On AllCells()
+u0 = u_initial
 
-Output(u)
-Output(fluxes)
-
+For dt In timesteps {
+    computeResidualLocal : Function(u : Collection Of Scalar On AllCells()) -> Collection Of Scalar On AllCells()
+    computeResidualLocal(u) = {
+        -> computeResidual(u, u0, dt)
+    }
+    u_guess = u0
+    u = NewtonSolve(computeResidualLocal, u_guess)
+    Output("u", u)
+    u0 = u
+}
 
 
 
