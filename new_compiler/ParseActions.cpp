@@ -37,6 +37,14 @@ Node* handleIdentifier(const std::string& name)
         if (SymbolTable::isFunctionDeclared(name)) {
             return new FuncRefNode(name);
         } else {
+            // This is a small problem: we want the error below, to catch
+            // usage of undeclared identifiers, but the function start section
+            // would then generate errors, because we are not yet in the function
+            // scope.
+
+            // std::string e("unknown identifier ");
+            // e += name;
+            // yyerror(e.c_str());
             return new JustAnIdentifierNode(name);
         }
     }
