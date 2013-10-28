@@ -256,22 +256,10 @@ CollOfScalar EquelleRuntimeCPU::gradient(const CollOfScalar& cell_scalarfield) c
 }
 
 
-// CollOfScalarAD EquelleRuntimeCPU::gradient(const CollOfScalarAD& cell_scalarfield) const
-// {
-//     return ops_.grad * cell_scalarfield;
-// }
-
-
 CollOfScalar EquelleRuntimeCPU::negGradient(const CollOfScalar& cell_scalarfield) const
 {
     return ops_.ngrad * cell_scalarfield;//.matrix();
 }
-
-
-// CollOfScalarAD EquelleRuntimeCPU::negGradient(const CollOfScalarAD& cell_scalarfield) const
-// {
-//     return ops_.ngrad * cell_scalarfield;
-// }
 
 
 CollOfScalar EquelleRuntimeCPU::divergence(const CollOfScalar& face_fluxes) const
@@ -285,27 +273,10 @@ CollOfScalar EquelleRuntimeCPU::divergence(const CollOfScalar& face_fluxes) cons
 }
 
 
-// CollOfScalarAD EquelleRuntimeCPU::divergence(const CollOfScalarAD& face_fluxes) const
-// {
-//     if (face_fluxes.size() == ops_.internal_faces.size()) {
-//         // This is actually a hack, the compiler should know to emit interiorDivergence()
-//         // eventually, but as a temporary measure we do this.
-//         return interiorDivergence(face_fluxes);
-//     }
-//     return ops_.fulldiv * face_fluxes;
-// }
-
-
 CollOfScalar EquelleRuntimeCPU::interiorDivergence(const CollOfScalar& face_fluxes) const
 {
     return ops_.div * face_fluxes;//.matrix();
 }
-
-
-// CollOfScalarAD EquelleRuntimeCPU::interiorDivergence(const CollOfScalarAD& face_fluxes) const
-// {
-//     return ops_.div * face_fluxes;
-// }
 
 
 CollOfBool EquelleRuntimeCPU::isEmpty(const CollOfCell& cells) const
@@ -334,7 +305,7 @@ CollOfBool EquelleRuntimeCPU::isEmpty(const CollOfFace& faces) const
 }
 
 
-CollOfScalar EquelleRuntimeCPU::solveForUpdate(const CollOfScalarAD& residual) const
+CollOfScalar EquelleRuntimeCPU::solveForUpdate(const CollOfScalar& residual) const
 {
     Eigen::SparseMatrix<double, Eigen::RowMajor> matr = residual.derivative()[0];
 
@@ -367,12 +338,6 @@ double EquelleRuntimeCPU::twoNorm(const CollOfScalar& vals) const
 {
     return vals.value().matrix().norm();
 }
-
-
-// double EquelleRuntimeCPU::twoNorm(const CollOfScalarAD& vals) const
-// {
-//     return twoNorm(vals.value());
-// }
 
 
 void EquelleRuntimeCPU::output(const String& tag, const double val) const
@@ -409,13 +374,6 @@ void EquelleRuntimeCPU::output(const String& tag, const CollOfScalar& vals)
         std::cout << std::endl;
     }
 }
-
-
-
-// void EquelleRuntimeCPU::output(const String& tag, const CollOfScalarAD& vals)
-// {
-//     output(tag, vals.value());
-// }
 
 
 Scalar EquelleRuntimeCPU::userSpecifiedScalarWithDefault(const String& name,
@@ -463,10 +421,10 @@ SeqOfScalar EquelleRuntimeCPU::userSpecifiedSequenceOfScalar(const String& name)
 }
 
 
-CollOfScalarAD EquelleRuntimeCPU::singlePrimaryVariable(const CollOfScalar& initial_values)
+CollOfScalar EquelleRuntimeCPU::singlePrimaryVariable(const CollOfScalar& initial_values)
 {
     std::vector<int> block_pattern;
     block_pattern.push_back(initial_values.size());
-    // Syntax below is: CollOfScalarAD::variable(block index, initialized from, block structure)
-    return CollOfScalarAD::variable(0, initial_values.value(), block_pattern);
+    // Syntax below is: CollOfScalar::variable(block index, initialized from, block structure)
+    return CollOfScalar::variable(0, initial_values.value(), block_pattern);
 }

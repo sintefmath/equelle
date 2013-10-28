@@ -15,7 +15,7 @@ template <class EntityCollection>
 CollOfScalar EquelleRuntimeCPU::operatorOn(const double data,
                                            const EntityCollection& to_set)
 {
-    return CollOfScalar(CollOfScalarAD::V::Constant(to_set.size(), data));
+    return CollOfScalar(CollOfScalar::V::Constant(to_set.size(), data));
 }
 
 
@@ -155,9 +155,9 @@ SomeCollection EquelleRuntimeCPU::trinaryIf(const CollOfBool& predicate,
 
 
 template <>
-inline CollOfScalarAD EquelleRuntimeCPU::trinaryIf(const CollOfBool& predicate,
-                                                   const CollOfScalarAD& iftrue,
-                                                   const CollOfScalarAD& iffalse) const
+inline CollOfScalar EquelleRuntimeCPU::trinaryIf(const CollOfBool& predicate,
+                                                 const CollOfScalar& iftrue,
+                                                 const CollOfScalar& iffalse) const
 {
     const int sz = predicate.size();
     assert(sz == iftrue.size() && sz == iffalse.size());
@@ -169,7 +169,7 @@ inline CollOfScalarAD EquelleRuntimeCPU::trinaryIf(const CollOfBool& predicate,
             falseones[i] = 1.0;
         }
     }
-    CollOfScalarAD retval = iftrue * trueones + iffalse * falseones;
+    CollOfScalar retval = iftrue * trueones + iffalse * falseones;
     return retval;
 }
 
@@ -182,12 +182,12 @@ CollOfScalar EquelleRuntimeCPU::newtonSolve(const ResidualFunctor& rescomp,
     clock.start();
 
     // Set up Newton loop.
-    CollOfScalarAD u = singlePrimaryVariable(u_initialguess);
+    CollOfScalar u = singlePrimaryVariable(u_initialguess);
     if (verbose_ > 2) {
         output("Initial u", u);
         output("norm", twoNorm(u));
     }
-    CollOfScalarAD residual = rescomp(u);
+    CollOfScalar residual = rescomp(u);
     if (verbose_ > 2) {
         output("Initial residual", residual);
         output("norm", twoNorm(residual));

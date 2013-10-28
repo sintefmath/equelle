@@ -43,39 +43,40 @@ typedef double Scalar;
 typedef bool Bool;
 typedef std::string String;
 
-/// Types from opm-autodiff and Eigen.
-
-// The following trick lets us automatically convert CollOfScalar to CollOfScalarAD
-//typedef Opm::AutoDiffBlock<Scalar> CollOfScalarAD;
-typedef Opm::AutoDiffBlock<Scalar> ADB;
-struct CollOfScalarAD : public ADB
+/// The Collection Of Scalar type is based on Eigen and opm-autodiff.
+/// It uses inheritance to provide extra interfaces for ease of use,
+/// notably converting constructors.
+class CollOfScalar : public Opm::AutoDiffBlock<double>
 {
-    CollOfScalarAD()
+public:
+    typedef Opm::AutoDiffBlock<double> ADB;
+    //typedef ADB::V V;
+    CollOfScalar()
         : ADB(ADB::null())
     {
     }
-    CollOfScalarAD(const ADB& adb)
+    CollOfScalar(const ADB& adb)
         : ADB(adb)
     {
     }
-    CollOfScalarAD(const ADB::V& x)
+    CollOfScalar(const ADB::V& x)
         : ADB(ADB::constant(x))
     {
     }
 };
 
-inline CollOfScalarAD operator-(const CollOfScalarAD& x)
+/// This operator is not provided by AutoDiffBlock, so must add it here.
+inline CollOfScalar operator-(const CollOfScalar& x)
 {
-    return CollOfScalarAD::V::Zero(x.size()) - x;
+    return CollOfScalar::V::Zero(x.size()) - x;
 }
 
-inline CollOfScalarAD operator/(const Scalar& s, const CollOfScalarAD& x)
+/// This operator is not provided by AutoDiffBlock, so must add it here.
+inline CollOfScalar operator/(const Scalar& s, const CollOfScalar& x)
 {
-    return CollOfScalarAD::V::Constant(x.size(), s)/x;
+    return CollOfScalar::V::Constant(x.size(), s)/x;
 }
 
-// typedef ADB::V CollOfScalar;
-typedef CollOfScalarAD CollOfScalar;
 typedef Eigen::Array<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> CollOfVector;
 typedef Eigen::Array<bool, Eigen::Dynamic, 1> CollOfBool;
 typedef std::vector<Scalar> SeqOfScalar;
@@ -108,13 +109,9 @@ public:
 
     /// Operators.
     CollOfScalar gradient(const CollOfScalar& cell_scalarfield) const;
-    // CollOfScalarAD gradient(const CollOfScalarAD& cell_scalarfield) const;
     CollOfScalar negGradient(const CollOfScalar& cell_scalarfield) const;
-    // CollOfScalarAD negGradient(const CollOfScalarAD& cell_scalarfield) const;
     CollOfScalar divergence(const CollOfScalar& face_fluxes) const;
-    // CollOfScalarAD divergence(const CollOfScalarAD& face_fluxes) const;
     CollOfScalar interiorDivergence(const CollOfScalar& face_fluxes) const;
-    // CollOfScalarAD interiorDivergence(const CollOfScalarAD& face_fluxes) const;
     CollOfBool isEmpty(const CollOfCell& cells) const;
     CollOfBool isEmpty(const CollOfFace& faces) const;
     template <class EntityCollection>
@@ -135,7 +132,6 @@ public:
     /// Output.
     void output(const String& tag, Scalar val) const;
     void output(const String& tag, const CollOfScalar& vals);
-    // void output(const String& tag, const CollOfScalarAD& vals);
 
     /// Input.
     Scalar userSpecifiedScalarWithDefault(const String& name,
@@ -153,14 +149,13 @@ private:
     bool boundaryCell(const int cell_index) const;
 
     /// Creating primary variables.
-    static CollOfScalarAD singlePrimaryVariable(const CollOfScalar& initial_values);
+    static CollOfScalar singlePrimaryVariable(const CollOfScalar& initial_values);
 
     /// Solver helper.
-    CollOfScalar solveForUpdate(const CollOfScalarAD& residual) const;
+    CollOfScalar solveForUpdate(const CollOfScalar& residual) const;
 
     /// Norms.
     Scalar twoNorm(const CollOfScalar& vals) const;
-    // Scalar twoNorm(const CollOfScalarAD& vals) const;
 
     /// Data members.
     std::unique_ptr<Opm::GridManager> grid_manager_;
