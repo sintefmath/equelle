@@ -1,0 +1,3 @@
+n = Normal(AllFaces())
+n2 = Dot(n, n)
+Output("squared normals", n2)
