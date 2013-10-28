@@ -547,6 +547,11 @@ SymbolTable::SymbolTable()
                             FunctionType({ Variable("values", EquelleType()) },
                                          EquelleType(Scalar, Collection, AllCells)));
     // 4. Other functions
+    functions_.emplace_back("Dot",
+                            FunctionType({ Variable("v1", EquelleType(Vector, Collection)),
+                                           Variable("v2", EquelleType(Vector, Collection)) },
+                                EquelleType(Scalar, Collection),
+                                {InvalidIndex, 0, InvalidIndex}));
     functions_.emplace_back("NewtonSolve",
                             FunctionType({ Variable("residual_function", EquelleType()),
                                            Variable("u", EquelleType()) },
