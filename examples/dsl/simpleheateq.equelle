@@ -1,40 +1,37 @@
-#! -*-sh-*-
 # Heat conduction with no boundary conditions or source terms.
 
 # Physics that requires specification
-k : Scalar = UserSpecifiedScalarWithDefault(0.3) # Heat diffusion constant.
+k : Scalar = UserSpecifiedScalarWithDefault("k", 0.3) # Heat diffusion constant.
 
 # @afr: time step strategy assumed given outside.
-dt : Scalar = UserSpecifiedScalarWithDefault(0.5) # Time step length.
+dt : Scalar = UserSpecifiedScalarWithDefault("dt", 0.5) # Time step length.
 
 # u0 should be given initial values (in user input)
-u0 : Collection Of Scalar On AllCells(Grid) = UserSpecifiedCollectionOfScalar( AllCells(Grid) )
+u0 : Collection Of Scalar On AllCells() = UserSpecifiedCollectionOfScalar("u0", AllCells())
 
 
 # Compute interior transmissibilities.
-vol = Volume(AllCells(Grid))                               # Deduced type:  Collection Of Scalar On AllCells()
-interior_faces = InteriorFaces(Grid)                       # Deduced type:  Collection Of Face
+vol = |AllCells()|                                         # Deduced type:  Collection Of Scalar On AllCells()
+interior_faces = InteriorFaces()                           # Deduced type:  Collection Of Face
 first = FirstCell(interior_faces)                          # Deduced type:  Collection Of Cell On interior_faces
 							   # Equivalent to: Collection Of Cell On InteriorFaces()
 second = SecondCell(interior_faces)                        # Deduced type:  Same as for 'first.'
-itrans  = k * Area(interior_faces) / EuclideanLength(Centroid(first) - Centroid(second))	
+itrans  = k * |interior_faces| / |Centroid(first) - Centroid(second)|
 
 
 # Compute flux for interior faces.
-computeInteriorFlux : Function(u :: Collection Of Scalar) -> Collection Of Scalar
-computeInteriorFlux = {
-    flux = -itrans * Gradient(u)
-	return flux
+computeInteriorFlux : Function(u : Collection Of Scalar On AllCells()) -> Collection Of Scalar On interior_faces
+computeInteriorFlux(u) = {
+    -> -itrans * Gradient(u)
 }
 
 
 # Compute the residual for the heat equation.
-computeResidual : Function(u :: Collection Of Scalar) -> Collection Of Scalar
-computeResidual = {
+computeResidual : Function(u : Collection Of Scalar On AllCells()) -> Collection Of Scalar On AllCells()
+computeResidual(u) = {
     ifluxes = computeInteriorFlux(u)    
-	# Deduced type: Collection Of Scalar On AllCells()
     residual = u - u0 + (dt / vol) * Divergence(ifluxes)
-	return residual
+    -> residual
 }
 
 
@@ -42,5 +39,5 @@ computeResidual = {
 explicitu = u0 - computeResidual(u0)
 u = NewtonSolve(computeResidual, u0)
 
-Output(explicitu)
-Output(u)
+Output("explicitu", explicitu)
+Output("u", u)

@@ -1,6 +1,5 @@
-/*
-  Copyright 2013 SINTEF ICT, Applied Mathematics.
-*/
+
+// This program was created by the Equelle compiler from SINTEF.
 
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <opm/core/linalg/LinearSolverFactory.hpp>
@@ -14,17 +13,7 @@
 #include <iostream>
 #include <cmath>
 
-#define DO_IMPLICIT 1
-#define USE_DUNE_ER 0
-
-#if USE_DUNE_ER
-#include "EquelleRuntimeDune.hpp"
-typedef EquelleRuntimeDune EquelleRuntime;
-#else
 #include "EquelleRuntimeCPU.hpp"
-typedef EquelleRuntimeCPU EquelleRuntime;
-#endif
-
 
 int main(int argc, char** argv)
 {
@@ -32,116 +21,32 @@ int main(int argc, char** argv)
     Opm::parameter::ParameterGroup param(argc, argv, false);
 
     // Create the Equelle runtime.
-    EquelleRuntime er(param);
+    EquelleRuntimeCPU er(param);
 
     // ============= Generated code starts here ================
 
-    // --------------------------------------------------------------------------------
-    // k : Scalar = UserSpecifiedScalarWithDefault(0.3) # Heat diffusion constant.
-    // dt : Scalar = UserSpecifiedScalarWithDefault(0.5) # Time step length.
-    // u0 : Collection Of Scalar On AllCells() = UserSpecifiedCollectionOfScalar( AllCells() )
-    // --------------------------------------------------------------------------------
-    const auto k = param.getDefault("k", 0.3);
-    const auto dt = param.getDefault("dt", 0.5);
-    const auto u0 = er.userSpecifiedCollectionOfScalar("u0", er.allCells());
-
-    // --------------------------------------------------------------------------------
-    // # Compute interior transmissibilities.
-    // vol = |AllCells()|                                         # Deduced type:  Collection Of Scalar On AllCells()
-    // interior_faces = InteriorFaces()                           # Deduced type:  Collection Of Face
-    // first = FirstCell(interior_faces)                          # Deduced type:  Collection Of Cell On interior_faces
-    // 							          # Equivalent to: Collection Of Cell On InteriorFaces()
-    // second = SecondCell(interior_faces)                        # Deduced type:  Same as for 'first'.
-    // itrans : Collection Of Scalar On interior_faces = k * |interior_faces| / |Centroid(first) - Centroid(second)|
-    // --------------------------------------------------------------------------------
-    const auto vol = er.norm(er.allCells());
-    const auto interior_faces = er.interiorFaces();
-    const auto first = er.firstCell(interior_faces);
-    const auto second = er.secondCell(interior_faces);
-    const CollOfScalar itrans = k * er.norm(interior_faces) / er.norm(er.centroid(first) - er.centroid(second));
-
-    // --------------------------------------------------------------------------------
-    // # Compute flux for interior faces.
-    // computeInteriorFlux : Function(u : Collection Of Scalar On AllCells()) -> Collection Of Scalar On InteriorFaces()
-    // computeInteriorFlux(u) = {
-    //     flux = -itrans * Gradient(u)
-    //     return flux
-    // }
-    // --------------------------------------------------------------------------------
-    auto computeInteriorFlux = [&](const CollOfScalar u) -> CollOfScalar {
-        const CollOfScalar flux = -itrans * er.gradient(u);
-        return flux;
+    const Scalar k = er.userSpecifiedScalarWithDefault("k", double(0.3));
+    const Scalar dt = er.userSpecifiedScalarWithDefault("dt", double(0.5));
+    const CollOfScalar u0 = er.userSpecifiedCollectionOfScalar("u0", er.allCells());
+    const CollOfScalar vol = er.norm(er.allCells());
+    const CollOfFace interior_faces = er.interiorFaces();
+    const CollOfCell first = er.firstCell(interior_faces);
+    const CollOfCell second = er.secondCell(interior_faces);
+    const CollOfScalar itrans = (k * (er.norm(interior_faces) / er.norm((er.centroid(first) - er.centroid(second)))));
+    auto computeInteriorFlux = [&](const CollOfScalar& u) -> CollOfScalar {
+        return (-itrans * er.gradient(u));
     };
-#if DO_IMPLICIT
-    auto computeInteriorFluxAD = [&](const CollOfScalarAD u) -> CollOfScalarAD {
-        const CollOfScalarAD flux = -itrans * er.gradient(u);
-        return flux;
-    };
-#endif
-
-    // --------------------------------------------------------------------------------
-    // # Compute the residual for the heat equation.
-    // computeResidual : Function(u : Collection Of Scalar On AllCells()) -> Collection Of Scalar On AllCells()
-    // computeResidual(u) = {
-    //     ifluxes = computeInteriorFlux(u)
-    //     # Deduced type: Collection Of Scalar On AllCells()
-    //     residual = u - u0 + (dt / vol) * Divergence(ifluxes)
-    //     return residual
-    // }
-    // --------------------------------------------------------------------------------
-    auto computeResidual = [&](const CollOfScalar u) -> CollOfScalar {
+    auto computeResidual = [&](const CollOfScalar& u) -> CollOfScalar {
         const CollOfScalar ifluxes = computeInteriorFlux(u);
-        const CollOfScalar residual = u - u0 + (dt / vol) * er.divergence(ifluxes);
+        const CollOfScalar residual = ((u - u0) + ((dt / vol) * er.divergence(ifluxes)));
         return residual;
     };
-#if DO_IMPLICIT
-    auto computeResidualAD = [&](const CollOfScalarAD u) -> CollOfScalarAD {
-        const CollOfScalarAD ifluxes = computeInteriorFluxAD(u);
-        const CollOfScalarAD residual = u - u0 + (dt / vol) * er.divergence(ifluxes);
-        return residual;
-    };
-#endif
-
-    // --------------------------------------------------------------------------------
-    // explicitu = u0 - computeResidual(u0)
-    // u = NewtonSolve(computeResidual, u0)
-    // --------------------------------------------------------------------------------
-    const CollOfScalar explicitu = u0 - computeResidual(u0);
-#if DO_IMPLICIT
-    const CollOfScalar u = er.newtonSolve(computeResidualAD, u0);
-#endif
-
-    // --------------------------------------------------------------------------------
-    // Output(explixitu)
-    // Output(u)
-    // --------------------------------------------------------------------------------
+    const CollOfScalar explicitu = (u0 - computeResidual(u0));
+    const CollOfScalar u = er.newtonSolve(computeResidual, u0);
     er.output("explicitu", explicitu);
-#if DO_IMPLICIT
     er.output("u", u);
-#endif
 
     // ============= Generated code ends here ================
 
-
     return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
