@@ -90,10 +90,7 @@ int main(int argc, char** argv)
     //     -> -itrans * Gradient(u)
     // }
     // --------------------------------------------------------------------------------
-    auto computeInteriorFlux = [&](CollOfScalar u) -> CollOfScalar {
-        return (-itrans * er.gradient(u));
-    };
-    auto ADcomputeInteriorFlux = [&](CollOfScalarAD u) -> CollOfScalarAD {
+    auto computeInteriorFlux = [&](const CollOfScalar& u) -> CollOfScalar {
         return (-itrans * er.gradient(u));
     };
 
@@ -108,14 +105,9 @@ int main(int argc, char** argv)
     //     -> dir_fluxes On BoundaryFaces()
     // }
     // --------------------------------------------------------------------------------
-    auto computeBoundaryFlux = [&](CollOfScalar u) -> CollOfScalar {
+    auto computeBoundaryFlux = [&](const CollOfScalar& u) -> CollOfScalar {
         const CollOfScalar u_dirbdycells = er.operatorOn(u, er.allCells(), er.operatorOn(bf_cells, er.boundaryFaces(), dirichlet_boundary));
         const CollOfScalar dir_fluxes = ((er.operatorOn(btrans, er.boundaryFaces(), dirichlet_boundary) * dir_sign) * (u_dirbdycells - dirichlet_val));
-        return er.operatorOn(dir_fluxes, dirichlet_boundary, er.boundaryFaces());
-    };
-    auto ADcomputeBoundaryFlux = [&](CollOfScalarAD u) -> CollOfScalarAD {
-        const CollOfScalarAD u_dirbdycells = er.operatorOn(u, er.allCells(), er.operatorOn(bf_cells, er.boundaryFaces(), dirichlet_boundary));
-        const CollOfScalarAD dir_fluxes = ((er.operatorOn(btrans, er.boundaryFaces(), dirichlet_boundary) * dir_sign) * (u_dirbdycells - dirichlet_val));
         return er.operatorOn(dir_fluxes, dirichlet_boundary, er.boundaryFaces());
     };
 
@@ -132,18 +124,11 @@ int main(int argc, char** argv)
     //     -> residual
     // }
     // --------------------------------------------------------------------------------
-    auto computeResidual = [&](CollOfScalar u) -> CollOfScalar {
+    auto computeResidual = [&](const CollOfScalar& u) -> CollOfScalar {
         const CollOfScalar ifluxes = computeInteriorFlux(u);
         const CollOfScalar bfluxes = computeBoundaryFlux(u);
         const CollOfScalar fluxes = (er.operatorOn(ifluxes, er.interiorFaces(), er.allFaces()) + er.operatorOn(bfluxes, er.boundaryFaces(), er.allFaces()));
         const CollOfScalar residual = ((u - u0) + ((dt / vol) * er.divergence(fluxes)));
-        return residual;
-    };
-    auto ADcomputeResidual = [&](CollOfScalarAD u) -> CollOfScalarAD {
-        const CollOfScalarAD ifluxes = ADcomputeInteriorFlux(u);
-        const CollOfScalarAD bfluxes = ADcomputeBoundaryFlux(u);
-        const CollOfScalarAD fluxes = (er.operatorOn(ifluxes, er.interiorFaces(), er.allFaces()) + er.operatorOn(bfluxes, er.boundaryFaces(), er.allFaces()));
-        const CollOfScalarAD residual = ((u - u0) + ((dt / vol) * er.divergence(fluxes)));
         return residual;
     };
 
@@ -152,7 +137,7 @@ int main(int argc, char** argv)
     // u = NewtonSolve(computeResidual, u0)
     // --------------------------------------------------------------------------------
     const CollOfScalar explicitu = (u0 - computeResidual(u0));
-    const CollOfScalar u = er.newtonSolve(ADcomputeResidual, u0);
+    const CollOfScalar u = er.newtonSolve(computeResidual, u0);
 
     // --------------------------------------------------------------------------------
     // Output("explicitu", explicitu)
