@@ -28,7 +28,7 @@ FLOAT    {INT}[.]{INT}
 BLANKS   [\t ]+
 STRING   \"(\\.|[^\\"])*\"
 SINGLES  [:=()+\-*/^<>{},|?\[\]]
-ELLIPSIS [...]
+ELLIPSIS [.][.][.]
 LINECONT {ELLIPSIS}[\t ]*\n
 
 %option yylineno
