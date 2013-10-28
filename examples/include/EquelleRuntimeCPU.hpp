@@ -43,6 +43,11 @@ typedef double Scalar;
 typedef bool Bool;
 typedef std::string String;
 
+// Collections and sequences (apart from Collection Of Scalar).
+typedef Eigen::Array<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> CollOfVector;
+typedef Eigen::Array<bool, Eigen::Dynamic, 1> CollOfBool;
+typedef std::vector<Scalar> SeqOfScalar;
+
 /// The Collection Of Scalar type is based on Eigen and opm-autodiff.
 /// It uses inheritance to provide extra interfaces for ease of use,
 /// notably converting constructors.
@@ -65,21 +70,54 @@ public:
     }
 };
 
-/// This operator is not provided by AutoDiffBlock, so must add it here.
+/// This operator is not provided by AutoDiffBlock, so we must add it here.
 inline CollOfScalar operator-(const CollOfScalar& x)
 {
     return CollOfScalar::V::Zero(x.size()) - x;
 }
 
-/// This operator is not provided by AutoDiffBlock, so must add it here.
+/// This operator is not provided by AutoDiffBlock, so we must add it here.
 inline CollOfScalar operator/(const Scalar& s, const CollOfScalar& x)
 {
     return CollOfScalar::V::Constant(x.size(), s)/x;
 }
 
-typedef Eigen::Array<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> CollOfVector;
-typedef Eigen::Array<bool, Eigen::Dynamic, 1> CollOfBool;
-typedef std::vector<Scalar> SeqOfScalar;
+/// This operator is not provided by AutoDiffBlock, so we must add it here.
+inline CollOfBool operator<(const Scalar& s, const CollOfScalar& x)
+{
+    return s < x.value();
+}
+
+/// This operator is not provided by AutoDiffBlock, so we must add it here.
+        inline CollOfBool operator<(const CollOfScalar& x, const Scalar& s)
+{
+    return x.value() < s;
+}
+
+/// This operator is not provided by AutoDiffBlock, so we must add it here.
+inline CollOfBool operator>(const Scalar& s, const CollOfScalar& x)
+{
+    return s > x.value();
+}
+
+/// This operator is not provided by AutoDiffBlock, so we must add it here.
+inline CollOfBool operator>(const CollOfScalar& x, const Scalar& s)
+{
+    return x.value() > s;
+}
+
+/// This operator is not provided by AutoDiffBlock, so we must add it here.
+inline CollOfBool operator<(const CollOfScalar& x, const CollOfScalar& y)
+{
+    return x.value() < y.value();
+}
+
+/// This operator is not provided by AutoDiffBlock, so we must add it here.
+inline CollOfBool operator>(const CollOfScalar& x, const CollOfScalar& y)
+{
+    return x.value() > y.value();
+}
+
 
 
 
