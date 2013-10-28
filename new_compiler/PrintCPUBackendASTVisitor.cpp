@@ -108,6 +108,44 @@ void PrintCPUBackendASTVisitor::postVisit(BinaryOpNode&)
     std::cout << ')';
 }
 
+void PrintCPUBackendASTVisitor::visit(ComparisonOpNode&)
+{
+    std::cout << '(';
+}
+
+void PrintCPUBackendASTVisitor::midVisit(ComparisonOpNode& node)
+{
+    std::string op(" ");
+    switch (node.op()) {
+    case Less:
+        op = "<";
+        break;
+    case Greater:
+        op = ">";
+        break;
+    case LessEqual:
+        op = "<=";
+        break;
+    case GreaterEqual:
+        op = ">=";
+        break;
+    case Equal:
+        op = "==";
+        break;
+    case NotEqual:
+        op = "!=";
+        break;
+    default:
+        break;
+    }
+    std::cout << ' ' << op << ' ';
+}
+
+void PrintCPUBackendASTVisitor::postVisit(ComparisonOpNode&)
+{
+    std::cout << ')';
+}
+
 void PrintCPUBackendASTVisitor::visit(NormNode&)
 {
     std::cout << "er.norm(";

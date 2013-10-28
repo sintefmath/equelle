@@ -207,6 +207,39 @@ private:
 
 
 
+enum ComparisonOp { Less, Greater, LessEqual, GreaterEqual, Equal, NotEqual };
+
+
+class ComparisonOpNode : public Node
+{
+public:
+    ComparisonOpNode(ComparisonOp op, Node* left, Node* right) : op_(op), left_(left), right_(right) {}
+    EquelleType type() const
+    {
+        EquelleType lt = left_->type();
+        return EquelleType(Bool, lt.compositeType(), lt.gridMapping());
+    }
+    ComparisonOp op() const
+    {
+        return op_;
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        left_->accept(visitor);
+        visitor.midVisit(*this);
+        right_->accept(visitor);
+        visitor.postVisit(*this);
+    }
+private:
+    ComparisonOp op_;
+    Node* left_;
+    Node* right_;
+};
+
+
+
+
 class NormNode : public Node
 {
 public:

@@ -25,6 +25,9 @@ public:
     void visit(BinaryOpNode& node);
     void midVisit(BinaryOpNode& node);
     void postVisit(BinaryOpNode& node);
+    void visit(ComparisonOpNode& node);
+    void midVisit(ComparisonOpNode& node);
+    void postVisit(ComparisonOpNode& node);
     void visit(NormNode& node);
     void postVisit(NormNode& node);
     void visit(UnaryNegationNode& node);

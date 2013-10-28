@@ -88,6 +88,44 @@ void PrintEquelleASTVisitor::postVisit(BinaryOpNode&)
     std::cout << ')';
 }
 
+void PrintEquelleASTVisitor::visit(ComparisonOpNode&)
+{
+    std::cout << '(';
+}
+
+void PrintEquelleASTVisitor::midVisit(ComparisonOpNode& node)
+{
+    std::string op(" ");
+    switch (node.op()) {
+    case Less:
+        op = "<";
+        break;
+    case Greater:
+        op = ">";
+        break;
+    case LessEqual:
+        op = "<=";
+        break;
+    case GreaterEqual:
+        op = ">=";
+        break;
+    case Equal:
+        op = "==";
+        break;
+    case NotEqual:
+        op = "!=";
+        break;
+    default:
+        break;
+    }
+    std::cout << ' ' << op << ' ';
+}
+
+void PrintEquelleASTVisitor::postVisit(ComparisonOpNode&)
+{
+    std::cout << ')';
+}
+
 void PrintEquelleASTVisitor::visit(NormNode&)
 {
     std::cout << '|';

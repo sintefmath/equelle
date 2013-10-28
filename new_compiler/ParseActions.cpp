@@ -249,8 +249,8 @@ BinaryOpNode* handleBinaryOp(BinaryOp op, Node* left, Node* right)
     }
     if (lt.isCollection() && rt.isCollection()) {
         if (lt.gridMapping() != rt.gridMapping()) {
-            yyerror("arithmetic binary operators on 'Collection's only acceptable "
-                    "if both sides are 'On' the same set.");
+            yyerror("arithmetic binary operators on Collections only acceptable "
+                    "if both sides are On the same set.");
         }
     }
     switch (op) {
@@ -275,6 +275,24 @@ BinaryOpNode* handleBinaryOp(BinaryOp op, Node* left, Node* right)
         yyerror("internal compiler error in handleBinaryOp().");
     }
     return new BinaryOpNode(op, left, right);
+}
+
+
+
+ComparisonOpNode* handleComparison(ComparisonOp op, Node* left, Node* right)
+{
+    EquelleType lt = left->type();
+    EquelleType rt = right->type();
+    if ((lt.basicType() != Scalar) || (rt.basicType() != Scalar)) {
+        yyerror("comparison operators can only be applied to scalars");
+    }
+    if (lt.isCollection() && rt.isCollection()) {
+        if (lt.gridMapping() != rt.gridMapping()) {
+            yyerror("comparison operators on Collections only acceptable "
+                    "if both sides are On the same set.");
+        }
+    }
+    return new ComparisonOpNode(op, left, right);
 }
 
 

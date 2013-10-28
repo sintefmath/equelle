@@ -12,6 +12,7 @@ class StringNode;
 class TypeNode;
 class FuncTypeNode;
 class BinaryOpNode;
+class ComparisonOpNode;
 class NormNode;
 class UnaryNegationNode;
 class OnNode;
@@ -45,6 +46,9 @@ public:
     virtual void visit(BinaryOpNode& node) = 0;
     virtual void midVisit(BinaryOpNode& node) = 0;
     virtual void postVisit(BinaryOpNode& node) = 0;
+    virtual void visit(ComparisonOpNode& node) = 0;
+    virtual void midVisit(ComparisonOpNode& node) = 0;
+    virtual void postVisit(ComparisonOpNode& node) = 0;
     virtual void visit(NormNode& node) = 0;
     virtual void postVisit(NormNode& node) = 0;
     virtual void visit(UnaryNegationNode& node) = 0;

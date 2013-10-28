@@ -76,6 +76,36 @@ void PrintASTVisitor::visit(BinaryOpNode& node)
     ++indent_;
 }
 
+void PrintASTVisitor::visit(ComparisonOpNode& node)
+{
+    std::string op(" ");
+    switch (node.op()) {
+    case Less:
+        op = "<";
+        break;
+    case Greater:
+        op = ">";
+        break;
+    case LessEqual:
+        op = "<=";
+        break;
+    case GreaterEqual:
+        op = ">=";
+        break;
+    case Equal:
+        op = "==";
+        break;
+    case NotEqual:
+        op = "!=";
+        break;
+    default:
+        break;
+    }
+    std::cout << indent() << "ComparisonOpNode: " << op << '\n';
+
+    ++indent_;
+}
+
 void PrintASTVisitor::visit(NormNode&)
 {
     std::cout << indent() << "NormNode\n";
@@ -199,6 +229,15 @@ void PrintASTVisitor::midVisit(BinaryOpNode&)
 }
 
 void PrintASTVisitor::postVisit(BinaryOpNode&)
+{
+    --indent_;
+}
+
+void PrintASTVisitor::midVisit(ComparisonOpNode&)
+{
+}
+
+void PrintASTVisitor::postVisit(ComparisonOpNode&)
 {
     --indent_;
 }

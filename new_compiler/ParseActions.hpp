@@ -46,6 +46,8 @@ FuncCallStatementNode* handleFuncCallStatement(FuncCallNode* fcall);
 
 BinaryOpNode* handleBinaryOp(BinaryOp op, Node* left, Node* right);
 
+ComparisonOpNode* handleComparison(ComparisonOp op, Node* left, Node* right);
+
 NormNode* handleNorm(Node* expr_to_norm);
 
 UnaryNegationNode* handleUnaryNegation(Node* expr_to_negate);
