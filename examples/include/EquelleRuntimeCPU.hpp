@@ -106,8 +106,10 @@ public:
     CollOfScalar norm(const CollOfVector& vectors) const;
     CollOfVector centroid(const CollOfFace& faces) const;
     CollOfVector centroid(const CollOfCell& cells) const;
+    CollOfVector normal(const CollOfFace& faces) const;
 
-    /// Operators.
+    /// Operators and math functions.
+    CollOfScalar dot(const CollOfVector& v1, const CollOfVector& v2) const;
     CollOfScalar gradient(const CollOfScalar& cell_scalarfield) const;
     CollOfScalar negGradient(const CollOfScalar& cell_scalarfield) const;
     CollOfScalar divergence(const CollOfScalar& face_fluxes) const;

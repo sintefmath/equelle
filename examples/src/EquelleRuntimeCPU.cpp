@@ -250,6 +250,42 @@ CollOfVector EquelleRuntimeCPU::centroid(const CollOfCell& cells) const
 }
 
 
+CollOfVector EquelleRuntimeCPU::normal(const CollOfFace& faces) const
+{
+    const int n = faces.size();
+    const int dim = grid_.dimensions;
+    CollOfVector normals(n, dim);
+    for (int i = 0; i < n; ++i) {
+        const double* fn = grid_.face_normals + dim * faces[i].index;
+        for (int d = 0; d < dim; ++d) {
+            normals(i, d) = fn[d];
+        }
+    }
+    // Since the UnstructuredGrid uses the unorthodox convention that face
+    // normals are scaled with the face areas, we must renormalize them.
+    normals.colwise() /= normals.matrix().rowwise().norm().array();
+    return normals;
+}
+
+
+CollOfScalar EquelleRuntimeCPU::dot(const CollOfVector& v1, const CollOfVector& v2) const
+{
+    if (v1.size() != v2.size()) {
+        OPM_THROW(std::logic_error, "Non-matching size of collections for dot().");
+    }
+    const int n = v1.rows();
+    const int dim = grid_.dimensions;
+    CollOfScalar::V result(n);
+    for (int i = 0; i < n; ++i) {
+        result[i] = 0.0;
+        for (int d = 0; d < dim; ++d) {
+            result[i] += v1(i,d) * v2(i,d);
+        }
+    }
+    return result;
+}
+
+
 CollOfScalar EquelleRuntimeCPU::gradient(const CollOfScalar& cell_scalarfield) const
 {
     return ops_.grad * cell_scalarfield;//.matrix();
