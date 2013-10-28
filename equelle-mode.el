@@ -30,6 +30,13 @@
 ;; mode creation. The tutorial can be found here:
 ;; http://two-wugs.net/emacs/mode-tutorial.html
 
+;; How to install this mode:
+;; 1. Put this file in your .emacs.d/ directory.
+;; 2. Put the following in your .emacs file:
+;;
+;;    (require 'equelle-mode)
+;;
+
 ;;; Code:
 (defvar equelle-mode-hook nil)
 (defvar equelle-mode-map
@@ -42,24 +49,20 @@
 
 (defconst equelle-font-lock-keywords-1
   (list
-   '("\\<\\(Collection\\|Of\\|On\\|Subset\\|Scalar\\|Vector\\|Bool\\|Cell\\|Face\\|Edge\\|Vertex\\|Function\\|And\\|Or\\|Not\\|Xor\\)\\>" . font-lock-keyword-face)
+   '("\\<\\(Collection\\|Sequence\\|Of\\|On\\|In\\|Mutable\\|Subset\\|Scalar\\|Vector\\|Bool\\|Cell\\|Face\\|Edge\\|Vertex\\|Function\\|For\\|And\\|Or\\|Not\\|Xor\\)\\>" . font-lock-keyword-face)
    '("\\('\\w*'\\)" . font-lock-variable-name-face))
   "Minimal highlighting expressions for Equelle mode.")
 
 (defconst equelle-font-lock-keywords-2
   (append equelle-font-lock-keywords-1
 		  (list
-		   '("\\<\\(InteriorCells\\|BoundaryCells\\|AllCells\\|InteriorFaces\\|BoundaryFaces\\|AllFaces\\|InteriorEdges\\|BoundaryEdges\\|AllEdges\\|InteriorVertices\\|BoundaryVertices\\|AllVertices\\|FirstCell\\|SeconCell\\|IsEmpty\\|Centroid\\|Normal\\|UserSpecifiedScalarWithDefault\\|UserSpecifiedCollectionOfScalar\\|UserSpecifiedCollectionOfFaceSubsetOf\\|Gradient\\|Divergence\\|NewtonSolve\\|Output\\)\\>" . font-lock-builtin-face)
+		   '("\\<\\(InteriorCells\\|BoundaryCells\\|AllCells\\|InteriorFaces\\|BoundaryFaces\\|AllFaces\\|InteriorEdges\\|BoundaryEdges\\|AllEdges\\|InteriorVertices\\|BoundaryVertices\\|AllVertices\\|FirstCell\\|SeconCell\\|IsEmpty\\|Centroid\\|Normal\\|UserSpecifiedScalarWithDefault\\|UserSpecifiedCollectionOfScalar\\|UserSpecifiedCollectionOfFaceSubsetOf\\|UserSpecifiedSequenceOfScalar\\|Gradient\\|Divergence\\|NewtonSolve\\|Output\\)\\>" . font-lock-builtin-face)
 		   '("\\<\\(True\\|False\\)\\>" . font-lock-constant-face)))
   "Additional Keywords to highlight in Equelle mode.")
 
 (defconst equelle-font-lock-keywords-3
   (append equelle-font-lock-keywords-2
 		  (list
-		 ; These are some possible built-in values for Equelle attributes
-			 ; "ROLE" "ORGANISATIONAL_UNIT" "STRING" "REFERENCE" "AND"
-			 ; "XOR" "WORKFLOW" "SYNCHR" "NO" "APPLICATIONS" "BOOLEAN"
-							 ; "INTEGER" "HUMAN" "UNDER_REVISION" "OR"
 		   '("\\<\\(A\\(ND\\|PPLICATIONS\\)\\|BOOLEAN\\|HUMAN\\|INTEGER\\|NO\\|OR\\(GANISATIONAL_UNIT\\)?\\|R\\(EFERENCE\\|OLE\\)\\|S\\(TRING\\|YNCHR\\)\\|UNDER_REVISION\\|WORKFLOW\\|XOR\\)\\>" . font-lock-constant-face)))
   "Balls-out highlighting in Equelle mode.")
 
@@ -73,23 +76,23 @@
   (if (bobp)
 	  (indent-line-to 0)		   ; First line is always non-indented
 	(let ((not-indented t) cur-indent)
-	  (if (looking-at "^[ \t]*END_") ; If the line we are looking at is the end of a block, then decrease the indentation
+	  (if (looking-at ".*}.*") ; If the line we are looking at is the end of a block, then decrease the indentation
 		  (progn
 			(save-excursion
 			  (forward-line -1)
-			  (setq cur-indent (- (current-indentation) default-tab-width)))
+			  (setq cur-indent (- (current-indentation) 4)))
 			(if (< cur-indent 0) ; We can't indent past the left margin
 				(setq cur-indent 0)))
 		(save-excursion
 		  (while not-indented ; Iterate backwards until we find an indentation hint
 			(forward-line -1)
-			(if (looking-at "^[ \t]*END_") ; This hint indicates that we need to indent at the level of the END_ token
+			(if (looking-at ".*}.*") ; This hint indicates that we need to indent at the level of the } token
 				(progn
 				  (setq cur-indent (current-indentation))
 				  (setq not-indented nil))
-			  (if (looking-at "^[ \t]*\\(PARTICIPANT\\|MODEL\\|APPLICATION\\|WORKFLOW\\|ACTIVITY\\|DATA\\|TOOL_LIST\\|TRANSITION\\)") ; This hint indicates that we need to indent an extra level
+			  (if (looking-at ".*{.*") ; This hint indicates that we need to indent an extra level
 				  (progn
-					(setq cur-indent (+ (current-indentation) default-tab-width)) ; Do the actual indenting
+					(setq cur-indent (+ (current-indentation) 4)) ; Do the actual indenting
 					(setq not-indented nil))
 				(if (bobp)
 					(setq not-indented nil)))))))
