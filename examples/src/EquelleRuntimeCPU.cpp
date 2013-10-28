@@ -195,7 +195,7 @@ CollOfCell EquelleRuntimeCPU::secondCell(const CollOfFace& faces) const
 CollOfScalar EquelleRuntimeCPU::norm(const CollOfFace& faces) const
 {
     const int n = faces.size();
-    CollOfScalar areas(n);
+    CollOfScalar::V areas(n);
     for (int i = 0; i < n; ++i) {
         areas[i] = grid_.face_areas[faces[i].index];
     }
@@ -206,7 +206,7 @@ CollOfScalar EquelleRuntimeCPU::norm(const CollOfFace& faces) const
 CollOfScalar EquelleRuntimeCPU::norm(const CollOfCell& cells) const
 {
     const int n = cells.size();
-    CollOfScalar volumes(n);
+    CollOfScalar::V volumes(n);
     for (int i = 0; i < n; ++i) {
         volumes[i] = grid_.cell_volumes[cells[i].index];
     }
@@ -216,7 +216,7 @@ CollOfScalar EquelleRuntimeCPU::norm(const CollOfCell& cells) const
 
 CollOfScalar EquelleRuntimeCPU::norm(const CollOfVector& vectors) const
 {
-    return vectors.matrix().rowwise().norm();
+    return CollOfScalar::V(vectors.matrix().rowwise().norm());
 }
 
 
@@ -252,26 +252,26 @@ CollOfVector EquelleRuntimeCPU::centroid(const CollOfCell& cells) const
 
 CollOfScalar EquelleRuntimeCPU::gradient(const CollOfScalar& cell_scalarfield) const
 {
-    return ops_.grad * cell_scalarfield.matrix();
+    return ops_.grad * cell_scalarfield;//.matrix();
 }
 
 
-CollOfScalarAD EquelleRuntimeCPU::gradient(const CollOfScalarAD& cell_scalarfield) const
-{
-    return ops_.grad * cell_scalarfield;
-}
+// CollOfScalarAD EquelleRuntimeCPU::gradient(const CollOfScalarAD& cell_scalarfield) const
+// {
+//     return ops_.grad * cell_scalarfield;
+// }
 
 
 CollOfScalar EquelleRuntimeCPU::negGradient(const CollOfScalar& cell_scalarfield) const
 {
-    return ops_.ngrad * cell_scalarfield.matrix();
+    return ops_.ngrad * cell_scalarfield;//.matrix();
 }
 
 
-CollOfScalarAD EquelleRuntimeCPU::negGradient(const CollOfScalarAD& cell_scalarfield) const
-{
-    return ops_.ngrad * cell_scalarfield;
-}
+// CollOfScalarAD EquelleRuntimeCPU::negGradient(const CollOfScalarAD& cell_scalarfield) const
+// {
+//     return ops_.ngrad * cell_scalarfield;
+// }
 
 
 CollOfScalar EquelleRuntimeCPU::divergence(const CollOfScalar& face_fluxes) const
@@ -281,31 +281,31 @@ CollOfScalar EquelleRuntimeCPU::divergence(const CollOfScalar& face_fluxes) cons
         // eventually, but as a temporary measure we do this.
         return interiorDivergence(face_fluxes);
     }
-    return ops_.fulldiv * face_fluxes.matrix();
+    return ops_.fulldiv * face_fluxes;//.matrix();
 }
 
 
-CollOfScalarAD EquelleRuntimeCPU::divergence(const CollOfScalarAD& face_fluxes) const
-{
-    if (face_fluxes.size() == ops_.internal_faces.size()) {
-        // This is actually a hack, the compiler should know to emit interiorDivergence()
-        // eventually, but as a temporary measure we do this.
-        return interiorDivergence(face_fluxes);
-    }
-    return ops_.fulldiv * face_fluxes;
-}
+// CollOfScalarAD EquelleRuntimeCPU::divergence(const CollOfScalarAD& face_fluxes) const
+// {
+//     if (face_fluxes.size() == ops_.internal_faces.size()) {
+//         // This is actually a hack, the compiler should know to emit interiorDivergence()
+//         // eventually, but as a temporary measure we do this.
+//         return interiorDivergence(face_fluxes);
+//     }
+//     return ops_.fulldiv * face_fluxes;
+// }
 
 
 CollOfScalar EquelleRuntimeCPU::interiorDivergence(const CollOfScalar& face_fluxes) const
 {
-    return ops_.div * face_fluxes.matrix();
+    return ops_.div * face_fluxes;//.matrix();
 }
 
 
-CollOfScalarAD EquelleRuntimeCPU::interiorDivergence(const CollOfScalarAD& face_fluxes) const
-{
-    return ops_.div * face_fluxes;
-}
+// CollOfScalarAD EquelleRuntimeCPU::interiorDivergence(const CollOfScalarAD& face_fluxes) const
+// {
+//     return ops_.div * face_fluxes;
+// }
 
 
 CollOfBool EquelleRuntimeCPU::isEmpty(const CollOfCell& cells) const
@@ -338,7 +338,7 @@ CollOfScalar EquelleRuntimeCPU::solveForUpdate(const CollOfScalarAD& residual) c
 {
     Eigen::SparseMatrix<double, Eigen::RowMajor> matr = residual.derivative()[0];
 
-    CollOfScalar du = CollOfScalar::Zero(residual.size());
+    CollOfScalar::V du = CollOfScalar::V::Zero(residual.size());
 
     Opm::time::StopWatch clock;
     clock.start();
@@ -365,14 +365,14 @@ CollOfScalar EquelleRuntimeCPU::solveForUpdate(const CollOfScalarAD& residual) c
 
 double EquelleRuntimeCPU::twoNorm(const CollOfScalar& vals) const
 {
-    return vals.matrix().norm();
+    return vals.value().matrix().norm();
 }
 
 
-double EquelleRuntimeCPU::twoNorm(const CollOfScalarAD& vals) const
-{
-    return twoNorm(vals.value());
-}
+// double EquelleRuntimeCPU::twoNorm(const CollOfScalarAD& vals) const
+// {
+//     return twoNorm(vals.value());
+// }
 
 
 void EquelleRuntimeCPU::output(const String& tag, const double val) const
@@ -400,11 +400,11 @@ void EquelleRuntimeCPU::output(const String& tag, const CollOfScalar& vals)
             OPM_THROW(std::runtime_error, "Failed to open " << fname.str());
         }
         file.precision(16);
-        std::copy(vals.data(), vals.data() + vals.size(), std::ostream_iterator<double>(file, "\n"));
+        std::copy(vals.value().data(), vals.value().data() + vals.size(), std::ostream_iterator<double>(file, "\n"));
     } else {
         std::cout << tag << " =\n";
         for (int i = 0; i < vals.size(); ++i) {
-            std::cout << std::setw(15) << std::left << ( vals[i] ) << " ";
+            std::cout << std::setw(15) << std::left << ( vals.value()[i] ) << " ";
         }
         std::cout << std::endl;
     }
@@ -412,10 +412,10 @@ void EquelleRuntimeCPU::output(const String& tag, const CollOfScalar& vals)
 
 
 
-void EquelleRuntimeCPU::output(const String& tag, const CollOfScalarAD& vals)
-{
-    output(tag, vals.value());
-}
+// void EquelleRuntimeCPU::output(const String& tag, const CollOfScalarAD& vals)
+// {
+//     output(tag, vals.value());
+// }
 
 
 Scalar EquelleRuntimeCPU::userSpecifiedScalarWithDefault(const String& name,
@@ -468,5 +468,5 @@ CollOfScalarAD EquelleRuntimeCPU::singlePrimaryVariable(const CollOfScalar& init
     std::vector<int> block_pattern;
     block_pattern.push_back(initial_values.size());
     // Syntax below is: CollOfScalarAD::variable(block index, initialized from, block structure)
-    return CollOfScalarAD::variable(0, initial_values, block_pattern);
+    return CollOfScalarAD::variable(0, initial_values.value(), block_pattern);
 }

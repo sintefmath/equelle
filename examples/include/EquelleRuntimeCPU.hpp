@@ -50,6 +50,10 @@ typedef std::string String;
 typedef Opm::AutoDiffBlock<Scalar> ADB;
 struct CollOfScalarAD : public ADB
 {
+    CollOfScalarAD()
+        : ADB(ADB::null())
+    {
+    }
     CollOfScalarAD(const ADB& adb)
         : ADB(adb)
     {
@@ -59,7 +63,19 @@ struct CollOfScalarAD : public ADB
     {
     }
 };
-typedef ADB::V CollOfScalar;
+
+inline CollOfScalarAD operator-(const CollOfScalarAD& x)
+{
+    return CollOfScalarAD::V::Zero(x.size()) - x;
+}
+
+inline CollOfScalarAD operator/(const Scalar& s, const CollOfScalarAD& x)
+{
+    return CollOfScalarAD::V::Constant(x.size(), s)/x;
+}
+
+// typedef ADB::V CollOfScalar;
+typedef CollOfScalarAD CollOfScalar;
 typedef Eigen::Array<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> CollOfVector;
 typedef Eigen::Array<bool, Eigen::Dynamic, 1> CollOfBool;
 typedef std::vector<Scalar> SeqOfScalar;
@@ -92,13 +108,13 @@ public:
 
     /// Operators.
     CollOfScalar gradient(const CollOfScalar& cell_scalarfield) const;
-    CollOfScalarAD gradient(const CollOfScalarAD& cell_scalarfield) const;
+    // CollOfScalarAD gradient(const CollOfScalarAD& cell_scalarfield) const;
     CollOfScalar negGradient(const CollOfScalar& cell_scalarfield) const;
-    CollOfScalarAD negGradient(const CollOfScalarAD& cell_scalarfield) const;
+    // CollOfScalarAD negGradient(const CollOfScalarAD& cell_scalarfield) const;
     CollOfScalar divergence(const CollOfScalar& face_fluxes) const;
-    CollOfScalarAD divergence(const CollOfScalarAD& face_fluxes) const;
+    // CollOfScalarAD divergence(const CollOfScalarAD& face_fluxes) const;
     CollOfScalar interiorDivergence(const CollOfScalar& face_fluxes) const;
-    CollOfScalarAD interiorDivergence(const CollOfScalarAD& face_fluxes) const;
+    // CollOfScalarAD interiorDivergence(const CollOfScalarAD& face_fluxes) const;
     CollOfBool isEmpty(const CollOfCell& cells) const;
     CollOfBool isEmpty(const CollOfFace& faces) const;
     template <class EntityCollection>
@@ -119,7 +135,7 @@ public:
     /// Output.
     void output(const String& tag, Scalar val) const;
     void output(const String& tag, const CollOfScalar& vals);
-    void output(const String& tag, const CollOfScalarAD& vals);
+    // void output(const String& tag, const CollOfScalarAD& vals);
 
     /// Input.
     Scalar userSpecifiedScalarWithDefault(const String& name,
@@ -144,7 +160,7 @@ private:
 
     /// Norms.
     Scalar twoNorm(const CollOfScalar& vals) const;
-    Scalar twoNorm(const CollOfScalarAD& vals) const;
+    // Scalar twoNorm(const CollOfScalarAD& vals) const;
 
     /// Data members.
     std::unique_ptr<Opm::GridManager> grid_manager_;

@@ -15,7 +15,7 @@ template <class EntityCollection>
 CollOfScalar EquelleRuntimeCPU::operatorOn(const double data,
                                            const EntityCollection& to_set)
 {
-    return CollOfScalar::Constant(to_set.size(), data);
+    return CollOfScalar(CollOfScalarAD::V::Constant(to_set.size(), data));
 }
 
 
@@ -161,8 +161,8 @@ inline CollOfScalarAD EquelleRuntimeCPU::trinaryIf(const CollOfBool& predicate,
 {
     const int sz = predicate.size();
     assert(sz == iftrue.size() && sz == iffalse.size());
-    CollOfScalar trueones = CollOfScalar::Constant(sz, 1.0);
-    CollOfScalar falseones = CollOfScalar::Constant(sz, 0.0);
+    CollOfScalar::V trueones = CollOfScalar::V::Constant(sz, 1.0);
+    CollOfScalar::V falseones = CollOfScalar::V::Constant(sz, 0.0);
     for (int i = 0; i < sz; ++i) {
         if (!predicate[i]) {
             trueones[i] = 0.0;
@@ -264,10 +264,10 @@ CollOfScalar EquelleRuntimeCPU::userSpecifiedCollectionOfScalar(const String& na
         if (int(data.size()) != size) {
             OPM_THROW(std::runtime_error, "Unexpected size of input data for " << name << " in file " << filename);
         }
-        return CollOfScalar(Eigen::Map<CollOfScalar>(&data[0], size));
+        return CollOfScalar(CollOfScalar::V(Eigen::Map<CollOfScalar::V>(&data[0], size)));
     } else {
         // Uniform values.
-        return CollOfScalar::Constant(size, param_.get<double>(name));
+        return CollOfScalar(CollOfScalar::V::Constant(size, param_.get<double>(name)));
     }
 }
 
