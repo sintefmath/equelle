@@ -204,6 +204,15 @@ FuncTypeNode* handleFuncType(FuncArgsDeclNode* argtypes, TypeNode* rtype)
 FuncCallNode* handleFuncCall(const std::string& name, FuncArgsNode* args)
 {
     const Function& f = SymbolTable::getFunction(name);
+    // Check function call arguments.
+    const auto argtypes = args->argumentTypes();
+    if (argtypes.size() != f.functionType().arguments().size()) {
+        std::string err_msg = "wrong number of arguments when calling function ";
+        err_msg += name;
+        yyerror(err_msg.c_str());
+    }
+    // At the moment, we do not check function argument types.
+    // If the function returns a new entity set, we must declare it (even if anonymous).
     int dynsubret = f.functionType().dynamicSubsetReturn(args->argumentTypes());
     if (dynsubret != NotApplicable) {
         // Create a new entity collection.
