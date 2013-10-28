@@ -68,9 +68,6 @@ private:
     bool suppressed_;
     int indent_;
     int sequence_depth_;
-    bool emit_ad_;
-    bool in_extra_funcassign_accept_;
-    bool in_function_call_requiring_ad_;
     void endl() const;
     std::string indent() const;
     void suppress();

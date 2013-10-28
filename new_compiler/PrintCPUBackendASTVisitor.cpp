@@ -9,8 +9,6 @@
 #include <cctype>
 
 
-#define OLD_AD_USAGE 0
-
 namespace
 {
     const char* cppStartString();
@@ -22,10 +20,7 @@ namespace
 PrintCPUBackendASTVisitor::PrintCPUBackendASTVisitor()
     : suppressed_(false),
       indent_(1),
-      sequence_depth_(0),
-      emit_ad_(false),
-      in_extra_funcassign_accept_(false),
-      in_function_call_requiring_ad_(false)
+      sequence_depth_(0)
 {
 }
 
@@ -221,11 +216,6 @@ void PrintCPUBackendASTVisitor::visit(VarNode& node)
 
 void PrintCPUBackendASTVisitor::visit(FuncRefNode& node)
 {
-#if OLD_AD_USAGE
-    if (in_function_call_requiring_ad_) {
-        std::cout << "AD";
-    }
-#endif
     std::cout << node.name();
 }
 
@@ -260,13 +250,7 @@ void PrintCPUBackendASTVisitor::postVisit(FuncDeclNode&)
 
 void PrintCPUBackendASTVisitor::visit(FuncStartNode& node)
 {
-    std::cout << indent() << "auto ";
-#if OLD_AD_USAGE
-    if (emit_ad_) {
-        std::cout << "AD";
-    }
-#endif
-    std::cout << node.name() << " = [&](";
+    std::cout << indent() << "auto " << node.name() << " = [&](";
     const FunctionType& ft = SymbolTable::getFunction(node.name()).functionType();
     const size_t n = ft.arguments().size();
     for (int i = 0; i < n; ++i) {
@@ -289,27 +273,12 @@ void PrintCPUBackendASTVisitor::postVisit(FuncStartNode& node)
     endl();
 }
 
-void PrintCPUBackendASTVisitor::visit(FuncAssignNode& node)
+void PrintCPUBackendASTVisitor::visit(FuncAssignNode&)
 {
-#if OLD_AD_USAGE
-    if (!in_extra_funcassign_accept_) {
-        in_extra_funcassign_accept_ = true;
-        node.accept(*this);
-        in_extra_funcassign_accept_ = false;
-    }
-#else
-    (void)node;
-    emit_ad_ = true;
-#endif
 }
 
 void PrintCPUBackendASTVisitor::postVisit(FuncAssignNode&)
 {
-#if OLD_AD_USAGE
-    emit_ad_ = !emit_ad_;
-#else
-    emit_ad_ = false;
-#endif
     --indent_;
     std::cout << indent() << "};";
     endl();
@@ -344,23 +313,11 @@ void PrintCPUBackendASTVisitor::postVisit(ReturnStatementNode&)
 void PrintCPUBackendASTVisitor::visit(FuncCallNode& node)
 {
     const std::string fname = node.name();
-#if OLD_AD_USAGE
-    // The below is a hack, but it could be replaced by a more general
-    // mechanism if necessary.
-    if (fname == "NewtonSolve") {
-        in_function_call_requiring_ad_ = true;
-    }
-#endif
     const char first = fname[0];
     std::string cppname;
     if (std::isupper(first)) {
         cppname += std::string("er.") + char(std::tolower(first)) + fname.substr(1);
     } else {
-#if OLD_AD_USAGE
-        if (emit_ad_) {
-            cppname += "AD";
-        }
-#endif
         cppname += fname;
     }
     std::cout << cppname << '(';
@@ -368,9 +325,6 @@ void PrintCPUBackendASTVisitor::visit(FuncCallNode& node)
 
 void PrintCPUBackendASTVisitor::postVisit(FuncCallNode&)
 {
-#if OLD_AD_USAGE
-    in_function_call_requiring_ad_ = false;
-#endif
     std::cout << ')';
 }
 
@@ -428,9 +382,6 @@ std::string PrintCPUBackendASTVisitor::cppTypeString(const EquelleType& et) cons
     std::string cppstring = et.isCollection() ? "CollOf" : "";
     cppstring += et.isSequence() ? "SeqOf" : "";
     cppstring += basicTypeString(et.basicType());
-    if (emit_ad_ && et.isCollection() && et.basicType() == Scalar) {
-        cppstring += "AD";
-    }
     return cppstring;
 }
 
