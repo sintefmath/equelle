@@ -27,41 +27,31 @@ p = 0.0 On AllCells()
 # Constants
 vol = |AllCells()|
 
-
+# Computing transmissibilities. Check algorithm agains MRST and OPM.
 computeTransmissibilities : Function(permeability : Collection Of Scalar On AllCells()) -> Collection Of Scalar On InteriorFaces()
 computeTransmissibilities(permeability) = {
-    # InteriorFaces : Function() -> Collection Of Face
-    # interior_faces : Collection Of Face
     interior_faces = InteriorFaces()
-    # FirstCell : Function(facecoll : Collection Of Face) -> Collection Of Cell On facecoll
-    # first : Collection Of Cell On interior_faces
     first = FirstCell(interior_faces)
-    # SecondCell : Function(facecoll : Collection Of Face) -> Collection Of Cell On facecoll
-    # second : Collection Of Cell On interior_faces
     second = SecondCell(interior_faces)
-    # Centroid : Function(cellcoll : Collection Of Cell) -> Collection of Vector On cellcoll
-    # Centroid : Function(facecoll : Collection Of Face) -> Collection of Vector On facecoll
-    # Centroid(first) : Collection of Vector On first
-    # Centroid(interior_faces) : Collection of Vector On interior_faces
-    # cdiff1 : Collection of Vector On interior_faces (since first is 'On' interior_faces)
-    cdiff1 = Centroid(first) - Centroid(interior_faces)        # Deduced type: Vector On interior_faces
-    cdiff2 = Centroid(second) - Centroid(interior_faces)       # Deduced type: Vector On interior_faces
-    p1 = permeability On first                                 # Deduced type: Scalar On interior_faces
-    p2 = permeability On second                                # Deduced type: Scalar On interior_faces
-    a = |interior_faces|                                       # Deduced type: Scalar On interior_faces
+    cdiff1 = Centroid(first) - Centroid(interior_faces)
+    cdiff2 = Centroid(second) - Centroid(interior_faces)
+    p1 = permeability On first
+    p2 = permeability On second
+    a = |interior_faces|
     halftrans1 = a * p1 * Dot(Normal(interior_faces), cdiff1) / Dot(cdiff1, cdiff1)
     halftrans2 = a * p2 * Dot(Normal(interior_faces), cdiff2) / Dot(cdiff2, cdiff2)
     trans = 1.0 / (1.0/halftrans1 + 1.0/halftrans2)
     -> trans
 }
 
-upstream : Function(flux : Collection Of Scalar On InteriorFaces(), ...
-                    x    : Collection Of Scalar On AllCells()) ...
-                    -> Collection Of Scalar On InteriorFaces()
-upstream(flux, x) = {
+# Upwind selection.
+upwind : Function(flux : Collection Of Scalar On InteriorFaces(), ...
+                  x    : Collection Of Scalar On AllCells()) ...
+                  -> Collection Of Scalar On InteriorFaces()
+upwind(flux, x) = {
     x1 = x On FirstCell(InteriorFaces())
     x2 = x On SecondCell(InteriorFaces())
-    -> flux# > 0 ? x1 : x2
+    -> flux > 0 ? x1 : x2
 }
 
 # Deduced (and declared) type: Scalar On interior_faces
