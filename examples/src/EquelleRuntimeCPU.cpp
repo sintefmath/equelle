@@ -420,7 +420,7 @@ Scalar EquelleRuntimeCPU::userSpecifiedScalarWithDefault(const String& name,
 
 
 CollOfFace EquelleRuntimeCPU::userSpecifiedCollectionOfFaceSubsetOf(const String& name,
-                                                                     const CollOfFace& face_superset)
+                                                                    const CollOfFace& face_superset)
 {
     const String filename = param_.get<String>(name + "_filename");
     std::ifstream is(filename.c_str());
@@ -438,6 +438,30 @@ CollOfFace EquelleRuntimeCPU::userSpecifiedCollectionOfFaceSubsetOf(const String
     }
     if (!includes(face_superset.begin(), face_superset.end(), data.begin(), data.end())) {
         OPM_THROW(std::runtime_error, "Given faces are not in the assumed subset.");
+    }
+    return data;
+}
+
+
+CollOfCell EquelleRuntimeCPU::userSpecifiedCollectionOfCellSubsetOf(const String& name,
+                                                                    const CollOfCell& cell_superset)
+{
+    const String filename = param_.get<String>(name + "_filename");
+    std::ifstream is(filename.c_str());
+    if (!is) {
+        OPM_THROW(std::runtime_error, "Could not find file " << filename);
+    }
+    std::istream_iterator<int> beg(is);
+    std::istream_iterator<int> end;
+    CollOfCell data;
+    for (auto it = beg; it != end; ++it) {
+        data.push_back(Cell(*it));
+    }
+    if (!is_sorted(data.begin(), data.end())) {
+        OPM_THROW(std::runtime_error, "Input set of cells was not sorted in ascending order.");
+    }
+    if (!includes(cell_superset.begin(), cell_superset.end(), data.begin(), data.end())) {
+        OPM_THROW(std::runtime_error, "Given cells are not in the assumed subset.");
     }
     return data;
 }

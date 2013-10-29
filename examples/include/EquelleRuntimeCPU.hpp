@@ -79,7 +79,13 @@ inline CollOfScalar operator-(const CollOfScalar& x)
 /// This operator is not provided by AutoDiffBlock, so we must add it here.
 inline CollOfScalar operator/(const Scalar& s, const CollOfScalar& x)
 {
-    return CollOfScalar::V::Constant(x.size(), s)/x;
+    return CollOfScalar::V::Constant(x.size(), s) / x;
+}
+
+/// This operator is not provided by AutoDiffBlock, so we must add it here.
+inline CollOfScalar operator/(const CollOfScalar& x, const Scalar& s)
+{
+    return x / CollOfScalar::V::Constant(x.size(), s);
 }
 
 /// This operator is not provided by AutoDiffBlock, so we must add it here.
@@ -116,6 +122,12 @@ inline CollOfBool operator<(const CollOfScalar& x, const CollOfScalar& y)
 inline CollOfBool operator>(const CollOfScalar& x, const CollOfScalar& y)
 {
     return x.value() > y.value();
+}
+
+/// This operator is not provided by AutoDiffBlock, so we must add it here.
+inline CollOfBool operator>=(const CollOfScalar& x, const Scalar& s)
+{
+    return x.value() >= s;
 }
 
 
@@ -178,6 +190,8 @@ public:
                                           const Scalar default_value);
     CollOfFace userSpecifiedCollectionOfFaceSubsetOf(const String& name,
                                                      const CollOfFace& superset);
+    CollOfCell userSpecifiedCollectionOfCellSubsetOf(const String& name,
+                                                     const CollOfCell& superset);
     template <class SomeCollection>
     CollOfScalar userSpecifiedCollectionOfScalar(const String& name,
                                                  const SomeCollection& coll);
