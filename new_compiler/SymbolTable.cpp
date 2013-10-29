@@ -449,6 +449,9 @@ void SymbolTable::setProgram(Node* ast_root)
 std::string SymbolTable::equelleString(const EquelleType& type)
 {
     std::string retval;
+    if (type.isMutable()) {
+        retval += "Mutable ";
+    }
     if (type.isCollection()) {
         retval += "Collection Of ";
     } else if (type.isSequence()) {
