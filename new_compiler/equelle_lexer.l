@@ -42,6 +42,7 @@ Collection       { TOK(COLLECTION); }
 Sequence         { TOK(SEQUENCE); }
 Of               { TOK(OF); }
 On               { TOK(ON); }
+Extend           { TOK(EXTEND); }
 Subset           { TOK(SUBSET); }
 Scalar           { TOK(SCALAR); }
 Vector           { TOK(VECTOR); }

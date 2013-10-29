@@ -383,6 +383,40 @@ OnNode* handleOn(Node* left, Node* right)
 
 
 
+OnNode* handleExtend(Node* left, Node* right)
+{
+    if (!right->type().isEntityCollection()) {
+        yyerror("in a '<left> On <right>' expression "
+                "the expression <right> must be a Collection Of Cell, Face, Edge or Vertex.");
+    }
+    if (left->type().isSequence()) {
+        yyerror("cannot use On operator with a Sequence.");
+    }
+
+    if (left->type().isCollection()) {
+        const int gml = left->type().gridMapping();
+        if (SymbolTable::entitySetType(gml) != right->type().basicType()) {
+            std::string err_msg;
+            err_msg += "in a '<left> On <right>' expression the expression <right> must "
+                "be a collection of the same kind of that which <left> is On. ";
+            err_msg += "Collection on the left is On ";
+            err_msg += SymbolTable::entitySetName(gml);
+            yyerror(err_msg.c_str());
+        }
+        // Following test is wrong: cannot deal properly with rhs that is not an entity set.
+        // const int gmr = right->type().gridMapping();
+        // if (!SymbolTable::isSubset(gml, gmr)
+        //     && !SymbolTable::isSubset(gmr, gml)) {
+        //     yyerror("in a '<left> On <right>' expression "
+        //             "the entityset <right> must be a (non-strict) super- or sub-set of "
+        //             "the set which <left> is 'On'.");
+        // }
+    }
+    return new OnNode(left, right);
+}
+
+
+
 StringNode* handleString(const std::string& content)
 {
     return new StringNode(content);

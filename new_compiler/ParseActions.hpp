@@ -56,6 +56,8 @@ TrinaryIfNode* handleTrinaryIf(Node* predicate, Node* iftrue, Node* iffalse);
 
 OnNode* handleOn(Node* left, Node* right);
 
+OnNode* handleExtend(Node* left, Node* right);
+
 StringNode* handleString(const std::string& content);
 
 TypeNode* handleMutableType(TypeNode* type_expr);

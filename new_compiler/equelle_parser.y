@@ -2,6 +2,7 @@
 %token SEQUENCE
 %token OF
 %token ON
+%token EXTEND
 %token SUBSET
 %token SCALAR
 %token VECTOR
@@ -63,6 +64,7 @@
 %nonassoc MUTABLE
 %nonassoc '?'
 %nonassoc ON
+%nonassoc EXTEND
 %left OR
 %nonassoc XOR
 %left AND
@@ -150,6 +152,7 @@ expr: number              { $$ = $1; }
     | '-' expr %prec UMINUS  { $$ = handleUnaryNegation($2); }
     | expr '?' expr ':' expr %prec '?' { $$ = handleTrinaryIf($1, $3, $5); }
     | expr ON expr        { $$ = handleOn($1, $3); }
+    | expr EXTEND expr    { $$ = handleExtend($1, $3); }
     | ID                  { $$ = handleIdentifier(*($1)); delete $1; }
     | STRING_LITERAL      { $$ = handleString(*($1)); delete $1; }
     ;

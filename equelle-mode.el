@@ -49,14 +49,14 @@
 
 (defconst equelle-font-lock-keywords-1
   (list
-   '("\\<\\(Collection\\|Sequence\\|Of\\|On\\|In\\|Mutable\\|Subset\\|Scalar\\|Vector\\|Bool\\|Cell\\|Face\\|Edge\\|Vertex\\|Function\\|For\\|And\\|Or\\|Not\\|Xor\\)\\>" . font-lock-keyword-face)
+   '("\\<\\(Collection\\|Sequence\\|Of\\|On\\|Extend\\|In\\|Mutable\\|Subset\\|Scalar\\|Vector\\|Bool\\|Cell\\|Face\\|Edge\\|Vertex\\|Function\\|For\\|And\\|Or\\|Not\\|Xor\\)\\>" . font-lock-keyword-face)
    '("\\('\\w*'\\)" . font-lock-variable-name-face))
   "Minimal highlighting expressions for Equelle mode.")
 
 (defconst equelle-font-lock-keywords-2
   (append equelle-font-lock-keywords-1
 		  (list
-		   '("\\<\\(InteriorCells\\|BoundaryCells\\|AllCells\\|InteriorFaces\\|BoundaryFaces\\|AllFaces\\|InteriorEdges\\|BoundaryEdges\\|AllEdges\\|InteriorVertices\\|BoundaryVertices\\|AllVertices\\|FirstCell\\|SeconCell\\|IsEmpty\\|Centroid\\|Normal\\|UserSpecifiedScalarWithDefault\\|UserSpecifiedCollectionOfScalar\\|UserSpecifiedCollectionOfFaceSubsetOf\\|UserSpecifiedSequenceOfScalar\\|Gradient\\|Divergence\\|NewtonSolve\\|Output\\)\\>" . font-lock-builtin-face)
+		   '("\\<\\(InteriorCells\\|BoundaryCells\\|AllCells\\|InteriorFaces\\|BoundaryFaces\\|AllFaces\\|InteriorEdges\\|BoundaryEdges\\|AllEdges\\|InteriorVertices\\|BoundaryVertices\\|AllVertices\\|FirstCell\\|SecondCell\\|IsEmpty\\|Centroid\\|Normal\\|UserSpecifiedScalarWithDefault\\|UserSpecifiedCollectionOfScalar\\|UserSpecifiedCollectionOfFaceSubsetOf\\|UserSpecifiedCollectionOfCellSubsetOf\\|UserSpecifiedSequenceOfScalar\\|Gradient\\|Divergence\\|NewtonSolve\\|Output\\)\\>" . font-lock-builtin-face)
 		   '("\\<\\(True\\|False\\)\\>" . font-lock-constant-face)))
   "Additional Keywords to highlight in Equelle mode.")
 
