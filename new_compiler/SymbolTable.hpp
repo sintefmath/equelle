@@ -216,6 +216,8 @@ public:
 
     static const std::string& entitySetName(const int entity_set_index);
 
+    static BasicType entitySetType(const int entity_set_index);
+
     static void setEntitySetName(const int entity_set_index, const std::string& name);
 
     static void dump();
