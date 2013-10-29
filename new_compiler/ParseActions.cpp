@@ -96,6 +96,12 @@ VarAssignNode* handleAssignment(const std::string& name, Node* expr)
             }
         }
     } else {
+        // Setting the gridmapping, as in the block above. Only this is
+        // the direct (no previous declaration) assignment scenario.
+        const int gm = expr->type().gridMapping();
+        if (gm != NotApplicable && SymbolTable::entitySetName(gm) == "AnonymousEntitySet") {
+            SymbolTable::setEntitySetName(gm, name);
+        }
         SymbolTable::declareVariable(name, expr->type());
     }
 
