@@ -538,9 +538,15 @@ SymbolTable::SymbolTable()
                                            Variable("entities", EquelleType()) },
                                          EquelleType(Face, Collection),
                                          { InvalidIndex, InvalidIndex, 1}));
+    functions_.emplace_back("UserSpecifiedCollectionOfCellSubsetOf",
+                            FunctionType({ Variable("name", EquelleType(String)),
+                                           Variable("entities", EquelleType()) },
+                                         EquelleType(Cell, Collection),
+                                         { InvalidIndex, InvalidIndex, 1}));
     functions_.emplace_back("UserSpecifiedSequenceOfScalar",
                             FunctionType({ Variable("name", EquelleType(String)) },
                                          EquelleType(Scalar, Sequence)));
+
 
     // 3. Discrete operators.
     functions_.emplace_back("Gradient",
