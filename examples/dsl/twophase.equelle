@@ -1,33 +1,17 @@
 # Two-phase flow with no-flow boundary and simple source terms.
 
-# Equelle note:
-# Allowed primitive types:
-#   Scalar, Vector (numeric types)
-#   Cell, Face, Edge, Vertex (topological types)
-# Allowed compound type: only sets of primitive types, associated with sets of topological entities.
-# Declaration syntax for sets: <primitive type> On <set of topological type>
-#
-# Use type deduction by default, optional type declarations used to improve readability and detect errors.
-
 # Physics that requires specification
 perm : Collection Of Scalar On AllCells()
 perm = UserSpecifiedCollectionOfScalar("perm", AllCells())
 poro : Collection Of Scalar On AllCells()
 poro = UserSpecifiedCollectionOfScalar("poro", AllCells())
-
-# s0 should be given initial values (in user input)
-s0 : Collection Of Scalar On AllCells()
-s0 = UserSpecifiedCollectionOfScalar("s0", AllCells())
-
-s : Collection Of Scalar On AllCells()
-s = s0
-p : Collection Of Scalar On AllCells()
-p = 0.0 On AllCells()
+watervisc = UserSpecifiedScalarWithDefault("watervisc", 0.0005)
+oilvisc = UserSpecifiedScalarWithDefault("oilvisc", 0.005)
 
 # Constants
 vol = |AllCells()|
 
-# Computing transmissibilities. Check algorithm agains MRST and OPM.
+# Computing transmissibilities. Note: we should check algorithm agains MRST and OPM.
 computeTransmissibilities : Function(permeability : Collection Of Scalar On AllCells()) -> Collection Of Scalar On InteriorFaces()
 computeTransmissibilities(permeability) = {
     interior_faces = InteriorFaces()
@@ -44,6 +28,9 @@ computeTransmissibilities(permeability) = {
     -> trans
 }
 
+# Actually compute transmissibilities.
+trans = computeTransmissibilities(perm)
+
 # Upwind selection.
 upwind : Function(flux : Collection Of Scalar On InteriorFaces(), ...
                   x    : Collection Of Scalar On AllCells()) ...
@@ -51,47 +38,106 @@ upwind : Function(flux : Collection Of Scalar On InteriorFaces(), ...
 upwind(flux, x) = {
     x1 = x On FirstCell(InteriorFaces())
     x2 = x On SecondCell(InteriorFaces())
-    -> flux > 0 ? x1 : x2
+    -> flux >= 0.0 ? x1 : x2
 }
 
-# Deduced (and declared) type: Scalar On interior_faces
-trans : Collection Of Scalar On InteriorFaces()
-trans = computeTransmissibilities(perm)
-
-# Variable quantities
-# Deduced (and declared) type: Scalar On interior_faces
-computeFluxes : Function(p : Collection Of Scalar On AllCells()) ...
-                         -> Collection Of Scalar On InteriorFaces()
-computeFluxes(p) = {
-    -> - trans * Gradient(p)
+# Total fluxes
+computeTotalFluxes : Function(pressure : Collection Of Scalar On AllCells(), ...
+                              total_mobility : Collection Of Scalar On AllCells()) ...
+                              -> Collection Of Scalar On InteriorFaces()
+computeTotalFluxes(pressure, total_mobility) = {
+    ngradp = -Gradient(pressure)
+    face_total_mobility = upwind(ngradp, total_mobility)
+    -> trans * face_total_mobility * ngradp
 }
 
-# Deduced (and declared) type: Scalar On Cells(Grid)
-computeResidual : Function(u  : Collection Of Scalar On AllCells(), ...
-                           u0 : Collection Of Scalar On AllCells(), ...
-                           dt : Scalar) ...
+# Pressure residual
+computePressureResidual : Function(pressure : Collection Of Scalar On AllCells(), ...
+                                   total_mobility : Collection Of Scalar On AllCells(), ...
+                                   source : Collection Of Scalar On AllCells()) ...
+                                   -> Collection Of Scalar On AllCells()
+computePressureResidual(pressure, total_mobility) = {
+    fluxes = computeTotalFluxes(pressure, total_mobility)
+    -> Divergence(fluxes) - source
+}
+
+# Water mobility
+computeWaterMob : Function(sw : Collection Of Scalar On AllCells()) ...
                            -> Collection Of Scalar On AllCells()
-computeResidual(u, u0, dt) = 
-{
-    fluxes = computeFluxes(u)
-    -> u - u0 + (dt / vol) * Divergence(fluxes)
+computeWaterMob(sw) = {
+    krw = sw
+    -> krw / watervisc
 }
 
+# Oil mobility
+computeOilMob : Function(sw : Collection Of Scalar On AllCells()) ...
+                         -> Collection Of Scalar On AllCells()
+computeOilMob(sw) = {
+    kro = (1.0 On AllCells()) - sw
+    -> kro / oilvisc
+}
 
+# Transport residual
+computeTransportResidual : Function(sw : Collection Of Scalar On AllCells(), ...
+                                    sw0 : Collection Of Scalar On AllCells(), ...
+                                    fluxes : Collection Of Scalar On InteriorFaces(), ...
+                                    source : Collection Of Scalar On AllCells(), ...
+                                    insource_sw : Collection Of Scalar On AllCells(), ...
+                                    dt : Scalar) ...
+                                    -> Collection Of Scalar On AllCells()
+computeTransportResidual(sw, sw0, fluxes, source, insource_sat, dt) = {
+    insource = source > 0.0 ? source : 0.0 On AllCells()
+    outsource = source < 0.0 ? source : 0.0 On AllCells()
+    mw = computeWaterMob(sw)
+    mo = computeOilMob(sw)
+    f = mw / (mw + mo)
+    f_face = upwind(fluxes, f)
+    w_fluxes = f_face * fluxes
+    q = insource * insource_sw + outsource * f
+    -> sw - sw0 + (dt/vol) * Divergence(w_fluxes) - q
+}
+
+# Initialise state variables.
 timesteps = UserSpecifiedSequenceOfScalar("timesteps")
-u_initial = UserSpecifiedCollectionOfScalar("u_initial", AllCells())
-u0 : Mutable Collection Of Scalar On AllCells()
-u0 = u_initial
+sw_initial = UserSpecifiedCollectionOfScalar("sw_initial", AllCells())
+source_cells = UserSpecifiedCollectionOfCellSubsetOf("source_cells", AllCells())
+source_values = UserSpecifiedCollectionOfScalar("source_values", source_cells)
+source = source_values On AllCells()
+insource_sw = 1.0 On AllCells()
+sw0 : Mutable Collection Of Scalar On AllCells()
+sw0 = sw_initial
+p0 : Mutable Collection Of Scalar On AllCells()
+p0 = 0 On AllCells()
 
+# Output initial solution
+Output("pressure", p0)
+Output("saturation", sw0)
+
+# Main timestepping loop.
 For dt In timesteps {
-    computeResidualLocal : Function(u : Collection Of Scalar On AllCells()) -> Collection Of Scalar On AllCells()
-    computeResidualLocal(u) = {
-        -> computeResidual(u, u0, dt)
+    # Compute flux.
+    total_mobility = computeWaterMob(sw0) + computeOilMob(sw0)
+    pressureResLocal : Function(pressure : Collection Of Scalar On AllCells()) -> Collection Of Scalar On AllCells()
+    pressureResLocal(pressure) = {
+        -> computePressureResidual(pressure, total_mobility, source)
     }
-    u_guess = u0
-    u = NewtonSolve(computeResidualLocal, u_guess)
-    Output("u", u)
-    u0 = u
+    p = NewtonSolve(pressureResLocal, p0)
+    fluxes = computeTotalFluxes(p, total_mobility)
+
+    # Compute saturation.
+    transportResLocal : Function(sw : Collection Of Scalar On AllCells()) -> Collection Of Scalar On AllCells()
+    transportResLocal(sw) = {
+        -> computeTransportResidual(sw, sw0, fluxes, source, insource_sw, dt)
+    }
+    sw = NewtonSolve(transportResLocal, sw0)
+
+    # Update state variables
+    p0 = p
+    sw0 = sw
+
+    # Output new solution
+    Output("pressure", p0)
+    Output("saturation", sw0)
 }
 
 

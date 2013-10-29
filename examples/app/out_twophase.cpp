@@ -27,9 +27,8 @@ int main(int argc, char** argv)
 
     const CollOfScalar perm = er.userSpecifiedCollectionOfScalar("perm", er.allCells());
     const CollOfScalar poro = er.userSpecifiedCollectionOfScalar("poro", er.allCells());
-    const CollOfScalar s0 = er.userSpecifiedCollectionOfScalar("s0", er.allCells());
-    const CollOfScalar s = s0;
-    const CollOfScalar p = er.operatorOn(double(0), er.allCells());
+    const Scalar watervisc = er.userSpecifiedScalarWithDefault("watervisc", double(0.0005));
+    const Scalar oilvisc = er.userSpecifiedScalarWithDefault("oilvisc", double(0.005));
     const CollOfScalar vol = er.norm(er.allCells());
     auto computeTransmissibilities = [&](const CollOfScalar& permeability) -> CollOfScalar {
         const CollOfFace interior_faces = er.interiorFaces();
@@ -45,31 +44,67 @@ int main(int argc, char** argv)
         const CollOfScalar trans = (double(1) / ((double(1) / halftrans1) + (double(1) / halftrans2)));
         return trans;
     };
+    const CollOfScalar trans = computeTransmissibilities(perm);
     auto upwind = [&](const CollOfScalar& flux, const CollOfScalar& x) -> CollOfScalar {
         const CollOfScalar x1 = er.operatorOn(x, er.allCells(), er.firstCell(er.interiorFaces()));
         const CollOfScalar x2 = er.operatorOn(x, er.allCells(), er.secondCell(er.interiorFaces()));
-        return er.trinaryIf((flux > double(0)), x1, x2);
+        return er.trinaryIf((flux >= double(0)), x1, x2);
     };
-    const CollOfScalar trans = computeTransmissibilities(perm);
-    auto computeFluxes = [&](const CollOfScalar& pp) -> CollOfScalar {
-        return (-trans * er.gradient(p));
+    auto computeTotalFluxes = [&](const CollOfScalar& pressure, const CollOfScalar& total_mobility) -> CollOfScalar {
+        const CollOfScalar ngradp = -er.gradient(pressure);
+        const CollOfScalar face_total_mobility = upwind(ngradp, total_mobility);
+        return ((trans * face_total_mobility) * ngradp);
     };
-    auto computeResidual = [&](const CollOfScalar& u, const CollOfScalar& u0, const Scalar& dt) -> CollOfScalar {
-        const CollOfScalar fluxes = computeFluxes(u);
-        return ((u - u0) + ((dt / vol) * er.divergence(fluxes)));
+    auto computePressureResidual = [&](const CollOfScalar& pressure, const CollOfScalar& total_mobility, const CollOfScalar& source) -> CollOfScalar {
+        const CollOfScalar fluxes = computeTotalFluxes(pressure, total_mobility);
+        return (er.divergence(fluxes) - source);
+    };
+    auto computeWaterMob = [&](const CollOfScalar& sw) -> CollOfScalar {
+        const CollOfScalar krw = sw;
+        return (krw / watervisc);
+    };
+    auto computeOilMob = [&](const CollOfScalar& sw) -> CollOfScalar {
+        const CollOfScalar kro = (er.operatorOn(double(1), er.allCells()) - sw);
+        return (kro / oilvisc);
+    };
+    auto computeTransportResidual = [&](const CollOfScalar& sw, const CollOfScalar& sw0, const CollOfScalar& fluxes, const CollOfScalar& source, const CollOfScalar& insource_sw, const Scalar& dt) -> CollOfScalar {
+        const CollOfScalar insource = er.trinaryIf((source > double(0)), source, er.operatorOn(double(0), er.allCells()));
+        const CollOfScalar outsource = er.trinaryIf((source < double(0)), source, er.operatorOn(double(0), er.allCells()));
+        const CollOfScalar mw = computeWaterMob(sw);
+        const CollOfScalar mo = computeOilMob(sw);
+        const CollOfScalar f = (mw / (mw + mo));
+        const CollOfScalar f_face = upwind(fluxes, f);
+        const CollOfScalar w_fluxes = (f_face * fluxes);
+        const CollOfScalar q = ((insource * insource_sw) + (outsource * f));
+        return (((sw - sw0) + ((dt / vol) * er.divergence(w_fluxes))) - q);
     };
     const SeqOfScalar timesteps = er.userSpecifiedSequenceOfScalar("timesteps");
-    const CollOfScalar u_initial = er.userSpecifiedCollectionOfScalar("u_initial", er.allCells());
-    CollOfScalar u0;
-    u0 = u_initial;
+    const CollOfScalar sw_initial = er.userSpecifiedCollectionOfScalar("sw_initial", er.allCells());
+    const CollOfCell source_cells = er.userSpecifiedCollectionOfCellSubsetOf("source_cells", er.allCells());
+    const CollOfScalar source_values = er.userSpecifiedCollectionOfScalar("source_values", source_cells);
+    const CollOfScalar source = er.operatorOn(source_values, source_cells, er.allCells());
+    const CollOfScalar insource_sw = er.operatorOn(double(1), er.allCells());
+    CollOfScalar sw0;
+    sw0 = sw_initial;
+    CollOfScalar p0;
+    p0 = er.operatorOn(double(0), er.allCells());
+    er.output("pressure", p0);
+    er.output("saturation", sw0);
     for (const Scalar& dt : timesteps) {
-        auto computeResidualLocal = [&](const CollOfScalar& u) -> CollOfScalar {
-            return computeResidual(u, u0, dt);
+        const CollOfScalar total_mobility = (computeWaterMob(sw0) + computeOilMob(sw0));
+        auto pressureResLocal = [&](const CollOfScalar& pressure) -> CollOfScalar {
+            return computePressureResidual(pressure, total_mobility, source);
         };
-        const CollOfScalar u_guess = u0;
-        const CollOfScalar u = er.newtonSolve(computeResidualLocal, u_guess);
-        er.output("u", u);
-        u0 = u;
+        const CollOfScalar p = er.newtonSolve(pressureResLocal, p0);
+        const CollOfScalar fluxes = computeTotalFluxes(p, total_mobility);
+        auto transportResLocal = [&](const CollOfScalar& sw) -> CollOfScalar {
+            return computeTransportResidual(sw, sw0, fluxes, source, insource_sw, dt);
+        };
+        const CollOfScalar sw = er.newtonSolve(transportResLocal, sw0);
+        p0 = p;
+        sw0 = sw;
+        er.output("pressure", p0);
+        er.output("saturation", sw0);
     }
 
     // ============= Generated code ends here ================
