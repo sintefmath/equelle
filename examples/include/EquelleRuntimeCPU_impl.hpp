@@ -32,7 +32,6 @@ namespace
             return std::vector<int>();
         }
 
-        assert(superset.size() >= subset.size());
         assert(std::is_sorted(superset.begin(), superset.end()));
         assert(std::adjacent_find(superset.begin(), superset.end()) == superset.end());
         assert(superset[0].index >= 0);
