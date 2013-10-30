@@ -130,7 +130,8 @@ EquelleType FunctionType::returnType(const std::vector<EquelleType>& argtypes) c
             return_type_.basicType() : argtypes[dynamic_.arg_index_for_basic_type].basicType();
         const int gridmapping = dynamic_.arg_index_for_gridmapping == InvalidIndex ?
             return_type_.gridMapping() : argtypes[dynamic_.arg_index_for_gridmapping].gridMapping();
-        return EquelleType(bt, return_type_.compositeType(), gridmapping);
+        const int subset = dynamicSubsetReturn(argtypes);
+        return EquelleType(bt, return_type_.compositeType(), gridmapping, subset, false, return_type_.isDomain());
     } else {
         return return_type_;
     }

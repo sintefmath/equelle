@@ -290,7 +290,7 @@ public:
     OnNode(Node* left, Node* right) : left_(left), right_(right) {}
     EquelleType type() const
     {
-        return EquelleType(left_->type().basicType(), Collection, right_->type().gridMapping());
+        return EquelleType(left_->type().basicType(), Collection, right_->type().gridMapping(), left_->type().subsetOf());
     }
     EquelleType lefttype() const
     {
@@ -668,7 +668,7 @@ public:
         EquelleType t = SymbolTable::getFunction(funcname_).returnType(funcargs_->argumentTypes());
         if (dsr_ != NotApplicable) {
             assert(t.isEntityCollection());
-            return EquelleType(t.basicType(), Collection, dsr_);
+            return EquelleType(t.basicType(), Collection, dsr_, t.subsetOf(), t.isMutable(), t.isDomain());
         } else {
             return t;
         }
