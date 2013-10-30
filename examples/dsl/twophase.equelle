@@ -73,7 +73,7 @@ computeWaterMob(sw) = {
 computeOilMob : Function(sw : Collection Of Scalar On AllCells()) ...
                          -> Collection Of Scalar On AllCells()
 computeOilMob(sw) = {
-    kro = (1.0 On AllCells()) - sw
+    kro = (1.0 Extend AllCells()) - sw
     -> kro / oilvisc
 }
 
@@ -86,8 +86,8 @@ computeTransportResidual : Function(sw : Collection Of Scalar On AllCells(), ...
                                     dt : Scalar) ...
                                     -> Collection Of Scalar On AllCells()
 computeTransportResidual(sw, sw0, fluxes, source, insource_sat, dt) = {
-    insource = source > 0.0 ? source : 0.0 On AllCells()
-    outsource = source < 0.0 ? source : 0.0 On AllCells()
+    insource = source > 0.0 ? source : 0.0 Extend AllCells()
+    outsource = source < 0.0 ? source : 0.0 Extend AllCells()
     mw = computeWaterMob(sw)
     mo = computeOilMob(sw)
     f = mw / (mw + mo)
@@ -102,12 +102,12 @@ timesteps = UserSpecifiedSequenceOfScalar("timesteps")
 sw_initial = UserSpecifiedCollectionOfScalar("sw_initial", AllCells())
 source_cells = UserSpecifiedCollectionOfCellSubsetOf("source_cells", AllCells())
 source_values = UserSpecifiedCollectionOfScalar("source_values", source_cells)
-source = source_values On AllCells()
-insource_sw = 1.0 On AllCells()
+source = source_values Extend AllCells()
+insource_sw = 1.0 Extend AllCells()
 sw0 : Mutable Collection Of Scalar On AllCells()
 sw0 = sw_initial
 p0 : Mutable Collection Of Scalar On AllCells()
-p0 = 0 On AllCells()
+p0 = 0.0 Extend AllCells()
 
 # Output initial solution
 Output("pressure", p0)
