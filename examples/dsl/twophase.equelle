@@ -9,7 +9,7 @@ watervisc = UserSpecifiedScalarWithDefault("watervisc", 0.0005)
 oilvisc = UserSpecifiedScalarWithDefault("oilvisc", 0.005)
 
 # Constants
-vol = |AllCells()|
+pv = poro * |AllCells()|
 
 # Computing transmissibilities. Note: we should check algorithm agains MRST and OPM.
 computeTransmissibilities : Function(permeability : Collection Of Scalar On AllCells()) -> Collection Of Scalar On InteriorFaces()
@@ -22,7 +22,7 @@ computeTransmissibilities(permeability) = {
     p1 = permeability On first
     p2 = permeability On second
     a = |interior_faces|
-    halftrans1 = a * p1 * Dot(Normal(interior_faces), cdiff1) / Dot(cdiff1, cdiff1)
+    halftrans1 = - a * p1 * Dot(Normal(interior_faces), cdiff1) / Dot(cdiff1, cdiff1)
     halftrans2 = a * p2 * Dot(Normal(interior_faces), cdiff2) / Dot(cdiff2, cdiff2)
     trans = 1.0 / (1.0/halftrans1 + 1.0/halftrans2)
     -> trans
@@ -41,11 +41,11 @@ upwind(flux, x) = {
     -> flux >= 0.0 ? x1 : x2
 }
 
-# Total fluxes
-computeTotalFluxes : Function(pressure : Collection Of Scalar On AllCells(), ...
-                              total_mobility : Collection Of Scalar On AllCells()) ...
-                              -> Collection Of Scalar On InteriorFaces()
-computeTotalFluxes(pressure, total_mobility) = {
+# Total flux
+computeTotalFlux : Function(pressure : Collection Of Scalar On AllCells(), ...
+                            total_mobility : Collection Of Scalar On AllCells()) ...
+                            -> Collection Of Scalar On InteriorFaces()
+computeTotalFlux(pressure, total_mobility) = {
     ngradp = -Gradient(pressure)
     face_total_mobility = upwind(ngradp, total_mobility)
     -> trans * face_total_mobility * ngradp
@@ -57,8 +57,8 @@ computePressureResidual : Function(pressure : Collection Of Scalar On AllCells()
                                    source : Collection Of Scalar On AllCells()) ...
                                    -> Collection Of Scalar On AllCells()
 computePressureResidual(pressure, total_mobility) = {
-    fluxes = computeTotalFluxes(pressure, total_mobility)
-    -> Divergence(fluxes) - source
+    flux = computeTotalFlux(pressure, total_mobility)
+    -> Divergence(flux) - source
 }
 
 # Water mobility
@@ -80,21 +80,21 @@ computeOilMob(sw) = {
 # Transport residual
 computeTransportResidual : Function(sw : Collection Of Scalar On AllCells(), ...
                                     sw0 : Collection Of Scalar On AllCells(), ...
-                                    fluxes : Collection Of Scalar On InteriorFaces(), ...
+                                    flux : Collection Of Scalar On InteriorFaces(), ...
                                     source : Collection Of Scalar On AllCells(), ...
                                     insource_sw : Collection Of Scalar On AllCells(), ...
                                     dt : Scalar) ...
                                     -> Collection Of Scalar On AllCells()
-computeTransportResidual(sw, sw0, fluxes, source, insource_sat, dt) = {
+computeTransportResidual(sw, sw0, flux, source, insource_sat, dt) = {
     insource = source > 0.0 ? source : 0.0 Extend AllCells()
     outsource = source < 0.0 ? source : 0.0 Extend AllCells()
     mw = computeWaterMob(sw)
     mo = computeOilMob(sw)
-    f = mw / (mw + mo)
-    f_face = upwind(fluxes, f)
-    w_fluxes = f_face * fluxes
-    q = insource * insource_sw + outsource * f
-    -> sw - sw0 + (dt/vol) * Divergence(w_fluxes) - q
+    fracflow = mw / (mw + mo)
+    face_fracflow = upwind(flux, fracflow)
+    water_flux = face_fracflow * flux
+    q = insource * insource_sw + outsource * fracflow
+    -> sw - sw0 + (dt/pv) * (Divergence(water_flux) - q)
 }
 
 # Initialise state variables.
@@ -122,14 +122,14 @@ For dt In timesteps {
         -> computePressureResidual(pressure, total_mobility, source)
     }
     p = NewtonSolve(pressureResLocal, p0)
-    fluxes = computeTotalFluxes(p, total_mobility)
+    flux = computeTotalFlux(p, total_mobility)
 
     # Compute saturation.
     transportResLocal : Function(sw : Collection Of Scalar On AllCells()) -> Collection Of Scalar On AllCells()
     transportResLocal(sw) = {
-        -> computeTransportResidual(sw, sw0, fluxes, source, insource_sw, dt)
+        -> computeTransportResidual(sw, sw0, flux, source, insource_sw, dt)
     }
-    sw = NewtonSolve(transportResLocal, sw0)
+    sw = NewtonSolve(transportResLocal, 0.5 Extend AllCells())
 
     # Update state variables
     p0 = p
@@ -137,6 +137,7 @@ For dt In timesteps {
 
     # Output new solution
     Output("pressure", p0)
+    Output("flux", flux)
     Output("saturation", sw0)
 }
 
