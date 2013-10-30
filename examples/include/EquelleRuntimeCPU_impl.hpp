@@ -190,19 +190,19 @@ CollOfScalar EquelleRuntimeCPU::newtonSolve(const ResidualFunctor& rescomp,
     CollOfScalar u = singlePrimaryVariable(u_initialguess);
     if (verbose_ > 2) {
         output("Initial u", u);
-        output("norm", twoNorm(u));
+        output("    newtonSolve: norm (initial u)", twoNorm(u));
     }
     CollOfScalar residual = rescomp(u);
     if (verbose_ > 2) {
         output("Initial residual", residual);
-        output("norm", twoNorm(residual));
+        output("    newtonSolve: norm (initial residual)", twoNorm(residual));
     }
 
     int iter = 0;
 
     // Debugging output not specified in Equelle.
     if (verbose_ > 1) {
-        std::cout << "iter = " << iter << " (max = " << max_iter_
+        std::cout << "    newtonSolve: iter = " << iter << " (max = " << max_iter_
                   << "), norm(residual) = " << twoNorm(residual)
                   << " (tol = " << abs_res_tol_ << ")" << std::endl;
     }
@@ -220,16 +220,16 @@ CollOfScalar EquelleRuntimeCPU::newtonSolve(const ResidualFunctor& rescomp,
         if (verbose_ > 2) {
             // Debugging output not specified in Equelle.
             output("u", u);
-            output("norm(u)", twoNorm(u));
+            output("    newtonSolve: norm(u)", twoNorm(u));
             output("residual", residual);
-            output("norm(residual)", twoNorm(residual));
+            output("    newtonSolve: norm(residual)", twoNorm(residual));
         }
 
         ++iter;
 
         // Debugging output not specified in Equelle.
         if (verbose_ > 1) {
-            std::cout << "iter = " << iter << " (max = " << max_iter_
+            std::cout << "    newtonSolve: iter = " << iter << " (max = " << max_iter_
                       << "), norm(residual) = " << twoNorm(residual)
                       << " (tol = " << abs_res_tol_ << ")" << std::endl;
         }

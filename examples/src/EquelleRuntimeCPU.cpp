@@ -360,8 +360,8 @@ CollOfScalar EquelleRuntimeCPU::solveForUpdate(const CollOfScalar& residual) con
                            matr.outerIndexPtr(), matr.innerIndexPtr(), matr.valuePtr(),
                            residual.value().data(), du.data());
 
-    if (verbose_ > 1) {
-        std::cout << "Linear solver took: " << clock.secsSinceLast() << " seconds." << std::endl;
+    if (verbose_ > 2) {
+        std::cout << "        solveForUpdate: Linear solver took: " << clock.secsSinceLast() << " seconds." << std::endl;
     }
     if (!rep.converged) {
         OPM_THROW(std::runtime_error, "Linear solver convergence failure.");
