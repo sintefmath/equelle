@@ -164,7 +164,11 @@ std::string FunctionType::equelleString() const
     for (auto var : arguments_) {
         retval += var.name();
         retval += " : ";
-        retval += SymbolTable::equelleString(var.type());
+        if (var.type().basicType() == Invalid) {
+            retval += " <multiple types possible>";
+        } else {
+            retval += SymbolTable::equelleString(var.type());
+        }
         retval += ", ";
     }
     if (!arguments_.empty()) {
@@ -326,6 +330,7 @@ const std::string& Function::parentScope() const
 void Function::dump() const
 {
     std::cout << "------------------ Dump of function: " << name() << " ------------------\n";
+    std::cout << type_.equelleString() << '\n';
     std::cout << "Local variables:\n";
     for (const Variable& v : local_variables_) {
         std::cout << v.name() << " : " << SymbolTable::equelleString(v.type()) << "    assigned: " << v.assigned() << '\n';
