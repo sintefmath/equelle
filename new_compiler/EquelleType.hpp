@@ -12,7 +12,7 @@
 
 // ------ EquelleType class and type-related utilities ------ 
 
-enum BasicType { Bool, Scalar, Vector, Cell, Face, Edge, Vertex, String, Invalid };
+enum BasicType { Bool, Scalar, Vector, Cell, Face, Edge, Vertex, String, Void, Invalid };
 
 enum CanonicalEntitySet { InteriorCells = 0, BoundaryCells, AllCells,
                           InteriorFaces, BoundaryFaces, AllFaces,
@@ -43,7 +43,8 @@ public:
                 const CompositeType composite = None,
                 const int gridmapping = NotApplicable,
                 const int subset_of = NotApplicable,
-                const bool is_mutable = false);
+                const bool is_mutable = false,
+                const bool is_domain = false);
 
     bool isBasic() const;
 
@@ -54,6 +55,8 @@ public:
     CompositeType compositeType() const;
 
     bool isCollection() const;
+
+    bool isDomain() const;
 
     bool isSequence() const;
 
@@ -75,6 +78,7 @@ private:
     int gridmapping_;
     int subset_of_;
     bool mutable_;
+    bool is_domain_;
 };
 
 

@@ -27,6 +27,8 @@ std::string basicTypeString(const BasicType bt)
         return "Vertex";
     case String:
         return "String";
+    case Void:
+        return "Void";
     default:
         return "basicTypeString() error";
     }
@@ -42,6 +44,7 @@ bool isEntityType(const BasicType bt)
     case Scalar:
     case Vector:
     case String:
+    case Void:
     case Invalid:
         return false;
     case Cell:
@@ -67,6 +70,7 @@ bool isNumericType(const BasicType bt)
     case Edge:
     case Vertex:
     case String:
+    case Void:
     case Invalid:
         return false;
     case Scalar:
@@ -151,12 +155,14 @@ EquelleType::EquelleType(const BasicType bt,
                          const CompositeType composite,
                          const int gridmapping,
                          const int subset_of,
-                         const bool is_mutable)
+                         const bool is_mutable,
+                         const bool is_domain)
     : basic_type_(bt),
       composite_(composite),
       gridmapping_(gridmapping),
       subset_of_(subset_of),
-      mutable_(is_mutable)
+      mutable_(is_mutable),
+      is_domain_(is_domain)
 {
 }
 
@@ -185,6 +191,11 @@ CompositeType EquelleType::compositeType() const
 bool EquelleType::isCollection() const
 {
     return composite_ == Collection;
+}
+
+bool EquelleType::isDomain() const
+{
+    return is_domain_;
 }
 
 bool EquelleType::isSequence() const
@@ -220,7 +231,8 @@ bool EquelleType::operator==(const EquelleType& et) const
     return basic_type_ == et.basic_type_
         && composite_ == et.composite_
         && gridmapping_ == et.gridmapping_
-        && subset_of_ == et.subset_of_;
+        && subset_of_ == et.subset_of_
+        && is_domain_ == et.is_domain_;
 }
 
 bool EquelleType::operator!=(const EquelleType& et) const
