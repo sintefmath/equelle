@@ -64,12 +64,12 @@ int main(int argc, char** argv)
         return (krw / watervisc);
     };
     auto computeOilMob = [&](const CollOfScalar& sw) -> CollOfScalar {
-        const CollOfScalar kro = (er.operatorOn(double(1), er.allCells()) - sw);
+        const CollOfScalar kro = (er.operatorExtend(double(1), er.allCells()) - sw);
         return (kro / oilvisc);
     };
     auto computeTransportResidual = [&](const CollOfScalar& sw, const CollOfScalar& sw0, const CollOfScalar& fluxes, const CollOfScalar& source, const CollOfScalar& insource_sw, const Scalar& dt) -> CollOfScalar {
-        const CollOfScalar insource = er.trinaryIf((source > double(0)), source, er.operatorOn(double(0), er.allCells()));
-        const CollOfScalar outsource = er.trinaryIf((source < double(0)), source, er.operatorOn(double(0), er.allCells()));
+        const CollOfScalar insource = er.trinaryIf((source > double(0)), source, er.operatorExtend(double(0), er.allCells()));
+        const CollOfScalar outsource = er.trinaryIf((source < double(0)), source, er.operatorExtend(double(0), er.allCells()));
         const CollOfScalar mw = computeWaterMob(sw);
         const CollOfScalar mo = computeOilMob(sw);
         const CollOfScalar f = (mw / (mw + mo));
@@ -82,12 +82,12 @@ int main(int argc, char** argv)
     const CollOfScalar sw_initial = er.userSpecifiedCollectionOfScalar("sw_initial", er.allCells());
     const CollOfCell source_cells = er.userSpecifiedCollectionOfCellSubsetOf("source_cells", er.allCells());
     const CollOfScalar source_values = er.userSpecifiedCollectionOfScalar("source_values", source_cells);
-    const CollOfScalar source = er.operatorOn(source_values, source_cells, er.allCells());
-    const CollOfScalar insource_sw = er.operatorOn(double(1), er.allCells());
+    const CollOfScalar source = er.operatorExtend(source_values, source_cells, er.allCells());
+    const CollOfScalar insource_sw = er.operatorExtend(double(1), er.allCells());
     CollOfScalar sw0;
     sw0 = sw_initial;
     CollOfScalar p0;
-    p0 = er.operatorOn(double(0), er.allCells());
+    p0 = er.operatorExtend(double(0), er.allCells());
     er.output("pressure", p0);
     er.output("saturation", sw0);
     for (const Scalar& dt : timesteps) {
