@@ -84,6 +84,7 @@ VarAssignNode* handleAssignment(const std::string& name, Node* expr)
             if (lhs_type.gridMapping() == PostponedDefinition
                 && lhs_type.basicType() == rhs_type.basicType()
                 && lhs_type.isCollection() && rhs_type.isCollection()
+                && rhs_type.isDomain()
                 && SymbolTable::isSubset(rhs_type.gridMapping(), lhs_type.subsetOf())) {
                 // OK, should make postponed definition of the variable.
                 SymbolTable::setVariableType(name, rhs_type);
@@ -226,15 +227,18 @@ FuncCallNode* handleFuncCall(const std::string& name, FuncArgsNode* args)
         yyerror(err_msg.c_str());
     }
     // At the moment, we do not check function argument types.
-    // If the function returns a new entity set, we must declare it (even if anonymous).
-    int dynsubret = f.functionType().dynamicSubsetReturn(args->argumentTypes());
-    if (dynsubret != NotApplicable) {
-        // Create a new entity collection.
-        const int gm = SymbolTable::declareNewEntitySet("AnonymousEntitySet", dynsubret);
-        return new FuncCallNode(name, args, gm);
-    } else {
-        return new FuncCallNode(name, args);
+    // If the function returns a new dynamically created domain,
+    // we must declare it (anonymously for now).
+    const EquelleType rtype = f.returnType(argtypes);
+    if (rtype.isDomain()) {
+        const int dynsubret = f.functionType().dynamicSubsetReturn(argtypes);
+        if (dynsubret != NotApplicable) {
+            // Create a new domain.
+            const int gm = SymbolTable::declareNewEntitySet("AnonymousEntitySet", dynsubret);
+            return new FuncCallNode(name, args, gm);
+        }
     }
+    return new FuncCallNode(name, args);
 }
 
 
@@ -351,68 +355,85 @@ TrinaryIfNode* handleTrinaryIf(Node* predicate, Node* iftrue, Node* iffalse)
 
 OnNode* handleOn(Node* left, Node* right)
 {
-    if (!right->type().isEntityCollection()) {
+    const EquelleType lt = left->type();
+    const EquelleType rt = right->type();
+    // Left side can be anything but a sequence.
+    if (lt.isSequence()) {
+        yyerror("cannot use Extend operator with a Sequence.");
+    }
+    // Right side must be an entity collection.
+    if (!rt.isEntityCollection()) {
         yyerror("in a '<left> On <right>' expression "
                 "the expression <right> must be a Collection Of Cell, Face, Edge or Vertex.");
     }
-    if (left->type().isSequence()) {
-        yyerror("cannot use On operator with a Sequence.");
-    }
-
-    if (left->type().isCollection()) {
-        const int gml = left->type().gridMapping();
-        if (SymbolTable::entitySetType(gml) != right->type().basicType()) {
+    // Left side must be some collection.
+    if (!lt.isCollection()) {
+        yyerror("in a '<left> On <right>' expression "
+                "the expression <left> must be a Collection.");
+    } else {
+        // The domain (grid mapping) of the left side must contain
+        // the right hand side. Explanation by example:
+        //   x = AllCells()
+        //   y : Collection Of Scalar On x = |x|
+        // The above defines x and y, and the On part declares that there is a 1-1 mapping x -> y.
+        // We can even denote this mapping y(x).
+        //   z = InteriorFaces()
+        //   w : Collection Of Cell On z = FirstCell(z)
+        // Now w is On z, meaning that there is a 1-1 mapping z -> w, we denote it w(z)
+        // Finally, what does then the following mean?
+        //   yow = y On w
+        // Its meaning is intended to be a composition of mappings, that is
+        // there is now a 1-1 mapping z->yow defined by yow(z) = y(w(z)).
+        // This is only ok if the range of w(z) is contained in the domain of y(x), that is x.
+        // In our case that means that the entity collection on the right hand side must be contained
+        // in the domain of the left.
+        const int left_domain = lt.gridMapping();
+        const int right_collection = rt.subsetOf();
+        if (!SymbolTable::isSubset(right_collection, left_domain)) {
             std::string err_msg;
             err_msg += "in a '<left> On <right>' expression the expression <right> must "
-                "be a collection of the same kind of that which <left> is On. ";
+                "be a collection that is contained in the domain that <left> is On. ";
             err_msg += "Collection on the left is On ";
-            err_msg += SymbolTable::entitySetName(gml);
+            err_msg += SymbolTable::entitySetName(left_domain);
             yyerror(err_msg.c_str());
         }
-        // Following test is wrong: cannot deal properly with rhs that is not an entity set.
-        // const int gmr = right->type().gridMapping();
-        // if (!SymbolTable::isSubset(gml, gmr)
-        //     && !SymbolTable::isSubset(gmr, gml)) {
-        //     yyerror("in a '<left> On <right>' expression "
-        //             "the entityset <right> must be a (non-strict) super- or sub-set of "
-        //             "the set which <left> is 'On'.");
-        // }
     }
-    return new OnNode(left, right);
+    return new OnNode(left, right, false);
 }
 
 
 
 OnNode* handleExtend(Node* left, Node* right)
 {
-    if (!right->type().isEntityCollection()) {
-        yyerror("in a '<left> On <right>' expression "
-                "the expression <right> must be a Collection Of Cell, Face, Edge or Vertex.");
+    const EquelleType lt = left->type();
+    const EquelleType rt = right->type();
+    // Left side can be anything but a sequence.
+    if (lt.isSequence()) {
+        yyerror("cannot use Extend operator with a Sequence.");
     }
-    if (left->type().isSequence()) {
-        yyerror("cannot use On operator with a Sequence.");
+    // Right side must be a domain.
+    if (!rt.isDomain()) {
+        yyerror("in a '<left> Extend <right>' expression "
+                "the expression <right> must be a Collection Of Cell, Face, Edge or Vertex, "
+                "that also is a domain (all unique, non-Empty elements).");
     }
-
-    if (left->type().isCollection()) {
-        const int gml = left->type().gridMapping();
-        if (SymbolTable::entitySetType(gml) != right->type().basicType()) {
+    // If left side is a collection, its domain (grid mapping) must be
+    // a subset of the right hand side.
+    if (lt.isCollection()) {
+        const int left_domain = lt.gridMapping();
+        const int right_domain = lt.gridMapping();
+        if (!SymbolTable::isSubset(left_domain, right_domain)) {
             std::string err_msg;
-            err_msg += "in a '<left> On <right>' expression the expression <right> must "
-                "be a collection of the same kind of that which <left> is On. ";
+            err_msg += "in a '<left> Extend <right>' expression the expression <right> must "
+                "be a domain that contains the domain that <left> is On. ";
             err_msg += "Collection on the left is On ";
-            err_msg += SymbolTable::entitySetName(gml);
+            err_msg += SymbolTable::entitySetName(left_domain);
+            err_msg += " and Domain on the right is On ";
+            err_msg += SymbolTable::entitySetName(right_domain);
             yyerror(err_msg.c_str());
         }
-        // Following test is wrong: cannot deal properly with rhs that is not an entity set.
-        // const int gmr = right->type().gridMapping();
-        // if (!SymbolTable::isSubset(gml, gmr)
-        //     && !SymbolTable::isSubset(gmr, gml)) {
-        //     yyerror("in a '<left> On <right>' expression "
-        //             "the entityset <right> must be a (non-strict) super- or sub-set of "
-        //             "the set which <left> is 'On'.");
-        // }
     }
-    return new OnNode(left, right);
+    return new OnNode(left, right, true);
 }
 
 

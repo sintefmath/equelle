@@ -287,7 +287,7 @@ private:
 class OnNode : public Node
 {
 public:
-    OnNode(Node* left, Node* right) : left_(left), right_(right) {}
+    OnNode(Node* left, Node* right, bool is_extend) : left_(left), right_(right), is_extend_(is_extend) {}
     EquelleType type() const
     {
         return EquelleType(left_->type().basicType(), Collection, right_->type().gridMapping(), left_->type().subsetOf());
@@ -295,6 +295,10 @@ public:
     EquelleType lefttype() const
     {
         return left_->type();
+    }
+    bool isExtend() const
+    {
+        return is_extend_;
     }
     virtual void accept(ASTVisitorInterface& visitor)
     {
@@ -307,6 +311,7 @@ public:
 private:
     Node* left_;
     Node* right_;
+    bool is_extend_;
 };
 
 

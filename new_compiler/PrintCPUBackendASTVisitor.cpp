@@ -165,14 +165,18 @@ void PrintCPUBackendASTVisitor::postVisit(UnaryNegationNode&)
 {
 }
 
-void PrintCPUBackendASTVisitor::visit(OnNode&)
+void PrintCPUBackendASTVisitor::visit(OnNode& node)
 {
-    std::cout << "er.operatorOn(";
+    if (node.isExtend()) {
+        std::cout << "er.operatorExtend(";
+    } else {
+        std::cout << "er.operatorOn(";
+    }
 }
 
 void PrintCPUBackendASTVisitor::midVisit(OnNode& node)
 {
-    // Backend's operatorOn has three arguments when the left argument
+    // Backend's operatorOn/operatorExtend has three arguments when the left argument
     // is a collection, not two. The middle argument (that we will
     // write in this method) should be the set that the first argument
     // is On. Example:
