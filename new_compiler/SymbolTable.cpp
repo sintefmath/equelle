@@ -145,7 +145,7 @@ int FunctionType::dynamicSubsetReturn(const std::vector<EquelleType>& argtypes) 
         const bool coll = return_type_.isCollection();
         if (isEntityType(bt) && coll) {
             const int subset = dynamic_.arg_index_for_subset == InvalidIndex ?
-                NotApplicable : argtypes[dynamic_.arg_index_for_subset].gridMapping();
+                return_type_.subsetOf() : argtypes[dynamic_.arg_index_for_subset].gridMapping();
             return subset;
         }
     }
