@@ -22,17 +22,17 @@ namespace
             return new Opm::GridManager(param.get<std::string>("grid_filename"));
         }
         const int grid_dim = param.getDefault("grid_dim", 2);
-        int num[3] = { 1, 1, 1 };
+        int num[3] = { 6, 1, 1 };
         double size[3] = { 1.0, 1.0, 1.0 };
         switch (grid_dim) { // Fall-throughs are intentional in this
         case 3:
             num[2] = param.getDefault("nz", num[2]);
             size[2] = param.getDefault("dz", size[2]);
         case 2:
-            num[1] = param.getDefault("ny", num[2]);
-            size[1] = param.getDefault("dy", size[2]);
-            num[0] = param.getDefault("nx", num[2]);
-            size[0] = param.getDefault("dx", size[2]);
+            num[1] = param.getDefault("ny", num[1]);
+            size[1] = param.getDefault("dy", size[1]);
+            num[0] = param.getDefault("nx", num[0]);
+            size[0] = param.getDefault("dx", size[0]);
             break;
         default:
             OPM_THROW(std::runtime_error, "Cannot handle " << grid_dim << " dimensions.");

@@ -12,8 +12,8 @@
 
 
 template <class EntityCollection>
-CollOfScalar EquelleRuntimeCPU::operatorOn(const double data,
-                                           const EntityCollection& to_set)
+CollOfScalar EquelleRuntimeCPU::operatorExtend(const double data,
+                                               const EntityCollection& to_set)
 {
     return CollOfScalar(CollOfScalar::V::Constant(to_set.size(), data));
 }
@@ -111,6 +111,22 @@ namespace
 } // anon namespace
 
 template <class SomeCollection, class EntityCollection>
+SomeCollection EquelleRuntimeCPU::operatorExtend(const SomeCollection& data,
+                                                 const EntityCollection& from_set,
+                                                 const EntityCollection& to_set)
+{
+    const size_t from_sz = data.size();
+    assert(from_sz == from_set.size());
+    const size_t to_sz = to_set.size();
+    // Expand with zeros.
+    std::vector<int> indices = subsetIndices(to_set, from_set);
+    assert(indices.size() == from_sz);
+    return superset(data, indices, to_sz);
+}
+
+
+
+template <class SomeCollection, class EntityCollection>
 SomeCollection EquelleRuntimeCPU::operatorOn(const SomeCollection& data,
                                              const EntityCollection& from_set,
                                              const EntityCollection& to_set)
@@ -119,20 +135,10 @@ SomeCollection EquelleRuntimeCPU::operatorOn(const SomeCollection& data,
     const size_t from_sz = data.size();
     assert(from_sz == from_set.size());
     const size_t to_sz = to_set.size();
-    if (to_sz == from_sz) {
-        assert(from_set == to_set);
-        return data;
-    } else if (to_sz > from_sz) {
-        // Expand with zeros.
-        std::vector<int> indices = subsetIndices(to_set, from_set);
-        assert(indices.size() == from_sz);
-        return superset(data, indices, to_sz);
-    } else {
-        // Extract subset.
-        std::vector<int> indices = subsetIndices(from_set, to_set);
-        assert(indices.size() == to_sz);
-        return subset(data, indices);
-    }
+    // Extract subset.
+    std::vector<int> indices = subsetIndices(from_set, to_set);
+    assert(indices.size() == to_sz);
+    return subset(data, indices);
 }
 
 

@@ -74,7 +74,7 @@ int main(int argc, char** argv)
     // --------------------------------------------------------------------------------
     const CollOfFace bf = er.boundaryFaces();
     const CollOfCell bf_cells = er.trinaryIf(er.isEmpty(er.firstCell(bf)), er.secondCell(bf), er.firstCell(bf));
-    const CollOfScalar bf_sign = er.trinaryIf(er.isEmpty(er.firstCell(bf)), er.operatorOn(-double(1), bf), er.operatorOn(double(1), bf));
+    const CollOfScalar bf_sign = er.trinaryIf(er.isEmpty(er.firstCell(bf)), er.operatorExtend(-double(1), bf), er.operatorExtend(double(1), bf));
     const CollOfScalar btrans = (k * (er.norm(bf) / er.norm((er.centroid(bf) - er.centroid(bf_cells)))));
 
     // --------------------------------------------------------------------------------

@@ -167,7 +167,9 @@ public:
     CollOfBool isEmpty(const CollOfCell& cells) const;
     CollOfBool isEmpty(const CollOfFace& faces) const;
     template <class EntityCollection>
-    CollOfScalar operatorOn(const Scalar data, const EntityCollection& to_set);
+    CollOfScalar operatorExtend(const Scalar data, const EntityCollection& to_set);
+    template <class SomeCollection, class EntityCollection>
+    SomeCollection operatorExtend(const SomeCollection& data, const EntityCollection& from_set, const EntityCollection& to_set);
     template <class SomeCollection, class EntityCollection>
     SomeCollection operatorOn(const SomeCollection& data, const EntityCollection& from_set, const EntityCollection& to_set);
 
