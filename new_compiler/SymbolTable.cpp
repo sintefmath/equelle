@@ -522,11 +522,11 @@ SymbolTable::SymbolTable()
     functions_.emplace_back("AllVertices", FunctionType(EquelleType(Vertex, Collection, AllVertices, AllVertices, false, true)));
     functions_.emplace_back("FirstCell",
                             FunctionType({ Variable("faces", EquelleType(Face, Collection)) },
-                                         EquelleType(Cell, Collection),
+                                         EquelleType(Cell, Collection, NotApplicable, AllCells),
                                          { InvalidIndex, 0, InvalidIndex}));
     functions_.emplace_back("SecondCell",
                             FunctionType({ Variable("faces", EquelleType(Face, Collection)) },
-                                         EquelleType(Cell, Collection),
+                                         EquelleType(Cell, Collection, NotApplicable, AllCells),
                                          { InvalidIndex, 0, InvalidIndex}));
     functions_.emplace_back("IsEmpty",
                             FunctionType({ Variable("entities", EquelleType()) },
