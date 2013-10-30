@@ -502,25 +502,25 @@ SymbolTable::SymbolTable()
 {
     // ----- Add built-in functions to function table. -----
     // 1. Grid functions.
-    functions_.emplace_back("Main", FunctionType(EquelleType()));
-    functions_.emplace_back("InteriorCells", FunctionType(EquelleType(Cell, Collection, InteriorCells)));
-    functions_.emplace_back("BoundaryCells", FunctionType(EquelleType(Cell, Collection, BoundaryCells)));
-    functions_.emplace_back("AllCells", FunctionType(EquelleType(Cell, Collection, AllCells)));
-    functions_.emplace_back("InteriorFaces", FunctionType(EquelleType(Face, Collection, InteriorFaces)));
-    functions_.emplace_back("BoundaryFaces", FunctionType(EquelleType(Face, Collection, BoundaryFaces)));
-    functions_.emplace_back("AllFaces", FunctionType(EquelleType(Face, Collection, AllFaces)));
-    functions_.emplace_back("InteriorEdges", FunctionType(EquelleType(Edge, Collection, InteriorEdges)));
-    functions_.emplace_back("BoundaryEdges", FunctionType(EquelleType(Edge, Collection, BoundaryEdges)));
-    functions_.emplace_back("AllEdges", FunctionType(EquelleType(Edge, Collection, AllEdges)));
-    functions_.emplace_back("InteriorVertices", FunctionType(EquelleType(Vertex, Collection, InteriorVertices)));
-    functions_.emplace_back("BoundaryVertices", FunctionType(EquelleType(Vertex, Collection, BoundaryVertices)));
-    functions_.emplace_back("AllVertices", FunctionType(EquelleType(Vertex, Collection, AllVertices)));
+    functions_.emplace_back("Main", FunctionType(EquelleType(Void)));
+    functions_.emplace_back("InteriorCells", FunctionType(EquelleType(Cell, Collection, InteriorCells, AllCells, false, true)));
+    functions_.emplace_back("BoundaryCells", FunctionType(EquelleType(Cell, Collection, BoundaryCells, AllCells, false, true)));
+    functions_.emplace_back("AllCells", FunctionType(EquelleType(Cell, Collection, AllCells, AllCells, false, true)));
+    functions_.emplace_back("InteriorFaces", FunctionType(EquelleType(Face, Collection, InteriorFaces, AllFaces, false, true)));
+    functions_.emplace_back("BoundaryFaces", FunctionType(EquelleType(Face, Collection, BoundaryFaces, AllFaces, false, true)));
+    functions_.emplace_back("AllFaces", FunctionType(EquelleType(Face, Collection, AllFaces, AllFaces, false, true)));
+    functions_.emplace_back("InteriorEdges", FunctionType(EquelleType(Edge, Collection, InteriorEdges, AllEdges, false, true)));
+    functions_.emplace_back("BoundaryEdges", FunctionType(EquelleType(Edge, Collection, BoundaryEdges, AllEdges, false, true)));
+    functions_.emplace_back("AllEdges", FunctionType(EquelleType(Edge, Collection, AllEdges, AllEdges, false, true)));
+    functions_.emplace_back("InteriorVertices", FunctionType(EquelleType(Vertex, Collection, InteriorVertices, AllVertices, false, true)));
+    functions_.emplace_back("BoundaryVertices", FunctionType(EquelleType(Vertex, Collection, BoundaryVertices, AllVertices, false, true)));
+    functions_.emplace_back("AllVertices", FunctionType(EquelleType(Vertex, Collection, AllVertices, AllVertices, false, true)));
     functions_.emplace_back("FirstCell",
-                            FunctionType({ Variable("faces", EquelleType()) },
+                            FunctionType({ Variable("faces", EquelleType(Face, Collection)) },
                                          EquelleType(Cell, Collection),
                                          { InvalidIndex, 0, InvalidIndex}));
     functions_.emplace_back("SecondCell",
-                            FunctionType({ Variable("faces", EquelleType()) },
+                            FunctionType({ Variable("faces", EquelleType(Face, Collection)) },
                                          EquelleType(Cell, Collection),
                                          { InvalidIndex, 0, InvalidIndex}));
     functions_.emplace_back("IsEmpty",
@@ -532,7 +532,7 @@ SymbolTable::SymbolTable()
                                          EquelleType(Vector, Collection),
                                          { InvalidIndex, 0, InvalidIndex}));
     functions_.emplace_back("Normal",
-                            FunctionType({ Variable("faces", EquelleType()) },
+                            FunctionType({ Variable("faces", EquelleType(Face, Collection)) },
                                          EquelleType(Vector, Collection),
                                          { InvalidIndex, 0, InvalidIndex}));
     // 2. User input functions.
@@ -548,12 +548,12 @@ SymbolTable::SymbolTable()
     functions_.emplace_back("UserSpecifiedCollectionOfFaceSubsetOf",
                             FunctionType({ Variable("name", EquelleType(String)),
                                            Variable("entities", EquelleType()) },
-                                         EquelleType(Face, Collection),
+                                          EquelleType(Face, Collection, NotApplicable, NotApplicable, false, true),
                                          { InvalidIndex, InvalidIndex, 1}));
     functions_.emplace_back("UserSpecifiedCollectionOfCellSubsetOf",
                             FunctionType({ Variable("name", EquelleType(String)),
                                            Variable("entities", EquelleType()) },
-                                         EquelleType(Cell, Collection),
+                                         EquelleType(Cell, Collection, NotApplicable, NotApplicable, false, true),
                                          { InvalidIndex, InvalidIndex, 1}));
     functions_.emplace_back("UserSpecifiedSequenceOfScalar",
                             FunctionType({ Variable("name", EquelleType(String)) },
@@ -565,7 +565,7 @@ SymbolTable::SymbolTable()
                             FunctionType({ Variable("values", EquelleType(Scalar, Collection, AllCells)) },
                                          EquelleType(Scalar, Collection, InteriorFaces)));
     functions_.emplace_back("Divergence",
-                            FunctionType({ Variable("values", EquelleType()) },
+                            FunctionType({ Variable("values", EquelleType(Scalar, Collection)) },
                                          EquelleType(Scalar, Collection, AllCells)));
     // 4. Other functions
     functions_.emplace_back("Dot",
@@ -580,7 +580,7 @@ SymbolTable::SymbolTable()
     functions_.emplace_back("Output",
                             FunctionType({ Variable("tag", EquelleType(String)),
                                            Variable("data", EquelleType()) },
-                                         EquelleType()));
+                                         EquelleType(Void)));
 
 
     // ----- Set main function ref and current (initially equal to main). -----
