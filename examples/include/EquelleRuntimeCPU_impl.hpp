@@ -114,13 +114,11 @@ SomeCollection EquelleRuntimeCPU::operatorExtend(const SomeCollection& data,
                                                  const EntityCollection& from_set,
                                                  const EntityCollection& to_set)
 {
-    const size_t from_sz = data.size();
-    assert(from_sz == from_set.size());
-    const size_t to_sz = to_set.size();
+    assert(size_t(data.size()) == size_t(from_set.size()));
     // Expand with zeros.
     std::vector<int> indices = subsetIndices(to_set, from_set);
-    assert(indices.size() == from_sz);
-    return superset(data, indices, to_sz);
+    assert(indices.size() == from_set.size());
+    return superset(data, indices, to_set.size());
 }
 
 
@@ -130,13 +128,13 @@ SomeCollection EquelleRuntimeCPU::operatorOn(const SomeCollection& data,
                                              const EntityCollection& from_set,
                                              const EntityCollection& to_set)
 {
-    // The implementation assumes that from_set is a subset of to_set, or vice versa.
-    const size_t from_sz = data.size();
-    assert(from_sz == from_set.size());
-    const size_t to_sz = to_set.size();
+    // The implementation assumes that to_set is a subset of from_set,
+    // in the sense that all (possibly repeated) elements of to_set
+    // are found in from_set.
+    assert(size_t(data.size()) == size_t(from_set.size()));
     // Extract subset.
     std::vector<int> indices = subsetIndices(from_set, to_set);
-    assert(indices.size() == to_sz);
+    assert(indices.size() == to_set.size());
     return subset(data, indices);
 }
 
