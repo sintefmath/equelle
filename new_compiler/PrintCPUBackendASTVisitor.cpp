@@ -253,7 +253,9 @@ void PrintCPUBackendASTVisitor::postVisit(VarAssignNode&)
 
 void PrintCPUBackendASTVisitor::visit(VarNode& node)
 {
-    std::cout << node.name();
+    if (!suppressed_) {
+        std::cout << node.name();
+    }
 }
 
 void PrintCPUBackendASTVisitor::visit(FuncRefNode& node)
