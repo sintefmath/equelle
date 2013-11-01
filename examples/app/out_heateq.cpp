@@ -15,6 +15,8 @@
 
 #include "EquelleRuntimeCPU.hpp"
 
+void ensureRequirements(const EquelleRuntimeCPU& er);
+
 int main(int argc, char** argv)
 {
     // Get user parameters.
@@ -22,6 +24,8 @@ int main(int argc, char** argv)
 
     // Create the Equelle runtime.
     EquelleRuntimeCPU er(param);
+
+    ensureRequirements(er);
 
     // ============= Generated code starts here ================
 
@@ -63,4 +67,8 @@ int main(int argc, char** argv)
     // ============= Generated code ends here ================
 
     return 0;
+}
+
+void ensureRequirements(const EquelleRuntimeCPU& er)
+{
 }
