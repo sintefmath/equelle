@@ -200,6 +200,10 @@ public:
 
     SeqOfScalar userSpecifiedSequenceOfScalar(const String& name);
 
+
+    /// Ensuring requirements that may be imposed by Equelle programs.
+    void ensureGridDimensionMin(const int minimum_grid_dimension) const;
+
 private:
     /// Topology helpers
     bool boundaryCell(const int cell_index) const;

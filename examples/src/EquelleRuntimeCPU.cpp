@@ -481,6 +481,17 @@ SeqOfScalar EquelleRuntimeCPU::userSpecifiedSequenceOfScalar(const String& name)
 }
 
 
+
+void EquelleRuntimeCPU::ensureGridDimensionMin(const int minimum_grid_dimension) const
+{
+    if (grid_.dimensions < minimum_grid_dimension) {
+        OPM_THROW(std::runtime_error, "Equelle simulator requires minimum " << minimum_grid_dimension
+                  << " dimensions, but grid only has " << grid_.dimensions << " dimensions.");
+    }
+}
+
+
+
 CollOfScalar EquelleRuntimeCPU::singlePrimaryVariable(const CollOfScalar& initial_values)
 {
     std::vector<int> block_pattern;
