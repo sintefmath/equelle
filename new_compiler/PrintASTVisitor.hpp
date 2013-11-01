@@ -66,6 +66,8 @@ public:
     void postVisit(FuncCallStatementNode& node);
     void visit(LoopNode& node);
     void postVisit(LoopNode& node);
+    void visit(RandomAccessNode& node);
+    void postVisit(RandomAccessNode& node);
 
 private:
     int indent_;

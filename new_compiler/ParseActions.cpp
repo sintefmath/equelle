@@ -507,3 +507,15 @@ LoopNode* handleLoopStatement(LoopNode* loop_start, SequenceNode* loop_block)
     return loop_start;
 }
 
+
+
+RandomAccessNode* handleRandomAccess(Node* expr, const int index)
+{
+    if (expr->type().basicType() != Vector) {
+        yyerror("cannot use '[<index>]' random access operator with anything other than a Vector");
+    }
+    if (index < 0 || index > 2) {
+        yyerror("cannot use '[<index>]' random access operator with index < 0 or > 2");
+    }
+    return new RandomAccessNode(expr, index);
+}

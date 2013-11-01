@@ -68,5 +68,6 @@ LoopNode* handleLoopStart(const std::string& loop_variable, const std::string& l
 
 LoopNode* handleLoopStatement(LoopNode* loop_start, SequenceNode* loop_block);
 
+RandomAccessNode* handleRandomAccess(Node* expr, const int index);
 
 #endif // PARSEACTIONS_HEADER_INCLUDED

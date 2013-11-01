@@ -183,6 +183,11 @@ BasicType EquelleType::basicType() const
     return basic_type_;
 }
 
+void EquelleType::setBasicType(const BasicType bt)
+{
+    basic_type_ = bt;
+}
+
 CompositeType EquelleType::compositeType() const
 {
     return composite_;

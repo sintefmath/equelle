@@ -7,6 +7,7 @@
 #include "SymbolTable.hpp"
 #include <iostream>
 #include <cctype>
+#include <sstream>
 
 
 namespace
@@ -50,8 +51,18 @@ void PrintCPUBackendASTVisitor::postVisit(SequenceNode&)
 {
     --sequence_depth_;
     if (sequence_depth_ == 0) {
-        // We are back at the root node.
+        // We are back at the root node. Finish main() function.
         std::cout << cppEndString();
+        // Emit ensureRequirements() function.
+        std::cout <<
+            "\n"
+            "void ensureRequirements(const EquelleRuntimeCPU& er)\n"
+            "{\n";
+        for (const std::string& req : requirement_strings_) {
+            std::cout << "    " << req;
+        }
+        std::cout << 
+            "}\n";
     }
 }
 
@@ -399,6 +410,21 @@ void PrintCPUBackendASTVisitor::postVisit(LoopNode&)
     endl();
 }
 
+void PrintCPUBackendASTVisitor::visit(RandomAccessNode&)
+{
+    std::cout << "CollOfScalar(";
+}
+
+void PrintCPUBackendASTVisitor::postVisit(RandomAccessNode& node)
+{
+    // Add a grid dimension requirement.
+    std::ostringstream os;
+    os << "er.ensureGridDimensionMin(" << node.index() + 1 << ");\n";
+    addRequirementString(os.str());
+    // Random access op is taking the column of the underlying Eigen array.
+    std::cout << ".col(" << node.index() << "))";
+}
+
 
 
 void PrintCPUBackendASTVisitor::endl() const
@@ -429,7 +455,10 @@ std::string PrintCPUBackendASTVisitor::cppTypeString(const EquelleType& et) cons
     return cppstring;
 }
 
-
+void PrintCPUBackendASTVisitor::addRequirementString(const std::string& req)
+{
+    requirement_strings_.insert(req);
+}
 
 namespace
 {
@@ -453,6 +482,8 @@ namespace
 "\n"
 "#include \"EquelleRuntimeCPU.hpp\"\n"
 "\n"
+"void ensureRequirements(const EquelleRuntimeCPU& er);\n"
+"\n"
 "int main(int argc, char** argv)\n"
 "{\n"
 "    // Get user parameters.\n"
@@ -460,6 +491,8 @@ namespace
 "\n"
 "    // Create the Equelle runtime.\n"
 "    EquelleRuntimeCPU er(param);\n"
+"\n"
+"    ensureRequirements(er);\n"
 "\n"
 "    // ============= Generated code starts here ================\n";
     }

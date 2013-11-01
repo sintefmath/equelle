@@ -761,4 +761,37 @@ private:
     SequenceNode* loop_block_;
 };
 
+
+
+class RandomAccessNode : public Node
+{
+public:
+    RandomAccessNode(Node* expr, const int index)
+        : expr_(expr), index_(index)
+    {
+    }
+    int index() const
+    {
+        return index_;
+    }
+    EquelleType type() const
+    {
+        // We must be a (Collection Of) Scalar,
+        // since expr_ must be a (Collection Of) Vector.
+        EquelleType t = expr_->type();
+        assert(t.basicType() == Vector);
+        t.setBasicType(Scalar);
+        return t;
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        expr_->accept(visitor);
+        visitor.postVisit(*this);
+    }
+private:
+    Node* expr_;
+    int index_;
+};
+
 #endif // ASTNODES_HEADER_INCLUDED

@@ -75,6 +75,7 @@
 %nonassoc '/'
 %nonassoc '^'
 %nonassoc NOT UMINUS
+%left '['
 
 
 
@@ -137,6 +138,7 @@ comb_decl_assign: ID ':' type_expr '=' expr  { $$ = handleDeclarationAssign(*($1
 
 expr: number              { $$ = $1; }
     | function_call       { $$ = $1; }
+    | expr '[' INT ']'    { $$ = handleRandomAccess($1, intFromString(*($3))); delete $3; }
     | '(' expr ')'        { $$ = $2; }
     | '|' expr '|'        { $$ = handleNorm($2); }
     | expr '/' expr       { $$ = handleBinaryOp(Divide, $1, $3); }

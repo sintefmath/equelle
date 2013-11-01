@@ -8,6 +8,7 @@
 #include "ASTVisitorInterface.hpp"
 #include "EquelleType.hpp"
 #include <string>
+#include <set>
 
 class PrintCPUBackendASTVisitor : public ASTVisitorInterface
 {
@@ -66,16 +67,20 @@ public:
     void postVisit(FuncCallStatementNode& node);
     void visit(LoopNode& node);
     void postVisit(LoopNode& node);
+    void visit(RandomAccessNode& node);
+    void postVisit(RandomAccessNode& node);
 
 private:
     bool suppressed_;
     int indent_;
     int sequence_depth_;
+    std::set<std::string> requirement_strings_;
     void endl() const;
     std::string indent() const;
     void suppress();
     void unsuppress();
     std::string cppTypeString(const EquelleType& et) const;
+    void addRequirementString(const std::string& req);
 };
 
 #endif // PRINTCPUBACKENDASTVISITOR_HEADER_INCLUDED

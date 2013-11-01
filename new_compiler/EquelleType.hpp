@@ -52,6 +52,8 @@ public:
 
     BasicType basicType() const;
 
+    void setBasicType(const BasicType bt);
+
     CompositeType compositeType() const;
 
     bool isCollection() const;
