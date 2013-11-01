@@ -1,3 +1,5 @@
 n = Normal(AllFaces())
 n2 = Dot(n, n)
+n0 = n[0]
 Output("squared normals", n2)
+Output("first component", n0)
