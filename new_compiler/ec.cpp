@@ -9,7 +9,9 @@ extern int yyparse();
 #include "PrintASTVisitor.hpp"
 #include "PrintEquelleASTVisitor.hpp"
 #include "PrintCPUBackendASTVisitor.hpp"
+#include "PrintMRSTBackendASTVisitor.hpp"
 #include "ASTNodes.hpp"
+#include <iostream>
 
 int main(int argc, char** argv)
 {
@@ -17,6 +19,7 @@ int main(int argc, char** argv)
     PrintASTVisitor v0;
     PrintEquelleASTVisitor v1;
     PrintCPUBackendASTVisitor v2;
+    PrintMRSTBackendASTVisitor v3;
     int which = 2;
     if (argc > 1) {
         which = std::atoi(argv[1]);
@@ -31,5 +34,10 @@ int main(int argc, char** argv)
     case 2:
         SymbolTable::program()->accept(v2);
         break;
+    case 3:
+        SymbolTable::program()->accept(v3);
+        break;
+    default:
+        std::cerr << "Unknown back-end choice: " << which << '\n';
     }
 }
