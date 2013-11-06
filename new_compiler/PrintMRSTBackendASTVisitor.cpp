@@ -64,7 +64,8 @@ void PrintMRSTBackendASTVisitor::visit(NumberNode& node)
 
 void PrintMRSTBackendASTVisitor::visit(StringNode& node)
 {
-    std::cout << node.content();
+    // Translate to single quoted strings.
+    std::cout << '\'' << node.content().substr(1, node.content().size() - 2) << '\'';
 }
 
 void PrintMRSTBackendASTVisitor::visit(TypeNode&)
@@ -190,10 +191,10 @@ void PrintMRSTBackendASTVisitor::midVisit(OnNode& node)
         // function call such as AllCells(). If the second, we must transform to
         // proper call syntax for the C++ backend.
         const char first = esname[0];
-        const std::string cppterm = std::isupper(first) ?
-            std::string("eq") + esname
+        const std::string mterm = std::isupper(first) ?
+            std::string("er.") + esname
             : esname;
-        std::cout << cppterm;
+        std::cout << mterm;
         std::cout << ", ";
     }
 }
@@ -252,8 +253,9 @@ void PrintMRSTBackendASTVisitor::visit(FuncRefNode& node)
     std::cout << node.name();
 }
 
-void PrintMRSTBackendASTVisitor::visit(JustAnIdentifierNode&)
+void PrintMRSTBackendASTVisitor::visit(JustAnIdentifierNode& node)
 {
+    std::cout << node.name();
 }
 
 void PrintMRSTBackendASTVisitor::visit(FuncArgsDeclNode&)
@@ -283,26 +285,13 @@ void PrintMRSTBackendASTVisitor::postVisit(FuncDeclNode&)
 
 void PrintMRSTBackendASTVisitor::visit(FuncStartNode& node)
 {
-    // std::cout << indent() << "auto " << node.name() << " = [&](";
-    // const FunctionType& ft = SymbolTable::getFunction(node.name()).functionType();
-    // const size_t n = ft.arguments().size();
-    // for (int i = 0; i < n; ++i) {
-    //     std::cout << "const "
-    //               << cppTypeString(ft.arguments()[i].type())
-    //               << "& " << ft.arguments()[i].name();
-    //     if (i < n - 1) {
-    //         std::cout << ", ";
-    //     }
-    // }
-    std::cout << "Function start " << node.name();
-    ++indent_;
+    std::cout << indent() << "function Res = " << node.name();
 }
 
 void PrintMRSTBackendASTVisitor::postVisit(FuncStartNode&)
 {
-    // const FunctionType& ft = SymbolTable::getFunction(node.name()).functionType();
-    // std::cout << ") -> " << cppTypeString(ft.returnType()) << " {";
     endl();
+    ++indent_;
 }
 
 void PrintMRSTBackendASTVisitor::visit(FuncAssignNode&)
@@ -312,12 +301,13 @@ void PrintMRSTBackendASTVisitor::visit(FuncAssignNode&)
 void PrintMRSTBackendASTVisitor::postVisit(FuncAssignNode&)
 {
     --indent_;
-    std::cout << indent() << "};";
+    std::cout << indent() << "end";
     endl();
 }
 
 void PrintMRSTBackendASTVisitor::visit(FuncArgsNode&)
 {
+    std::cout << '(';
 }
 
 void PrintMRSTBackendASTVisitor::midVisit(FuncArgsNode&)
@@ -327,11 +317,12 @@ void PrintMRSTBackendASTVisitor::midVisit(FuncArgsNode&)
 
 void PrintMRSTBackendASTVisitor::postVisit(FuncArgsNode&)
 {
+    std::cout << ')';
 }
 
 void PrintMRSTBackendASTVisitor::visit(ReturnStatementNode&)
 {
-    std::cout << indent() << "return ";
+    std::cout << indent() << "Res = ";
 }
 
 void PrintMRSTBackendASTVisitor::postVisit(ReturnStatementNode&)
@@ -344,18 +335,17 @@ void PrintMRSTBackendASTVisitor::visit(FuncCallNode& node)
 {
     const std::string fname = node.name();
     const char first = fname[0];
-    std::string cppname;
+    std::string mname;
     if (std::isupper(first)) {
-        cppname += std::string("eq") + fname;
+        mname += std::string("er.") + fname;
     } else {
-        cppname += fname;
+        mname += fname;
     }
-    std::cout << cppname << '(';
+    std::cout << mname;
 }
 
 void PrintMRSTBackendASTVisitor::postVisit(FuncCallNode&)
 {
-    std::cout << ')';
 }
 
 void PrintMRSTBackendASTVisitor::visit(FuncCallStatementNode&)
@@ -371,7 +361,7 @@ void PrintMRSTBackendASTVisitor::postVisit(FuncCallStatementNode&)
 
 void PrintMRSTBackendASTVisitor::visit(LoopNode& node)
 {
-    std::cout << indent() << "for " << node.loopVariable() << " = " << node.loopSet() << ")";
+    std::cout << indent() << "for " << node.loopVariable() << " = " << node.loopSet();
     ++indent_;
     endl();
 }
@@ -412,8 +402,12 @@ namespace
     const char* startString()
     {
         return
-"function output = equelleProgram(input)\n"
+"function output = equelleProgram(er, input)\n"
 "% This program was created by the Equelle compiler from SINTEF.\n"
+"\n"
+"    if nargin > 1\n"
+"        er.setInput(input);\n"
+"    end\n"
 "\n"
 "    % ============= Generated code starts here ================\n";
     }
@@ -423,6 +417,7 @@ namespace
         return "\n"
 "    % ============= Generated code ends here ================\n"
 "\n"
-"endfunction\n";
+"    er.setInput([]);\n"
+"end\n";
     }
 }
