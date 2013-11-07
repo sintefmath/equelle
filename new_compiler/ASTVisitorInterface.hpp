@@ -31,6 +31,7 @@ class ReturnStatementNode;
 class FuncCallNode;
 class FuncCallStatementNode;
 class LoopNode;
+class ArrayNode;
 class RandomAccessNode;
 
 
@@ -88,6 +89,8 @@ public:
     virtual void postVisit(FuncCallStatementNode& node) = 0;
     virtual void visit(LoopNode& node) = 0;
     virtual void postVisit(LoopNode& node) = 0;
+    virtual void visit(ArrayNode& node) = 0;
+    virtual void postVisit(ArrayNode& node) = 0;
     virtual void visit(RandomAccessNode& node) = 0;
     virtual void postVisit(RandomAccessNode& node) = 0;
 

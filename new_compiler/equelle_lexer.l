@@ -40,6 +40,7 @@ LINECONT {ELLIPSIS}[\t ]*\n
 {STRING}         { STORE; TOK(STRING_LITERAL); }
 Collection       { TOK(COLLECTION); }
 Sequence         { TOK(SEQUENCE); }
+Array            { TOK(ARRAY); }
 Of               { TOK(OF); }
 On               { TOK(ON); }
 Extend           { TOK(EXTEND); }

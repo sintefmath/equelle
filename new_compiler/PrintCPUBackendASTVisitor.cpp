@@ -410,19 +410,38 @@ void PrintCPUBackendASTVisitor::postVisit(LoopNode&)
     endl();
 }
 
-void PrintCPUBackendASTVisitor::visit(RandomAccessNode&)
+void PrintCPUBackendASTVisitor::visit(ArrayNode&)
 {
-    std::cout << "CollOfScalar(";
+    std::cout << '{';
+}
+
+void PrintCPUBackendASTVisitor::postVisit(ArrayNode&)
+{
+    std::cout << '}';
+}
+
+void PrintCPUBackendASTVisitor::visit(RandomAccessNode& node)
+{
+    if (!node.arrayAccess()) {
+        // This is Vector access.
+        std::cout << "CollOfScalar(";
+    }
 }
 
 void PrintCPUBackendASTVisitor::postVisit(RandomAccessNode& node)
 {
-    // Add a grid dimension requirement.
-    std::ostringstream os;
-    os << "er.ensureGridDimensionMin(" << node.index() + 1 << ");\n";
-    addRequirementString(os.str());
-    // Random access op is taking the column of the underlying Eigen array.
-    std::cout << ".col(" << node.index() << "))";
+    if (node.arrayAccess()) {
+        // This is Array access.
+        std::cout << "[" << node.index() << "]";
+    } else {
+        // This is Vector access.
+        // Add a grid dimension requirement.
+        std::ostringstream os;
+        os << "er.ensureGridDimensionMin(" << node.index() + 1 << ");\n";
+        addRequirementString(os.str());
+        // Random access op is taking the column of the underlying Eigen array.
+        std::cout << ".col(" << node.index() << "))";
+    }
 }
 
 
@@ -449,9 +468,19 @@ void PrintCPUBackendASTVisitor::unsuppress()
 
 std::string PrintCPUBackendASTVisitor::cppTypeString(const EquelleType& et) const
 {
-    std::string cppstring = et.isCollection() ? "CollOf" : "";
-    cppstring += et.isSequence() ? "SeqOf" : "";
+    std::string cppstring;
+    if (et.isArray()) {
+        cppstring += "std::array<";
+    }
+    if (et.isCollection()) {
+        cppstring += "CollOf";
+    } else if (et.isSequence()) {
+        cppstring += "SeqOf";
+    }
     cppstring += basicTypeString(et.basicType());
+    if (et.isArray()) {
+        cppstring += ", " + std::to_string(et.arraySize()) + ">";
+    }
     return cppstring;
 }
 

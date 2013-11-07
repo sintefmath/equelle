@@ -320,6 +320,16 @@ void PrintEquelleASTVisitor::postVisit(LoopNode&)
     endl();
 }
 
+void PrintEquelleASTVisitor::visit(ArrayNode&)
+{
+    std::cout << '[';
+}
+
+void PrintEquelleASTVisitor::postVisit(ArrayNode&)
+{
+    std::cout << ']';
+}
+
 void PrintEquelleASTVisitor::visit(RandomAccessNode&)
 {
 }

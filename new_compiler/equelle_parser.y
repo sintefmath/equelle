@@ -1,5 +1,6 @@
 %token COLLECTION
 %token SEQUENCE
+%token ARRAY
 %token OF
 %token ON
 %token EXTEND
@@ -48,6 +49,7 @@
 %type <type> basic_type
 %type <fargdecl> f_decl_args
 %type <node> number
+%type <node> array
 %type <fcall> function_call
 %type <farg> f_call_args
 %type <seq> block
@@ -157,6 +159,7 @@ expr: number              { $$ = $1; }
     | expr EXTEND expr    { $$ = handleExtend($1, $3); }
     | ID                  { $$ = handleIdentifier(*($1)); delete $1; }
     | STRING_LITERAL      { $$ = handleString(*($1)); delete $1; }
+    | array               { $$ = $1; }
     ;
 
 type_expr: basic_type                                  { $$ = $1; }
@@ -164,6 +167,7 @@ type_expr: basic_type                                  { $$ = $1; }
          | COLLECTION OF basic_type ON expr            { $$ = handleCollection($3,      $5,  nullptr); }
          | COLLECTION OF basic_type SUBSET OF expr     { $$ = handleCollection($3, nullptr,       $6); }
          | SEQUENCE OF basic_type                      { $$ = handleSequence($3); }
+         | ARRAY OF INT type_expr                      { $$ = handleArrayType(intFromString(*($3)), $4); delete $3; }
          | MUTABLE type_expr                           { $$ = handleMutableType($2); }
          ;
 
@@ -188,6 +192,8 @@ f_decl_args: f_decl_args ',' declaration { $$ = $1; $$->addArg($3); }
 number: INT                     { $$ = handleNumber(numFromString(*($1))); delete $1; }
       | FLOAT                   { $$ = handleNumber(numFromString(*($1))); delete $1; }
       ;
+
+array: '[' f_call_args ']'      { $$ = handleArray($2); }
 
 function_call: BUILTIN '(' f_call_args ')'  { $$ = handleFuncCall(*($1), $3); delete $1; }
              | ID '(' f_call_args ')'       { $$ = handleFuncCall(*($1), $3); delete $1; }

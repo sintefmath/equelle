@@ -213,6 +213,13 @@ void PrintASTVisitor::visit(LoopNode& node)
 }
 
 
+void PrintASTVisitor::visit(ArrayNode& node)
+{
+    std::cout << indent() << "ArrayNode: array size = " << node.type().arraySize() << "\n";
+    ++indent_;
+}
+
+
 void PrintASTVisitor::visit(RandomAccessNode& node)
 {
     std::cout << indent() << "RandomAccessNode: index = " << node.index() << "\n";
@@ -340,6 +347,11 @@ void PrintASTVisitor::postVisit(FuncCallStatementNode&)
 }
 
 void PrintASTVisitor::postVisit(LoopNode&)
+{
+    --indent_;
+}
+
+void PrintASTVisitor::postVisit(ArrayNode&)
 {
     --indent_;
 }

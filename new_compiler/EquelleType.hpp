@@ -24,6 +24,8 @@ enum CanonicalEntitySet { InteriorCells = 0, BoundaryCells, AllCells,
 
 enum CompositeType { None, Collection, Sequence };
 
+enum { NotAnArray = -1 };
+
 std::string basicTypeString(const BasicType bt);
 
 bool isEntityType(const BasicType bt);
@@ -44,7 +46,8 @@ public:
                 const int gridmapping = NotApplicable,
                 const int subset_of = NotApplicable,
                 const bool is_mutable = false,
-                const bool is_domain = false);
+                const bool is_domain = false,
+                const int array_size = NotAnArray);
 
     bool isBasic() const;
 
@@ -61,6 +64,12 @@ public:
     bool isDomain() const;
 
     bool isSequence() const;
+
+    bool isArray() const;
+
+    int arraySize() const;
+
+    void setArraySize(const int array_size);
 
     int gridMapping() const;
 
@@ -81,6 +90,7 @@ private:
     int subset_of_;
     bool mutable_;
     bool is_domain_;
+    int array_size_;
 };
 
 

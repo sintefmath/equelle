@@ -458,6 +458,9 @@ std::string SymbolTable::equelleString(const EquelleType& type)
     if (type.isMutable()) {
         retval += "Mutable ";
     }
+    if (type.isArray()) {
+        retval += "Array Of " + std::to_string(type.arraySize()) + " ";
+    }
     if (type.isCollection()) {
         retval += "Collection Of ";
     } else if (type.isSequence()) {

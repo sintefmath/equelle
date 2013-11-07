@@ -64,6 +64,10 @@ TypeNode* handleMutableType(TypeNode* type_expr);
 
 TypeNode* handleSequence(TypeNode* basic_type);
 
+TypeNode* handleArrayType(const int array_size, TypeNode* type_expr);
+
+ArrayNode* handleArray(FuncArgsNode* expr_list);
+
 LoopNode* handleLoopStart(const std::string& loop_variable, const std::string& loop_set);
 
 LoopNode* handleLoopStatement(LoopNode* loop_start, SequenceNode* loop_block);

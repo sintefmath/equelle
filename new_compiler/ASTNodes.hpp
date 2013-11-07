@@ -610,6 +610,10 @@ public:
     {
         args_.push_back(expr);
     }
+    const std::vector<Node*>& arguments() const
+    {
+        return args_;
+    }
     std::vector<EquelleType> argumentTypes() const
     {
         std::vector<EquelleType> argtypes;
@@ -763,6 +767,32 @@ private:
 
 
 
+class ArrayNode : public Node
+{
+public:
+    ArrayNode(FuncArgsNode* expr_list)
+        : expr_list_(expr_list)
+    {
+        type_ = expr_list->arguments().front()->type();
+        type_.setArraySize(expr_list->arguments().size());
+    }
+    EquelleType type() const
+    {
+        return type_;
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        expr_list_->accept(visitor);
+        visitor.postVisit(*this);
+    }
+private:
+    FuncArgsNode* expr_list_;
+    EquelleType type_;
+};
+
+
+
 class RandomAccessNode : public Node
 {
 public:
@@ -774,14 +804,24 @@ public:
     {
         return index_;
     }
+    bool arrayAccess() const
+    {
+        return expr_->type().isArray();
+    }
     EquelleType type() const
     {
-        // We must be a (Collection Of) Scalar,
+        // Either erpr_ must be an Array, or, if not,
+        // we must be a (Collection Of) Scalar,
         // since expr_ must be a (Collection Of) Vector.
         EquelleType t = expr_->type();
-        assert(t.basicType() == Vector);
-        t.setBasicType(Scalar);
-        return t;
+        if (t.isArray()) {
+            t.setArraySize(NotAnArray);
+            return t;
+        } else {
+            assert(t.basicType() == Vector);
+            t.setBasicType(Scalar);
+            return t;
+        }
     }
     virtual void accept(ASTVisitorInterface& visitor)
     {

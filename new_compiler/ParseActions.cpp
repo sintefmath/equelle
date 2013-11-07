@@ -257,6 +257,9 @@ BinaryOpNode* handleBinaryOp(BinaryOp op, Node* left, Node* right)
     if (!isNumericType(lt.basicType()) || !(isNumericType(rt.basicType()))) {
         yyerror("arithmetic binary operators only apply to numeric types");
     }
+    if (lt.isArray() || rt.isArray()) {
+        yyerror("arithmetic binary operators cannot be applied to Array types");
+    }
     if (lt.isCollection() && rt.isCollection()) {
         if (lt.gridMapping() != rt.gridMapping()) {
             yyerror("arithmetic binary operators on Collections only acceptable "
@@ -296,6 +299,9 @@ ComparisonOpNode* handleComparison(ComparisonOp op, Node* left, Node* right)
     if ((lt.basicType() != Scalar) || (rt.basicType() != Scalar)) {
         yyerror("comparison operators can only be applied to scalars");
     }
+    if (lt.isArray() || rt.isArray()) {
+        yyerror("comparison operators cannot be applied to Array types");
+    }
     if (lt.isCollection() && rt.isCollection()) {
         if (lt.gridMapping() != rt.gridMapping()) {
             yyerror("comparison operators on Collections only acceptable "
@@ -309,6 +315,9 @@ ComparisonOpNode* handleComparison(ComparisonOp op, Node* left, Node* right)
 
 NormNode* handleNorm(Node* expr_to_norm)
 {
+    if (expr_to_norm->type().isArray()) {
+        yyerror("cannot take norm of an Array.");
+    }
     const BasicType bt = expr_to_norm->type().basicType();
     if (isEntityType(bt) || bt == Scalar || bt == Vector) {
         return new NormNode(expr_to_norm);
@@ -325,6 +334,9 @@ UnaryNegationNode* handleUnaryNegation(Node* expr_to_negate)
     if (!isNumericType(expr_to_negate->type().basicType())) {
         yyerror("unary minus can only be applied to numeric types.");
     }
+    if (expr_to_negate->type().isArray()) {
+        yyerror("unary minus cannot be applied to an Array.");
+    }
     return new UnaryNegationNode(expr_to_negate);
 }
 
@@ -335,6 +347,9 @@ TrinaryIfNode* handleTrinaryIf(Node* predicate, Node* iftrue, Node* iffalse)
     const EquelleType pt = predicate->type();
     const EquelleType tt = iftrue->type();
     const EquelleType ft = iffalse->type();
+    if (pt.isArray() || tt.isArray() || ft.isArray()) {
+        yyerror("in trinary if operator, no operands can be of Array type.");
+    }
     if (pt.basicType() != Bool) {
         yyerror("in trinary if '<predicate> ? <iftrue> : <iffalse>' "
                 "<predicate> must be a Bool type.");
@@ -357,9 +372,12 @@ OnNode* handleOn(Node* left, Node* right)
 {
     const EquelleType lt = left->type();
     const EquelleType rt = right->type();
+    if (lt.isArray() || rt.isArray()) {
+        yyerror("cannot use On operator with an Array.");
+    }
     // Left side can be anything but a sequence.
     if (lt.isSequence()) {
-        yyerror("cannot use Extend operator with a Sequence.");
+        yyerror("cannot use On operator with a Sequence.");
     }
     // Right side must be an entity collection.
     if (!rt.isEntityCollection()) {
@@ -407,6 +425,9 @@ OnNode* handleExtend(Node* left, Node* right)
 {
     const EquelleType lt = left->type();
     const EquelleType rt = right->type();
+    if (lt.isArray() || rt.isArray()) {
+        yyerror("cannot use Extend operator with an Array.");
+    }
     // Left side can be anything but a sequence.
     if (lt.isSequence()) {
         yyerror("cannot use Extend operator with a Sequence.");
@@ -467,6 +488,43 @@ TypeNode* handleSequence(TypeNode* basic_type)
 
 
 
+TypeNode* handleArrayType(const int array_size, TypeNode* type_expr)
+{
+    EquelleType et = type_expr->type();
+    if (et.isArray()) {
+        yyerror("cannot create an Array of an Array.");
+        return type_expr;
+    } else {
+        et.setArraySize(array_size);
+        TypeNode* tn = new TypeNode(et);
+        delete type_expr;
+        return tn;
+    }
+}
+
+
+
+ArrayNode* handleArray(FuncArgsNode* expr_list)
+{
+    const auto& elems = expr_list->arguments();
+    if (elems.empty()) {
+        yyerror("cannot create an empty array.");
+    } else {
+        const EquelleType et = elems[0]->type();
+        if (et.isArray()) {
+            yyerror("an Array cannot contain another Array.");
+        }
+        for (const auto& elem : elems) {
+            if (elem->type() != et) {
+                yyerror("elements of an Array must all have the same type");
+            }
+        }
+    }
+    return new ArrayNode(expr_list);
+}
+
+
+
 LoopNode* handleLoopStart(const std::string& loop_variable, const std::string& loop_set)
 {
     // Check that loop_set is a sequence, extract its type.
@@ -475,6 +533,11 @@ LoopNode* handleLoopStart(const std::string& loop_variable, const std::string& l
         loop_set_type = SymbolTable::variableType(loop_set);
         if (!loop_set_type.isSequence()) {
             std::string err_msg = "loop set must be a Sequence: ";
+            err_msg += loop_set;
+            yyerror(err_msg.c_str());
+        }
+        if (loop_set_type.isArray()) {
+            std::string err_msg = "loop set cannot be an Array: ";
             err_msg += loop_set;
             yyerror(err_msg.c_str());
         }
@@ -511,11 +574,16 @@ LoopNode* handleLoopStatement(LoopNode* loop_start, SequenceNode* loop_block)
 
 RandomAccessNode* handleRandomAccess(Node* expr, const int index)
 {
-    if (expr->type().basicType() != Vector) {
-        yyerror("cannot use '[<index>]' random access operator with anything other than a Vector");
-    }
-    if (index < 0 || index > 2) {
-        yyerror("cannot use '[<index>]' random access operator with index < 0 or > 2");
+    if (expr->type().isArray()) {
+        if (index < 0 || index >= expr->type().arraySize()) {
+            yyerror("index out of array bounds in '[<index>]' random access operator.");
+        }
+    } else if (expr->type().basicType() == Vector) {
+        if (index < 0 || index > 2) {
+            yyerror("cannot use '[<index>]' random access operator on a Vector with index < 0 or > 2");
+        }
+    } else {
+        yyerror("cannot use '[<index>]' random access operator with anything other than a Vector or Array");
     }
     return new RandomAccessNode(expr, index);
 }

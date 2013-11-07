@@ -156,13 +156,15 @@ EquelleType::EquelleType(const BasicType bt,
                          const int gridmapping,
                          const int subset_of,
                          const bool is_mutable,
-                         const bool is_domain)
+                         const bool is_domain,
+                         const int array_size)
     : basic_type_(bt),
       composite_(composite),
       gridmapping_(gridmapping),
       subset_of_(subset_of),
       mutable_(is_mutable),
-      is_domain_(is_domain)
+      is_domain_(is_domain),
+      array_size_(array_size)
 {
 }
 
@@ -208,6 +210,21 @@ bool EquelleType::isSequence() const
     return composite_ == Sequence;
 }
 
+bool EquelleType::isArray() const
+{
+    return array_size_ != NotAnArray;
+}
+
+int EquelleType::arraySize() const
+{
+    return array_size_;
+}
+
+void EquelleType::setArraySize(const int array_size)
+{
+    array_size_ = array_size;
+}
+
 int EquelleType::gridMapping() const
 {
     return gridmapping_;
@@ -237,7 +254,8 @@ bool EquelleType::operator==(const EquelleType& et) const
         && composite_ == et.composite_
         && gridmapping_ == et.gridmapping_
         && subset_of_ == et.subset_of_
-        && is_domain_ == et.is_domain_;
+        && is_domain_ == et.is_domain_
+        && array_size_ == et.array_size_;
 }
 
 bool EquelleType::operator!=(const EquelleType& et) const

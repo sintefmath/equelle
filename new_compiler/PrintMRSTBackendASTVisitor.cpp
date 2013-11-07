@@ -373,6 +373,16 @@ void PrintMRSTBackendASTVisitor::postVisit(LoopNode&)
     endl();
 }
 
+void PrintMRSTBackendASTVisitor::visit(ArrayNode&)
+{
+    std::cout << '{';
+}
+
+void PrintMRSTBackendASTVisitor::postVisit(ArrayNode&)
+{
+    std::cout << '}';
+}
+
 void PrintMRSTBackendASTVisitor::visit(RandomAccessNode&)
 {
 }
