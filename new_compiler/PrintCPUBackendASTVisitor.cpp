@@ -410,14 +410,14 @@ void PrintCPUBackendASTVisitor::postVisit(LoopNode&)
     endl();
 }
 
-void PrintCPUBackendASTVisitor::visit(ArrayNode&)
+void PrintCPUBackendASTVisitor::visit(ArrayNode& node)
 {
-    std::cout << '{';
+    std::cout << cppTypeString(node.type()) << "({{";
 }
 
 void PrintCPUBackendASTVisitor::postVisit(ArrayNode&)
 {
-    std::cout << '}';
+    std::cout << "}})";
 }
 
 void PrintCPUBackendASTVisitor::visit(RandomAccessNode& node)
@@ -508,6 +508,7 @@ namespace
 "#include <iterator>\n"
 "#include <iostream>\n"
 "#include <cmath>\n"
+"#include <array>\n"
 "\n"
 "#include \"EquelleRuntimeCPU.hpp\"\n"
 "\n"
