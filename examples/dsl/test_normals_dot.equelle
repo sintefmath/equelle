@@ -1,5 +1,20 @@
+# This small test program tests a few builtins and operations:
+#  - AllFaces(), Normal() and Dot()
+#  - Random access to a Vector, v[i]
+#  - Array type declaration and literal, a = [x, y, z]
+#  - Random access to an Array, a[i]
+#  - Random access to an Array literal, [x, y, z] [i]
 n = Normal(AllFaces())
 n2 = Dot(n, n)
 n0 = n[0]
+narray : Array Of 2 Collection Of Scalar On AllFaces() = [n0, n0 + n2]
 Output("squared normals", n2)
 Output("first component", n0)
+Output("their sum", narray[1])
+getsecond : Function(a : Array Of 2 Collection Of Scalar On AllFaces()) -> Collection Of Scalar On AllFaces()
+getsecond(a) = {
+    -> a[1]
+}
+Output("second element of array", getsecond(narray))
+Output("second element of a different, inline array", getsecond([n0, 2*n0 + n2]))
+Output("second element of the same, inline array, direct access", [n0, 2*n0 + n2][1])
