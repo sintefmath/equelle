@@ -49,3 +49,9 @@ equelle_lexer.cpp
 equelle_parser.cpp
 equelle_parser.hpp
 equelle_parser.output
+
+*.aux
+*.log
+*.synctex.gz
+
+EquelleReference.pdf
