@@ -1,0 +1,189 @@
+\documentclass[11pt]{article}
+%
+% definitions
+\usepackage{amsmath,amssymb}
+\usepackage{xcolor}
+\usepackage{bm}
+\usepackage{todonotes}
+\setlength{\marginparwidth}{0.6in} % Needed for todonotes because geometry package is used
+\usepackage[vlined,boxed]{algorithm2e}    % For those with brand new LaTeX
+
+\newcommand{\cads}{a}
+\newcommand{\eff}{\mathrm{eff}}
+\newcommand{\cmax}{c_{\max}}
+\newcommand{\Sb}{{\bm{S}}}
+\newcommand{\cb}{{\bm{c}}}
+\newcommand{\Kb}{{\bm{K}}}
+\newcommand{\kb}{{\bm{k}}}
+\newcommand{\nb}{{\bm{n}}}
+\newcommand{\ub}{{\bm{u}}}
+\newcommand{\abs}[1]{\left| #1\right|}
+\newcommand{\norm}[1]{\left\| #1\right\|}
+\newcommand{\dd}{\mathrm{d}}
+\newcommand{\Sdpv}{\ensuremath{S_\text{dpv}}}
+\newcommand{\fracpar}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+%% Extra markup for revisions:
+%\newcommand{\rev}[1]{\textcolor{BrickRed}{#1}}
+
+\title{Equelle Reference Manual}
+\author{Atgeirr Fl{\o} Rasmussen, SINTEF ICT}
+
+\begin{document}
+
+\maketitle
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+
+Equelle is a domain-specific language intended for writing simulators, in the sense of
+programs that numerically solve partial differential equations. The language was created
+at SINTEF ICT, department of Applied Mathematics, starting in 2013.
+
+\subsection{Motivation}
+
+The primary motivation for Equelle is to separate the concerns of the application expert
+who knows a field, its physics and equations from the computational scientist who knows
+parallel programming and linear solvers.
+
+We also seek to minimize the work needed to port simulators to new architectures and
+hardware types. This is achieved by allowing multiple back-ends to the language, reducing
+the question of supporting a new hardware type to implementing a new back-end.
+
+We have chosen not to start at the level of the PDEs themselves. Instead, our intention is
+that Equelle should make it easy to express the discrete equations for a simulator.
+Furthermore, we have concentrated on features useful for finite volume methods, as such
+methods are our primary focus.
+
+\subsection{Vectorized notation}
+
+In languages like C or Fortran, numerical programs usually have a large number of
+loops. In Equelle we seek to have fewer loops, and especially to avoid indexing. Indexing
+is a major source of errors in numerical computation, and we have sought to minimize them
+by using vectorized notation. In Equelle, the statement \code{a = b + c*d} can just as
+well refer to collections of number as to single numbers. All such statements are
+interpreted as element-wise, similar to Matlab's initial-point operators such as
+\code{.*}.
+
+\subsection{The grid concept in Equelle}
+
+In any Equelle program, a computational grid is assumed to exist. It is constant and
+unchanging from the view of the program, and it is up to the back-end to actually
+create or read a particular grid, when the simulator is run.
+
+Grids are cell complexes. They consist of entities of varying dimensionality. The entities
+of highest dimension are called cells and all other entities can be obtained as
+intersections of cells. The converse also holds: all possible intersections of cells are
+entities of the grid. This means that Equelle grids are unstructured, and capable of
+representing almost arbitrary computational grids. It also means that there is no notion
+of non-conforming grid, since all cell-cell intersections are by definition entities of
+the grid.
+
+\subsection{The \code{Collection Of} types}
+
+In most programming languages, a collection of data will be accessed either as a sequence,
+or by random access, using indices. In Equelle, data will often be associated with a
+subset of grid entities instead. A variable can be created that has one element per cell
+in the grid, for example. The Equelle compiler ensures that such a variable cannot be used
+in a context where it does not make sense, such as adding it to a variable containing one
+element per face. An Equelle \code{Collection} always has a domain, and can be thought of
+as a 1-1 mapping from that domain to the data. In traditional languages, such mappings
+would implicitly be from the integer indices to the data. New domains can be created from
+user input, to capture concepts such as applying a certain boundary condition to only part
+of the boundary, or using different equations on part of the grid. There is also a set of
+operators (\code{On}, \code{Extend}) that manipulates these mappings, giving a great deal
+of flexibility without the risk of indexing errors.
+
+\subsection{Type checking and type inference}
+
+Equelle is strongly typed. Making a mistake in typing will usually cause a compile
+error. However, unlike languages like C++ (at least before \code{auto} was allowed), the
+user is usually not burdened with declaring the types of variables. The Equelle compiler
+is able to infer the correct types of any valid expression. Therefore Equelle statements
+can be very concise, yet unlike languages such as Python or Matlab, types are enforced at
+compile time.
+
+Mostly, Equelle can be said to be statically typed. However, the domains of
+\code{Collection}s can be dynamically computed or input, so that part of the type system
+can be said to be dynamic. However, it is all checked at compile time.
+
+\subsection{Declaration and assignment}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Types in Equelle}
+
+\subsection{Basic types}
+
+\subsection{Collections}
+
+\subsection{Domains and the \code{On} concept}
+
+\subsection{The \code{Subset Of} concept}
+
+\subsection{Sequences}
+
+\subsection{Arrays}
+
+\subsection{Function types}
+
+\subsection{Mutable variables}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Built-in operators and functions}
+
+\subsection{Arithmetic operators}
+
+\subsection{Grid topology}
+
+\subsection{Grid geometry}
+
+\subsection{Discrete operators}
+
+\subsection{Solver functions}
+
+\subsection{Miscellaneous functions}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Control structures and functions}
+
+\subsection{Scopes}
+
+\subsection{The For construct}
+
+\subsection{Functions}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{The grammar of Equelle}
+
+\subsection{Allowed identifiers}
+
+\subsection{Syntax for literals}
+
+\subsection{Expression syntax}
+
+\subsection{Statements}
+
+\subsection{The formal grammar definition}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Bibliography.
+
+%\begin{small}
+%  \bibliographystyle{spelike} %\bibliography{bib/polymer,bib/diagnostics,bib/co2,bib/fronttracking,bib/divSINTEF,bib/reorder,bib/streamlines,bib/misc}
+%\end{small}
+
+
+\end{document}
+
+
+%% Local Variables:
+%% fill-column: 90
+%% mode: LaTeX
+%% TeX-master: t
+%% End:
