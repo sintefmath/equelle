@@ -3,9 +3,10 @@
 */
 
 
+#include "SymbolTable.hpp"
 #include "Common.hpp"
 #include "EquelleType.hpp"
-#include "SymbolTable.hpp"
+#include "NodeInterface.hpp"
 
 #include <algorithm>
 #include <stdexcept>
@@ -506,7 +507,8 @@ void SymbolTable::dump()
 }
 
 SymbolTable::SymbolTable()
-    : next_entityset_index_(FirstRuntimeEntitySet)
+    : next_entityset_index_(FirstRuntimeEntitySet),
+      ast_root_(nullptr)
 {
     // ----- Add built-in functions to function table. -----
     // 1. Grid functions.
@@ -610,6 +612,12 @@ SymbolTable::SymbolTable()
     declareEntitySet("AllVertices()", AllVertices, AllVertices);
 }
 
+SymbolTable::~SymbolTable()
+{
+    delete ast_root_; // OK even if null.
+}
+
+/// Using the Meyers singleton pattern.
 SymbolTable& SymbolTable::instance()
 {
     static SymbolTable s;

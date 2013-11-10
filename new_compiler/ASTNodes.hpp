@@ -5,6 +5,7 @@
 #ifndef ASTNODES_HEADER_INCLUDED
 #define ASTNODES_HEADER_INCLUDED
 
+#include "NodeInterface.hpp"
 #include "Common.hpp"
 #include "EquelleType.hpp"
 #include "SymbolTable.hpp"
@@ -16,28 +17,15 @@
 // ------ Abstract syntax tree classes ------
 
 
-/// Base class for all AST classes.
-class Node
-{
-public:
-    virtual ~Node()
-    {}
-    virtual EquelleType type() const
-    {
-        return EquelleType();
-    }
-    virtual void accept(ASTVisitorInterface&)
-    {
-        // Do nothing.
-    }
-};
-
-
-
-
 class SequenceNode : public Node
 {
 public:
+    virtual ~SequenceNode()
+    {
+        for (auto np : nodes_) {
+            delete np;
+        }
+    }
     void pushNode(Node* node)
     {
         if (node) {
@@ -154,7 +142,15 @@ enum BinaryOp { Add, Subtract, Multiply, Divide };
 class BinaryOpNode : public Node
 {
 public:
-    BinaryOpNode(BinaryOp op, Node* left, Node* right) : op_(op), left_(left), right_(right) {}
+    BinaryOpNode(BinaryOp op, Node* left, Node* right)
+        : op_(op), left_(left), right_(right)
+    {
+    }
+    virtual ~BinaryOpNode()
+    {
+        delete left_;
+        delete right_;
+    }
     EquelleType type() const
     {
         EquelleType lt = left_->type();
@@ -213,7 +209,15 @@ enum ComparisonOp { Less, Greater, LessEqual, GreaterEqual, Equal, NotEqual };
 class ComparisonOpNode : public Node
 {
 public:
-    ComparisonOpNode(ComparisonOp op, Node* left, Node* right) : op_(op), left_(left), right_(right) {}
+    ComparisonOpNode(ComparisonOp op, Node* left, Node* right)
+        : op_(op), left_(left), right_(right)
+    {
+    }
+    virtual ~ComparisonOpNode()
+    {
+        delete left_;
+        delete right_;
+    }
     EquelleType type() const
     {
         EquelleType lt = left_->type();
@@ -244,6 +248,10 @@ class NormNode : public Node
 {
 public:
     NormNode(Node* expr_to_norm) : expr_to_norm_(expr_to_norm){}
+    virtual ~NormNode()
+    {
+        delete expr_to_norm_;
+    }
     EquelleType type() const
     {
         return EquelleType(Scalar,
@@ -267,6 +275,10 @@ class UnaryNegationNode : public Node
 {
 public:
     UnaryNegationNode(Node* expr_to_negate) : expr_to_negate_(expr_to_negate) {}
+    virtual ~UnaryNegationNode()
+    {
+        delete expr_to_negate_;
+    }
     EquelleType type() const
     {
         return expr_to_negate_->type();
@@ -287,8 +299,16 @@ private:
 class OnNode : public Node
 {
 public:
-    OnNode(Node* left, Node* right, bool is_extend) : left_(left), right_(right), is_extend_(is_extend) {}
-    EquelleType type() const
+    OnNode(Node* left, Node* right, bool is_extend)
+        : left_(left), right_(right), is_extend_(is_extend)
+    {
+    }
+    virtual ~OnNode()
+    {
+        delete left_;
+        delete right_;
+    }
+   EquelleType type() const
     {
         return EquelleType(left_->type().basicType(), Collection, right_->type().gridMapping(), left_->type().subsetOf());
     }
@@ -323,6 +343,12 @@ public:
     TrinaryIfNode(Node* predicate, Node* iftrue, Node* iffalse)
         : predicate_(predicate), iftrue_(iftrue), iffalse_(iffalse)
     {}
+    virtual ~TrinaryIfNode()
+    {
+        delete predicate_;
+        delete iftrue_;
+        delete iffalse_;
+    }
     EquelleType type() const
     {
         return iftrue_->type();
@@ -353,6 +379,10 @@ public:
         : varname_(varname), type_(type)
     {
     }
+    virtual ~VarDeclNode()
+    {
+        delete type_;
+    }
     EquelleType type() const
     {
         return type_->type();
@@ -380,6 +410,10 @@ class VarAssignNode : public Node
 public:
     VarAssignNode(std::string varname, Node* expr) : varname_(varname), expr_(expr)
     {
+    }
+    virtual ~VarAssignNode()
+    {
+        delete expr_;
     }
     const std::string& name() const
     {
@@ -490,6 +524,12 @@ public:
             decls_.push_back(vardecl);
         }
     }
+    virtual ~FuncArgsDeclNode()
+    {
+        for (auto decl : decls_) {
+            delete decl;
+        }
+    }
     void addArg(VarDeclNode* vardecl)
     {
         decls_.push_back(vardecl);
@@ -529,6 +569,10 @@ public:
         : funcname_(funcname), ftype_(ftype)
     {
     }
+    virtual ~FuncDeclNode()
+    {
+        delete ftype_;
+    }
     const std::string& name() const
     {
         return funcname_;
@@ -556,6 +600,10 @@ public:
         : funcname_(funcname), funcargs_(funcargs)
     {
     }
+    virtual ~FuncStartNode()
+    {
+        delete funcargs_;
+    }
     const std::string& name() const
     {
         return funcname_;
@@ -581,6 +629,11 @@ public:
         : funcstart_(funcstart), funcbody_(funcbody)
     {
     }
+    virtual ~FuncAssignNode()
+    {
+        delete funcstart_;
+        delete funcbody_;
+    }
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
@@ -604,6 +657,12 @@ public:
     {
         if (expr) {
             args_.push_back(expr);
+        }
+    }
+    virtual ~FuncArgsNode()
+    {
+        for (auto arg : args_) {
+            delete arg;
         }
     }
     void addArg(Node* expr)
@@ -648,6 +707,10 @@ public:
     ReturnStatementNode(Node* expr)
         : expr_(expr)
     {}
+    virtual ~ReturnStatementNode()
+    {
+        delete expr_;
+    }
     EquelleType type() const
     {
         return expr_->type();
@@ -672,6 +735,10 @@ public:
                  const int dynamic_subset_return = NotApplicable)
         : funcname_(funcname), funcargs_(funcargs), dsr_(dynamic_subset_return)
     {}
+    virtual ~FuncCallNode()
+    {
+        delete funcargs_;
+    }
     EquelleType type() const
     {
         EquelleType t = SymbolTable::getFunction(funcname_).returnType(funcargs_->argumentTypes());
@@ -706,6 +773,10 @@ public:
     FuncCallStatementNode(FuncCallNode* fcall)
     : fcall_(fcall)
     {}
+    virtual ~FuncCallStatementNode()
+    {
+        delete fcall_;
+    }
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
@@ -729,7 +800,10 @@ public:
           loop_block_(loop_block)
     {
     }
-
+    virtual ~LoopNode()
+    {
+        delete loop_block_;
+    }
     const std::string& loopVariable() const
     {
         return loop_variable_;
@@ -776,6 +850,10 @@ public:
         type_ = expr_list->arguments().front()->type();
         type_.setArraySize(expr_list->arguments().size());
     }
+    virtual ~ArrayNode()
+    {
+        delete expr_list_;
+    }
     EquelleType type() const
     {
         return type_;
@@ -799,6 +877,10 @@ public:
     RandomAccessNode(Node* expr, const int index)
         : expr_(expr), index_(index)
     {
+    }
+    virtual ~RandomAccessNode()
+    {
+        delete expr_;
     }
     int index() const
     {

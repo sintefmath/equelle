@@ -225,6 +225,8 @@ public:
 private:
     SymbolTable();
 
+    ~SymbolTable();
+
     static SymbolTable& instance();
 
     void declareEntitySet(const std::string& name, const int entity_index, const int subset_entity_index);
