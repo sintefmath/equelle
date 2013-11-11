@@ -58,6 +58,14 @@ that Equelle should make it easy to express the discrete equations for a simulat
 Furthermore, we have concentrated on features useful for finite volume methods, as such
 methods are our primary focus.
 
+\subsection{Basic syntax}
+
+An Equelle program consists of a sequence of statements. Statements are terminated by
+newlines, unless preceded by an ellipsis (three periods, \code{...}). Comments starts with
+the hash character \code{\#} and run to the end of the line, and an ellipsis does not make
+the comment continue to the next line. Blocks such as function bodies or \code{For} loop
+bodies are delimited by curly brackets (\code{\{ \}}).
+
 \subsection{Vectorized notation}
 
 In languages like C or Fortran, numerical programs usually have a large number of
@@ -96,7 +104,8 @@ would implicitly be from the integer indices to the data. New domains can be cre
 user input, to capture concepts such as applying a certain boundary condition to only part
 of the boundary, or using different equations on part of the grid. There is also a set of
 operators (\code{On}, \code{Extend}) that manipulates these mappings, giving a great deal
-of flexibility without the risk of indexing errors.
+of flexibility without the risk of indexing errors. The \code{On} concept is described in more
+detail in section \ref{subsec:domains-on}.
 
 \subsection{Type checking and type inference}
 
@@ -120,15 +129,21 @@ time.
 To declare a variable, use a single statement with a colon separating the variable name
 and its type:
 
-\code{volume : Scalar}
+\begin{verbatim}
+volume : Scalar
+\end{verbatim}
 
-To assign a variable, use the = sign:
+To assign a variable, use the \code{=} sign:
 
-\code{volume = 5.67}
+\begin{verbatim}
+volume = 5.67
+\end{verbatim}
 
 This can be combined, as follows:
 
-\code{volume : Scalar = 5.67}
+\begin{verbatim}
+volume : Scalar = 5.67
+\end{verbatim}
 
 The declarations are entirely optional. They can be included as a form of documentation,
 or left out according to the wishes of the programmer. There is an important restriction
@@ -159,11 +174,12 @@ running simulations on both 2D and 3D grids, and the Vector class will be approp
 sized in both cases. One can obtain the Scalar elements of a Vector by indexing (starting
 from 0):
 
-\code{a : Vector \\
-... \\
-b : Scalar = a[0]    \# First ('x') element. \\
-c : Scalar = a[2]    \# Third ('z') element.
-}
+\begin{verbatim}
+a : Vector
+...
+b : Scalar = a[0]    # First ('x') element.
+c : Scalar = a[2]    # Third ('z') element.
+\end{verbatim}
 
 Use of vector indexing is checked, and a program that uses the index 2 like in the
 assignment of c above, will impose the restriction on the resulting simulator that it
@@ -191,10 +207,11 @@ Variable can contain several elements of the same basic type. Such a variable is
 collection. To declare a collection you use \code{Collection Of} followed by a basic type,
 the keyword \code{On} and an expression for the domain of the collection:
 
-\code{a : Collection Of Scalar On AllFaces() \\
-b : Collection Of Cell On InteriorFaces() \\
+\begin{verbatim}
+a : Collection Of Scalar On AllFaces()
+b : Collection Of Cell On InteriorFaces()
 c : Collection Of Vector On AllCells()
-}
+\end{verbatim}
 
 Arithmetic operators can be applied only between collections that are \code{On} the same
 domain.
@@ -208,9 +225,10 @@ dimension. Several basic domains are available via built-in Equelle functions, s
 possible to specify domains dynamically, to be set from user input when running a
 simulation. For example (including optional type declaration):
 
-\code{dirichlet\_boundary : Collection Of Face Subset Of AllFaces()\\
-dirichlet\_boundary =  InputDomainSubsetOf(AllFaces())
-}
+\begin{verbatim}
+dirichlet_boundary : Collection Of Face Subset Of AllFaces()
+dirichlet_boundary =  InputDomainSubsetOf(AllFaces())
+\end{verbatim}
 
 This new domain can be used in all ways that the basic built-in domains can. Note that the
 \code{Subset Of} part will be discussed in section \ref{subsec:subset-of}.
@@ -219,8 +237,9 @@ Given a domain, collections can be declared to be \code{On} that domain. Such a 
 can be thought of as a 1-1 mapping from the domain to the data of the collection. There is
 no ordering implicit in this. Consider the following declaration:
 
-\code{a : Collection Of Scalar On BoundaryFaces()
-}
+\begin{verbatim}
+a : Collection Of Scalar On BoundaryFaces()
+\end{verbatim}
 
 This can be viewed as mapping taking $f \in \code{BoundaryFaces()} \to a(f)$.
 
@@ -231,7 +250,7 @@ the collections, and the result would also be \code{On BoundaryFaces()}, for exa
 $a + b$ be viewed as mapping taking $f \in \code{BoundaryFaces()} \to a(f) + b(f)$. 
 
 Finally, note that not all collections of grid entities are domains. For example the
-collection returned from FirstCell(InteriorFaces()) can possibly contain repeated
+collection returned from \code{FirstCell(InteriorFaces())} can possibly contain repeated
 instances of one or more cells.
 
 \subsection{The \code{Subset Of} concept}
@@ -242,26 +261,29 @@ domains. Therefore it is important to know for any domain, what other domains it
 contained in. For the built-in domains this is obvious and given. For example
 \code{BoundaryCells()} is contained within \code{AllCells()}. For domains that are input
 from the user, the containing domain must be given as an argument to the
-\code{InputDomainSubsetOf()} function, as seen in the example of \ref{subsec:domains-on}.
+\code{InputDomainSubsetOf()} function, as seen in the \code{dirichlet\_boundary} example
+of \ref{subsec:domains-on}.
 
 Given a collection on some domain, one may extend the collection to larger domains by
 padding it with zeros. This is only possible for collections of \code{Scalar} type. To do
 this one can use the \code{Extend} operator. To continue the previous example:
 
-\code{x : Collection Of Scalar On dirichlet\_boundary\\
-... \\
-y : Collection Of Scalar On BoundaryFaces()\\
+\begin{verbatim}
+x : Collection Of Scalar On dirichlet_boundary
+...
+y : Collection Of Scalar On BoundaryFaces()
 y = x Extend BoundaryFaces()
-}
+\end{verbatim}
 
 Similarly, one may do the opposite and restrict a collection to a subdomain by using
 \code{On} as an operator:
 
-\code{x : Collection Of Scalar On BoundaryFaces()\\
-... \\
-y : Collection Of Scalar On dirichlet\_boundary\\ 
-y = x On dirichlet\_boundary
-}
+\begin{verbatim}
+x : Collection Of Scalar On BoundaryFaces()
+...
+y : Collection Of Scalar On dirichlet_boundary
+y = x On dirichlet_boundary
+\end{verbatim}
 
 A user-specified domain may or may not be a subset of another user-specified domain, but
 that is not possible to decide at compile time, and so you can never extend or restrict a
@@ -278,13 +300,13 @@ x2 = x1 On d2                        # Error
 x2 = ((x1 Extend AllCells()) On d2)  # Ok.
 \end{verbatim}
 
-The above example first extends x1 with zeros to AllCells() and then restricts it to
-d2. If d2 overlaps d1, then x2 will have the same value as x1 for the cells of d2 that are
-also in d1, and zero for the cells that don't.
+The above example first extends x1 with zeros to \code{AllCells()} and then restricts it
+to d2. If d2 overlaps d1, then x2 will have the same value as x1 for the cells of d2 that
+are also in d1, and zero for the cells that don't.
 
 There is one way the use of \code{On} as an operator is very different from the use of
 \code{Extend}: the collection on the right hand side of the \code{On} does not have to be
-a domain, but all elements of the collection have to be in the domain of the left hand
+a domain. Still, all elements of the collection have to be in the domain of the left hand
 side. This is looked at in more detail in section \ref{subsec:on-extend}.
 
 \subsection{Sequences}
@@ -302,6 +324,9 @@ For dt In timesteps {
 }
 \end{verbatim}
 
+The above loop is guaranteed to execute in sequential order, with \code{dt} taking one by
+one the values in the sequence \code{timesteps}.
+
 \subsection{Arrays}
 
 First, note that the \code{Array} type is not intended for long arrays. That would be
@@ -312,7 +337,8 @@ arrays, the only allowed operation is the indexing operation that obtains an ele
 the array. Indexing starts from zero. Square brackets can be used to construct an
 array. Example usage:
 \begin{verbatim}
-bothFunc : Function() -> Array Of 2 Collection Of Cell On InteriorFaces()
+bothFunc : Function() ...
+           -> Array Of 2 Collection Of Cell On InteriorFaces()
 bothFunc() = {
     -> [FirstCell(InteriorFaces()), SecondCell(InteriorFaces())]
 }
@@ -327,6 +353,21 @@ expression is an \code{Array} of either \code{Vector} or \code{Collection Of Vec
 first indexing operator always refers to elements of the \code{Array}.
 
 \subsection{Function types}
+
+It is a goal to eventually support very flexible function templates in Equelle. However
+for now, user-defined functions must have their type declared, meaning that the types of
+arguments and the return type must be given. Example usage:
+
+\begin{verbatim}
+compRes : Function(u : Collection Of Scalar On AllCells(), ...
+                   u0: Collection Of Scalar On AllCells(), ...
+                   dt : Scalar) ...
+                   -> Collection Of Scalar On AllCells()
+\end{verbatim}
+
+Some built-in functions have some polymorphism, such as \code{InputDomainSubsetOf},
+\code{Centroid} or \code{Output}. There is at the moment no Equelle syntax that lets the
+user create functions with the same flexibility.
 
 \subsection{Mutable variables}
 
@@ -347,6 +388,15 @@ regular = 6         # Error
 \section{Built-in operators and functions}
 
 \subsection{Arithmetic operators}
+
+The four fundamental operators (\code{+ - * /}) are available. They can be used with
+\code{Scalar} or \code{Vector} expressions, with the exceptions that two \code{Vector}
+expressions cannot be multiplied or divided, and that a \code{Scalar} and a \code{Vector}
+expression cannot be added or subtracted.
+
+If one expression is a \code{Collection}, then both expressions must be collections that
+are \code{On} the same domain. There is one exception to this: you can always multiply or
+divide a \code{Collection} with a \code{Scalar}.
 
 \subsection{Grid topology}
 
