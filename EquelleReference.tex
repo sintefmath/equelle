@@ -64,8 +64,9 @@ loops. In Equelle we seek to have fewer loops, and especially to avoid indexing.
 is a major source of errors in numerical computation, and we have sought to minimize them
 by using vectorized notation. In Equelle, the statement \code{a = b + c*d} can just as
 well refer to collections of number as to single numbers. All such statements are
-interpreted as element-wise, similar to Matlab's initial-point operators such as
-\code{.*}.
+interpreted element-wise, similar to Matlab's initial-point operators such as
+\code{.*} or \code{./} which do not perform matrix operations but element-wise
+operations.
 
 \subsection{The grid concept in Equelle}
 
@@ -99,17 +100,43 @@ of flexibility without the risk of indexing errors.
 \subsection{Type checking and type inference}
 
 Equelle is strongly typed. Making a mistake in typing will usually cause a compile
-error. However, unlike languages like C++ (at least before \code{auto} was allowed), the
-user is usually not burdened with declaring the types of variables. The Equelle compiler
-is able to infer the correct types of any valid expression. Therefore Equelle statements
-can be very concise, yet unlike languages such as Python or Matlab, types are enforced at
-compile time.
+error. This is a safety feature, and when combined with the domains of collections being
+part of its type it is a strong safeguard against errors that are easy to make in other
+languages.
 
 Mostly, Equelle can be said to be statically typed. However, the domains of
 \code{Collection}s can be dynamically computed or input, so that part of the type system
-can be said to be dynamic. However, it is all checked at compile time.
+can be said to be dynamic. However, this is all checked at compile time.
 
-\subsection{Declaration and assignment}
+\subsection{Declaration and assignment, immutability}
+
+Unlike languages like C++ (at least before \code{auto} was allowed), the user is usually
+not burdened with declaring the types of variables. The Equelle compiler is able to infer
+the correct types of any valid expression. Therefore Equelle statements can be very
+concise, yet unlike languages such as Python or Matlab, type safety is enforced at compile
+time.
+
+To declare a variable, use a single statement with a colon separating the variable name
+and its type:
+
+\code{volume : Scalar}
+
+To assign a variable, use the = sign:
+
+\code{volume = 5.67}
+
+This can be combined, as follows:
+
+\code{volume : Scalar = 5.67}
+
+The declarations are entirely optional. They can be included as a form of documentation,
+or left out according to the wishes of the programmer.
+
+By default, Equelle variables are immutable, and can only be assigned to once. This makes
+it easier for the compiler and back-end to parallelize programs correctly. It is possible
+to create mutable variables, but it must be done explicitly, but declaring the variable to
+be \code{Mutable}.
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -117,7 +144,31 @@ can be said to be dynamic. However, it is all checked at compile time.
 
 \subsection{Basic types}
 
+There are 7 basic types in Equelle, as shown in Table \ref{tab:basic-types}. Note that
+there is no separate type for integer numbers. This helps avoiding some types of errors
+that are widespread in other languages, for example the expression \code{1/2} will
+yield an expression of type \code{Scalar} with the value 0.5, and not zero as in C.
+
+\begin{table}
+\begin{tabular}{l|l}
+{\em Type} & {\em Semantics} \\
+\hline \\
+\code{Scalar} & A single floating-point number \\
+\code{Vector} & A pair or triple of \code{Scalar}s (depending on grid dimension) \\
+\code{Bool} & A flag that is \code{True} or \code{False} \\
+\code{Cell} & A cell entity of the grid \\
+\code{Face} & A face entity of the grid \\
+\code{Edge} & An edge entity of the grid \\
+\code{Vertex} & A vertex entity of the grid \\
+\end{tabular}
+\caption{Basic types in Equelle}
+\label{tab:basic-types}
+\end{table}
+
 \subsection{Collections}
+
+Variable can contain several elements of the same basic type. Such a variable is called a
+collection.
 
 \subsection{Domains and the \code{On} concept}
 
