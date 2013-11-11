@@ -412,15 +412,15 @@ void EquelleRuntimeCPU::output(const String& tag, const CollOfScalar& vals)
 }
 
 
-Scalar EquelleRuntimeCPU::userSpecifiedScalarWithDefault(const String& name,
+Scalar EquelleRuntimeCPU::inputScalarWithDefault(const String& name,
                                                          const Scalar default_value)
 {
     return param_.getDefault(name, default_value);
 }
 
 
-CollOfFace EquelleRuntimeCPU::userSpecifiedCollectionOfFaceSubsetOf(const String& name,
-                                                                    const CollOfFace& face_superset)
+CollOfFace EquelleRuntimeCPU::inputDomainSubsetOf(const String& name,
+                                                  const CollOfFace& face_superset)
 {
     const String filename = param_.get<String>(name + "_filename");
     std::ifstream is(filename.c_str());
@@ -443,8 +443,8 @@ CollOfFace EquelleRuntimeCPU::userSpecifiedCollectionOfFaceSubsetOf(const String
 }
 
 
-CollOfCell EquelleRuntimeCPU::userSpecifiedCollectionOfCellSubsetOf(const String& name,
-                                                                    const CollOfCell& cell_superset)
+CollOfCell EquelleRuntimeCPU::inputDomainSubsetOf(const String& name,
+                                                  const CollOfCell& cell_superset)
 {
     const String filename = param_.get<String>(name + "_filename");
     std::ifstream is(filename.c_str());
@@ -467,7 +467,7 @@ CollOfCell EquelleRuntimeCPU::userSpecifiedCollectionOfCellSubsetOf(const String
 }
 
 
-SeqOfScalar EquelleRuntimeCPU::userSpecifiedSequenceOfScalar(const String& name)
+SeqOfScalar EquelleRuntimeCPU::inputSequenceOfScalar(const String& name)
 {
     const String filename = param_.get<String>(name + "_filename");
     std::ifstream is(filename.c_str());

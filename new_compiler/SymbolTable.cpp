@@ -546,26 +546,21 @@ SymbolTable::SymbolTable()
                                          EquelleType(Vector, Collection),
                                          { InvalidIndex, 0, InvalidIndex}));
     // 2. User input functions.
-    functions_.emplace_back("UserSpecifiedScalarWithDefault",
+    functions_.emplace_back("InputScalarWithDefault",
                             FunctionType({ Variable("name", EquelleType(String)),
                                            Variable("default", EquelleType(Scalar)) },
                                          EquelleType(Scalar)));
-    functions_.emplace_back("UserSpecifiedCollectionOfScalar",
+    functions_.emplace_back("InputCollectionOfScalar",
                             FunctionType({ Variable("name", EquelleType(String)),
                                            Variable("entities", EquelleType()) },
                                          EquelleType(Scalar, Collection),
                                          { InvalidIndex, 1, InvalidIndex}));
-    functions_.emplace_back("UserSpecifiedCollectionOfFaceSubsetOf",
+    functions_.emplace_back("InputDomainSubsetOf",
                             FunctionType({ Variable("name", EquelleType(String)),
                                            Variable("entities", EquelleType()) },
-                                          EquelleType(Face, Collection, NotApplicable, NotApplicable, false, true),
-                                         { InvalidIndex, InvalidIndex, 1}));
-    functions_.emplace_back("UserSpecifiedCollectionOfCellSubsetOf",
-                            FunctionType({ Variable("name", EquelleType(String)),
-                                           Variable("entities", EquelleType()) },
-                                         EquelleType(Cell, Collection, NotApplicable, NotApplicable, false, true),
-                                         { InvalidIndex, InvalidIndex, 1}));
-    functions_.emplace_back("UserSpecifiedSequenceOfScalar",
+                                          EquelleType(Invalid, Collection, NotApplicable, NotApplicable, false, true),
+                                         { 1, InvalidIndex, 1}));
+    functions_.emplace_back("InputSequenceOfScalar",
                             FunctionType({ Variable("name", EquelleType(String)) },
                                          EquelleType(Scalar, Sequence)));
 

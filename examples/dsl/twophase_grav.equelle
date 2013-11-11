@@ -2,14 +2,14 @@
 
 # Physics that requires specification
 perm : Collection Of Scalar On AllCells()
-perm = UserSpecifiedCollectionOfScalar("perm", AllCells())
+perm = InputCollectionOfScalar("perm", AllCells())
 poro : Collection Of Scalar On AllCells()
-poro = UserSpecifiedCollectionOfScalar("poro", AllCells())
-watervisc = UserSpecifiedScalarWithDefault("watervisc", 0.0005)
-oilvisc = UserSpecifiedScalarWithDefault("oilvisc", 0.005)
-waterdensity = UserSpecifiedScalarWithDefault("waterdensity", 1000.0)
-oildensity = UserSpecifiedScalarWithDefault("oildensity", 750.0)
-gravity = UserSpecifiedScalarWithDefault("gravity", 9.82)
+poro = InputCollectionOfScalar("poro", AllCells())
+watervisc = InputScalarWithDefault("watervisc", 0.0005)
+oilvisc = InputScalarWithDefault("oilvisc", 0.005)
+waterdensity = InputScalarWithDefault("waterdensity", 1000.0)
+oildensity = InputScalarWithDefault("oildensity", 750.0)
+gravity = InputScalarWithDefault("gravity", 9.82)
 
 # Constants
 pv = poro * |AllCells()|
@@ -117,10 +117,10 @@ computeTransportResidual(sw, sw0, flux, source, insource_sat, dt) = {
 }
 
 # Initialise state variables.
-timesteps = UserSpecifiedSequenceOfScalar("timesteps")
-sw_initial = UserSpecifiedCollectionOfScalar("sw_initial", AllCells())
-source_cells = UserSpecifiedCollectionOfCellSubsetOf("source_cells", AllCells())
-source_values = UserSpecifiedCollectionOfScalar("source_values", source_cells)
+timesteps = InputSequenceOfScalar("timesteps")
+sw_initial = InputCollectionOfScalar("sw_initial", AllCells())
+source_cells = InputDomainSubsetOf("source_cells", AllCells())
+source_values = InputCollectionOfScalar("source_values", source_cells)
 source = source_values Extend AllCells()
 insource_sw = 1.0 Extend AllCells()
 sw0 : Mutable Collection Of Scalar On AllCells()

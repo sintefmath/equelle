@@ -1,13 +1,13 @@
 #! -*-sh-*-
 # Shallow water...
 
-cfl : Scalar = UserSpecifiedScalarWithDefault(0.9) # Courant number <= 1
-g : Scalar = UserSpecifiedScalarWithDefault(9.81) # Gravitational constant
+cfl : Scalar = InputScalarWithDefault(0.9) # Courant number <= 1
+g : Scalar = InputScalarWithDefault(9.81) # Gravitational constant
 
 # initial values (in user input)
-h0 : Collection Of Scalar On AllCells() = UserSpecifiedCollectionOfScalar( AllCells() ) # Water elevation
-hu0 : Collection Of Scalar On AllCells() = UserSpecifiedCollectionOfScalar( AllCells() ) # Momentum along x-axis
-hv0 : Collection Of Scalar On AllCells() = UserSpecifiedCollectionOfScalar( AllCells() ) # Momentum along y-axis
+h0 : Collection Of Scalar On AllCells() = InputCollectionOfScalar( AllCells() ) # Water elevation
+hu0 : Collection Of Scalar On AllCells() = InputCollectionOfScalar( AllCells() ) # Momentum along x-axis
+hv0 : Collection Of Scalar On AllCells() = InputCollectionOfScalar( AllCells() ) # Momentum along y-axis
 
 # Create a tuple of our physical variables to enable "vector notation" that is close to the mathematics
 q0 : Tuple of (Collection Of Scalar On AllCells()) = (h0, hu0, hv0) #What kind of parenthesis do we need here?

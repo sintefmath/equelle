@@ -12,6 +12,7 @@
 #include <iterator>
 #include <iostream>
 #include <cmath>
+#include <array>
 
 #include "EquelleRuntimeCPU.hpp"
 
@@ -29,10 +30,10 @@ int main(int argc, char** argv)
 
     // ============= Generated code starts here ================
 
-    const Scalar k = er.userSpecifiedScalarWithDefault("k", double(0.3));
-    const CollOfScalar u_initial = er.userSpecifiedCollectionOfScalar("u_initial", er.allCells());
-    const CollOfFace dirichlet_boundary = er.userSpecifiedCollectionOfFaceSubsetOf("dirichlet_boundary", er.boundaryFaces());
-    const CollOfScalar dirichlet_val = er.userSpecifiedCollectionOfScalar("dirichlet_val", dirichlet_boundary);
+    const Scalar k = er.inputScalarWithDefault("k", double(0.3));
+    const CollOfScalar u_initial = er.inputCollectionOfScalar("u_initial", er.allCells());
+    const CollOfFace dirichlet_boundary = er.inputDomainSubsetOf("dirichlet_boundary", er.boundaryFaces());
+    const CollOfScalar dirichlet_val = er.inputCollectionOfScalar("dirichlet_val", dirichlet_boundary);
     const CollOfScalar vol = er.norm(er.allCells());
     const CollOfFace interior_faces = er.interiorFaces();
     const CollOfCell first = er.firstCell(interior_faces);
@@ -58,7 +59,7 @@ int main(int argc, char** argv)
         const CollOfScalar residual = ((u - u0) + ((dt / vol) * er.divergence(fluxes)));
         return residual;
     };
-    const SeqOfScalar timesteps = er.userSpecifiedSequenceOfScalar("timesteps");
+    const SeqOfScalar timesteps = er.inputSequenceOfScalar("timesteps");
     CollOfScalar u0;
     u0 = u_initial;
     for (const Scalar& dt : timesteps) {

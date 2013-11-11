@@ -12,6 +12,7 @@
 #include <iterator>
 #include <iostream>
 #include <cmath>
+#include <array>
 
 #include "EquelleRuntimeCPU.hpp"
 
@@ -29,9 +30,9 @@ int main(int argc, char** argv)
 
     // ============= Generated code starts here ================
 
-    const Scalar k = er.userSpecifiedScalarWithDefault("k", double(0.3));
-    const Scalar dt = er.userSpecifiedScalarWithDefault("dt", double(0.5));
-    const CollOfScalar u0 = er.userSpecifiedCollectionOfScalar("u0", er.allCells());
+    const Scalar k = er.inputScalarWithDefault("k", double(0.3));
+    const Scalar dt = er.inputScalarWithDefault("dt", double(0.5));
+    const CollOfScalar u0 = er.inputCollectionOfScalar("u0", er.allCells());
     const CollOfScalar vol = er.norm(er.allCells());
     const CollOfFace interior_faces = er.interiorFaces();
     const CollOfCell first = er.firstCell(interior_faces);

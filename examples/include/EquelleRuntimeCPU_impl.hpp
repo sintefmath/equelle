@@ -250,8 +250,8 @@ CollOfScalar EquelleRuntimeCPU::newtonSolve(const ResidualFunctor& rescomp,
 
 
 template <class SomeCollection>
-CollOfScalar EquelleRuntimeCPU::userSpecifiedCollectionOfScalar(const String& name,
-                                                                const SomeCollection& coll)
+CollOfScalar EquelleRuntimeCPU::inputCollectionOfScalar(const String& name,
+                                                        const SomeCollection& coll)
 {
     const int size = coll.size();
     const bool from_file = param_.getDefault(name + "_from_file", false);

@@ -12,6 +12,7 @@
 #include <iterator>
 #include <iostream>
 #include <cmath>
+#include <array>
 
 #include "EquelleRuntimeCPU.hpp"
 
@@ -34,10 +35,10 @@ int main(int argc, char** argv)
     auto foo = [&](const Scalar& x, const Scalar& y) -> Scalar {
         return ((a * x) + (b * y));
     };
-    const SeqOfScalar seq = er.userSpecifiedSequenceOfScalar("seq");
+    const SeqOfScalar seq = er.inputSequenceOfScalar("seq");
     for (const Scalar& elem : seq) {
         const Scalar r = ((a + double(3)) + elem);
-        const SeqOfScalar seq2 = er.userSpecifiedSequenceOfScalar("seq2");
+        const SeqOfScalar seq2 = er.inputSequenceOfScalar("seq2");
         for (const Scalar& e2 : seq2) {
             auto foo3 = [&](const Scalar& y) -> Scalar {
                 auto three = [&]() -> Scalar {

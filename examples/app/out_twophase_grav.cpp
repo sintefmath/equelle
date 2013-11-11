@@ -12,6 +12,7 @@
 #include <iterator>
 #include <iostream>
 #include <cmath>
+#include <array>
 
 #include "EquelleRuntimeCPU.hpp"
 
@@ -29,13 +30,13 @@ int main(int argc, char** argv)
 
     // ============= Generated code starts here ================
 
-    const CollOfScalar perm = er.userSpecifiedCollectionOfScalar("perm", er.allCells());
-    const CollOfScalar poro = er.userSpecifiedCollectionOfScalar("poro", er.allCells());
-    const Scalar watervisc = er.userSpecifiedScalarWithDefault("watervisc", double(0.0005));
-    const Scalar oilvisc = er.userSpecifiedScalarWithDefault("oilvisc", double(0.005));
-    const Scalar waterdensity = er.userSpecifiedScalarWithDefault("waterdensity", double(1000));
-    const Scalar oildensity = er.userSpecifiedScalarWithDefault("oildensity", double(750));
-    const Scalar gravity = er.userSpecifiedScalarWithDefault("gravity", double(9.82));
+    const CollOfScalar perm = er.inputCollectionOfScalar("perm", er.allCells());
+    const CollOfScalar poro = er.inputCollectionOfScalar("poro", er.allCells());
+    const Scalar watervisc = er.inputScalarWithDefault("watervisc", double(0.0005));
+    const Scalar oilvisc = er.inputScalarWithDefault("oilvisc", double(0.005));
+    const Scalar waterdensity = er.inputScalarWithDefault("waterdensity", double(1000));
+    const Scalar oildensity = er.inputScalarWithDefault("oildensity", double(750));
+    const Scalar gravity = er.inputScalarWithDefault("gravity", double(9.82));
     const CollOfScalar pv = (poro * er.norm(er.allCells()));
     const CollOfScalar cell_depths = CollOfScalar(er.centroid(er.allCells()).col(1));
     const CollOfScalar zdiff = er.gradient(cell_depths);
@@ -98,10 +99,10 @@ int main(int argc, char** argv)
         const CollOfScalar q = ((insource * insource_sw) + (outsource * fracflow));
         return ((sw - sw0) + ((dt / pv) * (er.divergence(water_flux) - q)));
     };
-    const SeqOfScalar timesteps = er.userSpecifiedSequenceOfScalar("timesteps");
-    const CollOfScalar sw_initial = er.userSpecifiedCollectionOfScalar("sw_initial", er.allCells());
-    const CollOfCell source_cells = er.userSpecifiedCollectionOfCellSubsetOf("source_cells", er.allCells());
-    const CollOfScalar source_values = er.userSpecifiedCollectionOfScalar("source_values", source_cells);
+    const SeqOfScalar timesteps = er.inputSequenceOfScalar("timesteps");
+    const CollOfScalar sw_initial = er.inputCollectionOfScalar("sw_initial", er.allCells());
+    const CollOfCell source_cells = er.inputDomainSubsetOf("source_cells", er.allCells());
+    const CollOfScalar source_values = er.inputCollectionOfScalar("source_values", source_cells);
     const CollOfScalar source = er.operatorExtend(source_values, source_cells, er.allCells());
     const CollOfScalar insource_sw = er.operatorExtend(double(1), er.allCells());
     CollOfScalar sw0;

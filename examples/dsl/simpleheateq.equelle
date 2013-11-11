@@ -1,13 +1,13 @@
 # Heat conduction with no boundary conditions or source terms.
 
 # Physics that requires specification
-k : Scalar = UserSpecifiedScalarWithDefault("k", 0.3) # Heat diffusion constant.
+k : Scalar = InputScalarWithDefault("k", 0.3) # Heat diffusion constant.
 
 # @afr: time step strategy assumed given outside.
-dt : Scalar = UserSpecifiedScalarWithDefault("dt", 0.5) # Time step length.
+dt : Scalar = InputScalarWithDefault("dt", 0.5) # Time step length.
 
 # u0 should be given initial values (in user input)
-u0 : Collection Of Scalar On AllCells() = UserSpecifiedCollectionOfScalar("u0", AllCells())
+u0 : Collection Of Scalar On AllCells() = InputCollectionOfScalar("u0", AllCells())
 
 
 # Compute interior transmissibilities.

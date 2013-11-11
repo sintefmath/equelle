@@ -188,17 +188,17 @@ public:
     void output(const String& tag, const CollOfScalar& vals);
 
     /// Input.
-    Scalar userSpecifiedScalarWithDefault(const String& name,
+    Scalar inputScalarWithDefault(const String& name,
                                           const Scalar default_value);
-    CollOfFace userSpecifiedCollectionOfFaceSubsetOf(const String& name,
-                                                     const CollOfFace& superset);
-    CollOfCell userSpecifiedCollectionOfCellSubsetOf(const String& name,
-                                                     const CollOfCell& superset);
+    CollOfFace inputDomainSubsetOf(const String& name,
+                                   const CollOfFace& superset);
+    CollOfCell inputDomainSubsetOf(const String& name,
+                                   const CollOfCell& superset);
     template <class SomeCollection>
-    CollOfScalar userSpecifiedCollectionOfScalar(const String& name,
-                                                 const SomeCollection& coll);
+    CollOfScalar inputCollectionOfScalar(const String& name,
+                                         const SomeCollection& coll);
 
-    SeqOfScalar userSpecifiedSequenceOfScalar(const String& name);
+    SeqOfScalar inputSequenceOfScalar(const String& name);
 
 
     /// Ensuring requirements that may be imposed by Equelle programs.

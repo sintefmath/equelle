@@ -35,20 +35,20 @@ int main(int argc, char** argv)
     // ============= Generated code starts here ================
 
     // --------------------------------------------------------------------------------
-    // k : Scalar = UserSpecifiedScalarWithDefault("k", 0.3) # Heat diffusion constant.
-    // dt : Scalar = UserSpecifiedScalarWithDefault("dt", 0.5) # Time step length.
+    // k : Scalar = InputScalarWithDefault("k", 0.3) # Heat diffusion constant.
+    // dt : Scalar = InputScalarWithDefault("dt", 0.5) # Time step length.
     // u0 : Collection Of Scalar On AllCells()
-    // u0 = UserSpecifiedCollectionOfScalar("u0", AllCells())
+    // u0 = InputCollectionOfScalar("u0", AllCells())
     // dirichlet_boundary : Collection Of Face On BoundaryFaces()
-    // dirichlet_boundary = UserSpecifiedCollectionOfFace( BoundaryFaces() )
+    // dirichlet_boundary = InputDomainSubsetOf( BoundaryFaces() )
     // dirichlet_val : Collection Of Scalar On dirichlet_boundary
-    // dirichlet_val = UserSpecifiedCollectionOfScalar("dirichlet_val", dirichlet_boundary)
+    // dirichlet_val = InputCollectionOfScalar("dirichlet_val", dirichlet_boundary)
     // --------------------------------------------------------------------------------
-    const Scalar k = er.userSpecifiedScalarWithDefault("k", double(0.3));
-    const Scalar dt = er.userSpecifiedScalarWithDefault("dt", double(0.5));
-    const CollOfScalar u0 = er.userSpecifiedCollectionOfScalar("u0", er.allCells());
-    const CollOfFace dirichlet_boundary = er.userSpecifiedCollectionOfFaceSubsetOf("dirichlet_boundary", er.boundaryFaces());
-    const CollOfScalar dirichlet_val = er.userSpecifiedCollectionOfScalar("dirichlet_val", dirichlet_boundary);
+    const Scalar k = er.inputScalarWithDefault("k", double(0.3));
+    const Scalar dt = er.inputScalarWithDefault("dt", double(0.5));
+    const CollOfScalar u0 = er.inputCollectionOfScalar("u0", er.allCells());
+    const CollOfFace dirichlet_boundary = er.inputDomainSubsetOf("dirichlet_boundary", er.boundaryFaces());
+    const CollOfScalar dirichlet_val = er.inputCollectionOfScalar("dirichlet_val", dirichlet_boundary);
 
     // --------------------------------------------------------------------------------
     // # Compute interior transmissibilities.
