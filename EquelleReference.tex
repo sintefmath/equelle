@@ -1,6 +1,7 @@
 \documentclass[11pt]{article}
 %
 % definitions
+\usepackage{parskip}
 \usepackage{amsmath,amssymb}
 \usepackage{xcolor}
 \usepackage{bm}
@@ -130,7 +131,10 @@ This can be combined, as follows:
 \code{volume : Scalar = 5.67}
 
 The declarations are entirely optional. They can be included as a form of documentation,
-or left out according to the wishes of the programmer.
+or left out according to the wishes of the programmer. There is an important restriction
+on variable and function names: user-declared names must start with a lower case
+letter. Names starting with a capital letter are reserved for Equelle. In the remainder of
+the name, any letter or number can be used, or underscores.
 
 By default, Equelle variables are immutable, and can only be assigned to once. This makes
 it easier for the compiler and back-end to parallelize programs correctly. It is possible
@@ -149,10 +153,26 @@ there is no separate type for integer numbers. This helps avoiding some types of
 that are widespread in other languages, for example the expression \code{1/2} will
 yield an expression of type \code{Scalar} with the value 0.5, and not zero as in C.
 
+Vectors are special in that the number of elements will depend on the number of grid
+dimensions. A simulator can be created (depending on the back-end used) that is capable of
+running simulations on both 2D and 3D grids, and the Vector class will be appropriately
+sized in both cases. One can obtain the Scalar elements of a Vector by indexing (starting
+from 0):
+
+\code{a : Vector \\
+... \\
+b : Scalar = a[0]    \# First ('x') element. \\
+c : Scalar = a[2]    \# Third ('z') element.
+}
+
+Use of vector indexing is checked, and a program that uses the index 2 like in the
+assignment of c above, will impose the restriction on the resulting simulator that it
+requires 3 grid dimensions.
+
 \begin{table}
 \begin{tabular}{l|l}
 {\em Type} & {\em Semantics} \\
-\hline \\
+\hline
 \code{Scalar} & A single floating-point number \\
 \code{Vector} & A pair or triple of \code{Scalar}s (depending on grid dimension) \\
 \code{Bool} & A flag that is \code{True} or \code{False} \\
@@ -168,19 +188,159 @@ yield an expression of type \code{Scalar} with the value 0.5, and not zero as in
 \subsection{Collections}
 
 Variable can contain several elements of the same basic type. Such a variable is called a
-collection.
+collection. To declare a collection you use \code{Collection Of} followed by a basic type,
+the keyword \code{On} and an expression for the domain of the collection:
+
+\code{a : Collection Of Scalar On AllFaces() \\
+b : Collection Of Cell On InteriorFaces() \\
+c : Collection Of Vector On AllCells()
+}
+
+Arithmetic operators can be applied only between collections that are \code{On} the same
+domain.
 
 \subsection{Domains and the \code{On} concept}
+\label{subsec:domains-on}
+
+A domain is defined to be a set of unique grid entities (no repeats), all of the same
+dimension. Several basic domains are available via built-in Equelle functions, such as
+\code{AllCells()}, \code{BoundaryFaces()} and \code{InteriorVertices()}. It is also
+possible to specify domains dynamically, to be set from user input when running a
+simulation. For example (including optional type declaration):
+
+\code{dirichlet\_boundary : Collection Of Face Subset Of AllFaces()\\
+dirichlet\_boundary =  InputDomainSubsetOf(AllFaces())
+}
+
+This new domain can be used in all ways that the basic built-in domains can. Note that the
+\code{Subset Of} part will be discussed in section \ref{subsec:subset-of}.
+
+Given a domain, collections can be declared to be \code{On} that domain. Such a collection
+can be thought of as a 1-1 mapping from the domain to the data of the collection. There is
+no ordering implicit in this. Consider the following declaration:
+
+\code{a : Collection Of Scalar On BoundaryFaces()
+}
+
+This can be viewed as mapping taking $f \in \code{BoundaryFaces()} \to a(f)$.
+
+Even if on a low level there exist some ordering of the boundary faces of the grid, it is
+not needed by nor accessible from the Equelle program. However, if a different collection
+$b$ was declared to be \code{On} the same domain, it would be possible to add or multiply
+the collections, and the result would also be \code{On BoundaryFaces()}, for example can
+$a + b$ be viewed as mapping taking $f \in \code{BoundaryFaces()} \to a(f) + b(f)$. 
+
+Finally, note that not all collections of grid entities are domains. For example the
+collection returned from FirstCell(InteriorFaces()) can possibly contain repeated
+instances of one or more cells.
 
 \subsection{The \code{Subset Of} concept}
+\label{subsec:subset-of}
+
+It is often necessary to extend or restrict collections to larger or smaller
+domains. Therefore it is important to know for any domain, what other domains it is
+contained in. For the built-in domains this is obvious and given. For example
+\code{BoundaryCells()} is contained within \code{AllCells()}. For domains that are input
+from the user, the containing domain must be given as an argument to the
+\code{InputDomainSubsetOf()} function, as seen in the example of \ref{subsec:domains-on}.
+
+Given a collection on some domain, one may extend the collection to larger domains by
+padding it with zeros. This is only possible for collections of \code{Scalar} type. To do
+this one can use the \code{Extend} operator. To continue the previous example:
+
+\code{x : Collection Of Scalar On dirichlet\_boundary\\
+... \\
+y : Collection Of Scalar On BoundaryFaces()\\
+y = x Extend BoundaryFaces()
+}
+
+Similarly, one may do the opposite and restrict a collection to a subdomain by using
+\code{On} as an operator:
+
+\code{x : Collection Of Scalar On BoundaryFaces()\\
+... \\
+y : Collection Of Scalar On dirichlet\_boundary\\ 
+y = x On dirichlet\_boundary
+}
+
+A user-specified domain may or may not be a subset of another user-specified domain, but
+that is not possible to decide at compile time, and so you can never extend or restrict a
+collection from one such domain to another with \code{Extend} and \code{On}
+directly. However, it is possible to do so via a containing domain:
+
+\begin{verbatim}
+d1 : Collection Of Cell Subset Of AllCells()
+d2 : Collection Of Cell Subset Of AllCells()
+x1 : Collection Of Scalar On d1
+...
+x2 = x1 Extend d2                    # Error
+x2 = x1 On d2                        # Error
+x2 = ((x1 Extend AllCells()) On d2)  # Ok.
+\end{verbatim}
+
+The above example first extends x1 with zeros to AllCells() and then restricts it to
+d2. If d2 overlaps d1, then x2 will have the same value as x1 for the cells of d2 that are
+also in d1, and zero for the cells that don't.
+
+There is one way the use of \code{On} as an operator is very different from the use of
+\code{Extend}: the collection on the right hand side of the \code{On} does not have to be
+a domain, but all elements of the collection have to be in the domain of the left hand
+side. This is looked at in more detail in section \ref{subsec:on-extend}.
 
 \subsection{Sequences}
 
+Unlike a \code{Collection}, that is a mapping from some grid domain, a \code{Sequence} is
+a mapping from the integers. It is quite limited what a sequence can be used for,
+currently the only usage is to specify the data over which a \code{For} loop iterates. The
+declaration syntax for sequences is similar to that for collections, and as with
+collections it is possible to have sequences of basic types only. Example usage:
+\begin{verbatim}
+timesteps : Sequence Of Scalar
+timesteps = InputSequenceOfScalar("timesteps")
+For dt In timesteps {
+    ...
+}
+\end{verbatim}
+
 \subsection{Arrays}
+
+First, note that the \code{Array} type is not intended for long arrays. That would be
+handled by a \code{Collection} in Equelle. Rather, it is meant to collect small sets of
+variables for convenience, especially as function arguments or return types. The size of
+an array must be given in the program. It is not possible to use arithmetic operators with
+arrays, the only allowed operation is the indexing operation that obtains an element from
+the array. Indexing starts from zero. Square brackets can be used to construct an
+array. Example usage:
+\begin{verbatim}
+bothFunc : Function() -> Array Of 2 Collection Of Cell On InteriorFaces()
+bothFunc() = {
+    -> [FirstCell(InteriorFaces()), SecondCell(InteriorFaces())]
+}
+both = bothFunc()
+first = both[0]
+second = both[1]
+wrong = both[2]  # This generates a compiler error
+\end{verbatim}
+
+As with access to \code{Vector} types, indexed access is checked by the compiler. If an
+expression is an \code{Array} of either \code{Vector} or \code{Collection Of Vector}, the
+first indexing operator always refers to elements of the \code{Array}.
 
 \subsection{Function types}
 
 \subsection{Mutable variables}
+
+Since variables are immutable by default, they must explicitly be declared mutable. This
+is done by writing \code{Mutable} in front of the type. Example usage:
+
+\begin{verbatim}
+regular : Scalar = 8
+writable : Mutable Scalar = 9
+writable = regular  # Ok
+writable = 4        # Ok
+regular = writable  # Error
+regular = 6         # Error
+\end{verbatim}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -191,6 +351,9 @@ collection.
 \subsection{Grid topology}
 
 \subsection{Grid geometry}
+
+\subsection{On and Extend}
+\label{subsec:on-extend}
 
 \subsection{Discrete operators}
 
