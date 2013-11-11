@@ -25,11 +25,14 @@ Function templates and instantiation:
 -> a function (instantiated, typed) is a type that can be passed etc.
 -> a function template cannot be passed as an argument (but consider
 ok for other templates).
+Let |.| be absolute value for Scalar.
 
 Lexer/Grammar:
 --------------
 Tuples (also needs work in parser etc.)
 Check and fix multi-argument functions.
+Give nice error messages when user tries to define var or func with
+capital letter.
 
 
 Parsing, type checking and building AST:
