@@ -398,7 +398,103 @@ If one expression is a \code{Collection}, then both expressions must be collecti
 are \code{On} the same domain. There is one exception to this: you can always multiply or
 divide a \code{Collection} with a \code{Scalar}.
 
+The norm operator can be used for multiple purposes. For a \code{Scalar} it returns the
+absolute value, for a \code{Vector} it returns the Euclidean norm, and for grid entities
+it returns the measure (volume, area, length) of the entity. It also works for
+collections, returning a \code{Collection Of Scalar} in all cases. An example:
+
+\begin{verbatim}
+ifaces = InteriorFaces()
+first = FirstCell(ifaces)
+second = SecondCell(ifaces)
+x = |ifaces| * |Centroid(second) - Centroid(first)|
+\end{verbatim}
+
+In the above, \code{x} will end up being a \code{Collection Of Scalar On InteriorFaces()},
+and its value will be, for each interior face, the product of the face's area with the
+distance between its adjacent cells' centroids.
+
+
+\subsection{Comparisons and logical operators}
+
+The equality comparison operators \code{==} and \code{!=} are accepted by Equelle for all
+basic types. The numerical comparisons \code{<}, \code{<=}, \code{>} and \code{>=} are
+accepted for \code{Scalar} types only. They all return \code{Bool}, or \code{Collection Of
+Bool} if the operands are collections. As for arithmetic operators, both collections must
+then be \code{On} the same domain.
+
+The logical operators \code{And}, \code{Or}, \code{Not} and \code{Xor} can be used on
+either two \code{Bool} operands or two \code{Collection Of Bool} operands.
+
+The trinary operator (\code{ ? : }) takes three arguments. The first (before the question
+mark) must be a \code{Bool}, and the second and third arguments (on either side of the
+colon) can be of any type, but both must be of the same type. If the first argument is
+true, the second argument is returned, otherwise the third. If any argument is a
+collection, they must all be collections on the same domain, and the operator is applied
+element-wise.
+
 \subsection{Grid topology}
+
+The built-in functions dealing with grid topology are summarized in Table
+\ref{tab:topfunc}. Most of these functions simply return the canonical built-in domains of
+Equelle, they all return domains of the indicated type and are named like this:
+
+\code{All|Interior|Boundary + Cells|Faces|Edges|Vertices}.
+
+The functions \code{FirstCell} and \code{SecondCell} do not require domains for their
+arguments, nor do they return domains. In a grid, each face is oriented. This orientation
+is so that the \code{Normal} of a face points from its \code{FirstCell} to its
+\code{SecondCell}. These function may return \code{Empty} for faces on the outer boundary,
+in fact the boundary can be characterized by the fact that either \code{FirstCell} or
+\code{SecondCell} must be \code{Empty}.
+
+The \code{IsEmpty} function returns \code{True} if the input is \code{Empty} and
+\code{False} otherwise.
+
+\begin{table}
+\begin{tabular}{l|l|l}
+{\em Function} & {\em Arguments} & {\em Returns} \\
+\hline
+\code{AllCells} & & \code{Collection Of Cell} \\
+\code{InteriorCells} & & \code{Collection Of Cell} \\
+\code{BoundaryCells} & & \code{Collection Of Cell} \\
+\code{AllFaces} & & \code{Collection Of Face} \\
+\code{InteriorFaces} & & \code{Collection Of Face} \\
+\code{BoundaryFaces} & & \code{Collection Of Face} \\
+\code{AllEdges} & & \code{Collection Of Edge} \\
+\code{InteriorEdges} & & \code{Collection Of Edge} \\
+\code{BoundaryEdges} & & \code{Collection Of Edge} \\
+\code{AllVertices} & & \code{Collection Of Vertex} \\
+\code{InteriorVertices} & & \code{Collection Of Vertex} \\
+\code{BoundaryVertices} & & \code{Collection Of Vertex} \\
+\code{FirstCell} & \code{Collection Of Face} & \code{Collection Of Cell}  \\
+\code{SecondCell} & \code{Collection Of Face} & \code{Collection Of Cell}  \\
+\code{IsEmpty} & \code{Collection Of Cell} & \code{Collection Of Bool}  \\
+\end{tabular}
+\caption{Topological built-in functions}
+\label{tab:topfunc}
+\end{table}
+
+Consider the following example:
+
+\begin{verbatim}
+bfaces = BoundaryFaces()
+first = FirstCell(bfaces)
+second = SecondCell(bfaces)
+bface_cells = IsEmpty(first) ? second : first
+\end{verbatim}
+
+The type of \code{bface\_cells} will be \code{Collection Of Cell On BoundaryFaces()}. Note
+that some boundary faces can be mapped to the same cell. In the grid in
+Figure~\ref{fig:2dgrid} for example, \code{bf\_cells} would contain cell $6$ twice, once for
+face $i$ and once for face $u$. Therefore \code{bf\_cells} cannot be a domain.
+
+\begin{figure}
+\centering
+\includegraphics[width=0.8\textwidth]{grid-enumeration}
+\caption{An example grid in 2D}
+\label{fig:2dgrid}
+\end{figure}
 
 \subsection{Grid geometry}
 
@@ -412,7 +508,7 @@ divide a \code{Collection} with a \code{Scalar}.
 \subsection{Miscellaneous functions}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Control structures and functions}
+\section{Control structures and user-defined functions}
 
 \subsection{Scopes}
 
