@@ -48,6 +48,7 @@ int main(int argc, char** argv)
     const CollOfVector q3 = (n2 * n);
     const CollOfVector q4 = (n * n2);
     er.output("should be zero", er.norm((((q1 - q2) + q3) - q4)));
+    er.output("should be all 1.5", er.sqrt((double(2.25) * n2)));
 
     // ============= Generated code ends here ================
 
