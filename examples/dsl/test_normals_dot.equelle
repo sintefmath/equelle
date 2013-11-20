@@ -18,3 +18,8 @@ getsecond(a) = {
 Output("second element of array", getsecond(narray))
 Output("second element of a different, inline array", getsecond([n0, 2*n0 + n2]))
 Output("second element of the same, inline array, direct access", [n0, 2*n0 + n2][1])
+q1 = n * 3
+q2 = 3 * n
+q3 = n2 * n
+q4 = n * n2
+Output("should be zero", |q1 - q2 + q3 - q4|)

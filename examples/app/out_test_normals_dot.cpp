@@ -43,6 +43,11 @@ int main(int argc, char** argv)
     er.output("second element of array", getsecond(narray));
     er.output("second element of a different, inline array", getsecond(std::array<CollOfScalar, 2>({{n0, ((double(2) * n0) + n2)}})));
     er.output("second element of the same, inline array, direct access", std::array<CollOfScalar, 2>({{n0, ((double(2) * n0) + n2)}})[1]);
+    const CollOfVector q1 = (n * double(3));
+    const CollOfVector q2 = (double(3) * n);
+    const CollOfVector q3 = (n2 * n);
+    const CollOfVector q4 = (n * n2);
+    er.output("should be zero", er.norm((((q1 - q2) + q3) - q4)));
 
     // ============= Generated code ends here ================
 
