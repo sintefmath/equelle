@@ -130,6 +130,27 @@ inline CollOfBool operator>=(const CollOfScalar& x, const Scalar& s)
     return x.value() >= s;
 }
 
+/// This function is not provided by AutoDiffBlock, so we must add it here.
+inline CollOfScalar sqrt(const CollOfScalar& x)
+{
+    // d(sqrt(x))/dy = 1/(2*sqrt(x)) * dx/dy
+
+    const auto& xjac = x.derivative();
+    if (xjac.empty()) {
+        return CollOfScalar(sqrt(x.value()));
+    }
+    const int num_blocks = xjac.size();
+    std::vector<CollOfScalar::M> jac(num_blocks);
+    typedef Eigen::DiagonalMatrix<Scalar, Eigen::Dynamic> D;
+    const auto sqrt_x = sqrt(x.value());
+    const D one_over_two_sqrt_x = (0.5/sqrt_x).matrix().asDiagonal();
+    for (int block = 0; block < num_blocks; ++block) {
+        jac[block] = one_over_two_sqrt_x * xjac[block];
+    }
+    return CollOfScalar::ADB::function(sqrt_x, jac);
+}
+
+
 
 
 
