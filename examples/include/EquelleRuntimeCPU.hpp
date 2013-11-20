@@ -281,6 +281,7 @@ public:
     CollOfVector normal(const CollOfFace& faces) const;
 
     /// Operators and math functions.
+    CollOfScalar sqrt(const CollOfScalar& x) const;
     CollOfScalar dot(const CollOfVector& v1, const CollOfVector& v2) const;
     CollOfScalar gradient(const CollOfScalar& cell_scalarfield) const;
     CollOfScalar negGradient(const CollOfScalar& cell_scalarfield) const;

@@ -285,6 +285,12 @@ CollOfVector EquelleRuntimeCPU::normal(const CollOfFace& faces) const
 }
 
 
+CollOfScalar EquelleRuntimeCPU::sqrt(const CollOfScalar& x) const
+{
+    return ::sqrt(x);
+}
+
+
 CollOfScalar EquelleRuntimeCPU::dot(const CollOfVector& v1, const CollOfVector& v2) const
 {
     if (v1.numCols() != v2.numCols()) {
