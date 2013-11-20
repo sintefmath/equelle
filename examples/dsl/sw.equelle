@@ -1,38 +1,46 @@
 #! -*-sh-*-
 # Shallow water...
 
-cfl : Scalar = InputScalarWithDefault(0.9) # Courant number <= 1
-g : Scalar = InputScalarWithDefault(9.81) # Gravitational constant
+cfl : Scalar = InputScalarWithDefault("cfl", 0.9) # Courant number <= 1
+g : Scalar = InputScalarWithDefault("g", 9.81) # Gravitational constant
 
 # initial values (in user input)
-h0 : Collection Of Scalar On AllCells() = InputCollectionOfScalar( AllCells() ) # Water elevation
-hu0 : Collection Of Scalar On AllCells() = InputCollectionOfScalar( AllCells() ) # Momentum along x-axis
-hv0 : Collection Of Scalar On AllCells() = InputCollectionOfScalar( AllCells() ) # Momentum along y-axis
+h0 : Collection Of Scalar On AllCells() #Water elevation
+hu0 : Collection Of Scalar On AllCells() # Momentum along x-axis
+hv0 : Collection Of Scalar On AllCells() # Momentum along y-axis
+
+h0 = InputCollectionOfScalar("h0", AllCells() ) 
+hu0 = InputCollectionOfScalar("hu0", AllCells() ) 
+hv0 = InputCollectionOfScalar("hv0", AllCells() ) 
 
 # Create a tuple of our physical variables to enable "vector notation" that is close to the mathematics
-q0 : Tuple of (Collection Of Scalar On AllCells()) = (h0, hu0, hv0) #What kind of parenthesis do we need here?
+q0 : Array Of 3 Collection Of Scalar On AllCells()
+q0 = [h0, hu0, hv0] #What kind of parenthesis do we need here?
 
 # Copy initial conditions
 q = q0
 
 # Part of the shallow water equations: fluxes along x-axis and y-axis
+f : Function(q : Array Of 3 Collection Of Scalar On AllFaces()) -> Array Of 3 Collection Of Scalar On AllFaces()
 f(q) = {
 	h = q[0]
 	hu = q[1]
 	hv = q[2]
 	
-	return (hu, ...
+	-> [hu, ...
 		hu*hu/h + (1/2)*g*h*h, ...
-		hu*hv/h)
+		hu*hv/h]
 }
+
+g : Function(q : Array Of 3 Collection Of Scalar On AllFaces()) -> Array Of 3 Collection Of Scalar On AllFaces()
 g(q) = {
 	h = q[0]
 	hu = q[1]
 	hv = q[2]
 	
-	return (hu, ...
+	-> [hu, ...
 		hu*hv/h, ...
-		hv*hv/h + (1/2)*g*h*h)
+		hv*hv/h + (1/2)*g*h*h]
 }
 
 
@@ -43,6 +51,10 @@ g(q) = {
 # @param qr State vector on "right" side of interface
 # @param n Normal of interface
 # @param l Interface length
+compute_flux : Function(ql : Array Of 3 Collection Of Scalar On AllFaces(), ...
+			qr : Array Of 3 Collection Of Scalar On AllFaces(), ...
+			l : Collection Of Scalar On AllFaces(), ...
+			n : Collection Of Vector On AllFaces()) -> Array Of 4 Collection Of Scalar On AllFaces()
 compute_flux(ql, qr, l, n) = {	
 	# Create aliases for h and hu for the left and right hand side of the integration point
 	hl = ql[0]
@@ -53,38 +65,47 @@ compute_flux(ql, qr, l, n) = {
 	hvr = qr[2]
 
 	# p is the wave speed for the integration point in the normal direction (be ware of small h for certain calculations: not handled yet)
-	# We need to get the 
-	pl = Dot((hul, hvl) / hl, n)
-	pr = Dot((hur, hvr) / hr, n)
+	#FIXME: pl = Dot([hul, hvl] / hl, n)
+	#FIXME: pr = Dot([hur, hvr] / hr, n)
+	pl = 0.7
+	pr = 0.9
 
 	# c is the gravitational potential leading to potentially increased wave speeds
 	cl = Sqrt(g*hl)
 	cr = Sqrt(g*hr)
 
 	# am and ap are the min / max eigenvalues (wave speeds) for a face (or integration point...)
-	am = Min(Min(pl-cl, pr-cr), 0)
-	ap = Max(Max(pl+cl, pr+cr), 0)
+	#FIXME: am = Min(Min(pl-cl, pr-cr), 0)
+	#FIXME: ap = Max(Max(pl+cl, pr+cr), 0)
+	am = 0.0
+	ap = 0.0
 	
 	# Use the central upwind flux function to calculate the x- and y-components of the flux
-	f_flux = (ap * f(ql) - am * f(qr)) / (ap-am)
-	g_flux = (ap * f(ql) - am * f(qr)) / (ap-am)
+	#FIXME: f_flux = (ap * f(ql) - am * f(qr)) / (ap-am)
+	#FIXME: g_flux = (ap * f(ql) - am * f(qr)) / (ap-am)
+	f_flux = [0.9, 0.9, 0.9]
+	g_flux = [0.8, 0.8, 0.8]
 	
 	#Stabilization term in the central upwind function
-	central_upwind_correction = ap*am*(ql - qr) / (ap-am)
+	#FIXME: central_upwind_correction = ap*am*(ql - qr) / (ap-am)
+	central_upwind_correction = [0.9, 0.9, 0.9]
 	
 	# Find the flux in the normal direction
-	flux = l*(Dot((f_flux, g_flux), n) - central_upwind_correction)
+	#FIXME: flux = l*(Dot([f_flux, g_flux], n) - central_upwind_correction)
+	flux = [0.9, 0.9, 0.9]
 	
 	# Compute the maximum absolute wave speed (needed to compute the time step size based on the CFL condition)
-	max_wave_speed = Max(ap, -am)
+	#FIXME: max_wave_speed = Max(ap, -am)
+	max_wave_speed = 0.8
 
 	# Return the flux for the given integration point
-	return (flux, max_wave_speed)
+	-> [flux[0], flux[1], flux[2], max_wave_speed]
 }
 
 
 
 # Reconstructs a plane for each cell in the grid, with a slope limiter
+reconstruct_plane : Function(q : Array Of 3 Collection Of Scalar On AllCells()) -> Array Of 2 Collection Of Scalar On AllCells()
 reconstruct_plane(q) = {
 	# The following would typically be used in a cartesian setting:
 	# forward_diff_x = (q_right - q) / dx
@@ -101,7 +122,7 @@ reconstruct_plane(q) = {
 	# return (x_slope, y_slope)
 	
 	# But for now, let's return a zero-slope (flat)
-	return (0, 0)
+	-> [0, 0]
 }
 
 # Get all cells and faces, which will be used later
@@ -117,8 +138,8 @@ slopes = reconstruct_plane(AllCells())
 # Find the normal and tangent for the interface
 # Tangent is only needed for integration points that are not on the edge midpoint
 n = Normal(if)
-tmp = (n[1] / n[0], -1)
-tangent = tmp / EuclideanLength(tmp)
+#FIXME: tmp = (n[1] / n[0], -1)
+#FIXME: tangent = tmp / EuclideanLength(tmp)
 
 # Find the vector from the cell center to the integration point
 ip = Centroid(if) # for a two point gauss quadrature add/subtract tangent*Length(if)/(2*Sqrt(3)) here
@@ -129,22 +150,31 @@ second_to_ip = ip - Centroid(second)
 l = |if| # The | . | construct gives the length/area/volumes of edges/faces/cells.
 
 # Evaluate the reconstructed variables at the integration point
-q1 = q On first + Dot(slopes On first, first_to_ip) # double check this, should be correct
-q2 = q On second + Dot(slopes On second, second_to_ip)
+#FIXME: q1 = q On first + Dot(slopes On first, first_to_ip) # double check this, should be correct
+#FIXME: q2 = q On second + Dot(slopes On second, second_to_ip)
+q1 = [q[0] On first, q[1] On first, q[2] On first]
+q2 = [q[0] On second, q[1] On second, q[2] On second]
 
 # Compute the flux (and maximum wave speeds) at the integration point
-(fluxes, max_wave_speeds) = compute_flux(q1, q2, l, n)
+flux_and_max_wave_speed = compute_flux(q1, q2, l, n)
 
 # Compute dt according to the CFL
-min_area = Min(|AllCells()|)
-max_wave_speed = Max(max_wave_speeds)
+#FIXME: min_area = Min(|AllCells()|)
+min_area = 0.9
+#FIXME: max_wave_speed = Max(flux_and_max_wave_speed[3])
+max_wave_speed = 0.8
 dt = cfl*min_area / (6*max_wave_speed)
 
 # Evolve the solution one time step
-q = q + dt*Divergence(fluxes) / Volume(AllCells())
+#FIXME: flux : Array Of 3 Collection Of Scalar On AllCells()
+#FIXME: flux = [flux_and_max_wave_speed[0], ...
+#	flux_and_max_wave_speed[1], ...
+#	flux_and_max_wave_speed[2]]
+#FIXME: q = q + dt*Divergence(fluxes) / |AllCells()|
+#FIXME: q[0] = q[0] + dt*Divergence(flux[0]) / |AllCells()|
 
-Output(q)
-Output(fluxes)
+Output("q", q)
+#FIXME: Output("flux", flux)
 
 
 

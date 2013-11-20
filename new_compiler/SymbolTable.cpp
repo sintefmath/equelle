@@ -586,6 +586,10 @@ SymbolTable::SymbolTable()
                             FunctionType({ Variable("tag", EquelleType(String)),
                                            Variable("data", EquelleType()) },
                                          EquelleType(Void)));
+    functions_.emplace_back("Sqrt",
+                            FunctionType({ Variable("s", EquelleType(Scalar, Collection)) },
+                                EquelleType(Scalar, Collection),
+                                {InvalidIndex, 0, InvalidIndex}));
 
 
     // ----- Set main function ref and current (initially equal to main). -----
