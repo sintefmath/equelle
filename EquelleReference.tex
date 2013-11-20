@@ -398,10 +398,11 @@ If one expression is a \code{Collection}, then both expressions must be collecti
 are \code{On} the same domain. There is one exception to this: you can always multiply or
 divide a \code{Collection} with a \code{Scalar}.
 
-The norm operator can be used for multiple purposes. For a \code{Scalar} it returns the
-absolute value, for a \code{Vector} it returns the Euclidean norm, and for grid entities
-it returns the measure (volume, area, length) of the entity. It also works for
-collections, returning a \code{Collection Of Scalar} in all cases. An example:
+The norm operator is written using vertical bars (\code{|}$\cdot$\code{|}) and can be used
+for multiple purposes. For a \code{Scalar} it returns the absolute value, for a
+\code{Vector} it returns the Euclidean norm, and for grid entities it returns the measure
+(volume, area, length) of the entity. It also works for collections, returning a
+\code{Collection Of Scalar} in all cases. An example:
 
 \begin{verbatim}
 ifaces = InteriorFaces()
@@ -471,7 +472,7 @@ The \code{IsEmpty} function returns \code{True} if the input is \code{Empty} and
 \code{SecondCell} & \code{Collection Of Face} & \code{Collection Of Cell}  \\
 \code{IsEmpty} & \code{Collection Of Cell} & \code{Collection Of Bool}  \\
 \end{tabular}
-\caption{Topological built-in functions}
+\caption{Grid topology built-in functions}
 \label{tab:topfunc}
 \end{table}
 
@@ -498,8 +499,49 @@ face $i$ and once for face $u$. Therefore \code{bf\_cells} cannot be a domain.
 
 \subsection{Grid geometry}
 
+The built-in functions dealing with grid geometry are summarized in Table
+\ref{tab:geomfunc}.
+
+\begin{table}
+\begin{tabular}{l|l|l}
+{\em Function} & {\em Arguments} & {\em Returns} \\
+\hline
+\code{Centroid} & \code{Collection Of Cell} & \code{Collection Of Vector} \\
+\code{Centroid} & \code{Collection Of Face} & \code{Collection Of Vector} \\
+\code{Normal} & \code{Collection Of Face} & \code{Collection Of Vector} \\
+\end{tabular}
+\caption{Grid geometry built-in functions}
+\label{tab:geomfunc}
+\end{table}
+
+All grid geometry functions return vectors. Note that \code{Normal} returns unit normals.
+
+
 \subsection{On and Extend}
 \label{subsec:on-extend}
+
+The operators \code{On} and \code{Extend} both create new collections from existing
+ones. We deal with \code{Extend} first.
+
+\code{Extend} can be used in two ways. The first and simplest is to create a
+\code{Collection} from a single (non-collection) expression of a basic type, each element
+of the resulting collection being equal to the given single expression. For example we can
+extend a previous example:
+
+\begin{verbatim}
+bfaces = BoundaryFaces()
+first = FirstCell(bfaces)
+second = SecondCell(bfaces)
+bface_cells = IsEmpty(first) ? second : first
+bface_sign = IsEmpty(first) ? (-1 Extend bfaces) : (1 Extend bfaces)
+\end{verbatim}
+
+In the above example, \code{(-1 Extend bfaces)} is a \code{Collection Of Scalar On bfaces}
+with each element equal to -1.
+
+The second way to use \code{Extend} is to 
+
+For both uses of \code{Extend}, the second argument must be a domain.
 
 \subsection{Discrete operators}
 
