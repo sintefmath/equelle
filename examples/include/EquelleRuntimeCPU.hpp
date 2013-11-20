@@ -44,7 +44,6 @@ typedef bool Bool;
 typedef std::string String;
 
 // Collections and sequences (apart from Collection Of Scalar).
-typedef Eigen::Array<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> CollOfVector;
 typedef Eigen::Array<bool, Eigen::Dynamic, 1> CollOfBool;
 typedef std::vector<Scalar> SeqOfScalar;
 
@@ -152,6 +151,108 @@ inline CollOfScalar sqrt(const CollOfScalar& x)
 
 
 
+class CollOfVector
+{
+public:
+    explicit CollOfVector(const int columns)
+        : v(columns)
+    {
+    }
+    const CollOfScalar& col(const int c) const
+    {
+        return v[c];
+    }
+    CollOfScalar& col(const int c)
+    {
+        return v[c];
+    }
+    int numCols() const
+    {
+        return v.size();
+    }
+private:
+    std::vector<CollOfScalar> v;
+};
+
+inline CollOfVector operator+(const CollOfVector& v1, const CollOfVector& v2)
+{
+    const int dim = v1.numCols();
+    CollOfVector res(dim);
+    for (int d = 0; d < dim; ++d) {
+        res.col(d) = v1.col(d) + v2.col(d);
+    }
+    return res;
+}
+
+inline CollOfVector operator-(const CollOfVector& v1, const CollOfVector& v2)
+{
+    const int dim = v1.numCols();
+    CollOfVector res(dim);
+    for (int d = 0; d < dim; ++d) {
+        res.col(d) = v1.col(d) - v2.col(d);
+    }
+    return res;
+}
+
+inline CollOfVector operator-(const CollOfVector& x)
+{
+    const int dim = x.numCols();
+    CollOfVector res(dim);
+    for (int d = 0; d < dim; ++d) {
+        res.col(d) = -x.col(d);
+    }
+    return res;
+}
+
+inline CollOfVector operator*(const CollOfVector& x, const Scalar& s)
+{
+    const int dim = x.numCols();
+    CollOfVector res(dim);
+    for (int d = 0; d < dim; ++d) {
+        res.col(d) = x.col(d) * s;
+    }
+    return res;
+}
+
+inline CollOfVector operator*(const CollOfVector& x, const CollOfScalar& s)
+{
+    const int dim = x.numCols();
+    CollOfVector res(dim);
+    for (int d = 0; d < dim; ++d) {
+        res.col(d) = x.col(d) * s;
+    }
+    return res;
+}
+
+inline CollOfVector operator*(const Scalar& s, const CollOfVector& x)
+{
+    return x * s; // Commutative.
+}
+
+inline CollOfVector operator*(const CollOfScalar& s, const CollOfVector& x)
+{
+    return x * s; // Commutative.
+}
+
+inline CollOfVector operator/(const CollOfVector& x, const Scalar& s)
+{
+    const int dim = x.numCols();
+    CollOfVector res(dim);
+    for (int d = 0; d < dim; ++d) {
+        res.col(d) = x.col(d) / s;
+    }
+    return res;
+}
+
+inline CollOfVector operator/(const CollOfVector& x, const CollOfScalar& s)
+{
+    const int dim = x.numCols();
+    CollOfVector res(dim);
+    for (int d = 0; d < dim; ++d) {
+        res.col(d) = x.col(d) / s;
+    }
+    return res;
+}
 
 
 /// The Equelle runtime class.

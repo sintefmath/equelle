@@ -216,7 +216,12 @@ CollOfScalar EquelleRuntimeCPU::norm(const CollOfCell& cells) const
 
 CollOfScalar EquelleRuntimeCPU::norm(const CollOfVector& vectors) const
 {
-    return CollOfScalar::V(vectors.matrix().rowwise().norm());
+    CollOfScalar norm2 = vectors.col(0) * vectors.col(0);
+    const int dim = vectors.numCols();
+    for (int d = 1; d < dim; ++d) {
+        norm2 += vectors.col(d) * vectors.col(d);
+    }
+    return sqrt(norm2);
 }
 
 
@@ -224,12 +229,16 @@ CollOfVector EquelleRuntimeCPU::centroid(const CollOfFace& faces) const
 {
     const int n = faces.size();
     const int dim = grid_.dimensions;
-    CollOfVector centroids(n, dim);
+    Eigen::Array<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor> c(n, dim);
     for (int i = 0; i < n; ++i) {
         const double* fc = grid_.face_centroids + dim * faces[i].index;
         for (int d = 0; d < dim; ++d) {
-            centroids(i, d) = fc[d];
+            c(i, d) = fc[d];
         }
+    }
+    CollOfVector centroids(dim);
+    for (int d = 0; d < dim; ++d) {
+        centroids.col(d) = CollOfScalar(c.col(d));
     }
     return centroids;
 }
@@ -239,12 +248,16 @@ CollOfVector EquelleRuntimeCPU::centroid(const CollOfCell& cells) const
 {
     const int n = cells.size();
     const int dim = grid_.dimensions;
-    CollOfVector centroids(n, dim);
+    Eigen::Array<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor> c(n, dim);
     for (int i = 0; i < n; ++i) {
         const double* fc = grid_.cell_centroids + dim * cells[i].index;
         for (int d = 0; d < dim; ++d) {
-            centroids(i, d) = fc[d];
+            c(i, d) = fc[d];
         }
+    }
+    CollOfVector centroids(dim);
+    for (int d = 0; d < dim; ++d) {
+        centroids.col(d) = CollOfScalar(c.col(d));
     }
     return centroids;
 }
@@ -254,33 +267,36 @@ CollOfVector EquelleRuntimeCPU::normal(const CollOfFace& faces) const
 {
     const int n = faces.size();
     const int dim = grid_.dimensions;
-    CollOfVector normals(n, dim);
+    Eigen::Array<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor> nor(n, dim);
     for (int i = 0; i < n; ++i) {
         const double* fn = grid_.face_normals + dim * faces[i].index;
         for (int d = 0; d < dim; ++d) {
-            normals(i, d) = fn[d];
+            nor(i, d) = fn[d];
         }
     }
     // Since the UnstructuredGrid uses the unorthodox convention that face
     // normals are scaled with the face areas, we must renormalize them.
-    normals.colwise() /= normals.matrix().rowwise().norm().array();
+    nor.colwise() /= nor.matrix().rowwise().norm().array();
+    CollOfVector normals(dim);
+    for (int d = 0; d < dim; ++d) {
+        normals.col(d) = CollOfScalar(nor.col(d));
+    }
     return normals;
 }
 
 
 CollOfScalar EquelleRuntimeCPU::dot(const CollOfVector& v1, const CollOfVector& v2) const
 {
-    if (v1.size() != v2.size()) {
-        OPM_THROW(std::logic_error, "Non-matching size of collections for dot().");
+    if (v1.numCols() != v2.numCols()) {
+        OPM_THROW(std::logic_error, "Non-matching dimension of Vectors for dot().");
     }
-    const int n = v1.rows();
+    if (v1.col(0).size() != v2.col(0).size()) {
+        OPM_THROW(std::logic_error, "Non-matching size of Vector collections for dot().");
+    }
     const int dim = grid_.dimensions;
-    CollOfScalar::V result(n);
-    for (int i = 0; i < n; ++i) {
-        result[i] = 0.0;
-        for (int d = 0; d < dim; ++d) {
-            result[i] += v1(i,d) * v2(i,d);
-        }
+    CollOfScalar result = v1.col(0) * v2.col(0);
+    for (int d = 1; d < dim; ++d) {
+        result += v1.col(d) * v2.col(d);
     }
     return result;
 }
