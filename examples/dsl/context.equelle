@@ -1,0 +1,8 @@
+a : Mutable Scalar = 8
+f : Function() -> Scalar
+f() = {
+    -> 2 * a
+}
+Output("f before", f())
+a = 3
+Output("f after", f())
