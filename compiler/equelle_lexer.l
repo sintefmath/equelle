@@ -1,4 +1,8 @@
 %{
+/*
+  Copyright 2013 SINTEF ICT, Applied Mathematics.
+*/
+
 #include <iostream>
 
 #if RETURN_TOKENS

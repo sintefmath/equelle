@@ -1,3 +1,9 @@
+%{
+/*
+  Copyright 2013 SINTEF ICT, Applied Mathematics.
+*/
+%}
+
 %token COLLECTION
 %token SEQUENCE
 %token ARRAY
