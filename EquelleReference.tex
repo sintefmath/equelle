@@ -537,11 +537,28 @@ bface_sign = IsEmpty(first) ? (-1 Extend bfaces) : (1 Extend bfaces)
 \end{verbatim}
 
 In the above example, \code{(-1 Extend bfaces)} is a \code{Collection Of Scalar On bfaces}
-with each element equal to -1.
+with each element equal to -1. The right hand side expression of the \code{Extend}
+operator must be a domain.
 
-The second way to use \code{Extend} is to 
+The second way to use \code{Extend} is to take a \code{Collection Of Scalar} and extend it
+with zeros to form a new \code{Collection Of Scalar} on a larger domain. For example:
 
-For both uses of \code{Extend}, the second argument must be a domain.
+\begin{verbatim}
+a = AllFaces()
+b = BoundaryFaces()
+c = Centroid(b)[0]  # The x coordinate of the face centroid
+d = x Extend a
+\end{verbatim}
+
+A collection can be thought of as a 1-1 mapping from its domain to its data elements. In
+the above example, $c$ can be considered to take $f \in b \to c(f)$. Then $d$ takes $f \in
+b \to c(f)$ and $f \in a\setminus b \to 0$. For this use of \code{Extend}, the expression
+on the right of the operator must be a domain that contains the domain of the collection
+of the left.
+
+The \code{On} operator performs the ...
+
+
 
 \subsection{Discrete operators}
 
