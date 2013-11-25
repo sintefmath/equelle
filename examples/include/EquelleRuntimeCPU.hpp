@@ -255,6 +255,57 @@ inline CollOfVector operator/(const CollOfVector& x, const CollOfScalar& s)
 }
 
 
+/// Simplify support of array literals.
+template <typename T>
+std::array<T, 1> makeArray(const T& t)
+{
+    return std::array<T,1>{{t}};
+}
+template <typename T>
+std::array<T, 2> makeArray(const T& t1, const T& t2)
+{
+    return std::array<T,2>{{t1, t2}};
+}
+template <typename T>
+std::array<T, 3> makeArray(const T& t1, const T& t2, const T& t3)
+{
+    return std::array<T,3>{{t1, t2, t3}};
+}
+template <typename T>
+std::array<T, 4> makeArray(const T& t1, const T& t2, const T& t3, const T& t4)
+{
+    return std::array<T,4>{{t1, t2, t3, t4}};
+}
+
+/// A helper type for newtonSolveSystem
+template <int Num>
+struct ResCompType;
+
+template <>
+struct ResCompType<1>
+{
+    typedef std::function<CollOfScalar(const CollOfScalar&)> type;
+};
+
+template <>
+struct ResCompType<2>
+{
+    typedef std::function<CollOfScalar(const CollOfScalar&, const CollOfScalar&)> type;
+};
+
+template <>
+struct ResCompType<3>
+{
+    typedef std::function<CollOfScalar(const CollOfScalar&, const CollOfScalar&, const CollOfScalar&)> type;
+};
+
+template <>
+struct ResCompType<4>
+{
+    typedef std::function<CollOfScalar(const CollOfScalar&, const CollOfScalar&, const CollOfScalar&, const CollOfScalar&)> type;
+};
+
+
 /// The Equelle runtime class.
 /// Contains methods corresponding to Equelle built-ins to make
 /// it easy to generate C++ code for an Equelle program.
@@ -305,6 +356,10 @@ public:
     template <class ResidualFunctor>
     CollOfScalar newtonSolve(const ResidualFunctor& rescomp,
                              const CollOfScalar& u_initialguess);
+
+    template <int Num>
+    std::array<CollOfScalar, Num> newtonSolveSystem(const std::array<typename ResCompType<Num>::type, Num>& rescomp,
+                                                    const std::array<CollOfScalar, Num>& u_initialguess);
 
     /// Output.
     void output(const String& tag, Scalar val) const;

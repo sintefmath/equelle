@@ -9,6 +9,7 @@
 #include <fstream>
 #include <iterator>
 #include <opm/core/utility/StopWatch.hpp>
+#include <opm/autodiff/AutoDiffHelpers.hpp>
 
 
 template <class EntityCollection>
@@ -246,6 +247,55 @@ CollOfScalar EquelleRuntimeCPU::newtonSolve(const ResidualFunctor& rescomp,
     }
 
     return u.value();
+}
+
+
+template <int Num>
+std::array<CollOfScalar, Num> EquelleRuntimeCPU::newtonSolveSystem(const std::array<typename ResCompType<Num>::type, Num>& rescomp,
+                                                                   const std::array<CollOfScalar, Num>& u_initialguess)
+{
+    // Set up ranges object.
+    std::array<Opm::Span, Num> ranges{{ Opm::Span(0), Opm::Span(0) }}; // Dummy spans that will be overwritten.
+    int start = 0;
+    for (int i = 0; i < Num; ++i) {
+        const int end = start + u_initialguess[i].size();
+        ranges[i] = Opm::Span(end - start, 1, start);
+        start = end;
+    }
+    const int total_size = start;
+    std::array<CollOfScalar, Num> temp;
+    std::array<CollOfScalar, Num> tempres;
+    // Build combined functor.
+    auto combined_rescomp = [&](const CollOfScalar& u) -> CollOfScalar {
+        // Split into components.
+        for (int i = 0; i < Num; ++i) {
+            temp[i] = subset(u, ranges[i]);
+        }
+        // Call each part.
+        for (int i = 0; i < Num; ++i) {
+            static_assert(Num == 2, "Only systems of 2 equations can be solved."); // Todo: figure out how to do Num arguments in op() below.
+            tempres[i] = rescomp[i](temp[0], temp[1]);
+        }
+        // Recombine
+        CollOfScalar result = superset(tempres[0], ranges[0], total_size);
+        for (int i = 1; i < Num; ++i) {
+            result += superset(tempres[i], ranges[i], total_size);
+        }
+        return result;
+    };
+    // Build combined initial guess.
+    CollOfScalar combined_u_initialguess = superset(u_initialguess[0], ranges[0], total_size);
+    for (int i = 1; i < Num; ++i) {
+        combined_u_initialguess += superset(u_initialguess[i], ranges[i], total_size);
+    }
+    std::cout << "Done with setup of combined things." << std::endl;
+
+    // Call regular Newton solver with combined objects.
+    CollOfScalar combined_u = newtonSolve(combined_rescomp, combined_u_initialguess);
+    for (int i = 0; i < Num; ++i) {
+        temp[i] = subset(combined_u, ranges[i]);
+    }
+    return temp;
 }
 
 
