@@ -255,11 +255,11 @@ std::array<CollOfScalar, Num> EquelleRuntimeCPU::newtonSolveSystem(const std::ar
                                                                    const std::array<CollOfScalar, Num>& u_initialguess)
 {
     // Set up ranges object.
-    std::array<Opm::Span, Num> ranges{{ Opm::Span(0), Opm::Span(0) }}; // Dummy spans that will be overwritten.
+    std::array<ESpan, Num> ranges{{ ESpan(0), ESpan(0) }}; // Dummy spans that will be overwritten.
     int start = 0;
     for (int i = 0; i < Num; ++i) {
         const int end = start + u_initialguess[i].size();
-        ranges[i] = Opm::Span(end - start, 1, start);
+        ranges[i] = ESpan(end - start, 1, start);
         start = end;
     }
     const int total_size = start;

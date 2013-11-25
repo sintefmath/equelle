@@ -306,6 +306,105 @@ struct ResCompType<4>
 };
 
 
+/// This class is copied from the class Span in opm-autodiff's AutoDiffHelpers.hpp,
+/// since the version in the 2013.10 release has a minor misfeature:
+/// the data members are const, which prevents copying and assignment.
+/// Class name changed to ESpan to avoid conflict.
+class ESpan
+{
+public:
+    explicit ESpan(const int num)
+    : num_(num),
+      stride_(1),
+      start_(0)
+    {
+    }
+    ESpan(const int num, const int stride, const int start)
+        : num_(num),
+          stride_(stride),
+          start_(start)
+    {
+    }
+    int operator[](const int i) const
+    {
+        assert(i >= 0 && i < num_);
+        return start_ + i*stride_;
+    }
+    int size() const
+    {
+        return num_;
+    }
+
+
+    class ESpanIterator
+    {
+    public:
+        ESpanIterator(const ESpan* span, const int index)
+            : span_(span),
+              index_(index)
+        {
+        }
+        ESpanIterator operator++()
+        {
+            ++index_;
+            return *this;
+        }
+        ESpanIterator operator++(int)
+        {
+            ESpanIterator before_increment(*this);
+            ++index_;
+            return before_increment;
+        }
+        bool operator<(const ESpanIterator& rhs) const
+        {
+            assert(span_ == rhs.span_);
+            return index_ < rhs.index_;
+        }
+        bool operator==(const ESpanIterator& rhs) const
+        {
+            assert(span_ == rhs.span_);
+            return index_ == rhs.index_;
+        }
+        bool operator!=(const ESpanIterator& rhs) const
+        {
+            assert(span_ == rhs.span_);
+            return index_ != rhs.index_;
+        }
+        int operator*()
+        {
+            return (*span_)[index_];
+        }
+    private:
+        const ESpan* span_;
+        int index_;
+    };
+
+    typedef ESpanIterator iterator;
+    typedef ESpanIterator const_iterator;
+
+    ESpanIterator begin() const
+    {
+        return ESpanIterator(this, 0);
+    }
+
+    ESpanIterator end() const
+    {
+        return ESpanIterator(this, num_);
+    }
+
+    bool operator==(const ESpan& rhs)
+    {
+        return num_ == rhs.num_ && start_ == rhs.start_ && stride_ == rhs.stride_;
+    }
+
+private:
+    int num_;
+    int stride_;
+    int start_;
+};
+
+
+
 /// The Equelle runtime class.
 /// Contains methods corresponding to Equelle built-ins to make
 /// it easy to generate C++ code for an Equelle program.
