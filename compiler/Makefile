@@ -2,10 +2,10 @@
 
 # Modify these to suit your setup.
 FLEX     = flex
-BISON    = bison3
-CXX	 = g++-4.7.0
+BISON    = bison
+CXX	 = g++
 # The -Wno-sign-compare is because flex generates a scanner with signed/unsigned comparison!
-CXXFLAGS = -std=c++11 -g -Wall -Wextra -Wno-sign-compare -pedantic
+CXXFLAGS = -std=c++0x -g -Wall -Wextra -Wno-sign-compare -pedantic
 
 ECHEADERS = Common.hpp EquelleType.hpp SymbolTable.hpp ASTNodes.hpp ParseActions.hpp ASTVisitorInterface.hpp PrintASTVisitor.hpp PrintEquelleASTVisitor.hpp PrintCPUBackendASTVisitor.hpp PrintMRSTBackendASTVisitor.hpp NodeInterface.hpp
 ECOBJS = equelle_lexer_tok.o equelle_parser.o Common.o EquelleType.o SymbolTable.o ParseActions.o PrintASTVisitor.o PrintEquelleASTVisitor.o PrintCPUBackendASTVisitor.o PrintMRSTBackendASTVisitor.o
