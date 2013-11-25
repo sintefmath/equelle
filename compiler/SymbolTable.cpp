@@ -132,7 +132,9 @@ EquelleType FunctionType::returnType(const std::vector<EquelleType>& argtypes) c
         const int gridmapping = dynamic_.arg_index_for_gridmapping == InvalidIndex ?
             return_type_.gridMapping() : argtypes[dynamic_.arg_index_for_gridmapping].gridMapping();
         const int subset = dynamicSubsetReturn(argtypes);
-        return EquelleType(bt, return_type_.compositeType(), gridmapping, subset, false, return_type_.isDomain());
+        const int array_size = dynamic_.arg_index_for_array_size == InvalidIndex ?
+            return_type_.arraySize() : argtypes[dynamic_.arg_index_for_array_size].arraySize();
+        return EquelleType(bt, return_type_.compositeType(), gridmapping, subset, false, return_type_.isDomain(), array_size);
     } else {
         return return_type_;
     }
@@ -580,8 +582,14 @@ SymbolTable::SymbolTable()
                                 {InvalidIndex, 0, InvalidIndex}));
     functions_.emplace_back("NewtonSolve",
                             FunctionType({ Variable("residual_function", EquelleType()),
-                                           Variable("u", EquelleType()) },
-                                         EquelleType(Scalar, Collection, AllCells)));
+                                           Variable("u_guess", EquelleType(Scalar, Collection)) },
+                                EquelleType(Scalar, Collection),
+                                {InvalidIndex, 1, InvalidIndex}));
+    functions_.emplace_back("NewtonSolveSystem",
+                            FunctionType({ Variable("residual_function_array", EquelleType()),
+                                           Variable("u_guess_array", EquelleType(Scalar, Collection)) },
+                                EquelleType(Scalar, Collection),
+                                {InvalidIndex, 1, InvalidIndex, 1}));
     functions_.emplace_back("Output",
                             FunctionType({ Variable("tag", EquelleType(String)),
                                            Variable("data", EquelleType()) },

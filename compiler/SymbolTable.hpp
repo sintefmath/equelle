@@ -69,20 +69,23 @@ struct DynamicReturnSpecification
         : active(false),
           arg_index_for_basic_type(InvalidIndex),
           arg_index_for_gridmapping(InvalidIndex),
-          arg_index_for_subset(InvalidIndex)
+          arg_index_for_subset(InvalidIndex),
+          arg_index_for_array_size(InvalidIndex)
     {
     }
-    DynamicReturnSpecification(const int bt_ix, const int gm_ix, const int ss_ix)
+    DynamicReturnSpecification(const int bt_ix, const int gm_ix, const int ss_ix, const int ar_ix = InvalidIndex)
         : active(true),
           arg_index_for_basic_type(bt_ix),
           arg_index_for_gridmapping(gm_ix),
-          arg_index_for_subset(ss_ix)
+          arg_index_for_subset(ss_ix),
+          arg_index_for_array_size(ar_ix)
     {
     }
     bool active;
     int arg_index_for_basic_type;
     int arg_index_for_gridmapping;
     int arg_index_for_subset;
+    int arg_index_for_array_size;
 };
 
 
