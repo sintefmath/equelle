@@ -305,9 +305,19 @@ void PrintCPUBackendASTVisitor::postVisit(FuncDeclNode&)
 
 void PrintCPUBackendASTVisitor::visit(FuncStartNode& node)
 {
-    std::cout << indent() << "auto " << node.name() << " = [&](";
+    // std::cout << indent() << "auto " << node.name() << " = [&](";
     const FunctionType& ft = SymbolTable::getFunction(node.name()).functionType();
     const size_t n = ft.arguments().size();
+    std::cout << indent() << "std::function<" << cppTypeString(ft.returnType()) << '(';
+    for (int i = 0; i < n; ++i) {
+        std::cout << "const "
+                  << cppTypeString(ft.arguments()[i].type())
+                  << "&";
+        if (i < n - 1) {
+            std::cout << ", ";
+        }
+    }
+    std::cout << ")> " << node.name() << " = [&](";
     for (int i = 0; i < n; ++i) {
         std::cout << "const "
                   << cppTypeString(ft.arguments()[i].type())
@@ -375,6 +385,13 @@ void PrintCPUBackendASTVisitor::visit(FuncCallNode& node)
     } else {
         cppname += fname;
     }
+    // Special treatment for the NewtonSolveSystem() function, since it is unable to
+    // deduce its template parameter <int Num>.
+    if (fname == "NewtonSolveSystem") {
+        std::ostringstream extra;
+        extra << "<" << node.type().arraySize() << ">";
+        cppname += extra.str();
+    }
     std::cout << cppname << '(';
 }
 
@@ -410,14 +427,16 @@ void PrintCPUBackendASTVisitor::postVisit(LoopNode&)
     endl();
 }
 
-void PrintCPUBackendASTVisitor::visit(ArrayNode& node)
+void PrintCPUBackendASTVisitor::visit(ArrayNode&)
 {
-    std::cout << cppTypeString(node.type()) << "({{";
+    // std::cout << cppTypeString(node.type()) << "({{";
+    std::cout << "makeArray(";
 }
 
 void PrintCPUBackendASTVisitor::postVisit(ArrayNode&)
 {
-    std::cout << "}})";
+    // std::cout << "}})";
+    std::cout << ")";
 }
 
 void PrintCPUBackendASTVisitor::visit(RandomAccessNode& node)
