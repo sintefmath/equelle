@@ -517,7 +517,7 @@ The built-in functions dealing with grid geometry are summarized in Table
 All grid geometry functions return vectors. Note that \code{Normal} returns unit normals.
 
 
-\subsection{On and Extend}
+\subsection{On and Extend as operators}
 \label{subsec:on-extend}
 
 The operators \code{On} and \code{Extend} both create new collections from existing
@@ -556,11 +556,57 @@ b \to c(f)$ and $f \in a\setminus b \to 0$. For this use of \code{Extend}, the e
 on the right of the operator must be a domain that contains the domain of the collection
 of the left.
 
-The \code{On} operator performs the ...
+The \code{On} operator performs the evaluate-on or restrict-to operation on a
+collection. Given a collection, one can use \code{On} to form a new collection that is
+restricted to a subset of the domain of the original collection. For example:
+
+\begin{verbatim}
+all_centroids = Centroid(AllFaces())
+boundary_centroids : Collection Of Vector On BoundaryFaces()
+boundary_centroids = all_centroids On BoundaryFaces()
+\end{verbatim}
+
+In the above, \code{boundary\_centroids} would be identical to the result of
+\code{Centroid(BoundaryFaces())}. Note that when unlike \code{Extend}, the \code{On} operator
+can be used with other basic types than \code{Scalar}, since it does not need to assign a
+default value (zero for \code{Extend}) to any elements, but draws all its data from the
+collection given on the left hand side. The new collection's domain will be the same as
+that of the right hand side.
+
+The right hand side does not need to be a domain in itself. It is however required to be a subset of
+the domain of the left hand side collection. Extending a previous example shows how:
+
+\begin{verbatim}
+bfaces = BoundaryFaces()
+first = FirstCell(bfaces)
+second = SecondCell(bfaces)
+bface_cells = IsEmpty(first) ? second : first
+bface_cell_centroids = Centroid(AllCells()) On bface_cells
+\end{verbatim}
+
+In the above, the type of \code{bface\_cells} is \code{Collection Of Cell On
+  BoundaryFaces() Subset Of AllCells()}. It contains, for each boundary face, the cell
+just on the inside of the face. It is not a domain, since any cell can occur multiple
+times in the collection. The collection \code{bface\_cell\_centroids} contains, for each
+boundary face, the centroid of the cell just inside of it.
+
+Another example:
+
+\begin{verbatim}
+a = AllCells()
+c = Centroid(a)
+s = SecondCell(InteriorFaces())
+d = c On s
+\end{verbatim}
 
 
+Viewing collections as 1-1 mappings from domains to data, one can say that if $c$ takes an
+element $e \in a \to c(e)$ and $s \subset a$, then $d$ (which is given by \code{c On s})
+simply takes $e \in s \to c(e)$.
 
 \subsection{Discrete operators}
+
+The discrete operators \code{Gradient} and \code{Divergence} make it easy to program...
 
 \subsection{Solver functions}
 
