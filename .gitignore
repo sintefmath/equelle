@@ -33,4 +33,5 @@ compiler/equelle_parser.output
 *.aux
 *.log
 *.synctex.gz
+*.toc
 doc/EquelleReference.pdf

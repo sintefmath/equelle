@@ -6,6 +6,7 @@
 \usepackage{xcolor}
 \usepackage{bm}
 \usepackage{todonotes}
+\usepackage{draftwatermark}
 \setlength{\marginparwidth}{0.6in} % Needed for todonotes because geometry package is used
 \usepackage[vlined,boxed]{algorithm2e}    % For those with brand new LaTeX
 
@@ -35,6 +36,11 @@
 
 \maketitle
 
+\newpage
+
+\tableofcontents
+
+\newpage
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
@@ -606,34 +612,182 @@ simply takes $e \in s \to c(e)$.
 
 \subsection{Discrete operators}
 
-The discrete operators \code{Gradient} and \code{Divergence} make it easy to program...
+The discrete operators \code{Gradient} and \code{Divergence} make it easy to program
+finite volume methods. Their properties are summarized in Table~\ref{tab:discops}.
+
+\begin{table}[h]
+\begin{tabular}{l|p{4.5cm}|p{4.5cm}}
+{\em Function} & {\em Arguments} & {\em Returns} \\
+\hline
+\code{Gradient} & \code{Collection Of Scalar On AllCells()}
+& \code{Collection Of Scalar On InteriorFaces()} \\
+\code{Divergence} & \code{Collection Of Scalar On InteriorFaces()}
+& \code{Collection Of Scalar On AllCells()} \\
+\code{Divergence} & \code{Collection Of Scalar On AllFaces()}
+& \code{Collection Of Scalar On AllCells()} \\
+\end{tabular}
+\caption{Discrete operators}
+\label{tab:discops}
+\end{table}
+
+The function call \code{Gradient(x)} computes for each interior face, the difference
+between \code{x} at the two adjacent cells. It is equivalent to the following Equelle
+function:
+
+\begin{verbatim}
+grad : Function(x : Collection Of Scalar On AllCells()) ...
+                -> Collection Of Scalar On InteriorFaces()
+grad(x) = {
+    first = FirstCell(InteriorFaces())
+    second = SecondCell(InteriorFaces())
+    -> (x On second) - (x On first) 
+}
+\end{verbatim}
+
+The function call \code{Divergence(x)} computes for each cell, the discrete divergence of
+the flux \code{x}. This is equal to the orientation-signed sum of the elements of \code{x}
+belonging to faces adjacent to the cell. This sum is done with signs, in such a way that
+elements of faces that are positively oriented with respect to the cell are added, and
+elements with negative orientation subtracted. Consider for example the grid in
+Figure~\ref{fig:2dgrid}. Assume that all faces are oriented so that the normals point to
+the right or upwards. Then the (signed) boundary of cell 3 is equal to $-e + f - o +
+r$. If those faces have associated fluxes equal to $\{0, 1, 2, -1\}$ the divergence at
+cell 3 would be $-0 + 1 - 2 + (-1) = -2$.
+
+Note that there are two variants of \code{Divergence}: for convenience there is one that
+is defined on \code{InteriorFaces()} only, it is equivalent to the following function
+invoking the full \code{Divergence} function:
+
+\begin{verbatim}
+div_int : Function(x : Collection Of Scalar On InteriorFaces()) ...
+                   -> Collection Of Scalar On AllCells()
+div_int(x) = {
+    -> Divergence(x Extend AllFaces())
+}
+\end{verbatim}
+
+It is not possible to define an Equelle function that is equivalent to the full
+\code{Divergence} built-in function, since there is no way (for now at least) to access
+the neighbour faces of a cell.
 
 \subsection{Solver functions}
 
+Equelle is not intended to write advanced linear solvers or similar low-level
+code. Instead, such features are meant to be provided by the back-end, through solver
+functions of the language. So far, there are only 2 such functions available, for solving
+nonlinear (or linear) problems with the Newton-Raphson method.
+
+The simplest, \code{NewtonSolve}, solves a scalar equation. It takes as arguments a
+function and an initial guess, and returns a value that makes the function zero within
+some tolerance. What that tolerance is and how it is controlled is currently up to the
+back-end to specify. Since Equelle does not have a system for exceptions or other error
+handling, it is back-end dependent what happens if the algorithm fails to converge. The
+function argument, its return value, and the initial guess must all be of the same type,
+scalar collections over the same domain. A short example:
+
+\begin{verbatim}
+pressureResLocal(pressure) = {
+    -> computePressureResidual(pressure, total_mobility, source)
+}
+p = NewtonSolve(pressureResLocal, p0)
+\end{verbatim}
+
+In the above, there exists some function \code{computePressureResidual} taking three
+arguments. At the point shown we want to solve for the first argument, with fixed values
+for the two other arguments. We then create a local function binding the two last
+arguments, and pass the resulting function to \code{NewtonSolve} together with an initial
+guess.
+
+For systems of equations \code{NewtonSolveSystem} is available. Its interface is very
+similar to the simple version. It takes as argument an \code{Array Of} functions and an
+\code{Array Of} initial guesses, and returns an \code{Array Of} solutions:
+
+\begin{verbatim}
+pressureResLocal : Function(pressure : Collection Of Scalar On AllCells(), ...
+                            sw : Collection Of Scalar On AllCells()) ...
+                            -> Collection Of Scalar On AllCells()
+pressureResLocal(pressure, sw) = {
+    total_mobility = computeWaterMob(sw) + computeOilMob(sw)
+    -> computePressureResidual(pressure, total_mobility, source)
+}
+
+newvals = NewtonSolveSystem([pressureResLocal, transportResLocal], ...
+                            [p0, 0.5 Extend AllCells()])
+\end{verbatim}
+
+In the above partial example, we want to solve for \code{pressure} and \code{sw}
+simultaneously. Then we have to pass arrays to \code{NewtonSolveSystem}, and each of those
+functions needs to take both of the unknowns as inputs, as shown above for the
+\code{pressureResLocal} function. The \code{transportResLocal} function is not shown here,
+but that one also must take both \code{pressure} and \code{sw}.
+
+\subsection{Input and output}
+
+Equelle provides function to get user input, that are summarized in
+Table~\ref{tab:iofunc}. All functions take a \code{String} argument, a tag for the
+operation. It is up to the back-end how that is used, for example the serial back-end
+writes a series of numbered files prefixed with the tag each time \code{Output} is called
+with the same tag. The function \code{InputCollectionOfScalar} takes a domain as input,
+and returns a collection over the same domain. The function \code{InputDomainSubsetOf}
+takes a domain as input argument, and returns a new domain that is a subset of the input
+domain. Ensuring that any user input actually satisfies this is the duty of the
+back-end. This function is notable in particular, since it is the only way to create a new
+domain that is not equal to one of the 12 standard domains (\code{AllCells(),
+InteriorCells()} etc.).
+
+\begin{table}
+\begin{tabular}{l|l|l}
+{\em Function} & {\em Arguments} & {\em Returns} \\
+\hline
+\code{InputScalarWithDefault} & \code{String, Scalar} & \code{Scalar} \\
+\code{InputCollectionOfScalar} & \code{String}, {\em domain} & \code{Collection Of Scalar} \\
+\code{InputDomainSubsetOf} & \code{String}, {\em domain} & {\em domain} \\
+\code{InputSequenceOfScalar} & \code{String} & \code{Sequence Of Scalar} \\
+\code{Output} & \code{String, Scalar} & \\
+\code{Output} & \code{String, Collection Of Scalar} & \\
+\end{tabular}
+\caption{I/O functions}
+\label{tab:iofunc}
+\end{table}
+
 \subsection{Miscellaneous functions}
 
+Other built-in functions include the dot product, \code{Dot}, and the square root
+function, \code{Sqrt}. See Table~\ref{tab:miscfunc} for a summary.
+
+\begin{table}
+\begin{tabular}{l|l|l}
+{\em Function} & {\em Arguments} & {\em Returns} \\
+\hline
+\code{Dot} & 2 \code{Collection Of Vector}s & \code{Collection Of Scalar} \\
+\code{Sqrt} & \code{Collection Of Scalar} & \code{Collection Of Scalar} \\
+\end{tabular}
+\caption{Miscellaneous functions}
+\label{tab:miscfunc}
+\end{table}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Control structures and user-defined functions}
+% \section{Control structures and user-defined functions}
 
-\subsection{Scopes}
+% \subsection{Scopes}
 
-\subsection{The For construct}
+% \subsection{The For construct}
 
-\subsection{Functions}
+% \subsection{Functions}
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{The grammar of Equelle}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \section{The grammar of Equelle}
 
-\subsection{Allowed identifiers}
+% \subsection{Allowed identifiers}
 
-\subsection{Syntax for literals}
+% \subsection{Syntax for literals}
 
-\subsection{Expression syntax}
+% \subsection{Expression syntax}
 
-\subsection{Statements}
+% \subsection{Statements}
 
-\subsection{The formal grammar definition}
+% \subsection{The formal grammar definition}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
