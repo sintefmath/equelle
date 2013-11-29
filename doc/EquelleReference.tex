@@ -358,7 +358,7 @@ As with access to \code{Vector} types, indexed access is checked by the compiler
 expression is an \code{Array} of either \code{Vector} or \code{Collection Of Vector}, the
 first indexing operator always refers to elements of the \code{Array}.
 
-\subsection{Function types}
+\subsection{Function types}\label{sec:functypes}
 
 It is a goal to eventually support very flexible function templates in Equelle. However
 for now, user-defined functions must have their type declared, meaning that the types of
@@ -767,13 +767,81 @@ function, \code{Sqrt}. See Table~\ref{tab:miscfunc} for a summary.
 \end{table}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% \section{Control structures and user-defined functions}
+\section{Control structures and user-defined functions}
 
-% \subsection{Scopes}
+\subsection{Scopes}
 
-% \subsection{The For construct}
+All variables can only be used in the scope they are declared, or scopes nested inside
+that. Scopes are delimited by curly braces (\code{\{$cdot$\} }) and currently occur as
+\code{For} loops or function definitions. Scopes can be arbitrarily nested, so a function
+can be declared inside a for loop inside a function and so on.
 
-% \subsection{Functions}
+\subsection{The \code{For} loop}
+
+Explicit loops are much more rare in Equelle than in many other languages. This is because
+operations on collections are the norm, reducing the need for such loops. The only use of
+\code{For} currently allowed is looping over a \code{Sequence}. That uses the following
+syntax:
+
+\begin{verbatim}
+# Type of timesteps : Sequence Of Scalar
+For dt In timesteps {
+    # Code that uses dt goes here.
+}
+\end{verbatim}
+
+Inside the loop, the loop variable (\code{dt} above) takes on the values of the sequence
+given (\code{timesteps} above) one at a time, in order. It is explicitly sequential and
+will not be parallelized. Inside the loop scope, the loop variable is immutable, although
+it takes on a new value every iteration.
+
+\subsection{Functions}
+
+Equelle supports defining functions in arbitrary scopes. Currently, the type of a function
+must be declared, as discussed in \ref{sec:functypes}. After declaration, it may be
+defined. A short example:
+
+\begin{verbatim}
+# Declaring the type of upwind is necessary for now
+upwind : Function(flux : Collection Of Scalar On InteriorFaces(), ...
+                  x    : Collection Of Scalar On AllCells()) ...
+                  -> Collection Of Scalar On InteriorFaces()
+# Defining the function.
+upwind(flux, x) = {
+    x1 = x On FirstCell(InteriorFaces())
+    x2 = x On SecondCell(InteriorFaces())
+    -> flux >= 0.0 ? x1 : x2
+}
+\end{verbatim}
+
+The above shows the syntax for both declaring and defining a function. The function must
+end with a return statement, consisting of the return operator \code{->} and an
+expression.
+
+A function can use any variables that are in the scope in which they are defined. The
+above example could instead have been written:
+
+\begin{verbatim}
+first = FirstCell(InteriorFaces())
+second = SecondCell(InteriorFaces())
+# Declaring the type of upwind is necessary for now
+upwind : Function(flux : Collection Of Scalar On InteriorFaces(), ...
+                  x    : Collection Of Scalar On AllCells()) ...
+                  -> Collection Of Scalar On InteriorFaces()
+# Defining the function.
+upwind(flux, x) = {
+    x1 = x On first
+    x2 = x On second
+    -> flux >= 0.0 ? x1 : x2
+}
+\end{verbatim}
+
+Notice that since variable in Equelle are immutable, their values cannot change between
+the point the function is defined and the calls to the function. The single, rare, exception,
+is that explicitly declared \code{Mutable} variables can be changed. In Equelle, a
+function does not store the state at its point of definition in any way, and if it uses a
+\code{Mutable} variable from its surrounding scope, its current value is used whenever the
+function is called.
 
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
