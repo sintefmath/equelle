@@ -56,7 +56,7 @@
 (defconst equelle-font-lock-keywords-2
   (append equelle-font-lock-keywords-1
 		  (list
-		   '("\\<\\(InteriorCells\\|BoundaryCells\\|AllCells\\|InteriorFaces\\|BoundaryFaces\\|AllFaces\\|InteriorEdges\\|BoundaryEdges\\|AllEdges\\|InteriorVertices\\|BoundaryVertices\\|AllVertices\\|FirstCell\\|SecondCell\\|IsEmpty\\|Centroid\\|Normal\\|UserSpecifiedScalarWithDefault\\|UserSpecifiedCollectionOfScalar\\|UserSpecifiedCollectionOfFaceSubsetOf\\|UserSpecifiedCollectionOfCellSubsetOf\\|UserSpecifiedSequenceOfScalar\\|Gradient\\|Divergence\\|NewtonSolve\\|Output\\)\\>" . font-lock-builtin-face)
+		   '("\\<\\(InteriorCells\\|BoundaryCells\\|AllCells\\|InteriorFaces\\|BoundaryFaces\\|AllFaces\\|InteriorEdges\\|BoundaryEdges\\|AllEdges\\|InteriorVertices\\|BoundaryVertices\\|AllVertices\\|FirstCell\\|SecondCell\\|IsEmpty\\|Centroid\\|Normal\\|InputScalarWithDefault\\|InputCollectionOfScalar\\|InputDomainSubsetOf\\|InputSequenceOfScalar\\|Gradient\\|Divergence\\|NewtonSolve\\|MinReduce\\|MaxReduce\\|SumReduce\\|ProdReduce\\|Output\\)\\>" . font-lock-builtin-face)
 		   '("\\<\\(True\\|False\\)\\>" . font-lock-constant-face)))
   "Additional Keywords to highlight in Equelle mode.")
 
