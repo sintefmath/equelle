@@ -599,6 +599,22 @@ SymbolTable::SymbolTable()
                                 EquelleType(Scalar, Collection),
                                 {InvalidIndex, 0, InvalidIndex}));
 
+    functions_.emplace_back("MaxReduce",
+                            FunctionType({ Variable("x", EquelleType(Scalar, Collection)) },
+                                         EquelleType(Scalar)));
+
+    functions_.emplace_back("MinReduce",
+                            FunctionType({ Variable("x", EquelleType(Scalar, Collection)) },
+                                         EquelleType(Scalar)));
+
+    functions_.emplace_back("SumReduce",
+                            FunctionType({ Variable("x", EquelleType(Scalar, Collection)) },
+                                         EquelleType(Scalar)));
+
+    functions_.emplace_back("ProdReduce",
+                            FunctionType({ Variable("x", EquelleType(Scalar, Collection)) },
+                                         EquelleType(Scalar)));
+
 
     // ----- Set main function ref and current (initially equal to main). -----
     main_function_ = functions_.begin();

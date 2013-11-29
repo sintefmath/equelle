@@ -362,6 +362,25 @@ CollOfBool EquelleRuntimeCPU::isEmpty(const CollOfFace& faces) const
     return retval;
 }
 
+Scalar EquelleRuntimeCPU::minReduce(const CollOfScalar& x) const
+{
+    return x.value().minCoeff();
+}
+
+Scalar EquelleRuntimeCPU::maxReduce(const CollOfScalar& x) const
+{
+    return x.value().maxCoeff();
+}
+
+Scalar EquelleRuntimeCPU::sumReduce(const CollOfScalar& x) const
+{
+    return x.value().sum();
+}
+
+Scalar EquelleRuntimeCPU::prodReduce(const CollOfScalar& x) const
+{
+    return x.value().prod();
+}
 
 CollOfScalar EquelleRuntimeCPU::solveForUpdate(const CollOfScalar& residual) const
 {

@@ -445,13 +445,18 @@ public:
     SomeCollection operatorExtend(const SomeCollection& data, const EntityCollection& from_set, const EntityCollection& to_set);
     template <class SomeCollection, class EntityCollection>
     SomeCollection operatorOn(const SomeCollection& data, const EntityCollection& from_set, const EntityCollection& to_set);
-
     template <class SomeCollection>
     SomeCollection trinaryIf(const CollOfBool& predicate,
                              const SomeCollection& iftrue,
                              const SomeCollection& iffalse) const;
 
-    /// Solver function.
+    /// Reductions.
+    Scalar minReduce(const CollOfScalar& x) const;
+    Scalar maxReduce(const CollOfScalar& x) const;
+    Scalar sumReduce(const CollOfScalar& x) const;
+    Scalar prodReduce(const CollOfScalar& x) const;
+
+    /// Solver functions.
     template <class ResidualFunctor>
     CollOfScalar newtonSolve(const ResidualFunctor& rescomp,
                              const CollOfScalar& u_initialguess);
