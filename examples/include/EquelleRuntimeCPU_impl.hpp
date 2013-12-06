@@ -125,9 +125,10 @@ SomeCollection EquelleRuntimeCPU::operatorExtend(const SomeCollection& data,
 
 
 template <class SomeCollection, class EntityCollection>
-SomeCollection EquelleRuntimeCPU::operatorOn(const SomeCollection& data,
-                                             const EntityCollection& from_set,
-                                             const EntityCollection& to_set)
+typename CollType<SomeCollection>::Type
+EquelleRuntimeCPU::operatorOn(const SomeCollection& data,
+                              const EntityCollection& from_set,
+                              const EntityCollection& to_set)
 {
     // The implementation assumes that to_set is a subset of from_set,
     // in the sense that all (possibly repeated) elements of to_set
@@ -141,14 +142,15 @@ SomeCollection EquelleRuntimeCPU::operatorOn(const SomeCollection& data,
 
 
 
-template <class SomeCollection>
-SomeCollection EquelleRuntimeCPU::trinaryIf(const CollOfBool& predicate,
-                                            const SomeCollection& iftrue,
-                                            const SomeCollection& iffalse) const
+template <class SomeCollection1, class SomeCollection2>
+typename CollType<SomeCollection1>::Type
+EquelleRuntimeCPU::trinaryIf(const CollOfBool& predicate,
+                             const SomeCollection1& iftrue,
+                             const SomeCollection2& iffalse) const
 {
     const size_t sz = predicate.size();
     assert(sz == size_t(iftrue.size()) && sz == size_t(iffalse.size()));
-    SomeCollection retval = iftrue;
+    SomeCollection1 retval = iftrue;
     for (size_t i = 0; i < sz; ++i) {
         if (!predicate[i]) {
             retval[i] = iffalse[i];
@@ -159,9 +161,9 @@ SomeCollection EquelleRuntimeCPU::trinaryIf(const CollOfBool& predicate,
 
 
 template <>
-inline CollOfScalar EquelleRuntimeCPU::trinaryIf(const CollOfBool& predicate,
-                                                 const CollOfScalar& iftrue,
-                                                 const CollOfScalar& iffalse) const
+inline CollOfScalar EquelleRuntimeCPU::trinaryIf<CollOfScalar, CollOfScalar>(const CollOfBool& predicate,
+                                                                             const CollOfScalar& iftrue,
+                                                                             const CollOfScalar& iffalse) const
 {
     const int sz = predicate.size();
     assert(sz == iftrue.size() && sz == iffalse.size());
@@ -175,6 +177,33 @@ inline CollOfScalar EquelleRuntimeCPU::trinaryIf(const CollOfBool& predicate,
     }
     CollOfScalar retval = iftrue * trueones + iffalse * falseones;
     return retval;
+}
+
+template <>
+inline CollOfScalar
+EquelleRuntimeCPU::trinaryIf<CollOfScalar::ADB, CollOfScalar>(const CollOfBool& predicate,
+                                                              const CollOfScalar::ADB& iftrue,
+                                                              const CollOfScalar& iffalse) const
+{
+    return trinaryIf<CollOfScalar, CollOfScalar>(predicate, iftrue, iffalse);
+}
+
+template <>
+inline CollOfScalar
+EquelleRuntimeCPU::trinaryIf<CollOfScalar, CollOfScalar::ADB>(const CollOfBool& predicate,
+                                                              const CollOfScalar& iftrue,
+                                                              const CollOfScalar::ADB& iffalse) const
+{
+    return trinaryIf<CollOfScalar, CollOfScalar>(predicate, iftrue, iffalse);
+}
+
+template <>
+inline CollOfScalar
+EquelleRuntimeCPU::trinaryIf<CollOfScalar::ADB, CollOfScalar::ADB>(const CollOfBool& predicate,
+                                                                   const CollOfScalar::ADB& iftrue,
+                                                                   const CollOfScalar::ADB& iffalse) const
+{
+    return trinaryIf<CollOfScalar, CollOfScalar>(predicate, iftrue, iffalse);
 }
 
 

@@ -255,26 +255,35 @@ inline CollOfVector operator/(const CollOfVector& x, const CollOfScalar& s)
 }
 
 
+
+/// A helper type for ensuring AutoDiffBlock objects are converted
+/// to CollOfScalar when necessary for template functions.
+template <class Coll>
+struct CollType { typedef Coll Type; };
+template<>
+struct CollType<Opm::AutoDiffBlock<double>> { typedef CollOfScalar Type; };
+
+
 /// Simplify support of array literals.
 template <typename T>
-std::array<T, 1> makeArray(const T& t)
+std::array<typename CollType<T>::Type, 1> makeArray(const T& t)
 {
-    return std::array<T,1>{{t}};
+    return std::array<typename CollType<T>::Type,1>{{t}};
 }
 template <typename T>
-std::array<T, 2> makeArray(const T& t1, const T& t2)
+std::array<typename CollType<T>::Type, 2> makeArray(const T& t1, const T& t2)
 {
-    return std::array<T,2>{{t1, t2}};
+    return std::array<typename CollType<T>::Type,2>{{t1, t2}};
 }
 template <typename T>
-std::array<T, 3> makeArray(const T& t1, const T& t2, const T& t3)
+std::array<typename CollType<T>::Type, 3> makeArray(const T& t1, const T& t2, const T& t3)
 {
-    return std::array<T,3>{{t1, t2, t3}};
+    return std::array<typename CollType<T>::Type,3>{{t1, t2, t3}};
 }
 template <typename T>
-std::array<T, 4> makeArray(const T& t1, const T& t2, const T& t3, const T& t4)
+std::array<typename CollType<T>::Type, 4> makeArray(const T& t1, const T& t2, const T& t3, const T& t4)
 {
-    return std::array<T,4>{{t1, t2, t3, t4}};
+    return std::array<typename CollType<T>::Type,4>{{t1, t2, t3, t4}};
 }
 
 /// A helper type for newtonSolveSystem
@@ -439,16 +448,21 @@ public:
     CollOfScalar interiorDivergence(const CollOfScalar& face_fluxes) const;
     CollOfBool isEmpty(const CollOfCell& cells) const;
     CollOfBool isEmpty(const CollOfFace& faces) const;
+
     template <class EntityCollection>
     CollOfScalar operatorExtend(const Scalar data, const EntityCollection& to_set);
+
     template <class SomeCollection, class EntityCollection>
     SomeCollection operatorExtend(const SomeCollection& data, const EntityCollection& from_set, const EntityCollection& to_set);
+
     template <class SomeCollection, class EntityCollection>
-    SomeCollection operatorOn(const SomeCollection& data, const EntityCollection& from_set, const EntityCollection& to_set);
-    template <class SomeCollection>
-    SomeCollection trinaryIf(const CollOfBool& predicate,
-                             const SomeCollection& iftrue,
-                             const SomeCollection& iffalse) const;
+    typename CollType<SomeCollection>::Type operatorOn(const SomeCollection& data, const EntityCollection& from_set, const EntityCollection& to_set);
+
+    template <class SomeCollection1, class SomeCollection2>
+    typename CollType<SomeCollection1>::Type
+    trinaryIf(const CollOfBool& predicate,
+              const SomeCollection1& iftrue,
+              const SomeCollection2& iffalse) const;
 
     /// Reductions.
     Scalar minReduce(const CollOfScalar& x) const;
