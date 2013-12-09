@@ -753,7 +753,8 @@ InteriorCells()} etc.).
 \subsection{Miscellaneous functions}
 
 Other built-in functions include the dot product, \code{Dot}, and the square root
-function, \code{Sqrt}. See Table~\ref{tab:miscfunc} for a summary.
+function, \code{Sqrt}. Also there are reduction functions that reduce a collection to its
+minumum, maximum, sum or product. See Table~\ref{tab:miscfunc} for a summary.
 
 \begin{table}
 \begin{tabular}{l|l|l}
@@ -761,6 +762,10 @@ function, \code{Sqrt}. See Table~\ref{tab:miscfunc} for a summary.
 \hline
 \code{Dot} & 2 \code{Collection Of Vector}s & \code{Collection Of Scalar} \\
 \code{Sqrt} & \code{Collection Of Scalar} & \code{Collection Of Scalar} \\
+\code{MinReduce} & \code{Collection Of Scalar} & \code{Scalar} \\
+\code{MaxReduce} & \code{Collection Of Scalar} & \code{Scalar} \\
+\code{SumReduce} & \code{Collection Of Scalar} & \code{Scalar} \\
+\code{ProdReduce} & \code{Collection Of Scalar} & \code{Scalar} \\
 \end{tabular}
 \caption{Miscellaneous functions}
 \label{tab:miscfunc}
@@ -845,11 +850,38 @@ function is called.
 
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% \section{The grammar of Equelle}
+\section{The grammar of Equelle}
 
-% \subsection{Allowed identifiers}
+The Equelle compiler is written in C++, and uses the compiler generator tools \code{flex}
+and \code{bison} for lexical scanning and parsing. The files \code{equelle\_lexer.l} and
+\code{equelle\_parser.y} contain the definitions of the scanner and parser, respectively.
 
-% \subsection{Syntax for literals}
+\subsection{Allowed identifiers}
+
+In Equelle, the lower-case letters \code{[a-z]}, upper-case letters \code{[A-Z]}, digits
+\code{[0-9]} and underscore \code{[\_]} are allowed in identifiers. Built-in keywords and
+the names of built-in functions all start with an upper-case letter. User-defined
+identifiers can be used for the names of functions and variables, and must always start
+with a lower-case letter.
+
+\subsection{Syntax for literals}
+
+There are literal expressions available for the following types: \code{Scalar},
+\code{Bool}, \code{String} and \code{Array}.
+
+Any number in an expression will be interpreted as a floating-point number and inferred to
+be a \code{Scalar}. For the time being, Equelle does not support scientific notation for
+scalars however, such as \code{2.3e-6}. This applies only to numbers in the Equelle
+program itself, for example when reading input from files the back-end supports any
+allowable C++ notation, as readable by standard input stream facilities.
+
+The literals for \code{Bool} are \code{True} and \code{False}.
+
+A string literal consists of a sequence of characters surrounded by double quotes, and it
+is possible to use backslash as escape character, for example
+\begin{verbatim}
+example = "A string with \"escaped double quotes\"."
+\end{verbatim}
 
 % \subsection{Expression syntax}
 
