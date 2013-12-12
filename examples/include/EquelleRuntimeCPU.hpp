@@ -94,7 +94,7 @@ inline CollOfBool operator<(const Scalar& s, const CollOfScalar& x)
 }
 
 /// This operator is not provided by AutoDiffBlock, so we must add it here.
-        inline CollOfBool operator<(const CollOfScalar& x, const Scalar& s)
+inline CollOfBool operator<(const CollOfScalar& x, const Scalar& s)
 {
     return x.value() < s;
 }
@@ -127,6 +127,12 @@ inline CollOfBool operator>(const CollOfScalar& x, const CollOfScalar& y)
 inline CollOfBool operator>=(const CollOfScalar& x, const Scalar& s)
 {
     return x.value() >= s;
+}
+
+/// This operator is not provided by AutoDiffBlock, so we must add it here.
+inline CollOfBool operator==(const CollOfScalar& x, const CollOfScalar& y)
+{
+    return x.value() == y.value();
 }
 
 /// This function is not provided by AutoDiffBlock, so we must add it here.
