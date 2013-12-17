@@ -58,6 +58,9 @@ void PrintCPUBackendASTVisitor::postVisit(SequenceNode&)
             "\n"
             "void ensureRequirements(const EquelleRuntimeCPU& er)\n"
             "{\n";
+        if (requirement_strings_.empty()) {
+            std::cout << "    (void)er;\n";
+        }
         for (const std::string& req : requirement_strings_) {
             std::cout << "    " << req;
         }
