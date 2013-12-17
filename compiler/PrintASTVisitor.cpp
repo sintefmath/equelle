@@ -118,9 +118,10 @@ void PrintASTVisitor::visit(UnaryNegationNode&)
     ++indent_;
 }
 
-void PrintASTVisitor::visit(OnNode&)
+void PrintASTVisitor::visit(OnNode& node)
 {
-    std::cout << indent() << "OnNode\n";
+    std::cout << indent() << "OnNode: operator "
+              << (node.isExtend() ? "Extend" : "On") << '\n';
     ++indent_;
 }
 

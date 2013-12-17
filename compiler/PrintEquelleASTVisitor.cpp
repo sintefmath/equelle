@@ -150,9 +150,13 @@ void PrintEquelleASTVisitor::visit(OnNode&)
     std::cout << '(';
 }
 
-void PrintEquelleASTVisitor::midVisit(OnNode&)
+void PrintEquelleASTVisitor::midVisit(OnNode& node)
 {
-    std::cout << " On ";
+    if (node.isExtend()) {
+        std::cout << " Extend ";
+    } else {
+        std::cout << " On ";
+    }
 }
 
 void PrintEquelleASTVisitor::postVisit(OnNode&)
