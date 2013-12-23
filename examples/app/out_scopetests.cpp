@@ -32,7 +32,7 @@ int main(int argc, char** argv)
 
     const Scalar a = double(5);
     const Scalar b = double(6);
-    auto foo = [&](const Scalar& x, const Scalar& y) -> Scalar {
+    std::function<Scalar(const Scalar&, const Scalar&)> foo = [&](const Scalar& x, const Scalar& y) -> Scalar {
         return ((a * x) + (b * y));
     };
     const SeqOfScalar seq = er.inputSequenceOfScalar("seq");
@@ -40,8 +40,8 @@ int main(int argc, char** argv)
         const Scalar r = ((a + double(3)) + elem);
         const SeqOfScalar seq2 = er.inputSequenceOfScalar("seq2");
         for (const Scalar& e2 : seq2) {
-            auto foo3 = [&](const Scalar& y) -> Scalar {
-                auto three = [&]() -> Scalar {
+            std::function<Scalar(const Scalar&)> foo3 = [&](const Scalar& y) -> Scalar {
+                std::function<Scalar()> three = [&]() -> Scalar {
                     return double(3);
                 };
                 return foo(three(), y);
@@ -58,4 +58,5 @@ int main(int argc, char** argv)
 
 void ensureRequirements(const EquelleRuntimeCPU& er)
 {
+    (void)er;
 }
