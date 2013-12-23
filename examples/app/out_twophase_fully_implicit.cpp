@@ -50,6 +50,12 @@ int main(int argc, char** argv)
         return trans;
     };
     const CollOfScalar trans = computeTransmissibilities(perm);
+    const CollOfScalar zero = er.operatorExtend(double(0), er.allCells());
+    const CollOfScalar one = er.operatorExtend(double(1), er.allCells());
+    std::function<CollOfScalar(const CollOfScalar&)> chop = [&](const CollOfScalar& x) -> CollOfScalar {
+        const CollOfScalar y = er.trinaryIf((x < double(0)), zero, x);
+        return er.trinaryIf((y > double(1)), one, y);
+    };
     std::function<CollOfScalar(const CollOfScalar&, const CollOfScalar&)> upwind = [&](const CollOfScalar& flux, const CollOfScalar& x) -> CollOfScalar {
         const CollOfScalar x1 = er.operatorOn(x, er.allCells(), er.firstCell(er.interiorFaces()));
         const CollOfScalar x2 = er.operatorOn(x, er.allCells(), er.secondCell(er.interiorFaces()));
@@ -69,7 +75,8 @@ int main(int argc, char** argv)
         return (krw / watervisc);
     };
     std::function<CollOfScalar(const CollOfScalar&)> computeOilMob = [&](const CollOfScalar& sw) -> CollOfScalar {
-        const CollOfScalar kro = (er.operatorExtend(double(1), er.allCells()) - sw);
+        const CollOfScalar so = (er.operatorExtend(double(1), er.allCells()) - sw);
+        const CollOfScalar kro = so;
         return (kro / oilvisc);
     };
     std::function<CollOfScalar(const CollOfScalar&, const CollOfScalar&, const CollOfScalar&, const CollOfScalar&, const CollOfScalar&, const Scalar&)> computeTransportResidual = [&](const CollOfScalar& sw, const CollOfScalar& sw0, const CollOfScalar& flux, const CollOfScalar& source, const CollOfScalar& insource_sw, const Scalar& dt) -> CollOfScalar {
@@ -119,4 +126,5 @@ int main(int argc, char** argv)
 
 void ensureRequirements(const EquelleRuntimeCPU& er)
 {
+    (void)er;
 }
