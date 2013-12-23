@@ -31,6 +31,15 @@ computeTransmissibilities(permeability) = {
 # Actually compute transmissibilities.
 trans = computeTransmissibilities(perm)
 
+# Define chop(), a function restricting values to [0,1].
+zero = 0 Extend AllCells()
+one = 1 Extend AllCells()
+chop : Function(x : Collection Of Scalar On AllCells()) -> Collection Of Scalar On AllCells()
+chop(x) = {
+    y = x < 0 ? zero : x
+    -> y > 1 ? one : y
+}
+
 # Upwind selection.
 upwind : Function(flux : Collection Of Scalar On InteriorFaces(), ...
                   x    : Collection Of Scalar On AllCells()) ...
@@ -73,7 +82,8 @@ computeWaterMob(sw) = {
 computeOilMob : Function(sw : Collection Of Scalar On AllCells()) ...
                          -> Collection Of Scalar On AllCells()
 computeOilMob(sw) = {
-    kro = (1.0 Extend AllCells()) - sw
+    so = (1.0 Extend AllCells()) - sw
+    kro = so
     -> kro / oilvisc
 }
 
@@ -94,6 +104,8 @@ computeTransportResidual(sw, sw0, flux, source, insource_sat, dt) = {
     face_fracflow = upwind(flux, fracflow)
     water_flux = face_fracflow * flux
     q = insource * insource_sw + outsource * fracflow
+#   divwf = Divergence(water_flux)
+#   divf = Divergence(flux)
     -> sw - sw0 + (dt/pv) * (Divergence(water_flux) - q)
 }
 
@@ -133,8 +145,11 @@ For dt In timesteps {
 
     newvals = NewtonSolveSystem([pressureResLocal, transportResLocal], ...
                                 [p0, 0.5 Extend AllCells()])
+
+
     # Update state variables
     p0 = newvals[0]
+#    sw0 = chop(newvals[1])
     sw0 = newvals[1]
 
     # Output new solution
