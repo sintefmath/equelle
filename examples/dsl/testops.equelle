@@ -1,0 +1,9 @@
+a = Centroid(AllCells())[0]
+b = Centroid(AllCells())[1]
+Output("hmmm", a > (0 Extend AllCells()) ? (a + b) : (0 Extend AllCells()))
+a1 = (a + b) On InteriorCells()
+b1 = b On InteriorCells()
+c = (a1 + b1) Extend AllCells()
+array = [a1 + b1, a1 - b1, a1]
+qww = "This is a string with \"quoted escapes\" and others \n\n\n such as newlines"
+Output(qww, 2)
