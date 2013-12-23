@@ -69,6 +69,7 @@ int main(int argc, char** argv)
         const CollOfScalar u_guess = u0;
         const CollOfScalar u = er.newtonSolve(computeResidualLocal, u_guess);
         er.output("u", u);
+        er.output("maximum of u", er.maxReduce(u));
         u0 = u;
     }
 
@@ -79,4 +80,5 @@ int main(int argc, char** argv)
 
 void ensureRequirements(const EquelleRuntimeCPU& er)
 {
+    (void)er;
 }

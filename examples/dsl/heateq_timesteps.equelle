@@ -70,5 +70,6 @@ For dt In timesteps {
     u_guess = u0
     u = NewtonSolve(computeResidualLocal, u_guess)
     Output("u", u)
+    Output("maximum of u", MaxReduce(u))
     u0 = u
 }
