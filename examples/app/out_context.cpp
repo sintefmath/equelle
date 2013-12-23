@@ -32,7 +32,7 @@ int main(int argc, char** argv)
 
     Scalar a;
     a = double(8);
-    auto f = [&]() -> Scalar {
+    std::function<Scalar()> f = [&]() -> Scalar {
         return (double(2) * a);
     };
     er.output("f before", f());
@@ -46,4 +46,5 @@ int main(int argc, char** argv)
 
 void ensureRequirements(const EquelleRuntimeCPU& er)
 {
+    (void)er;
 }

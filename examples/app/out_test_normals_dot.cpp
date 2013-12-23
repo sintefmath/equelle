@@ -33,16 +33,16 @@ int main(int argc, char** argv)
     const CollOfVector n = er.normal(er.allFaces());
     const CollOfScalar n2 = er.dot(n, n);
     const CollOfScalar n0 = CollOfScalar(n.col(0));
-    const std::array<CollOfScalar, 2> narray = std::array<CollOfScalar, 2>({{n0, (n0 + n2)}});
+    const std::array<CollOfScalar, 2> narray = makeArray(n0, (n0 + n2));
     er.output("squared normals", n2);
     er.output("first component", n0);
     er.output("their sum", narray[1]);
-    auto getsecond = [&](const std::array<CollOfScalar, 2>& a) -> CollOfScalar {
+    std::function<CollOfScalar(const std::array<CollOfScalar, 2>&)> getsecond = [&](const std::array<CollOfScalar, 2>& a) -> CollOfScalar {
         return a[1];
     };
     er.output("second element of array", getsecond(narray));
-    er.output("second element of a different, inline array", getsecond(std::array<CollOfScalar, 2>({{n0, ((double(2) * n0) + n2)}})));
-    er.output("second element of the same, inline array, direct access", std::array<CollOfScalar, 2>({{n0, ((double(2) * n0) + n2)}})[1]);
+    er.output("second element of a different, inline array", getsecond(makeArray(n0, ((double(2) * n0) + n2))));
+    er.output("second element of the same, inline array, direct access", makeArray(n0, ((double(2) * n0) + n2))[1]);
     const CollOfVector q1 = (n * double(3));
     const CollOfVector q2 = (double(3) * n);
     const CollOfVector q3 = (n2 * n);

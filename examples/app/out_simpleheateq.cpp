@@ -38,10 +38,10 @@ int main(int argc, char** argv)
     const CollOfCell first = er.firstCell(interior_faces);
     const CollOfCell second = er.secondCell(interior_faces);
     const CollOfScalar itrans = (k * (er.norm(interior_faces) / er.norm((er.centroid(first) - er.centroid(second)))));
-    auto computeInteriorFlux = [&](const CollOfScalar& u) -> CollOfScalar {
+    std::function<CollOfScalar(const CollOfScalar&)> computeInteriorFlux = [&](const CollOfScalar& u) -> CollOfScalar {
         return (-itrans * er.gradient(u));
     };
-    auto computeResidual = [&](const CollOfScalar& u) -> CollOfScalar {
+    std::function<CollOfScalar(const CollOfScalar&)> computeResidual = [&](const CollOfScalar& u) -> CollOfScalar {
         const CollOfScalar ifluxes = computeInteriorFlux(u);
         const CollOfScalar residual = ((u - u0) + ((dt / vol) * er.divergence(ifluxes)));
         return residual;
@@ -58,4 +58,5 @@ int main(int argc, char** argv)
 
 void ensureRequirements(const EquelleRuntimeCPU& er)
 {
+    (void)er;
 }
