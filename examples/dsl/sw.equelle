@@ -21,8 +21,8 @@ q0 = [h0, hu0, hv0] #What kind of parenthesis do we need here?
 q = q0
 
 # Part of the shallow water equations: fluxes along x-axis and y-axis
-f : Function(q : Array Of 3 Collection Of Scalar On AllFaces()) -> Array Of 3 Collection Of Scalar On AllFaces()
-f(q) = {
+fflux : Function(q : Array Of 3 Collection Of Scalar On AllFaces()) -> Array Of 3 Collection Of Scalar On AllFaces()
+fflux(q) = {
 	h = q[0]
 	hu = q[1]
 	hv = q[2]
@@ -32,8 +32,8 @@ f(q) = {
 		hu*hv/h]
 }
 
-g : Function(q : Array Of 3 Collection Of Scalar On AllFaces()) -> Array Of 3 Collection Of Scalar On AllFaces()
-g(q) = {
+gflux : Function(q : Array Of 3 Collection Of Scalar On AllFaces()) -> Array Of 3 Collection Of Scalar On AllFaces()
+gflux(q) = {
 	h = q[0]
 	hu = q[1]
 	hv = q[2]
@@ -81,8 +81,8 @@ compute_flux(ql, qr, l, n) = {
 	ap = 0.0
 	
 	# Use the central upwind flux function to calculate the x- and y-components of the flux
-	#FIXME: f_flux = (ap * f(ql) - am * f(qr)) / (ap-am)
-	#FIXME: g_flux = (ap * f(ql) - am * f(qr)) / (ap-am)
+	#FIXME: f_flux = (ap * fflux(ql) - am * fflux(qr)) / (ap-am)
+	#FIXME: g_flux = (ap * fflux(ql) - am * fflux(qr)) / (ap-am)  # Should it be gflux here?
 	f_flux = [0.9, 0.9, 0.9]
 	g_flux = [0.8, 0.8, 0.8]
 	
@@ -92,11 +92,11 @@ compute_flux(ql, qr, l, n) = {
 	
 	# Find the flux in the normal direction
 	#FIXME: flux = l*(Dot([f_flux, g_flux], n) - central_upwind_correction)
-	flux = [0.9, 0.9, 0.9]
+	flux = [0.9 Extend AllFaces(), 0.9 Extend AllFaces(), 0.9 Extend AllFaces()]
 	
 	# Compute the maximum absolute wave speed (needed to compute the time step size based on the CFL condition)
 	#FIXME: max_wave_speed = Max(ap, -am)
-	max_wave_speed = 0.8
+	max_wave_speed = 0.8 Extend AllFaces()
 
 	# Return the flux for the given integration point
 	-> [flux[0], flux[1], flux[2], max_wave_speed]
@@ -122,32 +122,32 @@ reconstruct_plane(q) = {
 	# return (x_slope, y_slope)
 	
 	# But for now, let's return a zero-slope (flat)
-	-> [0, 0]
+	-> [0 Extend AllCells(), 0 Extend AllCells()]
 }
 
 # Get all cells and faces, which will be used later
-if = InteriorFaces()
-first = FirstCell(if)
-second = SecondCell(if)
+ifs = InteriorFaces()
+first = FirstCell(ifs)
+second = SecondCell(ifs)
 
 # Reconstruct a higher-order approximation to the physical quantities within each cell.
 # In this case, we reconstruct a plane, but for higher order, we typically reconstruct
 # a higher-order polynomial
-slopes = reconstruct_plane(AllCells())
+slopes = reconstruct_plane(q)
 
 # Find the normal and tangent for the interface
 # Tangent is only needed for integration points that are not on the edge midpoint
-n = Normal(if)
+n = Normal(ifs)
 #FIXME: tmp = (n[1] / n[0], -1)
 #FIXME: tangent = tmp / EuclideanLength(tmp)
 
 # Find the vector from the cell center to the integration point
-ip = Centroid(if) # for a two point gauss quadrature add/subtract tangent*Length(if)/(2*Sqrt(3)) here
+ip = Centroid(ifs) # for a two point gauss quadrature add/subtract tangent*Length(ifs)/(2*Sqrt(3)) here
 first_to_ip = ip - Centroid(first)
 second_to_ip = ip - Centroid(second)
 
 # Find the length of the edges
-l = |if| # The | . | construct gives the length/area/volumes of edges/faces/cells.
+l = |ifs| # The | . | construct gives the length/area/volumes of edges/faces/cells.
 
 # Evaluate the reconstructed variables at the integration point
 #FIXME: q1 = q On first + Dot(slopes On first, first_to_ip) # double check this, should be correct
@@ -173,7 +173,9 @@ dt = cfl*min_area / (6*max_wave_speed)
 #FIXME: q = q + dt*Divergence(fluxes) / |AllCells()|
 #FIXME: q[0] = q[0] + dt*Divergence(flux[0]) / |AllCells()|
 
-Output("q", q)
+Output("q0", q[0])
+Output("q1", q[1])
+Output("q2", q[2])
 #FIXME: Output("flux", flux)
 
 
