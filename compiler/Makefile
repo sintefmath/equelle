@@ -7,8 +7,8 @@ CXX	 = g++
 # The -Wno-sign-compare is because flex generates a scanner with signed/unsigned comparison!
 CXXFLAGS = -std=c++0x -g -Wall -Wextra -Wno-sign-compare -pedantic
 
-ECHEADERS = Common.hpp EquelleType.hpp SymbolTable.hpp ASTNodes.hpp ParseActions.hpp ASTVisitorInterface.hpp PrintASTVisitor.hpp PrintEquelleASTVisitor.hpp PrintCPUBackendASTVisitor.hpp PrintMRSTBackendASTVisitor.hpp NodeInterface.hpp
-ECOBJS = equelle_lexer_tok.o equelle_parser.o Common.o EquelleType.o SymbolTable.o ParseActions.o PrintASTVisitor.o PrintEquelleASTVisitor.o PrintCPUBackendASTVisitor.o PrintMRSTBackendASTVisitor.o
+ECHEADERS = Common.hpp EquelleType.hpp SymbolTable.hpp ASTNodes.hpp ParseActions.hpp ASTVisitorInterface.hpp PrintASTVisitor.hpp PrintEquelleASTVisitor.hpp PrintCPUBackendASTVisitor.hpp PrintMRSTBackendASTVisitor.hpp PrintCUDABackendASTVisitor.hpp NodeInterface.hpp 
+ECOBJS = equelle_lexer_tok.o equelle_parser.o Common.o EquelleType.o SymbolTable.o ParseActions.o PrintASTVisitor.o PrintEquelleASTVisitor.o PrintCPUBackendASTVisitor.o PrintMRSTBackendASTVisitor.o PrintCUDABackendASTVisitor.o
 
 all:		ec el
 

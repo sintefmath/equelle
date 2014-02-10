@@ -14,9 +14,9 @@
 #include <cmath>
 #include <array>
 
-#include "EquelleRuntimeCPU.hpp"
+#include "EquelleRuntimeCUDA.hpp"
 
-void ensureRequirements(const EquelleRuntimeCPU& er);
+void ensureRequirements(const EquelleRuntimeCUDA& er);
 
 int main(int argc, char** argv)
 {
@@ -24,7 +24,7 @@ int main(int argc, char** argv)
     Opm::parameter::ParameterGroup param(argc, argv, false);
 
     // Create the Equelle runtime.
-    EquelleRuntimeCPU er(param);
+    EquelleRuntimeCUDA er(param);
 
     ensureRequirements(er);
 
@@ -32,7 +32,7 @@ int main(int argc, char** argv)
 
     const CollOfScalar a = er.inputCollectionOfScalar("a", er.allCells());
     const CollOfScalar b = er.inputCollectionOfScalar("b", er.allCells());
-    const CollOfScalar c = (a + b);
+    const CollOfScalar c = (a - b);
     er.output("c", c);
 
     // ============= Generated code ends here ================
@@ -40,7 +40,7 @@ int main(int argc, char** argv)
     return 0;
 }
 
-void ensureRequirements(const EquelleRuntimeCPU& er)
+void ensureRequirements(const EquelleRuntimeCUDA& er)
 {
     (void)er;
 }
