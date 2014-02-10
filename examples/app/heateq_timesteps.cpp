@@ -31,8 +31,7 @@ int main(int argc, char** argv)
     // ============= Generated code starts here ================
 
     const Scalar k = er.inputScalarWithDefault("k", double(0.3));
-    const Scalar dt = er.inputScalarWithDefault("dt", double(0.5));
-    const CollOfScalar u0 = er.inputCollectionOfScalar("u0", er.allCells());
+    const CollOfScalar u_initial = er.inputCollectionOfScalar("u_initial", er.allCells());
     const CollOfFace dirichlet_boundary = er.inputDomainSubsetOf("dirichlet_boundary", er.boundaryFaces());
     const CollOfScalar dirichlet_val = er.inputCollectionOfScalar("dirichlet_val", dirichlet_boundary);
     const CollOfScalar vol = er.norm(er.allCells());
@@ -53,17 +52,26 @@ int main(int argc, char** argv)
         const CollOfScalar dir_fluxes = ((er.operatorOn(btrans, er.boundaryFaces(), dirichlet_boundary) * dir_sign) * (u_dirbdycells - dirichlet_val));
         return er.operatorExtend(dir_fluxes, dirichlet_boundary, er.boundaryFaces());
     };
-    std::function<CollOfScalar(const CollOfScalar&)> computeResidual = [&](const CollOfScalar& u) -> CollOfScalar {
+    std::function<CollOfScalar(const CollOfScalar&, const CollOfScalar&, const Scalar&)> computeResidual = [&](const CollOfScalar& u, const CollOfScalar& u0, const Scalar& dt) -> CollOfScalar {
         const CollOfScalar ifluxes = computeInteriorFlux(u);
         const CollOfScalar bfluxes = computeBoundaryFlux(u);
         const CollOfScalar fluxes = (er.operatorExtend(ifluxes, er.interiorFaces(), er.allFaces()) + er.operatorExtend(bfluxes, er.boundaryFaces(), er.allFaces()));
         const CollOfScalar residual = ((u - u0) + ((dt / vol) * er.divergence(fluxes)));
         return residual;
     };
-    const CollOfScalar explicitu = (u0 - computeResidual(u0));
-    const CollOfScalar u = er.newtonSolve(computeResidual, u0);
-    er.output("explicitu", explicitu);
-    er.output("u", u);
+    const SeqOfScalar timesteps = er.inputSequenceOfScalar("timesteps");
+    CollOfScalar u0;
+    u0 = u_initial;
+    for (const Scalar& dt : timesteps) {
+        std::function<CollOfScalar(const CollOfScalar&)> computeResidualLocal = [&](const CollOfScalar& u) -> CollOfScalar {
+            return computeResidual(u, u0, dt);
+        };
+        const CollOfScalar u_guess = u0;
+        const CollOfScalar u = er.newtonSolve(computeResidualLocal, u_guess);
+        er.output("u", u);
+        er.output("maximum of u", er.maxReduce(u));
+        u0 = u;
+    }
 
     // ============= Generated code ends here ================
 

@@ -1,0 +1,12 @@
+#
+# Small basic calculater for helping designing the GPU back-end 
+# of the Equelle compiler.
+#
+
+a : Collection Of Scalar On AllCells()
+b : Collection Of Scalar On AllCells()
+c : Collection Of Scalar On AllCells()
+a = InputCollectionOfScalar("a", AllCells())
+b = InputCollectionOfScalar("b", AllCells())
+c = (a + b)
+Output("c", c)
