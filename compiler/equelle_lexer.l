@@ -36,7 +36,6 @@ ELLIPSIS [.][.][.]
 LINECONT {ELLIPSIS}[\t ]*\n
 
 %option yylineno
-%option outfile="equelle_lexer.cpp"
 %option nounput
 
 %%

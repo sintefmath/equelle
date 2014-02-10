@@ -1,4 +1,4 @@
-project(equelle)
+project(equelle_compiler)
 cmake_minimum_required( VERSION 2.8 )
 
 # The -Wno-sign-compare is because flex generates a scanner with
@@ -11,6 +11,9 @@ find_package( FLEX REQUIRED )
 
 bison_target( MyParser equelle_parser.y ${CMAKE_CURRENT_BINARY_DIR}/equelle_parser.cpp)
 flex_target(MyScanner equelle_lexer.l ${CMAKE_CURRENT_BINARY_DIR}/equelle_lexer.cpp )
+add_flex_bison_dependency(MyScanner MyParser)
+
+include_directories( . ${CMAKE_CURRENT_BINARY_DIR} )
 
 file( GLOB EC_SOURCES "*.cpp" )
 file( GLOB to_remove el.cpp )
@@ -23,6 +26,9 @@ ${BISON_MyParser_OUTPUTS} )
 set_target_properties( ec PROPERTIES COMPILE_DEFINITIONS "RETURN_TOKENS=1" )
 
 add_executable( el el.cpp ${FLEX_MyScanner_OUTPUTS} ) 
+
+install(TARGETS ec el 
+	RUNTIME DESTINATION bin)
 
 
 
