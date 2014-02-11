@@ -13,10 +13,10 @@
 
 
 template <class EntityCollection>
-CollOfScalar EquelleRuntimeCUDA::operatorExtend(const double data,
+CollOfScalarCPU EquelleRuntimeCUDA::operatorExtend(const double data,
                                                const EntityCollection& to_set)
 {
-    return CollOfScalar(CollOfScalar::V::Constant(to_set.size(), data));
+    return CollOfScalarCPU(CollOfScalarCPU::V::Constant(to_set.size(), data));
 }
 
 
@@ -161,66 +161,66 @@ EquelleRuntimeCUDA::trinaryIf(const CollOfBool& predicate,
 
 
 template <>
-inline CollOfScalar EquelleRuntimeCUDA::trinaryIf<CollOfScalar, CollOfScalar>(const CollOfBool& predicate,
-                                                                             const CollOfScalar& iftrue,
-                                                                             const CollOfScalar& iffalse) const
+inline CollOfScalarCPU EquelleRuntimeCUDA::trinaryIf<CollOfScalarCPU, CollOfScalarCPU>(const CollOfBool& predicate,
+                                                                             const CollOfScalarCPU& iftrue,
+                                                                             const CollOfScalarCPU& iffalse) const
 {
     const int sz = predicate.size();
     assert(sz == iftrue.size() && sz == iffalse.size());
-    CollOfScalar::V trueones = CollOfScalar::V::Constant(sz, 1.0);
-    CollOfScalar::V falseones = CollOfScalar::V::Constant(sz, 0.0);
+    CollOfScalarCPU::V trueones = CollOfScalarCPU::V::Constant(sz, 1.0);
+    CollOfScalarCPU::V falseones = CollOfScalarCPU::V::Constant(sz, 0.0);
     for (int i = 0; i < sz; ++i) {
         if (!predicate[i]) {
             trueones[i] = 0.0;
             falseones[i] = 1.0;
         }
     }
-    CollOfScalar retval = iftrue * trueones + iffalse * falseones;
+    CollOfScalarCPU retval = iftrue * trueones + iffalse * falseones;
     return retval;
 }
 
 template <>
-inline CollOfScalar
-EquelleRuntimeCUDA::trinaryIf<CollOfScalar::ADB, CollOfScalar>(const CollOfBool& predicate,
-                                                              const CollOfScalar::ADB& iftrue,
-                                                              const CollOfScalar& iffalse) const
+inline CollOfScalarCPU
+EquelleRuntimeCUDA::trinaryIf<CollOfScalarCPU::ADB, CollOfScalarCPU>(const CollOfBool& predicate,
+                                                              const CollOfScalarCPU::ADB& iftrue,
+                                                              const CollOfScalarCPU& iffalse) const
 {
-    return trinaryIf<CollOfScalar, CollOfScalar>(predicate, iftrue, iffalse);
+    return trinaryIf<CollOfScalarCPU, CollOfScalarCPU>(predicate, iftrue, iffalse);
 }
 
 template <>
-inline CollOfScalar
-EquelleRuntimeCUDA::trinaryIf<CollOfScalar, CollOfScalar::ADB>(const CollOfBool& predicate,
-                                                              const CollOfScalar& iftrue,
-                                                              const CollOfScalar::ADB& iffalse) const
+inline CollOfScalarCPU
+EquelleRuntimeCUDA::trinaryIf<CollOfScalarCPU, CollOfScalarCPU::ADB>(const CollOfBool& predicate,
+                                                              const CollOfScalarCPU& iftrue,
+                                                              const CollOfScalarCPU::ADB& iffalse) const
 {
-    return trinaryIf<CollOfScalar, CollOfScalar>(predicate, iftrue, iffalse);
+    return trinaryIf<CollOfScalarCPU, CollOfScalarCPU>(predicate, iftrue, iffalse);
 }
 
 template <>
-inline CollOfScalar
-EquelleRuntimeCUDA::trinaryIf<CollOfScalar::ADB, CollOfScalar::ADB>(const CollOfBool& predicate,
-                                                                   const CollOfScalar::ADB& iftrue,
-                                                                   const CollOfScalar::ADB& iffalse) const
+inline CollOfScalarCPU
+EquelleRuntimeCUDA::trinaryIf<CollOfScalarCPU::ADB, CollOfScalarCPU::ADB>(const CollOfBool& predicate,
+                                                                   const CollOfScalarCPU::ADB& iftrue,
+                                                                   const CollOfScalarCPU::ADB& iffalse) const
 {
-    return trinaryIf<CollOfScalar, CollOfScalar>(predicate, iftrue, iffalse);
+    return trinaryIf<CollOfScalarCPU, CollOfScalarCPU>(predicate, iftrue, iffalse);
 }
 
 
 template <class ResidualFunctor>
-CollOfScalar EquelleRuntimeCUDA::newtonSolve(const ResidualFunctor& rescomp,
-                                            const CollOfScalar& u_initialguess)
+CollOfScalarCPU EquelleRuntimeCUDA::newtonSolve(const ResidualFunctor& rescomp,
+                                            const CollOfScalarCPU& u_initialguess)
 {
     Opm::time::StopWatch clock;
     clock.start();
 
     // Set up Newton loop.
-    CollOfScalar u = singlePrimaryVariable(u_initialguess);
+    CollOfScalarCPU u = singlePrimaryVariable(u_initialguess);
     if (verbose_ > 2) {
         output("Initial u", u);
         output("    newtonSolve: norm (initial u)", twoNorm(u));
     }
-    CollOfScalar residual = rescomp(u);
+    CollOfScalarCPU residual = rescomp(u);
     if (verbose_ > 2) {
         output("Initial residual", residual);
         output("    newtonSolve: norm (initial residual)", twoNorm(residual));
@@ -239,7 +239,7 @@ CollOfScalar EquelleRuntimeCUDA::newtonSolve(const ResidualFunctor& rescomp,
     while ( (twoNorm(residual) > abs_res_tol_) && (iter < max_iter_) ) {
 
         // Solve linear equations for du, apply update.
-        const CollOfScalar du = solveForUpdate(residual);
+        const CollOfScalarCPU du = solveForUpdate(residual);
         u = u - du;
 
         // Recompute residual.
@@ -280,8 +280,8 @@ CollOfScalar EquelleRuntimeCUDA::newtonSolve(const ResidualFunctor& rescomp,
 
 
 template <int Num>
-std::array<CollOfScalar, Num> EquelleRuntimeCUDA::newtonSolveSystem(const std::array<typename ResCompType<Num>::type, Num>& rescomp,
-                                                                   const std::array<CollOfScalar, Num>& u_initialguess)
+std::array<CollOfScalarCPU, Num> EquelleRuntimeCUDA::newtonSolveSystem(const std::array<typename ResCompType<Num>::type, Num>& rescomp,
+                                                                   const std::array<CollOfScalarCPU, Num>& u_initialguess)
 {
     // Set up ranges object.
     std::array<ESpan, Num> ranges{{ ESpan(0), ESpan(0) }}; // Dummy spans that will be overwritten.
@@ -292,10 +292,10 @@ std::array<CollOfScalar, Num> EquelleRuntimeCUDA::newtonSolveSystem(const std::a
         start = end;
     }
     const int total_size = start;
-    std::array<CollOfScalar, Num> temp;
-    std::array<CollOfScalar, Num> tempres;
+    std::array<CollOfScalarCPU, Num> temp;
+    std::array<CollOfScalarCPU, Num> tempres;
     // Build combined functor.
-    auto combined_rescomp = [&](const CollOfScalar& u) -> CollOfScalar {
+    auto combined_rescomp = [&](const CollOfScalarCPU& u) -> CollOfScalarCPU {
         // Split into components.
         for (int i = 0; i < Num; ++i) {
             temp[i] = subset(u, ranges[i]);
@@ -306,21 +306,21 @@ std::array<CollOfScalar, Num> EquelleRuntimeCUDA::newtonSolveSystem(const std::a
             tempres[i] = rescomp[i](temp[0], temp[1]);
         }
         // Recombine
-        CollOfScalar result = superset(tempres[0], ranges[0], total_size);
+        CollOfScalarCPU result = superset(tempres[0], ranges[0], total_size);
         for (int i = 1; i < Num; ++i) {
             result += superset(tempres[i], ranges[i], total_size);
         }
         return result;
     };
     // Build combined initial guess.
-    CollOfScalar combined_u_initialguess = superset(u_initialguess[0], ranges[0], total_size);
+    CollOfScalarCPU combined_u_initialguess = superset(u_initialguess[0], ranges[0], total_size);
     for (int i = 1; i < Num; ++i) {
         combined_u_initialguess += superset(u_initialguess[i], ranges[i], total_size);
     }
     std::cout << "Done with setup of combined things." << std::endl;
 
     // Call regular Newton solver with combined objects.
-    CollOfScalar combined_u = newtonSolve(combined_rescomp, combined_u_initialguess);
+    CollOfScalarCPU combined_u = newtonSolve(combined_rescomp, combined_u_initialguess);
     for (int i = 0; i < Num; ++i) {
         temp[i] = subset(combined_u, ranges[i]);
     }
@@ -328,8 +328,8 @@ std::array<CollOfScalar, Num> EquelleRuntimeCUDA::newtonSolveSystem(const std::a
 }
 
 
-template <class SomeCollection>
-CollOfScalar EquelleRuntimeCUDA::inputCollectionOfScalar(const String& name,
+/*template <class SomeCollection>
+CollOfScalarCPU EquelleRuntimeCUDA::inputCollectionOfScalar(const String& name,
                                                         const SomeCollection& coll)
 {
     const int size = coll.size();
@@ -346,12 +346,12 @@ CollOfScalar EquelleRuntimeCUDA::inputCollectionOfScalar(const String& name,
         if (int(data.size()) != size) {
             OPM_THROW(std::runtime_error, "Unexpected size of input data for " << name << " in file " << filename);
         }
-        return CollOfScalar(CollOfScalar::V(Eigen::Map<CollOfScalar::V>(&data[0], size)));
+        return CollOfScalarCPU(CollOfScalarCPU::V(Eigen::Map<CollOfScalarCPU::V>(&data[0], size)));
     } else {
         // Uniform values.
-        return CollOfScalar(CollOfScalar::V::Constant(size, param_.get<double>(name)));
+        return CollOfScalarCPU(CollOfScalarCPU::V::Constant(size, param_.get<double>(name)));
     }
-}
+}*/
 
 
 #endif // EQUELLERUNTIMECUDA_IMPL_HEADER_INCLUDED

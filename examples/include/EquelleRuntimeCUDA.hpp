@@ -15,6 +15,15 @@
 #include <string>
 #include <map>
 
+// Including device code
+// This should be independent from the rest of the host code
+//      and especially from any c++11 code.
+#include "EquelleRuntimeCUDA_cuda.hpp"
+
+// Forward declarations for the Device types
+//class CollOfScalar;
+
+
 
 /// Topological entities.
 template <int Codim>
@@ -50,109 +59,109 @@ typedef std::vector<Scalar> SeqOfScalar;
 /// The Collection Of Scalar type is based on Eigen and opm-autodiff.
 /// It uses inheritance to provide extra interfaces for ease of use,
 /// notably converting constructors.
-class CollOfScalar : public Opm::AutoDiffBlock<double>
+class CollOfScalarCPU : public Opm::AutoDiffBlock<double>
 {
 public:
     typedef Opm::AutoDiffBlock<double> ADB;
     //typedef ADB::V V;
-    CollOfScalar()
+    CollOfScalarCPU()
         : ADB(ADB::null())
     {
     }
-    CollOfScalar(const ADB& adb)
-        : ADB(adb)
+    CollOfScalarCPU(const ADB& adb)
+    : ADB(adb)
     {
     }
-    CollOfScalar(const ADB::V& x)
+    CollOfScalarCPU(const ADB::V& x)
         : ADB(ADB::constant(x))
     {
     }
-};
+};    
 
 /// This operator is not provided by AutoDiffBlock, so we must add it here.
-inline CollOfScalar operator-(const CollOfScalar& x)
+inline CollOfScalarCPU operator-(const CollOfScalarCPU& x)
 {
-    return CollOfScalar::V::Zero(x.size()) - x;
+    return CollOfScalarCPU::V::Zero(x.size()) - x;
 }
 
 /// This operator is not provided by AutoDiffBlock, so we must add it here.
-inline CollOfScalar operator/(const Scalar& s, const CollOfScalar& x)
+inline CollOfScalarCPU operator/(const Scalar& s, const CollOfScalarCPU& x)
 {
-    return CollOfScalar::V::Constant(x.size(), s) / x;
+    return CollOfScalarCPU::V::Constant(x.size(), s) / x;
 }
 
 /// This operator is not provided by AutoDiffBlock, so we must add it here.
-inline CollOfScalar operator/(const CollOfScalar& x, const Scalar& s)
+inline CollOfScalarCPU operator/(const CollOfScalarCPU& x, const Scalar& s)
 {
-    return x / CollOfScalar::V::Constant(x.size(), s);
+    return x / CollOfScalarCPU::V::Constant(x.size(), s);
 }
 
 /// This operator is not provided by AutoDiffBlock, so we must add it here.
-inline CollOfBool operator<(const Scalar& s, const CollOfScalar& x)
+inline CollOfBool operator<(const Scalar& s, const CollOfScalarCPU& x)
 {
     return s < x.value();
 }
 
 /// This operator is not provided by AutoDiffBlock, so we must add it here.
-inline CollOfBool operator<(const CollOfScalar& x, const Scalar& s)
+inline CollOfBool operator<(const CollOfScalarCPU& x, const Scalar& s)
 {
     return x.value() < s;
 }
 
 /// This operator is not provided by AutoDiffBlock, so we must add it here.
-inline CollOfBool operator>(const Scalar& s, const CollOfScalar& x)
+inline CollOfBool operator>(const Scalar& s, const CollOfScalarCPU& x)
 {
     return s > x.value();
 }
 
 /// This operator is not provided by AutoDiffBlock, so we must add it here.
-inline CollOfBool operator>(const CollOfScalar& x, const Scalar& s)
+inline CollOfBool operator>(const CollOfScalarCPU& x, const Scalar& s)
 {
     return x.value() > s;
 }
 
 /// This operator is not provided by AutoDiffBlock, so we must add it here.
-inline CollOfBool operator<(const CollOfScalar& x, const CollOfScalar& y)
+inline CollOfBool operator<(const CollOfScalarCPU& x, const CollOfScalarCPU& y)
 {
     return x.value() < y.value();
 }
 
 /// This operator is not provided by AutoDiffBlock, so we must add it here.
-inline CollOfBool operator>(const CollOfScalar& x, const CollOfScalar& y)
+inline CollOfBool operator>(const CollOfScalarCPU& x, const CollOfScalarCPU& y)
 {
     return x.value() > y.value();
 }
 
 /// This operator is not provided by AutoDiffBlock, so we must add it here.
-inline CollOfBool operator>=(const CollOfScalar& x, const Scalar& s)
+inline CollOfBool operator>=(const CollOfScalarCPU& x, const Scalar& s)
 {
     return x.value() >= s;
 }
 
 /// This operator is not provided by AutoDiffBlock, so we must add it here.
-inline CollOfBool operator==(const CollOfScalar& x, const CollOfScalar& y)
+inline CollOfBool operator==(const CollOfScalarCPU& x, const CollOfScalarCPU& y)
 {
     return x.value() == y.value();
 }
 
 /// This function is not provided by AutoDiffBlock, so we must add it here.
-inline CollOfScalar sqrt(const CollOfScalar& x)
+inline CollOfScalarCPU sqrt(const CollOfScalarCPU& x)
 {
     // d(sqrt(x))/dy = 1/(2*sqrt(x)) * dx/dy
 
     const auto& xjac = x.derivative();
     if (xjac.empty()) {
-        return CollOfScalar(sqrt(x.value()));
+        return CollOfScalarCPU(sqrt(x.value()));
     }
     const int num_blocks = xjac.size();
-    std::vector<CollOfScalar::M> jac(num_blocks);
+    std::vector<CollOfScalarCPU::M> jac(num_blocks);
     typedef Eigen::DiagonalMatrix<Scalar, Eigen::Dynamic> D;
     const auto sqrt_x = sqrt(x.value());
     const D one_over_two_sqrt_x = (0.5/sqrt_x).matrix().asDiagonal();
     for (int block = 0; block < num_blocks; ++block) {
         jac[block] = one_over_two_sqrt_x * xjac[block];
     }
-    return CollOfScalar::ADB::function(sqrt_x, jac);
+    return CollOfScalarCPU::ADB::function(sqrt_x, jac);
 }
 
 
@@ -164,11 +173,11 @@ public:
         : v(columns)
     {
     }
-    const CollOfScalar& col(const int c) const
+    const CollOfScalarCPU& col(const int c) const
     {
         return v[c];
     }
-    CollOfScalar& col(const int c)
+    CollOfScalarCPU& col(const int c)
     {
         return v[c];
     }
@@ -177,7 +186,7 @@ public:
         return v.size();
     }
 private:
-    std::vector<CollOfScalar> v;
+    std::vector<CollOfScalarCPU> v;
 };
 
 inline CollOfVector operator+(const CollOfVector& v1, const CollOfVector& v2)
@@ -220,7 +229,7 @@ inline CollOfVector operator*(const CollOfVector& x, const Scalar& s)
     return res;
 }
 
-inline CollOfVector operator*(const CollOfVector& x, const CollOfScalar& s)
+inline CollOfVector operator*(const CollOfVector& x, const CollOfScalarCPU& s)
 {
     const int dim = x.numCols();
     CollOfVector res(dim);
@@ -235,7 +244,7 @@ inline CollOfVector operator*(const Scalar& s, const CollOfVector& x)
     return x * s; // Commutative.
 }
 
-inline CollOfVector operator*(const CollOfScalar& s, const CollOfVector& x)
+inline CollOfVector operator*(const CollOfScalarCPU& s, const CollOfVector& x)
 {
     return x * s; // Commutative.
 }
@@ -250,7 +259,7 @@ inline CollOfVector operator/(const CollOfVector& x, const Scalar& s)
     return res;
 }
 
-inline CollOfVector operator/(const CollOfVector& x, const CollOfScalar& s)
+inline CollOfVector operator/(const CollOfVector& x, const CollOfScalarCPU& s)
 {
     const int dim = x.numCols();
     CollOfVector res(dim);
@@ -263,11 +272,11 @@ inline CollOfVector operator/(const CollOfVector& x, const CollOfScalar& s)
 
 
 /// A helper type for ensuring AutoDiffBlock objects are converted
-/// to CollOfScalar when necessary for template functions.
+/// to CollOfScalarCPU when necessary for template functions.
 template <class Coll>
 struct CollType { typedef Coll Type; };
 template<>
-struct CollType<Opm::AutoDiffBlock<double>> { typedef CollOfScalar Type; };
+struct CollType<Opm::AutoDiffBlock<double>> { typedef CollOfScalarCPU Type; };
 
 
 /// Simplify support of array literals.
@@ -299,25 +308,25 @@ struct ResCompType;
 template <>
 struct ResCompType<1>
 {
-    typedef std::function<CollOfScalar(const CollOfScalar&)> type;
+    typedef std::function<CollOfScalarCPU(const CollOfScalarCPU&)> type;
 };
 
 template <>
 struct ResCompType<2>
 {
-    typedef std::function<CollOfScalar(const CollOfScalar&, const CollOfScalar&)> type;
+    typedef std::function<CollOfScalarCPU(const CollOfScalarCPU&, const CollOfScalarCPU&)> type;
 };
 
 template <>
 struct ResCompType<3>
 {
-    typedef std::function<CollOfScalar(const CollOfScalar&, const CollOfScalar&, const CollOfScalar&)> type;
+    typedef std::function<CollOfScalarCPU(const CollOfScalarCPU&, const CollOfScalarCPU&, const CollOfScalarCPU&)> type;
 };
 
 template <>
 struct ResCompType<4>
 {
-    typedef std::function<CollOfScalar(const CollOfScalar&, const CollOfScalar&, const CollOfScalar&, const CollOfScalar&)> type;
+    typedef std::function<CollOfScalarCPU(const CollOfScalarCPU&, const CollOfScalarCPU&, const CollOfScalarCPU&, const CollOfScalarCPU&)> type;
 };
 
 
@@ -438,25 +447,25 @@ public:
     CollOfFace interiorFaces() const;
     CollOfCell firstCell(const CollOfFace& faces) const;
     CollOfCell secondCell(const CollOfFace& faces) const;
-    CollOfScalar norm(const CollOfFace& faces) const;
-    CollOfScalar norm(const CollOfCell& cells) const;
-    CollOfScalar norm(const CollOfVector& vectors) const;
+    CollOfScalarCPU norm(const CollOfFace& faces) const;
+    CollOfScalarCPU norm(const CollOfCell& cells) const;
+    CollOfScalarCPU norm(const CollOfVector& vectors) const;
     CollOfVector centroid(const CollOfFace& faces) const;
     CollOfVector centroid(const CollOfCell& cells) const;
     CollOfVector normal(const CollOfFace& faces) const;
 
     /// Operators and math functions.
-    CollOfScalar sqrt(const CollOfScalar& x) const;
-    CollOfScalar dot(const CollOfVector& v1, const CollOfVector& v2) const;
-    CollOfScalar gradient(const CollOfScalar& cell_scalarfield) const;
-    CollOfScalar negGradient(const CollOfScalar& cell_scalarfield) const;
-    CollOfScalar divergence(const CollOfScalar& face_fluxes) const;
-    CollOfScalar interiorDivergence(const CollOfScalar& face_fluxes) const;
+    CollOfScalarCPU sqrt(const CollOfScalarCPU& x) const;
+    CollOfScalarCPU dot(const CollOfVector& v1, const CollOfVector& v2) const;
+    CollOfScalarCPU gradient(const CollOfScalarCPU& cell_scalarfield) const;
+    CollOfScalarCPU negGradient(const CollOfScalarCPU& cell_scalarfield) const;
+    CollOfScalarCPU divergence(const CollOfScalarCPU& face_fluxes) const;
+    CollOfScalarCPU interiorDivergence(const CollOfScalarCPU& face_fluxes) const;
     CollOfBool isEmpty(const CollOfCell& cells) const;
     CollOfBool isEmpty(const CollOfFace& faces) const;
 
     template <class EntityCollection>
-    CollOfScalar operatorExtend(const Scalar data, const EntityCollection& to_set);
+    CollOfScalarCPU operatorExtend(const Scalar data, const EntityCollection& to_set);
 
     template <class SomeCollection, class EntityCollection>
     SomeCollection operatorExtend(const SomeCollection& data, const EntityCollection& from_set, const EntityCollection& to_set);
@@ -471,23 +480,24 @@ public:
               const SomeCollection2& iffalse) const;
 
     /// Reductions.
-    Scalar minReduce(const CollOfScalar& x) const;
-    Scalar maxReduce(const CollOfScalar& x) const;
-    Scalar sumReduce(const CollOfScalar& x) const;
-    Scalar prodReduce(const CollOfScalar& x) const;
+    Scalar minReduce(const CollOfScalarCPU& x) const;
+    Scalar maxReduce(const CollOfScalarCPU& x) const;
+    Scalar sumReduce(const CollOfScalarCPU& x) const;
+    Scalar prodReduce(const CollOfScalarCPU& x) const;
 
     /// Solver functions.
     template <class ResidualFunctor>
-    CollOfScalar newtonSolve(const ResidualFunctor& rescomp,
-                             const CollOfScalar& u_initialguess);
+    CollOfScalarCPU newtonSolve(const ResidualFunctor& rescomp,
+                             const CollOfScalarCPU& u_initialguess);
 
     template <int Num>
-    std::array<CollOfScalar, Num> newtonSolveSystem(const std::array<typename ResCompType<Num>::type, Num>& rescomp,
-                                                    const std::array<CollOfScalar, Num>& u_initialguess);
+    std::array<CollOfScalarCPU, Num> newtonSolveSystem(const std::array<typename ResCompType<Num>::type, Num>& rescomp,
+                                                    const std::array<CollOfScalarCPU, Num>& u_initialguess);
 
     /// Output.
     void output(const String& tag, Scalar val) const;
-    void output(const String& tag, const CollOfScalar& vals);
+    void output(const String& tag, const CollOfScalarCPU& vals);
+    void output(const String& tag, const CollOfScalar& vals, int dummy);
 
     /// Input.
     Scalar inputScalarWithDefault(const String& name,
@@ -511,13 +521,13 @@ private:
     bool boundaryCell(const int cell_index) const;
 
     /// Creating primary variables.
-    static CollOfScalar singlePrimaryVariable(const CollOfScalar& initial_values);
+    static CollOfScalarCPU singlePrimaryVariable(const CollOfScalarCPU& initial_values);
 
     /// Solver helper.
-    CollOfScalar solveForUpdate(const CollOfScalar& residual) const;
+    CollOfScalarCPU solveForUpdate(const CollOfScalarCPU& residual) const;
 
     /// Norms.
-    Scalar twoNorm(const CollOfScalar& vals) const;
+    Scalar twoNorm(const CollOfScalarCPU& vals) const;
 
     /// Data members.
     std::unique_ptr<Opm::GridManager> grid_manager_;
@@ -535,5 +545,7 @@ private:
 
 // Include the implementations of template members.
 #include "EquelleRuntimeCUDA_impl.hpp"
+#include "EquelleRuntimeCUDA_havahol.hpp"
+#include "EquelleRuntimeCUDA_cuda.hpp"
 
 #endif // EQUELLERUNTIMECUDA_HEADER_INCLUDED

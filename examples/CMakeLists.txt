@@ -23,15 +23,24 @@ cmake_minimum_required(VERSION 2.8)
 # example, the extra libs line in such a custom.cmake can look like this:
 # set(EXTRA_LIBS_FOR_EQUELLE boost_filesystem-mt boost_system-mt superlu_4.3 umfpack cholmod amd colamd ecl lapack blas CACHE STRING "")
 
+# Check for cuda, and set flag for double precision
+find_package("CUDA" REQUIRED)
+set( CUDA_NVCC_FLAGS "-arch=sm_13" CACHE STRING "nvcc flags" FORCE)
+
+
 # We need C++11 features.
-set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra" )
+#set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra" )
+set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 
 set( SUPERLU_LIB          "superlu" CACHE PATH "" ) 	# havahol
+
+
 
 # The /usr/include/eigen3 path is default installed location of eigen3
 # on Ubuntu, you may need to add your own location in the EXTRA_... variable.
 include_directories(
   "./include"
+  "./cuda_include"
   "/usr/local/include/Eigen" 		# havahol
   "/usr/local/superlu"				# havahol
   "/usr/include/suitesparse"		# havahol
@@ -46,14 +55,22 @@ file( GLOB sources     "src/*.cpp" )
 file( GLOB app_sources "app/*.cpp" )
 file( GLOB headers     "include/*.hpp" )
 file( GLOB DSL_sources "dsl/*.equelle" )
+file( GLOB cuda_files  "src/*.cu" )
+file( GLOB cuda_include "cuda_include/*.hpp" )
 
 # Here we make the equelle_rt library which we list below!
-add_library( equelle_rt ${sources} ${headers})
+add_library( equelle_rt ${sources} ${headers} )
+
+# Building the cuda files as a library
+set(CUDA_PROPAGATE_HOST_FLAGS OFF)
+#include_directories("/usr/local/cuda-5.5/include/")
+cuda_add_library(cuda_object ${cuda_files} ${cuda_include} )
 
 foreach( app ${app_sources} )
   get_filename_component( target ${app} NAME_WE )
   add_executable( ${target}
-    ${app} ${headers} ${DSL_sources}
+  	${app} 
+  	#${headers} ${DSL_sources}
     )
     # Do we actually need headers and DSL_sources in the add_exec?
   target_link_libraries( ${target}
@@ -69,6 +86,10 @@ foreach( app ${app_sources} )
     ${SUPERLU_LIB}			# havahol
     "umfpack"				# havahol
     "tinyxml"				# havahol
+    "cuda_object"
+    ${CUDA_LIBRARIES}
+    ${CUDA_cusparse_LIBRARY}
+    ${CUDA_cublas_LIBRARY}
   )
 endforeach()
 

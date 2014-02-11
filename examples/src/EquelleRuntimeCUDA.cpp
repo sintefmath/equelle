@@ -4,6 +4,9 @@
 
 
 #include "EquelleRuntimeCUDA.hpp"
+#include "EquelleRuntimeCUDA_havahol.hpp"
+#include "EquelleRuntimeCUDA_cuda.hpp"
+
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/core/utility/StopWatch.hpp>
 #include <iomanip>
@@ -192,10 +195,10 @@ CollOfCell EquelleRuntimeCUDA::secondCell(const CollOfFace& faces) const
 }
 
 
-CollOfScalar EquelleRuntimeCUDA::norm(const CollOfFace& faces) const
+CollOfScalarCPU EquelleRuntimeCUDA::norm(const CollOfFace& faces) const
 {
     const int n = faces.size();
-    CollOfScalar::V areas(n);
+    CollOfScalarCPU::V areas(n);
     for (int i = 0; i < n; ++i) {
         areas[i] = grid_.face_areas[faces[i].index];
     }
@@ -203,10 +206,10 @@ CollOfScalar EquelleRuntimeCUDA::norm(const CollOfFace& faces) const
 }
 
 
-CollOfScalar EquelleRuntimeCUDA::norm(const CollOfCell& cells) const
+CollOfScalarCPU EquelleRuntimeCUDA::norm(const CollOfCell& cells) const
 {
     const int n = cells.size();
-    CollOfScalar::V volumes(n);
+    CollOfScalarCPU::V volumes(n);
     for (int i = 0; i < n; ++i) {
         volumes[i] = grid_.cell_volumes[cells[i].index];
     }
@@ -214,9 +217,9 @@ CollOfScalar EquelleRuntimeCUDA::norm(const CollOfCell& cells) const
 }
 
 
-CollOfScalar EquelleRuntimeCUDA::norm(const CollOfVector& vectors) const
+CollOfScalarCPU EquelleRuntimeCUDA::norm(const CollOfVector& vectors) const
 {
-    CollOfScalar norm2 = vectors.col(0) * vectors.col(0);
+    CollOfScalarCPU norm2 = vectors.col(0) * vectors.col(0);
     const int dim = vectors.numCols();
     for (int d = 1; d < dim; ++d) {
         norm2 += vectors.col(d) * vectors.col(d);
@@ -238,7 +241,7 @@ CollOfVector EquelleRuntimeCUDA::centroid(const CollOfFace& faces) const
     }
     CollOfVector centroids(dim);
     for (int d = 0; d < dim; ++d) {
-        centroids.col(d) = CollOfScalar(c.col(d));
+        centroids.col(d) = CollOfScalarCPU(c.col(d));
     }
     return centroids;
 }
@@ -257,7 +260,7 @@ CollOfVector EquelleRuntimeCUDA::centroid(const CollOfCell& cells) const
     }
     CollOfVector centroids(dim);
     for (int d = 0; d < dim; ++d) {
-        centroids.col(d) = CollOfScalar(c.col(d));
+        centroids.col(d) = CollOfScalarCPU(c.col(d));
     }
     return centroids;
 }
@@ -279,19 +282,19 @@ CollOfVector EquelleRuntimeCUDA::normal(const CollOfFace& faces) const
     nor.colwise() /= nor.matrix().rowwise().norm().array();
     CollOfVector normals(dim);
     for (int d = 0; d < dim; ++d) {
-        normals.col(d) = CollOfScalar(nor.col(d));
+        normals.col(d) = CollOfScalarCPU(nor.col(d));
     }
     return normals;
 }
 
 
-CollOfScalar EquelleRuntimeCUDA::sqrt(const CollOfScalar& x) const
+CollOfScalarCPU EquelleRuntimeCUDA::sqrt(const CollOfScalarCPU& x) const
 {
     return ::sqrt(x);
 }
 
 
-CollOfScalar EquelleRuntimeCUDA::dot(const CollOfVector& v1, const CollOfVector& v2) const
+CollOfScalarCPU EquelleRuntimeCUDA::dot(const CollOfVector& v1, const CollOfVector& v2) const
 {
     if (v1.numCols() != v2.numCols()) {
         OPM_THROW(std::logic_error, "Non-matching dimension of Vectors for dot().");
@@ -300,7 +303,7 @@ CollOfScalar EquelleRuntimeCUDA::dot(const CollOfVector& v1, const CollOfVector&
         OPM_THROW(std::logic_error, "Non-matching size of Vector collections for dot().");
     }
     const int dim = grid_.dimensions;
-    CollOfScalar result = v1.col(0) * v2.col(0);
+    CollOfScalarCPU result = v1.col(0) * v2.col(0);
     for (int d = 1; d < dim; ++d) {
         result += v1.col(d) * v2.col(d);
     }
@@ -308,19 +311,19 @@ CollOfScalar EquelleRuntimeCUDA::dot(const CollOfVector& v1, const CollOfVector&
 }
 
 
-CollOfScalar EquelleRuntimeCUDA::gradient(const CollOfScalar& cell_scalarfield) const
+CollOfScalarCPU EquelleRuntimeCUDA::gradient(const CollOfScalarCPU& cell_scalarfield) const
 {
     return ops_.grad * cell_scalarfield;//.matrix();
 }
 
 
-CollOfScalar EquelleRuntimeCUDA::negGradient(const CollOfScalar& cell_scalarfield) const
+CollOfScalarCPU EquelleRuntimeCUDA::negGradient(const CollOfScalarCPU& cell_scalarfield) const
 {
     return ops_.ngrad * cell_scalarfield;//.matrix();
 }
 
 
-CollOfScalar EquelleRuntimeCUDA::divergence(const CollOfScalar& face_fluxes) const
+CollOfScalarCPU EquelleRuntimeCUDA::divergence(const CollOfScalarCPU& face_fluxes) const
 {
     if (face_fluxes.size() == ops_.internal_faces.size()) {
         // This is actually a hack, the compiler should know to emit interiorDivergence()
@@ -331,7 +334,7 @@ CollOfScalar EquelleRuntimeCUDA::divergence(const CollOfScalar& face_fluxes) con
 }
 
 
-CollOfScalar EquelleRuntimeCUDA::interiorDivergence(const CollOfScalar& face_fluxes) const
+CollOfScalarCPU EquelleRuntimeCUDA::interiorDivergence(const CollOfScalarCPU& face_fluxes) const
 {
     return ops_.div * face_fluxes;//.matrix();
 }
@@ -362,31 +365,31 @@ CollOfBool EquelleRuntimeCUDA::isEmpty(const CollOfFace& faces) const
     return retval;
 }
 
-Scalar EquelleRuntimeCUDA::minReduce(const CollOfScalar& x) const
+Scalar EquelleRuntimeCUDA::minReduce(const CollOfScalarCPU& x) const
 {
     return x.value().minCoeff();
 }
 
-Scalar EquelleRuntimeCUDA::maxReduce(const CollOfScalar& x) const
+Scalar EquelleRuntimeCUDA::maxReduce(const CollOfScalarCPU& x) const
 {
     return x.value().maxCoeff();
 }
 
-Scalar EquelleRuntimeCUDA::sumReduce(const CollOfScalar& x) const
+Scalar EquelleRuntimeCUDA::sumReduce(const CollOfScalarCPU& x) const
 {
     return x.value().sum();
 }
 
-Scalar EquelleRuntimeCUDA::prodReduce(const CollOfScalar& x) const
+Scalar EquelleRuntimeCUDA::prodReduce(const CollOfScalarCPU& x) const
 {
     return x.value().prod();
 }
 
-CollOfScalar EquelleRuntimeCUDA::solveForUpdate(const CollOfScalar& residual) const
+CollOfScalarCPU EquelleRuntimeCUDA::solveForUpdate(const CollOfScalarCPU& residual) const
 {
     Eigen::SparseMatrix<double, Eigen::RowMajor> matr = residual.derivative()[0];
 
-    CollOfScalar::V du = CollOfScalar::V::Zero(residual.size());
+    CollOfScalarCPU::V du = CollOfScalarCPU::V::Zero(residual.size());
 
     Opm::time::StopWatch clock;
     clock.start();
@@ -411,7 +414,7 @@ CollOfScalar EquelleRuntimeCUDA::solveForUpdate(const CollOfScalar& residual) co
 }
 
 
-double EquelleRuntimeCUDA::twoNorm(const CollOfScalar& vals) const
+double EquelleRuntimeCUDA::twoNorm(const CollOfScalarCPU& vals) const
 {
     return vals.value().matrix().norm();
 }
@@ -423,7 +426,7 @@ void EquelleRuntimeCUDA::output(const String& tag, const double val) const
 }
 
 
-void EquelleRuntimeCUDA::output(const String& tag, const CollOfScalar& vals)
+void EquelleRuntimeCUDA::output(const String& tag, const CollOfScalarCPU& vals)
 {
     if (output_to_file_) {
         int count = -1;
@@ -450,7 +453,7 @@ void EquelleRuntimeCUDA::output(const String& tag, const CollOfScalar& vals)
         }
         std::cout << std::endl;
     }
-}
+}/**/
 
 
 Scalar EquelleRuntimeCUDA::inputScalarWithDefault(const String& name,
@@ -533,10 +536,10 @@ void EquelleRuntimeCUDA::ensureGridDimensionMin(const int minimum_grid_dimension
 
 
 
-CollOfScalar EquelleRuntimeCUDA::singlePrimaryVariable(const CollOfScalar& initial_values)
+CollOfScalarCPU EquelleRuntimeCUDA::singlePrimaryVariable(const CollOfScalarCPU& initial_values)
 {
     std::vector<int> block_pattern;
     block_pattern.push_back(initial_values.size());
-    // Syntax below is: CollOfScalar::variable(block index, initialized from, block structure)
-    return CollOfScalar::variable(0, initial_values.value(), block_pattern);
+    // Syntax below is: CollOfScalarCPU::variable(block index, initialized from, block structure)
+    return CollOfScalarCPU::variable(0, initial_values.value(), block_pattern);
 }
