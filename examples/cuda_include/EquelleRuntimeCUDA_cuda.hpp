@@ -21,6 +21,7 @@ class CollOfScalar
 public:
     CollOfScalar();
     CollOfScalar(int size);
+    CollOfScalar(const CollOfScalar& coll);
     ~CollOfScalar();
 
     void setValuesFromFile(std::istream_iterator<double> begin, 
@@ -32,7 +33,7 @@ public:
     double* getDevValues() const;
     //double* getHostValues() const;
     void copyToHost() const ;
-    thrust::device_vector<double> dev_vec;
+    //thrust::device_vector<double> dev_vec;
 private:
     //thrust::host_vector<double> host_vec;
     //thrust::device_vector<double> dev_vec;
@@ -43,14 +44,17 @@ private:
 };
 
 inline CollOfScalar operator-(const CollOfScalar& lhs, const CollOfScalar& rhs) {
-    CollOfScalar *out = new CollOfScalar(lhs.getSize());
+    //CollOfScalar out = new CollOfScalar(lhs.getSize());
+    CollOfScalar out(lhs.getSize());
     //for(int i = 0; i < out->getSize(); ++i) {
     //    out->setValue(i, lhs.getValue(i) - rhs.getValue(i));
     //}
     
+    std::cout << "MINUS!\n";
+
     double* lhs_dev = lhs.getDevValues();
     double* rhs_dev = rhs.getDevValues();
-    double* out_dev = out->getDevValues();
+    double* out_dev = out.getDevValues();
     
     cublasHandle_t blasHandle;
     cublasStatus_t blasStatus;
@@ -63,7 +67,7 @@ inline CollOfScalar operator-(const CollOfScalar& lhs, const CollOfScalar& rhs) 
     }
 
     // out = lhs
-    blasStatus = cublasDcopy( blasHandle, out->getSize() , lhs_dev, 1, out_dev, 1);
+    blasStatus = cublasDcopy( blasHandle, out.getSize() , lhs_dev, 1, out_dev, 1);
     if ( blasStatus != CUBLAS_STATUS_SUCCESS ) {
 	printf("Error: operator- : out_dev = lhs_dev\n");
 	exit(0);
@@ -72,7 +76,7 @@ inline CollOfScalar operator-(const CollOfScalar& lhs, const CollOfScalar& rhs) 
     // x = alpha * p + x
     // out = -1 * rhs + lhs
     double negOne = -1.0;
-    blasStatus = cublasDaxpy( blasHandle, out->getSize(), &negOne, rhs_dev, 1, out_dev, 1);
+    blasStatus = cublasDaxpy( blasHandle, out.getSize(), &negOne, rhs_dev, 1, out_dev, 1);
     if ( blasStatus != CUBLAS_STATUS_SUCCESS ) {
 	printf("CG - Error x = x + alpha*p\n");
 	return false;
@@ -84,7 +88,7 @@ inline CollOfScalar operator-(const CollOfScalar& lhs, const CollOfScalar& rhs) 
 	exit(0);
     }
 
-    return *out;
+    return out;
 }
 
 namespace
