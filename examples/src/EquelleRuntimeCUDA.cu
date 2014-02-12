@@ -7,7 +7,7 @@
 //#include <string>
 //#include <fstream>
 //#include <iterator>
-//#include <cuda.h>
+#include <cuda.h>
 
 #include <stdlib.h>
 
@@ -21,6 +21,8 @@ CollOfScalar::CollOfScalar()
     // Blank
     values = 0;
     size = 0;
+    dev_values = 0;
+    dev_vec = thrust::device_vector<double>(0);
 
 }
 
@@ -28,14 +30,51 @@ CollOfScalar::CollOfScalar(int size) {
     // dev_vec.reserve(size);
     this->size = size;
     values = (double*)malloc(size*sizeof(double));
+    dev_vec = thrust::device_vector<double>(size);
+    cudaError_t status = cudaMalloc( (void**)&dev_values, size*sizeof(double));
+    if ( status != cudaSuccess ) {
+	std::cout << "Error allocating dev_values in CollOfScalar(int)\n";
+	exit(0);
+    }
 }
 
 // Destructor:
 CollOfScalar::~CollOfScalar() {
     if ( size > 0 ) {
-	free(values);
 	size = 0;
     }
+    if (values != 0) {
+	std::cout << "Freeing values\n";
+	free(values);
+	values = 0;
+    }
+    if (dev_values != 0) {
+	cudaError_t status = cudaFree(dev_values);
+	if (status != cudaSuccess) {
+	    std::cout << "Error freeing in destructor of CollOfScalar\n";
+	    exit(0);
+	}
+	dev_values = 0;
+    }
+}
+
+double* CollOfScalar::getDevValues() const {
+    return dev_values;
+}
+
+//double* CollOfScalar::getHostValues() const {
+//    return values;
+//}
+
+void CollOfScalar::copyToHost() const {
+
+    cudaError_t cudaError = cudaMemcpy( values, dev_values, size*sizeof(double),
+					cudaMemcpyDeviceToHost);
+    if (cudaError != cudaSuccess) {
+	std::cout << "Error copying to host in output\n";
+	exit(0);
+    }
+
 }
 
 double CollOfScalar::getValue(int index) const
@@ -68,6 +107,9 @@ void CollOfScalar::setValuesFromFile(std::istream_iterator<double> begin,
     for(int i = 0; i < host_vec.size(); i++) {
 	values[i] = host_vec[i];
     }
+    //dev_vec = host_vec;
+    cudaError_t cudaStatus = cudaMemcpy( dev_values, values, size*sizeof(double),
+					 cudaMemcpyHostToDevice);
 }
 
 void CollOfScalar::setValuesUniform(double val, int size)

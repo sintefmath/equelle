@@ -12,6 +12,11 @@
 
 void EquelleRuntimeCUDA::output(const String& tag, const CollOfScalar& coll, int dummy)
 {
+    // Get data back to host
+    coll.copyToHost();
+    
+    // Do this with the device_vector instead!
+    
     std::cout << "\n";
     std::cout << "Values in " << tag << std::endl;
     for(int i = 0; i < coll.getSize(); ++i) {

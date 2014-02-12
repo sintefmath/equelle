@@ -24,12 +24,12 @@ CollOfScalar EquelleRuntimeCUDA::inputCollectionOfScalar( const String& name, co
 	}
 	std::istream_iterator<double> begin(is);
 	std::istream_iterator<double> end;
-	CollOfScalar out(size);
-	out.setValuesFromFile(begin, end);
-	if ( out.getSize() != size) {
+	CollOfScalar *out = new CollOfScalar(size);
+	out->setValuesFromFile(begin, end);
+	if ( out->getSize() != size) {
 	    OPM_THROW(std::runtime_error, "Unexpected size of input data for " << name << " in file " << filename); 
 	}
-	return CollOfScalar(size);
+	return *out;
     }
     else {
 	// There is a number in the parameter file
