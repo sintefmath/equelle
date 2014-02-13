@@ -26,18 +26,11 @@ public:
 
     void setValuesFromFile(std::istream_iterator<double> begin, 
 			   std::istream_iterator<double> end);
-    void setValuesUniform(double val, int size);
-    double getValue(int index) const;
-    void setValue(int index, double value);
+    void setValuesUniform(double val);
     int getSize() const;
     double* getDevValues() const;
-    //double* getHostValues() const;
-    void copyToHost() const ;
-    //thrust::device_vector<double> dev_vec;
+    void copyToHost(double* values) const ;
 private:
-    //thrust::host_vector<double> host_vec;
-    //thrust::device_vector<double> dev_vec;
-    double* values;
     int size;
     double* dev_values;
 

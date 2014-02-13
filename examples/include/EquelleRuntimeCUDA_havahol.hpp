@@ -16,7 +16,8 @@ CollOfScalar EquelleRuntimeCUDA::inputCollectionOfScalar( const String& name, co
     // Copy the reading part from the CPU back-end
     const int size = coll.size();
     const bool from_file = param_.getDefault(name + "_from_file", false);
-    if ( from_file) {
+    //if ( from_file) {
+    if ( from_file ) {
 	const String filename = param_.get<String>(name + "_filename");
 	std::ifstream is (filename.c_str());
 	if (!is) {
@@ -35,8 +36,9 @@ CollOfScalar EquelleRuntimeCUDA::inputCollectionOfScalar( const String& name, co
     else {
 	// There is a number in the parameter file
 	CollOfScalar out(size);
+	out.setValuesUniform(param_.get<double>(name));
 	//out.setValuesUniform(param_.get<double>(name), size);
-	return CollOfScalar();
+	return out;
     }
 }
 

@@ -13,14 +13,17 @@
 void EquelleRuntimeCUDA::output(const String& tag, const CollOfScalar& coll, int dummy)
 {
     // Get data back to host
-    coll.copyToHost();
+
+    double* values = (double*)malloc(coll.getSize()*sizeof(double));
+    coll.copyToHost(values);
     
     // Do this with the device_vector instead!
     
     std::cout << "\n";
     std::cout << "Values in " << tag << std::endl;
     for(int i = 0; i < coll.getSize(); ++i) {
-	std::cout << coll.getValue(i) << "  ";
+	std::cout << values[i] << "  ";
     }
     std::cout << std::endl;
+    free(values);
 }
