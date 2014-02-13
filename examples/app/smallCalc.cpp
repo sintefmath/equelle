@@ -36,6 +36,8 @@ int main(int argc, char** argv)
     const CollOfScalar c = (a - b);
     const CollOfScalar e = (d - c);
     er.output("e", e, 0);
+    er.output("a", a, 0);
+    er.output("b", b, 0);
 
     // ============= Generated code ends here ================
 

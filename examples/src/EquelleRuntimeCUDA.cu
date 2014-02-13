@@ -16,14 +16,14 @@
 
 // Implementation of the class CollOfScalar
 
-CollOfScalar::CollOfScalar()
-{
-    //values = 0;
-    size = 0;
-    dev_values = 0;
-    //dev_vec = thrust::device_vector<double>(0);
-
-}
+//CollOfScalar::CollOfScalar()
+//{
+//   //values = 0;
+//   size = 0;
+//  dev_values = 0;
+//  //dev_vec = thrust::device_vector<double>(0);
+//
+//}
 
 CollOfScalar::CollOfScalar(int size) {
     // dev_vec.reserve(size);
@@ -35,6 +35,11 @@ CollOfScalar::CollOfScalar(int size) {
 	std::cout << "Error allocating dev_values in CollOfScalar(int)\n";
 	exit(0);
     }
+
+    // Set grid and block size for cuda kernel executions:
+    block_x = havahol_helper::MAX_THREADS;
+    grid_x = (size + block_x - 1) / block_x;
+
 }
 
 
@@ -63,6 +68,8 @@ CollOfScalar::CollOfScalar(const CollOfScalar& coll) {
 	    exit(0);
 	}
     }    
+    grid_x = coll.grid_x;
+    block_x = coll.block_x;
 }
 
 
@@ -91,6 +98,13 @@ double* CollOfScalar::getDevValues() const {
     return dev_values;
 }
 
+int CollOfScalar::block() {
+    return block_x;
+}
+
+int CollOfScalar::grid() {
+    return grid_x;
+}
 
 // Assumes that values are already allocated on host
 void CollOfScalar::copyToHost(double* values) const
@@ -149,4 +163,29 @@ int CollOfScalar::getSize() const
 {
     //return dev_vec.size();
     return size;
+}
+
+
+/// OPERATION OVERLOADING
+CollOfScalar operator-(const CollOfScalar& lhs, const CollOfScalar& rhs) {
+
+    CollOfScalar out = lhs;
+    //double* lhs_dev = lhs.getDevValues();
+    double* rhs_dev = rhs.getDevValues();
+    double* out_dev = out.getDevValues();
+
+    dim3 block(out.block());
+    dim3 grid(out.grid());
+    std::cout << "Calling minus_kernel!\n";
+    minus_kernel <<<grid, block>>>(out_dev, rhs_dev, out.getSize());
+    return out;
+}
+
+/// KERNEL IMPLEMENTATIONS:
+__global__ void minus_kernel(double* out, double* rhs, int size) {
+    
+    int index = threadIdx.x + blockDim.x*blockIdx.x;
+    if ( index < size) {
+	out[index] = out[index] - rhs[index];
+    }
 }
