@@ -4,23 +4,24 @@
 
 #include <string>
 #include <iostream>
+#include <thrust/host_vector.h>
 
 //
 //   CPP for implementation of non-cuda functions
 //
 
 
-void EquelleRuntimeCUDA::output(const String& tag, const CollOfScalar& coll, int dummy)
+void EquelleRuntimeCUDA::output(const String& tag, CollOfScalar coll, int dummy)
 {
     // Get data back to host
-    coll.copyToHost();
+    double* host_vals = coll.getHostValues();
     
     // Do this with the device_vector instead!
     
     std::cout << "\n";
-    std::cout << "Values in " << tag << std::endl;
+    std::cout << "The " << coll.getSize() << " values in " << tag << std::endl;
     for(int i = 0; i < coll.getSize(); ++i) {
-	std::cout << coll.getValue(i) << "  ";
+	std::cout << host_vals[i] << "  ";
     }
     std::cout << std::endl;
 }

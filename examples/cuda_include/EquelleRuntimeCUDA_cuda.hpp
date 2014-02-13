@@ -30,31 +30,35 @@ public:
     double getValue(int index) const;
     void setValue(int index, double value);
     int getSize() const;
-    double* getDevValues() const;
-    //double* getHostValues() const;
+    double* getRawPtr();
+    //double* getRawPtr() const;
+    double* getHostValues() ;
     void copyToHost() const ;
     //thrust::device_vector<double> dev_vec;
+    void wrapPtrIntoVec(double* out_dev);
+
 private:
     //thrust::host_vector<double> host_vec;
-    //thrust::device_vector<double> dev_vec;
+    thrust::device_vector<double> dev_vec;
     double* values;
     int size;
     double* dev_values;
 
 };
 
-inline CollOfScalar operator-(const CollOfScalar& lhs, const CollOfScalar& rhs) {
+inline CollOfScalar operator-(CollOfScalar lhs, CollOfScalar rhs) {
     //CollOfScalar out = new CollOfScalar(lhs.getSize());
     CollOfScalar out(lhs.getSize());
     //for(int i = 0; i < out->getSize(); ++i) {
     //    out->setValue(i, lhs.getValue(i) - rhs.getValue(i));
     //}
     
-    std::cout << "MINUS!\n";
+    std::cout << "MINUS! with sizes: " << out.getSize() << " = " << lhs.getSize() << " - ";
+    std::cout << rhs.getSize() << "\n";
 
-    double* lhs_dev = lhs.getDevValues();
-    double* rhs_dev = rhs.getDevValues();
-    double* out_dev = out.getDevValues();
+    double* lhs_dev = lhs.getRawPtr();
+    double* rhs_dev = rhs.getRawPtr();
+    double* out_dev = out.getRawPtr();
     
     cublasHandle_t blasHandle;
     cublasStatus_t blasStatus;
@@ -87,6 +91,27 @@ inline CollOfScalar operator-(const CollOfScalar& lhs, const CollOfScalar& rhs) 
 	printf("Error destroying cublas!\n");
 	exit(0);
     }
+    
+    //CollOfScalar outX = out;
+    // Make sure that out.dev_vec is wrapped around the raw buffer!
+    std::cout << "End of minus: out.getSize() = " << out.getSize() << "\n";
+
+    double* a_dev = out.getRawPtr();
+    double* a = (double*)malloc(out.getSize()*sizeof(double));
+    cudaError_t stat = cudaMemcpy(a, a_dev, sizeof(double)*out.getSize(), cudaMemcpyDeviceToHost);
+    for (int i = 0; i < out.getSize(); i++) {
+	std::cout << a[i] << " ";
+    }
+    std::cout << std::endl;
+    out.wrapPtrIntoVec(out_dev);
+
+    cudaPointerAttributes attr;
+    stat = cudaPointerGetAttributes(&attr, a_dev);
+    if (stat != cudaSuccess) {
+	std::cout << "Error in getAttribute\n\t";
+	std::cout << "Error code: " << cudaGetErrorString(stat) << std::endl;
+    }
+    std::cout << "a_dev lives on: " << attr.memoryType << std::endl;
 
     return out;
 }
