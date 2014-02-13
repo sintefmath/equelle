@@ -181,11 +181,70 @@ CollOfScalar operator-(const CollOfScalar& lhs, const CollOfScalar& rhs) {
     return out;
 }
 
+CollOfScalar operator+(const CollOfScalar& lhs, const CollOfScalar& rhs) {
+
+    CollOfScalar out = lhs;
+    double* rhs_dev = rhs.getDevValues();
+    double* out_dev = out.getDevValues();
+
+    dim3 block(out.block());
+    dim3 grid(out.grid());
+    plus_kernel <<<grid, block>>>(out_dev, rhs_dev, out.getSize());
+    return out;
+}
+
+CollOfScalar operator*(const CollOfScalar& lhs, const CollOfScalar& rhs) {
+
+    CollOfScalar out = lhs;
+    double* rhs_dev = rhs.getDevValues();
+    double* out_dev = out.getDevValues();
+
+    dim3 block(out.block());
+    dim3 grid(out.grid());
+    multiplication_kernel <<<grid, block>>>(out_dev, rhs_dev, out.getSize());
+    return out;
+}
+
+CollOfScalar operator/(const CollOfScalar& lhs, const CollOfScalar& rhs) {
+
+    CollOfScalar out = lhs;
+    double* rhs_dev = rhs.getDevValues();
+    double* out_dev = out.getDevValues();
+
+    dim3 block(out.block());
+    dim3 grid(out.grid());
+    division_kernel <<<grid, block>>>(out_dev, rhs_dev, out.getSize());
+    return out;
+}
+
+
 /// KERNEL IMPLEMENTATIONS:
 __global__ void minus_kernel(double* out, double* rhs, int size) {
     
     int index = threadIdx.x + blockDim.x*blockIdx.x;
     if ( index < size) {
 	out[index] = out[index] - rhs[index];
+    }
+}
+
+
+__global__ void plus_kernel(double* out, double* rhs, int size) {
+    int index = threadIdx.x + blockDim.x*blockIdx.x;
+    if( index < size ) {
+	out[index] = out[index] + rhs[index];
+    }
+}
+
+__global__ void multiplication_kernel(double* out, double* rhs, int size) {
+    int index = threadIdx.x + blockDim.x*blockIdx.x;
+    if ( index < size ) {
+	out[index] = out[index] * rhs[index];
+    }
+}
+
+__global__ void division_kernel(double* out, double* rhs, int size) {
+    int index = threadIdx.x + blockDim.x*blockIdx.x;
+    if ( index < size ) {
+	out[index] = out[index] / rhs[index];
     }
 }
