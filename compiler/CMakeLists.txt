@@ -28,7 +28,8 @@ set_target_properties( ec PROPERTIES COMPILE_DEFINITIONS "RETURN_TOKENS=1" )
 add_executable( el el.cpp ${FLEX_MyScanner_OUTPUTS} ) 
 
 install(TARGETS ec el 
-	RUNTIME DESTINATION bin)
+	EXPORT EquelleTargets
+	RUNTIME DESTINATION "${INSTALL_BIN_DIR}" COMPONENT bin )
 
 
 

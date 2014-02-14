@@ -3,6 +3,12 @@ cmake_minimum_required( VERSION 2.8 )
 
 add_subdirectory(serial)
 
+# Needed to export libraries and include dirs for various backends out into EquelleConfig.cmake
+set(EQUELLE_LIBRARIES_FOR_CONFIG ${EQUELLE_LIBRARIES_FOR_CONFIG} PARENT_SCOPE)
+set(EQUELLE_INCLUDE_DIRS_FOR_CONFIG ${EQUELLE_INCLUDE_DIRS_FOR_CONFIG} PARENT_SCOPE)
+
+
+
 
 
 
