@@ -40,14 +40,17 @@ export(PACKAGE equelle)
 # Create the EquelleConfig.cmake and EquelleConfigVersion files
 file(RELATIVE_PATH REL_INCLUDE_DIR "${INSTALL_CMAKE_DIR}"
    "${INSTALL_INCLUDE_DIR}")
+
 # ... for the build tree
-set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}")
+#set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}")
 configure_file(EquelleConfig.cmake.in
   "${PROJECT_BINARY_DIR}/EquelleConfig.cmake" @ONLY)
-# ... for the install tree
-set(CONF_INCLUDE_DIRS "\${EQUELLE_CMAKE_DIR}/${REL_INCLUDE_DIR}")
+
+# ... for the install tree. 
+set(CONF_INCLUDE_DIRS "\${EQUELLE_CMAKE_DIR}/${REL_INCLUDE_DIR}/equelle")
 configure_file(EquelleConfig.cmake.in
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/EquelleConfig.cmake" @ONLY)
+
 # ... for both
 configure_file(EquelleConfigVersion.cmake.in
   "${PROJECT_BINARY_DIR}/EquelleConfigVersion.cmake" @ONLY)
