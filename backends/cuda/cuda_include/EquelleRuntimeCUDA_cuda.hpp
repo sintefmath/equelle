@@ -29,7 +29,7 @@ __global__ void division_kernel(double* out, double* rhs, int size);
 class CollOfScalar
 {
 public:
-    // CollOfScalar();
+    CollOfScalar();
     CollOfScalar(int size);
     CollOfScalar(const CollOfScalar& coll);
     ~CollOfScalar();
@@ -39,7 +39,7 @@ public:
     void setValuesUniform(double val);
 
     int getSize() const;
-    double* getDevValues() const;
+    double* data() const;
     void copyToHost(double* values) const ;
 
     int grid();
