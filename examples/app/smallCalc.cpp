@@ -35,13 +35,14 @@ int main(int argc, char** argv)
     const CollOfScalar d = er.inputCollectionOfScalar("d", er.allCells());
     const CollOfScalar c = (a - b);
     const CollOfScalar e = (d - c);
-    er.output("e", e, 0);
+    er.output("e", e);
     const CollOfScalar f = (e / d);
-    er.output("f", f, 0);
+    er.output("f", f);
     const CollOfScalar g = (f + b);
-    er.output("g", g, 0);
+    er.output("g", g);
     const CollOfScalar h = (g * d);
-    er.output("h", h, 0);
+    er.output("h", h);
+    const CollOfScalar i = (h + double(100));
 
     // ============= Generated code ends here ================
 
