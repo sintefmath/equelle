@@ -96,17 +96,8 @@ endforeach()
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+#find_package( Equelle REQUIRED )
+#add_executable( heat heatCUDA.cpp )
+#target_link_libraries( ${EQULLE_LIBRARIES} )
 
 

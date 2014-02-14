@@ -3,8 +3,6 @@
 #include <thrust/fill.h>
 #include <thrust/copy.h>
 #include <thrust/sequence.h>
-#include <thrust/memory.h>
-#include <thrust/device_ptr.h>
 
 #include <string>
 //#include <fstream>
@@ -12,7 +10,6 @@
 #include <cuda.h>
 
 #include <stdlib.h>
-#include <iostream>
 
 #include "EquelleRuntimeCUDA_cuda.hpp"
 
@@ -26,7 +23,6 @@
 //  //dev_vec = thrust::device_vector<double>(0);
 //
 //}
-
 
 CollOfScalar::CollOfScalar(int size) {
     this->size = size;
@@ -55,7 +51,6 @@ CollOfScalar::CollOfScalar(const CollOfScalar& coll) {
 			    cudaMemcpyDeviceToDevice);
 	checkError("cudaMemcpy in CollOfScalar::CollOfScalar(const CollOfScalar&)");
     }    
-
     grid_x = coll.grid_x;
     block_x = coll.block_x;
 }
@@ -67,18 +62,11 @@ CollOfScalar::~CollOfScalar() {
 	cudaStatus = cudaFree(dev_values);
 	checkError("cudaFree in CollOfScalar::~CollOfScalar");
     }
-    //delete dev_vec;
-    
 }
 
-double* CollOfScalar::getRawPtr() {
-    //return dev_values;
-    //thrust::device_ptr<const double> dev_ptr = dev_vec.data();
-    double* out = thrust::raw_pointer_cast(&dev_vec[0]);
-    return out;
+double* CollOfScalar::getDevValues() const {
+    return dev_values;
 }
-
-
 
 int CollOfScalar::block() {
     return block_x;
@@ -103,12 +91,11 @@ void CollOfScalar::setValuesFromFile(std::istream_iterator<double> begin,
 				     std::istream_iterator<double> end)
 {
     thrust::host_vector<double> host_vec(begin, end);
+
     double* values = (double*)malloc(size*sizeof(double));
     for(int i = 0; i < host_vec.size(); i++) {
 	values[i] = host_vec[i];
-	std::cout << values[i] << "   ";
     }
-    std::cout << "\n";
     //dev_vec = host_vec;
     cudaStatus = cudaMemcpy( dev_values, values, size*sizeof(double),
 					 cudaMemcpyHostToDevice);
@@ -138,6 +125,7 @@ int CollOfScalar::getSize() const
     //return dev_vec.size();
     return size;
 }
+
 
 
 // TODO: Replace exit(0) with a smoother and more correct exit strategy.

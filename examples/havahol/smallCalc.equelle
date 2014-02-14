@@ -3,10 +3,30 @@
 # of the Equelle compiler.
 #
 
-a : Collection Of Scalar On AllCells()
+a : Collection Of Scalar On AllCells() 
 b : Collection Of Scalar On AllCells()
 c : Collection Of Scalar On AllCells()
-a = InputCollectionOfScalar("a", AllCells())
-b = InputCollectionOfScalar("b", AllCells())
+d : Collection Of Scalar On AllCells()
+e : Collection Of Scalar On AllCells()
+f : Collection Of Scalar On AllCells()
+a = InputCollectionOfScalar("a", AllCells()) # 1 2 3 .. 8 9 8 7 .. 3 2
+b = InputCollectionOfScalar("b", AllCells()) # 1 2 3 ... 16
+d = InputCollectionOfScalar("d", AllCells()) # 100
 c = (a - b)
-Output("c", c)
+e = d - c 
+# Now, e = 100 ... 100 102 ... 114
+Output("e", e)
+
+f = e / d
+# f = 1 ... 1 1.02 ... 1.14
+Output("f", f)
+
+g = f + b
+# g = 2 3 ... 10 11.02 12.04 ... 17.14
+Output("g", g)
+
+h = g * d
+# h = 200 300 ... 1000 1102 1204 ... 1714
+Output("h", h)
+
+i = h + 100

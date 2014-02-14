@@ -62,10 +62,6 @@
 %type <node> f_startdef
 %type <loop> loop_start
 
-
-%output "equelle_parser.cpp"
-%defines "equelle_parser.hpp"
-
 %start program
 %error-verbose
 
