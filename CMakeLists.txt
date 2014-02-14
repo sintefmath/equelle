@@ -1,6 +1,8 @@
 project(equelle)
 cmake_minimum_required(VERSION 2.8)
 
+#find_package( "CUDA" REQUIRED )
+
 set(EQUELLE_MAJOR_VERSION 0)
 set(EQUELLE_MINOR_VERSION 1)
 set(EQUELLE_PATCH_VERSION 0)
@@ -32,7 +34,7 @@ add_subdirectory(compiler)
 add_subdirectory(backends)
 add_subdirectory(tools)
 
-export( TARGETS ec el equelle_rt 
+export( TARGETS ec el equelle_rt equelle_cuda_cu equelle_cuda_cpu
 	FILE "${PROJECT_BINARY_DIR}/EquelleTargets.cmake")
 
 export(PACKAGE equelle)

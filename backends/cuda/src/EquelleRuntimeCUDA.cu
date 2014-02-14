@@ -24,9 +24,7 @@
 //
 //}
 
-CollOfScalar::CollOfScalar(int size) {
-    this->size = size;
-
+CollOfScalar::CollOfScalar(int size) : size(size), dev_values(0) {
     cudaStatus = cudaMalloc( (void**)&dev_values, size*sizeof(double));
     checkError("cudaMalloc in CollOfScalar::CollOfScalar(int)");
 
@@ -38,11 +36,10 @@ CollOfScalar::CollOfScalar(int size) {
 
 
 // Copy constructor
-CollOfScalar::CollOfScalar(const CollOfScalar& coll) {
+CollOfScalar::CollOfScalar(const CollOfScalar& coll) : size(0), dev_values(0) {
     std::cout << "Copy constructor!\n";
     size = coll.size;
-    dev_values = 0;
-
+   
     if (coll.dev_values != 0) {
 	cudaStatus = cudaMalloc( (void**)&dev_values, size*sizeof(double));
 	checkError("cudaMalloc in CollOfScalar::CollOfScalar(const CollOfScalar&)"); 

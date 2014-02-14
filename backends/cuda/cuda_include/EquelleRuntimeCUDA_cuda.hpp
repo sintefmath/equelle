@@ -37,6 +37,7 @@ public:
     void setValuesFromFile(std::istream_iterator<double> begin, 
 			   std::istream_iterator<double> end);
     void setValuesUniform(double val);
+
     int getSize() const;
     double* getDevValues() const;
     void copyToHost(double* values) const ;

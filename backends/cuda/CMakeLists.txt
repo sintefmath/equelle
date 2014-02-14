@@ -9,6 +9,7 @@ file( GLOB cuda_src "src/*.cpp" )
 file( GLOB cuda_inc "include/*.hpp" )
 file( GLOB cuda_cuda_src "src/*.cu" )
 file( GLOB cuda_cuda_inc "cuda_include/*.hpp" )
+set( SUPERLU_LIB          "superlu" CACHE PATH "" ) 	# havahol
 
 set( SERIAL_INCLUDE_DIRS "/usr/local/include/Eigen" ${EQUELLE_EXTRA_INCLUDE_DIRS})
 
@@ -29,7 +30,7 @@ set_target_properties( equelle_cuda_cu PROPERTIES
 
 set(EQUELLE_LIBS_FOR_CONFIG ${EQUELLE_LIBS_FOR_CONFIG}
     equelle_cuda_cpu equelle_cuda_cu  opmautodiff opmcore dunecommon
-    umfpack tinyxml
+    umfpack tinyxml boost_filesystem-mt	boost_system-mt ${SUPERLU_LIB}
     ${EQUELLE_EXTRA_LIBS} ${CUDA_LIBRARIES} ${CUDA_cusparse_LIBRARY} 
     ${CUDA_cublas_LIBRARY}
     PARENT_SCOPE)
