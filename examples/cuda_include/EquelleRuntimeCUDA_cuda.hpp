@@ -24,6 +24,8 @@ __global__ void plus_kernel(double* out, double* rhs, int size);
 __global__ void multiplication_kernel(double* out, double* rhs, int size);
 __global__ void division_kernel(double* out, double* rhs, int size);
 
+
+
 class CollOfScalar
 {
 public:
@@ -45,12 +47,17 @@ private:
     int size;
     double* dev_values;
 
+    // Error handling
+    mutable cudaError_t cudaStatus;
+    void checkError(const std::string& msg) const;
+
     // Use 1D kernel grids for arithmetic operations
     int grid_x;
     int block_x;
 
 };
 
+// Operation overloading
 CollOfScalar operator-(const CollOfScalar& lhs, const CollOfScalar& rhs);
 CollOfScalar operator+(const CollOfScalar& lhs, const CollOfScalar& rhs);
 CollOfScalar operator*(const CollOfScalar& lhs, const CollOfScalar& rhs);
