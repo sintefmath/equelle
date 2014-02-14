@@ -2,7 +2,8 @@
 # It defines the following variables
 #  EQUELLE_INCLUDE_DIRS - include directories for Equelle
 #  EQUELLE_LIBRARIES    - libraries to link against
-#  EQUELLE_EXECUTABLE   - the bar executable
+#  EQUELLE_LIB_DIRS     - libraries directories
+#  EQUELLE_EXECUTABLE   - the equelle compiler executables
  
 # Compute paths
 get_filename_component(EQUELLE_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
@@ -13,6 +14,7 @@ if(NOT TARGET foo AND NOT Equelle_BINARY_DIR)
 endif()
  
 # These are IMPORTED targets created by EquelleTargets.cmake
-set(EQUELLE_LIBRARIES @EQUELLE_LIBRARIES_FOR_CONFIG@)
-set(EQUELLE_APPS_DIR "@CONF_APPS_DIR@")		       
+set(EQUELLE_LIBRARIES @EQUELLE_LIBS_FOR_CONFIG@)
+set(EQUELLE_LIB_DIRS  @EQUELLE_LIB_DIRS_FOR_CONFIG@)
+set(EQUELLE_APPS_DIR  @CONF_APPS_DIR@)
 set(EQUELLE_EXECUTABLE el ec)

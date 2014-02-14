@@ -6,10 +6,10 @@ set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra -Wno-sign-compare" )
 file( GLOB serial_src "src/*.cpp" )
 file( GLOB serial_inc "include/*.hpp" )
 
-set( SERIAL_INCLUDE_DIRECTORIES "/usr/include/eigen3" )
+set( SERIAL_INCLUDE_DIRS "/usr/include/eigen3" ${EQUELLE_EXTRA_INCLUDE_DIRS})
 
 include_directories( "include" 
-	${SERIAL_INCLUDE_DIRECTORIES} )
+	${SERIAL_INCLUDE_DIRS} )
 
 add_library( equelle_rt ${serial_src} ${serial_inc} )
 
@@ -17,8 +17,18 @@ set_target_properties( equelle_rt PROPERTIES
 	PUBLIC_HEADER "${serial_inc}" )
 
 
-set(EQUELLE_LIBRARIES_FOR_CONFIG ${EQUELLE_LIBRARIES_FOR_CONFIG} equelle_rt opmautodiff opmcore dunecommon PARENT_SCOPE)
-set(EQUELLE_INCLUDE_DIRS_FOR_CONFIG ${EQUELLE_INCLUDE_DIRS_FOR_CONFIG} /usr/include/eigen3 PARENT_SCOPE )
+set(EQUELLE_LIBS_FOR_CONFIG ${EQUELLE_LIBS_FOR_CONFIG}
+    equelle_rt opmautodiff opmcore dunecommon
+    ${EQUELLE_EXTRA_LIBS}
+    PARENT_SCOPE)
+
+set(EQUELLE_LIB_DIRS_FOR_CONFIG ${EQUELLE_LIB_DIRS_FOR_CONFIG}
+    ${EQUELLE_EXTRA_LIB_DIRS}
+    PARENT_SCOPE)
+
+set(EQUELLE_INCLUDE_DIRS_FOR_CONFIG ${EQUELLE_INCLUDE_DIRS_FOR_CONFIG}
+    ${SERIAL_INCLUDE_DIRS}
+    PARENT_SCOPE )
 
 
 install(TARGETS equelle_rt
