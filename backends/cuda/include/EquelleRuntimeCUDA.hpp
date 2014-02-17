@@ -497,7 +497,7 @@ public:
     /// Output.
     void output(const String& tag, Scalar val) const;
     void output(const String& tag, const CollOfScalarCPU& vals);
-    void output(const String& tag, const CollOfScalar& vals, int dummy);
+    void output(const String& tag, const CollOfScalar& coll, int dummy);
 
     /// Input.
     Scalar inputScalarWithDefault(const String& name,

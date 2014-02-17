@@ -249,7 +249,7 @@ CollOfScalarCPU EquelleRuntimeCUDA::newtonSolve(const ResidualFunctor& rescomp,
             // Debugging output not specified in Equelle.
             output("u", u);
             output("    newtonSolve: norm(u)", twoNorm(u));
-            output("residual", residual);
+	    output("residual", residual);
             output("    newtonSolve: norm(residual)", twoNorm(residual));
         }
 

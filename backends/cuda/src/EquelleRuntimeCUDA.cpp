@@ -425,7 +425,6 @@ void EquelleRuntimeCUDA::output(const String& tag, const double val) const
     std::cout << tag << " = " << val << std::endl;
 }
 
-
 void EquelleRuntimeCUDA::output(const String& tag, const CollOfScalarCPU& vals)
 {
     if (output_to_file_) {
@@ -453,8 +452,7 @@ void EquelleRuntimeCUDA::output(const String& tag, const CollOfScalarCPU& vals)
         }
         std::cout << std::endl;
     }
-}/**/
-
+}
 
 Scalar EquelleRuntimeCUDA::inputScalarWithDefault(const String& name,
                                                          const Scalar default_value)

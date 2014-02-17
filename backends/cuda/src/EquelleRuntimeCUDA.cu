@@ -1,8 +1,8 @@
-#include <thrust/host_vector.h>
-#include <thrust/device_vector.h>
-#include <thrust/fill.h>
-#include <thrust/copy.h>
-#include <thrust/sequence.h>
+//#include <thrust/host_vector.h>
+//#include <thrust/device_vector.h>
+//#include <thrust/fill.h>
+//#include <thrust/copy.h>
+//#include <thrust/sequence.h>
 
 #include <string>
 //#include <fstream>
@@ -11,6 +11,7 @@
 
 #include <stdlib.h>
 #include <vector>
+#include <iostream>
 
 #include "EquelleRuntimeCUDA_cuda.hpp"
 
@@ -69,13 +70,18 @@ int CollOfScalar::grid() {
 }
 
 // Assumes that values are already allocated on host
-void CollOfScalar::copyToHost(double* values) const
+std::vector<double> CollOfScalar::copyToHost() const
 {
     std::cout << "copyToHost() - val_ptr = " << dev_values << std::endl;
     
-    cudaStatus = cudaMemcpy( values, dev_values, size*sizeof(double),
+    std::vector<double> host_vec;
+    host_vec.reserve(size);
+
+    cudaStatus = cudaMemcpy( &host_vec[0], dev_values, size*sizeof(double),
 					cudaMemcpyDeviceToHost);
     checkError("cudaMemcpy in CollOfScalar::copyToHost");
+    
+    return host_vec;
 }
 
 

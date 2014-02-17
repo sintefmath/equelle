@@ -4,7 +4,7 @@
 
 //#include <thrust/device_ptr.h>
 //#include <thrust/host_vector.h>
-#include <thrust/device_vector.h>
+//#include <thrust/device_vector.h>
 
 #include <cublas_v2.h>
 #include <cuda.h>
@@ -40,7 +40,7 @@ public:
 
     int getSize() const;
     double* data() const;
-    void copyToHost(double* values) const ;
+    std::vector<double> copyToHost() const ;
 
     int grid();
     int block();
