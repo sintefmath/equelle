@@ -13,6 +13,9 @@
 #include <vector>
 #include <iostream>
 
+// For error exception macro:
+#include <opm/core/utility/ErrorMacros.hpp>
+
 #include "EquelleRuntimeCUDA_cuda.hpp"
 
 // Implementation of the class CollOfScalar
@@ -129,10 +132,10 @@ int CollOfScalar::size() const
 // TODO: Replace exit(0) with a smoother and more correct exit strategy.
 void CollOfScalar::checkError(const std::string& msg) const {
     if ( cudaStatus != cudaSuccess ) {
-	//OPM_THROW(std::runtime_error, "Cuda error\n\t" << msg << " - Error code: " << cudaGetErrorString(cudaStatus));
+	OPM_THROW(std::runtime_error, "\nCuda error\n\t" << msg << " - Error code: " << cudaGetErrorString(cudaStatus));
 	// OPM_THROW does not work as we cannot include OPM in this cuda file.
-	std::cout <<  "Cuda error\n\t" << msg << "\n\tError code: " << cudaGetErrorString(cudaStatus) << std::endl;
-	exit(0);
+	//std::cout <<  "Cuda error\n\t" << msg << "\n\tError code: " << cudaGetErrorString(cudaStatus) << std::endl;
+	//exit(0);
     }
 }
 

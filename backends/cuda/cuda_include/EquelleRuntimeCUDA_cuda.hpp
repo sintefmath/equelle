@@ -48,13 +48,13 @@ private:
     int size_;
     double* dev_values;
 
-    // Error handling
-    mutable cudaError_t cudaStatus;
-    void checkError(const std::string& msg) const;
-
     // Use 1D kernel grids for arithmetic operations
     int grid_x_;
     int block_x_;
+
+    // Error handling
+    mutable cudaError_t cudaStatus;
+    void checkError(const std::string& msg) const;
 
 };
 
