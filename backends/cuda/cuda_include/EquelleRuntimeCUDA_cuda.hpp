@@ -31,7 +31,8 @@ class CollOfScalar
 public:
     CollOfScalar();
     CollOfScalar(int size);
-    CollOfScalar(const CollOfScalar& coll);
+    CollOfScalar(const std::vector<double>& host_vec);
+    CollOfScalar(const CollOfScalar& coll);  
     ~CollOfScalar();
 
     void setValuesFromFile(std::istream_iterator<double> begin, 
@@ -49,8 +50,8 @@ private:
     double* dev_values;
 
     // Use 1D kernel grids for arithmetic operations
-    int grid_x_;
     int block_x_;
+    int grid_x_;
 
     // Error handling
     mutable cudaError_t cudaStatus;

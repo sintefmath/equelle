@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 2.8)
 
 #find_package( "CUDA" REQUIRED )
 
+# For running "make test"
+enable_testing()
+
 set(EQUELLE_MAJOR_VERSION 0)
 set(EQUELLE_MINOR_VERSION 1)
 set(EQUELLE_PATCH_VERSION 0)

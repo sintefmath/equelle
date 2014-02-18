@@ -23,24 +23,35 @@
 CollOfScalar::CollOfScalar() 
     : size_(0), 
       dev_values(0),
-      grid_x_(0),
-      block_x_(0)
+      block_x_(0),
+      grid_x_(0)
 {
 }
 
 CollOfScalar::CollOfScalar(int size) 
     : size_(size),
-      dev_values(0)
+      dev_values(0),
+      block_x_(havahol_helper::MAX_THREADS),
+      grid_x_((size_ + block_x_ - 1) / block_x_)
 {
     cudaStatus = cudaMalloc( (void**)&dev_values, size_*sizeof(double));
     checkError("cudaMalloc in CollOfScalar::CollOfScalar(int)");
-
-    // Set grid and block size for cuda kernel executions:
-    block_x_ = havahol_helper::MAX_THREADS;
-    grid_x_ = (size + block_x_ - 1) / block_x_;
-
 }
 
+// Constructor from vector, in order to do testing
+CollOfScalar::CollOfScalar(const std::vector<double>& host_vec)
+    : size_(host_vec.size()),
+      dev_values(0),
+      block_x_(havahol_helper::MAX_THREADS),
+      grid_x_((size_ + block_x_ - 1) / block_x_)
+{
+    cudaStatus = cudaMalloc( (void**)&dev_values, size_*sizeof(double));
+    checkError("cudaMalloc in CollOfScalar::CollOfScalar(std::vector<double>)");
+    
+    cudaStatus = cudaMemcpy(dev_values, &host_vec[0], size_*sizeof(double),
+			    cudaMemcpyHostToDevice);
+    checkError("cudaMemcpy in CollOfScalar::CollOfScalar(std::vector<double>)");
+}
 
 // Copy constructor
 CollOfScalar::CollOfScalar(const CollOfScalar& coll) 
@@ -86,7 +97,7 @@ int CollOfScalar::grid() const {
 // Assumes that values are already allocated on host
 std::vector<double> CollOfScalar::copyToHost() const
 {
-    std::cout << "copyToHost() - val_ptr = " << dev_values << std::endl;
+    //std::cout << "copyToHost() - val_ptr = " << dev_values << std::endl;
     
     // Fill the vector with zeros. That way host_vec.size() behaves as expected.
     std::vector<double> host_vec(size_, 0);
@@ -104,6 +115,10 @@ void CollOfScalar::setValuesFromFile(std::istream_iterator<double> begin,
 {
     std::vector<double> host_vec(begin, end);
     double* values = &host_vec[0];
+
+    if ( host_vec.size() != size_ ) {
+	OPM_THROW(std::runtime_error, "wrong size of input file collection");
+    }
 
     cudaStatus = cudaMemcpy( dev_values, values, size_*sizeof(double),
 					 cudaMemcpyHostToDevice);
