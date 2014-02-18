@@ -28,7 +28,7 @@ CollOfScalar EquelleRuntimeCUDA::inputCollectionOfScalar( const String& name, co
 	//CollOfScalar *out = new CollOfScalar(size);
 	CollOfScalar out(size);
 	out.setValuesFromFile(begin, end);
-	if ( out.getSize() != size) {
+	if ( out.size() != size) {
 	    OPM_THROW(std::runtime_error, "Unexpected size of input data for " << name << " in file " << filename); 
 	}
 	return out;

@@ -17,35 +17,46 @@
 
 // Implementation of the class CollOfScalar
 
-CollOfScalar::CollOfScalar() : size(0), dev_values(0)
+CollOfScalar::CollOfScalar() 
+    : size_(0), 
+      dev_values(0),
+      grid_x_(0),
+      block_x_(0)
 {
 }
 
-CollOfScalar::CollOfScalar(int size) : size(size), dev_values(0) {
-    cudaStatus = cudaMalloc( (void**)&dev_values, size*sizeof(double));
+CollOfScalar::CollOfScalar(int size) 
+    : size_(size),
+      dev_values(0)
+{
+    cudaStatus = cudaMalloc( (void**)&dev_values, size_*sizeof(double));
     checkError("cudaMalloc in CollOfScalar::CollOfScalar(int)");
 
     // Set grid and block size for cuda kernel executions:
-    block_x = havahol_helper::MAX_THREADS;
-    grid_x = (size + block_x - 1) / block_x;
+    block_x_ = havahol_helper::MAX_THREADS;
+    grid_x_ = (size + block_x_ - 1) / block_x_;
 
 }
 
 
 // Copy constructor
-CollOfScalar::CollOfScalar(const CollOfScalar& coll) : size(coll.size), dev_values(0) {
+CollOfScalar::CollOfScalar(const CollOfScalar& coll) 
+    : size_(coll.size_), 
+      dev_values(0),
+      grid_x_(coll.grid_x_),
+      block_x_(coll.block_x_)
+{
     std::cout << "Copy constructor!\n";
    
     if (coll.dev_values != 0) {
-	cudaStatus = cudaMalloc( (void**)&dev_values, size*sizeof(double));
+	cudaStatus = cudaMalloc( (void**)&dev_values, size_*sizeof(double));
 	checkError("cudaMalloc in CollOfScalar::CollOfScalar(const CollOfScalar&)"); 
 
-	cudaStatus = cudaMemcpy(dev_values, coll.dev_values, size*sizeof(double),
+	cudaStatus = cudaMemcpy(dev_values, coll.dev_values, size_*sizeof(double),
 			    cudaMemcpyDeviceToDevice);
 	checkError("cudaMemcpy in CollOfScalar::CollOfScalar(const CollOfScalar&)");
     }    
-    grid_x = coll.grid_x;
-    block_x = coll.block_x;
+
 }
 
 
@@ -61,12 +72,12 @@ double* CollOfScalar::data() const {
     return dev_values;
 }
 
-int CollOfScalar::block() {
-    return block_x;
+int CollOfScalar::block() const {
+    return block_x_;
 }
 
-int CollOfScalar::grid() {
-    return grid_x;
+int CollOfScalar::grid() const {
+    return grid_x_;
 }
 
 // Assumes that values are already allocated on host
@@ -74,10 +85,10 @@ std::vector<double> CollOfScalar::copyToHost() const
 {
     std::cout << "copyToHost() - val_ptr = " << dev_values << std::endl;
     
-    std::vector<double> host_vec;
-    host_vec.reserve(size);
+    // Fill the vector with zeros. That way host_vec.size() behaves as expected.
+    std::vector<double> host_vec(size_, 0);
 
-    cudaStatus = cudaMemcpy( &host_vec[0], dev_values, size*sizeof(double),
+    cudaStatus = cudaMemcpy( &host_vec[0], dev_values, size_*sizeof(double),
 					cudaMemcpyDeviceToHost);
     checkError("cudaMemcpy in CollOfScalar::copyToHost");
     
@@ -91,7 +102,7 @@ void CollOfScalar::setValuesFromFile(std::istream_iterator<double> begin,
     std::vector<double> host_vec(begin, end);
     double* values = &host_vec[0];
 
-    cudaStatus = cudaMemcpy( dev_values, values, size*sizeof(double),
+    cudaStatus = cudaMemcpy( dev_values, values, size_*sizeof(double),
 					 cudaMemcpyHostToDevice);
     checkError("cudamMemcpy in CollOfScalar::setValuesFromFile");    
 }
@@ -101,16 +112,16 @@ void CollOfScalar::setValuesUniform(double val)
     // Can not use cudaMemset as it sets float values on a given
     // number of bytes.
 
-    std::vector<double> host_vec(size, val);
+    std::vector<double> host_vec(size_, val);
         
-    cudaStatus = cudaMemcpy(dev_values, &host_vec[0], size*sizeof(double),
+    cudaStatus = cudaMemcpy(dev_values, &host_vec[0], size_*sizeof(double),
 				    cudaMemcpyHostToDevice);
     checkError("cudaMemcpy in CollOfScalar::setValuesUniform");
 } 
     
-int CollOfScalar::getSize() const
+int CollOfScalar::size() const
 {
-    return size;
+    return size_;
 }
 
 
@@ -144,7 +155,7 @@ CollOfScalar operator-(const CollOfScalar& lhs, const CollOfScalar& rhs) {
     dim3 block(out.block());
     dim3 grid(out.grid());
     std::cout << "Calling minus_kernel!\n";
-    minus_kernel <<<grid, block>>>(out_dev, rhs_dev, out.getSize());
+    minus_kernel <<<grid, block>>>(out_dev, rhs_dev, out.size());
     return out;
 }
 
@@ -156,7 +167,7 @@ CollOfScalar operator+(const CollOfScalar& lhs, const CollOfScalar& rhs) {
 
     dim3 block(out.block());
     dim3 grid(out.grid());
-    plus_kernel <<<grid, block>>>(out_dev, rhs_dev, out.getSize());
+    plus_kernel <<<grid, block>>>(out_dev, rhs_dev, out.size());
     return out;
 }
 
@@ -168,7 +179,7 @@ CollOfScalar operator*(const CollOfScalar& lhs, const CollOfScalar& rhs) {
 
     dim3 block(out.block());
     dim3 grid(out.grid());
-    multiplication_kernel <<<grid, block>>>(out_dev, rhs_dev, out.getSize());
+    multiplication_kernel <<<grid, block>>>(out_dev, rhs_dev, out.size());
     return out;
 }
 
@@ -180,7 +191,7 @@ CollOfScalar operator/(const CollOfScalar& lhs, const CollOfScalar& rhs) {
 
     dim3 block(out.block());
     dim3 grid(out.grid());
-    division_kernel <<<grid, block>>>(out_dev, rhs_dev, out.getSize());
+    division_kernel <<<grid, block>>>(out_dev, rhs_dev, out.size());
     return out;
 }
 

@@ -38,14 +38,14 @@ public:
 			   std::istream_iterator<double> end);
     void setValuesUniform(double val);
 
-    int getSize() const;
+    int size() const;
     double* data() const;
     std::vector<double> copyToHost() const ;
 
-    int grid();
-    int block();
+    int grid() const;
+    int block() const;
 private:
-    int size;
+    int size_;
     double* dev_values;
 
     // Error handling
@@ -53,8 +53,8 @@ private:
     void checkError(const std::string& msg) const;
 
     // Use 1D kernel grids for arithmetic operations
-    int grid_x;
-    int block_x;
+    int grid_x_;
+    int block_x_;
 
 };
 
