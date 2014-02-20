@@ -47,7 +47,8 @@ BOOST_AUTO_TEST_CASE( pluss_tests )
 
 BOOST_AUTO_TEST_CASE( minus_test )
 {
-    int size = 10000;
+    //int size = 10000;
+    int size = 1024*1024;
     std::vector<double> a, b, lf;
     for(int i = 0; i < size; ++i) {
 	a.push_back( i*(i%4 + 1));

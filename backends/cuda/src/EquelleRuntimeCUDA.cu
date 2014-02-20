@@ -82,9 +82,15 @@ CollOfScalar::~CollOfScalar() {
     }
 }
 
-double* CollOfScalar::data() const {
+const double* CollOfScalar::data() const {
     return dev_values;
 }
+
+double* CollOfScalar::data() {
+    return dev_values;
+}
+
+
 
 int CollOfScalar::block() const {
     return block_x_;
@@ -99,11 +105,10 @@ std::vector<double> CollOfScalar::copyToHost() const
 {
     //std::cout << "copyToHost() - val_ptr = " << dev_values << std::endl;
     
-    // Fill the vector with zeros. That way host_vec.size() behaves as expected.
     std::vector<double> host_vec(size_, 0);
 
     cudaStatus = cudaMemcpy( &host_vec[0], dev_values, size_*sizeof(double),
-					cudaMemcpyDeviceToHost);
+			     cudaMemcpyDeviceToHost);
     checkError("cudaMemcpy in CollOfScalar::copyToHost");
     
     return host_vec;
@@ -143,12 +148,9 @@ int CollOfScalar::size() const
 }
 
 
-
-// TODO: Replace exit(0) with a smoother and more correct exit strategy.
 void CollOfScalar::checkError(const std::string& msg) const {
     if ( cudaStatus != cudaSuccess ) {
 	OPM_THROW(std::runtime_error, "\nCuda error\n\t" << msg << " - Error code: " << cudaGetErrorString(cudaStatus));
-	// OPM_THROW does not work as we cannot include OPM in this cuda file.
 	//std::cout <<  "Cuda error\n\t" << msg << "\n\tError code: " << cudaGetErrorString(cudaStatus) << std::endl;
 	//exit(0);
     }
@@ -167,49 +169,49 @@ CollOfScalar operator-(const CollOfScalar& lhs, const CollOfScalar& rhs) {
 
     CollOfScalar out = lhs;
     //double* lhs_dev = lhs.data();
-    double* rhs_dev = rhs.data();
+    const double* rhs_dev = rhs.data();
     double* out_dev = out.data();
 
     dim3 block(out.block());
     dim3 grid(out.grid());
     std::cout << "Calling minus_kernel!\n";
-    minus_kernel <<<grid, block>>>(out_dev, rhs_dev, out.size());
+    equelleCUDA::minus_kernel <<<grid, block>>>(out_dev, rhs_dev, out.size());
     return out;
 }
 
 CollOfScalar operator+(const CollOfScalar& lhs, const CollOfScalar& rhs) {
 
     CollOfScalar out = lhs;
-    double* rhs_dev = rhs.data();
+    const double* rhs_dev = rhs.data();
     double* out_dev = out.data();
 
     dim3 block(out.block());
     dim3 grid(out.grid());
-    plus_kernel <<<grid, block>>>(out_dev, rhs_dev, out.size());
+    equelleCUDA::plus_kernel <<<grid, block>>>(out_dev, rhs_dev, out.size());
     return out;
 }
 
 CollOfScalar operator*(const CollOfScalar& lhs, const CollOfScalar& rhs) {
 
     CollOfScalar out = lhs;
-    double* rhs_dev = rhs.data();
+    const double* rhs_dev = rhs.data();
     double* out_dev = out.data();
 
     dim3 block(out.block());
     dim3 grid(out.grid());
-    multiplication_kernel <<<grid, block>>>(out_dev, rhs_dev, out.size());
+    equelleCUDA::multiplication_kernel <<<grid, block>>>(out_dev, rhs_dev, out.size());
     return out;
 }
 
 CollOfScalar operator/(const CollOfScalar& lhs, const CollOfScalar& rhs) {
 
     CollOfScalar out = lhs;
-    double* rhs_dev = rhs.data();
+    const double* rhs_dev = rhs.data();
     double* out_dev = out.data();
 
     dim3 block(out.block());
     dim3 grid(out.grid());
-    division_kernel <<<grid, block>>>(out_dev, rhs_dev, out.size());
+    equelleCUDA::division_kernel <<<grid, block>>>(out_dev, rhs_dev, out.size());
     return out;
 }
 
@@ -224,30 +226,30 @@ CollOfScalar operator/(const CollOfScalar& lhs, const CollOfScalar& rhs) {
 
 
 
-__global__ void minus_kernel(double* out, double* rhs, int size) {
+__global__ void equelleCUDA::minus_kernel(double* out, const double* rhs, const int size) {
     
     int index = threadIdx.x + blockDim.x*blockIdx.x;
-    if ( index < size) {
+    if ( index < size ) {
 	out[index] = out[index] - rhs[index];
     }
 }
 
 
-__global__ void plus_kernel(double* out, double* rhs, int size) {
+__global__ void equelleCUDA::plus_kernel(double* out, const double* rhs, const int size) {
     int index = threadIdx.x + blockDim.x*blockIdx.x;
     if( index < size ) {
 	out[index] = out[index] + rhs[index];
     }
 }
 
-__global__ void multiplication_kernel(double* out, double* rhs, int size) {
+__global__ void equelleCUDA::multiplication_kernel(double* out, const double* rhs, const int size) {
     int index = threadIdx.x + blockDim.x*blockIdx.x;
     if ( index < size ) {
 	out[index] = out[index] * rhs[index];
     }
 }
 
-__global__ void division_kernel(double* out, double* rhs, int size) {
+__global__ void equelleCUDA::division_kernel(double* out, const double* rhs, const int size) {
     int index = threadIdx.x + blockDim.x*blockIdx.x;
     if ( index < size ) {
 	out[index] = out[index] / rhs[index];

@@ -4,7 +4,7 @@ cmake_minimum_required( VERSION 2.8 )
 find_package("CUDA" REQUIRED)
 
 # find boost for testing:
-find_package(Boost REQUIRED)
+find_package(Boost)
 
 
 set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra -Wno-sign-compare" )
@@ -30,18 +30,20 @@ set( CUDA_NVCC_FLAGS "-arch=sm_13" CACHE STRING "nvcc flags" FORCE)
 cuda_add_library( equelle_cuda_cu ${cuda_cuda_src} ${cuda_cuda_inc} )
 
 # make the unit-testing 
-enable_testing()
-foreach ( single_test ${cuda_test_src} )
-	# get name without extension
-	get_filename_component( test_name ${single_test} NAME_WE )
-	add_executable( ${test_name} ${single_test})
-	target_link_libraries( ${test_name}  
-		${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
-		equelle_cuda_cpu
-		equelle_cuda_cu
-	)
-	add_test( ${test_name} optirun ./${test_name})
-endforeach()
+if (Boost_FOUND)
+	enable_testing()
+	foreach ( single_test ${cuda_test_src} )
+		# get name without extension
+		get_filename_component( test_name ${single_test} NAME_WE )
+		add_executable( ${test_name} ${single_test})
+		target_link_libraries( ${test_name}  
+			${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+			equelle_cuda_cpu
+			equelle_cuda_cu
+		)
+		add_test( ${test_name} optirun ./${test_name})
+	endforeach()
+endif(Boost_FOUND)
 
 set_target_properties( equelle_cuda_cpu PROPERTIES
 	PUBLIC_HEADER "${cuda_inc}" )
