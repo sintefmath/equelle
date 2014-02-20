@@ -12,6 +12,8 @@
 #include <iterator>
 
 
+using namespace equelleCUDA;
+
 //
 //   CPP for implementation of non-cuda functions
 //

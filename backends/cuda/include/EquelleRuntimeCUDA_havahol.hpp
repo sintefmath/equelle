@@ -14,7 +14,7 @@
 
 
 template <class SomeCollection>
-CollOfScalar EquelleRuntimeCUDA::inputCollectionOfScalar( const String& name, const SomeCollection& coll) 
+equelleCUDA::CollOfScalar EquelleRuntimeCUDA::inputCollectionOfScalar( const String& name, const SomeCollection& coll) 
 {
     std::cout << "Copy from file " << name << std::endl;
     // Copy the reading part from the CPU back-end
@@ -34,17 +34,16 @@ CollOfScalar EquelleRuntimeCUDA::inputCollectionOfScalar( const String& name, co
 	if ( data.size() != size) {
 	    OPM_THROW(std::runtime_error, "Unexpected size of input data for " << name << " in file " << filename); 
 	}
-	return CollOfScalar(data);
+	return equelleCUDA::CollOfScalar(data);
     }
     else {
 	// There is a number in the parameter file
 	//CollOfScalar out(size);
 	//out.setValuesUniform(param_.get<double>(name));
 	//out.setValuesUniform(param_.get<double>(name), size);
-	return CollOfScalar(size, param_.get<double>(name));
+	return equelleCUDA::CollOfScalar(size, param_.get<double>(name));
     }
 }
-
 
 
 #endif // EQUELLERUNTIMECUDA_HAVAHOL_HEADER_INCLUDED

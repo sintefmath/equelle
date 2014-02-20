@@ -534,6 +534,8 @@ namespace
 "\n"
 "#include \"EquelleRuntimeCUDA.hpp\"\n"
 "\n"
+"using namespace equelleCUDA;\n"
+"\n"
 "void ensureRequirements(const EquelleRuntimeCUDA& er);\n"
 "\n"
 "int main(int argc, char** argv)\n"

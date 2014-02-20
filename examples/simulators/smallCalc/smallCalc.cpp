@@ -16,6 +16,8 @@
 
 #include "EquelleRuntimeCUDA.hpp"
 
+using namespace equelleCUDA;
+
 void ensureRequirements(const EquelleRuntimeCUDA& er);
 
 int main(int argc, char** argv)

@@ -15,6 +15,7 @@
 #include <stdexcept>
 #include <set>
 
+using namespace equelleCUDA;
 
 
 namespace

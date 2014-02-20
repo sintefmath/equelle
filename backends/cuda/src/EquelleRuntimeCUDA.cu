@@ -20,12 +20,16 @@
 
 // Implementation of the class CollOfScalar
 
+using namespace equelleCUDA;
+
+
 CollOfScalar::CollOfScalar() 
     : size_(0), 
       dev_values_(0),
       block_x_(0),
       grid_x_(0)
 {
+    // Intentionally left blank
 }
 
 CollOfScalar::CollOfScalar(const int size) 
@@ -158,7 +162,7 @@ void CollOfScalar::checkError_(const std::string& msg) const {
 
 
 
-CollOfScalar operator-(const CollOfScalar& lhs, const CollOfScalar& rhs) {
+CollOfScalar equelleCUDA::operator-(const CollOfScalar& lhs, const CollOfScalar& rhs) {
 
     CollOfScalar out = lhs;
     //double* lhs_dev = lhs.data();
@@ -168,11 +172,11 @@ CollOfScalar operator-(const CollOfScalar& lhs, const CollOfScalar& rhs) {
     dim3 block(out.block());
     dim3 grid(out.grid());
     std::cout << "Calling minus_kernel!\n";
-    equelleCUDA::minus_kernel <<<grid, block>>>(out_dev, rhs_dev, out.size());
+    minus_kernel <<<grid, block>>>(out_dev, rhs_dev, out.size());
     return out;
 }
 
-CollOfScalar operator+(const CollOfScalar& lhs, const CollOfScalar& rhs) {
+CollOfScalar equelleCUDA::operator+(const CollOfScalar& lhs, const CollOfScalar& rhs) {
 
     CollOfScalar out = lhs;
     const double* rhs_dev = rhs.data();
@@ -180,11 +184,11 @@ CollOfScalar operator+(const CollOfScalar& lhs, const CollOfScalar& rhs) {
 
     dim3 block(out.block());
     dim3 grid(out.grid());
-    equelleCUDA::plus_kernel <<<grid, block>>>(out_dev, rhs_dev, out.size());
+    plus_kernel <<<grid, block>>>(out_dev, rhs_dev, out.size());
     return out;
 }
 
-CollOfScalar operator*(const CollOfScalar& lhs, const CollOfScalar& rhs) {
+CollOfScalar equelleCUDA::operator*(const CollOfScalar& lhs, const CollOfScalar& rhs) {
 
     CollOfScalar out = lhs;
     const double* rhs_dev = rhs.data();
@@ -192,11 +196,11 @@ CollOfScalar operator*(const CollOfScalar& lhs, const CollOfScalar& rhs) {
 
     dim3 block(out.block());
     dim3 grid(out.grid());
-    equelleCUDA::multiplication_kernel <<<grid, block>>>(out_dev, rhs_dev, out.size());
+    multiplication_kernel <<<grid, block>>>(out_dev, rhs_dev, out.size());
     return out;
 }
 
-CollOfScalar operator/(const CollOfScalar& lhs, const CollOfScalar& rhs) {
+CollOfScalar equelleCUDA::operator/(const CollOfScalar& lhs, const CollOfScalar& rhs) {
 
     CollOfScalar out = lhs;
     const double* rhs_dev = rhs.data();
@@ -204,7 +208,7 @@ CollOfScalar operator/(const CollOfScalar& lhs, const CollOfScalar& rhs) {
 
     dim3 block(out.block());
     dim3 grid(out.grid());
-    equelleCUDA::division_kernel <<<grid, block>>>(out_dev, rhs_dev, out.size());
+    division_kernel <<<grid, block>>>(out_dev, rhs_dev, out.size());
     return out;
 }
 

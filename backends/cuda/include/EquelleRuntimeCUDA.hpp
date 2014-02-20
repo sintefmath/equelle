@@ -497,7 +497,7 @@ public:
     /// Output.
     void output(const String& tag, Scalar val) const;
     void output(const String& tag, const CollOfScalarCPU& vals);
-    void output(const String& tag, const CollOfScalar& coll);
+    void output(const String& tag, const equelleCUDA::CollOfScalar& coll);
 
     /// Input.
     Scalar inputScalarWithDefault(const String& name,
@@ -507,7 +507,7 @@ public:
     CollOfCell inputDomainSubsetOf(const String& name,
                                    const CollOfCell& superset);
     template <class SomeCollection>
-    CollOfScalar inputCollectionOfScalar(const String& name,
+    equelleCUDA::CollOfScalar inputCollectionOfScalar(const String& name,
                                          const SomeCollection& coll);
 
     SeqOfScalar inputSequenceOfScalar(const String& name);

@@ -8,6 +8,8 @@
 
 #include <vector>
 
+using namespace equelleCUDA;
+
 static void compareVectors( std::vector<double> answer, std::vector<double> lf)
 {
     BOOST_REQUIRE_EQUAL_COLLECTIONS( answer.begin(), answer.end(),
