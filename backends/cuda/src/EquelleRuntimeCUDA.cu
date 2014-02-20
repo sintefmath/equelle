@@ -28,21 +28,41 @@ CollOfScalar::CollOfScalar()
 {
 }
 
-CollOfScalar::CollOfScalar(int size) 
+CollOfScalar::CollOfScalar(const int size) 
     : size_(size),
       dev_values(0),
-      block_x_(havahol_helper::MAX_THREADS),
+      block_x_(equelleCUDA::MAX_THREADS),
       grid_x_((size_ + block_x_ - 1) / block_x_)
 {
     cudaStatus = cudaMalloc( (void**)&dev_values, size_*sizeof(double));
     checkError("cudaMalloc in CollOfScalar::CollOfScalar(int)");
 }
 
+CollOfScalar::CollOfScalar(const int size, const int value) 
+    : size_(size),
+      dev_values(0),
+      block_x_(equelleCUDA::MAX_THREADS),
+      grid_x_((size_ + block_x_ - 1) / block_x_)
+{
+    // Can not use cudaMemset as it sets float values on a given
+    // number of bytes.
+
+    std::vector<double> host_vec(size_, value);
+
+    cudaStatus = cudaMalloc( (void**)&dev_values, size_*sizeof(double));
+    checkError("cudaMalloc in CollOfScalar::CollOfScalar(int, int)");
+        
+    cudaStatus = cudaMemcpy(dev_values, &host_vec[0], size_*sizeof(double),
+				    cudaMemcpyHostToDevice);
+    checkError("cudaMemcpy in CollOfScalar::CollOfScalar(int, int)");
+} 
+
+
 // Constructor from vector, in order to do testing
 CollOfScalar::CollOfScalar(const std::vector<double>& host_vec)
     : size_(host_vec.size()),
       dev_values(0),
-      block_x_(havahol_helper::MAX_THREADS),
+      block_x_(equelleCUDA::MAX_THREADS),
       grid_x_((size_ + block_x_ - 1) / block_x_)
 {
     cudaStatus = cudaMalloc( (void**)&dev_values, size_*sizeof(double));
@@ -115,33 +135,6 @@ std::vector<double> CollOfScalar::copyToHost() const
 }
 
 
-void CollOfScalar::setValuesFromFile(std::istream_iterator<double> begin,
-				     std::istream_iterator<double> end)
-{
-    std::vector<double> host_vec(begin, end);
-    double* values = &host_vec[0];
-
-    if ( host_vec.size() != size_ ) {
-	OPM_THROW(std::runtime_error, "wrong size of input file collection");
-    }
-
-    cudaStatus = cudaMemcpy( dev_values, values, size_*sizeof(double),
-					 cudaMemcpyHostToDevice);
-    checkError("cudamMemcpy in CollOfScalar::setValuesFromFile");    
-}
-
-void CollOfScalar::setValuesUniform(double val)
-{
-    // Can not use cudaMemset as it sets float values on a given
-    // number of bytes.
-
-    std::vector<double> host_vec(size_, val);
-        
-    cudaStatus = cudaMemcpy(dev_values, &host_vec[0], size_*sizeof(double),
-				    cudaMemcpyHostToDevice);
-    checkError("cudaMemcpy in CollOfScalar::setValuesUniform");
-} 
-    
 int CollOfScalar::size() const
 {
     return size_;

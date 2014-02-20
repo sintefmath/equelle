@@ -41,19 +41,14 @@ public:
     //! Default constructor
     CollOfScalar();
     explicit CollOfScalar(const int size);
+    
+    explicit CollOfScalar(const int size, const int value);
 
     //! Constructor from std::vector
     /*! Used for initialize CollOfScalar when using unit tests. */
     explicit CollOfScalar(const std::vector<double>& host_vec);
     CollOfScalar(const CollOfScalar& coll);  
     ~CollOfScalar();
-
-    void setValuesFromFile(std::istream_iterator<double> begin, 
-			   std::istream_iterator<double> end);
-    
-    //! Inserting a given value in all entries of the collection.
-    /*! \param val a const double which is given to all elements in the collection. */
-    void setValuesUniform(const double val);
 
     int size() const;
     const double* data() const;
@@ -87,7 +82,7 @@ CollOfScalar operator*(const CollOfScalar& lhs, const CollOfScalar& rhs);
 CollOfScalar operator/(const CollOfScalar& lhs, const CollOfScalar& rhs);
 
 
-namespace havahol_helper 
+namespace equelleCUDA
 {
     
     // Define max number of threads in a kernel block:

@@ -17,7 +17,7 @@
 //
 
 
-void EquelleRuntimeCUDA::output(const String& tag, const CollOfScalar& coll, int dummy)
+void EquelleRuntimeCUDA::output(const String& tag, const CollOfScalar& coll)
 {
     // Get data back to host
     std::vector<double> host = coll.copyToHost();
