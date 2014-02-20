@@ -22,7 +22,7 @@
 
 CollOfScalar::CollOfScalar() 
     : size_(0), 
-      dev_values(0),
+      dev_values_(0),
       block_x_(0),
       grid_x_(0)
 {
@@ -30,17 +30,17 @@ CollOfScalar::CollOfScalar()
 
 CollOfScalar::CollOfScalar(const int size) 
     : size_(size),
-      dev_values(0),
+      dev_values_(0),
       block_x_(equelleCUDA::MAX_THREADS),
       grid_x_((size_ + block_x_ - 1) / block_x_)
 {
-    cudaStatus = cudaMalloc( (void**)&dev_values, size_*sizeof(double));
-    checkError("cudaMalloc in CollOfScalar::CollOfScalar(int)");
+    cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
+    checkError_("cudaMalloc in CollOfScalar::CollOfScalar(int)");
 }
 
 CollOfScalar::CollOfScalar(const int size, const int value) 
     : size_(size),
-      dev_values(0),
+      dev_values_(0),
       block_x_(equelleCUDA::MAX_THREADS),
       grid_x_((size_ + block_x_ - 1) / block_x_)
 {
@@ -49,46 +49,46 @@ CollOfScalar::CollOfScalar(const int size, const int value)
 
     std::vector<double> host_vec(size_, value);
 
-    cudaStatus = cudaMalloc( (void**)&dev_values, size_*sizeof(double));
-    checkError("cudaMalloc in CollOfScalar::CollOfScalar(int, int)");
+    cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
+    checkError_("cudaMalloc in CollOfScalar::CollOfScalar(int, int)");
         
-    cudaStatus = cudaMemcpy(dev_values, &host_vec[0], size_*sizeof(double),
+    cudaStatus_ = cudaMemcpy(dev_values_, &host_vec[0], size_*sizeof(double),
 				    cudaMemcpyHostToDevice);
-    checkError("cudaMemcpy in CollOfScalar::CollOfScalar(int, int)");
+    checkError_("cudaMemcpy in CollOfScalar::CollOfScalar(int, int)");
 } 
 
 
 // Constructor from vector, in order to do testing
 CollOfScalar::CollOfScalar(const std::vector<double>& host_vec)
     : size_(host_vec.size()),
-      dev_values(0),
+      dev_values_(0),
       block_x_(equelleCUDA::MAX_THREADS),
       grid_x_((size_ + block_x_ - 1) / block_x_)
 {
-    cudaStatus = cudaMalloc( (void**)&dev_values, size_*sizeof(double));
-    checkError("cudaMalloc in CollOfScalar::CollOfScalar(std::vector<double>)");
+    cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
+    checkError_("cudaMalloc in CollOfScalar::CollOfScalar(std::vector<double>)");
     
-    cudaStatus = cudaMemcpy(dev_values, &host_vec[0], size_*sizeof(double),
+    cudaStatus_ = cudaMemcpy(dev_values_, &host_vec[0], size_*sizeof(double),
 			    cudaMemcpyHostToDevice);
-    checkError("cudaMemcpy in CollOfScalar::CollOfScalar(std::vector<double>)");
+    checkError_("cudaMemcpy in CollOfScalar::CollOfScalar(std::vector<double>)");
 }
 
 // Copy constructor
 CollOfScalar::CollOfScalar(const CollOfScalar& coll) 
     : size_(coll.size_), 
-      dev_values(0),
+      dev_values_(0),
       grid_x_(coll.grid_x_),
       block_x_(coll.block_x_)
 {
     std::cout << "Copy constructor!\n";
    
-    if (coll.dev_values != 0) {
-	cudaStatus = cudaMalloc( (void**)&dev_values, size_*sizeof(double));
-	checkError("cudaMalloc in CollOfScalar::CollOfScalar(const CollOfScalar&)"); 
+    if (coll.dev_values_ != 0) {
+	cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
+	checkError_("cudaMalloc in CollOfScalar::CollOfScalar(const CollOfScalar&)"); 
 
-	cudaStatus = cudaMemcpy(dev_values, coll.dev_values, size_*sizeof(double),
+	cudaStatus_ = cudaMemcpy(dev_values_, coll.dev_values_, size_*sizeof(double),
 			    cudaMemcpyDeviceToDevice);
-	checkError("cudaMemcpy in CollOfScalar::CollOfScalar(const CollOfScalar&)");
+	checkError_("cudaMemcpy in CollOfScalar::CollOfScalar(const CollOfScalar&)");
     }    
 
 }
@@ -96,18 +96,18 @@ CollOfScalar::CollOfScalar(const CollOfScalar& coll)
 
 // Destructor:
 CollOfScalar::~CollOfScalar() {
-    if (dev_values != 0) {
-	cudaStatus = cudaFree(dev_values);
-	checkError("cudaFree in CollOfScalar::~CollOfScalar");
+    if (dev_values_ != 0) {
+	cudaStatus_ = cudaFree(dev_values_);
+	checkError_("cudaFree in CollOfScalar::~CollOfScalar");
     }
 }
 
 const double* CollOfScalar::data() const {
-    return dev_values;
+    return dev_values_;
 }
 
 double* CollOfScalar::data() {
-    return dev_values;
+    return dev_values_;
 }
 
 
@@ -127,9 +127,9 @@ std::vector<double> CollOfScalar::copyToHost() const
     
     std::vector<double> host_vec(size_, 0);
 
-    cudaStatus = cudaMemcpy( &host_vec[0], dev_values, size_*sizeof(double),
+    cudaStatus_ = cudaMemcpy( &host_vec[0], dev_values_, size_*sizeof(double),
 			     cudaMemcpyDeviceToHost);
-    checkError("cudaMemcpy in CollOfScalar::copyToHost");
+    checkError_("cudaMemcpy in CollOfScalar::copyToHost");
     
     return host_vec;
 }
@@ -141,9 +141,9 @@ int CollOfScalar::size() const
 }
 
 
-void CollOfScalar::checkError(const std::string& msg) const {
-    if ( cudaStatus != cudaSuccess ) {
-	OPM_THROW(std::runtime_error, "\nCuda error\n\t" << msg << " - Error code: " << cudaGetErrorString(cudaStatus));
+void CollOfScalar::checkError_(const std::string& msg) const {
+    if ( cudaStatus_ != cudaSuccess ) {
+	OPM_THROW(std::runtime_error, "\nCuda error\n\t" << msg << " - Error code: " << cudaGetErrorString(cudaStatus_));
 	//std::cout <<  "Cuda error\n\t" << msg << "\n\tError code: " << cudaGetErrorString(cudaStatus) << std::endl;
 	//exit(0);
     }

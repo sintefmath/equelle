@@ -61,15 +61,15 @@ public:
     int block() const;
 private:
     int size_;
-    double* dev_values;
+    double* dev_values_;
 
     // Use 1D kernel grids for arithmetic operations
     int block_x_;
     int grid_x_;
 
     // Error handling
-    mutable cudaError_t cudaStatus;
-    void checkError(const std::string& msg) const;
+    mutable cudaError_t cudaStatus_;
+    void checkError_(const std::string& msg) const;
 
 
 };
