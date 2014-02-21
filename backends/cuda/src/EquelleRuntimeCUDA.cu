@@ -16,7 +16,7 @@
 // For error exception macro:
 #include <opm/core/utility/ErrorMacros.hpp>
 
-#include "EquelleRuntimeCUDA_cuda.hpp"
+#include "collOfScalar.hpp"
 
 // Implementation of the class CollOfScalar
 

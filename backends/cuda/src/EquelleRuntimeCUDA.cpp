@@ -5,7 +5,7 @@
 
 #include "EquelleRuntimeCUDA.hpp"
 #include "EquelleRuntimeCUDA_havahol.hpp"
-#include "EquelleRuntimeCUDA_cuda.hpp"
+#include "collOfScalar.hpp"
 
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/core/utility/StopWatch.hpp>
@@ -23,8 +23,10 @@ namespace
     Opm::GridManager* createGridManager(const Opm::parameter::ParameterGroup& param)
     {
         if (param.has("grid_filename")) {
+        	// Unstructured grid
             return new Opm::GridManager(param.get<std::string>("grid_filename"));
         }
+        // Otherwise: Cartesian grid
         const int grid_dim = param.getDefault("grid_dim", 2);
         int num[3] = { 6, 1, 1 };
         double size[3] = { 1.0, 1.0, 1.0 };

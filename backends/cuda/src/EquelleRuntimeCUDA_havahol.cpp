@@ -1,5 +1,5 @@
 #include "EquelleRuntimeCUDA.hpp"
-#include "EquelleRuntimeCUDA_cuda.hpp"
+#include "collOfScalar.hpp"
 #include "EquelleRuntimeCUDA_havahol.hpp"
 
 #include <string>

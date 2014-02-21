@@ -2,7 +2,7 @@
 
 #include <boost/test/included/unit_test.hpp>
 
-#include <EquelleRuntimeCUDA_cuda.hpp>
+#include <collOfScalar.hpp>
 #include <EquelleRuntimeCUDA_havahol.hpp>
 #include <EquelleRuntimeCUDA.hpp>
 
