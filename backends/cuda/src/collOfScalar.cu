@@ -18,6 +18,7 @@
 #include <opm/core/utility/ErrorMacros.hpp>
 
 #include "collOfScalar.hpp"
+#include "deviceGrid.hpp"
 
 // Implementation of the class CollOfScalar
 
@@ -152,6 +153,11 @@ int CollOfScalar::size() const
 }
 
 
+Collection CollOfScalar::collection() const {
+    return indices_;
+}
+
+
 void CollOfScalar::checkError_(const std::string& msg) const {
     if ( cudaStatus_ != cudaSuccess ) {
 	OPM_THROW(std::runtime_error, "\nCuda error\n\t" << msg << " - Error code: " << cudaGetErrorString(cudaStatus_));
@@ -159,6 +165,8 @@ void CollOfScalar::checkError_(const std::string& msg) const {
 	//exit(0);
     }
 }
+
+
 
 
 

@@ -103,6 +103,14 @@ namespace equelleCUDA {
 	*/
 	int block() const;
 	
+	//! Get the connection between the values and the grid
+	/*!
+	  Returns a Collection varible on which the scalars are living.
+	  A Collection constists of a thrust::device_vector of indices if the 
+	  Collection is a subset of the grid. Otherwise it represent all cells or faces
+	  on the grid, and have the member function isFull(), which returns true.
+	 */
+	Collection collection() const;
 	
     private:
 	int size_;
