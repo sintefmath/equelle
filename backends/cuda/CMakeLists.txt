@@ -20,8 +20,14 @@ set( SUPERLU_LIB          "superlu" CACHE PATH "" ) 	# havahol
 
 set( SERIAL_INCLUDE_DIRS "/usr/local/include/Eigen" ${EQUELLE_EXTRA_INCLUDE_DIRS})
 
+# Create function for printing text:
+# Use: CleanMessage("My message")
+function(CleanMessage)
+  execute_process(COMMAND ${CMAKE_COMMAND} -E echo "${ARGN}")
+endfunction()
+
 #"/usr/local/cuda-5.5/include" 
-include_directories( "include" "cuda_include" 
+include_directories( "include" "cuda_include" "test"
 	${SERIAL_INCLUDE_DIRS}  )
 
 # make non-cuda part of run-time library
@@ -38,8 +44,16 @@ if (Boost_FOUND)
 	foreach ( single_test ${cuda_test_src} )
 		# get name without extension
 		get_filename_component( test_name ${single_test} NAME_WE )
+		set( cuda_name "${test_name}_cuda" )
+		set( cuda_file_name "${CMAKE_CURRENT_SOURCE_DIR}/test/${test_name}.cu" )
+		set( cuda_h_file_name "${CMAKE_CURRENT_SOURCE_DIR}/test/${test_name}.h" )
+		CleanMessage("cuda_file_name: ${cuda_file_name} ")
+		CleanMessage("cuda_h_file_name: ${cuda_h_file_name} ")
+		CleanMessage("single_test: ${single_test} " )
+		cuda_add_library( ${cuda_name} ${cuda_file_name} ${cuda_h_file_name} )
 		add_executable( ${test_name} ${single_test})
 		target_link_libraries( ${test_name}  
+			${cuda_name}
 			${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
 			equelle_cuda_cpu
 			equelle_cuda_cu
@@ -52,22 +66,6 @@ if (Boost_FOUND)
 			add_test( ${test_name} optirun ./${test_name})
 		endif()
 	endforeach()
-	foreach ( single_test ${cuda_test_src_cu} ) 
-		get_filename_component( test_name ${single_test} NAME_WE )
-		cuda_add_executable( ${test_name} ${single_test} )
-		target_link_libraries( ${test_name}
-			${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
-			equelle_cuda_cpu
-			equelle_cuda_cu
-			opmcore boost_filesystem-mt boost_system-mt 
-			tinyxml umfpack ${SUPERLU_LIB} dunecommon
-		)
-		if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test/${test_name}.param")
-			add_test( ${test_name} optirun ./${test_name})
-		else()
-			add_test( ${test_name} optirun ./${test_name})
-		endif()
-	endforeach()		
 endif(Boost_FOUND)
 
 set_target_properties( equelle_cuda_cpu PROPERTIES

@@ -1,13 +1,21 @@
 // This file provides unit tests for the class
 // DeviceGrid, which handles grid related functionality on the GPU.
 
-#include <boost/test/included/unit_test.hpp>
-using namespace boost::unit_test;
+//#include <boost/test/included/unit_test.hpp>
+//using namespace boost::unit_test;
+
+// CUDA code and BOOST don't mix. Need to write tests without the BOOST framework.
+
+#include <cuda.h>
+#include <cuda_runtime.h>
+
 
 // Include everything that the equelle runtime need
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <opm/core/grid.h>
 #include <opm/core/grid/GridManager.hpp>
+
+#include <opm/core/utility/ErrorMacros.hpp>
 
 #include "EquelleRuntimeCUDA.hpp"
 
@@ -18,18 +26,20 @@ void ensureRequirements(const EquelleRuntimeCUDA& er)
     (void)er;
 }
 
-
+//int num_errors;
 
 void free_test_function() {
-    BOOST_CHECK(2 == 1);
+    
 }
 
 void equal_test_function(int a, int b) {
-    BOOST_REQUIRE( a == b);
+    if ( a != b ) {
+	OPM_THROW(std::runtime_error, "\nequal_test_function - " << a << " != " << b);
+    }
 }
 
 
-test_suite* init_unit_test_suite( int argc, char** argv )
+int main( int argc, char** argv )
 {
     // Get user parameters
     Opm::parameter::ParameterGroup param( argc, argv, false);
@@ -37,18 +47,18 @@ test_suite* init_unit_test_suite( int argc, char** argv )
     // Create the Equelle runtime
     EquelleRuntimeCUDA er(param);
     ensureRequirements(er);
+    
+    // Get the device grid so that we can play around with it!
     DeviceGrid dg(er.getGrid());
     std::cout << "Test: (4?) " << dg.test() << std::endl;
-
-    framework::master_test_suite().p_name.value = "Unit test for DeviceGrid";
-
+    
     int a = 1;
     int b = 1;
     //framework::master_test_suite().add( BOOST_REQUIRE( a == b ), 0);
 
-    framework::master_test_suite().add( BOOST_TEST_CASE( &free_test_function), 1);
+    free_test_function();
     
-    framework::master_test_suite().add( BOOST_TEST_CASE( boost::bind(&equal_test_function, a, b)), 0);
+    equal_test_function(a, b);
 
     return 0;
 

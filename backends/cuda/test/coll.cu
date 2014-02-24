@@ -50,7 +50,7 @@ void test_back_to_host(Collection coll) {
 
 }
 
-int main() {
+int cuda_main() {
 
     thrust::host_vector<int> host(10, 2);
     Collection coll(host);
