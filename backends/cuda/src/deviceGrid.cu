@@ -48,12 +48,6 @@ Collection::Collection(const thrust::device_vector<int>& indices)
 {
 }
 
-Collection::Collection(const thrust::host_vector<int>& indices)
-    : thrust::device_vector<int>(indices.begin(), indices.end()),
-      full_(false)
-{
-}
-
 
 Collection::Collection(const Collection& coll)
     : thrust::device_vector<int>(coll.begin(), coll.end()),
@@ -225,7 +219,9 @@ DeviceGrid::~DeviceGrid() {
 }
 
 
-
+int DeviceGrid::test() {
+    return 4;
+}
 
 
 

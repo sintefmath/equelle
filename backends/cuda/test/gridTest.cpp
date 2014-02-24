@@ -37,7 +37,8 @@ test_suite* init_unit_test_suite( int argc, char** argv )
     // Create the Equelle runtime
     EquelleRuntimeCUDA er(param);
     ensureRequirements(er);
-    
+    DeviceGrid dg(er.getGrid());
+    std::cout << "Test: (4?) " << dg.test() << std::endl;
 
     framework::master_test_suite().p_name.value = "Unit test for DeviceGrid";
 

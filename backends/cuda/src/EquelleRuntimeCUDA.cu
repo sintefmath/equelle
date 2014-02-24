@@ -29,7 +29,7 @@ CollOfScalar::CollOfScalar()
       dev_values_(0),
       block_x_(0),
       grid_x_(0),
-      indices_(0)
+      indices_()
 {
     // Intentionally left blank
 }
@@ -39,7 +39,7 @@ CollOfScalar::CollOfScalar(const int size)
       dev_values_(0),
       block_x_(equelleCUDA::MAX_THREADS),
       grid_x_((size_ + block_x_ - 1) / block_x_),
-      indices_(0)
+      indices_(true)
 {
     cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
     checkError_("cudaMalloc in CollOfScalar::CollOfScalar(int)");
@@ -50,7 +50,7 @@ CollOfScalar::CollOfScalar(const int size, const int value)
       dev_values_(0),
       block_x_(equelleCUDA::MAX_THREADS),
       grid_x_((size_ + block_x_ - 1) / block_x_),
-      indices_(0)
+      indices_(true)
 {
     // Can not use cudaMemset as it sets float values on a given
     // number of bytes.
@@ -72,7 +72,7 @@ CollOfScalar::CollOfScalar(const std::vector<double>& host_vec)
       dev_values_(0),
       block_x_(equelleCUDA::MAX_THREADS),
       grid_x_((size_ + block_x_ - 1) / block_x_),
-      indices_(0)
+      indices_(true)
 {
     cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
     checkError_("cudaMalloc in CollOfScalar::CollOfScalar(std::vector<double>)");
@@ -89,7 +89,7 @@ CollOfScalar::CollOfScalar(const CollOfScalar& coll)
       dev_values_(0),
       grid_x_(coll.grid_x_),
       block_x_(coll.block_x_),
-      indices_(0)
+      indices_(coll.indices_)
 {
     std::cout << "Copy constructor!\n";
    
@@ -102,13 +102,6 @@ CollOfScalar::CollOfScalar(const CollOfScalar& coll)
 	checkError_("cudaMemcpy in CollOfScalar::CollOfScalar(const CollOfScalar&)");
     }
     
-    if (coll.indices_ != 0 ) {
-	cudaStatus_ = cudaMalloc( (void**)&indices_, size_*sizeof(double));
-	checkError_("cudaMalloc for indices_ in CollOfScalar::CollOfScalar(const CollOfScalar&)");
-	cudaStatus_ = cudaMemcpy( indices_, coll.indices_, size_*sizeof(double),
-				  cudaMemcpyDeviceToDevice);
-	checkError_("cudaMemcpy for indices_ in CollOfScalar::CollOfScalar(const CollOfScalar&)");
-    }
 }
 
 

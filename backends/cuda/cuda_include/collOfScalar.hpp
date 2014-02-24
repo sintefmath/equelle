@@ -15,6 +15,8 @@
 #include <fstream>
 #include <iterator>
 
+#include <deviceGrid.hpp>
+
 // This is the header file for cuda!
 
 //#include "EquelleRuntimeCUDA.hpp"
@@ -110,7 +112,7 @@ namespace equelleCUDA {
 	int block_x_;
 	int grid_x_;
 	
-	int* indices_;
+	Collection indices_;
 	
 	// Error handling
 	//! check_Error throws an OPM exception if cudaStatus_ != cudaSuccess

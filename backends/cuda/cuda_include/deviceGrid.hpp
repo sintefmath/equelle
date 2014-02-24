@@ -16,19 +16,53 @@
 namespace equelleCUDA 
 {
 
+    //! Class for keeping track of subsets. Inheriting thrust::device_vector<int>
+    /*!
+      This is simply a minimally extended thrust::device_vector.
+      It is used such that given a complete set (allCells(), allFaces()) no extra 
+      indices are stored. We flag this by a boolean member variable.
+      For subsets the indices within the set is stored as a thrust::device_vector.
 
+      Since the class inherite thrust::device_vector, all vector member functions are
+      available and public.
+    */
     class Collection : public thrust::device_vector<int> 
     {	
     public:
+	//! Default constructor
 	Collection();
+	
+	//! Constructor used for full sets.
+	/*!
+	  Insert value 'true' to create a full collection.
+	  No extra storage used.
+	  Will throw an exception if input value is 'false'.
+	  \param full boolean indicating that the collection is complete.
+	*/
 	explicit Collection(const bool full);
+	//! Constructor for creating a subset Collection
+	/*!
+	  Give as input the indices that will be part of the collection.
+	*/
 	explicit Collection(const thrust::device_vector<int>& indices);
-	explicit Collection(const thrust::host_vector<int>& indices);
+	
+	//! Copy constructor
 	Collection(const Collection& coll);
 	
+	//! Destructor
 	~Collection();
 	
-       	bool isFull() const;
+	/*! 
+	  \return true if the Collection is full, false otherwise
+	*/
+	bool isFull() const;
+	//! Copy the device_vector to host memory.
+	/*!
+	  A member function to copy the values over to device memory.
+	  This function is added since we not are able to cast Collection 
+	  straight to thrust::host_vector. 
+	  Most naturally used in debugging.
+	*/
 	thrust::host_vector<int> toHost() const;
 	
     private:
@@ -37,11 +71,16 @@ namespace equelleCUDA
     }; // class Collection
 
     	
+
+
+    
     class DeviceGrid {
 
     public:
 	DeviceGrid();
 	explicit DeviceGrid( const UnstructuredGrid& grid);
+
+	int test();
 	
 	~DeviceGrid();
 

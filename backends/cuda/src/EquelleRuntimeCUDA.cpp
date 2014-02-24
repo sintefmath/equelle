@@ -546,3 +546,11 @@ CollOfScalarCPU EquelleRuntimeCUDA::singlePrimaryVariable(const CollOfScalarCPU&
     // Syntax below is: CollOfScalarCPU::variable(block index, initialized from, block structure)
     return CollOfScalarCPU::variable(0, initial_values.value(), block_pattern);
 }
+
+
+// HAVAHOL: added function for doing testing
+UnstructuredGrid EquelleRuntimeCUDA::getGrid() const {
+	return grid_;
+}
+
+
