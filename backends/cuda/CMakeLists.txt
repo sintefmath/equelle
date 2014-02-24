@@ -31,8 +31,8 @@ cuda_add_library( equelle_cuda_cu ${cuda_cuda_src} ${cuda_cuda_inc} )
 
 # make the unit-testing 
 if (Boost_FOUND)
-	enable_testing()
 	foreach ( single_test ${cuda_test_src} )
+	enable_testing()
 		# get name without extension
 		get_filename_component( test_name ${single_test} NAME_WE )
 		add_executable( ${test_name} ${single_test})
@@ -40,8 +40,14 @@ if (Boost_FOUND)
 			${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
 			equelle_cuda_cpu
 			equelle_cuda_cu
+			opmcore boost_filesystem-mt boost_system-mt 
+			tinyxml umfpack ${SUPERLU_LIB} dunecommon
 		)
-		add_test( ${test_name} optirun ./${test_name})
+		if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test/${test_name}.param")
+			add_test( ${test_name} optirun ./${test_name})
+		else()
+			add_test( ${test_name} optirun ./${test_name})
+		endif()
 	endforeach()
 endif(Boost_FOUND)
 
