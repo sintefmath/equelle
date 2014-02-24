@@ -19,6 +19,7 @@
 // This should be independent from the rest of the host code
 //      and especially from any c++11 code.
 #include "collOfScalar.hpp"
+#include "deviceGrid.hpp"
 
 // Forward declarations for the Device types
 //class CollOfScalar;
@@ -532,6 +533,7 @@ private:
     /// Data members.
     std::unique_ptr<Opm::GridManager> grid_manager_;
     const UnstructuredGrid& grid_;
+    equelleCUDA::DeviceGrid dev_grid_;
     Opm::HelperOps ops_;
     Opm::LinearSolverFactory linsolver_;
     bool output_to_file_;
@@ -546,6 +548,6 @@ private:
 // Include the implementations of template members.
 #include "EquelleRuntimeCUDA_impl.hpp"
 #include "EquelleRuntimeCUDA_havahol.hpp"
-#include "collOfScalar.hpp"
+//#include "collOfScalar.hpp"
 
 #endif // EQUELLERUNTIMECUDA_HEADER_INCLUDED

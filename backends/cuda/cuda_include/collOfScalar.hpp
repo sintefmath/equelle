@@ -1,13 +1,15 @@
 
-#ifndef EQUELLERUNTIMECUDA_CUDA_HEADER_INCLUDED
-#define EQUELLERUNTIMECUDA_CUDA_HEADER_INCLUDED
+#ifndef EQUELLE_COLLOFSCALAR_HEADER_INCLUDED
+#define EQUELLE_COLLOFSCALAR_HEADER_INCLUDED
 
 //#include <thrust/device_ptr.h>
 //#include <thrust/host_vector.h>
-//#include <thrust/device_vector.h>
+#include <thrust/device_vector.h>
 
-#include <cublas_v2.h>
+//#include <cublas_v2.h>
 #include <cuda.h>
+#include <cuda_runtime.h>
+
 
 #include <string>
 #include <fstream>
@@ -107,6 +109,8 @@ namespace equelleCUDA {
 	// Use 1D kernel grids for arithmetic operations
 	int block_x_;
 	int grid_x_;
+	
+	int* indices_;
 	
 	// Error handling
 	//! check_Error throws an OPM exception if cudaStatus_ != cudaSuccess
@@ -212,4 +216,4 @@ namespace equelleCUDA {
 } // namespace equelleCUDA
 
 
-#endif // EQUELLERUNTIMECUDA_CUDA_HEADER_INCLUDED
+#endif // EQUELLE_COLLOFSCALAR_CUDA_HEADER_INCLUDED

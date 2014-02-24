@@ -6,6 +6,7 @@
 #include "EquelleRuntimeCUDA.hpp"
 #include "EquelleRuntimeCUDA_havahol.hpp"
 #include "collOfScalar.hpp"
+#include "deviceGrid.hpp"
 
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/core/utility/StopWatch.hpp>
@@ -59,6 +60,7 @@ namespace
 EquelleRuntimeCUDA::EquelleRuntimeCUDA(const Opm::parameter::ParameterGroup& param)
     : grid_manager_(createGridManager(param)),
       grid_(*(grid_manager_->c_grid())),
+      dev_grid_(UnstructuredGrid(*(grid_manager_->c_grid()))),
       ops_(grid_),
       linsolver_(param),
       output_to_file_(param.getDefault("output_to_file", false)),

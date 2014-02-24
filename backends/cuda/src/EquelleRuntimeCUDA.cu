@@ -8,6 +8,7 @@
 //#include <fstream>
 //#include <iterator>
 #include <cuda.h>
+#include <cuda_runtime.h>
 
 #include <stdlib.h>
 #include <vector>
@@ -27,7 +28,8 @@ CollOfScalar::CollOfScalar()
     : size_(0), 
       dev_values_(0),
       block_x_(0),
-      grid_x_(0)
+      grid_x_(0),
+      indices_(0)
 {
     // Intentionally left blank
 }
@@ -36,7 +38,8 @@ CollOfScalar::CollOfScalar(const int size)
     : size_(size),
       dev_values_(0),
       block_x_(equelleCUDA::MAX_THREADS),
-      grid_x_((size_ + block_x_ - 1) / block_x_)
+      grid_x_((size_ + block_x_ - 1) / block_x_),
+      indices_(0)
 {
     cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
     checkError_("cudaMalloc in CollOfScalar::CollOfScalar(int)");
@@ -46,7 +49,8 @@ CollOfScalar::CollOfScalar(const int size, const int value)
     : size_(size),
       dev_values_(0),
       block_x_(equelleCUDA::MAX_THREADS),
-      grid_x_((size_ + block_x_ - 1) / block_x_)
+      grid_x_((size_ + block_x_ - 1) / block_x_),
+      indices_(0)
 {
     // Can not use cudaMemset as it sets float values on a given
     // number of bytes.
@@ -67,7 +71,8 @@ CollOfScalar::CollOfScalar(const std::vector<double>& host_vec)
     : size_(host_vec.size()),
       dev_values_(0),
       block_x_(equelleCUDA::MAX_THREADS),
-      grid_x_((size_ + block_x_ - 1) / block_x_)
+      grid_x_((size_ + block_x_ - 1) / block_x_),
+      indices_(0)
 {
     cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
     checkError_("cudaMalloc in CollOfScalar::CollOfScalar(std::vector<double>)");
@@ -77,12 +82,14 @@ CollOfScalar::CollOfScalar(const std::vector<double>& host_vec)
     checkError_("cudaMemcpy in CollOfScalar::CollOfScalar(std::vector<double>)");
 }
 
+
 // Copy constructor
 CollOfScalar::CollOfScalar(const CollOfScalar& coll) 
     : size_(coll.size_), 
       dev_values_(0),
       grid_x_(coll.grid_x_),
-      block_x_(coll.block_x_)
+      block_x_(coll.block_x_),
+      indices_(0)
 {
     std::cout << "Copy constructor!\n";
    
@@ -91,10 +98,17 @@ CollOfScalar::CollOfScalar(const CollOfScalar& coll)
 	checkError_("cudaMalloc in CollOfScalar::CollOfScalar(const CollOfScalar&)"); 
 
 	cudaStatus_ = cudaMemcpy(dev_values_, coll.dev_values_, size_*sizeof(double),
-			    cudaMemcpyDeviceToDevice);
+				 cudaMemcpyDeviceToDevice);
 	checkError_("cudaMemcpy in CollOfScalar::CollOfScalar(const CollOfScalar&)");
-    }    
-
+    }
+    
+    if (coll.indices_ != 0 ) {
+	cudaStatus_ = cudaMalloc( (void**)&indices_, size_*sizeof(double));
+	checkError_("cudaMalloc for indices_ in CollOfScalar::CollOfScalar(const CollOfScalar&)");
+	cudaStatus_ = cudaMemcpy( indices_, coll.indices_, size_*sizeof(double),
+				  cudaMemcpyDeviceToDevice);
+	checkError_("cudaMemcpy for indices_ in CollOfScalar::CollOfScalar(const CollOfScalar&)");
+    }
 }
 
 
