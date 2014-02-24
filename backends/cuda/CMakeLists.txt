@@ -8,18 +8,21 @@ find_package(Boost)
 
 
 set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra -Wno-sign-compare" )
+#set( CMAKE_CXX_FLAGS "-std=c++0x -Wall 	" )
 
 file( GLOB cuda_src "src/*.cpp" )
 file( GLOB cuda_inc "include/*.hpp" )
 file( GLOB cuda_cuda_src "src/*.cu" )
 file( GLOB cuda_cuda_inc "cuda_include/*.hpp" )
 file( GLOB cuda_test_src "test/*.cpp" )
+file( GLOB cuda_test_src_cu "test/*.cu" )
 set( SUPERLU_LIB          "superlu" CACHE PATH "" ) 	# havahol
 
 set( SERIAL_INCLUDE_DIRS "/usr/local/include/Eigen" ${EQUELLE_EXTRA_INCLUDE_DIRS})
 
-include_directories( "include" "cuda_include"
-	${SERIAL_INCLUDE_DIRS} )
+#"/usr/local/cuda-5.5/include" 
+include_directories( "include" "cuda_include" 
+	${SERIAL_INCLUDE_DIRS}  )
 
 # make non-cuda part of run-time library
 add_library( equelle_cuda_cpu ${cuda_src} ${cuda_inc} )
@@ -31,8 +34,8 @@ cuda_add_library( equelle_cuda_cu ${cuda_cuda_src} ${cuda_cuda_inc} )
 
 # make the unit-testing 
 if (Boost_FOUND)
-	foreach ( single_test ${cuda_test_src} )
 	enable_testing()
+	foreach ( single_test ${cuda_test_src} )
 		# get name without extension
 		get_filename_component( test_name ${single_test} NAME_WE )
 		add_executable( ${test_name} ${single_test})
@@ -49,6 +52,22 @@ if (Boost_FOUND)
 			add_test( ${test_name} optirun ./${test_name})
 		endif()
 	endforeach()
+	foreach ( single_test ${cuda_test_src_cu} ) 
+		get_filename_component( test_name ${single_test} NAME_WE )
+		cuda_add_executable( ${test_name} ${single_test} )
+		target_link_libraries( ${test_name}
+			${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+			equelle_cuda_cpu
+			equelle_cuda_cu
+			opmcore boost_filesystem-mt boost_system-mt 
+			tinyxml umfpack ${SUPERLU_LIB} dunecommon
+		)
+		if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test/${test_name}.param")
+			add_test( ${test_name} optirun ./${test_name})
+		else()
+			add_test( ${test_name} optirun ./${test_name})
+		endif()
+	endforeach()		
 endif(Boost_FOUND)
 
 set_target_properties( equelle_cuda_cpu PROPERTIES

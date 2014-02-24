@@ -3,15 +3,86 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
 // For error exception macro:
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/core/grid/GridManager.hpp>
 #include <opm/core/grid.h>
 
+#include <thrust/device_vector.h>
+#include <thrust/host_vector.h>
+#include <thrust/copy.h>
+#include <thrust/memory.h>
+
 #include "deviceGrid.hpp"
 
 using namespace equelleCUDA;
+
+
+// -------------------------------------------------- //
+// ------- Implementation of Collection ------------- //
+// -------------------------------------------------- //
+
+
+Collection::Collection() 
+    : thrust::device_vector<int>(),
+      full_(false)
+{
+}
+
+
+Collection::Collection(const bool full)
+    : thrust::device_vector<int>(),
+      full_(full)
+{
+    if (full_ != true ) {
+	OPM_THROW(std::runtime_error, "Creating non-full Collection without giving the collection\n");
+    }
+}
+
+
+Collection::Collection(const thrust::device_vector<int>& indices) 
+    : thrust::device_vector<int>(indices.begin(), indices.end()),
+      full_(false)
+{
+}
+
+Collection::Collection(const thrust::host_vector<int>& indices)
+    : thrust::device_vector<int>(indices.begin(), indices.end()),
+      full_(false)
+{
+}
+
+
+Collection::Collection(const Collection& coll)
+    : thrust::device_vector<int>(coll.begin(), coll.end()),
+    full_(coll.full_)
+{
+}
+
+Collection::~Collection() 
+{
+    // The destructor do nothing. Automaticly calling base constructor.
+}
+
+bool Collection::isFull() const
+{
+    return full_;
+}
+
+thrust::host_vector<int> Collection::toHost() const {
+    return thrust::host_vector<int>(this->begin(), this->end());
+}
+
+
+
+
+
+// --------------------------------------------------- //
+// -------- Implementation of DeviceGrid ------------- //
+// --------------------------------------------------- //
+
 
 // Default constructor
 DeviceGrid::DeviceGrid()
@@ -166,4 +237,5 @@ void DeviceGrid::checkError_(const std::string& msg) const {
     if ( cudaStatus_ != cudaSuccess ) {
 	OPM_THROW(std::runtime_error, "\nCuda error\n\t" << msg << " - Error code: " << cudaGetErrorString(cudaStatus_));
     }
+        
 }

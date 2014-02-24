@@ -5,11 +5,36 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
+#include <vector>
+
+#include <thrust/device_vector.h>
+#include <thrust/host_vector.h>
+
 #include <opm/core/grid/GridManager.hpp>
 
 
 namespace equelleCUDA 
 {
+
+
+    class Collection : public thrust::device_vector<int> 
+    {	
+    public:
+	Collection();
+	explicit Collection(const bool full);
+	explicit Collection(const thrust::device_vector<int>& indices);
+	explicit Collection(const thrust::host_vector<int>& indices);
+	Collection(const Collection& coll);
+	
+	~Collection();
+	
+       	bool isFull() const;
+	thrust::host_vector<int> toHost() const;
+	
+    private:
+	bool full_;
+	
+    }; // class Collection
 
     	
     class DeviceGrid {
