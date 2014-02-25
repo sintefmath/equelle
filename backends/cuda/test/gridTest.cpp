@@ -9,6 +9,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
+#include "gridTest.h"
 
 // Include everything that the equelle runtime need
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
@@ -50,8 +51,7 @@ int main( int argc, char** argv )
     
     // Get the device grid so that we can play around with it!
     DeviceGrid dg(er.getGrid());
-    std::cout << "Test: (4?) " << dg.test() << std::endl;
-    
+       
     int a = 1;
     int b = 1;
     //framework::master_test_suite().add( BOOST_REQUIRE( a == b ), 0);
@@ -60,6 +60,9 @@ int main( int argc, char** argv )
     
     equal_test_function(a, b);
 
-    return 0;
 
+    //int out = cuda_main(dg);
+    //std::cout << "Back in main!\n";
+    //return out;
+    return cuda_main(dg);
 }

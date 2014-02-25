@@ -80,16 +80,20 @@ namespace equelleCUDA
 	DeviceGrid();
 	explicit DeviceGrid( const UnstructuredGrid& grid);
 
-	int test();
+	// Copy constructor:
+	DeviceGrid( const DeviceGrid& grid);
+
+	int test(int a);
 	
 	~DeviceGrid();
 
     private:
 	
 	// Member variables for unstructured grids
-	const int dimensions_;
+	int dimensions_;
 	const int number_of_cells_;
 	const int number_of_faces_;
+	const int size_cell_faces_; // Extra variable compared to UnstructuredGrid
 	
 	// Member arrays for unstructured grids
 	double* cell_centroids_; 
