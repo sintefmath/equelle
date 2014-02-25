@@ -83,14 +83,34 @@ namespace equelleCUDA
 	// Copy constructor:
 	DeviceGrid( const DeviceGrid& grid);
 
-	int test(int a);
+	// This is a pure debugger function.
+	// We mark each collection with an ID to keep track of
+	// which ones are destructed.
+	int setID(int a);
+
+	// Grid operations
+	Collection allCells() const;
+	Collection allFaces() const;
+
+	Collection boundaryFaces() const;
+	Collection interiorFaces() const;
+	
+	Collection interiorCells() const;
+	Collection boundaryCells() const;
+
+
+	// Get functions:
+	int dimensions() const;
+	int number_of_cells() const;
+	int number_of_faces() const;
+	
 	
 	~DeviceGrid();
 
     private:
 	
 	// Member variables for unstructured grids
-	int dimensions_;
+	const int dimensions_;
 	const int number_of_cells_;
 	const int number_of_faces_;
 	const int size_cell_faces_; // Extra variable compared to UnstructuredGrid
@@ -104,6 +124,7 @@ namespace equelleCUDA
 	int* face_cells_;
 	double* face_normals_;
 
+	int id_;
 	
 	// Error handling:
 	mutable cudaError_t cudaStatus_;
@@ -111,6 +132,22 @@ namespace equelleCUDA
 
     }; // class DeviceGrid
 
+
+    struct unchanged
+    {
+	const int val;
+	unchanged(int val_in) : val(val_in) {}
+	__host__ __device__ 
+	bool operator()(const int x) {
+	    return (x == val); 
+	}
+    };
+
+
+    // KERNELS
+    __global__ void boundaryFacesKernel( int* b_faces,
+					 const int* face_cells,
+					 const int number_of_faces);
 
 
 } // namespace equelleCUDA

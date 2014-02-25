@@ -61,7 +61,8 @@ if (Boost_FOUND)
 			tinyxml umfpack ${SUPERLU_LIB} dunecommon
 		)
 		if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test/${test_name}.param")
-			add_test( ${test_name} optirun ./${test_name})
+			add_test( ${test_name} optirun ./${test_name}
+			${CMAKE_CURRENT_SOURCE_DIR}/test/${test_name}.param)
 		else()
 			add_test( ${test_name} optirun ./${test_name})
 		endif()

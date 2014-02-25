@@ -14,8 +14,14 @@
 #include <thrust/host_vector.h>
 #include <thrust/copy.h>
 #include <thrust/memory.h>
+#include <thrust/fill.h>
+#include <thrust/detail/raw_pointer_cast.h>
+#include <thrust/remove.h>
+#include <thrust/execution_policy.h>
+#include <thrust/iterator/retag.h>
 
 #include "deviceGrid.hpp"
+#include "collOfScalar.hpp"
 
 using namespace equelleCUDA;
 
@@ -90,7 +96,8 @@ DeviceGrid::DeviceGrid()
       cell_volumes_(0),
       face_areas_(0),
       face_cells_(0),
-      face_normals_(0)
+      face_normals_(0),
+      id_(0)
 {
     // intentionally left blank
 }
@@ -107,7 +114,8 @@ DeviceGrid::DeviceGrid( const UnstructuredGrid& grid)
       cell_volumes_(0),
       face_areas_(0),
       face_cells_(0),
-      face_normals_(0)
+      face_normals_(0),
+      id_(-1)
 {
     std::cout << "Creating new DeviceGrid:\n";
     std::cout << "\t\t Dimensions = " << dimensions_ << std::endl;
@@ -212,7 +220,8 @@ DeviceGrid::DeviceGrid(const DeviceGrid& grid)
     cell_volumes_(0),
     face_areas_(0),
     face_cells_(0),
-    face_normals_(0)
+    face_normals_(0),
+    id_(0)
 {    
     // CELL_CENTROIDS_
     cudaStatus_ = cudaMalloc( (void**)&cell_centroids_,
@@ -222,7 +231,7 @@ DeviceGrid::DeviceGrid(const DeviceGrid& grid)
 			      dimensions_ * number_of_cells_ * sizeof(double),
 			      cudaMemcpyDeviceToDevice );
     checkError_("cudaMemcpy(cell_centroids_) in DeviceGrid::DeviceGrid(const DeviceGrid&)");
-    std::cout << "\tCopy cell_centroids_:\t" << cell_centroids_ << "\n";
+    //std::cout << "\tCopy cell_centroids_:\t" << cell_centroids_ << "\n";
 
     // CELL_FACEPOS_
     cudaStatus_ = cudaMalloc( (void**)&cell_facepos_, 
@@ -232,7 +241,7 @@ DeviceGrid::DeviceGrid(const DeviceGrid& grid)
 			      (number_of_cells_ + 1) * sizeof(int),
 			      cudaMemcpyDeviceToDevice );
     checkError_("cudaMemcpy(cell_facepos_) in DeviceGrid::DeviceGrid(const DeviceGrid&)");
-    std::cout << "\tCopy cell_facepos_:\t" <<cell_facepos_ << "\n";
+    //std::cout << "\tCopy cell_facepos_:\t" <<cell_facepos_ << "\n";
 
     // CELL_FACES_
     cudaStatus_ = cudaMalloc( (void**)&cell_faces_,
@@ -242,8 +251,8 @@ DeviceGrid::DeviceGrid(const DeviceGrid& grid)
 			      size_cell_faces_ * sizeof(int),
 			      cudaMemcpyDeviceToDevice );
     checkError_("cudaMemcpy(cell_faces_) in DeviceGrid::DeviceGrid(const DeviceGrid&)");
-    std::cout << "\tCopy cell_faces_:\t" << cell_faces_ << " with size ";
-    std::cout << size_cell_faces_ << "\n";
+    //std::cout << "\tCopy cell_faces_:\t" << cell_faces_ << " with size ";
+    //std::cout << size_cell_faces_ << "\n";
 
     // CELL_VOLUMES_
     cudaStatus_ = cudaMalloc( (void**)&cell_volumes_,
@@ -253,7 +262,7 @@ DeviceGrid::DeviceGrid(const DeviceGrid& grid)
 			      number_of_cells_ * sizeof(double),
 			      cudaMemcpyDeviceToDevice);
     checkError_("cudaMemcpy(cell_volumes_) in DeviceGrid::DeviceGrid(const DeviceGrid&)");
-    std::cout << "\tCopy cell_volumes_:\t" << cell_volumes_ << "\n";
+    //std::cout << "\tCopy cell_volumes_:\t" << cell_volumes_ << "\n";
 
     // FACE_AREAS_
     cudaStatus_ = cudaMalloc( (void**)&face_areas_,
@@ -263,7 +272,7 @@ DeviceGrid::DeviceGrid(const DeviceGrid& grid)
 			      number_of_cells_ * sizeof(double),
 			      cudaMemcpyDeviceToDevice);
     checkError_("cudaMemcpy(face_areas_) in DeviceGrid::DeviceGrid(const DeviceGrid&)");
-    std::cout << "\tCopy face_areas_:\t" << face_areas_ << "\n";
+    //std::cout << "\tCopy face_areas_:\t" << face_areas_ << "\n";
     
     // FACE_CELLS_
     cudaStatus_ = cudaMalloc( (void**)&face_cells_,
@@ -273,7 +282,7 @@ DeviceGrid::DeviceGrid(const DeviceGrid& grid)
 			      2 * number_of_faces_ * sizeof(int),
 			      cudaMemcpyDeviceToDevice);
     checkError_("cudaMemcpy(face_cells_) in DeviceGrid::DeviceGrid(const DeviceGrid&)");
-    std::cout << "\tCopy face_cells_:\t" << face_cells_ << "\n";
+    //std::cout << "\tCopy face_cells_:\t" << face_cells_ << "\n";
 			    
     // FACE_NORMALS
     cudaStatus_ = cudaMalloc( (void**)&face_normals_,
@@ -283,7 +292,7 @@ DeviceGrid::DeviceGrid(const DeviceGrid& grid)
 			      dimensions_ * number_of_faces_ * sizeof(double),
 			      cudaMemcpyDeviceToDevice);
     checkError_("cudaMemcpy(face_normals_) in DeviceGrid::DeviceGrid(const DeviceGrid&)");
-    std::cout << "\tCopy face_normals_:\t" << face_normals_ << "\n";
+    //std::cout << "\tCopy face_normals_:\t" << face_normals_ << "\n";
     
     std::cout << "Created DeviceGrid from copy constructor!\n";
 }
@@ -291,68 +300,151 @@ DeviceGrid::DeviceGrid(const DeviceGrid& grid)
 
 // Destructor
 DeviceGrid::~DeviceGrid() {
-    std::cout << "Destructor - " << dimensions_ << "\n";
-    std::cout << "\t\t" << cell_centroids_;
+    std::cout << "Destructor - id " << id_ << "\n";
+    //std::cout << "\t\t" << cell_centroids_;
     if( cell_centroids_ != 0 ) {
-	std::cout << "\tDel cell_centriods_\n";
+	//std::cout << "\tDel cell_centriods_\n";
 	cudaStatus_ = cudaFree(cell_centroids_);
 	checkError_("cudaFree(cell_centroids_) in DeviceGrid::~DeviceGrid()");
     }
-    std::cout << "\t\t" << cell_facepos_;
+    //std::cout << "\t\t" << cell_facepos_;
     if ( cell_facepos_ != 0 ) {
-	std::cout << "\tDel cell_facepos_\n";
+	//std::cout << "\tDel cell_facepos_\n";
 	cudaStatus_ = cudaFree(cell_facepos_);
 	checkError_("cudaFree(cell_facepos_) in DeviceGrid::~DeviceGrid()");
     }
-    std::cout << "\t\t" << cell_faces_;
+    //std::cout << "\t\t" << cell_faces_;
     if ( cell_faces_ != 0 ) {
-	std::cout << "\tDel cell_faces\n";
+	//std::cout << "\tDel cell_faces\n";
 	cudaStatus_ = cudaFree(cell_faces_);
 	checkError_("cudaFree(cell_faces_) in DeviceGrid::~DeviceGrid()");
     }
-    std::cout << "\t\t" << cell_volumes_;
+    //std::cout << "\t\t" << cell_volumes_;
     if ( cell_volumes_ != 0 ) {
-	std::cout << "\tDel cell_volumes_\n";
+	//std::cout << "\tDel cell_volumes_\n";
 	cudaStatus_ = cudaFree(cell_volumes_);
 	checkError_("cudaFree(cell_volumes_) in DeviceGrid::~DeviceGrid()");
     }
-    std::cout << "\t\t" << face_areas_;
+    //std::cout << "\t\t" << face_areas_;
     if ( face_areas_ != 0 ) {
-	std::cout << "\tDel face_areas_\n";
+	//std::cout << "\tDel face_areas_\n";
 	cudaStatus_ = cudaFree(face_areas_);
 	checkError_("cudaFree(face_areas_) in DeviceGrid::~DeviceGrid()");
     }
-    std::cout << "\t\t" << face_cells_;
+    //std::cout << "\t\t" << face_cells_;
     if ( face_cells_ != 0 ) {
-	std::cout << "\tDel face_cells_\n";
+	//std::cout << "\tDel face_cells_\n";
 	cudaStatus_ = cudaFree(face_cells_);
 	checkError_("cudaFree(face_cells_) in DeviceGrid::~DeviceGrid()");
     }
-    std::cout << "\t\t" << face_normals_;
+    //std::cout << "\t\t" << face_normals_;
     if ( face_normals_ != 0 ) {
-	std::cout << "\tDel face_normals_\n";
+	//std::cout << "\tDel face_normals_\n";
 	cudaStatus_ = cudaFree(face_normals_);
 	checkError_("cudaFree(face_normals_) in DeviceGrid::~DeviceGrid()");
     }
+    std::cout << "Destructor finished.\n";
 }
 
 
-int DeviceGrid::test(int a) {
-    dimensions_ = a;
+int DeviceGrid::setID(int a) {
+    id_ = a;
     return 4;
 }
 
+// ------------ GRID OPERATIONS! ------------
+Collection DeviceGrid::allCells() const {
+    return Collection(true);
+}
+
+Collection DeviceGrid::allFaces() const {
+    return Collection(true);
+}
+
+Collection DeviceGrid::boundaryFaces() const {
+    // we use the face_cells_ array to check if both face_cells are cells
+    // If face f is a boundary face, then 
+    // face_cells_[2 * f] or face_cells_[2 * f + 1] contains -1.
+    
+    // Launch a kernel where we use number_of_faces number of threads.
+    // Use a 1D kernel for simplicity.
+    // Assume that we do not need more blocks than available.
+    dim3 block_size(MAX_THREADS);
+    int num_blocks = (number_of_faces_ + MAX_THREADS - 1) / MAX_THREADS;
+    dim3 grid_size(num_blocks);
+
+    // Create a vector of size number_of_faces_:
+    thrust::device_vector<int> b_faces(number_of_faces_);
+    // Fill it with the value number_of_faces_
+    //     this is an illigal faca index
+    thrust::fill(b_faces.begin(), b_faces.end(), number_of_faces_);
+    int* b_faces_ptr = thrust::raw_pointer_cast( &b_faces[0] );
+    boundaryFacesKernel<<<grid_size, block_size>>>( b_faces_ptr,
+						    face_cells_,
+						    number_of_faces_);
+    // Remove unchanged values
+    // See  - thrust::remove_if documentation 
+    //      - the saxpy example in the algorithm chapter of the thrust pdf
+    //    struct unchanged
+    //{
+    //	const int val;
+    //	unchanged(int val_in) : val(val_in) {}
+    //	__host__ __device__ 
+    //	bool operator()(const int x) {
+    //	    return (x == val); 
+    //	}
+    //};
+    thrust::device_vector<int>::iterator new_end = thrust::remove_if(thrust::device, 
+								     b_faces.begin(),
+								     b_faces.end(),
+								     unchanged(number_of_faces_));
+    
+    thrust::device_vector<int> out(b_faces.begin(), new_end);
+
+    return Collection(out);
+    
+}
 
 
+// ----------- GET FUNCTIONS! ------------------
 
+int DeviceGrid::dimensions() const {
+    return dimensions_;
+}
 
+int DeviceGrid::number_of_cells() const {
+    return number_of_cells_;
+}
+
+int DeviceGrid::number_of_faces() const {
+    return number_of_faces_;
+}
+
+// ---------- ERROR CHECKING! -----------------------
 
 // Check if for CUDA error and throw OPM exception if there is one.
 void DeviceGrid::checkError_(const std::string& msg) const {
     //std::cout << "checking...\n";
     if ( cudaStatus_ != cudaSuccess ) {
 	std::cout << "HELLO!!!!?\n";
+	std::cout << "\n\nEXCEPTION!!!\n\n";
+
 	OPM_THROW(std::runtime_error, "\nCuda error\n\t" << msg << " - Error code: " << cudaGetErrorString(cudaStatus_));
     }
         
+}
+
+
+// ----------- GRID KERNELS -------------------------
+
+__global__ void equelleCUDA::boundaryFacesKernel( int* b_faces,
+						  const int* face_cells,
+						  const int number_of_faces) 
+{
+    int face = threadIdx.x + blockIdx.x*blockDim.x;
+    if (face < number_of_faces) {
+	if ( (face_cells[2*face] == -1) || (face_cells[2*face + 1] == -1) ) {
+	    b_faces[face] = face;
+	}
+    }
 }
