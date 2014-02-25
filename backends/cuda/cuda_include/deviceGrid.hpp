@@ -149,6 +149,10 @@ namespace equelleCUDA
 					 const int* face_cells,
 					 const int number_of_faces);
 
+    __global__ void interiorFacesKernel( int* i_faces,
+					 const int* face_cells,
+					 const int number_of_faces);
+
 
 } // namespace equelleCUDA
 

@@ -85,6 +85,49 @@ int boundary_faces_test(DeviceGrid dg) {
     return 0;
 }
 
+int interior_faces_test(DeviceGrid dg) {
+    // Expecting a non-full Collection with the following values:
+    int lf[] = {1,2,3,6,7,8,11,12,13,19,20,21,22,23,24,25,26};
+    int lf_size = 17;
+
+    Collection coll = dg.interiorFaces();
+    if ( coll.isFull() ) {
+	std::cout << "Error in gridTest.cu - interior_faces_test\n";
+	std::cout << "\tThe collection should not be full.\n";
+	return 1;
+    }
+    
+    thrust::host_vector<int> host = coll.toHost();
+    std::cout << "Interior_faces contains the following:\n";
+    bool correct = true;
+    for ( int i = 0; i < host.size(); i++) {
+	std::cout << host[i] << " ";
+	if (i < lf_size) {
+	    if (host[i] != lf[i]) {
+		correct = false;
+	    }
+	}
+    }
+    if (correct) {
+	std::cout << "\n\tThis is correct\n";
+    } else {
+	std::cout << "\n\tThis is wrong\n";
+	std::cout << "Error in gridTest.cu - interior_faces_test\n";
+	std::cout << "\tThe indices in the collection is wrong\n";
+	return 1;
+    }
+    
+    if ( coll.size() != lf_size ) {
+	std::cout << "Error in gridTest.cu - interior_faces_test\n";
+	std::cout << "\tThe collection is of wrong size\n";
+	return 1;
+    }
+    
+    return 0;
+}
+
+
+
 int cuda_main(DeviceGrid dg) {
     
     std::cout << "From cuda_main!\n";
@@ -102,6 +145,9 @@ int cuda_main(DeviceGrid dg) {
 	return 1;
     }
     if ( boundary_faces_test(dg) ) {
+	return 1;
+    }
+    if ( interior_faces_test(dg) ) {
 	return 1;
     }
 

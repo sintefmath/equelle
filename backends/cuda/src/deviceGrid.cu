@@ -406,6 +406,51 @@ Collection DeviceGrid::boundaryFaces() const {
 }
 
 
+Collection DeviceGrid::interiorFaces() const {
+    // we use the face_cells_ array to check if both face_cells are cells
+    // If face f is an interior face, then neither of
+    // face_cells_[2 * f] nor face_cells_[2 * f + 1] contains -1.
+    
+    // Launch a kernel where we use number_of_faces number of threads.
+    // Use a 1D kernel for simplicity.
+    // Assume that we do not need more blocks than available.
+    dim3 block_size(MAX_THREADS);
+    int num_blocks = (number_of_faces_ + MAX_THREADS - 1) / MAX_THREADS;
+    dim3 grid_size(num_blocks);
+
+    // Create a vector of size number_of_faces_:
+    thrust::device_vector<int> i_faces(number_of_faces_);
+    // Fill it with the value number_of_faces_
+    //     this is an illigal faca index
+    thrust::fill(i_faces.begin(), i_faces.end(), number_of_faces_);
+    int* i_faces_ptr = thrust::raw_pointer_cast( &i_faces[0] );
+    interiorFacesKernel<<<grid_size, block_size>>>( i_faces_ptr,
+						    face_cells_,
+						    number_of_faces_);
+    // Remove unchanged values
+    // See  - thrust::remove_if documentation 
+    //      - the saxpy example in the algorithm chapter of the thrust pdf
+    //    struct unchanged
+    //{
+    //	const int val;
+    //	unchanged(int val_in) : val(val_in) {}
+    //	__host__ __device__ 
+    //	bool operator()(const int x) {
+    //	    return (x == val); 
+    //	}
+    //};
+    thrust::device_vector<int>::iterator new_end = thrust::remove_if(thrust::device, 
+								     i_faces.begin(),
+								     i_faces.end(),
+								     unchanged(number_of_faces_));
+    
+    thrust::device_vector<int> out(i_faces.begin(), new_end);
+
+    return Collection(out);
+    
+}
+
+
 // ----------- GET FUNCTIONS! ------------------
 
 int DeviceGrid::dimensions() const {
@@ -445,6 +490,19 @@ __global__ void equelleCUDA::boundaryFacesKernel( int* b_faces,
     if (face < number_of_faces) {
 	if ( (face_cells[2*face] == -1) || (face_cells[2*face + 1] == -1) ) {
 	    b_faces[face] = face;
+	}
+    }
+}
+
+
+__global__ void equelleCUDA::interiorFacesKernel( int* i_faces,
+						  const int* face_cells,
+						  const int number_of_faces)
+{
+    int face = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( face < number_of_faces) {
+	if ( (face_cells[2*face] != -1) && (face_cells[2*face + 1] != -1) ) {
+	    i_faces[face] = face;
 	}
     }
 }
