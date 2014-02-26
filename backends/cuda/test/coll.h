@@ -8,13 +8,14 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <deviceGrid.hpp>
+#include "CollOfIndices.hpp"
 
 
 // Function declarations:
 
-void test_copy(equelleCUDA::Collection coll);
-void test_full(equelleCUDA::Collection coll);
-void test_back_to_host(equelleCUDA::Collection coll);
+void test_copy(equelleCUDA::CollOfIndices coll);
+void test_full(equelleCUDA::CollOfIndices coll);
+void test_back_to_host(equelleCUDA::CollOfIndices coll);
 
 int cuda_main();
 

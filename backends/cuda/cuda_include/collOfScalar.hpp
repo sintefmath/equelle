@@ -16,6 +16,8 @@
 #include <iterator>
 
 #include <deviceGrid.hpp>
+#include "CollOfIndices.hpp"
+
 
 // This is the header file for cuda!
 
@@ -105,12 +107,12 @@ namespace equelleCUDA {
 	
 	//! Get the connection between the values and the grid
 	/*!
-	  Returns a Collection varible on which the scalars are living.
+	  Returns a CollOfIndices varible on which the scalars are living.
 	  A Collection constists of a thrust::device_vector of indices if the 
 	  Collection is a subset of the grid. Otherwise it represent all cells or faces
 	  on the grid, and have the member function isFull(), which returns true.
 	 */
-	Collection collection() const;
+	CollOfIndices collection() const;
 	
     private:
 	int size_;
@@ -120,7 +122,7 @@ namespace equelleCUDA {
 	int block_x_;
 	int grid_x_;
 	
-	Collection indices_;
+	CollOfIndices indices_;
 	
 	// Error handling
 	//! check_Error throws an OPM exception if cudaStatus_ != cudaSuccess

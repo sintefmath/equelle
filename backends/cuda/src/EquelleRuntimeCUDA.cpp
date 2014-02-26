@@ -7,6 +7,8 @@
 #include "EquelleRuntimeCUDA_havahol.hpp"
 #include "collOfScalar.hpp"
 #include "deviceGrid.hpp"
+#include "CollOfIndices.hpp"
+
 
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/core/utility/StopWatch.hpp>

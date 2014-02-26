@@ -22,61 +22,10 @@
 
 #include "deviceGrid.hpp"
 #include "collOfScalar.hpp"
+#include "CollOfIndices.hpp"
+
 
 using namespace equelleCUDA;
-
-
-// -------------------------------------------------- //
-// ------- Implementation of Collection ------------- //
-// -------------------------------------------------- //
-
-
-Collection::Collection() 
-    : thrust::device_vector<int>(),
-      full_(false)
-{
-}
-
-
-Collection::Collection(const bool full)
-    : thrust::device_vector<int>(),
-      full_(full)
-{
-    if (full_ != true ) {
-	OPM_THROW(std::runtime_error, "Creating non-full Collection without giving the collection\n");
-    }
-}
-
-
-Collection::Collection(const thrust::device_vector<int>& indices) 
-    : thrust::device_vector<int>(indices.begin(), indices.end()),
-      full_(false)
-{
-}
-
-
-Collection::Collection(const Collection& coll)
-    : thrust::device_vector<int>(coll.begin(), coll.end()),
-    full_(coll.full_)
-{
-}
-
-Collection::~Collection() 
-{
-    // The destructor do nothing. Automaticly calling base constructor.
-}
-
-bool Collection::isFull() const
-{
-    return full_;
-}
-
-thrust::host_vector<int> Collection::toHost() const {
-    return thrust::host_vector<int>(this->begin(), this->end());
-}
-
-
-
 
 
 // --------------------------------------------------- //
@@ -353,15 +302,15 @@ int DeviceGrid::setID(int a) {
 }
 
 // ------------ GRID OPERATIONS! ------------
-Collection DeviceGrid::allCells() const {
-    return Collection(true);
+CollOfIndices DeviceGrid::allCells() const {
+    return CollOfIndices(true);
 }
 
-Collection DeviceGrid::allFaces() const {
-    return Collection(true);
+CollOfIndices DeviceGrid::allFaces() const {
+    return CollOfIndices(true);
 }
 
-Collection DeviceGrid::boundaryFaces() const {
+CollOfIndices DeviceGrid::boundaryFaces() const {
     // we use the face_cells_ array to check if both face_cells are cells
     // If face f is a boundary face, then 
     // face_cells_[2 * f] or face_cells_[2 * f + 1] contains -1.
@@ -395,12 +344,12 @@ Collection DeviceGrid::boundaryFaces() const {
     // but the vector still has size equal to number_of_faces_
     thrust::device_vector<int> out(b_faces.begin(), new_end);
 
-    return Collection(out);
+    return CollOfIndices(out);
     
 }
 
 
-Collection DeviceGrid::interiorFaces() const {
+CollOfIndices DeviceGrid::interiorFaces() const {
     // we use the face_cells_ array to check if both face_cells are cells
     // If face f is an interior face, then neither of
     // face_cells_[2 * f] nor face_cells_[2 * f + 1] contains -1.
@@ -433,13 +382,13 @@ Collection DeviceGrid::interiorFaces() const {
     // but the vector still has size equal to number_of_faces_    
     thrust::device_vector<int> out(i_faces.begin(), new_end);
 
-    return Collection(out);
+    return CollOfIndices(out);
     
 }
 
 
 // BOUNDARY CELLS
-Collection DeviceGrid::boundaryCells() const {
+CollOfIndices DeviceGrid::boundaryCells() const {
     // Returns a Collection of indices of boundary cells.
     // Algorithm:
     // for each cell c
@@ -459,12 +408,10 @@ Collection DeviceGrid::boundaryCells() const {
     thrust::fill(b_cells.begin(), b_cells.end(), number_of_cells_);
     int* b_cells_ptr = thrust::raw_pointer_cast( &b_cells[0] );
     boundaryCellsKernel<<<grid, block>>>( b_cells_ptr,
-					  cell_facepos_,
 					  number_of_cells_,
+					  cell_facepos_,
 					  cell_faces_,
-					  //size_cell_faces_,
 					  face_cells_);
-					  //number_of_faces_);
 
     // Remove values which still are number_of_cells_
     thrust::device_vector<int>::iterator new_end = thrust::remove_if(thrust::device,
@@ -472,12 +419,12 @@ Collection DeviceGrid::boundaryCells() const {
 								     b_cells.end(),
 								     unchanged(number_of_cells_));
     thrust::device_vector<int> out(b_cells.begin(), new_end);
-    return Collection(out);
+    return CollOfIndices(out);
 }
 
 
 // INTERIOR CELLS
-Collection DeviceGrid::interiorCells() const {
+CollOfIndices DeviceGrid::interiorCells() const {
     // Same as boundaryCells, but the kernel is the other way around
     dim3 block(MAX_THREADS);
     dim3 grid( (int)((number_of_cells_ + MAX_THREADS - 1)/ MAX_THREADS) );
@@ -488,9 +435,7 @@ Collection DeviceGrid::interiorCells() const {
 					  number_of_cells_,
 					  cell_facepos_,
 					  cell_faces_,
-					  //size_cell_faces_,
 					  face_cells_);
-					  //number_of_faces_);
 
     // Remove values which still are number_of_cells_
     thrust::device_vector<int>::iterator new_end = thrust::remove_if(thrust::device,
@@ -498,7 +443,7 @@ Collection DeviceGrid::interiorCells() const {
 								     i_cells.end(),
 								     unchanged(number_of_cells_));
     thrust::device_vector<int> out(i_cells.begin(), new_end);
-    return Collection(out);
+    return CollOfIndices(out);
 
 
 }
@@ -563,12 +508,10 @@ __global__ void equelleCUDA::interiorFacesKernel( int* i_faces,
 
 
 __global__ void equelleCUDA::boundaryCellsKernel(int* b_cells,
-						 const int* cell_facepos,
 						 const int number_of_cells,
+						 const int* cell_facepos,
 						 const int* cell_faces,
-						 //const int size_cell_faces,
 						 const int* face_cells)
-						 //const int number_of_faces)
 {
     int cell = threadIdx.x + blockIdx.x*blockDim.x;
     if ( cell < number_of_cells) {

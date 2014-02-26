@@ -19,6 +19,8 @@
 
 #include "collOfScalar.hpp"
 #include "deviceGrid.hpp"
+#include "CollOfIndices.hpp"
+
 
 // Implementation of the class CollOfScalar
 
@@ -153,7 +155,7 @@ int CollOfScalar::size() const
 }
 
 
-Collection CollOfScalar::collection() const {
+CollOfIndices CollOfScalar::collection() const {
     return indices_;
 }
 

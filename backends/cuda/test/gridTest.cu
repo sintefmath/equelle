@@ -10,6 +10,8 @@
 
 
 #include "deviceGrid.hpp"
+#include "CollOfIndices.hpp"
+
 
 #include "gridTest.h"
 
@@ -23,7 +25,7 @@ using namespace equelleCUDA;
 int all_cells_test(DeviceGrid dg) {
     //Expect the Collection to be full.
 
-    Collection coll = dg.allCells();
+    CollOfIndices coll = dg.allCells();
     if ( !coll.isFull() ) {
 	std::cout << "Error in gridTest.cu - all_cells_test\n";
 	return 1;
@@ -35,7 +37,7 @@ int all_cells_test(DeviceGrid dg) {
 
 int all_faces_test(DeviceGrid dg) {
     // Expect the Collection to be full
-    Collection coll = dg.allFaces();
+    CollOfIndices coll = dg.allFaces();
     if ( !coll.isFull() ) {
 	std::cout << " Error in gridTest.cu - all_faces_test\n";
 	return 1;
@@ -49,7 +51,7 @@ int boundary_faces_test(DeviceGrid dg) {
     // { 0 4 5 9 10 14 15 16 17 18 27 28 29 30 }
     int lf[] = {0, 4, 5, 9, 10, 14, 15, 16, 17, 18, 27, 28, 29, 30 };
     int lf_size = 14;
-    Collection coll = dg.boundaryFaces();
+    CollOfIndices coll = dg.boundaryFaces();
     if ( coll.isFull() ) {
 	std::cout << "Error in gridTest.cu - boundary_faces_test\n";
 	std::cout << "\tCollection should not be full\n";
@@ -90,7 +92,7 @@ int interior_faces_test(DeviceGrid dg) {
     int lf[] = {1,2,3,6,7,8,11,12,13,19,20,21,22,23,24,25,26};
     int lf_size = 17;
 
-    Collection coll = dg.interiorFaces();
+    CollOfIndices coll = dg.interiorFaces();
     if ( coll.isFull() ) {
 	std::cout << "Error in gridTest.cu - interior_faces_test\n";
 	std::cout << "\tThe collection should not be full.\n";
@@ -131,7 +133,7 @@ int boundary_cells_test( DeviceGrid dg) {
     int lf[] = {0,1,2,3,4,7,8,9,10,11};
     int lf_size = 10;
     
-    Collection coll = dg.boundaryCells();
+    CollOfIndices coll = dg.boundaryCells();
     if ( coll.isFull() ) {
 	std::cout << "Error in gridTest.cu - boundary_cells_test\n";
 	std::cout << "\tThe collection should not be full.\n";
@@ -172,7 +174,7 @@ int interior_cells_test( DeviceGrid dg) {
     int lf[] = {5,6};
     int lf_size = 2;
     
-    Collection coll = dg.interiorCells();
+    CollOfIndices coll = dg.interiorCells();
     if ( coll.isFull() ) {
 	std::cout << "Error in gridTest.cu - interior_cells_test\n";
 	std::cout << "\tThe collection should not be full.\n";
