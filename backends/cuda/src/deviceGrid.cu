@@ -476,6 +476,34 @@ Collection DeviceGrid::boundaryCells() const {
 }
 
 
+// INTERIOR CELLS
+Collection DeviceGrid::interiorCells() const {
+    // Same as boundaryCells, but the kernel is the other way around
+    dim3 block(MAX_THREADS);
+    dim3 grid( (int)((number_of_cells_ + MAX_THREADS - 1)/ MAX_THREADS) );
+    thrust::device_vector<int> i_cells(number_of_cells_);
+    thrust::fill(i_cells.begin(), i_cells.end(), number_of_cells_);
+    int* i_cells_ptr = thrust::raw_pointer_cast( &i_cells[0] );
+    interiorCellsKernel<<<grid, block>>>( i_cells_ptr,
+					  number_of_cells_,
+					  cell_facepos_,
+					  cell_faces_,
+					  //size_cell_faces_,
+					  face_cells_);
+					  //number_of_faces_);
+
+    // Remove values which still are number_of_cells_
+    thrust::device_vector<int>::iterator new_end = thrust::remove_if(thrust::device,
+								     i_cells.begin(),
+								     i_cells.end(),
+								     unchanged(number_of_cells_));
+    thrust::device_vector<int> out(i_cells.begin(), new_end);
+    return Collection(out);
+
+
+}
+
+
 
 // ----------- GET FUNCTIONS! ------------------
 
@@ -556,4 +584,28 @@ __global__ void equelleCUDA::boundaryCellsKernel(int* b_cells,
 	    b_cells[cell] = cell;
 	}
     }
+}
+
+
+__global__ void equelleCUDA::interiorCellsKernel( int* i_cells,
+						  const int number_of_cells,
+						  const int* cell_facepos,
+						  const int* cell_faces,
+						  const int* face_cells)
+{
+    int cell = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( cell < number_of_cells) {
+	bool interior = true;
+	int face;
+	for ( int f_i = cell_facepos[cell]; f_i < cell_facepos[cell + 1]; f_i++) {
+	    face = cell_faces[f_i];
+	    if ( (face_cells[ 2*face ] == -1) || (face_cells[ 2*face +1] == -1) ) {
+		interior = false;
+	    }
+	}
+	if ( interior ) {
+	    i_cells[cell] = cell;
+	}
+    }
+
 }
