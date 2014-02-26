@@ -382,23 +382,17 @@ Collection DeviceGrid::boundaryFaces() const {
     boundaryFacesKernel<<<grid_size, block_size>>>( b_faces_ptr,
 						    face_cells_,
 						    number_of_faces_);
+    
     // Remove unchanged values
     // See  - thrust::remove_if documentation 
     //      - the saxpy example in the algorithm chapter of the thrust pdf
-    //    struct unchanged
-    //{
-    //	const int val;
-    //	unchanged(int val_in) : val(val_in) {}
-    //	__host__ __device__ 
-    //	bool operator()(const int x) {
-    //	    return (x == val); 
-    //	}
-    //};
     thrust::device_vector<int>::iterator new_end = thrust::remove_if(thrust::device, 
 								     b_faces.begin(),
 								     b_faces.end(),
 								     unchanged(number_of_faces_));
     
+    // new_end points now to where the legal values end,
+    // but the vector still has size equal to number_of_faces_
     thrust::device_vector<int> out(b_faces.begin(), new_end);
 
     return Collection(out);
@@ -430,25 +424,57 @@ Collection DeviceGrid::interiorFaces() const {
     // Remove unchanged values
     // See  - thrust::remove_if documentation 
     //      - the saxpy example in the algorithm chapter of the thrust pdf
-    //    struct unchanged
-    //{
-    //	const int val;
-    //	unchanged(int val_in) : val(val_in) {}
-    //	__host__ __device__ 
-    //	bool operator()(const int x) {
-    //	    return (x == val); 
-    //	}
-    //};
     thrust::device_vector<int>::iterator new_end = thrust::remove_if(thrust::device, 
 								     i_faces.begin(),
 								     i_faces.end(),
 								     unchanged(number_of_faces_));
     
+    // new_end points now to where the legal values end,
+    // but the vector still has size equal to number_of_faces_    
     thrust::device_vector<int> out(i_faces.begin(), new_end);
 
     return Collection(out);
     
 }
+
+
+// BOUNDARY CELLS
+Collection DeviceGrid::boundaryCells() const {
+    // Returns a Collection of indices of boundary cells.
+    // Algorithm:
+    // for each cell c
+    //     for (face f_index in [cell_facepos[c] : cell_facepos[c+1] )
+    //          f = cell_faces[f_index]
+    //          if ( face_cells[2*f] == -1 or face_cells[2*f + 1] == -1 )
+    //              c is a boundary cell.
+
+    // Kernel of number_of_cells_ threads
+    // Operate on vector filled with number_of_cells_
+    // Set cell index if boundary cell
+    // Remove all elements equal to number_of_cells_.
+
+    dim3 block(MAX_THREADS);
+    dim3 grid( (int)((number_of_cells_ + MAX_THREADS - 1)/ MAX_THREADS) );
+    thrust::device_vector<int> b_cells(number_of_cells_);
+    thrust::fill(b_cells.begin(), b_cells.end(), number_of_cells_);
+    int* b_cells_ptr = thrust::raw_pointer_cast( &b_cells[0] );
+    boundaryCellsKernel<<<grid, block>>>( b_cells_ptr,
+					  cell_facepos_,
+					  number_of_cells_,
+					  cell_faces_,
+					  //size_cell_faces_,
+					  face_cells_);
+					  //number_of_faces_);
+
+    // Remove values which still are number_of_cells_
+    thrust::device_vector<int>::iterator new_end = thrust::remove_if(thrust::device,
+								     b_cells.begin(),
+								     b_cells.end(),
+								     unchanged(number_of_cells_));
+    thrust::device_vector<int> out(b_cells.begin(), new_end);
+    return Collection(out);
+}
+
 
 
 // ----------- GET FUNCTIONS! ------------------
@@ -503,6 +529,31 @@ __global__ void equelleCUDA::interiorFacesKernel( int* i_faces,
     if ( face < number_of_faces) {
 	if ( (face_cells[2*face] != -1) && (face_cells[2*face + 1] != -1) ) {
 	    i_faces[face] = face;
+	}
+    }
+}
+
+
+__global__ void equelleCUDA::boundaryCellsKernel(int* b_cells,
+						 const int* cell_facepos,
+						 const int number_of_cells,
+						 const int* cell_faces,
+						 //const int size_cell_faces,
+						 const int* face_cells)
+						 //const int number_of_faces)
+{
+    int cell = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( cell < number_of_cells) {
+	bool boundary = false;
+	int face;
+	for ( int f_i = cell_facepos[cell]; f_i < cell_facepos[cell + 1]; f_i++) {
+	    face = cell_faces[f_i];
+	    if ( (face_cells[ 2*face ] == -1) || (face_cells[ 2*face +1] == -1) ) {
+		boundary = true;
+	    }
+	}
+	if (boundary) {
+	    b_cells[cell] = cell;
 	}
     }
 }

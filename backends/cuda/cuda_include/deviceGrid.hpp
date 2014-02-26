@@ -153,6 +153,20 @@ namespace equelleCUDA
 					 const int* face_cells,
 					 const int number_of_faces);
 
+    __global__ void boundaryCellsKernel( int* b_cells, // size number_of_cells
+					 const int* cell_facepos, // number_of_cells + 1
+					 const int number_of_cells,
+					 const int* cell_faces, // size_cell_faces_
+					 //const int size_cell_faces,
+					 const int* face_cells); // 2 * number_of_faces
+					 //const int number_of_faces);
+    
+    __global__ void interiorCellsKernel( int* i_cells,
+					 const int number_of_cells,
+					 const int* cell_facepos,
+					 const int* cell_faces,
+					 const int* face_cells);
+
 
 } // namespace equelleCUDA
 
