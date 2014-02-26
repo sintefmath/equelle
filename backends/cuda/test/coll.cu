@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "deviceGrid.hpp"
+#include "DeviceGrid.hpp"
 #include "CollOfIndices.hpp"
 
 

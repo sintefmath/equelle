@@ -7,7 +7,7 @@
 
 #include <cuda.h>
 #include <cuda_runtime.h>
-#include <deviceGrid.hpp>
+#include "DeviceGrid.hpp"
 #include "CollOfIndices.hpp"
 
 

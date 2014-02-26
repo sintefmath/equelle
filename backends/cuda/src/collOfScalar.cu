@@ -17,8 +17,8 @@
 // For error exception macro:
 #include <opm/core/utility/ErrorMacros.hpp>
 
-#include "collOfScalar.hpp"
-#include "deviceGrid.hpp"
+#include "CollOfScalar.hpp"
+#include "DeviceGrid.hpp"
 #include "CollOfIndices.hpp"
 
 

@@ -9,7 +9,7 @@
 #include <exception>
 
 
-#include "deviceGrid.hpp"
+#include "DeviceGrid.hpp"
 #include "CollOfIndices.hpp"
 
 

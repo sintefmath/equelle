@@ -20,8 +20,8 @@
 #include <thrust/execution_policy.h>
 #include <thrust/iterator/retag.h>
 
-#include "deviceGrid.hpp"
-#include "collOfScalar.hpp"
+#include "DeviceGrid.hpp"
+#include "CollOfScalar.hpp"
 #include "CollOfIndices.hpp"
 
 using namespace equelleCUDA;

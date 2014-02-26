@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "EquelleRuntimeCUDA.hpp"
-#include "collOfScalar.hpp"
+#include "CollOfScalar.hpp"
 
 
 

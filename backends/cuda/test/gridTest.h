@@ -4,7 +4,7 @@
 #ifndef EQUELLE_CUDA_TEST_GRIDTEST_HEADER
 #define EQUELLE_CUDA_TEST_GRIDTEST_HEADER
 
-#include "deviceGrid.hpp"
+#include "DeviceGrid.hpp"
 
 int all_cells_test(equelleCUDA::DeviceGrid dg);
 int all_faces_test(equelleCUDA::DeviceGrid dg);

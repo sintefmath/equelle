@@ -18,8 +18,8 @@
 // Including device code
 // This should be independent from the rest of the host code
 //      and especially from any c++11 code.
-#include "collOfScalar.hpp"
-#include "deviceGrid.hpp"
+#include "CollOfScalar.hpp"
+#include "DeviceGrid.hpp"
 
 // Forward declarations for the Device types
 //class CollOfScalar;
@@ -551,6 +551,5 @@ private:
 // Include the implementations of template members.
 #include "EquelleRuntimeCUDA_impl.hpp"
 #include "EquelleRuntimeCUDA_havahol.hpp"
-//#include "collOfScalar.hpp"
 
 #endif // EQUELLERUNTIMECUDA_HEADER_INCLUDED

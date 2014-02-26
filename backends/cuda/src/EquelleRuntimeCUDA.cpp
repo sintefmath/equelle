@@ -5,8 +5,8 @@
 
 #include "EquelleRuntimeCUDA.hpp"
 #include "EquelleRuntimeCUDA_havahol.hpp"
-#include "collOfScalar.hpp"
-#include "deviceGrid.hpp"
+#include "CollOfScalar.hpp"
+#include "DeviceGrid.hpp"
 #include "CollOfIndices.hpp"
 
 

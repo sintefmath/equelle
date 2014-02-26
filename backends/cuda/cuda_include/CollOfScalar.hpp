@@ -15,7 +15,7 @@
 #include <fstream>
 #include <iterator>
 
-#include <deviceGrid.hpp>
+#include "DeviceGrid.hpp"
 #include "CollOfIndices.hpp"
 
 
