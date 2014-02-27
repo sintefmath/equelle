@@ -439,6 +439,40 @@ CollOfIndices DeviceGrid::interiorCells() const {
 
 }
 
+CollOfIndices DeviceGrid::firstCell() const {
+    // FirstCells are found from the face_cells_ array
+    // for each face f:
+    //     FirstCell[f] = face_cells_[2*f]
+    
+    // setup how many threads/blocks we need:
+    dim3 block(MAX_THREADS);
+    dim3 grid( (int)((number_of_faces_ + MAX_THREADS - 1)/ MAX_THREADS) );
+    
+    // create a vector of size number_of_faces_:
+    thrust::device_vector<int> first(number_of_faces_);
+    int* first_ptr = thrust::raw_pointer_cast( &first[0] );
+    firstCellKernel<<<grid, block>>>( first_ptr, number_of_faces_, face_cells_);
+
+    return CollOfIndices(first);
+}
+
+CollOfIndices DeviceGrid::secondCell() const {
+    // SecondCells are found from the face_cells_ array
+    // for each face f:
+    //     SecondCell[f] = second_cells_[2*f + 1]
+
+    // setup how many threads/blocks we need:
+    dim3 block(MAX_THREADS);
+    dim3 grid( (int)((number_of_faces_ + MAX_THREADS - 1)/ MAX_THREADS) );
+    
+    // create a vector of size number_of_faces_:
+    thrust::device_vector<int> second(number_of_faces_);
+    int* second_ptr = thrust::raw_pointer_cast( &second[0] );
+    secondCellKernel<<<grid,block>>>( second_ptr, number_of_faces_, face_cells_);
+    
+    return CollOfIndices(second);
+}
+
 
 
 // ----------- GET FUNCTIONS! ------------------
@@ -542,4 +576,25 @@ __global__ void equelleCUDA::interiorCellsKernel( int* i_cells,
 	}
     }
 
+}
+
+
+__global__ void equelleCUDA::firstCellKernel( int* first,
+					const int number_of_faces,
+					const int* face_cells)
+{
+    int face = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( face < number_of_faces ) {
+	first[face] = face_cells[2*face];
+    }
+}
+
+__global__ void equelleCUDA::secondCellKernel( int* second,
+					 const int number_of_faces,
+					 const int* face_cells)
+{
+    int face = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( face < number_of_faces ) {
+	second[face] = face_cells[2*face + 1];
+    }
 }

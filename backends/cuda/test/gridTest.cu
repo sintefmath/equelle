@@ -65,6 +65,7 @@ int compare_collection(CollOfIndices coll, int sol[],
 	std::cout << "Error in gridTest.cu - testing " << test << "\n";
 	std::cout << "\tThe collection is of wrong size!\n";
 	std::cout << "\tSize is " << coll.size() << " but should be " << sol_size << "\n";
+	return 1;
     }
     
     return 0;
@@ -121,7 +122,18 @@ int cuda_main(DeviceGrid dg) {
     if ( compare_collection(dg.interiorCells(), int_cells, 2, false, "interiorCells()") ) {
 	return 1;
     }
-
+    
+    // Test firstCell()
+    int first_cells[] = {-1,0,1,2,3,-1,4,5,6,7,-1,8,9,10,11,-1,-1,-1,-1,0,1,2,3,4,5,6,7,8,9,10,11};
+    if ( compare_collection(dg.firstCell(), first_cells, 31, false, "firstCell()") ) {
+	return 1;
+    }
+    
+    // Test secondCell()
+    int second_cells[] = {0,1,2,3,-1,4,5,6,7,-1,8,9,10,11,-1,0,1,2,3,4,5,6,7,8,9,10,11,-1,-1,-1,-1};
+    if ( compare_collection(dg.secondCell(), second_cells, 31, false, "secondCell()") ) {
+	return 1;
+    }
 
     return 0;
 }

@@ -113,6 +113,38 @@ namespace equelleCUDA
 	*/
 	CollOfIndices boundaryCells() const;
 
+	//! Collection of first cell for all faces
+	/*!
+	  All faces have an orientation given by its normal vector, and each face
+	  separates two cells (or one cell and the outside of the domain). 
+	  The first and second cell are defined by this orientation, so that 
+	  the face's normal vector points from FirstCell to SecondCell.
+
+	  The collection here contains number_of_faces_ entries of indices
+	  of the FirstCell of each face respectively. If a face is on the boundary
+	  with an inwards pointing normal vector, it has no FirstCell, and this is
+	  represented by a -1 value in the collection.
+	  
+	  \sa secondCell
+    	*/
+	CollOfIndices firstCell() const;
+
+	//! Collection of second cell for all faces
+	/*!
+	  All facs have an orientation given by its bormal vector, and each face
+	  separates two cells (or one cell and the outside of the domain).
+	  The first and second cell are defined by this orientation, so that the
+	  face's normal vector points from FirstCell to SecondCell.
+	  
+	  The collection here contains number_of_faces_ entries of indices 
+	  of the SecondCell of each face respectively. If a face is on the boundary 
+	  with an outwards pointing normal vector, it has no SecondCell, and this is
+	  represented by a -1 value in the collection.
+	  
+	  \sa firstCell
+	*/
+	CollOfIndices secondCell() const;
+
 
 	// Get functions:
 	/*!
@@ -206,6 +238,7 @@ namespace equelleCUDA
       \param[in,out] b_faces Array with number_of_faces elements. All elements should be initialized to hold a number representing an illegal index. Then each face modifies its corresponding element to hold its index if it is a boundary face.
       \param[in] face_cells Array containing cell indices for each side of every face. Contains -1 if the face is on the boundary. Array size: number_of_faces * 2.
       \param[in] number_of_faces Number of faces in the grid.
+      
       \sa DeviceGrid::boundaryFaces
     */
     __global__ void boundaryFacesKernel( int* b_faces,
@@ -218,6 +251,7 @@ namespace equelleCUDA
       \param[in,out] i_faces Array with number_of_faces elements. All elements should be initialized to hold a number representing an illegal index. Then each face modifies its corresponding element to hold its index if it is an interior face.
       \param[in] face_cells Array containing cell indices for each side of every face. Contains -1 if the face is on the boundary. Array size: number_of_faces * 2.
       \param[in] number_of_faces Number of faces in the grid.
+      
       \sa DeviceGrid::interiorFaces
      */
     __global__ void interiorFacesKernel( int* i_faces,
@@ -232,6 +266,7 @@ namespace equelleCUDA
       \param[in] cell_facepos Array of size number_of_cells + 1, containing the index range for each cell for reading faces in cell_faces. 
       \param[in] cell_faces Array with face indices surrounding all cells. Which face indices corresponding to which cell is given from cell_facepos.
       \param[in] face_cells Array containing cell indices for each side of every face. Contains -1 if the face is on the boundary. Array size: number_of_faces * 2.
+      
       \sa DeviceGrid::boundaryCells
      */
     __global__ void boundaryCellsKernel( int* b_cells, // size number_of_cells
@@ -248,7 +283,8 @@ namespace equelleCUDA
       \param[in] cell_facepos Array of size number_of_cells + 1, containing the index range for each cell for reading faces in cell_faces. 
       \param[in] cell_faces Array with face indices surrounding all cells. Which face indices corresponding to which cell is given from cell_facepos.
       \param[in] face_cells Array containing cell indices for each side of every face. Contains -1 if the face is on the boundary. Array size: number_of_faces * 2.
-      \sa DeviceGrid::boundaryCells
+      
+      \sa DeviceGrid::interiorCells
     */
     __global__ void interiorCellsKernel( int* i_cells,
 					 const int number_of_cells,
@@ -256,6 +292,37 @@ namespace equelleCUDA
 					 const int* cell_faces,
 					 const int* face_cells);
 
+    //! Kernel for computing first cell for all faces.
+    /*!
+      The first cell for face f is simply found by
+      \code first[f] = face_cells[2*f] \endcode
+      
+      \param[out] first Array of size number_of_faces where the resulting index
+      of the first cell is to be stored.
+      \param[in] number_of_faces Number of faces in the grid
+      \param[in] face_cells Complete storage of the two cells on each side of all faces.
+      
+      \sa DeviceGrid::firstCell
+    */
+    __global__ void firstCellKernel( int* first,
+				     const int number_of_faces,
+				     const int* face_cells);
+
+    //! Kernel for computing second cell for all faces
+    /*!
+      The second cell for face f is simply found by
+      \code second[f] = face_cells[2*f + 1] \endcode
+      
+      \param[out] second Array of size number_of_faces where the resulting index
+      of the second cell is to be stored.
+      \param[in] number_of_faces Number of faces in the grid.
+      \param[in] face_cells Complete storage of the two cells on each side of all faces.
+      
+      \sa DeviceGrid::secondCell
+    */
+    __global__ void secondCellKernel( int* second,
+				      const int number_of_faces,
+				      const int* face_cells);
 
 } // namespace equelleCUDA
 
