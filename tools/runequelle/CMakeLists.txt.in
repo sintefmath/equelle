@@ -28,25 +28,28 @@ set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra" )
 
 # The /usr/include/eigen3 path is default installed location of eigen3
 # on Ubuntu, you may need to add your own location in the EXTRA_... variable.
+
+find_package(Equelle REQUIRED)
+
 include_directories(
   "./include"
   "/usr/include/eigen3"
-  "@CMAKE_INSTALL_PREFIX@/include/equelle"
+  ${EQUELLE_INCLUDE_DIRS}
   ${EXTRA_INCLUDES_FOR_EQUELLE}
+	
 )
 
 link_directories(
-  "@CMAKE_INSTALL_PREFIX@/lib"
   ${EXTRA_LIBDIRS_FOR_EQUELLE}
 )
 
 add_executable( ${SIMULATOR_EXEC_FILE} ${SIMULATOR_SOURCE_FILE} )
 
 target_link_libraries( ${SIMULATOR_EXEC_FILE}
-  "equelle_rt"
   "opmautodiff"
   "opmcore"
   "dunecommon"
+  ${EQUELLE_LIBRARIES}
   ${EXTRA_LIBS_FOR_EQUELLE}
 )
 

@@ -40,7 +40,9 @@ def createBuildDir(builddir):
 
 def compileCpp(source):
     with cd(builddir):
-        subprocess.call(["cmake", runequelleroot, "-DSIMULATOR_SOURCE_FILE=" + genCppFileName(source), "-DSIMULATOR_EXEC_FILE=" + genSimulatorName(source)])
+        subprocess.call(["cmake", runequelleroot, "-DSIMULATOR_SOURCE_FILE=" + genCppFileName(source),
+                                                  "-DSIMULATOR_EXEC_FILE=" + genSimulatorName(source),
+                                                  "-DCMAKE_PREFIX_PATH=@CMAKE_INSTALL_PREFIX@"])
         subprocess.call(["make"])
 
 def runSimulator(source, params):
