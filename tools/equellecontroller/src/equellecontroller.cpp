@@ -1,5 +1,22 @@
 #include "equelle/equellecontroller.hpp"
 
-EquelleController::EquelleController() {
+
+class EquelleControllerImpl {
+public:
+    EquelleControllerImpl() {}
+};
+
+EquelleController
+EquelleController::createEquelleController() {
+    return EquelleController();
+}
+
+EquelleController::EquelleController() : pimpl( new EquelleControllerImpl() )
+{
+}
+
+EquelleController::~EquelleController()
+{
+    delete pimpl;
 }
 

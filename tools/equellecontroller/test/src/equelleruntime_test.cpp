@@ -2,7 +2,10 @@
 #define BOOST_TEST_MODULE EquelleControllerTest
 #include <boost/test/unit_test.hpp>
 
-BOOST_AUTO_TEST_CASE( get_started )
+#include "equelle/equellecontroller.hpp"
+
+BOOST_AUTO_TEST_CASE( testFactoryMethod )
 {
-    BOOST_CHECK_EQUAL( 2+2, 4 );
+    EquelleController cont = EquelleController::createEquelleController();
 }
+
