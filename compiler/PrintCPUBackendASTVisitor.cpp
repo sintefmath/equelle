@@ -16,8 +16,6 @@ namespace
     const char* cppEndString();
 }
 
-
-
 PrintCPUBackendASTVisitor::PrintCPUBackendASTVisitor()
     : suppressed_(false),
       indent_(1),
@@ -28,10 +26,6 @@ PrintCPUBackendASTVisitor::PrintCPUBackendASTVisitor()
 PrintCPUBackendASTVisitor::~PrintCPUBackendASTVisitor()
 {
 }
-
-
-
-
 
 void PrintCPUBackendASTVisitor::visit(SequenceNode&)
 {
@@ -535,7 +529,9 @@ namespace
 "#include \"EquelleRuntimeCPU.hpp\"\n"
 "\n"
 "void ensureRequirements(const EquelleRuntimeCPU& er);\n"
+"void equelleGeneratedCode(EquelleRuntimeCPU& er);\n"
 "\n"
+ "#ifndef EQUELLE_NO_MAIN\n"
 "int main(int argc, char** argv)\n"
 "{\n"
 "    // Get user parameters.\n"
@@ -543,7 +539,12 @@ namespace
 "\n"
 "    // Create the Equelle runtime.\n"
 "    EquelleRuntimeCPU er(param);\n"
+"    equelleGeneratedCode(er);\n"
+"    return 0;\n"
+"}\n"
+"#endif // EQUELLE_NO_MAIN\n"
 "\n"
+"void equelleGeneratedCode(EquelleRuntimeCPU& er) {\n"
 "    ensureRequirements(er);\n"
 "\n"
 "    // ============= Generated code starts here ================\n";
@@ -554,7 +555,6 @@ namespace
         return "\n"
 "    // ============= Generated code ends here ================\n"
 "\n"
-"    return 0;\n"
 "}\n";
     }
 }
