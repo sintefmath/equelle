@@ -15,34 +15,43 @@ namespace equelleCUDA
 
     //! Class for keeping track of subsets by storing a collection of indices.
     /*!
-      This is simply a minimally extended thrust::device_vector.
-      It is used such that given a complete set (allCells(), allFaces()) no extra 
-      indices are stored. We flag this by a boolean member variable.
-      For subsets the indices within the set is stored as a thrust::device_vector.
+      This class is a tailored thrust::device_vector<int> class for storing indices
+      for handeling subsets of faces and cells. The vector should store indices 
+      of the cells or faces that is part of the set. 
+      If we have a complete set (allCells(), allFaces()) we simply 
+      set a flag to show it is full instead of storing N indices {0, 1, ..., N-1}.
 
-      Since the class inherite thrust::device_vector, all vector member functions are
-      available and public.
+      Vector functions for begin and end iterators, as well as getting a raw int pointer
+      to the data is provided.
     */
-    class CollOfIndices : public thrust::device_vector<int> // CollOfIndices
+    class CollOfIndices 
     {	
-	// make device_vector private member. Implement only functions we need.
     public:
 	//! Default constructor
 	CollOfIndices();
 	
 	//! Constructor used for full sets.
 	/*!
-	  Insert value 'true' to create a full collection.
-	  No extra storage used.
-	  Will throw an exception if input value is 'false'.
-	  \param full boolean indicating that the collection is complete.
+	  Insert the size of the full collection
+	  No extra storage used, sets a flag to show that it is full.
 	*/
-	explicit CollOfIndices(const bool full);
+	explicit CollOfIndices(const int size);
+
 	//! Constructor for creating a subset Coll
 	/*!
 	  Give as input the indices that will be part of the collection.
 	*/
 	explicit CollOfIndices(const thrust::device_vector<int>& indices);
+
+	//! Constructor for creating a subset collection from an iterator range
+	/*!
+	  \param[in] begin A pointer to the first element of the range which should
+	  be in the collection.
+	  \param[in] end A pointer to the element after the last one that should be
+	  int the collection.
+	 */
+	explicit CollOfIndices(thrust::device_vector<int>::iterator begin,
+			       thrust::device_vector<int>::iterator end);
 	
 	//! Copy constructor
 	CollOfIndices(const CollOfIndices& coll);
@@ -51,7 +60,7 @@ namespace equelleCUDA
 	~CollOfIndices();
 	
 	/*! 
-	  \return true if the Collection is full, false otherwise
+	  \return True if the Collection is full, false otherwise
 	*/
 	bool isFull() const;
 	//! Copy the device_vector to host memory.
@@ -63,8 +72,37 @@ namespace equelleCUDA
 	*/
 	thrust::host_vector<int> toHost() const;
 	
+	//! Collection size
+	/*!
+	  \return The size of the collection regardless if it is full or not.
+	*/
+	int size() const;
+	
+	//! Begin iterator
+	/*!
+	  \return An iterator at the beginning of the device vector
+	*/
+	//thrust::device_vector<int>::iterator begin() const;
+	thrust::device_vector<int>::iterator begin();
+
+	//! End iterator
+	/*!
+	  \return An iterator at the end of the device vector.
+	*/
+	//	thrust::device_vector<int>::iterator end() const;
+	thrust::device_vector<int>::iterator end();
+	
+	//! Reference to the first vector element
+	/*!
+	  \return An int pointer to the first element of the device_vector.
+	  Useful when the vector data is needed in a kernel.
+	*/
+	int* raw_pointer();
+	
     private:
 	bool full_;
+	int size_;
+	thrust::device_vector<int> dev_vec_;
 	
     }; // class CollOfIndices
 

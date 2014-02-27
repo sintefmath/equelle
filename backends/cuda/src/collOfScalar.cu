@@ -42,7 +42,7 @@ CollOfScalar::CollOfScalar(const int size)
       dev_values_(0),
       block_x_(equelleCUDA::MAX_THREADS),
       grid_x_((size_ + block_x_ - 1) / block_x_),
-      indices_(true)
+      indices_(size)
 {
     cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
     checkError_("cudaMalloc in CollOfScalar::CollOfScalar(int)");
@@ -53,7 +53,7 @@ CollOfScalar::CollOfScalar(const int size, const int value)
       dev_values_(0),
       block_x_(equelleCUDA::MAX_THREADS),
       grid_x_((size_ + block_x_ - 1) / block_x_),
-      indices_(true)
+      indices_(size)
 {
     // Can not use cudaMemset as it sets float values on a given
     // number of bytes.
@@ -75,7 +75,7 @@ CollOfScalar::CollOfScalar(const std::vector<double>& host_vec)
       dev_values_(0),
       block_x_(equelleCUDA::MAX_THREADS),
       grid_x_((size_ + block_x_ - 1) / block_x_),
-      indices_(true)
+      indices_(size_)
 {
     cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
     checkError_("cudaMalloc in CollOfScalar::CollOfScalar(std::vector<double>)");

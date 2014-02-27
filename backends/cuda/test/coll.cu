@@ -8,6 +8,7 @@
 #include <cuda_runtime.h>
 
 #include <thrust/host_vector.h>
+#include <thrust/device_vector.h>
 
 #include <opm/core/utility/ErrorMacros.hpp>
 
@@ -21,19 +22,20 @@ void test_copy(CollOfIndices coll) {
     if ( coll.isFull() ) {
 	OPM_THROW(std::runtime_error, "\ntest_copy - collection says it is " << coll.isFull() << " but should be false.");
     }
-    for (int i = 0; i < coll.size(); i++) {
-	if ( coll[i] != 2 ){
-	    OPM_THROW(std::runtime_error, "\ntest_copy - Collection don't match. Expected 2, got " << coll[i]);
+    for (thrust::device_vector<int>::iterator it = coll.begin(); it != coll.end(); it++) {
+	//for (int i = 0; i < coll.size(); i++) {
+	if ( *it != 2 ){
+	    OPM_THROW(std::runtime_error, "\ntest_copy - Collection don't match. Expected 2, got " << *it);
 	}
     }
 }
 
-void test_full(CollOfIndices coll) {
+void test_full(CollOfIndices coll, int s) {
     if ( !coll.isFull() ) {
 	OPM_THROW(std::runtime_error, "\ntest_full - isFull() should be true but is " << coll.isFull());
     }
-    if ( coll.size() != 0 ) {
-	OPM_THROW(std::runtime_error, "\ntest_full - vector should be empty, but has size " << coll.size());
+    if ( coll.size() != s ) {
+	OPM_THROW(std::runtime_error, "\ntest_full - vector should have size " << s << ", but has size " << coll.size());
     }
 
 }
@@ -62,8 +64,9 @@ int cuda_main() {
     CollOfIndices coll2 = coll;
     test_copy(coll2);
 
-    CollOfIndices coll3(true);
-    test_full(coll3);
+    int dummy_size = 20;
+    CollOfIndices coll3(dummy_size);
+    test_full(coll3, dummy_size);
 
     thrust::host_vector<int> host2(0);
     for( int i = 0; i < 20; i++) {

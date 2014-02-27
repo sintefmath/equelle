@@ -303,11 +303,11 @@ int DeviceGrid::setID(int a) {
 
 // ------------ GRID OPERATIONS! ------------
 CollOfIndices DeviceGrid::allCells() const {
-    return CollOfIndices(true);
+    return CollOfIndices(number_of_cells_);
 }
 
 CollOfIndices DeviceGrid::allFaces() const {
-    return CollOfIndices(true);
+    return CollOfIndices(number_of_faces_);
 }
 
 CollOfIndices DeviceGrid::boundaryFaces() const {
@@ -342,10 +342,7 @@ CollOfIndices DeviceGrid::boundaryFaces() const {
     
     // new_end points now to where the legal values end,
     // but the vector still has size equal to number_of_faces_
-    thrust::device_vector<int> out(b_faces.begin(), new_end);
-
-    return CollOfIndices(out);
-    
+    return CollOfIndices(b_faces.begin(), new_end);
 }
 
 
@@ -380,10 +377,7 @@ CollOfIndices DeviceGrid::interiorFaces() const {
     
     // new_end points now to where the legal values end,
     // but the vector still has size equal to number_of_faces_    
-    thrust::device_vector<int> out(i_faces.begin(), new_end);
-
-    return CollOfIndices(out);
-    
+    return CollOfIndices(i_faces.begin(), new_end);
 }
 
 
@@ -418,8 +412,7 @@ CollOfIndices DeviceGrid::boundaryCells() const {
 								     b_cells.begin(),
 								     b_cells.end(),
 								     unchanged(number_of_cells_));
-    thrust::device_vector<int> out(b_cells.begin(), new_end);
-    return CollOfIndices(out);
+    return CollOfIndices(b_cells.begin(), new_end);
 }
 
 
@@ -442,9 +435,7 @@ CollOfIndices DeviceGrid::interiorCells() const {
 								     i_cells.begin(),
 								     i_cells.end(),
 								     unchanged(number_of_cells_));
-    thrust::device_vector<int> out(i_cells.begin(), new_end);
-    return CollOfIndices(out);
-
+    return CollOfIndices(i_cells.begin(), new_end);
 
 }
 

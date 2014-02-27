@@ -34,15 +34,17 @@ using namespace equelleCUDA;
 
 
 CollOfIndices::CollOfIndices() 
-    : thrust::device_vector<int>(),
-      full_(false)
+    : full_(false),
+      size_(0),
+      dev_vec_(0)
 {
 }
 
 
-CollOfIndices::CollOfIndices(const bool full)
-    : thrust::device_vector<int>(),
-      full_(full)
+CollOfIndices::CollOfIndices(const int size)
+    : full_(true),
+      size_(size),
+      dev_vec_(0)
 {
     if (full_ != true ) {
 	OPM_THROW(std::runtime_error, "Creating non-full CollOfIndices without giving the collection\n");
@@ -51,21 +53,32 @@ CollOfIndices::CollOfIndices(const bool full)
 
 
 CollOfIndices::CollOfIndices(const thrust::device_vector<int>& indices) 
-    : thrust::device_vector<int>(indices.begin(), indices.end()),
-      full_(false)
+    : full_(false),
+      size_(0),
+      dev_vec_(indices.begin(), indices.end())
 {
+    size_ = dev_vec_.size();
 }
 
+CollOfIndices::CollOfIndices(thrust::device_vector<int>::iterator begin,
+			     thrust::device_vector<int>::iterator end)
+    : full_(false),
+      size_(0),
+      dev_vec_(begin, end)
+{
+    size_ = dev_vec_.size();
+}
 
 CollOfIndices::CollOfIndices(const CollOfIndices& coll)
-    : thrust::device_vector<int>(coll.begin(), coll.end()),
-    full_(coll.full_)
+    : full_(coll.full_),
+      size_(coll.size_),
+      dev_vec_(coll.dev_vec_.begin(), coll.dev_vec_.end())
 {
 }
 
 CollOfIndices::~CollOfIndices() 
 {
-    // The destructor do nothing. Automaticly calling base constructor.
+    // Nothing we manually have to destruct.
 }
 
 bool CollOfIndices::isFull() const
@@ -74,8 +87,34 @@ bool CollOfIndices::isFull() const
 }
 
 thrust::host_vector<int> CollOfIndices::toHost() const {
-    return thrust::host_vector<int>(this->begin(), this->end());
+    return thrust::host_vector<int>(dev_vec_.begin(), dev_vec_.end());
 }
 
 
+int CollOfIndices::size() const {
+    return size_;
+}
 
+//thrust::device_vector<int>::iterator CollOfIndices::begin() const {
+//    return dev_vec_.begin();
+//}
+
+//thrust::device_vector<int>::iterator CollOfIndices::end() const {
+//    return dev_vec_.end();
+//}
+
+thrust::device_vector<int>::iterator CollOfIndices::begin() {
+    return dev_vec_.begin();
+}
+
+thrust::device_vector<int>::iterator CollOfIndices::end() {
+    return dev_vec_.end();
+}
+
+int* CollOfIndices::raw_pointer() {
+    //thrust::device_vector<int> temp(8);
+    //thrust::fill(temp.begin(), temp.end(), 9);
+    //int* out = thrust::raw_pointer_cast( &temp[0] );
+    //int* out2 = out;
+    return thrust::raw_pointer_cast( &dev_vec_[0] );
+}
