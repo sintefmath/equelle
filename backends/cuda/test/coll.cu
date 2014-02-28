@@ -15,7 +15,7 @@
 using namespace equelleCUDA;
 
 
-void test_copy(CollOfFaces coll) {
+void test_copy(CollOfFace coll) {
     if ( coll.size() != 10 ) {
 	OPM_THROW(std::runtime_error, "\ntest_copy - size don't match");
     }
@@ -30,7 +30,7 @@ void test_copy(CollOfFaces coll) {
     }
 }
 
-void test_full(CollOfCells coll, int s) {
+void test_full(CollOfCell coll, int s) {
     if ( !coll.isFull() ) {
 	OPM_THROW(std::runtime_error, "\ntest_full - isFull() should be true but is " << coll.isFull());
     }
@@ -47,7 +47,7 @@ __global__ void addOne(int* array, int size) {
     }
 }
 
-void test_back_to_host(CollOfCells coll) {
+void test_back_to_host(CollOfCell coll) {
     if (coll.size() != 20) {
 	OPM_THROW(std::runtime_error, "\ntest_back_to_host - size should be 20, is " << coll.size());
     }
@@ -78,24 +78,24 @@ void test_back_to_host(CollOfCells coll) {
 int cuda_main() {
 
     thrust::host_vector<int> host(10, 2);
-    CollOfFaces coll(host);
+    CollOfFace coll(host);
 
-    CollOfCells cells(host);
+    CollOfCell cells(host);
 
     test_copy(coll);
     
-    CollOfFaces coll2 = coll;
+    CollOfFace coll2 = coll;
     test_copy(coll2);
 
     int dummy_size = 20;
-    CollOfCells coll3(dummy_size);
+    CollOfCell coll3(dummy_size);
     test_full(coll3, dummy_size);
 
     thrust::host_vector<int> host2(0);
     for( int i = 0; i < 20; i++) {
 	host2.push_back(i);
     }
-    CollOfCells coll4(host2);
+    CollOfCell coll4(host2);
     test_back_to_host(coll4);
 
     return 0;

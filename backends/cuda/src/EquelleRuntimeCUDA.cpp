@@ -74,10 +74,10 @@ EquelleRuntimeCUDA::EquelleRuntimeCUDA(const Opm::parameter::ParameterGroup& par
 }
 
 
-CollOfCell EquelleRuntimeCUDA::allCells() const
+CollOfCellCPU EquelleRuntimeCUDA::allCells() const
 {
     const int nc = grid_.number_of_cells;
-    CollOfCell cells(nc);
+    CollOfCellCPU cells(nc);
     for (int c = 0; c < nc; ++c) {
         cells[c].index = c;
     }
@@ -100,9 +100,9 @@ bool EquelleRuntimeCUDA::boundaryCell(const int cell_index) const
 }
 
 
-CollOfCell EquelleRuntimeCUDA::boundaryCells() const
+CollOfCellCPU EquelleRuntimeCUDA::boundaryCells() const
 {
-    CollOfCell cells;
+    CollOfCellCPU cells;
     const int nc = grid_.number_of_cells;
     cells.reserve(nc);
     for (int c = 0; c < nc; ++c) {
@@ -114,9 +114,9 @@ CollOfCell EquelleRuntimeCUDA::boundaryCells() const
 }
 
 
-CollOfCell EquelleRuntimeCUDA::interiorCells() const
+CollOfCellCPU EquelleRuntimeCUDA::interiorCells() const
 {
-    CollOfCell cells;
+    CollOfCellCPU cells;
     const int nc = grid_.number_of_cells;
     cells.reserve(nc);
     for (int c = 0; c < nc; ++c) {
@@ -128,10 +128,10 @@ CollOfCell EquelleRuntimeCUDA::interiorCells() const
 }
 
 
-CollOfFace EquelleRuntimeCUDA::allFaces() const
+CollOfFaceCPU EquelleRuntimeCUDA::allFaces() const
 {
     const int nf = grid_.number_of_faces;
-    CollOfFace faces(nf);
+    CollOfFaceCPU faces(nf);
     for (int f = 0; f < nf; ++f) {
         faces[f].index = f;
     }
@@ -141,11 +141,11 @@ CollOfFace EquelleRuntimeCUDA::allFaces() const
 
 // Again... this is kind of botched for a 1D grid implemented as a 2D(n, 1) or 2D(1, n) grid...
 
-CollOfFace EquelleRuntimeCUDA::boundaryFaces() const
+CollOfFaceCPU EquelleRuntimeCUDA::boundaryFaces() const
 {
     const int nif = ops_.internal_faces.size();
     const int nbf = grid_.number_of_faces - nif;
-    CollOfFace bfaces(nbf);
+    CollOfFaceCPU bfaces(nbf);
     int if_cursor = 0;
     int bf_cursor = 0;
 
@@ -169,10 +169,10 @@ CollOfFace EquelleRuntimeCUDA::boundaryFaces() const
 }
 
 
-CollOfFace EquelleRuntimeCUDA::interiorFaces() const
+CollOfFaceCPU EquelleRuntimeCUDA::interiorFaces() const
 {
     const int nif = ops_.internal_faces.size();
-    CollOfFace ifaces(nif);
+    CollOfFaceCPU ifaces(nif);
     for (int i = 0; i < nif; ++i) {
         ifaces[i].index = ops_.internal_faces(i);
     }
@@ -180,10 +180,10 @@ CollOfFace EquelleRuntimeCUDA::interiorFaces() const
 }
 
 
-CollOfCell EquelleRuntimeCUDA::firstCell(const CollOfFace& faces) const
+CollOfCellCPU EquelleRuntimeCUDA::firstCell(const CollOfFaceCPU& faces) const
 {
     const int n = faces.size();
-    CollOfCell fcells(n);
+    CollOfCellCPU fcells(n);
     for (int i = 0; i < n; ++i) {
         fcells[i].index = grid_.face_cells[2*faces[i].index];
     }
@@ -191,10 +191,10 @@ CollOfCell EquelleRuntimeCUDA::firstCell(const CollOfFace& faces) const
 }
 
 
-CollOfCell EquelleRuntimeCUDA::secondCell(const CollOfFace& faces) const
+CollOfCellCPU EquelleRuntimeCUDA::secondCell(const CollOfFaceCPU& faces) const
 {
     const int n = faces.size();
-    CollOfCell fcells(n);
+    CollOfCellCPU fcells(n);
     for (int i = 0; i < n; ++i) {
         fcells[i].index = grid_.face_cells[2*faces[i].index + 1];
     }
@@ -202,7 +202,7 @@ CollOfCell EquelleRuntimeCUDA::secondCell(const CollOfFace& faces) const
 }
 
 
-CollOfScalarCPU EquelleRuntimeCUDA::norm(const CollOfFace& faces) const
+CollOfScalarCPU EquelleRuntimeCUDA::norm(const CollOfFaceCPU& faces) const
 {
     const int n = faces.size();
     CollOfScalarCPU::V areas(n);
@@ -213,7 +213,7 @@ CollOfScalarCPU EquelleRuntimeCUDA::norm(const CollOfFace& faces) const
 }
 
 
-CollOfScalarCPU EquelleRuntimeCUDA::norm(const CollOfCell& cells) const
+CollOfScalarCPU EquelleRuntimeCUDA::norm(const CollOfCellCPU& cells) const
 {
     const int n = cells.size();
     CollOfScalarCPU::V volumes(n);
@@ -235,7 +235,7 @@ CollOfScalarCPU EquelleRuntimeCUDA::norm(const CollOfVector& vectors) const
 }
 
 
-CollOfVector EquelleRuntimeCUDA::centroid(const CollOfFace& faces) const
+CollOfVector EquelleRuntimeCUDA::centroid(const CollOfFaceCPU& faces) const
 {
     const int n = faces.size();
     const int dim = grid_.dimensions;
@@ -254,7 +254,7 @@ CollOfVector EquelleRuntimeCUDA::centroid(const CollOfFace& faces) const
 }
 
 
-CollOfVector EquelleRuntimeCUDA::centroid(const CollOfCell& cells) const
+CollOfVector EquelleRuntimeCUDA::centroid(const CollOfCellCPU& cells) const
 {
     const int n = cells.size();
     const int dim = grid_.dimensions;
@@ -273,7 +273,7 @@ CollOfVector EquelleRuntimeCUDA::centroid(const CollOfCell& cells) const
 }
 
 
-CollOfVector EquelleRuntimeCUDA::normal(const CollOfFace& faces) const
+CollOfVector EquelleRuntimeCUDA::normal(const CollOfFaceCPU& faces) const
 {
     const int n = faces.size();
     const int dim = grid_.dimensions;
@@ -347,7 +347,7 @@ CollOfScalarCPU EquelleRuntimeCUDA::interiorDivergence(const CollOfScalarCPU& fa
 }
 
 
-CollOfBool EquelleRuntimeCUDA::isEmpty(const CollOfCell& cells) const
+CollOfBool EquelleRuntimeCUDA::isEmpty(const CollOfCellCPU& cells) const
 {
     const size_t sz = cells.size();
     CollOfBool retval = CollOfBool::Constant(sz, false);
@@ -360,7 +360,7 @@ CollOfBool EquelleRuntimeCUDA::isEmpty(const CollOfCell& cells) const
 }
 
 
-CollOfBool EquelleRuntimeCUDA::isEmpty(const CollOfFace& faces) const
+CollOfBool EquelleRuntimeCUDA::isEmpty(const CollOfFaceCPU& faces) const
 {
     const size_t sz = faces.size();
     CollOfBool retval = CollOfBool::Constant(sz, false);
@@ -468,8 +468,8 @@ Scalar EquelleRuntimeCUDA::inputScalarWithDefault(const String& name,
 }
 
 
-CollOfFace EquelleRuntimeCUDA::inputDomainSubsetOf(const String& name,
-                                                  const CollOfFace& face_superset)
+CollOfFaceCPU EquelleRuntimeCUDA::inputDomainSubsetOf(const String& name,
+                                                  const CollOfFaceCPU& face_superset)
 {
     const String filename = param_.get<String>(name + "_filename");
     std::ifstream is(filename.c_str());
@@ -478,7 +478,7 @@ CollOfFace EquelleRuntimeCUDA::inputDomainSubsetOf(const String& name,
     }
     std::istream_iterator<int> beg(is);
     std::istream_iterator<int> end;
-    CollOfFace data;
+    CollOfFaceCPU data;
     for (auto it = beg; it != end; ++it) {
         data.push_back(Face(*it));
     }
@@ -492,8 +492,8 @@ CollOfFace EquelleRuntimeCUDA::inputDomainSubsetOf(const String& name,
 }
 
 
-CollOfCell EquelleRuntimeCUDA::inputDomainSubsetOf(const String& name,
-                                                  const CollOfCell& cell_superset)
+CollOfCellCPU EquelleRuntimeCUDA::inputDomainSubsetOf(const String& name,
+                                                  const CollOfCellCPU& cell_superset)
 {
     const String filename = param_.get<String>(name + "_filename");
     std::ifstream is(filename.c_str());
@@ -502,7 +502,7 @@ CollOfCell EquelleRuntimeCUDA::inputDomainSubsetOf(const String& name,
     }
     std::istream_iterator<int> beg(is);
     std::istream_iterator<int> end;
-    CollOfCell data;
+    CollOfCellCPU data;
     for (auto it = beg; it != end; ++it) {
         data.push_back(Cell(*it));
     }

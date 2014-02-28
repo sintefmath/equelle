@@ -44,8 +44,8 @@ typedef TopologicalEntity<0> Cell;
 typedef TopologicalEntity<1> Face;
 
 /// Topological collections.
-typedef std::vector<Cell> CollOfCell;
-typedef std::vector<Face> CollOfFace;
+typedef std::vector<Cell> CollOfCellCPU;
+typedef std::vector<Face> CollOfFaceCPU;
 
 // Basic types. Note that we do not have Vector type defined
 // although the CollOfVector type is.
@@ -440,20 +440,20 @@ public:
     EquelleRuntimeCUDA(const Opm::parameter::ParameterGroup& param);
 
     /// Topology and geometry related.
-    CollOfCell allCells() const;
-    CollOfCell boundaryCells() const;
-    CollOfCell interiorCells() const;
-    CollOfFace allFaces() const;
-    CollOfFace boundaryFaces() const;
-    CollOfFace interiorFaces() const;
-    CollOfCell firstCell(const CollOfFace& faces) const;
-    CollOfCell secondCell(const CollOfFace& faces) const;
-    CollOfScalarCPU norm(const CollOfFace& faces) const;
-    CollOfScalarCPU norm(const CollOfCell& cells) const;
+    CollOfCellCPU allCells() const;
+    CollOfCellCPU boundaryCells() const;
+    CollOfCellCPU interiorCells() const;
+    CollOfFaceCPU allFaces() const;
+    CollOfFaceCPU boundaryFaces() const;
+    CollOfFaceCPU interiorFaces() const;
+    CollOfCellCPU firstCell(const CollOfFaceCPU& faces) const;
+    CollOfCellCPU secondCell(const CollOfFaceCPU& faces) const;
+    CollOfScalarCPU norm(const CollOfFaceCPU& faces) const;
+    CollOfScalarCPU norm(const CollOfCellCPU& cells) const;
     CollOfScalarCPU norm(const CollOfVector& vectors) const;
-    CollOfVector centroid(const CollOfFace& faces) const;
-    CollOfVector centroid(const CollOfCell& cells) const;
-    CollOfVector normal(const CollOfFace& faces) const;
+    CollOfVector centroid(const CollOfFaceCPU& faces) const;
+    CollOfVector centroid(const CollOfCellCPU& cells) const;
+    CollOfVector normal(const CollOfFaceCPU& faces) const;
 
     /// Operators and math functions.
     CollOfScalarCPU sqrt(const CollOfScalarCPU& x) const;
@@ -462,8 +462,8 @@ public:
     CollOfScalarCPU negGradient(const CollOfScalarCPU& cell_scalarfield) const;
     CollOfScalarCPU divergence(const CollOfScalarCPU& face_fluxes) const;
     CollOfScalarCPU interiorDivergence(const CollOfScalarCPU& face_fluxes) const;
-    CollOfBool isEmpty(const CollOfCell& cells) const;
-    CollOfBool isEmpty(const CollOfFace& faces) const;
+    CollOfBool isEmpty(const CollOfCellCPU& cells) const;
+    CollOfBool isEmpty(const CollOfFaceCPU& faces) const;
 
     template <class EntityCollection>
     CollOfScalarCPU operatorExtend(const Scalar data, const EntityCollection& to_set);
@@ -503,10 +503,10 @@ public:
     /// Input.
     Scalar inputScalarWithDefault(const String& name,
                                           const Scalar default_value);
-    CollOfFace inputDomainSubsetOf(const String& name,
-                                   const CollOfFace& superset);
-    CollOfCell inputDomainSubsetOf(const String& name,
-                                   const CollOfCell& superset);
+    CollOfFaceCPU inputDomainSubsetOf(const String& name,
+                                   const CollOfFaceCPU& superset);
+    CollOfCellCPU inputDomainSubsetOf(const String& name,
+                                   const CollOfCellCPU& superset);
     template <class SomeCollection>
     equelleCUDA::CollOfScalar inputCollectionOfScalar(const String& name,
                                          const SomeCollection& coll);

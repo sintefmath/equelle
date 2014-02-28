@@ -13,9 +13,9 @@
 
 // Function declarations:
 
-void test_copy(equelleCUDA::CollOfFaces coll);
-void test_full(equelleCUDA::CollOfCells coll);
-void test_back_to_host(equelleCUDA::CollOfCells coll);
+void test_copy(equelleCUDA::CollOfFace coll);
+void test_full(equelleCUDA::CollOfCell coll);
+void test_back_to_host(equelleCUDA::CollOfCell coll);
 
 int cuda_main();
 

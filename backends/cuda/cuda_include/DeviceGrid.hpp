@@ -80,38 +80,38 @@ namespace equelleCUDA
 	/*!
 	  \return CollOfIndices corresponding to all cells of the grid
 	*/
-	CollOfCells allCells() const;
+	CollOfCell allCells() const;
 	//! Collection of all faces
 	/*!
 	  \return CollOfIndices corresponding to all faces of the grid
 	*/
-	CollOfFaces allFaces() const;
+	CollOfFace allFaces() const;
 
 	//! Collection of all boundary faces
 	/*!
 	  Creates a collection of the indices of the boundary faces of the grid.
 	  \return CollOfIndices of boundary faces
 	*/
-	CollOfFaces boundaryFaces() const;
+	CollOfFace boundaryFaces() const;
 	//! Collection of all interior faces
 	/*!
 	  Creates a collection of the indices of the interior faces of the grid.
 	  \return CollOfIndices of interior faces
 	*/
-	CollOfFaces interiorFaces() const;
+	CollOfFace interiorFaces() const;
 	
 	//! Collection of all interior cells.
 	/*!
 	  Creates a collection of the indices of the interior cells of the grid.
 	  \return CollOfIndices of interior cells.
 	*/
-	CollOfCells interiorCells() const;
+	CollOfCell interiorCells() const;
 	//! Collection of all boundary cells.
 	/*!
 	  Creates a collection of the indices of the boundary cells of the grid.
 	  \return CollOfIndices of boundary cells.
 	*/
-	CollOfCells boundaryCells() const;
+	CollOfCell boundaryCells() const;
 
 	//! Collection of first cell for a set of faces
 	/*!
@@ -132,7 +132,7 @@ namespace equelleCUDA
 
 	  \sa secondCell
     	*/
-	CollOfCells firstCell(CollOfFaces coll) const;
+	CollOfCell firstCell(CollOfFace coll) const;
 
 	//! Collection of second cell for a set of faces
 	/*!
@@ -153,7 +153,7 @@ namespace equelleCUDA
 	  
 	  \sa firstCell
 	*/
-	CollOfCells secondCell(CollOfFaces coll) const;
+	CollOfCell secondCell(CollOfFace coll) const;
 
 
 	// Get functions:

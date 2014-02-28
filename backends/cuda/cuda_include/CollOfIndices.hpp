@@ -108,8 +108,8 @@ namespace equelleCUDA
     }; // class CollOfIndices
 
 
-    typedef CollOfIndices<0> CollOfCells;
-    typedef CollOfIndices<1> CollOfFaces;
+    typedef CollOfIndices<0> CollOfCell;
+    typedef CollOfIndices<1> CollOfFace;
 
 
 } // namespace equelleCUDA
