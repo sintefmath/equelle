@@ -23,6 +23,15 @@ namespace equelleCUDA
 
       Vector functions for begin and end iterators, as well as getting a raw int pointer
       to the data is provided.
+
+      The class is written as a template class, where the template input is not used at all.
+      This is for having the opportunity of seperate between collections of faces and
+      collections of cells. For example, the first and second functions does not make 
+      sense if the input sets are collections of cells since only face have a first 
+      and second cell. We also want to ensure this kind of safety checks for 
+      Gradient and Divergence as well. For functions such as norm, the functionality
+      differs depending on whether the input is collection of faces or cells.
+      Giving typedefs as we have done here will result in such a check at compile time.
     */
     template <int dummy>
     class CollOfIndices 
@@ -107,8 +116,21 @@ namespace equelleCUDA
 	
     }; // class CollOfIndices
 
-
+    //! Typedef for a collection of cells.
+    /*!
+      Offers the compile time check for giving correct type of
+      collections into correct functions.
+      
+      \sa CollOfIndices
+    */
     typedef CollOfIndices<0> CollOfCell;
+    //! Typedef for a collection of faces.
+    /*!
+      Offers the compile time check for giving correct type of
+      collections into correct functions.
+      
+      \sa CollOfIndices
+    */
     typedef CollOfIndices<1> CollOfFace;
 
 
