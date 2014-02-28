@@ -123,17 +123,34 @@ int cuda_main(DeviceGrid dg) {
 	return 1;
     }
     
-    // Test firstCell()
+    // Test firstCell(allFaces())
     int first_cells[] = {-1,0,1,2,3,-1,4,5,6,7,-1,8,9,10,11,-1,-1,-1,-1,0,1,2,3,4,5,6,7,8,9,10,11};
-    if ( compare_collection(dg.firstCell(), first_cells, 31, false, "firstCell()") ) {
+    if ( compare_collection(dg.firstCell(dg.allFaces()), first_cells, 31, false, 
+			    "firstCell(allFaces())") ) {
 	return 1;
     }
     
-    // Test secondCell()
+    // Test secondCell(allFaces())
     int second_cells[] = {0,1,2,3,-1,4,5,6,7,-1,8,9,10,11,-1,0,1,2,3,4,5,6,7,8,9,10,11,-1,-1,-1,-1};
-    if ( compare_collection(dg.secondCell(), second_cells, 31, false, "secondCell()") ) {
+    if ( compare_collection(dg.secondCell(dg.allFaces()), second_cells, 31, false, 
+			    "secondCell(allFaces())") ) {
 	return 1;
     }
+
+    // Test firstCell(interiorFaces())
+    int first_int[] = {0,1,2,4,5,6,8,9,10,0,1,2,3,4,5,6,7};
+    if ( compare_collection(dg.firstCell(dg.interiorFaces()), first_int, 17, false,
+			    "firstCell(interiorFaces())") ) {
+	return 1;
+    }
+
+    // Test secondCell(interiorFaces())
+    int second_int[] = {1,2,3,5,6,7,9,10,11,4,5,6,7,8,9,10,11};
+    if ( compare_collection(dg.secondCell(dg.interiorFaces()), second_int, 17, false,
+			    "secondCell(interiorFaces())") ) {
+	return 1;
+    }
+							    
 
     return 0;
 }

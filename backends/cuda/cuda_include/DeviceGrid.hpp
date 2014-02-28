@@ -113,37 +113,47 @@ namespace equelleCUDA
 	*/
 	CollOfIndices boundaryCells() const;
 
-	//! Collection of first cell for all faces
+	//! Collection of first cell for a set of faces
 	/*!
 	  All faces have an orientation given by its normal vector, and each face
 	  separates two cells (or one cell and the outside of the domain). 
 	  The first and second cell are defined by this orientation, so that 
-	  the face's normal vector points from FirstCell to SecondCell.
-
-	  The collection here contains number_of_faces_ entries of indices
-	  of the FirstCell of each face respectively. If a face is on the boundary
-	  with an inwards pointing normal vector, it has no FirstCell, and this is
-	  represented by a -1 value in the collection.
+	  the face's normal vector points from FirstCell to SecondCell. 
+	  This function gives the first cell of the set of faces given as input.
 	  
+	  If a face do not have a FirstCell, the output value for this face will be
+	  -1. This will be the case for boundary faces with an inwards pointing
+	  normal vector.
+
+	  \param coll A collection of indices representing all faces, or a subset of 
+	  all faces, in the grid.
+	  \return A collection of indices representing the cells that are a FirstCell 
+	  for the faces given as input. 
+
 	  \sa secondCell
     	*/
-	CollOfIndices firstCell() const;
+	CollOfIndices firstCell(CollOfIndices coll) const;
 
-	//! Collection of second cell for all faces
+	//! Collection of second cell for a set of faces
 	/*!
 	  All facs have an orientation given by its bormal vector, and each face
 	  separates two cells (or one cell and the outside of the domain).
 	  The first and second cell are defined by this orientation, so that the
 	  face's normal vector points from FirstCell to SecondCell.
+	  This function gives the second cell of the set of faces given as input.
+
+	  If a face fo not have a SecondCell, the output value for this face will be
+	  -1. This will be the case for boundary faces with an outwards pointing
+	  normal vector.
 	  
-	  The collection here contains number_of_faces_ entries of indices 
-	  of the SecondCell of each face respectively. If a face is on the boundary 
-	  with an outwards pointing normal vector, it has no SecondCell, and this is
-	  represented by a -1 value in the collection.
+	  \param coll A collection of indices representing all faces, or a subset of
+	  all faces, in the grid.
+	  \return A collection of indices representing the cells taht are a SecondCell
+	  for the faces given as input.
 	  
 	  \sa firstCell
 	*/
-	CollOfIndices secondCell() const;
+	CollOfIndices secondCell(CollOfIndices coll) const;
 
 
 	// Get functions:
@@ -308,6 +318,26 @@ namespace equelleCUDA
 				     const int number_of_faces,
 				     const int* face_cells);
 
+    //! Kernel for computing first cell for a subset of faces.
+    /*!
+      Performs the same operation as firstCellKernel, but only computed on a subset
+      of the faces. We therefore need to read an index as well in order to find the 
+      correct cell.
+      \code first[i] = face_cells[2*face_index[i]] \endcode
+          
+      \param[out] first Array of size number_of_faces where the resulting index
+      of the first cell is to be stored.
+      \param[in] number_of_faces Number of faces in the subset of the grid.
+      \param[in] face_index The indices for the faces in the subset.
+      \param[in] face_cells Complete storage of the two cells on each side of all faces.
+      
+      \sa DeviceGrid::firstCell, firstCellKernel
+    */
+    __global__ void firstCellSubsetKernel( int* first,
+					   const int number_of_faces,
+					   const int* face_index,
+					   const int* face_cells);
+
     //! Kernel for computing second cell for all faces
     /*!
       The second cell for face f is simply found by
@@ -322,6 +352,26 @@ namespace equelleCUDA
     */
     __global__ void secondCellKernel( int* second,
 				      const int number_of_faces,
+				      const int* face_cells);
+
+    //! Kernel for computing second cell for a subset of faces.
+    /*!
+      Performs the same operation as secondCellKernel, but only computed on a subset
+      of the faces. We therefore need to read an index as well in order to find the
+      correct cell.
+      \code second[i] = face_cells[2*face_index[i] + 1] \endcode
+                
+      \param[out] second Array of size number_of_faces where the resulting index
+      of the second cell is to be stored.
+      \param[in] number_of_faces Number of faces in the subset of the grid.
+      \param[in] face_index The indices for the faces in the subset.
+      \param[in] face_cells Complete storage of the two cells on each side of all faces.
+      
+      \sa DeviceGrid::secondCell, secondCellKernel
+    */
+    __global__ void secondCellSubsetKernel( int* second,
+				      const int number_of_faces,
+				      const int* face_index,
 				      const int* face_cells);
 
 } // namespace equelleCUDA

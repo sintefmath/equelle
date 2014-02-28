@@ -40,6 +40,13 @@ void test_full(CollOfIndices coll, int s) {
 
 }
 
+
+__global__ void addOne(int* array, int size) {
+    if ( blockIdx.x < size ) {
+	array[blockIdx.x]++;
+    }
+}
+
 void test_back_to_host(CollOfIndices coll) {
     if (coll.size() != 20) {
 	OPM_THROW(std::runtime_error, "\ntest_back_to_host - size should be 20, is " << coll.size());
@@ -50,7 +57,21 @@ void test_back_to_host(CollOfIndices coll) {
 	    OPM_THROW(std::runtime_error, "\ntest_back_to_host - back[" << i << "] should be " << i << " but is " << back[i]);
 	}
     }
-
+    
+    // Get the raw pointer and call a kernel to add 1 on each
+    int* ptr = 0; 
+    ptr = coll.raw_pointer();
+    if (ptr == 0) {
+	OPM_THROW(std::runtime_error, "\ntest_back_to_host - failed assigning raw pointer");
+    } 
+    addOne<<<coll.size(), 1>>>(ptr, coll.size());
+    // copy back to host again
+    thrust::host_vector<int> added = coll.toHost();
+    for(int i = 0; i < added.size(); ++i) {
+	if ( added[i] != i+1 ) {
+	    OPM_THROW(std::runtime_error, "\ntest_back_to_host - added[" << i << "] should be " << i+1 << " but is " << back[i]);
+	}
+    }
 
 }
 
