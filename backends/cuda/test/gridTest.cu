@@ -19,7 +19,8 @@
 using namespace equelleCUDA;
 
 // Function for comparing a collection to a known hard coded solution
-int compare_collection(CollOfIndices coll, int sol[], 
+template <int dummy>
+int compare_collection(CollOfIndices<dummy> coll, int sol[], 
 		       int sol_size, bool full,
 		       std::string test) 
 { 
@@ -150,6 +151,27 @@ int cuda_main(DeviceGrid dg) {
 			    "secondCell(interiorFaces())") ) {
 	return 1;
     }
+
+    // Test firstCell(boundaryFaces())
+    int first_bound[] = {-1,3,-1,7,-1,11,-1,-1,-1,-1,8,9,10,11};
+    if ( compare_collection(dg.firstCell(dg.boundaryFaces()), first_bound, 14, false,
+			    "firstCell(boundaryFaces())") ) {
+	return 1;
+    }
+    
+    // Test secondCell(boundaryFaces())
+    int second_bound[] = {0,-1,4,-1,8,-1,0,1,2,3,-1,-1,-1,-1};
+    if ( compare_collection(dg.secondCell(dg.boundaryFaces()), second_bound, 14, false,
+			    "secondCell(boundaryFaces())") ) {
+	return 1;
+    }
+
+    // THIS GIVES AN COMPILER ERROR - AND IT SHOULD :)
+    // Test firstCell(interiorCells()
+    //if ( compare_collection( dg.firstCell(dg.interiorCells()), {}, 0, false,
+    //			     "firstCell(interiorCells())") ) {
+    //	return 1;
+    //}
 							    
 
     return 0;

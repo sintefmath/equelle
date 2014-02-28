@@ -1,3 +1,7 @@
+
+#ifndef EQUELLE_COLLOFINDICES_IMPL_INCLUDED
+#define EQUELLE_COLLOFINDICES_IMPL_INCLUDED
+
 #include <cuda.h>
 #include <cuda_runtime.h>
 
@@ -32,16 +36,16 @@ using namespace equelleCUDA;
 // ------- Implementation of CollOfIndices ---------- //
 // -------------------------------------------------- //
 
-
-CollOfIndices::CollOfIndices() 
+template <int dummy>
+CollOfIndices<dummy>::CollOfIndices() 
     : full_(false),
       size_(0),
       dev_vec_(0)
 {
 }
 
-
-CollOfIndices::CollOfIndices(const int size)
+template <int dummy>
+CollOfIndices<dummy>::CollOfIndices(const int size)
     : full_(true),
       size_(size),
       dev_vec_(0)
@@ -51,8 +55,8 @@ CollOfIndices::CollOfIndices(const int size)
     }
 }
 
-
-CollOfIndices::CollOfIndices(const thrust::device_vector<int>& indices) 
+template <int dummy>
+CollOfIndices<dummy>::CollOfIndices(const thrust::device_vector<int>& indices) 
     : full_(false),
       size_(0),
       dev_vec_(indices.begin(), indices.end())
@@ -60,7 +64,8 @@ CollOfIndices::CollOfIndices(const thrust::device_vector<int>& indices)
     size_ = dev_vec_.size();
 }
 
-CollOfIndices::CollOfIndices(thrust::device_vector<int>::iterator begin,
+template <int dummy>
+CollOfIndices<dummy>::CollOfIndices(thrust::device_vector<int>::iterator begin,
 			     thrust::device_vector<int>::iterator end)
     : full_(false),
       size_(0),
@@ -69,29 +74,33 @@ CollOfIndices::CollOfIndices(thrust::device_vector<int>::iterator begin,
     size_ = dev_vec_.size();
 }
 
-CollOfIndices::CollOfIndices(const CollOfIndices& coll)
+template <int dummy>
+CollOfIndices<dummy>::CollOfIndices(const CollOfIndices& coll)
     : full_(coll.full_),
       size_(coll.size_),
       dev_vec_(coll.dev_vec_.begin(), coll.dev_vec_.end())
 {
 }
 
-CollOfIndices::~CollOfIndices() 
+template <int dummy>
+CollOfIndices<dummy>::~CollOfIndices() 
 {
     // Nothing we manually have to destruct.
 }
 
-bool CollOfIndices::isFull() const
+template <int dummy>
+bool CollOfIndices<dummy>::isFull() const
 {
     return full_;
 }
 
-thrust::host_vector<int> CollOfIndices::toHost() const {
+template <int dummy>
+thrust::host_vector<int> CollOfIndices<dummy>::toHost() const {
     return thrust::host_vector<int>(dev_vec_.begin(), dev_vec_.end());
 }
 
-
-int CollOfIndices::size() const {
+template <int dummy>
+int CollOfIndices<dummy>::size() const {
     return size_;
 }
 
@@ -103,18 +112,27 @@ int CollOfIndices::size() const {
 //    return dev_vec_.end();
 //}
 
-thrust::device_vector<int>::iterator CollOfIndices::begin() {
+
+template <int dummy>
+thrust::device_vector<int>::iterator CollOfIndices<dummy>::begin() {
     return dev_vec_.begin();
 }
 
-thrust::device_vector<int>::iterator CollOfIndices::end() {
+template <int dummy>
+thrust::device_vector<int>::iterator CollOfIndices<dummy>::end() {
     return dev_vec_.end();
 }
 
-int* CollOfIndices::raw_pointer() {
+
+// This one should be const, but raw_pointer_cast is incompitible with const...
+template <int dummy>
+int* CollOfIndices<dummy>::raw_pointer() {
     //thrust::device_vector<int> temp(8);
     //thrust::fill(temp.begin(), temp.end(), 9);
-    //int* out = thrust::raw_pointer_cast( &temp[0] );
+    //const int* out = thrust::raw_pointer_cast( &dev_vec_[0] );
     //int* out2 = out;
     return thrust::raw_pointer_cast( &dev_vec_[0] );
 }
+
+
+#endif // EQUELLE_COLLOFINDICES_IMPL_INCLUDED

@@ -24,6 +24,7 @@ namespace equelleCUDA
       Vector functions for begin and end iterators, as well as getting a raw int pointer
       to the data is provided.
     */
+    template <int dummy>
     class CollOfIndices 
     {	
     public:
@@ -107,7 +108,14 @@ namespace equelleCUDA
     }; // class CollOfIndices
 
 
+    typedef CollOfIndices<0> CollOfCells;
+    typedef CollOfIndices<1> CollOfFaces;
+
+
 } // namespace equelleCUDA
+
+// Include implementation of the template class
+#include "CollOfIndices_impl.hpp"
 
 
 #endif // EQUELLE_COLLOFINDICES_HEADER_INCLUDED

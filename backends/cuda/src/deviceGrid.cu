@@ -302,15 +302,15 @@ int DeviceGrid::setID(int a) {
 }
 
 // ------------ GRID OPERATIONS! ------------
-CollOfIndices DeviceGrid::allCells() const {
-    return CollOfIndices(number_of_cells_);
+CollOfCells DeviceGrid::allCells() const {
+    return CollOfCells(number_of_cells_);
 }
 
-CollOfIndices DeviceGrid::allFaces() const {
-    return CollOfIndices(number_of_faces_);
+CollOfFaces DeviceGrid::allFaces() const {
+    return CollOfFaces(number_of_faces_);
 }
 
-CollOfIndices DeviceGrid::boundaryFaces() const {
+CollOfFaces DeviceGrid::boundaryFaces() const {
     // we use the face_cells_ array to check if both face_cells are cells
     // If face f is a boundary face, then 
     // face_cells_[2 * f] or face_cells_[2 * f + 1] contains -1.
@@ -342,11 +342,11 @@ CollOfIndices DeviceGrid::boundaryFaces() const {
     
     // new_end points now to where the legal values end,
     // but the vector still has size equal to number_of_faces_
-    return CollOfIndices(b_faces.begin(), new_end);
+    return CollOfFaces(b_faces.begin(), new_end);
 }
 
 
-CollOfIndices DeviceGrid::interiorFaces() const {
+CollOfFaces DeviceGrid::interiorFaces() const {
     // we use the face_cells_ array to check if both face_cells are cells
     // If face f is an interior face, then neither of
     // face_cells_[2 * f] nor face_cells_[2 * f + 1] contains -1.
@@ -377,12 +377,12 @@ CollOfIndices DeviceGrid::interiorFaces() const {
     
     // new_end points now to where the legal values end,
     // but the vector still has size equal to number_of_faces_    
-    return CollOfIndices(i_faces.begin(), new_end);
+    return CollOfFaces(i_faces.begin(), new_end);
 }
 
 
 // BOUNDARY CELLS
-CollOfIndices DeviceGrid::boundaryCells() const {
+CollOfCells DeviceGrid::boundaryCells() const {
     // Returns a Collection of indices of boundary cells.
     // Algorithm:
     // for each cell c
@@ -412,12 +412,12 @@ CollOfIndices DeviceGrid::boundaryCells() const {
 								     b_cells.begin(),
 								     b_cells.end(),
 								     unchanged(number_of_cells_));
-    return CollOfIndices(b_cells.begin(), new_end);
+    return CollOfCells(b_cells.begin(), new_end);
 }
 
 
 // INTERIOR CELLS
-CollOfIndices DeviceGrid::interiorCells() const {
+CollOfCells DeviceGrid::interiorCells() const {
     // Same as boundaryCells, but the kernel is the other way around
     dim3 block(MAX_THREADS);
     dim3 grid( (int)((number_of_cells_ + MAX_THREADS - 1)/ MAX_THREADS) );
@@ -435,11 +435,11 @@ CollOfIndices DeviceGrid::interiorCells() const {
 								     i_cells.begin(),
 								     i_cells.end(),
 								     unchanged(number_of_cells_));
-    return CollOfIndices(i_cells.begin(), new_end);
+    return CollOfCells(i_cells.begin(), new_end);
 
 }
 
-CollOfIndices DeviceGrid::firstCell(CollOfIndices coll) const {
+CollOfCells DeviceGrid::firstCell(CollOfFaces coll) const {
     // The out collection will be of same size as the in collection
 
     // FirstCells are found from the face_cells_ array
@@ -460,10 +460,10 @@ CollOfIndices DeviceGrid::firstCell(CollOfIndices coll) const {
  	firstCellSubsetKernel<<<grid, block>>>( first_ptr, coll.size(),
 					       index_ptr, face_cells_);
     }					
-    return CollOfIndices(first);
+    return CollOfCells(first);
 }
 
-CollOfIndices DeviceGrid::secondCell(CollOfIndices coll) const {
+CollOfCells DeviceGrid::secondCell(CollOfFaces coll) const {
     // SecondCells are found from the face_cells_ array
     // for face f
     //     second(f) = face_cells_[2*f + 1]
@@ -481,7 +481,7 @@ CollOfIndices DeviceGrid::secondCell(CollOfIndices coll) const {
 		secondCellSubsetKernel<<<grid, block>>>( second_ptr, coll.size(),
 							 coll.raw_pointer(), face_cells_);
     }
-    return CollOfIndices(second);
+    return CollOfCells(second);
 }
 
 

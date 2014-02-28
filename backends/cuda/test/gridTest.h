@@ -8,7 +8,8 @@
 
 #include "DeviceGrid.hpp"
 
-int compare_collection(equelleCUDA::CollOfIndices coll,
+template <int dummy>
+int compare_collection(equelleCUDA::CollOfIndices<dummy> coll,
 		       int sol[], int sol_size, bool full,
 		       std::string test);
 

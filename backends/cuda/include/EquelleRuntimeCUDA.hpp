@@ -511,6 +511,10 @@ public:
     equelleCUDA::CollOfScalar inputCollectionOfScalar(const String& name,
                                          const SomeCollection& coll);
 
+	template <int dummy>
+	equelleCUDA::CollOfScalar inputCollectionOfScalar(const String& name,
+						const equelleCUDA::CollOfIndices<dummy>& coll);
+										 
     SeqOfScalar inputSequenceOfScalar(const String& name);
 
 
