@@ -252,6 +252,12 @@ public:
     template <class SomeCollection, class EntityCollection>
     SomeCollection operatorExtend(const SomeCollection& data, const EntityCollection& from_set, const EntityCollection& to_set);
 
+    // Havahol Extend:
+    template<int dummy>
+    CollOfScalar operatorExtend(const CollOfScalar& data_in,
+				const CollOfIndices<dummy>& from_set,
+				const CollOfIndices<dummy>& to_set);
+
     //template <class SomeCollection, class EntityCollection>
     //typename CollType<SomeCollection>::Type operatorOn(const SomeCollection& data, const EntityCollection& from_set, const EntityCollection& to_set);
 
@@ -292,10 +298,10 @@ public:
     equelleCUDA::CollOfScalar inputCollectionOfScalar(const String& name,
                                          const SomeCollection& coll);
 	
-	// input havahol
-	template <int dummy>
-	equelleCUDA::CollOfScalar inputCollectionOfScalar(const String& name,
-						const equelleCUDA::CollOfIndices<dummy>& coll);
+    // input havahol
+    template <int dummy>
+    equelleCUDA::CollOfScalar inputCollectionOfScalar(const String& name,
+						      const equelleCUDA::CollOfIndices<dummy>& coll);
 										 
     SeqOfScalar inputSequenceOfScalar(const String& name);
 
@@ -303,8 +309,8 @@ public:
     /// Ensuring requirements that may be imposed by Equelle programs.
     void ensureGridDimensionMin(const int minimum_grid_dimension) const;
 
-	// Havahol - add a function to return grid in order to do testing here.
-	UnstructuredGrid getGrid() const;
+    // Havahol - add a function to return grid in order to do testing here.
+    UnstructuredGrid getGrid() const;
 
 private:
     /// Topology helpers

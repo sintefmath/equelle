@@ -24,8 +24,8 @@
 #include <thrust/execution_policy.h>
 #include <thrust/iterator/retag.h>
 
-#include "DeviceGrid.hpp"
-#include "CollOfScalar.hpp"
+//#include "DeviceGrid.hpp"
+//#include "CollOfScalar.hpp"
 #include "CollOfIndices.hpp"
 
 using namespace equelleCUDA;

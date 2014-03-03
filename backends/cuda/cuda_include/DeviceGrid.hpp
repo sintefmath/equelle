@@ -12,11 +12,16 @@
 
 #include <opm/core/grid/GridManager.hpp>
 
+#include "CollOfScalar.hpp"
 #include "CollOfIndices.hpp"
+
 
 namespace equelleCUDA 
 {
-    	
+    
+    // Forward declaration:
+    //class CollOfScalar;
+
     //! Storing an unstructured grid on the device and do operations on this grid
     /*!
       The DeviceGrid class is based on the struct UnstructuredGrid from OPM, and which is used by the current serial back-end for the Equelle compiler. Here, operations on the grid is given as member functions in DeviceGrid.
@@ -155,6 +160,11 @@ namespace equelleCUDA
 	*/
 	CollOfCell secondCell(CollOfFace coll) const;
 
+
+	template<int dummy>
+	CollOfScalar operatorExtend(const CollOfScalar& in_data,
+				    const CollOfIndices<dummy>& from_set,
+				    const CollOfIndices<dummy>& to_set);
 
 	// Get functions:
 	/*!
@@ -375,6 +385,10 @@ namespace equelleCUDA
 				      const int* face_cells);
 
 } // namespace equelleCUDA
+
+// For implementation of template member functions:
+#include "DeviceGrid_impl.hpp"
+
 
 #endif // EQUELLE_DEVICEGRID_HEADER_INCLUDE 
 
