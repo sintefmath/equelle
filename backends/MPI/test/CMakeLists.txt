@@ -13,4 +13,4 @@ include_directories( "include" ${Zoltan_INCLUDE_DIRS} )
 
 add_executable(zoltanintegration_test ${test_src} ${test_inc})
 
-target_link_libraries(zoltanintegration_test ${Boost_LIBRARIES} ${Zoltan_LIBRARIES} )
+target_link_libraries(zoltanintegration_test equelle_rt ${Boost_LIBRARIES} ${Zoltan_LIBRARIES} )
