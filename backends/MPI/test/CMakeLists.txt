@@ -7,6 +7,10 @@ add_definitions(-DBOOST_TEST_DYN_LINK)
 file(GLOB test_src "src/*.cpp")
 file(GLOB test_inc "include/*.hpp")
 
+find_package( Zoltan REQUIRED )
+
+include_directories( "include" ${Zoltan_INCLUDE_DIRS} )
+
 add_executable(zoltanintegration_test ${test_src} ${test_inc})
 
-target_link_libraries(zoltanintegration_test ${Boost_LIBRARIES})
+target_link_libraries(zoltanintegration_test ${Boost_LIBRARIES} ${Zoltan_LIBRARIES} )
