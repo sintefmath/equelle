@@ -48,7 +48,7 @@ CollOfScalar::CollOfScalar(const int size)
     checkError_("cudaMalloc in CollOfScalar::CollOfScalar(int)");
 }
 
-CollOfScalar::CollOfScalar(const int size, const int value) 
+CollOfScalar::CollOfScalar(const int size, const double value) 
     : size_(size),
       dev_values_(0),
       block_x_(equelleCUDA::MAX_THREADS),
@@ -139,6 +139,7 @@ std::vector<double> CollOfScalar::copyToHost() const
 {
     //std::cout << "copyToHost() - val_ptr = " << dev_values << std::endl;
     
+    // Fill host_vec with zeros:
     std::vector<double> host_vec(size_, 0);
 
     cudaStatus_ = cudaMemcpy( &host_vec[0], dev_values_, size_*sizeof(double),

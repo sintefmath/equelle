@@ -54,7 +54,7 @@ namespace equelleCUDA {
 	  \param size Collection size
 	  \param value Value assigned to each of the elements in the collection.
 	*/
-	explicit CollOfScalar(const int size, const int value);
+	explicit CollOfScalar(const int size, const double value);
 	
 	//! Constructor from std::vector
 	/*! 

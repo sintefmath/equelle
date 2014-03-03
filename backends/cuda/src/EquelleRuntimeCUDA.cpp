@@ -8,7 +8,6 @@
 #include "CollOfScalar.hpp"
 #include "DeviceGrid.hpp"
 #include "CollOfIndices.hpp"
-#include "runtimeWrap.hpp"
 
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/core/utility/StopWatch.hpp>
