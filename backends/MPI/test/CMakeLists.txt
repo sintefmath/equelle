@@ -9,8 +9,8 @@ file(GLOB test_inc "include/*.hpp")
 
 find_package( Zoltan REQUIRED )
 
-include_directories( "include" ${Zoltan_INCLUDE_DIRS} )
+include_directories( "include" ${Zoltan_INCLUDE_DIRS} "../../serial/include" "/usr/include/eigen3" )
 
 add_executable(zoltanintegration_test ${test_src} ${test_inc})
 
-target_link_libraries(zoltanintegration_test equelle_rt ${Boost_LIBRARIES} ${Zoltan_LIBRARIES} )
+target_link_libraries(zoltanintegration_test equelle_rt ${Boost_LIBRARIES} ${Zoltan_LIBRARIES} opmautodiff opmcore dunecommon )
