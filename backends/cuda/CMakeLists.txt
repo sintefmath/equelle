@@ -7,7 +7,7 @@ find_package("CUDA" REQUIRED)
 find_package(Boost)
 
 
-set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra -Wno-sign-compare" )
+set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra -Wno-sign-compare -Wno-unused-parameter" )
 #set( CMAKE_CXX_FLAGS "-std=c++0x -Wall 	" )
 
 file( GLOB cuda_src "src/*.cpp" )

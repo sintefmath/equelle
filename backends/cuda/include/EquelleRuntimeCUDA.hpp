@@ -9,7 +9,7 @@
 //#include <opm/autodiff/AutoDiffBlock.hpp>
 //#include <opm/autodiff/AutoDiffHelpers.hpp>
 
-#include <Eigen/Eigen>
+//#include <Eigen/Eigen>
 
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <opm/core/grid/GridManager.hpp>
@@ -59,7 +59,8 @@ typedef bool Bool;
 typedef std::string String;
 
 // Collections and sequences (apart from Collection Of Scalar).
-typedef Eigen::Array<bool, Eigen::Dynamic, 1> CollOfBool;
+//typedef Eigen::Array<bool, Eigen::Dynamic, 1> CollOfBool;
+typedef std::vector<bool> CollOfBool;
 typedef std::vector<Scalar> SeqOfScalar;
 
 /// The Collection Of Scalar type is based on Eigen and opm-autodiff.
@@ -218,12 +219,14 @@ public:
     EquelleRuntimeCUDA(const Opm::parameter::ParameterGroup& param);
 
     /// Topology and geometry related.
-    //    CollOfCell allCells() const;
-    CollOfCellCPU boundaryCells() const;
-    CollOfCellCPU interiorCells() const;
-    CollOfFaceCPU allFaces() const;
-    CollOfFaceCPU boundaryFaces() const;
-    CollOfFaceCPU interiorFaces() const;
+    CollOfCell allCells() const;
+    CollOfCell boundaryCells() const;
+    CollOfCell interiorCells() const;
+    CollOfFace allFaces() const;
+    CollOfFace boundaryFaces() const;
+    CollOfFace interiorFaces() const;
+    CollOfCell firstCell(equelleCUDA::CollOfFace faces) const;
+    CollOfCell secondCell(equelleCUDA::CollOfFace faces) const;
     CollOfCellCPU firstCell(const CollOfFaceCPU& faces) const;
     CollOfCellCPU secondCell(const CollOfFaceCPU& faces) const;
     CollOfScalarCPU norm(const CollOfFaceCPU& faces) const;

@@ -74,72 +74,51 @@ EquelleRuntimeCUDA::EquelleRuntimeCUDA(const Opm::parameter::ParameterGroup& par
 }
 
 
-//CollOfCell EquelleRuntimeCUDA::allCells() const
-//{
-//    return dev_grid_.allCells();
-    //return boundaryCells();
-//}
+CollOfCell EquelleRuntimeCUDA::allCells() const
+{
+    return dev_grid_.allCells();
+   //return boundaryCells();
+}
+
+CollOfCell EquelleRuntimeCUDA::boundaryCells() const 
+{
+    return dev_grid_.boundaryCells();
+}
+
+CollOfCell EquelleRuntimeCUDA::interiorCells() const 
+{
+    return dev_grid_.interiorCells();
+}
+
+CollOfFace EquelleRuntimeCUDA::allFaces() const
+{
+    return dev_grid_.allFaces();
+}
+
+CollOfFace EquelleRuntimeCUDA::boundaryFaces() const
+{
+    return dev_grid_.boundaryFaces();
+}
+
+CollOfFace EquelleRuntimeCUDA::interiorFaces() const
+{
+    return dev_grid_.interiorFaces();
+}
+
+CollOfCell EquelleRuntimeCUDA::firstCell(CollOfFace faces) const
+{
+    return dev_grid_.firstCell(faces);
+}
+
+CollOfCell EquelleRuntimeCUDA::secondCell(CollOfFace faces) const
+{
+    return dev_grid_.secondCell(faces);
+}
 
 
 // Note that this will not produce what some would consider the expected results for a 1D grid realized as a 2D grid of dimension (n, 1) or (1, n), since all cells
 // of such a grid are boundary cells.
 // That points out that communicating the grid concepts is very important.
-bool EquelleRuntimeCUDA::boundaryCell(const int cell_index) const
-{
-    for (int hface = grid_.cell_facepos[cell_index]; hface < grid_.cell_facepos[cell_index + 1]; ++hface) {
-        const int face = grid_.cell_faces[hface];
-        if (grid_.face_cells[2*face] < 0 || grid_.face_cells[2*face + 1] < 0) {
-            return true;
-        }
-    }
-    return false;
-}
-
-
-CollOfCellCPU EquelleRuntimeCUDA::boundaryCells() const
-{
-    CollOfCellCPU cells;
-    const int nc = grid_.number_of_cells;
-    cells.reserve(nc);
-    for (int c = 0; c < nc; ++c) {
-        if ( boundaryCell(c) ) {
-            cells.emplace_back( Cell(c) );
-        }
-    }
-    return cells;
-}
-
-
-CollOfCellCPU EquelleRuntimeCUDA::interiorCells() const
-{
-    CollOfCellCPU cells;
-    const int nc = grid_.number_of_cells;
-    cells.reserve(nc);
-    for (int c = 0; c < nc; ++c) {
-        if ( !boundaryCell(c) ) {
-            cells.emplace_back( Cell(c) );
-        }
-    }
-    return cells;
-}
-
-
-CollOfFaceCPU EquelleRuntimeCUDA::allFaces() const
-{
-    const int nf = grid_.number_of_faces;
-    CollOfFaceCPU faces(nf);
-    for (int f = 0; f < nf; ++f) {
-        faces[f].index = f;
-    }
-    return faces;
-}
-
-
-// Again... this is kind of botched for a 1D grid implemented as a 2D(n, 1) or 2D(1, n) grid...
-
-
-
-
 
 CollOfCellCPU EquelleRuntimeCUDA::firstCell(const CollOfFaceCPU& faces) const
 {
@@ -161,9 +140,6 @@ CollOfCellCPU EquelleRuntimeCUDA::secondCell(const CollOfFaceCPU& faces) const
     }
     return fcells;
 }
-
-
-
 
 
 CollOfVector EquelleRuntimeCUDA::centroid(const CollOfFaceCPU& faces) const
