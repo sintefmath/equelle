@@ -63,7 +63,7 @@ EquelleRuntimeCUDA::EquelleRuntimeCUDA(const Opm::parameter::ParameterGroup& par
     : grid_manager_(createGridManager(param)),
       grid_(*(grid_manager_->c_grid())),
       dev_grid_(UnstructuredGrid(*(grid_manager_->c_grid()))),
-      ops_(grid_),
+      //ops_(grid_),
       linsolver_(param),
       output_to_file_(param.getDefault("output_to_file", false)),
       verbose_(param.getDefault("verbose", 0)),
@@ -74,15 +74,11 @@ EquelleRuntimeCUDA::EquelleRuntimeCUDA(const Opm::parameter::ParameterGroup& par
 }
 
 
-CollOfCellCPU EquelleRuntimeCUDA::allCells() const
-{
-    const int nc = grid_.number_of_cells;
-    CollOfCellCPU cells(nc);
-    for (int c = 0; c < nc; ++c) {
-        cells[c].index = c;
-    }
-    return cells;
-}
+//CollOfCell EquelleRuntimeCUDA::allCells() const
+//{
+//    return dev_grid_.allCells();
+    //return boundaryCells();
+//}
 
 
 // Note that this will not produce what some would consider the expected results for a 1D grid realized as a 2D grid of dimension (n, 1) or (1, n), since all cells
@@ -141,43 +137,8 @@ CollOfFaceCPU EquelleRuntimeCUDA::allFaces() const
 
 // Again... this is kind of botched for a 1D grid implemented as a 2D(n, 1) or 2D(1, n) grid...
 
-CollOfFaceCPU EquelleRuntimeCUDA::boundaryFaces() const
-{
-    const int nif = ops_.internal_faces.size();
-    const int nbf = grid_.number_of_faces - nif;
-    CollOfFaceCPU bfaces(nbf);
-    int if_cursor = 0;
-    int bf_cursor = 0;
-
-    // This works as long as ops_.internal_faces(i)<ops_.internal_faces(i+1), which it currently is.
-    // Would be better to extend HelperOps to support this functionality.
-
-    for (int i = 0; i < grid_.number_of_faces; ++i) {
-        // Advance if_cursor so that the next internal face to look out for has larger or equal index to i
-        while ( (if_cursor < nif) && (i > ops_.internal_faces[if_cursor]) ) {
-            ++if_cursor;
-        }
-        // Now if_cursor points beyond the last internal face, or internal_face[if_cursor]>=i.
-        // If (if_cursor points beyond the last internal face) or (internal_face[if_cursor] is truly > i), we surely have a boundary face...
-        if ( (if_cursor == nif) || (ops_.internal_faces[if_cursor] > i) ) {
-            bfaces[bf_cursor].index = i;
-            ++bf_cursor;
-        }
-    }
-
-    return bfaces;
-}
 
 
-CollOfFaceCPU EquelleRuntimeCUDA::interiorFaces() const
-{
-    const int nif = ops_.internal_faces.size();
-    CollOfFaceCPU ifaces(nif);
-    for (int i = 0; i < nif; ++i) {
-        ifaces[i].index = ops_.internal_faces(i);
-    }
-    return ifaces;
-}
 
 
 CollOfCellCPU EquelleRuntimeCUDA::firstCell(const CollOfFaceCPU& faces) const
@@ -202,37 +163,7 @@ CollOfCellCPU EquelleRuntimeCUDA::secondCell(const CollOfFaceCPU& faces) const
 }
 
 
-CollOfScalarCPU EquelleRuntimeCUDA::norm(const CollOfFaceCPU& faces) const
-{
-    const int n = faces.size();
-    CollOfScalarCPU::V areas(n);
-    for (int i = 0; i < n; ++i) {
-        areas[i] = grid_.face_areas[faces[i].index];
-    }
-    return areas;
-}
 
-
-CollOfScalarCPU EquelleRuntimeCUDA::norm(const CollOfCellCPU& cells) const
-{
-    const int n = cells.size();
-    CollOfScalarCPU::V volumes(n);
-    for (int i = 0; i < n; ++i) {
-        volumes[i] = grid_.cell_volumes[cells[i].index];
-    }
-    return volumes;
-}
-
-
-CollOfScalarCPU EquelleRuntimeCUDA::norm(const CollOfVector& vectors) const
-{
-    CollOfScalarCPU norm2 = vectors.col(0) * vectors.col(0);
-    const int dim = vectors.numCols();
-    for (int d = 1; d < dim; ++d) {
-        norm2 += vectors.col(d) * vectors.col(d);
-    }
-    return sqrt(norm2);
-}
 
 
 CollOfVector EquelleRuntimeCUDA::centroid(const CollOfFaceCPU& faces) const
@@ -248,7 +179,7 @@ CollOfVector EquelleRuntimeCUDA::centroid(const CollOfFaceCPU& faces) const
     }
     CollOfVector centroids(dim);
     for (int d = 0; d < dim; ++d) {
-        centroids.col(d) = CollOfScalarCPU(c.col(d));
+        //centroids.col(d) = CollOfScalarCPU(c.col(d));
     }
     return centroids;
 }
@@ -267,7 +198,7 @@ CollOfVector EquelleRuntimeCUDA::centroid(const CollOfCellCPU& cells) const
     }
     CollOfVector centroids(dim);
     for (int d = 0; d < dim; ++d) {
-        centroids.col(d) = CollOfScalarCPU(c.col(d));
+        //centroids.col(d) = CollOfScalarCPU(c.col(d));
     }
     return centroids;
 }
@@ -289,16 +220,12 @@ CollOfVector EquelleRuntimeCUDA::normal(const CollOfFaceCPU& faces) const
     nor.colwise() /= nor.matrix().rowwise().norm().array();
     CollOfVector normals(dim);
     for (int d = 0; d < dim; ++d) {
-        normals.col(d) = CollOfScalarCPU(nor.col(d));
+        //normals.col(d) = CollOfScalarCPU(nor.col(d));
     }
     return normals;
 }
 
 
-CollOfScalarCPU EquelleRuntimeCUDA::sqrt(const CollOfScalarCPU& x) const
-{
-    return ::sqrt(x);
-}
 
 
 CollOfScalarCPU EquelleRuntimeCUDA::dot(const CollOfVector& v1, const CollOfVector& v2) const
@@ -310,121 +237,14 @@ CollOfScalarCPU EquelleRuntimeCUDA::dot(const CollOfVector& v1, const CollOfVect
         OPM_THROW(std::logic_error, "Non-matching size of Vector collections for dot().");
     }
     const int dim = grid_.dimensions;
-    CollOfScalarCPU result = v1.col(0) * v2.col(0);
+    CollOfScalarCPU result = v1.col(0);// * v2.col(0);
     for (int d = 1; d < dim; ++d) {
-        result += v1.col(d) * v2.col(d);
+	// result += v1.col(d) * v2.col(d);
     }
     return result;
 }
 
 
-CollOfScalarCPU EquelleRuntimeCUDA::gradient(const CollOfScalarCPU& cell_scalarfield) const
-{
-    return ops_.grad * cell_scalarfield;//.matrix();
-}
-
-
-CollOfScalarCPU EquelleRuntimeCUDA::negGradient(const CollOfScalarCPU& cell_scalarfield) const
-{
-    return ops_.ngrad * cell_scalarfield;//.matrix();
-}
-
-
-CollOfScalarCPU EquelleRuntimeCUDA::divergence(const CollOfScalarCPU& face_fluxes) const
-{
-    if (face_fluxes.size() == ops_.internal_faces.size()) {
-        // This is actually a hack, the compiler should know to emit interiorDivergence()
-        // eventually, but as a temporary measure we do this.
-        return interiorDivergence(face_fluxes);
-    }
-    return ops_.fulldiv * face_fluxes;//.matrix();
-}
-
-
-CollOfScalarCPU EquelleRuntimeCUDA::interiorDivergence(const CollOfScalarCPU& face_fluxes) const
-{
-    return ops_.div * face_fluxes;//.matrix();
-}
-
-
-CollOfBool EquelleRuntimeCUDA::isEmpty(const CollOfCellCPU& cells) const
-{
-    const size_t sz = cells.size();
-    CollOfBool retval = CollOfBool::Constant(sz, false);
-    for (size_t i = 0; i < sz; ++i) {
-        if (cells[i].index < 0) {
-            retval[i] = true;
-        }
-    }
-    return retval;
-}
-
-
-CollOfBool EquelleRuntimeCUDA::isEmpty(const CollOfFaceCPU& faces) const
-{
-    const size_t sz = faces.size();
-    CollOfBool retval = CollOfBool::Constant(sz, false);
-    for (size_t i = 0; i < sz; ++i) {
-        if (faces[i].index < 0) {
-            retval[i] = true;
-        }
-    }
-    return retval;
-}
-
-Scalar EquelleRuntimeCUDA::minReduce(const CollOfScalarCPU& x) const
-{
-    return x.value().minCoeff();
-}
-
-Scalar EquelleRuntimeCUDA::maxReduce(const CollOfScalarCPU& x) const
-{
-    return x.value().maxCoeff();
-}
-
-Scalar EquelleRuntimeCUDA::sumReduce(const CollOfScalarCPU& x) const
-{
-    return x.value().sum();
-}
-
-Scalar EquelleRuntimeCUDA::prodReduce(const CollOfScalarCPU& x) const
-{
-    return x.value().prod();
-}
-
-CollOfScalarCPU EquelleRuntimeCUDA::solveForUpdate(const CollOfScalarCPU& residual) const
-{
-    Eigen::SparseMatrix<double, Eigen::RowMajor> matr = residual.derivative()[0];
-
-    CollOfScalarCPU::V du = CollOfScalarCPU::V::Zero(residual.size());
-
-    Opm::time::StopWatch clock;
-    clock.start();
-
-    // solve(n, # nonzero values ("val"), ptr to col indices
-    // ("col_ind"), ptr to row locations in val array ("row_ind")
-    // (these two may be swapped, not sure about the naming convention
-    // here...), array of actual values ("val") (I guess... '*sa'...),
-    // rhs, solution)
-    Opm::LinearSolverInterface::LinearSolverReport rep
-        = linsolver_.solve(matr.rows(), matr.nonZeros(),
-                           matr.outerIndexPtr(), matr.innerIndexPtr(), matr.valuePtr(),
-                           residual.value().data(), du.data());
-
-    if (verbose_ > 2) {
-        std::cout << "        solveForUpdate: Linear solver took: " << clock.secsSinceLast() << " seconds." << std::endl;
-    }
-    if (!rep.converged) {
-        OPM_THROW(std::runtime_error, "Linear solver convergence failure.");
-    }
-    return du;
-}
-
-
-double EquelleRuntimeCUDA::twoNorm(const CollOfScalarCPU& vals) const
-{
-    return vals.value().matrix().norm();
-}
 
 
 void EquelleRuntimeCUDA::output(const String& tag, const double val) const
@@ -432,34 +252,6 @@ void EquelleRuntimeCUDA::output(const String& tag, const double val) const
     std::cout << tag << " = " << val << std::endl;
 }
 
-void EquelleRuntimeCUDA::output(const String& tag, const CollOfScalarCPU& vals)
-{
-    if (output_to_file_) {
-        int count = -1;
-        auto it = outputcount_.find(tag);
-        if (it == outputcount_.end()) {
-            count = 0;
-            outputcount_[tag] = 1; // should contain the count to be used next time for same tag.
-        } else {
-            count = outputcount_[tag];
-            ++outputcount_[tag];
-        }
-        std::ostringstream fname;
-        fname << tag << "-" << std::setw(5) << std::setfill('0') << count << ".output";
-        std::ofstream file(fname.str().c_str());
-        if (!file) {
-            OPM_THROW(std::runtime_error, "Failed to open " << fname.str());
-        }
-        file.precision(16);
-        std::copy(vals.value().data(), vals.value().data() + vals.size(), std::ostream_iterator<double>(file, "\n"));
-    } else {
-        std::cout << tag << " =\n";
-        for (int i = 0; i < vals.size(); ++i) {
-            std::cout << std::setw(15) << std::left << ( vals.value()[i] ) << " ";
-        }
-        std::cout << std::endl;
-    }
-}
 
 Scalar EquelleRuntimeCUDA::inputScalarWithDefault(const String& name,
                                                          const Scalar default_value)
@@ -539,15 +331,6 @@ void EquelleRuntimeCUDA::ensureGridDimensionMin(const int minimum_grid_dimension
     }
 }
 
-
-
-CollOfScalarCPU EquelleRuntimeCUDA::singlePrimaryVariable(const CollOfScalarCPU& initial_values)
-{
-    std::vector<int> block_pattern;
-    block_pattern.push_back(initial_values.size());
-    // Syntax below is: CollOfScalarCPU::variable(block index, initialized from, block structure)
-    return CollOfScalarCPU::variable(0, initial_values.value(), block_pattern);
-}
 
 
 // HAVAHOL: added function for doing testing

@@ -42,27 +42,34 @@ void equal_test_function(int a, int b) {
 
 int main( int argc, char** argv )
 {
-    // Get user parameters
-    Opm::parameter::ParameterGroup param( argc, argv, false);
+    int ret = 1;
+    try {
+	// Get user parameters
+	Opm::parameter::ParameterGroup param( argc, argv, false);
 
-    // Create the Equelle runtime
-    EquelleRuntimeCUDA er(param);
-    ensureRequirements(er);
+	// Create the Equelle runtime
+	EquelleRuntimeCUDA er(param);
+	ensureRequirements(er);
+	
+	// Get the device grid so that we can play around with it!
+	DeviceGrid dg(er.getGrid());
     
-    // Get the device grid so that we can play around with it!
-    DeviceGrid dg(er.getGrid());
-       
-    int a = 1;
-    int b = 1;
-    //framework::master_test_suite().add( BOOST_REQUIRE( a == b ), 0);
+	int a = 1;
+	int b = 1;
+	//framework::master_test_suite().add( BOOST_REQUIRE( a == b ), 0);
+	
+	free_test_function();
+	
+	equal_test_function(a, b);
+	
 
-    free_test_function();
-    
-    equal_test_function(a, b);
-
-
-    //int out = cuda_main(dg);
-    //std::cout << "Back in main!\n";
-    //return out;
-    return cuda_main(dg);
+	//int out = cuda_main(dg);
+	//std::cout << "Back in main!\n";
+	//return out;
+	ret = cuda_main(dg);
+    }
+    catch (...) {
+	std::cout << "\n\n FOUND EXCEPTION!\n\n\n";
+    }
+    return ret;
 }

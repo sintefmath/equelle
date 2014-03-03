@@ -6,14 +6,19 @@
 #define EQUELLERUNTIMECUDA_HEADER_INCLUDED
 
 
-#include <opm/autodiff/AutoDiffBlock.hpp>
-#include <opm/autodiff/AutoDiffHelpers.hpp>
+//#include <opm/autodiff/AutoDiffBlock.hpp>
+//#include <opm/autodiff/AutoDiffHelpers.hpp>
+
+#include <Eigen/Eigen>
+
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <opm/core/grid/GridManager.hpp>
 #include <opm/core/linalg/LinearSolverFactory.hpp>
 #include <vector>
 #include <string>
 #include <map>
+
+
 
 // Including device code
 // This should be independent from the rest of the host code
@@ -60,110 +65,21 @@ typedef std::vector<Scalar> SeqOfScalar;
 /// The Collection Of Scalar type is based on Eigen and opm-autodiff.
 /// It uses inheritance to provide extra interfaces for ease of use,
 /// notably converting constructors.
-class CollOfScalarCPU : public Opm::AutoDiffBlock<double>
+class CollOfScalarCPU : public std::vector<double>
 {
 public:
-    typedef Opm::AutoDiffBlock<double> ADB;
+    typedef std::vector<double> ADB; //Opm::AutoDiffBlock<double> ADB;
     //typedef ADB::V V;
     CollOfScalarCPU()
-        : ADB(ADB::null())
+        : ADB(ADB())
     {
     }
     CollOfScalarCPU(const ADB& adb)
     : ADB(adb)
     {
     }
-    CollOfScalarCPU(const ADB::V& x)
-        : ADB(ADB::constant(x))
-    {
-    }
+
 };    
-
-/// This operator is not provided by AutoDiffBlock, so we must add it here.
-inline CollOfScalarCPU operator-(const CollOfScalarCPU& x)
-{
-    return CollOfScalarCPU::V::Zero(x.size()) - x;
-}
-
-/// This operator is not provided by AutoDiffBlock, so we must add it here.
-inline CollOfScalarCPU operator/(const Scalar& s, const CollOfScalarCPU& x)
-{
-    return CollOfScalarCPU::V::Constant(x.size(), s) / x;
-}
-
-/// This operator is not provided by AutoDiffBlock, so we must add it here.
-inline CollOfScalarCPU operator/(const CollOfScalarCPU& x, const Scalar& s)
-{
-    return x / CollOfScalarCPU::V::Constant(x.size(), s);
-}
-
-/// This operator is not provided by AutoDiffBlock, so we must add it here.
-inline CollOfBool operator<(const Scalar& s, const CollOfScalarCPU& x)
-{
-    return s < x.value();
-}
-
-/// This operator is not provided by AutoDiffBlock, so we must add it here.
-inline CollOfBool operator<(const CollOfScalarCPU& x, const Scalar& s)
-{
-    return x.value() < s;
-}
-
-/// This operator is not provided by AutoDiffBlock, so we must add it here.
-inline CollOfBool operator>(const Scalar& s, const CollOfScalarCPU& x)
-{
-    return s > x.value();
-}
-
-/// This operator is not provided by AutoDiffBlock, so we must add it here.
-inline CollOfBool operator>(const CollOfScalarCPU& x, const Scalar& s)
-{
-    return x.value() > s;
-}
-
-/// This operator is not provided by AutoDiffBlock, so we must add it here.
-inline CollOfBool operator<(const CollOfScalarCPU& x, const CollOfScalarCPU& y)
-{
-    return x.value() < y.value();
-}
-
-/// This operator is not provided by AutoDiffBlock, so we must add it here.
-inline CollOfBool operator>(const CollOfScalarCPU& x, const CollOfScalarCPU& y)
-{
-    return x.value() > y.value();
-}
-
-/// This operator is not provided by AutoDiffBlock, so we must add it here.
-inline CollOfBool operator>=(const CollOfScalarCPU& x, const Scalar& s)
-{
-    return x.value() >= s;
-}
-
-/// This operator is not provided by AutoDiffBlock, so we must add it here.
-inline CollOfBool operator==(const CollOfScalarCPU& x, const CollOfScalarCPU& y)
-{
-    return x.value() == y.value();
-}
-
-/// This function is not provided by AutoDiffBlock, so we must add it here.
-inline CollOfScalarCPU sqrt(const CollOfScalarCPU& x)
-{
-    // d(sqrt(x))/dy = 1/(2*sqrt(x)) * dx/dy
-
-    const auto& xjac = x.derivative();
-    if (xjac.empty()) {
-        return CollOfScalarCPU(sqrt(x.value()));
-    }
-    const int num_blocks = xjac.size();
-    std::vector<CollOfScalarCPU::M> jac(num_blocks);
-    typedef Eigen::DiagonalMatrix<Scalar, Eigen::Dynamic> D;
-    const auto sqrt_x = sqrt(x.value());
-    const D one_over_two_sqrt_x = (0.5/sqrt_x).matrix().asDiagonal();
-    for (int block = 0; block < num_blocks; ++block) {
-        jac[block] = one_over_two_sqrt_x * xjac[block];
-    }
-    return CollOfScalarCPU::ADB::function(sqrt_x, jac);
-}
 
 
 
@@ -190,145 +106,7 @@ private:
     std::vector<CollOfScalarCPU> v;
 };
 
-inline CollOfVector operator+(const CollOfVector& v1, const CollOfVector& v2)
-{
-    const int dim = v1.numCols();
-    CollOfVector res(dim);
-    for (int d = 0; d < dim; ++d) {
-        res.col(d) = v1.col(d) + v2.col(d);
-    }
-    return res;
-}
 
-inline CollOfVector operator-(const CollOfVector& v1, const CollOfVector& v2)
-{
-    const int dim = v1.numCols();
-    CollOfVector res(dim);
-    for (int d = 0; d < dim; ++d) {
-        res.col(d) = v1.col(d) - v2.col(d);
-    }
-    return res;
-}
-
-inline CollOfVector operator-(const CollOfVector& x)
-{
-    const int dim = x.numCols();
-    CollOfVector res(dim);
-    for (int d = 0; d < dim; ++d) {
-        res.col(d) = -x.col(d);
-    }
-    return res;
-}
-
-inline CollOfVector operator*(const CollOfVector& x, const Scalar& s)
-{
-    const int dim = x.numCols();
-    CollOfVector res(dim);
-    for (int d = 0; d < dim; ++d) {
-        res.col(d) = x.col(d) * s;
-    }
-    return res;
-}
-
-inline CollOfVector operator*(const CollOfVector& x, const CollOfScalarCPU& s)
-{
-    const int dim = x.numCols();
-    CollOfVector res(dim);
-    for (int d = 0; d < dim; ++d) {
-        res.col(d) = x.col(d) * s;
-    }
-    return res;
-}
-
-inline CollOfVector operator*(const Scalar& s, const CollOfVector& x)
-{
-    return x * s; // Commutative.
-}
-
-inline CollOfVector operator*(const CollOfScalarCPU& s, const CollOfVector& x)
-{
-    return x * s; // Commutative.
-}
-
-inline CollOfVector operator/(const CollOfVector& x, const Scalar& s)
-{
-    const int dim = x.numCols();
-    CollOfVector res(dim);
-    for (int d = 0; d < dim; ++d) {
-        res.col(d) = x.col(d) / s;
-    }
-    return res;
-}
-
-inline CollOfVector operator/(const CollOfVector& x, const CollOfScalarCPU& s)
-{
-    const int dim = x.numCols();
-    CollOfVector res(dim);
-    for (int d = 0; d < dim; ++d) {
-        res.col(d) = x.col(d) / s;
-    }
-    return res;
-}
-
-
-
-/// A helper type for ensuring AutoDiffBlock objects are converted
-/// to CollOfScalarCPU when necessary for template functions.
-template <class Coll>
-struct CollType { typedef Coll Type; };
-template<>
-struct CollType<Opm::AutoDiffBlock<double>> { typedef CollOfScalarCPU Type; };
-
-
-/// Simplify support of array literals.
-template <typename T>
-std::array<typename CollType<T>::Type, 1> makeArray(const T& t)
-{
-    return std::array<typename CollType<T>::Type,1>{{t}};
-}
-template <typename T1, typename T2>
-std::array<typename CollType<T1>::Type, 2> makeArray(const T1& t1, const T2& t2)
-{
-    return std::array<typename CollType<T1>::Type,2>{{t1, t2}};
-}
-template <typename T1, typename T2, typename T3>
-std::array<typename CollType<T1>::Type, 3> makeArray(const T1& t1, const T2& t2, const T3& t3)
-{
-    return std::array<typename CollType<T1>::Type,3>{{t1, t2, t3}};
-}
-template <typename T1, typename T2, typename T3, typename T4>
-std::array<typename CollType<T1>::Type, 4> makeArray(const T1& t1, const T2& t2, const T3& t3, const T4& t4)
-{
-    return std::array<typename CollType<T1>::Type,4>{{t1, t2, t3, t4}};
-}
-
-/// A helper type for newtonSolveSystem
-template <int Num>
-struct ResCompType;
-
-template <>
-struct ResCompType<1>
-{
-    typedef std::function<CollOfScalarCPU(const CollOfScalarCPU&)> type;
-};
-
-template <>
-struct ResCompType<2>
-{
-    typedef std::function<CollOfScalarCPU(const CollOfScalarCPU&, const CollOfScalarCPU&)> type;
-};
-
-template <>
-struct ResCompType<3>
-{
-    typedef std::function<CollOfScalarCPU(const CollOfScalarCPU&, const CollOfScalarCPU&, const CollOfScalarCPU&)> type;
-};
-
-template <>
-struct ResCompType<4>
-{
-    typedef std::function<CollOfScalarCPU(const CollOfScalarCPU&, const CollOfScalarCPU&, const CollOfScalarCPU&, const CollOfScalarCPU&)> type;
-};
 
 
 /// This class is copied from the class Span in opm-autodiff's AutoDiffHelpers.hpp,
@@ -440,7 +218,7 @@ public:
     EquelleRuntimeCUDA(const Opm::parameter::ParameterGroup& param);
 
     /// Topology and geometry related.
-    CollOfCellCPU allCells() const;
+    //    CollOfCell allCells() const;
     CollOfCellCPU boundaryCells() const;
     CollOfCellCPU interiorCells() const;
     CollOfFaceCPU allFaces() const;
@@ -471,14 +249,14 @@ public:
     template <class SomeCollection, class EntityCollection>
     SomeCollection operatorExtend(const SomeCollection& data, const EntityCollection& from_set, const EntityCollection& to_set);
 
-    template <class SomeCollection, class EntityCollection>
-    typename CollType<SomeCollection>::Type operatorOn(const SomeCollection& data, const EntityCollection& from_set, const EntityCollection& to_set);
+    //template <class SomeCollection, class EntityCollection>
+    //typename CollType<SomeCollection>::Type operatorOn(const SomeCollection& data, const EntityCollection& from_set, const EntityCollection& to_set);
 
-    template <class SomeCollection1, class SomeCollection2>
-    typename CollType<SomeCollection1>::Type
-    trinaryIf(const CollOfBool& predicate,
-              const SomeCollection1& iftrue,
-              const SomeCollection2& iffalse) const;
+    //template <class SomeCollection1, class SomeCollection2>
+    //typename CollType<SomeCollection1>::Type
+    //trinaryIf(const CollOfBool& predicate,
+    //          const SomeCollection1& iftrue,
+    //          const SomeCollection2& iffalse) const;
 
     /// Reductions.
     Scalar minReduce(const CollOfScalarCPU& x) const;
@@ -491,9 +269,9 @@ public:
     CollOfScalarCPU newtonSolve(const ResidualFunctor& rescomp,
                              const CollOfScalarCPU& u_initialguess);
 
-    template <int Num>
-    std::array<CollOfScalarCPU, Num> newtonSolveSystem(const std::array<typename ResCompType<Num>::type, Num>& rescomp,
-                                                    const std::array<CollOfScalarCPU, Num>& u_initialguess);
+//    template <int Num>
+//    std::array<CollOfScalarCPU, Num> newtonSolveSystem(const std::array<typename ResCompType<Num>::type, Num>& rescomp,
+//                                                    const std::array<CollOfScalarCPU, Num>& u_initialguess);
 
     /// Output.
     void output(const String& tag, Scalar val) const;
@@ -510,7 +288,8 @@ public:
     template <class SomeCollection>
     equelleCUDA::CollOfScalar inputCollectionOfScalar(const String& name,
                                          const SomeCollection& coll);
-
+	
+	// input havahol
 	template <int dummy>
 	equelleCUDA::CollOfScalar inputCollectionOfScalar(const String& name,
 						const equelleCUDA::CollOfIndices<dummy>& coll);
@@ -541,7 +320,7 @@ private:
     std::unique_ptr<Opm::GridManager> grid_manager_;
     const UnstructuredGrid& grid_;
     equelleCUDA::DeviceGrid dev_grid_;
-    Opm::HelperOps ops_;
+    //Opm::HelperOps ops_;
     Opm::LinearSolverFactory linsolver_;
     bool output_to_file_;
     int verbose_;
