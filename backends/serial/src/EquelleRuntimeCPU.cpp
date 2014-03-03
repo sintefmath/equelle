@@ -14,8 +14,7 @@
 
 
 
-namespace
-{
+namespace equelle {
     Opm::GridManager* createGridManager(const Opm::parameter::ParameterGroup& param)
     {
         if (param.has("grid_filename")) {
@@ -46,12 +45,12 @@ namespace
             OPM_THROW(std::runtime_error, "Cannot handle " << grid_dim << " dimensions.");
         }
     }
-} // anonymous namespace
+} // equelle-namespace
 
 
 
 EquelleRuntimeCPU::EquelleRuntimeCPU(const Opm::parameter::ParameterGroup& param)
-    : grid_manager_(createGridManager(param)),
+    : grid_manager_(equelle::createGridManager(param)),
       grid_(*(grid_manager_->c_grid())),
       ops_(grid_),
       linsolver_(param),
