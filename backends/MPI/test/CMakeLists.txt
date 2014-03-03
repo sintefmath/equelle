@@ -9,7 +9,7 @@ file(GLOB test_inc "include/*.hpp")
 
 find_package( Zoltan REQUIRED )
 
-include_directories( "include" ${Zoltan_INCLUDE_DIRS} "../../serial/include" "/usr/include/eigen3" )
+include_directories( "include" ${Zoltan_INCLUDE_DIRS} "../../serial/include" "/usr/include/eigen3" "../include" )
 
 add_executable(zoltanintegration_test ${test_src} ${test_inc})
 
