@@ -14,6 +14,7 @@ file( GLOB cuda_src "src/*.cpp" )
 file( GLOB cuda_inc "include/*.hpp" )
 file( GLOB cuda_cuda_src "src/*.cu" )
 file( GLOB cuda_cuda_inc "cuda_include/*.hpp" )
+#file( GLOB cuda_cuda_cuh "cuda_include/*.cuh" )
 file( GLOB cuda_test_src "test/*.cpp" )
 file( GLOB cuda_test_src_cu "test/*.cu" )
 set( SUPERLU_LIB          "superlu" CACHE PATH "" ) 	# havahol
@@ -30,13 +31,14 @@ endfunction()
 include_directories( "include" "cuda_include" "test"
 	${SERIAL_INCLUDE_DIRS}  )
 
-# make non-cuda part of run-time library
-add_library( equelle_cuda_cpu ${cuda_src} ${cuda_inc} )
-
 # make cuda part of run-time library
 set(CUDA_PROPAGATE_HOST_FLAGS OFF)
 set( CUDA_NVCC_FLAGS "-arch=sm_13" CACHE STRING "nvcc flags" FORCE)
-cuda_add_library( equelle_cuda_cu ${cuda_cuda_src} ${cuda_cuda_inc} )
+cuda_add_library( equelle_cuda_cu ${cuda_cuda_src} ${cuda_cuda_inc}  )
+				  #${cuda_cuda_cuh} )
+
+# make non-cuda part of run-time library
+add_library( equelle_cuda_cpu ${cuda_src} ${cuda_inc} )
 
 # make the unit-testing 
 if (Boost_FOUND)

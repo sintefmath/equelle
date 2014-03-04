@@ -23,6 +23,7 @@
 // Including device code
 // This should be independent from the rest of the host code
 //      and especially from any c++11 code.
+#include "CollOfIndices.hpp"
 #include "CollOfScalar.hpp"
 #include "DeviceGrid.hpp"
 
@@ -297,6 +298,11 @@ public:
     template <class SomeCollection>
     equelleCUDA::CollOfScalar inputCollectionOfScalar(const String& name,
                                          const SomeCollection& coll);
+
+    // input havahol
+    template <int dummy>
+    equelleCUDA::CollOfIndices<dummy> inputDomainSubsetOf( const String& name,
+							 equelleCUDA::CollOfIndices<dummy> superset);
 	
     // input havahol
     template <int dummy>

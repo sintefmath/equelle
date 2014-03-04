@@ -31,18 +31,14 @@ set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra" )
 include_directories(
   "./include"
   "/usr/include/eigen3"
-  "/home/jse/projects/equelle/examples/include/"
+  "/usr/local/include/equelle"
   ${EXTRA_INCLUDES_FOR_EQUELLE}
 )
 
 link_directories(
+  "/usr/local/lib"
   ${EXTRA_LIBDIRS_FOR_EQUELLE}
 )
-
-file( GLOB sources     "/home/jse/projects/equelle/examples/src/*.cpp" )
-file( GLOB headers     "/home/jse/projects/equelle/examples/include/*.hpp" )
-
-add_library( equelle_rt ${sources} ${headers})
 
 add_executable( ${SIMULATOR_EXEC_FILE} ${SIMULATOR_SOURCE_FILE} )
 

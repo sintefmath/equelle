@@ -228,11 +228,11 @@ void EquelleRuntimeCUDA::output(const String& tag, const double val) const
 }
 
 
-Scalar EquelleRuntimeCUDA::inputScalarWithDefault(const String& name,
-                                                         const Scalar default_value)
-{
-    return param_.getDefault(name, default_value);
-}
+//Scalar EquelleRuntimeCUDA::inputScalarWithDefault(const String& name,
+//                                                         const Scalar default_value)
+//{
+//    return param_.getDefault(name, default_value);
+//}
 
 
 CollOfFaceCPU EquelleRuntimeCUDA::inputDomainSubsetOf(const String& name,

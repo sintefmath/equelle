@@ -56,3 +56,11 @@ void EquelleRuntimeCUDA::output(const String& tag, const CollOfScalar& coll)
 	std::cout << std::endl;
     }
 }
+
+
+Scalar EquelleRuntimeCUDA::inputScalarWithDefault(const String& name,
+						  const Scalar default_value) {
+    return param_.getDefault(name, default_value);
+}
+
+

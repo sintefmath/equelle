@@ -6,9 +6,11 @@
 #include <cuda_runtime.h>
 
 #include <vector>
+#include <string>
 
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
+
 
 namespace equelleCUDA 
 {
@@ -81,6 +83,9 @@ namespace equelleCUDA
 	  Most naturally used in debugging.
 	*/
 	thrust::host_vector<int> toHost() const;
+
+	//! Copy the device_vector to host memory without the need for thrust library.
+	std::vector<int> stdToHost() const;
 	
 	//! Collection size
 	/*!
@@ -108,7 +113,31 @@ namespace equelleCUDA
 	  Useful when the vector data is needed in a kernel.
 	*/
 	int* raw_pointer();
-	
+
+	//! Check if the input is collection is a subset of the caller.
+	/*!
+	  This function is most often used to check if a user provided domain
+	  is a legal set according to the Equelle function InputDomainSubsetOf.
+	  
+	  If the input is a subset of the caller, then this function does nothing.
+	  If it is not a subset, then an exception is thrown.
+	  
+	  \param[in] subset The set that is given as input from the user.
+	  This set is assumed to be sorted.
+	  \param[in] name The variable name for the subset. Used for giving 
+	  easy to understand exception message.
+	*/
+	void contains(CollOfIndices<dummy> subset, const std::string& name);
+
+
+	//! Sort the indices in ascending order
+	/*!
+	  This function just makes a call to the sort function provided by thrust.
+	  Useful after reading indices from file.
+	 */
+	void sort();
+
+
     private:
 	bool full_;
 	int size_;

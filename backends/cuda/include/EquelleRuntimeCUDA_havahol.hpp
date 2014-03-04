@@ -5,12 +5,18 @@
 #include <string>
 #include <fstream>
 #include <iterator>
-#include <vector>
+#include <thrust/host_vector.h>
 
 #include "EquelleRuntimeCUDA.hpp"
 #include "CollOfScalar.hpp"
 #include "CollOfIndices.hpp"
 #include "DeviceGrid.hpp"
+
+
+
+// -------------------------------------------------- //
+// ------------------ INPUT ------------------------- //
+// -------------------------------------------------- //
 
 
 template <int dummy>
@@ -47,6 +53,38 @@ equelleCUDA::CollOfScalar EquelleRuntimeCUDA::inputCollectionOfScalar( const Str
 
 
 template <int dummy>
+equelleCUDA::CollOfIndices<dummy> EquelleRuntimeCUDA::inputDomainSubsetOf(const String& name, equelleCUDA::CollOfIndices<dummy> superset) 
+{
+    const String filename = param_.get<String>(name + "_filename");
+    std::ifstream is(filename.c_str());
+    if (!is) {
+	OPM_THROW(std::runtime_error, "Could not find file " << filename);
+    }
+    std::istream_iterator<int> beg(is);
+    std::istream_iterator<int> end;
+    thrust::host_vector<int> host(beg, end);
+    thrust::device_vector<int> dev(host.begin(), host.end());
+    //thrust::sort(dev.begin(), dev.end());
+      
+    equelleCUDA::CollOfIndices<dummy> subset(host);
+    //subset.sort();
+    
+    // USING SORT ON THE DEVICE PRODUCES A STRANGE ERROR.
+    // SORTING DONE ON THE HOST FOR NOW...
+
+    
+    superset.contains(subset, name);
+
+    return subset;
+}
+
+
+// ---------------------------------------------------- //
+// ----------------- GRID OPERATIONS ------------------ //
+// ---------------------------------------------------- //
+
+
+template <int dummy>
 CollOfScalar EquelleRuntimeCUDA::operatorExtend(const CollOfScalar& data_in,
 						const CollOfIndices<dummy>& from_set,
 						const CollOfIndices<dummy>& to_set) {
@@ -60,6 +98,9 @@ CollOfScalar EquelleRuntimeCUDA::operatorExtend(const CollOfScalar& data_in,
     
     return dev_grid_.operatorExtend(data_in, from_set, to_set);
 }
+
+
+
 
 
 
