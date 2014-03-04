@@ -32,7 +32,6 @@ CollOfScalar::CollOfScalar()
       dev_values_(0),
       block_x_(0),
       grid_x_(0)
-      //indices_()
 {
     // Intentionally left blank
 }
@@ -42,7 +41,6 @@ CollOfScalar::CollOfScalar(const int size)
       dev_values_(0),
       block_x_(equelleCUDA::MAX_THREADS),
       grid_x_((size_ + block_x_ - 1) / block_x_)
-      //indices_(size)
 {
     cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
     checkError_("cudaMalloc in CollOfScalar::CollOfScalar(int)");
@@ -53,7 +51,6 @@ CollOfScalar::CollOfScalar(const int size, const double value)
       dev_values_(0),
       block_x_(equelleCUDA::MAX_THREADS),
       grid_x_((size_ + block_x_ - 1) / block_x_)
-      //indices_(size)
 {
     // Can not use cudaMemset as it sets float values on a given
     // number of bytes.
@@ -75,7 +72,6 @@ CollOfScalar::CollOfScalar(const std::vector<double>& host_vec)
       dev_values_(0),
       block_x_(equelleCUDA::MAX_THREADS),
       grid_x_((size_ + block_x_ - 1) / block_x_)
-      //indices_(size_)
 {
     cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
     checkError_("cudaMalloc in CollOfScalar::CollOfScalar(std::vector<double>)");
@@ -92,7 +88,6 @@ CollOfScalar::CollOfScalar(const CollOfScalar& coll)
       dev_values_(0),
       grid_x_(coll.grid_x_),
       block_x_(coll.block_x_)
-      //indices_(coll.indices_)
 {
     std::cout << "Copy constructor!\n";
    
@@ -155,10 +150,6 @@ int CollOfScalar::size() const
     return size_;
 }
 
-
-//CollOfIndices CollOfScalar::collection() const {
-//    return indices_;
-//}
 
 
 void CollOfScalar::checkError_(const std::string& msg) const {
