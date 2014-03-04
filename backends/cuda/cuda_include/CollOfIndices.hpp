@@ -84,6 +84,9 @@ namespace equelleCUDA
 	*/
 	thrust::host_vector<int> toHost() const;
 
+	//! Gives the device vector with the indices.
+	thrust::device_vector<int> device_vector() const;
+
 	//! Copy the device_vector to host memory without the need for thrust library.
 	std::vector<int> stdToHost() const;
 	

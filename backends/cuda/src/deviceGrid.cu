@@ -641,3 +641,45 @@ __global__ void equelleCUDA::secondCellSubsetKernel( int* second,
 	second[index] = face_cells[2*face_index[index] + 1];
     }
 }
+
+
+// CUDA WRAPPER FOR EXTEND
+CollOfScalar wrapDeviceGrid::extendToFull( CollOfScalar in_data,
+					   thrust::device_vector<int> from_set,
+					   int full_size) {
+    std::cout << "WRAPPER\n\n";
+    // setup how many threads/blocks we need:
+    dim3 block(MAX_THREADS);
+    dim3 grid( (int)((full_size + MAX_THREADS - 1)/ MAX_THREADS) );
+    
+    // create a vector of size number_of_faces_:
+    //thrust::device_vector<double> out(full_size);
+    CollOfScalar out(full_size);
+    //double* out_ptr = thrust::raw_pointer_cast( &out[0] );
+    int* from_ptr = thrust::raw_pointer_cast( &from_set[0]);
+    wrapDeviceGrid::extendToFullKernel<<<grid,block>>>( out.data(),
+							from_ptr,
+							from_set.size(),
+							in_data.data(),
+							full_size);
+    
+      
+    return out;
+}
+
+__global__ void wrapDeviceGrid::extendToFullKernel( double* outData,
+						    const int* from_set,
+						    const int from_size,
+						    const double* inData,
+						    const int to_size) 
+{
+    int outIndex = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( outIndex < to_size) {
+	outData[outIndex] = 0;
+	
+	__syncthreads();
+	if ( outIndex < from_size ) {
+	    outData[from_set[outIndex]] = inData[outIndex];
+	}
+    }
+}

@@ -258,6 +258,10 @@ public:
     CollOfScalar operatorExtend(const CollOfScalar& data_in,
 				const CollOfIndices<dummy>& from_set,
 				const CollOfIndices<dummy>& to_set);
+    template<int dummy>
+    CollOfScalar operatorOn(const CollOfScalar& data_in,
+			    const CollOfIndices<dummy>& from_set,
+			    const CollOfIndices<dummy>& to_set);
 
     //template <class SomeCollection, class EntityCollection>
     //typename CollType<SomeCollection>::Type operatorOn(const SomeCollection& data, const EntityCollection& from_set, const EntityCollection& to_set);

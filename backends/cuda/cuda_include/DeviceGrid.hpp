@@ -166,6 +166,13 @@ namespace equelleCUDA
 				    const CollOfIndices<dummy>& from_set,
 				    const CollOfIndices<dummy>& to_set);
 
+	
+	template<int dummy>
+	CollOfScalar operatorOn(const CollOfScalar& in_data,
+				const CollOfIndices<dummy>& from_set,
+				const CollOfIndices<dummy>& to_set);
+
+
 	// Get functions:
 	/*!
 	  \return dimensions
@@ -380,9 +387,28 @@ namespace equelleCUDA
       \sa DeviceGrid::secondCell, secondCellKernel
     */
     __global__ void secondCellSubsetKernel( int* second,
-				      const int number_of_faces,
-				      const int* face_index,
-				      const int* face_cells);
+					    const int number_of_faces,
+					    const int* face_index,
+					    const int* face_cells);
+
+
+    //! Functions that contain device code but that can not be directly part the class.
+    namespace wrapDeviceGrid{
+	
+	CollOfScalar extendToFull( CollOfScalar inData, 
+				   thrust::device_vector<int> from_set,
+				   int full_size);
+			
+	__global__ void extendToFullKernel( double* inData,
+					    const int* from_set,
+					    const int from_size,
+					    const double* outData,
+					    const int to_size);
+
+    } // namespace wrapDeviceGrid
+
+
+
 
 } // namespace equelleCUDA
 

@@ -1,6 +1,6 @@
 
-//#ifndef EQUELLE_COLLOFINDICES_IMPL_INCLUDED
-//#define EQUELLE_COLLOFINDICES_IMPL_INCLUDED
+#ifndef EQUELLE_COLLOFINDICES_IMPL_INCLUDED
+#define EQUELLE_COLLOFINDICES_IMPL_INCLUDED
 
 #include <cuda.h>
 #include <cuda_runtime.h>
@@ -103,6 +103,11 @@ thrust::host_vector<int> CollOfIndices<dummy>::toHost() const {
 }
 
 template <int dummy>
+thrust::device_vector<int> CollOfIndices<dummy>::device_vector() const {
+    return dev_vec_;
+}
+
+template <int dummy>
 std::vector<int> CollOfIndices<dummy>::stdToHost() const {
     thrust::host_vector<int> host(dev_vec_.begin(), dev_vec_.end());
     return std::vector<int>(host.begin(), host.end());
@@ -191,4 +196,4 @@ void CollOfIndices<dummy>::sort() {
 //template class CollOfIndices<1>;
 
 
-//#endif // EQUELLE_COLLOFINDICES_IMPL_INCLUDED
+#endif // EQUELLE_COLLOFINDICES_IMPL_INCLUDED

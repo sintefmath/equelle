@@ -71,9 +71,10 @@ equelleCUDA::CollOfIndices<dummy> EquelleRuntimeCUDA::inputDomainSubsetOf(const 
     
     // USING SORT ON THE DEVICE PRODUCES A STRANGE ERROR.
     // SORTING DONE ON THE HOST FOR NOW...
-
+    // Believe this is because the _impl.hpp file is compiled by 
+    // the gcc compiler as well through #includes
     
-    superset.contains(subset, name);
+    //superset.contains(subset, name);
 
     return subset;
 }
@@ -93,14 +94,27 @@ CollOfScalar EquelleRuntimeCUDA::operatorExtend(const CollOfScalar& data_in,
 	OPM_THROW(std::runtime_error, "data_in (size " << data_in.size() << ") and from_set (size " << from_set.size() << ") have to be of the same size in Extend function."); 
     }
     if (from_set.size() > to_set.size() ) {
-	OPM_THROW(std::runtime_error, "From_set (size " << from_set.size() << ") has to be a subset of to_set (size " << to_set.size());
+	OPM_THROW(std::runtime_error, "From_set (size " << from_set.size() << ") has to be a subset of to_set (size " << to_set.size() << ")");
     }
     
     return dev_grid_.operatorExtend(data_in, from_set, to_set);
 }
 
 
+template <int dummy>
+CollOfScalar EquelleRuntimeCUDA::operatorOn(const CollOfScalar& data_in,
+					    const CollOfIndices<dummy>& from_set,
+					    const CollOfIndices<dummy>& to_set) {
 
+    if ( data_in.size() != from_set.size()) {
+	OPM_THROW(std::runtime_error, "data_in (size " << data_in.size() << ") and from_set (size " << from_set.size() << ") have to be of the same size in On function.");
+    }
+    if ( to_set.size() > from_set.size() ) {
+	OPM_THROW(std::runtime_error, "To_set (size " << to_set.size() << ") has to be a subset of from_set (size " << from_set.size() << ")");
+    }
+
+    return dev_grid_.operatorOn(data_in, from_set, to_set);
+}
 
 
 

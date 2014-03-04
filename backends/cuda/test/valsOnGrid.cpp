@@ -29,6 +29,7 @@ int inputVectorComp(std::vector<int> host, std::string test);
 int scalar_test(EquelleRuntimeCUDA* er);
 
 
+
 //test_suite* init_unit_test_suite( int argc, char* argv[] )
 //{
 int main( int argc, char** argv) {
@@ -38,9 +39,9 @@ int main( int argc, char** argv) {
     
     DeviceGrid dg(er.getGrid());
     
-    //if ( inputDomainTest(&er) ) {
-    //    return 1;
-    //}
+    if ( inputDomainTest(&er) ) {
+        return 1;
+    }
 
     if ( collOfScalarTest(&er) ) {
 	return 1;
@@ -78,6 +79,40 @@ int collOfScalarTest(EquelleRuntimeCUDA* er) {
     }
     int faces_size = 31;
     if ( compare(faces, faces_sol, faces_size, "inputaCollectionOfScalar(faces)") ) {
+	return 1;
+    }
+
+    // EXTEND TEST:
+    
+    CollOfScalar intCell = er->inputCollectionOfScalar("intCell", er->interiorCells());
+    double intCell_sol[] = {3.14, 1002.2001};
+    if ( compare(intCell, intCell_sol, 2, "inputCollectionOfScalar(interiorCells())") ) {
+	return 1;
+    }
+    CollOfScalar ext_intCell_allCell = er->operatorExtend(intCell,
+							  er->interiorCells(),
+							  er->allCells());
+    double ext_intCell_allCell_sol[] = {0,0,0,0,0,3.14,1002.2001,0,0,0,0,0};
+    if ( compare(ext_intCell_allCell, ext_intCell_allCell_sol, 12,
+		 "Extend(intCell, interiorCells(), allCells())") ) {
+	return 1;
+    }
+
+    // Extend intFaces -> allFaces
+      CollOfScalar intFace = er->inputCollectionOfScalar("intFace", er->interiorFaces());
+    double intFace_sol[] = {1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9, 10.10, 11.11,
+			    12.12, 13.13, 14.14, 15.15, 16.16, 17.17};
+    if ( compare(intFace, intFace_sol, 17, "inputCollectionOfScalar(interiorFaces())")) {
+	return 1;
+    }
+    CollOfScalar ext_intFace_allFace = er->operatorExtend( intFace,
+							   er->interiorFaces(),
+							   er->allFaces());
+    double ext_intFace_allFace_sol[] = {0, 1.1, 2.2, 3.3, 0, 0, 4.4, 5.5, 6.6, 0, 0,
+					7.7, 8.8, 9.9, 0, 0,0,0,0, 10.10, 11.11, 12.12,
+					13.13, 14.14, 15.15, 16.16, 17.17, 0,0,0,0};
+    if( compare(ext_intFace_allFace, ext_intFace_allFace_sol, 31,
+		"Extend(intFace, interiorFaces(), allFaces())") ) {
 	return 1;
     }
     
@@ -140,7 +175,7 @@ int compare(CollOfScalar scal, double sol[],
 
 }
 
-/*
+
 int inputDomainTest(EquelleRuntimeCUDA* er) {
 
     CollOfFace in_face = er->inputDomainSubsetOf("ind", er->allFaces());
@@ -155,7 +190,7 @@ int inputDomainTest(EquelleRuntimeCUDA* er) {
 
     return 0;
 }
-*/
+
 
 
 int inputVectorComp(std::vector<int> host, std::string test) {
