@@ -115,7 +115,15 @@ int collOfScalarTest(EquelleRuntimeCUDA* er) {
 		"Extend(intFace, interiorFaces(), allFaces())") ) {
 	return 1;
     }
-    
+
+    // a is {0 10 20 ... 110} for allCells
+    CollOfScalar on_allCell_intCell = er->operatorOn( a, er->allCells(),
+							er->interiorCells());
+    double on_allCell_intCell_sol[] = {50, 60};
+    if( compare(on_allCell_intCell, on_allCell_intCell_sol, 2, 
+		"On(a, allCells(), interiorCells())") ) {
+	return 1;
+    }
     return 0;
 }
 

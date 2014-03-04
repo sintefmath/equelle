@@ -399,11 +399,23 @@ namespace equelleCUDA
 				   thrust::device_vector<int> from_set,
 				   int full_size);
 			
-	__global__ void extendToFullKernel( double* inData,
+	__global__ void extendToFullKernel( double* outData,
 					    const int* from_set,
 					    const int from_size,
-					    const double* outData,
+					    const double* inData,
 					    const int to_size);
+
+	CollOfScalar onFromFull( CollOfScalar inData,
+				 thrust::device_vector<int> to_set);
+
+
+	__global__ void onFromFullKernel( double* outData,
+					  const int* to_set,
+					  const int to_size,
+					  const double* inData);
+				 
+
+
 
     } // namespace wrapDeviceGrid
 

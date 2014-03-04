@@ -18,10 +18,10 @@ namespace equelleCUDA {
 					    const CollOfIndices<dummy>& from_set,
 					    const CollOfIndices<dummy>& to_set) 
     {
-	std::cout << "\nEXTEND\n\n";
 	if ( to_set.isFull() ) {
-	    std::cout << "\nEXTEND\n\n";
-	    return wrapDeviceGrid::extendToFull(in_data, from_set.device_vector(),
+	    std::cout << "EXTEND\n";
+	    return wrapDeviceGrid::extendToFull(in_data, 
+						from_set.device_vector(),
 						to_set.size());
 	}
 	else {
@@ -35,11 +35,16 @@ namespace equelleCUDA {
 					const CollOfIndices<dummy>& from_set,
 					const CollOfIndices<dummy>& to_set) 
     {
-
-
-	return CollOfScalar(to_set.size(), 0);
+	std::cout << "\n\nON\n\n";
+	if ( from_set.isFull() ) {
+	    return wrapDeviceGrid::onFromFull(in_data,
+					      to_set.device_vector());
+	    
+	}
+	else {
+	    OPM_THROW(std::runtime_error, "On from subset to subset is not yet implemented. We appologize the inconvinience");
+	}
     }
-
 
 }  // namespace equelleCUDA
 

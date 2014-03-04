@@ -647,7 +647,7 @@ __global__ void equelleCUDA::secondCellSubsetKernel( int* second,
 CollOfScalar wrapDeviceGrid::extendToFull( CollOfScalar in_data,
 					   thrust::device_vector<int> from_set,
 					   int full_size) {
-    std::cout << "WRAPPER\n\n";
+    std::cout << "WRAPPER\n";
     // setup how many threads/blocks we need:
     dim3 block(MAX_THREADS);
     dim3 grid( (int)((full_size + MAX_THREADS - 1)/ MAX_THREADS) );
@@ -683,3 +683,40 @@ __global__ void wrapDeviceGrid::extendToFullKernel( double* outData,
 	}
     }
 }
+
+CollOfScalar wrapDeviceGrid::onFromFull( CollOfScalar inData,
+					 thrust::device_vector<int> to_set ) {
+
+    // inData is a full set, so position is its index
+    // to_set is indices which we get the input from.
+    // out will be same size as to_set.
+
+    std::cout << "WRAPPER\n";
+    // setup how many threads/blocks we need:
+    dim3 block(MAX_THREADS);
+    dim3 grid( (int)(( to_set.size() + MAX_THREADS - 1)/ MAX_THREADS) );
+    
+    // Create the output vector:
+    CollOfScalar out(to_set.size());
+    double* out_ptr = out.data();
+    double* in_ptr = inData.data();
+    int* to_set_ptr = thrust::raw_pointer_cast( &to_set[0] );
+    wrapDeviceGrid::onFromFullKernel<<<grid,block>>>(out_ptr,
+						     to_set_ptr,
+						     to_set.size(),
+						     in_ptr);
+    return out;
+}
+
+
+__global__ void wrapDeviceGrid::onFromFullKernel( double* outData,
+						  const int* to_set,
+						  const int to_size,
+						  const double* inData)
+{
+    int toIndex = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( toIndex < to_size ) {
+	outData[toIndex] = inData[to_set[toIndex]];
+    }
+}
+						  
