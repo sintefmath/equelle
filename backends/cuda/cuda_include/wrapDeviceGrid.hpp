@@ -44,6 +44,10 @@ namespace equelleCUDA
 					    const double* inData,
 					    const int to_size);
 
+
+
+
+
 	CollOfScalar onFromFull( const CollOfScalar& inData,
 				 const thrust::device_vector<int>& to_set);
 
@@ -59,6 +63,31 @@ namespace equelleCUDA
 				 
 	
 
+
+
+	thrust::device_vector<int> onFromFullIndices( const thrust::device_vector<int>& inData,
+						      const thrust::device_vector<int>& from_set);
+
+	thrust::device_vector<int> onFromSubsetIndices( const thrust::device_vector<int>& inData,
+							const thrust::device_vector<int>& from_set,
+							const thrust::device_vector<int>& to_set,
+							const int& full_size);
+
+	__global__ void onFromFullKernelIndices( int* outData,
+						 const int* to_set,
+						 const int to_size,
+						 const int* inData);
+
+	// Needed from onFromSubsetIndices
+	thrust::device_vector<int> extendToFullIndices( const thrust::device_vector<int>& inData,
+							const thrust::device_vector<int>& to_set,
+							const int& full_size);
+
+	__global__ void extendToFullKernelIndices( int* outData,
+						   const int* from_set,
+						   const int from_size,
+						   const int* inData,
+						   const int to_size);
 
     } // namespace wrapDeviceGrid
 

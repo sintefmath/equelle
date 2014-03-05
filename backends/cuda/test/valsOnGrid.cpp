@@ -243,7 +243,7 @@ int compare(CollOfScalar scal, double sol[],
 
 int inputDomainTest(EquelleRuntimeCUDA* er) {
 
-    int ans[] = {0,1,2};
+    int ans[] = {0,5,10};
     CollOfFace in_face = er->inputDomainSubsetOf("ind", er->allFaces());
     if ( inputVectorComp(in_face.stdToHost(), ans, 3,  "allFaces()") ) {
 	return 1;
@@ -253,6 +253,19 @@ int inputDomainTest(EquelleRuntimeCUDA* er) {
 	return 1;
     }
 
+    // Test On for CollOfIndices
+    CollOfCell second_bndface = er->secondCell(er->boundaryFaces());
+    int second_bndface_sol[] = {0,-1,4,-1,8,-1,0,1,2,3,-1,-1,-1,-1};
+    if ( inputVectorComp(second_bndface.stdToHost(), second_bndface_sol, 14,
+			 "secondCell(boundaryFaces())") ) {
+	return 1;
+    }
+    CollOfCell on_res = er->operatorOn(second_bndface, er->boundaryFaces(), in_face);
+    int on_res_sol[] = {0, 4, 8};
+    if ( inputVectorComp(on_res.stdToHost(), on_res_sol, 3,
+			 "On(second_bndface, BoundaryFaces(), in_face)") ) {
+	return 1;
+    }
 
     return 0;
 }

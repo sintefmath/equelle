@@ -261,6 +261,12 @@ public:
 			    const CollOfIndices<dummy>& from_set,
 			    const CollOfIndices<dummy>& to_set);
 
+    // Implementation of the Equelle keyword On for CollOfIndices<>
+    template<int dummy_data, int dummy_set>
+    CollOfIndices<dummy_data> operatorOn( const CollOfIndices<dummy_data>& in_data,
+					  const CollOfIndices<dummy_set>& from_set,
+					  const CollOfIndices<dummy_set>& to_set);
+
     //template <class SomeCollection, class EntityCollection>
     //typename CollType<SomeCollection>::Type operatorOn(const SomeCollection& data, const EntityCollection& from_set, const EntityCollection& to_set);
 

@@ -195,9 +195,9 @@ namespace equelleCUDA
 
 	//! Implementation of the Equelle keyword On for CollOfIndices<>
 	template<int dummy_data, int dummy_set>
-	CollOfIndices<dummy_data> operatorOn( const CollOfIndices<dummy_data>& in_data,
-					      const CollOfIndices<dummy_set>& from_set,
-					      const CollOfIndices<dummy_set>& to_set);
+	thrust::device_vector<int> operatorOn( const CollOfIndices<dummy_data>& in_data,
+					       const CollOfIndices<dummy_set>& from_set,
+					       const CollOfIndices<dummy_set>& to_set);
 	
 
 	// Get functions:
