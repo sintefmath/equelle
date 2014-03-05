@@ -644,9 +644,9 @@ __global__ void equelleCUDA::secondCellSubsetKernel( int* second,
 
 
 // CUDA WRAPPER FOR EXTEND
-CollOfScalar wrapDeviceGrid::extendToFull( CollOfScalar in_data,
-					   thrust::device_vector<int> from_set,
-					   int full_size) {
+CollOfScalar wrapDeviceGrid::extendToFull( const CollOfScalar& in_data,
+					   const thrust::device_vector<int>& from_set,
+					   const int& full_size) {
     std::cout << "WRAPPER\n";
     // setup how many threads/blocks we need:
     dim3 block(MAX_THREADS);
@@ -656,7 +656,7 @@ CollOfScalar wrapDeviceGrid::extendToFull( CollOfScalar in_data,
     //thrust::device_vector<double> out(full_size);
     CollOfScalar out(full_size);
     //double* out_ptr = thrust::raw_pointer_cast( &out[0] );
-    int* from_ptr = thrust::raw_pointer_cast( &from_set[0]);
+    const int* from_ptr = thrust::raw_pointer_cast( &from_set[0]);
     wrapDeviceGrid::extendToFullKernel<<<grid,block>>>( out.data(),
 							from_ptr,
 							from_set.size(),
@@ -667,10 +667,10 @@ CollOfScalar wrapDeviceGrid::extendToFull( CollOfScalar in_data,
     return out;
 }
 
-CollOfScalar wrapDeviceGrid::extendToSubset( CollOfScalar inData,
-					     thrust::device_vector<int> from_set,
-					     thrust::device_vector<int> to_set,
-					     int full_size) {
+CollOfScalar wrapDeviceGrid::extendToSubset( const CollOfScalar& inData,
+					     const thrust::device_vector<int>& from_set,
+					     const thrust::device_vector<int>& to_set,
+					     const int& full_size) {
     std::cout << "WRAPPER - Extend to subset\n";
     CollOfScalar temp_full = extendToFull( inData, from_set, full_size);
     return onFromFull(temp_full, to_set);
@@ -694,8 +694,8 @@ __global__ void wrapDeviceGrid::extendToFullKernel( double* outData,
     }
 }
 
-CollOfScalar wrapDeviceGrid::onFromFull( CollOfScalar inData,
-					 thrust::device_vector<int> to_set ) {
+CollOfScalar wrapDeviceGrid::onFromFull( const CollOfScalar& inData,
+					 const thrust::device_vector<int>& to_set ) {
 
     // inData is a full set, so position is its index
     // to_set is indices which we get the input from.
@@ -708,20 +708,18 @@ CollOfScalar wrapDeviceGrid::onFromFull( CollOfScalar inData,
     
     // Create the output vector:
     CollOfScalar out(to_set.size());
-    double* out_ptr = out.data();
-    double* in_ptr = inData.data();
-    int* to_set_ptr = thrust::raw_pointer_cast( &to_set[0] );
-    wrapDeviceGrid::onFromFullKernel<<<grid,block>>>(out_ptr,
+    const int* to_set_ptr = thrust::raw_pointer_cast( &to_set[0] );
+    wrapDeviceGrid::onFromFullKernel<<<grid,block>>>(out.data(),
 						     to_set_ptr,
 						     to_set.size(),
-						     in_ptr);
+						     inData.data());
     return out;
 }
 
-CollOfScalar wrapDeviceGrid::onFromSubset( CollOfScalar inData,
-					   thrust::device_vector<int> from_set,
-					   thrust::device_vector<int> to_set,
-					   int full_size) {
+CollOfScalar wrapDeviceGrid::onFromSubset( const CollOfScalar& inData,
+					   const thrust::device_vector<int>& from_set,
+					   const thrust::device_vector<int>& to_set,
+					   const int& full_size) {
     
     std::cout << "WRAPPER - On subset\n";
     CollOfScalar temp_full = extendToFull(inData, from_set, full_size);

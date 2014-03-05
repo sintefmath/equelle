@@ -160,14 +160,35 @@ namespace equelleCUDA
 	*/
 	CollOfCell secondCell(CollOfFace coll) const;
 
+	//! Implementation of the Equelle keyword Extend.
+	/*!
+	  The functions take as input a Collection of Scalars from one domain,
+	  and map them over to a larger domain by expanding the Collection Of Scalars
+	  by zeros. The input set has to be a subset of the output set.
 
+	  \param[in] in_data Collection of Scalars that should be expanded.
+	  \param[in] from_set The Collection of Indices corresponding
+	  to in_data.
+	  \param[in] to_set The Collection of Indices corresponding to the 
+	  set given as return value.
+
+	  \remark The size of in_data and from_set has to be the same,
+	  and from_set has to be a subset of to_set.
+
+	  \return Collection Of Scalars corresponding to to_set. Values for indices
+	  found in from_set will be the same as in the corresponding position in
+	  in_data, and the rest of the elements are zero.
+	 */
 	template<int dummy>
 	CollOfScalar operatorExtend(const CollOfScalar& in_data,
 				    const CollOfIndices<dummy>& from_set,
 				    const CollOfIndices<dummy>& to_set);
 
-	
-	template<int dummy>
+	//! Implementation of the Equelle keyword On for Collection of Scalars
+	/*!
+	  so...
+	*/
+	template<int dummy> //, class SomeCollection>
 	CollOfScalar operatorOn(const CollOfScalar& in_data,
 				const CollOfIndices<dummy>& from_set,
 				const CollOfIndices<dummy>& to_set);
@@ -393,16 +414,26 @@ namespace equelleCUDA
 
 
     //! Functions that contain device code but that can not be directly part the class.
+    /*!
+      This namespace contains functions that is closely related to the DeviceGrid
+      class, but that can not be included in the class itself. Functions here are 
+      often called from template functions, or are kernels.
+      
+      The functions here should be thought of as private class members. They are
+      available as regular functions, but they are designed to be called from other 
+      higher level functions in either the equelleCUDA classes or the EquelleRuntimeCUDA
+      class.
+    */
     namespace wrapDeviceGrid{
 	
-	CollOfScalar extendToFull( CollOfScalar inData, 
-				   thrust::device_vector<int> from_set,
-				   int full_size);
+	CollOfScalar extendToFull( const CollOfScalar& inData, 
+				   const thrust::device_vector<int>& from_set,
+				   const int& full_size);
 
-	CollOfScalar extendToSubset( CollOfScalar inData,
-				     thrust::device_vector<int> from_set,
-				     thrust::device_vector<int> to_set,
-				     int full_size);
+	CollOfScalar extendToSubset( const CollOfScalar& inData,
+				     const thrust::device_vector<int>& from_set,
+				     const thrust::device_vector<int>& to_set,
+				     const int& full_size);
 			
 	__global__ void extendToFullKernel( double* outData,
 					    const int* from_set,
@@ -410,13 +441,13 @@ namespace equelleCUDA
 					    const double* inData,
 					    const int to_size);
 
-	CollOfScalar onFromFull( CollOfScalar inData,
-				 thrust::device_vector<int> to_set);
+	CollOfScalar onFromFull( const CollOfScalar& inData,
+				 const thrust::device_vector<int>& to_set);
 
-	CollOfScalar onFromSubset( CollOfScalar inData,
-				   thrust::device_vector<int> from_set,
-				   thrust::device_vector<int> to_set,
-				   int full_size);
+	CollOfScalar onFromSubset( const CollOfScalar& inData,
+				   const thrust::device_vector<int>& from_set,
+				   const thrust::device_vector<int>& to_set,
+				   const int& full_size);
 
 	__global__ void onFromFullKernel( double* outData,
 					  const int* to_set,

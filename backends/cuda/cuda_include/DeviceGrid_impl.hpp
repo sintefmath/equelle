@@ -26,12 +26,14 @@ namespace equelleCUDA {
 	}
 	else {
 	    // Better safe than sorry:
-	    int full_size = number_of_faces_;
-	    //if (dummy == 0) { // cells
-	    //    full_size = number_of_cells_;
-	    //} else (dummy == 1) {
-	    //    full_size = number_of_faces_;
-	    //}
+	    int full_size;// = number_of_faces_;
+	    if (dummy == 0) { // cells
+	        full_size = number_of_cells_;
+	    } else if (dummy == 1) {
+	        full_size = number_of_faces_;
+	    } else {
+		OPM_THROW(std::runtime_error, "No CollOfIndices<codim> for codim " << dummy);
+	    }
 	    return wrapDeviceGrid::extendToSubset(in_data,
 						  from_set.device_vector(),
 						  to_set.device_vector(),

@@ -111,11 +111,11 @@ CollOfScalar EquelleRuntimeCUDA::operatorOn(const CollOfScalar& data_in,
 					    const CollOfIndices<dummy>& to_set) {
 
     if ( data_in.size() != from_set.size()) {
-	OPM_THROW(std::runtime_error, "data_in (size " << data_in.size() << ") and from_set (size " << from_set.size() << ") have to be of the same size in On function.");
+	OPM_THROW(std::logic_error, "data_in (size " << data_in.size() << ") and from_set (size " << from_set.size() << ") have to be of the same size in On function.");
     }
-    if ( to_set.size() > from_set.size() ) {
-	OPM_THROW(std::runtime_error, "To_set (size " << to_set.size() << ") has to be a subset of from_set (size " << from_set.size() << ")");
-    }
+    //if ( to_set.size() > from_set.size() ) {
+    //	OPM_THROW(std::runtime_error, "To_set (size " << to_set.size() << ") has to be a subset of from_set (size " << from_set.size() << ")");
+    //}
 
     return dev_grid_.operatorOn(data_in, from_set, to_set);
 }
