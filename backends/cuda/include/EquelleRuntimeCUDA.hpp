@@ -245,13 +245,8 @@ public:
     CollOfBool isEmpty(const CollOfCellCPU& cells) const;
     CollOfBool isEmpty(const CollOfFaceCPU& faces) const;
 
-    template <class EntityCollection>
-    CollOfScalarCPU operatorExtend(const Scalar data, const EntityCollection& to_set);
-
-    template <class SomeCollection, class EntityCollection>
-    SomeCollection operatorExtend(const SomeCollection& data, const EntityCollection& from_set, const EntityCollection& to_set);
-
-    // Havahol Extend:
+    
+    // EXTEND and ON operators
     template<int codim>
     CollOfScalar operatorExtend(const CollOfScalar& data_in,
 				const CollOfIndices<codim>& from_set,
@@ -271,8 +266,6 @@ public:
 					  const CollOfIndices<codim_set>& from_set,
 					  const CollOfIndices<codim_set>& to_set);
 
-    //template <class SomeCollection, class EntityCollection>
-    //typename CollType<SomeCollection>::Type operatorOn(const SomeCollection& data, const EntityCollection& from_set, const EntityCollection& to_set);
 
     //template <class SomeCollection1, class SomeCollection2>
     //typename CollType<SomeCollection1>::Type
