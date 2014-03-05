@@ -13,4 +13,4 @@ include_directories( "include" ${Zoltan_INCLUDE_DIRS} "../../serial/include" "/u
 
 add_executable(zoltanintegration_test ${test_src} ${test_inc})
 
-target_link_libraries(zoltanintegration_test equelle_rt ${Boost_LIBRARIES} ${Zoltan_LIBRARIES} opmautodiff opmcore dunecommon )
+target_link_libraries(zoltanintegration_test equelle_rt equelle_mpi ${Boost_LIBRARIES} ${Zoltan_LIBRARIES} opmautodiff opmcore dunecommon )
