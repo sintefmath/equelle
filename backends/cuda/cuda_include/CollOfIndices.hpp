@@ -35,7 +35,7 @@ namespace equelleCUDA
       differs depending on whether the input is collection of faces or cells.
       Giving typedefs as we have done here will result in such a check at compile time.
     */
-    template <int dummy>
+    template <int codim>
     class CollOfIndices 
     {	
     public:
@@ -130,7 +130,7 @@ namespace equelleCUDA
 	  \param[in] name The variable name for the subset. Used for giving 
 	  easy to understand exception message.
 	*/
-	void contains(CollOfIndices<dummy> subset, const std::string& name);
+	void contains(CollOfIndices<codim> subset, const std::string& name);
 
 
 	//! Sort the indices in ascending order

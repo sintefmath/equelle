@@ -39,16 +39,16 @@ using namespace equelleCUDA;
 // ------- Implementation of CollOfIndices ---------- //
 // -------------------------------------------------- //
 
-template <int dummy>
-CollOfIndices<dummy>::CollOfIndices() 
+template <int codim>
+CollOfIndices<codim>::CollOfIndices() 
     : full_(false),
       size_(0),
       dev_vec_(0)
 {
 }
 
-template <int dummy>
-CollOfIndices<dummy>::CollOfIndices(const int size)
+template <int codim>
+CollOfIndices<codim>::CollOfIndices(const int size)
     : full_(true),
       size_(size),
       dev_vec_(0)
@@ -58,8 +58,8 @@ CollOfIndices<dummy>::CollOfIndices(const int size)
     }
 }
 
-template <int dummy>
-CollOfIndices<dummy>::CollOfIndices(const thrust::device_vector<int>& indices) 
+template <int codim>
+CollOfIndices<codim>::CollOfIndices(const thrust::device_vector<int>& indices) 
     : full_(false),
       size_(0),
       dev_vec_(indices.begin(), indices.end())
@@ -67,8 +67,8 @@ CollOfIndices<dummy>::CollOfIndices(const thrust::device_vector<int>& indices)
     size_ = dev_vec_.size();
 }
 
-template <int dummy>
-CollOfIndices<dummy>::CollOfIndices(thrust::device_vector<int>::iterator begin,
+template <int codim>
+CollOfIndices<codim>::CollOfIndices(thrust::device_vector<int>::iterator begin,
 			     thrust::device_vector<int>::iterator end)
     : full_(false),
       size_(0),
@@ -77,45 +77,45 @@ CollOfIndices<dummy>::CollOfIndices(thrust::device_vector<int>::iterator begin,
     size_ = dev_vec_.size();
 }
 
-template <int dummy>
-CollOfIndices<dummy>::CollOfIndices(const CollOfIndices& coll)
+template <int codim>
+CollOfIndices<codim>::CollOfIndices(const CollOfIndices& coll)
     : full_(coll.full_),
       size_(coll.size_),
       dev_vec_(coll.dev_vec_.begin(), coll.dev_vec_.end())
 {
 }
 
-template <int dummy>
-CollOfIndices<dummy>::~CollOfIndices() 
+template <int codim>
+CollOfIndices<codim>::~CollOfIndices() 
 {
     // Nothing we manually have to destruct.
 }
 
-template <int dummy>
-bool CollOfIndices<dummy>::isFull() const
+template <int codim>
+bool CollOfIndices<codim>::isFull() const
 {
     return full_;
 }
 
-template <int dummy>
-thrust::host_vector<int> CollOfIndices<dummy>::toHost() const {
+template <int codim>
+thrust::host_vector<int> CollOfIndices<codim>::toHost() const {
     return thrust::host_vector<int>(dev_vec_.begin(), dev_vec_.end());
 }
 
-template <int dummy>
-thrust::device_vector<int> CollOfIndices<dummy>::device_vector() const {
+template <int codim>
+thrust::device_vector<int> CollOfIndices<codim>::device_vector() const {
     return dev_vec_;
 }
 
-template <int dummy>
-std::vector<int> CollOfIndices<dummy>::stdToHost() const {
+template <int codim>
+std::vector<int> CollOfIndices<codim>::stdToHost() const {
     thrust::host_vector<int> host(dev_vec_.begin(), dev_vec_.end());
     return std::vector<int>(host.begin(), host.end());
 }
 
 
-template <int dummy>
-int CollOfIndices<dummy>::size() const {
+template <int codim>
+int CollOfIndices<codim>::size() const {
     return size_;
 }
 
@@ -128,20 +128,20 @@ int CollOfIndices<dummy>::size() const {
 //}
 
 
-template <int dummy>
-thrust::device_vector<int>::iterator CollOfIndices<dummy>::begin() {
+template <int codim>
+thrust::device_vector<int>::iterator CollOfIndices<codim>::begin() {
     return dev_vec_.begin();
 }
 
-template <int dummy>
-thrust::device_vector<int>::iterator CollOfIndices<dummy>::end() {
+template <int codim>
+thrust::device_vector<int>::iterator CollOfIndices<codim>::end() {
     return dev_vec_.end();
 }
 
 
 // This one should be const, but raw_pointer_cast is incompitible with const...
-template <int dummy>
-int* CollOfIndices<dummy>::raw_pointer() {
+template <int codim>
+int* CollOfIndices<codim>::raw_pointer() {
     //thrust::device_vector<int> temp(8);
     //thrust::fill(temp.begin(), temp.end(), 9);
     //const int* out = thrust::raw_pointer_cast( &dev_vec_[0] );
@@ -150,8 +150,8 @@ int* CollOfIndices<dummy>::raw_pointer() {
 }
 
 /*
-template <int dummy>
-void CollOfIndices<dummy>::contains( CollOfIndices<dummy> subset,
+template <int codim>
+void CollOfIndices<codim>::contains( CollOfIndices<codim> subset,
 				     const std::string& name) {
     
     // If this is a full set we only have to check first and last element
@@ -161,10 +161,10 @@ void CollOfIndices<dummy>::contains( CollOfIndices<dummy> subset,
 	    OPM_THROW(std::runtime_error, "Input set " << name << " contains invalid (negative) indices");
 	}
 	if (dev_ptr[subset.size()-1] >= this->size())  {
-	    if ( dummy == 0) {
+	    if ( codim == 0) {
 		OPM_THROW(std::runtime_error, "Input set " << name << " contains indices larger than number_of_cells " << this->size()); 
 	    }
-	    if (dummy == 1) {
+	    if (codim == 1) {
 		OPM_THROW(std::runtime_error, "Input set " << name << " contains indices large than number_of_faces " << this->size());
 	    }	
 	}
@@ -186,8 +186,8 @@ void CollOfIndices<dummy>::contains( CollOfIndices<dummy> subset,
     }
 }
 
-template<int dummy>
-void CollOfIndices<dummy>::sort() {
+template<int codim>
+void CollOfIndices<codim>::sort() {
     thrust::sort(dev_vec_.begin(), dev_vec_.end());
 }
 

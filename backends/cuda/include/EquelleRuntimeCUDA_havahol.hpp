@@ -19,8 +19,8 @@
 // -------------------------------------------------- //
 
 
-template <int dummy>
-equelleCUDA::CollOfScalar EquelleRuntimeCUDA::inputCollectionOfScalar( const String& name, const equelleCUDA::CollOfIndices<dummy>& coll) 
+template <int codim>
+equelleCUDA::CollOfScalar EquelleRuntimeCUDA::inputCollectionOfScalar( const String& name, const equelleCUDA::CollOfIndices<codim>& coll) 
 {
     std::cout << "Copy from file " << name << std::endl;
     // Copy the reading part from the CPU back-end
@@ -53,8 +53,8 @@ equelleCUDA::CollOfScalar EquelleRuntimeCUDA::inputCollectionOfScalar( const Str
 
 
 
-template <int dummy>
-equelleCUDA::CollOfIndices<dummy> EquelleRuntimeCUDA::inputDomainSubsetOf(const String& name, equelleCUDA::CollOfIndices<dummy> superset) 
+template <int codim>
+equelleCUDA::CollOfIndices<codim> EquelleRuntimeCUDA::inputDomainSubsetOf(const String& name, equelleCUDA::CollOfIndices<codim> superset) 
 {
     const String filename = param_.get<String>(name + "_filename");
     std::ifstream is(filename.c_str());
@@ -67,7 +67,7 @@ equelleCUDA::CollOfIndices<dummy> EquelleRuntimeCUDA::inputDomainSubsetOf(const 
     thrust::device_vector<int> dev(host.begin(), host.end());
     //thrust::sort(dev.begin(), dev.end());
       
-    equelleCUDA::CollOfIndices<dummy> subset(host);
+    equelleCUDA::CollOfIndices<codim> subset(host);
     //subset.sort();
     
     // USING SORT ON THE DEVICE PRODUCES A STRANGE ERROR.
@@ -89,10 +89,10 @@ equelleCUDA::CollOfIndices<dummy> EquelleRuntimeCUDA::inputDomainSubsetOf(const 
 // ---------------------------------------------------- //
 
 
-template <int dummy>
+template <int codim>
 CollOfScalar EquelleRuntimeCUDA::operatorExtend(const CollOfScalar& data_in,
-						const CollOfIndices<dummy>& from_set,
-						const CollOfIndices<dummy>& to_set) {
+						const CollOfIndices<codim>& from_set,
+						const CollOfIndices<codim>& to_set) {
     
     if (data_in.size() != from_set.size() ) {
 	OPM_THROW(std::runtime_error, "data_in (size " << data_in.size() << ") and from_set (size " << from_set.size() << ") have to be of the same size in Extend function."); 
@@ -105,10 +105,10 @@ CollOfScalar EquelleRuntimeCUDA::operatorExtend(const CollOfScalar& data_in,
 }
 
 
-template <int dummy>
+template <int codim>
 CollOfScalar EquelleRuntimeCUDA::operatorOn(const CollOfScalar& data_in,
-					    const CollOfIndices<dummy>& from_set,
-					    const CollOfIndices<dummy>& to_set) {
+					    const CollOfIndices<codim>& from_set,
+					    const CollOfIndices<codim>& to_set) {
 
     if ( data_in.size() != from_set.size()) {
 	OPM_THROW(std::logic_error, "data_in (size " << data_in.size() << ") and from_set (size " << from_set.size() << ") have to be of the same size in On function for CollOfScalar.");
@@ -122,14 +122,14 @@ CollOfScalar EquelleRuntimeCUDA::operatorOn(const CollOfScalar& data_in,
 
 
 
-template<int dummy_data, int dummy_set>
-CollOfIndices<dummy_data> EquelleRuntimeCUDA::operatorOn( const CollOfIndices<dummy_data>& data_in,
-							  const CollOfIndices<dummy_set>& from_set,
-							  const CollOfIndices<dummy_set>& to_set) {
+template<int codim_data, int codim_set>
+CollOfIndices<codim_data> EquelleRuntimeCUDA::operatorOn( const CollOfIndices<codim_data>& data_in,
+							  const CollOfIndices<codim_set>& from_set,
+							  const CollOfIndices<codim_set>& to_set) {
     if ( data_in.size() != from_set.size() ) {
 	OPM_THROW(std::logic_error, "data_in(size " << data_in.size() << ") and from_set (size " << from_set.size() << ") have to be of the same size in On function for CollOfIndices.");
     }
-    return CollOfIndices<dummy_data>(dev_grid_.operatorOn(data_in, from_set, to_set) );
+    return CollOfIndices<codim_data>(dev_grid_.operatorOn(data_in, from_set, to_set) );
 }
 
 

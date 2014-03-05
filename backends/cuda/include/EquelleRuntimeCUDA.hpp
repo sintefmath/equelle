@@ -252,20 +252,20 @@ public:
     SomeCollection operatorExtend(const SomeCollection& data, const EntityCollection& from_set, const EntityCollection& to_set);
 
     // Havahol Extend:
-    template<int dummy>
+    template<int codim>
     CollOfScalar operatorExtend(const CollOfScalar& data_in,
-				const CollOfIndices<dummy>& from_set,
-				const CollOfIndices<dummy>& to_set);
-    template<int dummy>
+				const CollOfIndices<codim>& from_set,
+				const CollOfIndices<codim>& to_set);
+    template<int codim>
     CollOfScalar operatorOn(const CollOfScalar& data_in,
-			    const CollOfIndices<dummy>& from_set,
-			    const CollOfIndices<dummy>& to_set);
+			    const CollOfIndices<codim>& from_set,
+			    const CollOfIndices<codim>& to_set);
 
     // Implementation of the Equelle keyword On for CollOfIndices<>
-    template<int dummy_data, int dummy_set>
-    CollOfIndices<dummy_data> operatorOn( const CollOfIndices<dummy_data>& in_data,
-					  const CollOfIndices<dummy_set>& from_set,
-					  const CollOfIndices<dummy_set>& to_set);
+    template<int codim_data, int codim_set>
+    CollOfIndices<codim_data> operatorOn( const CollOfIndices<codim_data>& in_data,
+					  const CollOfIndices<codim_set>& from_set,
+					  const CollOfIndices<codim_set>& to_set);
 
     //template <class SomeCollection, class EntityCollection>
     //typename CollType<SomeCollection>::Type operatorOn(const SomeCollection& data, const EntityCollection& from_set, const EntityCollection& to_set);
@@ -308,14 +308,14 @@ public:
                                          const SomeCollection& coll);
 
     // input havahol
-    template <int dummy>
-    equelleCUDA::CollOfIndices<dummy> inputDomainSubsetOf( const String& name,
-							 equelleCUDA::CollOfIndices<dummy> superset);
+    template <int codim>
+    equelleCUDA::CollOfIndices<codim> inputDomainSubsetOf( const String& name,
+							 equelleCUDA::CollOfIndices<codim> superset);
 	
     // input havahol
-    template <int dummy>
+    template <int codim>
     equelleCUDA::CollOfScalar inputCollectionOfScalar(const String& name,
-						      const equelleCUDA::CollOfIndices<dummy>& coll);
+						      const equelleCUDA::CollOfIndices<codim>& coll);
 										 
     SeqOfScalar inputSequenceOfScalar(const String& name);
 

@@ -14,10 +14,10 @@
 namespace equelleCUDA {
 
 
-    template <int dummy>
+    template <int codim>
     CollOfScalar DeviceGrid::operatorExtend(const CollOfScalar& in_data,
-					    const CollOfIndices<dummy>& from_set,
-					    const CollOfIndices<dummy>& to_set) 
+					    const CollOfIndices<codim>& from_set,
+					    const CollOfIndices<codim>& to_set) 
     {
 	if ( to_set.isFull() ) {
 	    std::cout << "EXTEND\n";
@@ -28,12 +28,12 @@ namespace equelleCUDA {
 	else {
 	    // Better safe than sorry:
 	    int full_size;// = number_of_faces_;
-	    if (dummy == 0) { // cells
+	    if (codim == 0) { // cells
 	        full_size = number_of_cells_;
-	    } else if (dummy == 1) {
+	    } else if (codim == 1) {
 	        full_size = number_of_faces_;
 	    } else {
-		OPM_THROW(std::runtime_error, "No CollOfIndices<codim> for codim " << dummy);
+		OPM_THROW(std::runtime_error, "No CollOfIndices<codim> for codim " << codim);
 	    }
 	    return wrapDeviceGrid::extendToSubset(in_data,
 						  from_set.device_vector(),
@@ -44,10 +44,10 @@ namespace equelleCUDA {
     
     }
 
-    template <int dummy>
+    template <int codim>
     CollOfScalar DeviceGrid::operatorOn(const CollOfScalar& in_data,
-					const CollOfIndices<dummy>& from_set,
-					const CollOfIndices<dummy>& to_set) 
+					const CollOfIndices<codim>& from_set,
+					const CollOfIndices<codim>& to_set) 
     {
 	std::cout << "\n\nON\n\n";
 	if ( from_set.isFull() ) {
@@ -57,14 +57,14 @@ namespace equelleCUDA {
 	}
 	else {
 	    int full_size; // better safe than sorry
-	    if (dummy == 0) {
+	    if (codim == 0) {
 		full_size = number_of_cells_;
 	    }
-	    else if (dummy == 1) {
+	    else if (codim == 1) {
 		full_size = number_of_faces_;
 	    }
 	    else {
-		OPM_THROW(std::runtime_error, "No CollOfIndices<codim> for codim " << dummy);
+		OPM_THROW(std::runtime_error, "No CollOfIndices<codim> for codim " << codim);
 	    }
 	    return wrapDeviceGrid::onFromSubset(in_data,
 						from_set.device_vector(),
@@ -76,10 +76,10 @@ namespace equelleCUDA {
 
 
 
-    template<int dummy_data, int dummy_set>
-    thrust::device_vector<int> DeviceGrid::operatorOn( const CollOfIndices<dummy_data>& in_data,
-						      const CollOfIndices<dummy_set>& from_set,
-						      const CollOfIndices<dummy_set>& to_set)
+    template<int codim_data, int codim_set>
+    thrust::device_vector<int> DeviceGrid::operatorOn( const CollOfIndices<codim_data>& in_data,
+						      const CollOfIndices<codim_set>& from_set,
+						      const CollOfIndices<codim_set>& to_set)
     {
 	std::cout << "\n\nON - COLL_OF_INDICES!!!\n\n";
 	if ( from_set.isFull() ) {
@@ -89,14 +89,14 @@ namespace equelleCUDA {
 	}
 	else {
 	    int full_size; // better safe than sorry
-	    if (dummy_set == 0) {
+	    if (codim_set == 0) {
 		full_size = number_of_cells_;
 	    }
-	    else if (dummy_set == 1) {
+	    else if (codim_set == 1) {
 		full_size = number_of_faces_;
 	    }
 	    else {
-		OPM_THROW(std::runtime_error, "No CollOfIndices<codim> for codim " << dummy_set);
+		OPM_THROW(std::runtime_error, "No CollOfIndices<codim> for codim " << codim_set);
 	    }
 	    return wrapDeviceGrid::onFromSubsetIndices(in_data.device_vector(),
 						       from_set.device_vector(),

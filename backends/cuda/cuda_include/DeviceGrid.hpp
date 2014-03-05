@@ -179,25 +179,25 @@ namespace equelleCUDA
 	  found in from_set will be the same as in the corresponding position in
 	  in_data, and the rest of the elements are zero.
 	 */
-	template<int dummy>
+	template<int codim>
 	CollOfScalar operatorExtend(const CollOfScalar& in_data,
-				    const CollOfIndices<dummy>& from_set,
-				    const CollOfIndices<dummy>& to_set);
+				    const CollOfIndices<codim>& from_set,
+				    const CollOfIndices<codim>& to_set);
 
 	//! Implementation of the Equelle keyword On for Collection of Scalars
 	/*!
 	  so...
 	*/
-	template<int dummy>
+	template<int codim>
 	CollOfScalar operatorOn(const CollOfScalar& in_data,
-				const CollOfIndices<dummy>& from_set,
-				const CollOfIndices<dummy>& to_set);
+				const CollOfIndices<codim>& from_set,
+				const CollOfIndices<codim>& to_set);
 
 	//! Implementation of the Equelle keyword On for CollOfIndices<>
-	template<int dummy_data, int dummy_set>
-	thrust::device_vector<int> operatorOn( const CollOfIndices<dummy_data>& in_data,
-					       const CollOfIndices<dummy_set>& from_set,
-					       const CollOfIndices<dummy_set>& to_set);
+	template<int codim_data, int codim_set>
+	thrust::device_vector<int> operatorOn( const CollOfIndices<codim_data>& in_data,
+					       const CollOfIndices<codim_set>& from_set,
+					       const CollOfIndices<codim_set>& to_set);
 	
 
 	// Get functions:
