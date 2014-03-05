@@ -179,6 +179,13 @@ int collOfScalarTest(EquelleRuntimeCUDA* er) {
 	return 1;
     }
     
+    // Test for extend from scalar
+    CollOfScalar fromScalar = er->operatorExtend(9.124, er->interiorCells());
+    double fromScalar_sol[] = {9.124, 9.124};
+    if ( compare(fromScalar, fromScalar_sol, 2, "Extend(9.124, InteriorCells())") ) {
+	return 1;
+    }
+
 
     return 0;
 }

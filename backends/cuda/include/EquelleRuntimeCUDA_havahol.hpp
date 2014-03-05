@@ -104,6 +104,12 @@ CollOfScalar EquelleRuntimeCUDA::operatorExtend(const CollOfScalar& data_in,
     return dev_grid_.operatorExtend(data_in, from_set, to_set);
 }
 
+template <int codim>
+CollOfScalar EquelleRuntimeCUDA::operatorExtend(const Scalar& data,
+						const CollOfIndices<codim>& set) {
+    return CollOfScalar(set.size(), data);
+}
+
 
 template <int codim>
 CollOfScalar EquelleRuntimeCUDA::operatorOn(const CollOfScalar& data_in,
