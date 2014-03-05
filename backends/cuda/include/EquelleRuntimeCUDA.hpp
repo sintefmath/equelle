@@ -228,8 +228,6 @@ public:
     CollOfFace interiorFaces() const;
     CollOfCell firstCell(equelleCUDA::CollOfFace faces) const;
     CollOfCell secondCell(equelleCUDA::CollOfFace faces) const;
-    CollOfCellCPU firstCell(const CollOfFaceCPU& faces) const;
-    CollOfCellCPU secondCell(const CollOfFaceCPU& faces) const;
     CollOfScalarCPU norm(const CollOfFaceCPU& faces) const;
     CollOfScalarCPU norm(const CollOfCellCPU& cells) const;
     CollOfScalarCPU norm(const CollOfVector& vectors) const;

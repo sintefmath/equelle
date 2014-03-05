@@ -667,6 +667,16 @@ CollOfScalar wrapDeviceGrid::extendToFull( CollOfScalar in_data,
     return out;
 }
 
+CollOfScalar wrapDeviceGrid::extendToSubset( CollOfScalar inData,
+					     thrust::device_vector<int> from_set,
+					     thrust::device_vector<int> to_set,
+					     int full_size) {
+    std::cout << "WRAPPER - Extend to subset\n";
+    CollOfScalar temp_full = extendToFull( inData, from_set, full_size);
+    return onFromFull(temp_full, to_set);
+
+}
+
 __global__ void wrapDeviceGrid::extendToFullKernel( double* outData,
 						    const int* from_set,
 						    const int from_size,
@@ -707,6 +717,17 @@ CollOfScalar wrapDeviceGrid::onFromFull( CollOfScalar inData,
 						     in_ptr);
     return out;
 }
+
+CollOfScalar wrapDeviceGrid::onFromSubset( CollOfScalar inData,
+					   thrust::device_vector<int> from_set,
+					   thrust::device_vector<int> to_set,
+					   int full_size) {
+    
+    std::cout << "WRAPPER - On subset\n";
+    CollOfScalar temp_full = extendToFull(inData, from_set, full_size);
+    return onFromFull(temp_full, to_set);
+}
+
 
 
 __global__ void wrapDeviceGrid::onFromFullKernel( double* outData,

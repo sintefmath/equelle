@@ -398,6 +398,11 @@ namespace equelleCUDA
 	CollOfScalar extendToFull( CollOfScalar inData, 
 				   thrust::device_vector<int> from_set,
 				   int full_size);
+
+	CollOfScalar extendToSubset( CollOfScalar inData,
+				     thrust::device_vector<int> from_set,
+				     thrust::device_vector<int> to_set,
+				     int full_size);
 			
 	__global__ void extendToFullKernel( double* outData,
 					    const int* from_set,
@@ -408,13 +413,17 @@ namespace equelleCUDA
 	CollOfScalar onFromFull( CollOfScalar inData,
 				 thrust::device_vector<int> to_set);
 
+	CollOfScalar onFromSubset( CollOfScalar inData,
+				   thrust::device_vector<int> from_set,
+				   thrust::device_vector<int> to_set,
+				   int full_size);
 
 	__global__ void onFromFullKernel( double* outData,
 					  const int* to_set,
 					  const int to_size,
 					  const double* inData);
 				 
-
+	
 
 
     } // namespace wrapDeviceGrid

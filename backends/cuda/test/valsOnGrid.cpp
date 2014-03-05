@@ -24,7 +24,7 @@ int compare(CollOfScalar scal, double sol[],
 int collOfScalarTest(EquelleRuntimeCUDA* er);
 
 int inputDomainTest(EquelleRuntimeCUDA* er);
-int inputVectorComp(std::vector<int> host, std::string test);
+int inputVectorComp(std::vector<int> host, int ans[], int ans_size, std::string test);
 
 int scalar_test(EquelleRuntimeCUDA* er);
 
@@ -99,7 +99,7 @@ int collOfScalarTest(EquelleRuntimeCUDA* er) {
     }
 
     // Extend intFaces -> allFaces
-      CollOfScalar intFace = er->inputCollectionOfScalar("intFace", er->interiorFaces());
+    CollOfScalar intFace = er->inputCollectionOfScalar("intFace", er->interiorFaces());
     double intFace_sol[] = {1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9, 10.10, 11.11,
 			    12.12, 13.13, 14.14, 15.15, 16.16, 17.17};
     if ( compare(intFace, intFace_sol, 17, "inputCollectionOfScalar(interiorFaces())")) {
@@ -116,6 +116,9 @@ int collOfScalarTest(EquelleRuntimeCUDA* er) {
 	return 1;
     }
 
+    // ON TEST
+    
+    // On allCells -> interiorCells
     // a is {0 10 20 ... 110} for allCells
     CollOfScalar on_allCell_intCell = er->operatorOn( a, er->allCells(),
 							er->interiorCells());
@@ -124,6 +127,59 @@ int collOfScalarTest(EquelleRuntimeCUDA* er) {
 		"On(a, allCells(), interiorCells())") ) {
 	return 1;
     }
+
+    // EXTEND subset -> subset
+
+    // Get a subset of both interior_faces and boundary_cells (1,2,3,7,8,11)
+    // This will be the subset of subset
+    int subset_ans[] = {1,2,3,7,8,11};
+    CollOfFace subset_face = er->inputDomainSubsetOf("subset", er->interiorFaces());
+    if ( inputVectorComp(subset_face.stdToHost(), subset_ans, 6, "interiorFaces()") ) {
+	return 1;
+    }
+    CollOfCell subset_cell = er->inputDomainSubsetOf("subset", er->boundaryCells());
+    if ( inputVectorComp(subset_cell.stdToHost(), subset_ans, 6, "boundaryCells()") ) {
+	return 1;
+    }
+    // Get input on the subset
+    CollOfScalar subsetVals = er->inputCollectionOfScalar("subsetVals", subset_face);
+    double subsetVals_sol[] = {10, 20, 30, 70, 80, 110};
+    if ( compare(subsetVals, subsetVals_sol, 6, "input(subsetVals)") ) {
+	return 1;
+    }
+    CollOfScalar extendSubsetCell = er->operatorExtend( subsetVals,
+							subset_cell,
+							er->boundaryCells());
+    double extendSubsetCell_sol[] = {0, 10,20,30, 0, 70,80,0,0,110};
+    if ( compare(extendSubsetCell, extendSubsetCell_sol, 10,
+		 "Extend(subset_Cell -> boundaryCells())") ) {
+	return 1;
+    }
+    CollOfScalar extendSubsetFace = er->operatorExtend( subsetVals,
+							subset_face,
+							er->interiorFaces());
+    double extendSubsetFace_sol[] = {10,20,30,0,70,80,110,0,0,0,0,0,0,0,0,0,0};
+    if ( compare(extendSubsetFace, extendSubsetFace_sol, 17,
+		 "Extend(subset_Face -> interiorFaces())") ) {
+	return 1;
+    }
+
+    // On subset -> subset
+    // Get values on boundary_cells:
+    CollOfScalar boundVals = er->inputCollectionOfScalar("boundCellVals", er->boundaryCells());
+    double boundVals_sol[] = {0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
+    if (compare(boundVals, boundVals_sol, 10, "input(boundCellVals)") ) {
+	return 1;
+    }
+    CollOfScalar onSubsetCell = er->operatorOn( boundVals,
+						er->boundaryCells(),
+						subset_cell);
+    double onSubsetCell_sol[] = {0.1, 0.2, 0.3, 0.5, 0.6, 0.9};
+    if ( compare(onSubsetCell, onSubsetCell_sol, 6, "On(boundaryCells() -> subset_cell)")){
+	return 1;
+    }
+    
+
     return 0;
 }
 
@@ -143,6 +199,7 @@ int scalar_test(EquelleRuntimeCUDA* er) {
 	std::cout << "\tShould take default value 164.93032 but scal_2 is " << scal_2 << std::endl;
 	return 1;
     }
+
     return 0;
 }
 
@@ -186,12 +243,13 @@ int compare(CollOfScalar scal, double sol[],
 
 int inputDomainTest(EquelleRuntimeCUDA* er) {
 
+    int ans[] = {0,1,2};
     CollOfFace in_face = er->inputDomainSubsetOf("ind", er->allFaces());
-    if ( inputVectorComp(in_face.stdToHost(), "allFaces()") ) {
+    if ( inputVectorComp(in_face.stdToHost(), ans, 3,  "allFaces()") ) {
 	return 1;
     }
     CollOfCell in_cell = er->inputDomainSubsetOf("ind", er->allCells());
-    if ( inputVectorComp(in_cell.stdToHost(), "allCells()") ) {
+    if ( inputVectorComp(in_cell.stdToHost(), ans, 3,  "allCells()") ) {
 	return 1;
     }
 
@@ -201,8 +259,8 @@ int inputDomainTest(EquelleRuntimeCUDA* er) {
 
 
 
-int inputVectorComp(std::vector<int> host, std::string test) {
-    if ( host.size() != 3) {
+int inputVectorComp(std::vector<int> host, int ans[], int ans_size, std::string test) {
+    if ( host.size() != ans_size) {
 	std::cout << "Error in valsOnGrid.cpp - testing inputDomainSubsetOf(" << test << ")\n";
 	std::cout << "\tThe collection is of wrong size!\n";
 	std::cout << "\tSize is " << host.size() << " should be 3\n";
@@ -213,7 +271,7 @@ int inputVectorComp(std::vector<int> host, std::string test) {
     std::cout << "Input indices:\n";
     for( int i = 0; i < host.size(); i++) {
 	std::cout << host[i] << " ";
-	if ( host[i] != i) {
+	if ( host[i] != ans[i]) {
 	    correct = false;
 	}
     }
@@ -225,6 +283,7 @@ int inputVectorComp(std::vector<int> host, std::string test) {
 	std:: cout << "\tShould be 0 1 2\n";
 	return 1;
     }
+    std::cout << "\tThis is correct\n";
 
     return 0;
 }

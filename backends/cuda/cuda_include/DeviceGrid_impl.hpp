@@ -25,7 +25,18 @@ namespace equelleCUDA {
 						to_set.size());
 	}
 	else {
-	    OPM_THROW(std::runtime_error, "Extend from subset to subset of full is not yet implemented");
+	    // Better safe than sorry:
+	    int full_size = number_of_faces_;
+	    //if (dummy == 0) { // cells
+	    //    full_size = number_of_cells_;
+	    //} else (dummy == 1) {
+	    //    full_size = number_of_faces_;
+	    //}
+	    return wrapDeviceGrid::extendToSubset(in_data,
+						  from_set.device_vector(),
+						  to_set.device_vector(),
+						  full_size);
+	    //OPM_THROW(std::runtime_error, "Extend from subset to subset of full is not yet implemented");
 	}
     
     }
@@ -42,7 +53,12 @@ namespace equelleCUDA {
 	    
 	}
 	else {
-	    OPM_THROW(std::runtime_error, "On from subset to subset is not yet implemented. We appologize the inconvinience");
+	    int full_size = number_of_faces_; // better safe than sorry
+	    return wrapDeviceGrid::onFromSubset(in_data,
+						from_set.device_vector(),
+						to_set.device_vector(),
+						full_size);
+	    //OPM_THROW(std::runtime_error, "On from subset to subset is not yet implemented. We appologize for the inconvinience");
 	}
     }
 

@@ -52,6 +52,7 @@ equelleCUDA::CollOfScalar EquelleRuntimeCUDA::inputCollectionOfScalar( const Str
 }
 
 
+
 template <int dummy>
 equelleCUDA::CollOfIndices<dummy> EquelleRuntimeCUDA::inputDomainSubsetOf(const String& name, equelleCUDA::CollOfIndices<dummy> superset) 
 {
@@ -75,6 +76,9 @@ equelleCUDA::CollOfIndices<dummy> EquelleRuntimeCUDA::inputDomainSubsetOf(const 
     // the gcc compiler as well through #includes
     
     //superset.contains(subset, name);
+
+    // The function works for correct sets without sort and contains,
+    // but it also allows for illegal input.
 
     return subset;
 }
