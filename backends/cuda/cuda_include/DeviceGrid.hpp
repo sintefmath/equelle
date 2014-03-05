@@ -188,11 +188,17 @@ namespace equelleCUDA
 	/*!
 	  so...
 	*/
-	template<int dummy> //, class SomeCollection>
+	template<int dummy>
 	CollOfScalar operatorOn(const CollOfScalar& in_data,
 				const CollOfIndices<dummy>& from_set,
 				const CollOfIndices<dummy>& to_set);
 
+	//! Implementation of the Equelle keyword On for CollOfIndices<>
+	template<int dummy_data, int dummy_set>
+	CollOfIndices<dummy_data> operatorOn( const CollOfIndices<dummy_data>& in_data,
+					      const CollOfIndices<dummy_set>& from_set,
+					      const CollOfIndices<dummy_set>& to_set);
+	
 
 	// Get functions:
 	/*!
@@ -411,54 +417,6 @@ namespace equelleCUDA
 					    const int number_of_faces,
 					    const int* face_index,
 					    const int* face_cells);
-
-
-    //! Functions that contain device code but that can not be directly part the class.
-    /*!
-      This namespace contains functions that is closely related to the DeviceGrid
-      class, but that can not be included in the class itself. Functions here are 
-      often called from template functions, or are kernels.
-      
-      The functions here should be thought of as private class members. They are
-      available as regular functions, but they are designed to be called from other 
-      higher level functions in either the equelleCUDA classes or the EquelleRuntimeCUDA
-      class.
-    */
-    namespace wrapDeviceGrid{
-	
-	CollOfScalar extendToFull( const CollOfScalar& inData, 
-				   const thrust::device_vector<int>& from_set,
-				   const int& full_size);
-
-	CollOfScalar extendToSubset( const CollOfScalar& inData,
-				     const thrust::device_vector<int>& from_set,
-				     const thrust::device_vector<int>& to_set,
-				     const int& full_size);
-			
-	__global__ void extendToFullKernel( double* outData,
-					    const int* from_set,
-					    const int from_size,
-					    const double* inData,
-					    const int to_size);
-
-	CollOfScalar onFromFull( const CollOfScalar& inData,
-				 const thrust::device_vector<int>& to_set);
-
-	CollOfScalar onFromSubset( const CollOfScalar& inData,
-				   const thrust::device_vector<int>& from_set,
-				   const thrust::device_vector<int>& to_set,
-				   const int& full_size);
-
-	__global__ void onFromFullKernel( double* outData,
-					  const int* to_set,
-					  const int to_size,
-					  const double* inData);
-				 
-	
-
-
-    } // namespace wrapDeviceGrid
-
 
 
 

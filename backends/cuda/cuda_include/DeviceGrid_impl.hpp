@@ -7,6 +7,7 @@
 #include "CollOfScalar.hpp"
 #include "CollOfIndices.hpp"
 //#include "DeviceGrid.hpp"
+#include "wrapDeviceGrid.hpp"
 
 #include <iostream>
 
@@ -55,7 +56,16 @@ namespace equelleCUDA {
 	    
 	}
 	else {
-	    int full_size = number_of_faces_; // better safe than sorry
+	    int full_size; // better safe than sorry
+	    if (dummy == 0) {
+		full_size = number_of_cells_;
+	    }
+	    else if (dummy == 1) {
+		full_size = number_of_faces_;
+	    }
+	    else {
+		OPM_THROW(std::runtime_error, "No CollOfIndices<codim> for codim " << dummy);
+	    }
 	    return wrapDeviceGrid::onFromSubset(in_data,
 						from_set.device_vector(),
 						to_set.device_vector(),
