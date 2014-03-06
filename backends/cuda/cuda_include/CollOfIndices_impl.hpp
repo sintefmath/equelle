@@ -30,6 +30,7 @@
 //#include "DeviceGrid.hpp"
 //#include "CollOfScalar.hpp"
 #include "CollOfIndices.hpp"
+#include "wrapCollOfIndices.hpp"
 
 using namespace equelleCUDA;
 
@@ -149,11 +150,26 @@ int* CollOfIndices<codim>::raw_pointer() {
     return thrust::raw_pointer_cast( &dev_vec_[0] );
 }
 
-/*
+
 template <int codim>
 void CollOfIndices<codim>::contains( CollOfIndices<codim> subset,
 				     const std::string& name) {
-    
+ 
+    if ( this->isFull() ) {
+	// Check first and last element
+	// Throws exception if subset is not contained.
+	wrapCollOfIndices::containsFull(subset.device_vector(), this->size(),
+					codim, name);
+     }
+    else {
+	// Need to compare two CollOfIndices vectors:
+	// Throws an exception if subset is not contained.
+	wrapCollOfIndices::containsSubset(this->device_vector(),
+					  subset.device_vector(),
+					  codim, name);
+    }
+}
+    /*    
     // If this is a full set we only have to check first and last element
     if ( this->isFull() ) {
 	int* dev_ptr = this->raw_pointer();
@@ -185,13 +201,15 @@ void CollOfIndices<codim>::contains( CollOfIndices<codim> subset,
 	}
     }
 }
+    */
 
 template<int codim>
 void CollOfIndices<codim>::sort() {
-    thrust::sort(dev_vec_.begin(), dev_vec_.end());
+    // thrust::sort(dev_vec_.begin(), dev_vec_.end());
+    //wrapCollOfIndices::sort(begin(), end());
 }
 
-*/
+
 //template class CollOfIndices<0>;
 //template class CollOfIndices<1>;
 

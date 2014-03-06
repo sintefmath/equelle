@@ -251,14 +251,26 @@ int compare(CollOfScalar scal, double sol[],
 int inputDomainTest(EquelleRuntimeCUDA* er) {
 
     int ans[] = {0,5,10};
-    CollOfFace in_face = er->inputDomainSubsetOf("ind", er->allFaces());
-    if ( inputVectorComp(in_face.stdToHost(), ans, 3,  "allFaces()") ) {
+    CollOfFace in_bnd = er->inputDomainSubsetOf("ind", er->boundaryFaces());
+    if ( inputVectorComp(in_bnd.stdToHost(), ans, 3,
+			 "inputDomainSubsetOf(boundaryFaces())") ) {
 	return 1;
     }
     CollOfCell in_cell = er->inputDomainSubsetOf("ind", er->allCells());
-    if ( inputVectorComp(in_cell.stdToHost(), ans, 3,  "allCells()") ) {
+    if ( inputVectorComp(in_cell.stdToHost(), ans, 3,  
+			 "inputDomainSubsetOf(allCells())") ) {
 	return 1;
     }
+    CollOfFace in_face = er->inputDomainSubsetOf("ind", er->allFaces());
+    if ( inputVectorComp(in_face.stdToHost(), ans, 3,  
+			 "inputDomainSubsetOf(allFaces())") ) {
+	return 1;
+    }
+    //CollOfFace in_bnd = er->inputDomainSubsetOf("ind", er->boundaryFaces());
+    //if ( inputVectorComp(in_bnd.stdToHost(), ans, 3,
+    //			 "inputDomainSubsetOf(boundaryFaces())") ) {
+    //	return 1;
+    //}
 
     // Test On for CollOfIndices
     CollOfCell second_bndface = er->secondCell(er->boundaryFaces());
@@ -281,7 +293,7 @@ int inputDomainTest(EquelleRuntimeCUDA* er) {
 
 int inputVectorComp(std::vector<int> host, int ans[], int ans_size, std::string test) {
     if ( host.size() != ans_size) {
-	std::cout << "Error in valsOnGrid.cpp - testing inputDomainSubsetOf(" << test << ")\n";
+	std::cout << "Error in valsOnGrid.cpp - testing " << test << "\n";
 	std::cout << "\tThe collection is of wrong size!\n";
 	std::cout << "\tSize is " << host.size() << " should be 3\n";
 	return 1;

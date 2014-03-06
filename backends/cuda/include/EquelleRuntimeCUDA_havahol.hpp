@@ -5,6 +5,7 @@
 #include <string>
 #include <fstream>
 #include <iterator>
+#include <vector>
 #include <thrust/host_vector.h>
 
 #include "EquelleRuntimeCUDA.hpp"
@@ -63,8 +64,15 @@ equelleCUDA::CollOfIndices<codim> EquelleRuntimeCUDA::inputDomainSubsetOf(const 
     }
     std::istream_iterator<int> beg(is);
     std::istream_iterator<int> end;
-    thrust::host_vector<int> host(beg, end);
-    thrust::device_vector<int> dev(host.begin(), host.end());
+    
+    std::vector<int> std_vec(beg, end);
+    if (!is_sorted(std_vec.begin(), std_vec.end()) ) {
+	OPM_THROW(std::runtime_error, "Input set " << name << " was not sorted in ascending order");
+    }
+    
+    thrust::host_vector<int> host(std_vec.begin(), std_vec.end());
+    //thrust::device_vector<int> dev(std_vec.begin(), std_vec.end());
+    //thrust::device_vector<int> dev(host.begin(), host.end());
     //thrust::sort(dev.begin(), dev.end());
       
     equelleCUDA::CollOfIndices<codim> subset(host);
@@ -75,7 +83,7 @@ equelleCUDA::CollOfIndices<codim> EquelleRuntimeCUDA::inputDomainSubsetOf(const 
     // Believe this is because the _impl.hpp file is compiled by 
     // the gcc compiler as well through #includes
     
-    //superset.contains(subset, name);
+    superset.contains(subset, name);
 
     // The function works for correct sets without sort and contains,
     // but it also allows for illegal input.

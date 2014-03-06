@@ -139,6 +139,8 @@ namespace equelleCUDA
 	  Useful after reading indices from file.
 	 */
 	void sort();
+	// Idea: is_sorted is a very fast operation on the CPU. Why not just 
+	// keep that task on the host?
 
 
     private:
@@ -164,6 +166,7 @@ namespace equelleCUDA
       \sa CollOfIndices
     */
     typedef CollOfIndices<1> CollOfFace;
+
 
 
 } // namespace equelleCUDA
