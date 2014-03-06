@@ -24,9 +24,12 @@ namespace equelleCUDA
 
     //! Storing an unstructured grid on the device and do operations on this grid
     /*!
-      The DeviceGrid class is based on the struct UnstructuredGrid from OPM, and which is used by the current serial back-end for the Equelle compiler. Here, operations on the grid is given as member functions in DeviceGrid.
+      The DeviceGrid class is based on the struct UnstructuredGrid from OPM, 
+      and which is used by the current serial back-end for the Equelle compiler.
+      Here, operations on the grid is given as member functions in DeviceGrid.
 
-      The class contains the following data members as private variables for storing the grid:
+      The class contains the following data members as private variables for storing 
+      the grid:
       - int dimensions_ 
           + Denoting 2D or 3D grid.
       - int number_of_cells_ 
@@ -34,22 +37,36 @@ namespace equelleCUDA
       - int number_of_faces_ 
           + Denoting the number og faces in the grid.
       - int size_cell_faces_
-          + integer denoting the size of the cell_faces_ array. Might be removed on a later time.
+          + integer denoting the size of the cell_faces_ array. Might be removed on 
+	  a later time.
 	  
       - double* cell_centroids_
-          + Points to array of coordinates of the centroids of all cells. Size of the array is ( dimensions_ * number_of_cells_ )
+          + Points to array of coordinates of the centroids of all cells. Size of the 
+	  array is ( dimensions_ * number_of_cells_ )
       - int* cell_facepos_
-	  + Contains the range of indices for which faces belongs to each cell. The face indices are found in the array cell_faces_, and a cell c is surrounded by the faces from cell_faces_[cell_facepos_[c]] to (but not included) cell_faces_[cell_facepos_[c+1]]. Number of faces for cell c is therefore cell_facepos_[c+1] - cell_facepos_[c], and the size of cell_facepos_ is number_of_cells_ + 1.
+	  + Contains the range of indices for which faces belongs to each cell. 
+	  The face indices are found in the array cell_faces_, and a cell c is 
+	  surrounded by the faces from cell_faces_[cell_facepos_[c]] to 
+	  (but not included) cell_faces_[cell_facepos_[c+1]]. Number of faces for 
+	  cell c is therefore cell_facepos_[c+1] - cell_facepos_[c], and the size 
+	  of cell_facepos_ is number_of_cells_ + 1.
       - int* cell_faces_
-	  + Contains the indices for all faces belonging to each face as described above. The size of the array is the value stored in cell_facepos_[number_of_cells_].
+	  + Contains the indices for all faces belonging to each face as described above.
+	  The size of the array is the value stored in cell_facepos_[number_of_cells_].
       - double* cell_volumes_
 	  + Contains the volume of each cell. Size of array is number_of_cells_
       - double* face_areas_
 	  + Contains the area of each face. Size of array is number_of_faces_
       - int* face_cells_
-	  + Contains the indices of the two cells on each side of each face. Face f is the face seperating the cells face_cells_[2*f] and face_cells_[2*f + 1]. The orientation is also so that the normal of face f points from face_cells_[2*f] to face_cells_[2*f + 1]. If the face is on the boundary, then one of the two cells will have the value -1. Size of this array is number_of_faces * 2.
+	  + Contains the indices of the two cells on each side of each face. 
+	  Face f is the face seperating the cells face_cells_[2*f] and 
+	  face_cells_[2*f + 1]. The orientation is also so that the normal of 
+	  face f points from face_cells_[2*f] to face_cells_[2*f + 1]. If the face is 
+	  on the boundary, then one of the two cells will have the value -1. 
+	  Size of this array is number_of_faces * 2.
       - double* face_normals_
-	  + Contains the normal vectors of each face, in non-normalized format. In order to get the normalized normal vector, divide on the face_area_. 
+	  + Contains the normal vectors of each face, in non-normalized format.
+	  In order to get the normalized normal vector, divide on the face_area_. 
      */
     class DeviceGrid {
     public:
@@ -162,7 +179,7 @@ namespace equelleCUDA
 
 	//! Implementation of the Equelle keyword Extend.
 	/*!
-	  The functions take as input a Collection of Scalars from one domain,
+	  The function takes as input a Collection of Scalars from one domain,
 	  and map them over to a larger domain by expanding the Collection Of Scalars
 	  by zeros. The input set has to be a subset of the output set.
 
@@ -172,7 +189,7 @@ namespace equelleCUDA
 	  \param[in] to_set The Collection of Indices corresponding to the 
 	  set given as return value.
 
-	  \remark The size of in_data and from_set has to be the same,
+	  \remark The sizes of in_data and from_set has to be the same,
 	  and from_set has to be a subset of to_set.
 
 	  \return Collection Of Scalars corresponding to to_set. Values for indices
@@ -186,14 +203,48 @@ namespace equelleCUDA
 
 	//! Implementation of the Equelle keyword On for Collection of Scalars
 	/*!
-	  so...
+	  The function evaluate a evaluate-on or restrict-to operation of a 
+	  Collection of Scalars defined on a Collection of Indices (Face or Cell)
+	  and map them to a given subset of Indices of that.
+	  
+	  \param[in] in_data Collection of Scalars that should be restricted on
+	  a subset set of what they already are defined for.
+	  \param[in] from_set The indices on which in_data is defined.
+	  \param[in] to_set A set of indices which the return collection should be
+	  defined on. The to_set should be a subset of the in_data.
+	  
+	  \remark The sizes of in_data and from_set should be the same. 
+	  
+	  \return Collection Of Scalars corresponding to the to_set. Values are
+	  the same for the ones in in_data for the corresponding indices in 
+	  from_set and to_set.
 	*/
 	template<int codim>
 	CollOfScalar operatorOn(const CollOfScalar& in_data,
 				const CollOfIndices<codim>& from_set,
 				const CollOfIndices<codim>& to_set);
 
-	//! Implementation of the Equelle keyword On for CollOfIndices<>
+	//! Implementation of the Equelle keyword On for CollOfIndices<codim>
+	/*!
+	  The function evaluate a evaluate-on or restrict-to operation of a 
+	  Collection of Indices defined on a Collection of Indices (Face or Cell)
+	  and map them to a given subset of Indices of that.
+	  
+	  \param[in] in_data Collection of Indices that should be restricted on
+	  a subset set of what they already are defined for.
+	  \param[in] from_set The indices on which in_data is defined.
+	  \param[in] to_set A set of indices which the return collection should be
+	  defined on. The to_set should be a subset of the in_data.
+	  
+	  \remark The sizes of in_data and from_set should be the same. The
+	  collection given as in_data can be regarded as a Collection of Scalar
+	  and this function will have the same functionality as the other operatorOn
+	  function.
+	  
+	  \return Collection Of Indices corresponding to the to_set. Values are
+	  the same for the ones in in_data for the corresponding indices in 
+	  from_set and to_set.
+	*/
 	template<int codim_data, int codim_set>
 	thrust::device_vector<int> operatorOn( const CollOfIndices<codim_data>& in_data,
 					       const CollOfIndices<codim_set>& from_set,
@@ -202,15 +253,15 @@ namespace equelleCUDA
 
 	// Get functions:
 	/*!
-	  \return dimensions
+	  \return dimensions_, the dimensions of the grid
 	*/
 	int dimensions() const;
 	/*!
-	  \return number of cells in the entire grid.
+	  \return number_of_cells_, the number of cells in the entire grid.
 	*/
 	int number_of_cells() const;
 	/*!
-	  \return number of faces in the entire grid.
+	  \return number_of_faces_, the number of faces in the entire grid.
 	*/
 	int number_of_faces() const;
 	
