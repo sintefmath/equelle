@@ -4,15 +4,15 @@
 #include <sstream>
 #include <mpi.h>
 
-//#include <zoltan_cpp.h>
+#include <zoltan_cpp.h>
 
 
-#define MPI_SAFE_CALL( err ) equelle::mpi::mpiSafeCall( err, __FILE__, __LINE__, __FUNCTION__ )
-#define ZOLTAN_SAFE_CALL( err ) equelle::mpi::zoltanSafeCall( err, __FILE__, __LINE__, __FUNCTION__ )
+#define MPI_SAFE_CALL( err ) equelle::mpiSafeCall( err, __FILE__, __LINE__, __FUNCTION__ )
+#define ZOLTAN_SAFE_CALL( err ) equelle::zoltanSafeCall( err, __FILE__, __LINE__, __FUNCTION__ )
 
-namespace equelle { namespace mpi {
+namespace equelle {
 
-/*
+
 inline
 void zoltanSafeCall( const int err, const std::string file, const int line, const std::string functionName ) {
     if ( err != ZOLTAN_OK ) {
@@ -39,7 +39,7 @@ void zoltanSafeCall( const int err, const std::string file, const int line, cons
         throw std::runtime_error( ss.str() );
     }
 }
-*/
+
 inline
 void mpiSafeCall( const int err, const std::string file, const int line, const std::string functionName ) {
     if ( err == MPI_SUCCESS ) {
@@ -59,8 +59,16 @@ void mpiSafeCall( const int err, const std::string file, const int line, const s
     throw std::runtime_error( ss.str() );
 }
 
+inline
+int getMPIRank() {
+    int rank;
+    MPI_SAFE_CALL( MPI_Comm_rank( MPI_COMM_WORLD, &rank ) );
+
+    return rank;
+}
 
 
 
-}} // namespace equelle::mpi
+
+} // namespace equelle
 

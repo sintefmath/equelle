@@ -13,7 +13,7 @@ set( MPI_INCLUDE_DIRS "/usr/include/eigen3" ${EQUELLE_EXTRA_INCLUDE_DIRS})
 include_directories( "include"
     ${MPI_INCLUDE_PATH}
     ${Zoltan_INCLUDE_DIRS}
-"../../serial/include" "/usr/include/eigen3" "../include" )
+    "../serial/include" "/usr/include/eigen3" "../include" )
 
 
 add_library( equelle_mpi ${mpi_src} ${mpi_inc} )

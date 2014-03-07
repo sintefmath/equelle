@@ -14,6 +14,7 @@
 
 
 
+
 namespace equelle {
     Opm::GridManager* createGridManager(const Opm::parameter::ParameterGroup& param)
     {

@@ -14,6 +14,7 @@
 #include "EquelleRuntimeCPU.hpp"
 #include "equelle/mpiutils.hpp"
 #include "equelle/RuntimeMPI.hpp"
+#include "equelle/ZoltanGrid.hpp"
 
 void dumpGrid( const UnstructuredGrid* grid ) {
     std::stringstream centroids;
@@ -52,8 +53,34 @@ BOOST_AUTO_TEST_CASE( gridExploration )
 BOOST_AUTO_TEST_CASE( RuntimeMPI_initializes_zoltan ) {
     equelle::RuntimeMPI runtime;
 
-    //BOOST_CHECK( runtime.zoltan != NULL );
+    BOOST_CHECK( runtime.zoltan != NULL );
+
+    int ierr;
+    void* grid = const_cast<void*>( reinterpret_cast<const void*>(runtime.grid_manager->c_grid() ) );
+
+    if ( equelle::getMPIRank() == 0 ) {
+        BOOST_CHECK_EQUAL( runtime.grid_manager->c_grid()->number_of_cells, 6 );
+        BOOST_CHECK_EQUAL( equelle::ZoltanGrid::getNumberOfObjects( grid, &ierr ), 6 );
+
+        // Check our querying of the 6x1 grid.
+        unsigned int cell = 0;
+        ZOLTAN_ID_PTR zptr = &cell;
+        BOOST_CHECK_EQUAL( equelle::ZoltanGrid::getNumberOfEdges( grid, 1, 1, zptr, zptr, &ierr ), 1 );
+
+        //cell = 1;
+        //BOOST_CHECK_EQUAL( equelle::ZoltanGrid::getNumberOfEdges( grid, 1, 1, cell, cell, &ierr ), 2 );
+        //BOOST_CHECK_EQUAL( equelle::ZoltanGrid::getNumberOfEdges( grid, 1, 1, 4, 4, &ierr ), 2 );
+        //BOOST_CHECK_EQUAL( equelle::ZoltanGrid::getNumberOfEdges( grid, 1, 1, 5, 5, &ierr ), 1 );
+    } else {
+        BOOST_CHECK_EQUAL( runtime.grid_manager->c_grid()->number_of_cells, 0 );
+        BOOST_CHECK_EQUAL( equelle::ZoltanGrid::getNumberOfObjects( grid, &ierr ), 0 );
+    }
+
+    //auto zr = runtime.computePartition();
+    //BOOST_CHECK_EQUAL( zr.changes, 1 );
 }
+
+
 
 
 
