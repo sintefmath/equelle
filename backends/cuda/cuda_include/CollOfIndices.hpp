@@ -11,6 +11,7 @@
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
 
+#include "equelleTypedefs.hpp"
 
 namespace equelleCUDA 
 {
@@ -133,15 +134,18 @@ namespace equelleCUDA
 	void contains(CollOfIndices<codim> subset, const std::string& name);
 
 
-	//! Sort the indices in ascending order
-	/*!
+	// Sort the indices in ascending order
+	/*
 	  This function just makes a call to the sort function provided by thrust.
 	  Useful after reading indices from file.
 	 */
-	void sort();
+	//void sort();
 	// Idea: is_sorted is a very fast operation on the CPU. Why not just 
 	// keep that task on the host?
-
+	
+	//! Returns a collection of boolean checking if each index is a valid index.
+	CollOfBool isEmpty();
+	
 
     private:
 	bool full_;

@@ -10,6 +10,7 @@
 
 #include <thrust/device_vector.h>
 
+#include "equelleTypedefs.hpp"
 
 namespace equelleCUDA 
 {
@@ -27,8 +28,16 @@ namespace equelleCUDA
 			    const int& codim,
 			    const std::string& name);
 
+	CollOfBool isEmpty(const thrust::device_vector<int>& indices);
+	
+	struct functorIsEmpty {
+	    __host__ __device__
+	    void operator()(int& x) {
+		x= (x == -1);
+	    }
+	};
 
-    
+	
     } // namespace wrapCollOfIndices
 
 } // namespace equelleCUDA

@@ -11,7 +11,8 @@
 
 #include "DeviceGrid.hpp"
 #include "CollOfIndices.hpp"
-
+#include "equelleTypedefs.hpp"
+#include "equelleTypedefs.hpp"
 
 #include "gridTest.h"
 
@@ -44,6 +45,42 @@ int compare_collection(CollOfIndices<dummy> coll, int sol[],
     // Testing indices
     thrust::host_vector<int> host = coll.toHost();
     std::cout << "Collection " << test << " is the following:\n";
+    bool correct = true;
+    for (int i = 0; i < host.size(); ++i) {
+	std::cout << host[i] << " ";
+	if (i < sol_size) {
+	    if (host[i] != sol[i]) {
+		correct = false;
+	    }
+	}
+    }
+    if (correct) {
+	std::cout << "\n\tThis is correct\n";
+    } else {
+	std::cout << "\n\tThis is wrong\n";
+	std::cout << "Error in gridTest.cu - testing " << test << "\n";
+	std::cout << "\tThe indices in the collection is wrong\n";
+	return 1;
+    }
+
+    if ( coll.size() != sol_size ) {
+	std::cout << "Error in gridTest.cu - testing " << test << "\n";
+	std::cout << "\tThe collection is of wrong size!\n";
+	std::cout << "\tSize is " << coll.size() << " but should be " << sol_size << "\n";
+	return 1;
+    }
+    
+    return 0;
+
+}
+
+
+int compare_collection_bool(CollOfBool coll, bool sol[], 
+		       int sol_size, std::string test) 
+{ 
+    // Testing indices
+    thrust::host_vector<bool> host = coll;
+    std::cout << "Collection of Booleans " << test << " is the following:\n";
     bool correct = true;
     for (int i = 0; i < host.size(); ++i) {
 	std::cout << host[i] << " ";
@@ -161,10 +198,20 @@ int cuda_main(DeviceGrid dg) {
     
     // Test secondCell(boundaryFaces())
     int second_bound[] = {0,-1,4,-1,8,-1,0,1,2,3,-1,-1,-1,-1};
-    if ( compare_collection(dg.secondCell(dg.boundaryFaces()), second_bound, 14, false,
+    CollOfCell second_bound_cells = dg.secondCell(dg.boundaryFaces());
+    if ( compare_collection(second_bound_cells, second_bound, 14, false,
 			    "secondCell(boundaryFaces())") ) {
 	return 1;
     }
+
+    // Testing isEmpty:
+    bool second_bound_empty[] = {0, 1,0,1,0,1,0,0,0,0,1,1,1,1};
+    if ( compare_collection_bool(second_bound_cells.isEmpty(), 
+				 second_bound_empty, 14,
+				 "isEmpty(secondCell(boundaryFaces()))")) {
+	return 1;
+    }
+
 
     // THIS GIVES AN COMPILER ERROR - AND IT SHOULD :)
     // Test firstCell(interiorCells()

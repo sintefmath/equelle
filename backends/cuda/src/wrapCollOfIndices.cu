@@ -8,10 +8,12 @@
 #include <thrust/detail/raw_pointer_cast.h>
 #include <thrust/merge.h>
 #include <thrust/unique.h>
+#include <thrust/for_each.h>
 
 #include <opm/core/utility/ErrorMacros.hpp>
 
 #include "wrapCollOfIndices.hpp"
+#include "equelleTypedefs.hpp"
 
 
 using namespace equelleCUDA;
@@ -55,4 +57,11 @@ void wrapCollOfIndices::containsSubset(const thrust::device_vector<int>& superse
     if ( hopefully_superset.size() != superset.size()) {
 	OPM_THROW( std::runtime_error, "Input set " << name << " is not a subset of the given set in the function call.");
     }
+}
+
+
+CollOfBool wrapCollOfIndices::isEmpty(const thrust::device_vector<int>& indices) {
+    thrust::device_vector<int> temp(indices.begin(), indices.end());
+    thrust::for_each(temp.begin(), temp.end(), functorIsEmpty());
+    return CollOfBool(temp.begin(), temp.end());
 }

@@ -12,6 +12,7 @@
 #include "CollOfScalar.hpp"
 #include "CollOfIndices.hpp"
 #include "DeviceGrid.hpp"
+#include "equelleTypedefs.hpp"
 
 
 
@@ -146,6 +147,10 @@ CollOfIndices<codim_data> EquelleRuntimeCUDA::operatorOn( const CollOfIndices<co
     return CollOfIndices<codim_data>(dev_grid_.operatorOn(data_in, from_set, to_set) );
 }
 
-
+// Is empty
+template <int codim>
+CollOfBool EquelleRuntimeCUDA::isEmpty(const CollOfIndices<codim>& set) const {
+    return set.isEmpty();
+}
 
 #endif // EQUELLERUNTIMECUDA_HAVAHOL_HEADER_INCLUDED

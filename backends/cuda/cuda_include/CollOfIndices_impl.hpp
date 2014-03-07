@@ -31,6 +31,7 @@
 //#include "CollOfScalar.hpp"
 #include "CollOfIndices.hpp"
 #include "wrapCollOfIndices.hpp"
+#include "equelleTypedefs.hpp"
 
 using namespace equelleCUDA;
 
@@ -169,44 +170,11 @@ void CollOfIndices<codim>::contains( CollOfIndices<codim> subset,
 					  codim, name);
     }
 }
-    /*    
-    // If this is a full set we only have to check first and last element
-    if ( this->isFull() ) {
-	int* dev_ptr = this->raw_pointer();
-	if ( (dev_ptr[0] < 0) ) {
-	    OPM_THROW(std::runtime_error, "Input set " << name << " contains invalid (negative) indices");
-	}
-	if (dev_ptr[subset.size()-1] >= this->size())  {
-	    if ( codim == 0) {
-		OPM_THROW(std::runtime_error, "Input set " << name << " contains indices larger than number_of_cells " << this->size()); 
-	    }
-	    if (codim == 1) {
-		OPM_THROW(std::runtime_error, "Input set " << name << " contains indices large than number_of_faces " << this->size());
-	    }	
-	}
-    }
-    
-    // else the superset is not full
-    else {
-	// merging:
-	thrust::device_vector<int> merged(this->size() + subset.size());
-	thrust::device_vector<int>::iterator merge_end = thrust::merge(this->begin(), this->end(), subset.begin(), subset.end(), merged.begin());
+ 
 
-	// unique:
-	thrust::device_vector<int>::iterator merge_new_end = thrust::unique(merged.begin(), merge_end);
-
-	thrust::device_vector<int> hopefully_superset(merged.begin(), merge_new_end);
-	if ( hopefully_superset.size() != this->size()) {
-	    OPM_THROW(std::runtime_error, "Input set " << name << " is not a subset by the given set in the function call.");
-	}
-    }
-}
-    */
-
-template<int codim>
-void CollOfIndices<codim>::sort() {
-    // thrust::sort(dev_vec_.begin(), dev_vec_.end());
-    //wrapCollOfIndices::sort(begin(), end());
+template <int codim>
+CollOfBool CollOfIndices<codim>::isEmpty() {
+    return wrapCollOfIndices::isEmpty(dev_vec_);
 }
 
 

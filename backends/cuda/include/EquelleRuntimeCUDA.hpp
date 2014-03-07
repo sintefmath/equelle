@@ -18,6 +18,8 @@
 #include <string>
 #include <map>
 
+#include <thrust/device_vector.h>
+
 
 
 // Including device code
@@ -26,6 +28,7 @@
 #include "CollOfIndices.hpp"
 #include "CollOfScalar.hpp"
 #include "DeviceGrid.hpp"
+#include "equelleTypedefs.hpp"
 
 // Forward declarations for the Device types
 //class CollOfScalar;
@@ -61,8 +64,9 @@ typedef std::string String;
 
 // Collections and sequences (apart from Collection Of Scalar).
 //typedef Eigen::Array<bool, Eigen::Dynamic, 1> CollOfBool;
-typedef std::vector<bool> CollOfBool;
+//typedef std::vector<bool> CollOfBool;
 typedef std::vector<Scalar> SeqOfScalar;
+
 
 /// The Collection Of Scalar type is based on Eigen and opm-autodiff.
 /// It uses inheritance to provide extra interfaces for ease of use,
@@ -244,7 +248,8 @@ public:
     CollOfScalarCPU interiorDivergence(const CollOfScalarCPU& face_fluxes) const;
     CollOfBool isEmpty(const CollOfCellCPU& cells) const;
     CollOfBool isEmpty(const CollOfFaceCPU& faces) const;
-
+    template<int codim>
+    CollOfBool isEmpty(const CollOfIndices<codim>& set) const;
     
     // EXTEND and ON operators
     template<int codim>
