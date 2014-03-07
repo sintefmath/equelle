@@ -221,9 +221,25 @@ CollOfScalar equelleCUDA::operator/(const CollOfScalar& lhs, const CollOfScalar&
     return out;
 }
 
+CollOfScalar equelleCUDA::operator*(const Scalar& lhs, const CollOfScalar& rhs) {
+    CollOfScalar out = rhs;
+    dim3 block(out.block());
+    dim3 grid(out.grid());
+    multScalCollection_kernel<<<grid,block>>>(out.data(), lhs, out.size());
+    return out;
+}
 
+CollOfScalar equelleCUDA::operator*(const CollOfScalar& lhs, const Scalar& rhs) {
+    return (rhs * lhs);
+}
 
+CollOfScalar equelleCUDA::operator/(const CollOfScalar& lhs, const Scalar& rhs) {
+    return ( (1/rhs) * lhs);
+}
 
+CollOfScalar equelleCUDA::operator-(const CollOfScalar& arg) {
+    return -1.0*arg;
+}
 
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -262,4 +278,11 @@ __global__ void equelleCUDA::division_kernel(double* out, const double* rhs, con
     }
 }
 
-
+__global__ void equelleCUDA::multScalCollection_kernel(double* out, const double scal,
+						       const int size) {
+    int index = threadIdx.x + blockDim.x*blockIdx.x;
+    if ( index < size ) {
+	out[index] = out[index]*scal;
+    }
+}
+						   

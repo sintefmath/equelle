@@ -58,9 +58,6 @@ typedef std::vector<Face> CollOfFaceCPU;
 
 // Basic types. Note that we do not have Vector type defined
 // although the CollOfVector type is.
-typedef double Scalar;
-typedef bool Bool;
-typedef std::string String;
 
 // Collections and sequences (apart from Collection Of Scalar).
 //typedef Eigen::Array<bool, Eigen::Dynamic, 1> CollOfBool;

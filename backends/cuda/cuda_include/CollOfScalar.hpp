@@ -15,6 +15,8 @@
 #include <fstream>
 #include <iterator>
 
+#include "equelleTypedefs.hpp"
+
 //#include "DeviceGrid.hpp"
 //#include "CollOfIndices.hpp"
 
@@ -167,7 +169,9 @@ namespace equelleCUDA {
     __global__ void division_kernel(double* out, const double* rhs, const int size);
 
 
-
+    __global__ void multScalCollection_kernel(double* out, 
+					      const double scal, 
+					      const int size);
 
     // -------------- Operation overloading ------------------- //
     
@@ -211,7 +215,23 @@ namespace equelleCUDA {
     */
     CollOfScalar operator/(const CollOfScalar& lhs, const CollOfScalar& rhs);
     
-    
+
+    //! Multiplication:  Scalar * Collection Of Scalars
+    /*!
+      Wrapper for the CUDA kernel which performs the operation
+      \param lhs Left hand side Scalar
+      \param rhs Right hand side Collection of Scalars
+      \return lhs * rhs
+      \sa multScalCollection_kernel
+    */
+    CollOfScalar operator*(const Scalar& lhs, const CollOfScalar& rhs);
+
+    CollOfScalar operator*(const CollOfScalar& lhs, const Scalar& rhs);
+
+    CollOfScalar operator/(const CollOfScalar& lhs, const Scalar& rhs);
+
+    CollOfScalar operator-(const CollOfScalar& arg);
+
     /*!
       Define max number of threads in a kernel block:
     */

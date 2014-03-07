@@ -16,6 +16,13 @@ static void compareVectors( std::vector<double> answer, std::vector<double> lf)
 				     lf.begin(), lf.end() );
 }
 
+static void compareVectorsDiv( std::vector<double> answer, std::vector<double> lf)
+{
+    for (int i = 0; i < lf.size(); i++) {
+	BOOST_REQUIRE_CLOSE( answer[i], lf[i], 0.000000000001 );
+    }
+}
+
 BOOST_AUTO_TEST_CASE ( testingTheTester )
 {
     std::vector<double> a;
@@ -93,5 +100,62 @@ BOOST_AUTO_TEST_CASE( division_test )
     CollOfScalar res = cos_a / cos_b ;
     compareVectors( res.copyToHost(), lf);
 }
+
+BOOST_AUTO_TEST_CASE( scal_coll_multiplication_test )
+{
+    int size = 10000;
+    std::vector<double> a, lf;
+    double myDoub = 1.15;
+    for (int i = 0; i < size; ++i) {
+	a.push_back( i*2.25);
+	lf.push_back( i*2.25*myDoub );
+    }
+    CollOfScalar col_a(a);
+    CollOfScalar res = myDoub * col_a;
+    compareVectors ( res.copyToHost(), lf);
+}
+
+BOOST_AUTO_TEST_CASE( coll_scal_multiplication_test )
+{
+    int size = 10000;
+    std::vector<double> a, lf;
+    double myDoub = 5;
+    for (int i = 0; i < size; ++i) {
+	a.push_back( i*2.25);
+	lf.push_back( i*2.25*myDoub );
+    }
+    CollOfScalar col_a(a);
+    CollOfScalar res = col_a * myDoub;
+    compareVectors ( res.copyToHost(), lf);
+}
+
+BOOST_AUTO_TEST_CASE( coll_scal_division_test )
+{
+    int size = 10000;
+    std::vector<double> a, lf;
+    double myDoub = 4.25;
+    for (int i = 0; i < size; ++i) {
+	a.push_back( i*2.5);
+	//lf.push_back( i*2.4999999999/myDoub );
+	lf.push_back( i*2.5/myDoub);
+    }
+    CollOfScalar col_a(a);
+    CollOfScalar res = col_a / myDoub;
+    compareVectorsDiv ( res.copyToHost(), lf);
+}
+
+BOOST_AUTO_TEST_CASE( unary_minus_test )
+{
+    int size = 10000;
+    std::vector<double> a, lf;
+    for (int i = 0; i < size; ++i) {
+	a.push_back( (i%619)*2.12124);
+	lf.push_back( -a[i] );
+    }
+    CollOfScalar col_a(a);
+    CollOfScalar res = - col_a;
+    compareVectors ( res.copyToHost(), lf);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END();
