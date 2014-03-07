@@ -254,12 +254,26 @@ namespace equelleCUDA
 	// NORM Functions
 	/*!
 	  Gives the sizes of the cells in the given set.
+	  
+	  \param[in] cells The indices of the cells for which we want the volume.
+	  \param[in] full True means that we want the norm of all cells in the grid,
+	  and false means that we only want a subset. If true we only call a cudaMemcpy,
+	  otherwise we call a kernel function.
+
+	  return A Collection of the cell volumes for the cells given by the input.
 	*/
 	CollOfScalar norm_of_cells(const thrust::device_vector<int>& cells,
 				   const bool& full) const;
 	
 	/*!
 	  Gives the sizes of the faces in the given set.
+
+	  \param[in] faces The indices of the faces for which we want the area.
+	  \param[in] full True means that we want the norm of all faces in the grid,
+	  and false means that we only want a subset. If true we only call a cudaMemcpy,
+	  otherwise we call a kernel function.
+
+	  return A Collection of the face area for the cells given by the input.
 	*/
 	CollOfScalar norm_of_faces(const thrust::device_vector<int>& faces,
 				   const bool& full) const ;
@@ -482,6 +496,19 @@ namespace equelleCUDA
 					    const int* face_index,
 					    const int* face_cells);
 
+    // Kernel for finding the norm (natural sizes) of faces and cells
+    /*!
+      The sizes of faces and cells are stored in the DeviceGrid class, and this kernel 
+      copies a given subset of these over to a collection of scalar memory location.
+      
+      \param[out] out Resulting norm which we want.
+      \param[in] indices The subset of the grid for which we want to compute the sizes.
+      \param[in] out_size Number of elements in out and indices.
+      \param[in] norm_values A pointer to the array of precomputed values for face areas 
+      or cell volumes, depending on which set we ask for.
+
+      \sa DeviceGrid::norm_of_cells, DeviceGrid::norm_of_faces
+    */
     __global__ void normKernel( double* out,
 				const int* indices,
 				const int out_size,

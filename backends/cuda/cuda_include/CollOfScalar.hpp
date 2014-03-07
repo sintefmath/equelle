@@ -131,7 +131,7 @@ namespace equelleCUDA {
     //! CUDA kernel for the minus operator
     /*!
       Performs elementwise operation for device arrays:
-      \code{.cpp} out = out - rhs \endcode
+      \code{.cpp} out[i] = out[i] - rhs[i] \endcode
       \param[in,out] out Input is left hand side operand and is overwritten by the result.
       \param[in] rhs right hand side operand.
       \param[in] size number of elements.
@@ -141,7 +141,7 @@ namespace equelleCUDA {
     //! CUDA kernel for the plus operator
     /*! 
       Performs elementwise operation for device arrays: 
-      \code out = out + rhs \endcode
+      \code out[i] = out[i] + rhs[i] \endcode
       \param[in,out] out Input is left hand side operand and is overwritten by the result.
       \param[in] rhs Right hand side operand.
       \param[in] size Number of elements.
@@ -151,7 +151,7 @@ namespace equelleCUDA {
     //! CUDA kernel for the multiplication operator
     /*! 
       Performs elementwise operation for device arrays: 
-      \code out = out * rhs \endcode
+      \code out[i] = out[i] * rhs[i] \endcode
       \param[in,out] out Input is left hand side operand and is overwritten by the result.
       \param[in] rhs Right hand side operand.
       \param[in] size Number of elements.
@@ -161,21 +161,28 @@ namespace equelleCUDA {
     //! CUDA kernel for the division operator
     /*! 
       Performs elementwise operation for device arrays: 
-      \code out = out / rhs \endcode
+      \code out[i] = out[i] / rhs[i] \endcode
       \param[in,out] out Input is left hand side operand and is overwritten by the result.
       \param[in] rhs Right hand side operand.
       \param[in] size Number of elements.
     */
     __global__ void division_kernel(double* out, const double* rhs, const int size);
 
-
+    //! CUDA kernel for multiplication with scalar and collection
+    /*!
+      Multiply each element in out with the value scal.
+      \code out[i] = out[i] * scal \endcode
+      \param[in,out] out Input is the collection operand and is overwritten by the result.
+      \param[in] scal Scalar value operand.
+      \param[in] size Number of elements.
+    */
     __global__ void multScalCollection_kernel(double* out, 
 					      const double scal, 
 					      const int size);
 
     // -------------- Operation overloading ------------------- //
     
-    //! Overloading of operator -
+    // Overloading of operator -
     /*!
       Wrapper for the CUDA kernel which performs the operation.
       \param lhs Left hand side operand
@@ -185,7 +192,7 @@ namespace equelleCUDA {
     */
     CollOfScalar operator-(const CollOfScalar& lhs, const CollOfScalar& rhs);
 
-    //! Overloading of operator +
+    // Overloading of operator +
     /*!
       Wrapper for the CUDA kernel which performs the operation.
       \param lhs Left hand side operand
@@ -195,7 +202,7 @@ namespace equelleCUDA {
     */
     CollOfScalar operator+(const CollOfScalar& lhs, const CollOfScalar& rhs);
     
-    //! Overloading of operator *
+    // Overloading of operator *
     /*!
       Wrapper for the CUDA kernel which performs the operation.
       \param lhs Left hand side operand
@@ -205,7 +212,7 @@ namespace equelleCUDA {
     */
     CollOfScalar operator*(const CollOfScalar& lhs, const CollOfScalar& rhs);
 
-    //! Overloading of operator /
+    // Overloading of operator /
     /*!
       Wrapper for the CUDA kernel which performs the operation.
       \param lhs Left hand side operand
@@ -216,7 +223,7 @@ namespace equelleCUDA {
     CollOfScalar operator/(const CollOfScalar& lhs, const CollOfScalar& rhs);
     
 
-    //! Multiplication:  Scalar * Collection Of Scalars
+    // Multiplication:  Scalar * Collection Of Scalars
     /*!
       Wrapper for the CUDA kernel which performs the operation
       \param lhs Left hand side Scalar
@@ -226,10 +233,27 @@ namespace equelleCUDA {
     */
     CollOfScalar operator*(const Scalar& lhs, const CollOfScalar& rhs);
 
+    /*! 
+      Since multiplication is commutative, this implementation simply return
+      rhs *  lhs
+      \param lhs Left hand side Collection of Scalar
+      \param rhs Right han side Scalar
+      \return lhs * rhs
+    */
     CollOfScalar operator*(const CollOfScalar& lhs, const Scalar& rhs);
 
+    /*!
+      Implemented as (1/rhs)*lhs in order to reuse kernel
+      \param lhs Left hand side Collection of Scalar
+      \param rhs Right hand side Scalar
+      \return lhs / rhs
+     */
     CollOfScalar operator/(const CollOfScalar& lhs, const Scalar& rhs);
 
+    /*!
+      Unary minus
+      \return A collection with the negative values of the inpur collection.
+    */
     CollOfScalar operator-(const CollOfScalar& arg);
 
     /*!
