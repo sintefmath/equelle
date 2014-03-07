@@ -153,4 +153,21 @@ CollOfBool EquelleRuntimeCUDA::isEmpty(const CollOfIndices<codim>& set) const {
     return set.isEmpty();
 }
 
+
+
+// NORM
+
+template <int codim>
+CollOfScalar EquelleRuntimeCUDA::norm(const CollOfIndices<codim>& set) const {
+    if (codim == 0) { // cells
+	return dev_grid_.norm_of_cells(set.device_vector(), set.isFull());
+    }
+    else if (codim == 1) { // faces
+	return dev_grid_.norm_of_faces(set.device_vector(), set.isFull());
+    }
+    else {
+	OPM_THROW(std::runtime_error, "Norm of a Collection of Indices with codim " << codim << " is not supported.");
+    }
+}
+
 #endif // EQUELLERUNTIMECUDA_HAVAHOL_HEADER_INCLUDED

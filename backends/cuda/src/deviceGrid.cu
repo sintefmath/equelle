@@ -482,13 +482,56 @@ CollOfCell DeviceGrid::secondCell(CollOfFace coll) const {
     if ( coll.isFull() ) {
 	secondCellKernel<<<grid,block>>>( second_ptr, coll.size(), face_cells_);
     } else {
-		secondCellSubsetKernel<<<grid, block>>>( second_ptr, coll.size(),
-							 coll.raw_pointer(), face_cells_);
+	secondCellSubsetKernel<<<grid, block>>>( second_ptr, coll.size(),
+						 coll.raw_pointer(), face_cells_);
     }
     return CollOfCell(second);
 }
 
 
+// ----- NORM ----
+
+CollOfScalar DeviceGrid::norm_of_cells(const thrust::device_vector<int>& cells,
+				       const bool& full) const {
+    if (full) {
+	CollOfScalar out(number_of_cells_,0);
+	cudaStatus_ = cudaMemcpy( out.data(), cell_volumes_, 
+				  sizeof(double)*number_of_cells_,
+				  cudaMemcpyDeviceToDevice);
+	checkError_("cudaMemcpy in DeviceGrid::norm_of_cells");
+	return out;
+    }
+    else {
+	CollOfScalar out(cells.size(),0);
+	dim3 block(MAX_THREADS);
+	dim3 grid( (int)((cells.size() + MAX_THREADS - 1)/ MAX_THREADS) );
+	const int* cells_ptr = thrust::raw_pointer_cast( &cells[0] );
+	normKernel<<<grid,block>>>( out.data(), cells_ptr, cells.size(),
+				    cell_volumes_);
+	return out;
+    }
+}
+
+CollOfScalar DeviceGrid::norm_of_faces(const thrust::device_vector<int>& faces,
+				       const bool& full) const {
+    if (full) {
+	CollOfScalar out(number_of_faces_,0);
+	cudaStatus_ = cudaMemcpy(out.data(), face_areas_, 
+				 sizeof(double)*number_of_faces_,
+				 cudaMemcpyDeviceToDevice);
+	checkError_("cudaMemcpy in DeviceGrid::norm_of_cells");
+	return out;
+    }
+    else {
+	CollOfScalar out(faces.size(),0);
+	dim3 block(MAX_THREADS);
+	dim3 grid( (int)((faces.size() + MAX_THREADS - 1)/ MAX_THREADS) );
+	const int* faces_ptr = thrust::raw_pointer_cast( &faces[0] );
+	normKernel<<<grid,block>>>( out.data(), faces_ptr, faces.size(),
+				    face_areas_);
+	return out;
+    }
+}
 
 // ----------- GET FUNCTIONS! ------------------
 
@@ -641,6 +684,21 @@ __global__ void equelleCUDA::secondCellSubsetKernel( int* second,
     int index = threadIdx.x + blockIdx.x*blockDim.x;
     if ( index < number_of_faces ) {
 	second[index] = face_cells[2*face_index[index] + 1];
+    }
+}
+
+
+// NORM KERNEL
+
+
+__global__ void equelleCUDA::normKernel( double* out,
+					 const int* indices,
+					 const int out_size,
+					 const double* norm_values) 
+{
+    int index = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( index < out_size ) {
+	out[index] = norm_values[indices[index]];
     }
 }
 

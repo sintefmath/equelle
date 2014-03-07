@@ -2,6 +2,8 @@
 #include <iostream>
 
 #include <vector>
+#include <math.h>
+#include <limits>
 
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <opm/core/grid.h>
@@ -186,7 +188,25 @@ int collOfScalarTest(EquelleRuntimeCUDA* er) {
 	return 1;
     }
 
-
+    // TEST VOLUME AND AREA
+    CollOfScalar vol = er->norm(er->allCells());
+    double vol_sol[] = {0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15};
+    if ( compare(vol, vol_sol, 12, "Norm(AllCells())") ) {
+	return 1;
+    }
+    CollOfScalar area = er->norm(er->allFaces());
+    double x = 0.3;
+    double y = 0.5;
+    double area_sol[] = {x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y};
+    if ( compare(area, area_sol, 31, "Norm(AllFaces())") ) {
+	return 1;
+    }
+    CollOfScalar area_bnd = er->norm(er->boundaryFaces());
+    double area_bnd_sol[] = {x,x,x,x,x,x,y,y,y,y,y,y,y,y};
+    if ( compare(area_bnd, area_bnd_sol, 14, "Norm(BoundaryFaces())") ) {
+	return 1;
+    }
+	
     return 0;
 }
 
@@ -229,7 +249,9 @@ int compare(CollOfScalar scal, double sol[],
     for (int i = 0; i < host.size(); ++i) {
 	std::cout << host[i] << " ";
 	if (i < sol_size) {
-	    if (host[i] != sol[i]) {
+	    //if (host[i] != sol[i]) {
+	    if ( fabs(host[i] - sol[i]) > 10*std::numeric_limits<double>::epsilon() ) {
+		std::cout << "(<- " << sol[i] << ") ";
 		correct = false;
 	    }
 	}

@@ -1,8 +1,8 @@
 grid_dim=2
 nx=4
-dx=1
+dx=0.5
 ny=3
-dy=1
+dy=0.3
 a_from_file=true
 a_filename=/home/havahol/equelle/equelle/backends/cuda/test/valsOnGrid_a.mat
 b_from_file=false

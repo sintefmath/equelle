@@ -250,6 +250,19 @@ namespace equelleCUDA
 					       const CollOfIndices<codim_set>& from_set,
 					       const CollOfIndices<codim_set>& to_set);
 	
+	
+	// NORM Functions
+	/*!
+	  Gives the sizes of the cells in the given set.
+	*/
+	CollOfScalar norm_of_cells(const thrust::device_vector<int>& cells,
+				   const bool& full) const;
+	
+	/*!
+	  Gives the sizes of the faces in the given set.
+	*/
+	CollOfScalar norm_of_faces(const thrust::device_vector<int>& faces,
+				   const bool& full) const ;
 
 	// Get functions:
 	/*!
@@ -468,6 +481,11 @@ namespace equelleCUDA
 					    const int number_of_faces,
 					    const int* face_index,
 					    const int* face_cells);
+
+    __global__ void normKernel( double* out,
+				const int* indices,
+				const int out_size,
+				const double* norm_values);
 
 
 
