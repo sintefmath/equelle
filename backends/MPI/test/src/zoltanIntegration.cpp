@@ -45,11 +45,15 @@ BOOST_AUTO_TEST_CASE( gridExploration )
     std::unique_ptr<Opm::GridManager> grid ( equelle::createGridManager(paramgroup) );
 
     BOOST_CHECK_EQUAL( grid->c_grid()->number_of_cells, 6 );
-    dumpGrid( grid->c_grid() );
+    //dumpGrid( grid->c_grid() );
 
 }
 
-BOOST_AUTO_TEST_CASE( RuntimeMPICtor ) {
+BOOST_AUTO_TEST_CASE( RuntimeMPI_initializes_zoltan ) {
     equelle::RuntimeMPI runtime;
+
+    //BOOST_CHECK( runtime.zoltan != NULL );
 }
+
+
 

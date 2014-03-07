@@ -2,14 +2,17 @@
 
 #include <stdexcept>
 #include <sstream>
+#include <mpi.h>
 
-#define MPI_SAFE_CALL( err ) equelle::mpi::mpiSafeCall( err, __FILE__, __LINE__, __FUNCITON__ )
-#define ZOLTAN_SAFE_CALL( err ) equelle::mpi::zoltanSafeCall( err, __FILE__, __LINE__, __FUNCITON__ )
+//#include <zoltan_cpp.h>
+
+
+#define MPI_SAFE_CALL( err ) equelle::mpi::mpiSafeCall( err, __FILE__, __LINE__, __FUNCTION__ )
+#define ZOLTAN_SAFE_CALL( err ) equelle::mpi::zoltanSafeCall( err, __FILE__, __LINE__, __FUNCTION__ )
 
 namespace equelle { namespace mpi {
 
-static const
-
+/*
 inline
 void zoltanSafeCall( const int err, const std::string file, const int line, const std::string functionName ) {
     if ( err != ZOLTAN_OK ) {
@@ -36,7 +39,7 @@ void zoltanSafeCall( const int err, const std::string file, const int line, cons
         throw std::runtime_error( ss.str() );
     }
 }
-
+*/
 inline
 void mpiSafeCall( const int err, const std::string file, const int line, const std::string functionName ) {
     if ( err == MPI_SUCCESS ) {
