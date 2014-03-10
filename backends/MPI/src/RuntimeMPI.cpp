@@ -34,6 +34,7 @@ void RuntimeMPI::initializeZoltan()
     ZOLTAN_SAFE_CALL( zoltan->Set_Param( "LB_METHOD", "GRAPH" ) );
     // Partition everything without concern for cost.
     ZOLTAN_SAFE_CALL( zoltan->Set_Param( "LB_APPROACH", "PARTITION" ) );
+    //ZOLTAN_SAFE_CALL( zoltan->Set_Param( "PHG_EDGE_SIZE_THRESHOLD", "1.0" ) );
 }
 
 void RuntimeMPI::initializeGrid()
@@ -52,6 +53,8 @@ RuntimeMPI::RuntimeMPI()
     initializeGrid();
 }
 
+
+
 RuntimeMPI::~RuntimeMPI()
 {
     // Zoltan resources must be deleted before we call MPI_Finalize.
@@ -68,23 +71,23 @@ zoltanReturns RuntimeMPI::computePartition()
 
     zoltan->Set_Num_Obj_Fn( ZoltanGrid::getNumberOfObjects, grid );
     zoltan->Set_Obj_List_Fn( ZoltanGrid::getCellList, grid );
-    zoltan->Set_Num_Edges_Fn( ZoltanGrid::getNumberOfEdges, grid );
-    zoltan->Set_Edge_List_Fn( ZoltanGrid::getEdgeList, grid );
+    zoltan->Set_Num_Edges_Multi_Fn( ZoltanGrid::getNumberOfEdgesMulti, grid );
+    zoltan->Set_Edge_List_Multi_Fn( ZoltanGrid::getEdgeListMulti, grid );
 
     ZOLTAN_SAFE_CALL(
                        zoltan->LB_Partition( zr.changes,         /* 1 if partitioning was changed, 0 otherwise */
-                                            zr.numGidEntries,   /* Number of integers used for a global ID */
-                                            zr.numLidEntries,   /* Number of integers used for a local ID */
-                                            zr.numImport,       /* Number of vertices to be sent to me */
-                                            zr.importGlobalGids,/* Global IDs of vertices to be sent to me */
-                                            zr.importLocalGids, /* Local IDs of vertices to be sent to me */
-                                            zr.importProcs,     /* Process rank for source of each incoming vertex */
-                                            zr.importToPart,    /* New partition for each incoming vertex */
-                                            zr.numExport,       /* Number of vertices I must send to other processes*/
-                                            zr.exportGlobalGids,/* Global IDs of the vertices I must send */
-                                            zr.exportLocalGids, /* Local IDs of the vertices I must send */
-                                            zr.exportProcs,     /* Process to which I send each of the vertices */
-                                            zr.exportToPart ) );  /* Partition to which each vertex will belong */
+                                             zr.numGidEntries,   /* Number of integers used for a global ID */
+                                             zr.numLidEntries,   /* Number of integers used for a local ID */
+                                             zr.numImport,       /* Number of vertices to be sent to me */
+                                             zr.importGlobalGids,/* Global IDs of vertices to be sent to me */
+                                             zr.importLocalGids, /* Local IDs of vertices to be sent to me */
+                                             zr.importProcs,     /* Process rank for source of each incoming vertex */
+                                             zr.importToPart,    /* New partition for each incoming vertex */
+                                             zr.numExport,       /* Number of vertices I must send to other processes*/
+                                             zr.exportGlobalGids,/* Global IDs of the vertices I must send */
+                                             zr.exportLocalGids, /* Local IDs of the vertices I must send */
+                                             zr.exportProcs,     /* Process to which I send each of the vertices */
+                                             zr.exportToPart ) );  /* Partition to which each vertex will belong */
 
     return zr;
 }

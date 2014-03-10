@@ -6,6 +6,9 @@
 #include <algorithm>
 #include <sstream>
 #include <iterator>
+#include <vector>
+#include <numeric>
+#include <fstream>
 
 #include <boost/test/unit_test.hpp>
 
@@ -63,22 +66,68 @@ BOOST_AUTO_TEST_CASE( RuntimeMPI_initializes_zoltan ) {
         BOOST_CHECK_EQUAL( equelle::ZoltanGrid::getNumberOfObjects( grid, &ierr ), 6 );
 
         // Check our querying of the 6x1 grid.
-        unsigned int cell = 0;
-        ZOLTAN_ID_PTR zptr = &cell;
-        BOOST_CHECK_EQUAL( equelle::ZoltanGrid::getNumberOfEdges( grid, 1, 1, zptr, zptr, &ierr ), 1 );
+        const auto numCells = runtime.grid_manager->c_grid()->number_of_cells;
+        std::vector<unsigned int> cells( numCells );
+        for( unsigned int i = 0; i < numCells; ++i ) {
+            cells[i] = i;
+        }
 
-        //cell = 1;
-        //BOOST_CHECK_EQUAL( equelle::ZoltanGrid::getNumberOfEdges( grid, 1, 1, cell, cell, &ierr ), 2 );
-        //BOOST_CHECK_EQUAL( equelle::ZoltanGrid::getNumberOfEdges( grid, 1, 1, 4, 4, &ierr ), 2 );
-        //BOOST_CHECK_EQUAL( equelle::ZoltanGrid::getNumberOfEdges( grid, 1, 1, 5, 5, &ierr ), 1 );
+        std::vector<int> numEdges( numCells, -1 );
+        equelle::ZoltanGrid::getNumberOfEdgesMulti( grid, 1, 1, numCells, cells.data(), cells.data(), numEdges.data(),
+                                                    &ierr );
+        BOOST_CHECK_EQUAL( ierr, ZOLTAN_OK );
+        BOOST_CHECK_EQUAL( numEdges[0], 1 );
+        BOOST_CHECK_EQUAL( numEdges[1], 2 );
+        BOOST_CHECK_EQUAL( numEdges[2], 2 );
+        BOOST_CHECK_EQUAL( numEdges[3], 2 );
+        BOOST_CHECK_EQUAL( numEdges[4], 2 );
+        BOOST_CHECK_EQUAL( numEdges[5], 1 );
+
+
+        auto totalNumberOfNeighbors = std::accumulate( numEdges.begin(), numEdges.end(), 0 );
+        std::vector<ZOLTAN_ID_TYPE> edgeList( totalNumberOfNeighbors, -1 );
+        std::vector<int> nbor_procs( edgeList.size() );
+
+        equelle::ZoltanGrid::getEdgeListMulti( grid, 1, 1, numCells,
+                                               cells.data(), cells.data(), numEdges.data(),
+                                               edgeList.data(), nbor_procs.data(), 0, NULL, &ierr );
+        // Cell 0
+        BOOST_CHECK_EQUAL( edgeList[0], 1 ); // 0 is neighbor with 1
+
+        // Cell 1
+        BOOST_CHECK_EQUAL( edgeList[1], 0 );
+        BOOST_CHECK_EQUAL( edgeList[2], 2 );
+
+        // Cell 2
+        BOOST_CHECK_EQUAL( edgeList[3], 1 );
+        BOOST_CHECK_EQUAL( edgeList[4], 3 );
+
+        // Cell 3
+        BOOST_CHECK_EQUAL( edgeList[5], 2 );
+        BOOST_CHECK_EQUAL( edgeList[6], 4 );
+
+        // Cell 4
+        BOOST_CHECK_EQUAL( edgeList[7], 3 );
+        BOOST_CHECK_EQUAL( edgeList[8], 5 );
+
+        // Cell 5
+        BOOST_CHECK_EQUAL( edgeList[9], 4 );
+
+        BOOST_CHECK_EQUAL( ierr, ZOLTAN_OK );
     } else {
         BOOST_CHECK_EQUAL( runtime.grid_manager->c_grid()->number_of_cells, 0 );
         BOOST_CHECK_EQUAL( equelle::ZoltanGrid::getNumberOfObjects( grid, &ierr ), 0 );
     }
 
-    //auto zr = runtime.computePartition();
-    //BOOST_CHECK_EQUAL( zr.changes, 1 );
+    auto zr = runtime.computePartition();
+    BOOST_CHECK_EQUAL( zr.changes, 1 );
+
+    if ( equelle::getMPIRank() == 0 ) {
+        std::ofstream f("rank0-exports");
+        equelle::ZoltanGrid::dumpExports( zr, f );
+    }
 }
+
 
 
 

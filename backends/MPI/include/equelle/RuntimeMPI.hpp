@@ -24,7 +24,7 @@ public:
 
     equelle::zoltanReturns computePartition();
     void initializeZoltan();
-    void initializeGrid();
+    void initializeGrid();        
 };
 
 }

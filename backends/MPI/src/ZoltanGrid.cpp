@@ -1,7 +1,14 @@
 #include "equelle/ZoltanGrid.hpp"
 
+#include <algorithm>
 #include <stdexcept>
+#include <iterator>
+#include <ostream>
+
 #include <opm/core/grid.h>
+#include <opm/autodiff/AutoDiffHelpers.hpp>
+
+#include "equelle/mpiutils.hpp"
 
 int equelle::ZoltanGrid::getNumberOfObjects(void *data, int *ierr)
 {
@@ -14,7 +21,7 @@ int equelle::ZoltanGrid::getNumberOfObjects(void *data, int *ierr)
 
 void equelle::ZoltanGrid::getCellList( void *data, int /*sizeGID*/, int /*sizeLID*/,
                                        ZOLTAN_ID_PTR globalId, ZOLTAN_ID_PTR localId,
-                                       int /*wgt_dim*/, float *weights, int *ierr )
+                                       int /*wgt_dim*/, float* /* weights */, int *ierr )
 {
     *ierr = ZOLTAN_OK;
     auto grid = reinterpret_cast<UnstructuredGrid*>( data );
@@ -27,26 +34,73 @@ void equelle::ZoltanGrid::getCellList( void *data, int /*sizeGID*/, int /*sizeLI
 }
 
 // Should we call it getNumberOfNeighbors (for a given cell?) In other words, the number of interior edges.
-int equelle::ZoltanGrid::getNumberOfEdges( void *data, int num_gid_entries, int num_lid_entries,
-                                           ZOLTAN_ID_PTR global_id, ZOLTAN_ID_PTR local_id, int *ierr )
+void equelle::ZoltanGrid::getNumberOfEdgesMulti( void *data, int /* num_gid_entries */, int /* num_lid_entries */,  int num_obj,
+                                           ZOLTAN_ID_PTR /* global_id */ , ZOLTAN_ID_PTR /* local_id */ , int* numEdges, int *ierr )
 {
     *ierr = ZOLTAN_FATAL;
-    /*
+
     auto grid = reinterpret_cast<UnstructuredGrid*>( data );
-    int cell_id = *local_id;
-
-    int face_begin = grid->cell_facepos[cell_id];
-    int face_end   = grid->cell_facepos[cell_id+1];
-    int numberOfFaces = face_end - face_begin;
 
 
-    */
-    return 0;
+    // The connectivity graph contains the number of neighbors for each cell on the diagonal
+    // and the index of the nonzero, and equal to -1, entries of the row contains the neighboring cell ID.
+    // Proof is by assuming c_1 is neighbor to c_2.
+    // - On the diagnoal this sums the number of neighbors.
+    // - On the nonzero entries this is always -1 due to the orientation of the edges (always 1*(-1) or vice versa).
+    Opm::HelperOps helperOps( *grid );
+    Opm::HelperOps::M adj = helperOps.div * helperOps.ngrad;
+
+    auto diag = adj.diagonal();
+    for( int i = 0; i < num_obj; ++i ) {
+        numEdges[i] = diag[i];
+    }
+
+    *ierr = ZOLTAN_OK;
 }
 
-void equelle::ZoltanGrid::getEdgeList(void *data, int num_gid_entries, int num_lid_entries, ZOLTAN_ID_PTR global_id, ZOLTAN_ID_PTR local_id, ZOLTAN_ID_PTR nbor_global_id, int *nbor_procs, int wgt_dim, float *ewgts, int *ierr)
+void equelle::ZoltanGrid::getEdgeListMulti(void *data, int /* num_gid_entries */, int /* num_lid_entries */, int num_obj,
+                                           ZOLTAN_ID_PTR /* global_ids */, ZOLTAN_ID_PTR /* local_ids */ , int *num_edges,
+                                           ZOLTAN_ID_PTR nbor_global_id, int *nbor_procs,
+                                           int /* wgt_dim */ , float */* ewgts */, int *ierr )
 {
-    std::cerr << __FUNCTION__ << std::endl;
     *ierr = ZOLTAN_FATAL;
-    //throw std::runtime_error( std::string( "Not implemented yet: " ) + __FUNCTION__ );
+    auto grid = reinterpret_cast<UnstructuredGrid*>( data );
+    assert( num_obj == grid->number_of_cells );
+
+    // The connectivity graph contains the number of neighbors for each cell on the diagonal
+    // and the index of the nonzero, and equal to -1, entries of the row contains the neighboring cell ID.
+    // Proof is by assuming c_1 is neighbor to c_2.
+    // - On the diagnoal this sums the number of neighbors.
+    // - On the nonzero entries this is always -1 due to the orientation of the edges (always 1*(-1) or vice versa).
+    Opm::HelperOps helperOps( *grid );
+    Opm::HelperOps::M adj = helperOps.div * helperOps.ngrad;
+
+    // The global id of the neighbors of a cell are given by the column-index of the nonzero, non-diagonal, entries of each row.
+    // These values are always -1.
+    int global_offset = 0;
+    for( int k = 0; k < adj.outerSize(); ++k ) {
+        for( Eigen::SparseMatrix<double>::InnerIterator it( adj, k); it; ++it ) {                       
+            if( it.row() == it.col() ) { // Skip diagonal elements
+                assert( it.value() == num_edges[k] );
+            } else {
+                // By using it.index() we can ignore what is the inner and outer dimensions. (Ie col-major or row-major.)
+                nbor_global_id[global_offset] = it.index();
+                nbor_procs[global_offset] = equelle::getMPIRank();
+                global_offset++;
+            }
+        }       
+    }    
+
+
+
+
+    *ierr = ZOLTAN_OK;
+}
+
+void equelle::ZoltanGrid::dumpExports(const equelle::zoltanReturns& zr, std::ostream& out)
+{
+    std::copy_n( zr.exportGlobalGids, zr.numExport, std::ostream_iterator<int>( out, " ") );
+    out << std::endl;
+    std::copy_n( zr.exportProcs, zr.numExport,  std::ostream_iterator<int>( out, " ") );
+    out << std::endl;
 }
