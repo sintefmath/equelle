@@ -207,6 +207,16 @@ int collOfScalarTest(EquelleRuntimeCUDA* er) {
 	return 1;
     }
 	
+
+    // Test trinaryIf
+    // a = {0, 10, 20, ..., 110} allCells
+    // a_big = a > 50 ? a * 2 : a / 2;
+    CollOfScalar a_big = er->trinaryIf( (a > er->operatorExtend(50, er->allCells())), a*2, a/2);
+    double a_big_sol[] = {0, 5, 10, 15, 20, 25, 120, 140, 160, 180, 200, 220};
+    if ( compare(a_big, a_big_sol, 12, "trinaryIf(a > 50 Extend AllCells(), a*2, a/2)")) {
+	return 1;
+    }
+
     return 0;
 }
 

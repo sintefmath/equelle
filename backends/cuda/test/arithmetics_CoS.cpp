@@ -2,7 +2,10 @@
 
 #include <boost/test/included/unit_test.hpp>
 
+#include <stdlib.h>
+
 #include <CollOfScalar.hpp>
+#include <equelleTypedefs.hpp>
 #include <EquelleRuntimeCUDA_havahol.hpp>
 #include <EquelleRuntimeCUDA.hpp>
 
@@ -14,6 +17,12 @@ static void compareVectors( std::vector<double> answer, std::vector<double> lf)
 {
     BOOST_REQUIRE_EQUAL_COLLECTIONS( answer.begin(), answer.end(),
 				     lf.begin(), lf.end() );
+}
+
+static void compareBools( std::vector<bool> answer, std::vector<bool> lf)
+{
+    BOOST_REQUIRE_EQUAL_COLLECTIONS( answer.begin(), answer.end(),
+				     lf.begin(), lf.end());
 }
 
 static void compareVectorsDiv( std::vector<double> answer, std::vector<double> lf)
@@ -155,6 +164,24 @@ BOOST_AUTO_TEST_CASE( unary_minus_test )
     CollOfScalar col_a(a);
     CollOfScalar res = - col_a;
     compareVectors ( res.copyToHost(), lf);
+}
+
+BOOST_AUTO_TEST_CASE( greater_than_test )
+{
+    int size = 10000;
+    std::vector<double> a, b;
+    std::vector<bool> lf;
+    for (int i = 0; i < size; ++i) {
+	a.push_back( rand() % 124 );
+	b.push_back( rand() % 87 );
+	lf.push_back( a[i] > b[i]);
+    }
+    CollOfScalar a_col(a);
+    CollOfScalar b_col(b);
+    CollOfBool cob = a_col > b_col;
+    std::vector<bool> res = cob_to_std(cob);
+    compareBools( lf, res);
+
 }
 
 

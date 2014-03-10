@@ -2,6 +2,7 @@
 #include "CollOfScalar.hpp"
 #include "CollOfIndices.hpp"
 #include "EquelleRuntimeCUDA_havahol.hpp"
+#include "wrapEquelleRuntime.hpp"
 
 #include <string>
 #include <iostream>
@@ -64,3 +65,14 @@ Scalar EquelleRuntimeCUDA::inputScalarWithDefault(const String& name,
 }
 
 
+
+CollOfScalar EquelleRuntimeCUDA::trinaryIf( const CollOfBool& predicate,
+					    const CollOfScalar& iftrue,
+					    const CollOfScalar& iffalse) const {
+    // First, we need same size of all input
+    if (iftrue.size() != iffalse.size() || iftrue.size() != predicate.size()) {
+	OPM_THROW(std::runtime_error, "Collections are not of the same size");
+    }
+    // Call a wrapper which calls a kernel
+    return equelleCUDA::trinaryIfWrapper(predicate, iftrue, iffalse);
+}

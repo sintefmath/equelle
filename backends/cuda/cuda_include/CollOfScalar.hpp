@@ -180,6 +180,20 @@ namespace equelleCUDA {
 					      const double scal, 
 					      const int size);
 
+    //! CUDA kernel for greater than operation
+    /*!
+      Compare elements in lhs with elements in rhs and return a Collection of Booleans.
+      \code out[i] = lhs[i] > rhs[i] \endcode
+      \param[in,out] out The resulting collection of booleans
+      \param[in] lhs Left hand side values
+      \param[in] rhs Right hand side values
+      \param[in] size Size of the arrays.
+    */
+    __global__ void compGTkernel( bool* out,
+				  const double* lhs,
+				  const double* rhs,
+				  const int size);
+
     // -------------- Operation overloading ------------------- //
     
     // Overloading of operator -
@@ -255,6 +269,21 @@ namespace equelleCUDA {
       \return A collection with the negative values of the inpur collection.
     */
     CollOfScalar operator-(const CollOfScalar& arg);
+
+    /*!
+      Greater than operator
+      \return Collection of Booleans consisting of
+      \code out[i] = lhs[i] > rhs[i] \endcode
+     */
+    CollOfBool operator>(const CollOfScalar& lhs, const CollOfScalar& rhs);
+
+
+
+    //! CollOfBool -> std::vector<bool>
+    /*!
+      Function for transforming a CollOfBool to a std::vector<bool>
+    */
+    std::vector<bool> cob_to_std(const CollOfBool& cob);
 
     /*!
       Define max number of threads in a kernel block:

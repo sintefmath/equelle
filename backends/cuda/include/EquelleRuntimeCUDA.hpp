@@ -270,6 +270,14 @@ public:
 					  const CollOfIndices<codim_set>& from_set,
 					  const CollOfIndices<codim_set>& to_set);
 
+    CollOfScalar trinaryIf( const CollOfBool& predicate,
+			    const CollOfScalar& iftrue,
+			    const CollOfScalar& iffalse) const;
+
+    template <int codim>
+    CollOfIndices<codim> trinaryIf( const CollOfBool& predicate,
+				    const CollOfIndices<codim>& iftrue,
+				    const CollOfIndices<codim>& iffalse) const;
 
     //template <class SomeCollection1, class SomeCollection2>
     //typename CollType<SomeCollection1>::Type

@@ -241,6 +241,14 @@ CollOfScalar equelleCUDA::operator-(const CollOfScalar& arg) {
     return -1.0*arg;
 }
 
+CollOfBool equelleCUDA::operator>(const CollOfScalar& lhs, const CollOfScalar& rhs) {
+    CollOfBool out(lhs.size());
+    bool* out_ptr = thrust::raw_pointer_cast( &out[0] );
+    dim3 block(lhs.block());
+    dim3 grid(lhs.grid());
+    compGTkernel<<<grid,block>>>(out_ptr, lhs.data(), rhs.data(), lhs.size());
+    return out;
+}
 
 /////////////////////////////////////////////////////////////////////////////////
 /// ----------------------- KERNEL IMPLEMENTATIONS: ---------------------------//
@@ -286,3 +294,20 @@ __global__ void equelleCUDA::multScalCollection_kernel(double* out, const double
     }
 }
 						   
+__global__ void equelleCUDA::compGTkernel( bool* out,
+					   const double* lhs,
+					   const double* rhs,
+					   const int size)
+{
+    int index = threadIdx.x + blockIdx.x * blockDim.x;
+    if ( index < size ) {
+	out[index] = lhs[index] > rhs[index];
+    }
+}
+
+
+// Transforming CollOfBool
+std::vector<bool> equelleCUDA::cob_to_std( const CollOfBool& cob) {
+    thrust::host_vector<bool> host = cob;
+    return std::vector<bool>(host.begin(), host.end());
+}
