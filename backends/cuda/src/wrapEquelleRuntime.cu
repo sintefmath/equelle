@@ -45,3 +45,41 @@ __global__ void equelleCUDA::trinaryIfKernel( double* out,
 	out[index] = temp;
     }
 }
+
+thrust::device_vector<int> equelleCUDA::trinaryIfWrapper(const CollOfBool& predicate,
+							 const thrust::device_vector<int>& iftrue,
+							 const thrust::device_vector<int>& iffalse) {
+    thrust::device_vector<int> out(predicate.size());
+    int* out_ptr = thrust::raw_pointer_cast( &out[0] );
+    const bool* pred_ptr = thrust::raw_pointer_cast( &predicate[0] );
+    const int* iftrue_ptr = thrust::raw_pointer_cast( &iftrue[0] );
+    const int* iffalse_ptr = thrust::raw_pointer_cast( &iffalse[0] );
+    dim3 block(MAX_THREADS);
+    dim3 grid((int)( (iftrue.size() + MAX_THREADS - 1)/MAX_THREADS));
+    trinaryIfKernel<<<grid,block>>>( out_ptr,
+				     pred_ptr,
+				     iftrue_ptr,
+				     iffalse_ptr,
+				     iftrue.size());
+    return out;
+}
+
+
+
+__global__ void equelleCUDA::trinaryIfKernel( int* out,
+					      const bool* predicate,
+					      const int* iftrue,
+					      const int* iffalse,
+					      const int size) {
+    int index = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( index < size ) {
+	int temp;
+	if ( predicate[index] ) {
+	    temp = iftrue[index];
+	}
+	else {
+	    temp = iffalse[index];
+	}
+	out[index] = temp;
+    }
+}

@@ -13,6 +13,7 @@
 #include "CollOfIndices.hpp"
 #include "DeviceGrid.hpp"
 #include "equelleTypedefs.hpp"
+#include "wrapEquelleRuntime.hpp"
 
 
 
@@ -168,6 +169,21 @@ CollOfScalar EquelleRuntimeCUDA::norm(const CollOfIndices<codim>& set) const {
     else {
 	OPM_THROW(std::runtime_error, "Norm of a Collection of Indices with codim " << codim << " is not supported.");
     }
+}
+
+
+// TRINARY IF 
+template<int codim>
+CollOfIndices<codim> EquelleRuntimeCUDA::trinaryIf( const CollOfBool& predicate,
+						    const CollOfIndices<codim>& iftrue,
+						    const CollOfIndices<codim>& iffalse) const
+{
+    if ( predicate.size() != iftrue.size() || predicate.size() != iffalse.size() ) {
+	OPM_THROW(std::runtime_error, "The sets are not of the same size");
+    }
+    return CollOfIndices<codim>(equelleCUDA::trinaryIfWrapper(predicate,
+							      iftrue.device_vector(),
+							      iffalse.device_vector()));
 }
 
 #endif // EQUELLERUNTIMECUDA_HAVAHOL_HEADER_INCLUDED

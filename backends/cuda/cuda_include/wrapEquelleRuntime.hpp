@@ -13,7 +13,7 @@
 
 namespace equelleCUDA
 {
-    //! Wrapper for calling the trinaryIf kernel
+    //! Wrapper for calling the trinaryIf kernel for CollOfScalar
     /*!
       Set up the kernel for a trinaryIf. Assumes that the given input parameters 
       satisfies the criterias as being the same size and not containing any illigal 
@@ -29,7 +29,24 @@ namespace equelleCUDA
 				   const CollOfScalar& iftrue,
 				   const CollOfScalar& iffalse);
 
-    //! Kernel for trinaryIf
+    //! Wrapper for calling the trinaryIf kernel for CollOfIndices
+    /*!
+      Set up the kernel for a trinaryIf. Assumes that the given input parameters 
+      satisfies the criterias as being the same size and not containing any illigal 
+      values.
+
+      \param predicate A Collection of Booleans often written as a test.
+      \param iftrue Values the output elements should take if the test is true
+      \param iffalse Values the output elements should take if the test is false.
+      return A device vectors with elements form iftrue and iffalse according
+      to predicate.
+    */
+    thrust::device_vector<int> trinaryIfWrapper(const CollOfBool& predicate,
+						const thrust::device_vector<int>& iftrue,
+						const thrust::device_vector<int>& iffalse);
+
+
+    //! Kernel for trinaryIf for CollOfScalar
     /*!
       Kernel for evaluating a trinaryIf statement. The output value out takes the 
       value from iftrue or iffalse depending on the boolean in predicate. For each 
@@ -53,8 +70,29 @@ namespace equelleCUDA
 				     const double* iffalse,
 				     const int size);
 
-
-
+    //! Kernel for trinaryIf for CollOfIndices
+    /*!
+      Kernel for evaluating a trinaryIf statement. The output value out takes the 
+      value from iftrue or iffalse depending on the boolean in predicate. For each 
+      valid index i we have
+      \code
+      if (predicate[i])
+          out[i] = iftrue[i]
+      else
+          out[i] = iffalse[i]
+      \endcode
+      
+      \param[out] out Result indices
+      \param[in] predicate Booleans to indicate which values to assign to out.
+      \param[in] iftrue Indices to be assigned to out if predicate is true
+      \param[in] iffalse Indices to be assigned to out if predicate is false
+      \param[in] size Size of the above arrays.
+    */
+    __global__ void trinaryIfKernel( int* out,
+				     const bool* predicate,
+				     const int* iftrue,
+				     const int* iffalse,
+				     const int size);
 
 } // namespace equelleCUDA
 

@@ -173,7 +173,7 @@ void CollOfIndices<codim>::contains( CollOfIndices<codim> subset,
  
 
 template <int codim>
-CollOfBool CollOfIndices<codim>::isEmpty() {
+CollOfBool CollOfIndices<codim>::isEmpty() const {
     return wrapCollOfIndices::isEmpty(dev_vec_);
 }
 

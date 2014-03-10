@@ -142,19 +142,28 @@ int runtime_test( const EquelleRuntimeCUDA& er) {
     }
     
     // Test firstCell(boundaryFaces())
-    int first_bound[] = {-1,3,-1,7,-1,11,-1,-1,-1,-1,8,9,10,11};
-    if ( compare_collection(er.firstCell(er.boundaryFaces()), first_bound, 14, false,
+    int first_bound_sol[] = {-1,3,-1,7,-1,11,-1,-1,-1,-1,8,9,10,11};
+    CollOfCell first_bound = er.firstCell(er.boundaryFaces());
+    if ( compare_collection(first_bound, first_bound_sol, 14, false,
 			    "Runtime.firstCell(boundaryFaces())") ) {
 	return 1;
     }
     
     // Test secondCell(boundaryFaces())
-    int second_bound[] = {0,-1,4,-1,8,-1,0,1,2,3,-1,-1,-1,-1};
-    if ( compare_collection(er.secondCell(er.boundaryFaces()), second_bound, 14, false,
+    int second_bound_sol[] = {0,-1,4,-1,8,-1,0,1,2,3,-1,-1,-1,-1};
+    CollOfCell second_bound = er.secondCell(er.boundaryFaces());
+    if ( compare_collection(second_bound, second_bound_sol, 14, false,
 			    "Runtime.secondCell(boundaryFaces())") ) {
 	return 1;
     }
 
+    // Test for trinaryIf
+    CollOfCell inner_bnd = er.trinaryIf(er.isEmpty(second_bound), first_bound, second_bound);
+    int inner_bnd_sol[] = {0,3,4,7,8,11,0,1,2,3,8,9,10,11};
+    if ( compare_collection(inner_bnd, inner_bnd_sol, 14, false,
+			    "Runtime.trinaryIf(isEmpty(second), first, second)") ) {
+	return 1;
+    }
     
     return 0;
 

@@ -144,7 +144,7 @@ namespace equelleCUDA
 	// keep that task on the host?
 	
 	//! Returns a collection of boolean checking if each index is a valid index.
-	CollOfBool isEmpty();
+	CollOfBool isEmpty() const;
 	
 
     private:

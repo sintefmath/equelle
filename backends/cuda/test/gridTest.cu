@@ -42,6 +42,15 @@ int compare_collection(CollOfIndices<dummy> coll, int sol[],
 	return 0;
     }
     
+    // Test size:
+    if ( coll.size() != sol_size ) {
+	std::cout << "Error in gridTest.cu - testing " << test << "\n";
+	std::cout << "\tThe collection is of wrong size!\n";
+	std::cout << "\tSize is " << coll.size() << " but should be " << sol_size << "\n";
+	return 1;
+    }
+
+
     // Testing indices
     thrust::host_vector<int> host = coll.toHost();
     std::cout << "Collection " << test << " is the following:\n";
@@ -50,6 +59,7 @@ int compare_collection(CollOfIndices<dummy> coll, int sol[],
 	std::cout << host[i] << " ";
 	if (i < sol_size) {
 	    if (host[i] != sol[i]) {
+		std::cout << "(<- " << sol[i] << ") ";
 		correct = false;
 	    }
 	}
@@ -60,13 +70,6 @@ int compare_collection(CollOfIndices<dummy> coll, int sol[],
 	std::cout << "\n\tThis is wrong\n";
 	std::cout << "Error in gridTest.cu - testing " << test << "\n";
 	std::cout << "\tThe indices in the collection is wrong\n";
-	return 1;
-    }
-
-    if ( coll.size() != sol_size ) {
-	std::cout << "Error in gridTest.cu - testing " << test << "\n";
-	std::cout << "\tThe collection is of wrong size!\n";
-	std::cout << "\tSize is " << coll.size() << " but should be " << sol_size << "\n";
 	return 1;
     }
     
