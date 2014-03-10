@@ -216,6 +216,18 @@ int collOfScalarTest(EquelleRuntimeCUDA* er) {
     if ( compare(a_big, a_big_sol, 12, "trinaryIf(a > 50 Extend AllCells(), a*2, a/2)")) {
 	return 1;
     }
+    
+    CollOfScalar a_big_grad = er->gradient(a_big);
+    double a_big_grad_sol[] = {5,5,5, 5,95,20, 20,20,20, 20,20,110,125, 140,155,80,80};
+    if ( compare(a_big_grad, a_big_grad_sol, 17, "Gradient(a_big)") ) {
+	return 1;
+    }
+
+    CollOfScalar div = er->divergence(a_big_grad);
+    double div_sol[] = {25,20,110,120, 125,225,-105,-65, -120,-155,-80,-100};
+    if ( compare(div, div_sol, 12, "Divergence(a_big_grad)") ) {
+	return 1;
+    }
 
     return 0;
 }

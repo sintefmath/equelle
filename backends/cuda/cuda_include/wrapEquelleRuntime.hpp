@@ -8,6 +8,7 @@
 #include <thrust/device_vector.h>
 
 #include "CollOfScalar.hpp"
+#include "CollOfIndices.hpp"
 #include "equelleTypedefs.hpp"
 
 
@@ -93,6 +94,47 @@ namespace equelleCUDA
 				     const int* iftrue,
 				     const int* iffalse,
 				     const int size);
+
+
+
+    // ----------- GRADIENT ------------------- //
+    
+    //! Wrapper for the Gradient kernel
+    /*!
+      This function provide a wrapper for calling the kernel which computes the
+      gradient. For that we also need the set of interior_faces in order to know the 
+      indices of the faces we want to compute the gradient of. We also need the 
+      array where the information about which cells are on each side of each face.
+      
+      \param cell_scalarfield The input values given on AllCells.
+      \param int_faces Contains the indices of the Interior Faces.
+      \param face_cells The array with indices telling us which cells are on each side
+      of what face.
+      \return A Collection Of Scalars on all Interior Cells with the discrete gradient
+      value computed from the value given in All Cells.
+    */
+    CollOfScalar gradientWrapper( const CollOfScalar& cell_scalarfield,
+				  const CollOfFace& int_faces,
+				  const int* face_cells);
+
+    //! Kernel for computing the Gradient
+    /*!
+      This kernel computes the discrete gradient values on each interior face given 
+      a value on all cells.
+      
+      \param[out] grad The resulting gradient values.
+      \param[in] cell_vals The input value given as a collection on all cells.
+      \param[in] interior_faces The face indices for the interior faces.
+      \param[in] face_cells The array with indices telling us which cells are on each 
+      side of what face.
+      \param[in] size_out The size of the resulting grad array.
+    */
+    __global__ void gradientKernel( double* grad,
+				    const double* cell_vals,
+				    const int* interior_faces,
+				    const int* face_cells,
+				    const int size_out);
+
 
 } // namespace equelleCUDA
 

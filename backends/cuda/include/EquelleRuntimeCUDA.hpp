@@ -247,6 +247,10 @@ public:
     CollOfScalarCPU interiorDivergence(const CollOfScalarCPU& face_fluxes) const;
     CollOfBool isEmpty(const CollOfCellCPU& cells) const;
     CollOfBool isEmpty(const CollOfFaceCPU& faces) const;
+
+    // Operators and math functions havahol
+    CollOfScalar gradient(const CollOfScalar& cell_scalarfield) const;
+    CollOfScalar divergence(const CollOfScalar& fluxes) const;
     template<int codim>
     CollOfBool isEmpty(const CollOfIndices<codim>& set) const;
     

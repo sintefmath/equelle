@@ -118,6 +118,12 @@ namespace equelleCUDA
 	*/
 	int* raw_pointer();
 
+	/*!
+	  \return A const int pointer to the first element of the device_vector.
+	  Useful when the vector data is needed in a kernel.
+	*/
+	const int* raw_pointer() const;
+
 	//! Check if the input is collection is a subset of the caller.
 	/*!
 	  This function is most often used to check if a user provided domain

@@ -76,3 +76,15 @@ CollOfScalar EquelleRuntimeCUDA::trinaryIf( const CollOfBool& predicate,
     // Call a wrapper which calls a kernel
     return equelleCUDA::trinaryIfWrapper(predicate, iftrue, iffalse);
 }
+
+
+CollOfScalar EquelleRuntimeCUDA::gradient( const CollOfScalar& cell_scalarfield ) const {
+    // First, need cell_scalarfield to be defined on all cells:
+    if ( cell_scalarfield.size() != dev_grid_.number_of_cells() ) {
+	OPM_THROW(std::runtime_error, "Gradient need input defined on AllCells()");
+    }
+
+    return equelleCUDA::gradientWrapper(cell_scalarfield,
+					dev_grid_.interiorFaces(),
+					dev_grid_.face_cells());
+}

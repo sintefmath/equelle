@@ -5,6 +5,7 @@
 
 #include "wrapEquelleRuntime.hpp"
 #include "CollOfScalar.hpp"
+#include "CollOfIndices.hpp"
 #include "equelleTypedefs.hpp"
 
 using namespace equelleCUDA;
@@ -81,5 +82,42 @@ __global__ void equelleCUDA::trinaryIfKernel( int* out,
 	    temp = iffalse[index];
 	}
 	out[index] = temp;
+    }
+}
+
+
+// Gradient implementation:
+CollOfScalar equelleCUDA::gradientWrapper( const CollOfScalar& cell_scalarfield,
+					   const CollOfFace& int_faces,
+					   const int* face_cells) {
+
+    // Output will be a collection on interiorFaces:
+    CollOfScalar out(int_faces.size());
+    // out now have info of how big kernel we need as well.
+    dim3 block(out.block());
+    dim3 grid(out.grid());
+    gradientKernel<<<grid,block>>>( out.data(),
+				    cell_scalarfield.data(),
+				    int_faces.raw_pointer(),
+				    face_cells,
+				    out.size());
+    return out;
+}
+
+
+
+__global__ void equelleCUDA::gradientKernel( double* grad,
+					     const double* cell_vals,
+					     const int* int_faces,
+					     const int* face_cells,
+					     const int size_out)
+{
+    // Compute index in interior_faces:
+    int i = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( i < size_out ) {
+	// Compute face index:
+	int fi = int_faces[i];
+	//grad[i] = second[int_face[i]] - first[int_face[i]]
+	grad[i] = cell_vals[face_cells[fi*2 + 1]] - cell_vals[face_cells[fi*2]];
     }
 }

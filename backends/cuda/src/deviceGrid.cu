@@ -547,6 +547,10 @@ int DeviceGrid::number_of_faces() const {
     return number_of_faces_;
 }
 
+int* DeviceGrid::face_cells() const {
+    return face_cells_;
+}
+
 // ---------- ERROR CHECKING! -----------------------
 
 // Check if for CUDA error and throw OPM exception if there is one.

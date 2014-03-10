@@ -151,6 +151,12 @@ int* CollOfIndices<codim>::raw_pointer() {
     return thrust::raw_pointer_cast( &dev_vec_[0] );
 }
 
+template <int codim>
+const int* CollOfIndices<codim>::raw_pointer() const {
+    const int* out = thrust::raw_pointer_cast( &dev_vec_[0] );
+    return out;
+}
+
 
 template <int codim>
 void CollOfIndices<codim>::contains( CollOfIndices<codim> subset,

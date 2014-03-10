@@ -291,7 +291,11 @@ namespace equelleCUDA
 	  \return number_of_faces_, the number of faces in the entire grid.
 	*/
 	int number_of_faces() const;
-	
+	/*!
+	  \return Pointer to face_cells_, array with cell index on each side of each face.
+	*/
+	int* face_cells() const;
+
 	//! Destructor
 	~DeviceGrid();
 
