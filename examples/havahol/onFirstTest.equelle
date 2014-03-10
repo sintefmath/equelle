@@ -1,0 +1,17 @@
+
+a : Collection Of Scalar On AllCells()
+a = 1.4 Extend AllCells()
+
+
+first = FirstCell(BoundaryFaces())
+second = SecondCell(BoundaryFaces())
+
+# This don't work:
+#b = IsEmpty(second) ? (a On first) : (a On second)
+
+#Do this work?
+b_cells = IsEmpty(second) ? first : second
+b = a On b_cells
+
+Output("b", b)
+
