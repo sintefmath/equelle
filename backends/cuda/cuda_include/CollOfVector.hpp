@@ -14,14 +14,46 @@
 
 namespace equelleCUDA {
 
+    //! Collection of Vectors
+    /*!
+      This class is implemented as an extention of the CollOfScalar class. It has all the
+      same functionality, and is extended with a index operator which returns a
+      CollOfScalar. When talking about the dimension of the collection we are really
+      talking about the dimension of the vectors in the collection. The dimension is 
+      therefore ment ot be 2 or 3 corresponding to 2D or 3D grids.
+    */
     class CollOfVector : public CollOfScalar 
     {
     public:
+	//! Default constructor
 	CollOfVector();
+	
+	//! Allocating constructor
+	/*!
+	  Allocates device memory without initialization.
+	  \param size The number of vectors in the collection
+	  \param dim Dimension of each vector
+	*/
 	explicit CollOfVector(const int size, const int dim);
+	//! Constructor from std::vector
+	/*!
+	  Used for easy testing. The std::vectors contains the vector elements,
+	  not the vectors them selves. The size of the collection will therefore
+	  be host.size()/dim.
+	  \param host A host vector with {1_x, 1_y, 1_z, 2_x, 2_y, 2_x,...,N_x, 
+	  N_y, N_z} for a 3 dimensional case. 
+	  \param dim The dimension of the vectors stored in host.
+	*/
 	explicit CollOfVector(const std::vector<double>& host, const int dim);
+	//! Copy constructor
 	CollOfVector(const CollOfVector& coll);
 
+	//! Index operator
+	/*!
+	  Returns a collection of Scalars with the values from the index of each of the
+	  vectors. myVector[1] will not return the second vector in the collection
+	  but a collection of the second component from all the vectors.
+	*/
 	CollOfScalar operator[](const int index) const;
 
     private:
@@ -30,6 +62,16 @@ namespace equelleCUDA {
 	// size_ from CollOfScalar is actually size_ * dim
     };
 
+    //! Kernel for getting the index element of all vectors in a collection.
+    /*!
+      \param[out] out Collection Of Scalar where out[i] is the index element of
+      vector number i in the collection of Vectors
+      \param[in] vec Collection of Vectors as a double array of size size_out*dim
+      \param[in] size_out Number of vectors in the collection and also the number 
+      of elements in the output collection of scalars.
+      \param[in] index The index we want to read from each vector
+      \param[in] dim The dimension of the vectors in the collection.
+    */
     __global__ void collOfVectorOperatorIndexKernel( double* out,
 						     const double* vec,
 						     const int size_out,

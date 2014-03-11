@@ -141,11 +141,35 @@ namespace equelleCUDA
     // ------------ DIVERGENCE! -------------- //
 
     //! Wrapper for Divergence operator
+    /*! 
+      Set up the kernel for computing the divergence in every cell based on a 
+      collection of fluxes on all faces. The divergence of a cell is a sum of the 
+      fluxes on all its surrounding faces where the faces with outwards pointing normals
+      are added and the faces with inwards pointing normals are subtracted.
+
+      \param fluxes A flux value for every face in the grid. Should be of size 
+      number_of_cells_
+      \param dev_grid A DeviceGrid referance since we need to a lot of its members
+      in the kernel.
+      \return A Collection of Scalars on allCells with the resulting divergence.
+    */
     CollOfScalar divergenceWrapper( const CollOfScalar& fluxes,
 				    const DeviceGrid& dev_grid);
 
 
     //! Kernel for Divergence operator
+    /*!
+      This kernel computes the divergence by finding which faces belong to which cell and
+      the faces relative orientation for the cells. 
+      
+      \param[out] div The resulting divergence on all cells.
+      \param[in] flux The flux given as input on all faces.
+      \param[in] cell_facepos The range in cell_faces which belongs to each cell
+      \param[in] cell_faces A list of face indices for all the cells
+      \param[in] face_cells A list of the pairs of cells on each side of every face.
+      \param[in] number_of_cells The complete number of cells in the grid
+      \param[in] number_of_faces The complete number of faces in the grid
+    */
     __global__ void divergenceKernel( double* div,
 				      const double* flux,
 				      const int* cell_facepos,
