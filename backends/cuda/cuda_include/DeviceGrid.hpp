@@ -199,7 +199,7 @@ namespace equelleCUDA
 	template<int codim>
 	CollOfScalar operatorExtend(const CollOfScalar& in_data,
 				    const CollOfIndices<codim>& from_set,
-				    const CollOfIndices<codim>& to_set);
+				    const CollOfIndices<codim>& to_set) const;
 
 	//! Implementation of the Equelle keyword On for Collection of Scalars
 	/*!
@@ -291,6 +291,14 @@ namespace equelleCUDA
 	  \return number_of_faces_, the number of faces in the entire grid.
 	*/
 	int number_of_faces() const;
+	/*!
+	  \return Pointer to cell_facepos_, array with number of faces for each cell
+	*/
+	int* cell_facepos() const;
+	/*!
+	  \return Pointer to cell_faces_, array with face indices surrounding each cell
+	*/
+	int* cell_faces() const;
 	/*!
 	  \return Pointer to face_cells_, array with cell index on each side of each face.
 	*/

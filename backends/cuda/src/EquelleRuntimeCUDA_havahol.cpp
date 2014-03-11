@@ -88,3 +88,26 @@ CollOfScalar EquelleRuntimeCUDA::gradient( const CollOfScalar& cell_scalarfield 
 					dev_grid_.interiorFaces(),
 					dev_grid_.face_cells());
 }
+
+
+
+CollOfScalar EquelleRuntimeCUDA::divergence(const CollOfScalar& face_fluxes) const {
+    
+    // If the size is not the same as the number of faces, then the input is
+    // given as interiorFaces. Then it has to be extended to AllFaces.
+    if ( face_fluxes.size() != dev_grid_.number_of_faces() ) {
+	CollOfFace int_faces = interiorFaces();
+	if ( face_fluxes.size() != int_faces.size() ) { // Then something wierd has happend
+	    OPM_THROW(std::runtime_error, "Input for divergence has to be on AllFaces or on InteriorFaces.");
+	}
+	// Extend to AllFaces():
+	CollOfScalar allFluxes = operatorExtend(face_fluxes, int_faces, allFaces());
+	return equelleCUDA::divergenceWrapper(allFluxes,
+					      dev_grid_);
+    }
+    else {
+	// We are on allFaces already, so let's go!
+	return equelleCUDA::divergenceWrapper(face_fluxes,
+					      dev_grid_); 
+    }
+}

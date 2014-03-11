@@ -17,7 +17,7 @@ namespace equelleCUDA {
     template <int codim>
     CollOfScalar DeviceGrid::operatorExtend(const CollOfScalar& in_data,
 					    const CollOfIndices<codim>& from_set,
-					    const CollOfIndices<codim>& to_set) 
+					    const CollOfIndices<codim>& to_set) const 
     {
 	if ( to_set.isFull() ) {
 	    std::cout << "EXTEND\n";

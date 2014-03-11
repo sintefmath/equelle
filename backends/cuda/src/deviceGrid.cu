@@ -547,6 +547,14 @@ int DeviceGrid::number_of_faces() const {
     return number_of_faces_;
 }
 
+int* DeviceGrid::cell_facepos() const {
+    return cell_facepos_;
+}
+
+int* DeviceGrid::cell_faces() const {
+    return cell_faces_;
+}
+
 int* DeviceGrid::face_cells() const {
     return face_cells_;
 }

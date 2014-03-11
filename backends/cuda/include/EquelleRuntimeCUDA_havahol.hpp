@@ -102,7 +102,7 @@ equelleCUDA::CollOfIndices<codim> EquelleRuntimeCUDA::inputDomainSubsetOf(const 
 template <int codim>
 CollOfScalar EquelleRuntimeCUDA::operatorExtend(const CollOfScalar& data_in,
 						const CollOfIndices<codim>& from_set,
-						const CollOfIndices<codim>& to_set) {
+						const CollOfIndices<codim>& to_set) const {
     
     if (data_in.size() != from_set.size() ) {
 	OPM_THROW(std::runtime_error, "data_in (size " << data_in.size() << ") and from_set (size " << from_set.size() << ") have to be of the same size in Extend function."); 

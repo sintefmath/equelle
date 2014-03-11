@@ -9,6 +9,7 @@
 
 #include "CollOfScalar.hpp"
 #include "CollOfIndices.hpp"
+#include "DeviceGrid.hpp"
 #include "equelleTypedefs.hpp"
 
 
@@ -134,6 +135,25 @@ namespace equelleCUDA
 				    const int* interior_faces,
 				    const int* face_cells,
 				    const int size_out);
+
+
+
+    // ------------ DIVERGENCE! -------------- //
+
+    //! Wrapper for Divergence operator
+    CollOfScalar divergenceWrapper( const CollOfScalar& fluxes,
+				    const DeviceGrid& dev_grid);
+
+
+    //! Kernel for Divergence operator
+    __global__ void divergenceKernel( double* div,
+				      const double* flux,
+				      const int* cell_facepos,
+				      const int* cell_faces,
+				      const int* face_cells,
+				      const int number_of_cells,
+				      const int number_of_faces);
+				      
 
 
 } // namespace equelleCUDA

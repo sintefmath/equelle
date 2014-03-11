@@ -258,7 +258,7 @@ public:
     template<int codim>
     CollOfScalar operatorExtend(const CollOfScalar& data_in,
 				const CollOfIndices<codim>& from_set,
-				const CollOfIndices<codim>& to_set);
+				const CollOfIndices<codim>& to_set) const;
 
     template<int codim>
     CollOfScalar operatorExtend(const Scalar& data, const CollOfIndices<codim>& set);

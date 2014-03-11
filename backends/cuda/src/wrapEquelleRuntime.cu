@@ -7,6 +7,7 @@
 #include "CollOfScalar.hpp"
 #include "CollOfIndices.hpp"
 #include "equelleTypedefs.hpp"
+#include "DeviceGrid.hpp"
 
 using namespace equelleCUDA;
 
@@ -119,5 +120,57 @@ __global__ void equelleCUDA::gradientKernel( double* grad,
 	int fi = int_faces[i];
 	//grad[i] = second[int_face[i]] - first[int_face[i]]
 	grad[i] = cell_vals[face_cells[fi*2 + 1]] - cell_vals[face_cells[fi*2]];
+    }
+}
+
+
+
+// ------------- DIVERGENCE --------------- //
+
+CollOfScalar equelleCUDA::divergenceWrapper( const CollOfScalar& fluxes,
+					     const DeviceGrid& dev_grid) {
+
+    // output is of size number_of_cells:
+    CollOfScalar out(dev_grid.number_of_cells());
+    // out have now block and grid size as well.
+    dim3 block(out.block());
+    dim3 grid(out.grid());
+
+    divergenceKernel<<<grid,block>>>( out.data(),
+				      fluxes.data(),
+				      dev_grid.cell_facepos(),
+				      dev_grid.cell_faces(),
+				      dev_grid.face_cells(),
+				      dev_grid.number_of_cells(),
+				      dev_grid.number_of_faces() );
+
+    return out;
+}
+
+
+__global__ void equelleCUDA::divergenceKernel( double* div,
+					       const double* flux,
+					       const int* cell_facepos,
+					       const int* cell_faces,
+					       const int* face_cells,
+					       const int number_of_cells,
+					       const int number_of_faces) 
+{
+    // My index: cell
+    int cell = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( cell < number_of_cells ) {
+	double div_temp = 0; // total divergence for this cell.
+	int factor, face;
+	// Iterate over this cells faces:
+	for ( int i = cell_facepos[cell]; i < cell_facepos[cell+1]; ++i ) {
+	    factor = -1; // Assume normal inwards
+	    face = cell_faces[i];
+	    if ( face_cells[face*2] == cell ) { // if normal outwards
+		factor = 1;
+	    }
+	    // Add contribution from this cell
+	    div_temp += flux[face]*factor; 
+	}
+	div[cell] = div_temp;
     }
 }
