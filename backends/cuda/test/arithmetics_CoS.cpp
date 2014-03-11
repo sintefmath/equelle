@@ -13,6 +13,8 @@
 
 using namespace equelleCUDA;
 
+const int ALL_SIZES = 100;
+
 static void compareVectors( std::vector<double> answer, std::vector<double> lf)
 {
     BOOST_REQUIRE_EQUAL_COLLECTIONS( answer.begin(), answer.end(),
@@ -50,6 +52,7 @@ BOOST_AUTO_TEST_SUITE( arithmetics );
 BOOST_AUTO_TEST_CASE( pluss_tests )
 {
     int size = 10000;
+    //int size = ALL_SIZES;
     std::vector<double> a, b, lf;
     for (int i = 0; i < size; ++i) {
 	a.push_back(i);
@@ -65,8 +68,8 @@ BOOST_AUTO_TEST_CASE( pluss_tests )
 
 BOOST_AUTO_TEST_CASE( minus_test )
 {
-    //int size = 10000;
-    int size = 1024*1024;
+    int size = 10000;
+    //int size = 1024*1024;
     std::vector<double> a, b, lf;
     for(int i = 0; i < size; ++i) {
 	a.push_back( i*(i%4 + 1));
@@ -168,7 +171,7 @@ BOOST_AUTO_TEST_CASE( unary_minus_test )
 
 BOOST_AUTO_TEST_CASE( greater_than_test )
 {
-    int size = 10000;
+    int size = 100;
     std::vector<double> a, b;
     std::vector<bool> lf;
     for (int i = 0; i < size; ++i) {

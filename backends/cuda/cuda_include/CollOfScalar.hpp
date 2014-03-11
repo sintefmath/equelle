@@ -288,7 +288,8 @@ namespace equelleCUDA {
     /*!
       Define max number of threads in a kernel block:
     */
-    const int MAX_THREADS = 512;
+    const int MAX_THREADS = 7;
+    //const int MAX_THREADS = 512;
     
 } // namespace equelleCUDA
 
