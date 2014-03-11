@@ -56,6 +56,18 @@ namespace equelleCUDA {
 	*/
 	CollOfScalar operator[](const int index) const;
 
+	//! Dimension of vectors in the collection
+	int dim() const;
+
+	//! Number of vectors in the collection
+	/*!
+	  This function returns the number of vectors in the collection.
+	  Not to be confused with size() which returns total number of 
+	  elements in the collection.
+	  size() = numVectors()*dim()
+	*/
+	int numVectors() const;
+
     private:
 	int dim_;
 
@@ -79,6 +91,21 @@ namespace equelleCUDA {
 						     const int dim);
 	
 
+    /*!
+      Overloaded operator + for Collection of Vectors. Elementwise addition
+      of all values stored in the collections.
+      
+      Works as a wrapper for the CUDA kernel which add collection of scalars.
+    */
+    CollOfVector operator+(const CollOfVector& lhs, const CollOfVector& rhs);
+
+    /*!
+      Overloaded operator - for Collection of Vectors. Elementwise subtraction
+      of all values stored in the collection.
+
+      Works as a wrapper for the CUDA kernel which subtract collection of scalars.
+    */
+    CollOfVector operator-(const CollOfVector& lhs, const CollOfVector& rhs);
 
 } // namespace equelleCUDA
 

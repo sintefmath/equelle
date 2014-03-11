@@ -41,7 +41,16 @@ CollOfVector::CollOfVector(const CollOfVector& coll)
 }
   
 
+int CollOfVector::dim() const {
+    return dim_;
+}
+
+int CollOfVector::numVectors() const {
+    return size()/dim_;
+}
+
 //Operator []
+
 CollOfScalar CollOfVector::operator[](const int index) const {
     
     if ( index < 0 || index >= dim_) {
@@ -62,8 +71,6 @@ CollOfScalar CollOfVector::operator[](const int index) const {
     return out;
 }
 
-  
-
 __global__ void equelleCUDA::collOfVectorOperatorIndexKernel( double* out,
 							      const double* vec,
 							      const int size_out,
@@ -75,4 +82,26 @@ __global__ void equelleCUDA::collOfVectorOperatorIndexKernel( double* out,
     if ( i < size_out ) {
 	out[i] = vec[i*dim + index];
     }
+}
+
+
+
+// ------------- OPERATOR OVERLOADING --------------------
+
+CollOfVector equelleCUDA::operator+(const CollOfVector& lhs, const CollOfVector& rhs) {
+
+    CollOfVector out = lhs;
+    dim3 block(out.block());
+    dim3 grid(out.grid());
+    plus_kernel<<<grid,block>>>(out.data(), rhs.data(), out.size());
+    return out;
+}
+
+
+CollOfVector equelleCUDA::operator-(const CollOfVector& lhs, const CollOfVector& rhs) {
+    CollOfVector out = lhs;
+    dim3 block(out.block());
+    dim3 grid(out.grid());
+    minus_kernel<<<grid,block>>>(out.data(), rhs.data(), out.size());
+    return out;
 }

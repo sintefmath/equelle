@@ -263,6 +263,20 @@ int vector_test() {
     if ( compare( vec2, sol2, 14, "myVec[2]") ) {
 	return 1;
     }
+
+    CollOfVector addedVec = myVec + myVec;
+    CollOfScalar added1 = addedVec[1];
+    double added1_sol[] = {2,8,14,20,26,32,38,44,50,56,62,68,74,80};
+    if ( compare( added1, added1_sol, 14, "(myVec + myVec)[1]") ) {
+	return 1;
+    }
+
+    CollOfVector subVec = myVec - addedVec;
+    CollOfScalar sub2 = subVec[2];
+    double sub2_sol[] = {-2,-5,-8,-11,-14,-17,-20,-23,-26,-29,-32,-35,-38,-41};
+    if ( compare( sub2, sub2_sol, 14, "(myVec - addedVec)[2]") ) {
+	return 1;
+    }
     
     return 0;
 }
