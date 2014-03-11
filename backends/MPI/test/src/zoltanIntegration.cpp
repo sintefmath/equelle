@@ -1,4 +1,4 @@
-#define BOSOT_TEST_MAIN
+#define BOOST_TEST_MAIN
 #define BOOST_TEST_MODULE EquelleControllerTest
 
 #include <memory>
