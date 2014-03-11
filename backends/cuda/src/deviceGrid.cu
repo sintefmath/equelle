@@ -26,6 +26,7 @@
 #include "wrapDeviceGrid.hpp"
 #include "CollOfScalar.hpp"
 #include "CollOfIndices.hpp"
+#include "CollOfVector.hpp"
 
 
 
@@ -533,6 +534,30 @@ CollOfScalar DeviceGrid::norm_of_faces(const thrust::device_vector<int>& faces,
     }
 }
 
+// CENTROID
+CollOfVector DeviceGrid::cellCentroids(const CollOfCell& cells) const {
+    CollOfVector out(cells.size(), dimensions());
+    if ( cells.isFull() ) {
+	cudaStatus_ = cudaMemcpy(out.data(), cell_centroids_,
+				 sizeof(double)*dimensions_*number_of_cells_,
+				 cudaMemcpyDeviceToDevice);
+	checkError_("cudaMemcpy in DeviceGrid::cellCentroids(CollOfCell)");
+    }
+    else {
+	// Set up a kernel that reads only required data
+	dim3 block(out.block());
+	dim3 grid(out.grid());
+
+	equelleCUDA::cellCentroidKernel<<<grid,block>>>( out.data(),
+							 cells.raw_pointer(),
+							 cell_centroids_,
+							 out.numVectors(),
+							 dimensions_);
+    }
+    return out;
+}
+
+
 // ----------- GET FUNCTIONS! ------------------
 
 int DeviceGrid::dimensions() const {
@@ -714,3 +739,22 @@ __global__ void equelleCUDA::normKernel( double* out,
     }
 }
 
+// CENTROID KERNEL
+
+__global__ void equelleCUDA::cellCentroidKernel( double* out,
+						 const int* cells,
+						 const double* all_centroids,
+						 const int num_vectors,
+						 const int dimensions)
+{
+    // EASY IMPLEMENTATION:
+    // One thread for each vector
+    int vec_id = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( vec_id < num_vectors ) {
+	int cell_index = cells[vec_id];
+	// Iterating over the element in the vector we create
+	for (int i = 0; i < dimensions; i++) {
+	    out[vec_id*dimensions + i] = all_centroids[cell_index * dimensions + i];
+	}
+    }
+}

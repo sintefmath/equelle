@@ -186,4 +186,6 @@ CollOfIndices<codim> EquelleRuntimeCUDA::trinaryIf( const CollOfBool& predicate,
 							      iffalse.device_vector()));
 }
 
+
+
 #endif // EQUELLERUNTIMECUDA_HAVAHOL_HEADER_INCLUDED

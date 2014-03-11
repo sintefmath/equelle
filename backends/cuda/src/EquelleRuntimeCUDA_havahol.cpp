@@ -111,3 +111,12 @@ CollOfScalar EquelleRuntimeCUDA::divergence(const CollOfScalar& face_fluxes) con
 					      dev_grid_); 
     }
 }
+
+
+
+// CENTRIOD
+CollOfVector EquelleRuntimeCUDA::centroid( const CollOfCell& cells) const 
+{
+    return dev_grid_.cellCentroids(cells);
+}
+

@@ -14,6 +14,7 @@
 
 #include "CollOfScalar.hpp"
 #include "CollOfIndices.hpp"
+#include "CollOfVector.hpp"
 
 
 namespace equelleCUDA 
@@ -278,7 +279,16 @@ namespace equelleCUDA
 	CollOfScalar norm_of_faces(const thrust::device_vector<int>& faces,
 				   const bool& full) const ;
 
-	// Get functions:
+
+	//! Vector of cell centroids
+	/*!
+	  Returns a vector with the centroids from the given set of cells.
+	*/
+	CollOfVector cellCentroids(const CollOfCell& cells) const;
+
+
+	// ---------------- Get functions: -------------------------------
+
 	/*!
 	  \return dimensions_, the dimensions of the grid
 	*/
@@ -332,6 +342,11 @@ namespace equelleCUDA
 	void checkError_(const std::string& msg) const;
 
     }; // class DeviceGrid
+
+
+    // ------------- END OF CLASS ------------------------------------------
+
+
 
 
     //! Functor checking if an input is equal to its stored value.
@@ -526,6 +541,14 @@ namespace equelleCUDA
 				const int out_size,
 				const double* norm_values);
 
+
+
+    
+    __global__ void cellCentroidKernel( double* out,
+					const int* cells,
+					const double* all_centroids,
+					const int num_vectors,
+					const int dimensions);
 
 
 } // namespace equelleCUDA

@@ -30,7 +30,7 @@ int inputVectorComp(std::vector<int> host, int ans[], int ans_size, std::string 
 
 int scalar_test(EquelleRuntimeCUDA* er);
 
-int vector_test();
+int vector_test(EquelleRuntimeCUDA* er);
 double compNorm(double a, double b, double c);
 
 
@@ -55,7 +55,7 @@ int main( int argc, char** argv) {
      	return 1;
     }
 
-    if ( vector_test() ) {
+    if ( vector_test(&er) ) {
 	return 1;
     }
 
@@ -240,7 +240,7 @@ int collOfScalarTest(EquelleRuntimeCUDA* er) {
 
 
 // --------- TESTING COLL_OF_VECTOR ----------------
-int vector_test() {
+int vector_test(EquelleRuntimeCUDA* er) {
 
     // Set up a vector with 42 (14*3) elements {0,1,2,...,41}
     std::vector<double> host_vec(0);
@@ -287,6 +287,31 @@ int vector_test() {
     if ( compare( norm, norm_sol, 14, "myVec.norm()") ) {
 	return 1;
     }
+
+    CollOfVector centrCells = er->centroid(er->allCells());
+    CollOfScalar centrCells0 = centrCells[0];
+    CollOfScalar centrCells1 = centrCells[1];
+    double centrCells0_sol[] = {0.25,0.75,1.25,1.75, 0.25,0.75,1.25,1.75, 0.25,0.75,1.25,1.75};
+    double centrCells1_sol[] = {0.15,0.15,0.15,0.15, 0.45,0.45,0.45,0.45, 0.75,0.75,0.75,0.75};
+    if ( compare( centrCells0, centrCells0_sol, 12, "Centroid(AllCells)[0]") ) {
+	return 1;
+    }
+    if ( compare( centrCells1, centrCells1_sol, 12, "Centroid(AllCells)[1]") ) {
+	return 1;
+    }
+
+    CollOfVector centr_bnd = er->centroid(er->boundaryCells());
+    CollOfScalar centr_bnd0 = centr_bnd[0];
+    CollOfScalar centr_bnd1 = centr_bnd[1];
+    double centr_bnd0_sol[] = {0.25,0.75,1.25,1.75, 0.25,1.75, 0.25,0.75,1.25,1.75};
+    double centr_bnd1_sol[] = {0.15,0.15,0.15,0.15, 0.45,0.45, 0.75,0.75,0.75,0.75};
+    if ( compare( centr_bnd0, centr_bnd0_sol, 10, "Centroid(boundaryCells())[0]") ) {
+	return 1;
+    }
+    if ( compare( centr_bnd1, centr_bnd1_sol, 10, "Centroid(boundaryCells())[1]") ) {
+	return 1;
+    }
+
 
     return 0;
 }
