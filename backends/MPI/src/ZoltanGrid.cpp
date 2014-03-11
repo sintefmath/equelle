@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <iterator>
 #include <ostream>
+#include <fstream>
 
 #include <opm/core/grid.h>
 #include <opm/autodiff/AutoDiffHelpers.hpp>
@@ -35,7 +36,7 @@ void equelle::ZoltanGrid::getCellList( void *data, int /*sizeGID*/, int /*sizeLI
 
 // Should we call it getNumberOfNeighbors (for a given cell?) In other words, the number of interior edges.
 void equelle::ZoltanGrid::getNumberOfEdgesMulti( void *data, int /* num_gid_entries */, int /* num_lid_entries */,  int num_obj,
-                                           ZOLTAN_ID_PTR /* global_id */ , ZOLTAN_ID_PTR /* local_id */ , int* numEdges, int *ierr )
+                                           ZOLTAN_ID_PTR  global_id  , ZOLTAN_ID_PTR /* local_id */ , int* numEdges, int *ierr )
 {
     *ierr = ZOLTAN_FATAL;
 
@@ -91,16 +92,24 @@ void equelle::ZoltanGrid::getEdgeListMulti(void *data, int /* num_gid_entries */
         }       
     }    
 
-
-
-
     *ierr = ZOLTAN_OK;
 }
 
-void equelle::ZoltanGrid::dumpExports(const equelle::zoltanReturns& zr, std::ostream& out)
+void equelle::ZoltanGrid::dumpRank0Exports( int numCells, const equelle::zoltanReturns& zr, std::ostream& out)
 {
+    std::vector<int> v( numCells, 0 ); // By default all nodes belong to rank 0.
+
+    for( int i = 0; i < zr.numExport; ++i ) {
+        v[ zr.exportGlobalGids[i] ] = zr.exportProcs[i];
+    }
+    std::copy( v.begin(), v.end(), std::ostream_iterator<int>( out, " " ) );
+    std::cout << std::endl;
+
+
+    /* // Might still be useful just to see where they end up.
     std::copy_n( zr.exportGlobalGids, zr.numExport, std::ostream_iterator<int>( out, " ") );
     out << std::endl;
     std::copy_n( zr.exportProcs, zr.numExport,  std::ostream_iterator<int>( out, " ") );
     out << std::endl;
+    */
 }

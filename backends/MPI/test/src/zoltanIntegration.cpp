@@ -19,6 +19,25 @@
 #include "equelle/RuntimeMPI.hpp"
 #include "equelle/ZoltanGrid.hpp"
 
+
+struct MPIConfig {
+    MPIConfig() {
+        MPI_SAFE_CALL( MPI_Init( NULL, NULL ) );
+
+        int size;
+        MPI_SAFE_CALL( MPI_Comm_size( MPI_COMM_WORLD, &size ) );
+
+        float zoltanVersion;
+        ZOLTAN_SAFE_CALL( Zoltan_Initialize( 0, NULL, &zoltanVersion ) );
+    }
+
+    ~MPIConfig() {
+         MPI_SAFE_CALL( MPI_Finalize() );
+    }
+};
+
+BOOST_GLOBAL_FIXTURE( MPIConfig );
+
 void dumpGrid( const UnstructuredGrid* grid ) {
     std::stringstream centroids;
     std::stringstream face_cells;
@@ -53,13 +72,15 @@ BOOST_AUTO_TEST_CASE( gridExploration )
 
 }
 
-BOOST_AUTO_TEST_CASE( RuntimeMPI_initializes_zoltan ) {
+
+BOOST_AUTO_TEST_CASE( RuntimeMPI_6x1grid ) {
     equelle::RuntimeMPI runtime;
 
     BOOST_CHECK( runtime.zoltan != NULL );
 
     int ierr;
     void* grid = const_cast<void*>( reinterpret_cast<const void*>(runtime.grid_manager->c_grid() ) );
+
 
     if ( equelle::getMPIRank() == 0 ) {
         BOOST_CHECK_EQUAL( runtime.grid_manager->c_grid()->number_of_cells, 6 );
@@ -106,7 +127,7 @@ BOOST_AUTO_TEST_CASE( RuntimeMPI_initializes_zoltan ) {
         BOOST_CHECK_EQUAL( edgeList[5], 2 );
         BOOST_CHECK_EQUAL( edgeList[6], 4 );
 
-        // Cell 4
+        // Cell 4UTO
         BOOST_CHECK_EQUAL( edgeList[7], 3 );
         BOOST_CHECK_EQUAL( edgeList[8], 5 );
 
@@ -124,10 +145,26 @@ BOOST_AUTO_TEST_CASE( RuntimeMPI_initializes_zoltan ) {
 
     if ( equelle::getMPIRank() == 0 ) {
         std::ofstream f("rank0-exports");
-        equelle::ZoltanGrid::dumpExports( zr, f );
+        equelle::ZoltanGrid::dumpRank0Exports( runtime.grid_manager->c_grid()->number_of_cells, zr, f );
     }
 }
 
+
+BOOST_AUTO_TEST_CASE( RuntimeMPI_6x2grid ) {
+    equelle::RuntimeMPI runtime;
+    if ( equelle::getMPIRank() == 0 ) {
+        runtime.grid_manager.reset( new Opm::GridManager( 6, 2 ) );
+    } // else the grid for other MPI nodes are empty in RuntimeMPI ctor.
+
+    auto zr = runtime.computePartition();
+    BOOST_CHECK_EQUAL( zr.changes, 1 );
+
+    if ( equelle::getMPIRank() == 0 ) {
+        std::ofstream f("rank0-6x2-exports");
+        equelle::ZoltanGrid::dumpRank0Exports( runtime.grid_manager->c_grid()->number_of_cells, zr, f );
+    }
+
+}
 
 
 

@@ -2,10 +2,14 @@
 
 #include <stdexcept>
 #include <sstream>
+#include <iterator>
+#include <algorithm>
 #include <mpi.h>
 
 #include <zoltan_cpp.h>
 
+#include <Eigen/Eigen>
+#include <Eigen/Sparse>
 
 #define MPI_SAFE_CALL( err ) equelle::mpiSafeCall( err, __FILE__, __LINE__, __FUNCTION__ )
 #define ZOLTAN_SAFE_CALL( err ) equelle::zoltanSafeCall( err, __FILE__, __LINE__, __FUNCTION__ )
@@ -65,6 +69,39 @@ int getMPIRank() {
     MPI_SAFE_CALL( MPI_Comm_rank( MPI_COMM_WORLD, &rank ) );
 
     return rank;
+}
+
+
+/**
+ * @brief dumpEigenCSR is a debug function to make it easy to import Eigen matrix into other libraries.
+ * The following python code exemplifies how it can be imported into Python:
+ * f = open('csr.txt')
+ * lines = f.readlines()
+ * f.close()
+ * inner = numpy.array( lines[0].strip().split() ).astype(int)
+ * outer = numpy.array( lines[1].strip().split() ).astype(int)
+ * data = numpy.array( lines[2].strip().split() ).astype(float)
+ * scipy.sparse.csc_matrix( (data,inner, outer) ).todense()
+ * @param mat Matrix to dump
+ * @param s stream/file to dump to
+ */
+inline
+void dumpEigenCSR( const Eigen::SparseMatrix<double>& mat, std::ostream& s = std::cout  ) {
+    Eigen::SparseMatrix<double> comp = mat;
+
+    comp.makeCompressed();
+
+    std::copy_n( comp.innerIndexPtr(), comp.nonZeros(),
+                 std::ostream_iterator<int>( s, " " ) );
+    s << std::endl;
+
+    std::copy_n( comp.outerIndexPtr(), comp.outerSize()+1,
+                 std::ostream_iterator<int>( s, " " ) );
+    s << std::endl;
+
+    std::copy_n( comp.valuePtr(), comp.nonZeros(),
+                 std::ostream_iterator<double>( s, " " ) );
+    s << std::endl;
 }
 
 
