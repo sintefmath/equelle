@@ -34,7 +34,11 @@ void RuntimeMPI::initializeZoltan()
     ZOLTAN_SAFE_CALL( zoltan->Set_Param( "LB_METHOD", "GRAPH" ) );
     // Partition everything without concern for cost.
     ZOLTAN_SAFE_CALL( zoltan->Set_Param( "LB_APPROACH", "PARTITION" ) );
-    //ZOLTAN_SAFE_CALL( zoltan->Set_Param( "PHG_EDGE_SIZE_THRESHOLD", "1.0" ) );
+
+    // Check that the query functions return valid input data; 0 or 1. (This slows performance; intended for debugging.)
+    ZOLTAN_SAFE_CALL( zoltan->Set_Param( "CHECK_HYPERGRAPH", "1" ) );
+
+    ZOLTAN_SAFE_CALL( zoltan->Set_Param( "PHG_EDGE_SIZE_THRESHOLD", "1.0" ) );
 }
 
 void RuntimeMPI::initializeGrid()
@@ -48,7 +52,7 @@ void RuntimeMPI::initializeGrid()
 
 RuntimeMPI::RuntimeMPI()
 {
-    std::call_once( flag, impl::initMPIandZoltan );
+    //std::call_once( flag, impl::initMPIandZoltan );
     initializeZoltan();
     initializeGrid();
 }
@@ -59,7 +63,7 @@ RuntimeMPI::~RuntimeMPI()
 {
     // Zoltan resources must be deleted before we call MPI_Finalize.
     zoltan.release();
-    MPI_SAFE_CALL( MPI_Finalize() );
+    //MPI_SAFE_CALL( MPI_Finalize() );
 
 }
 
