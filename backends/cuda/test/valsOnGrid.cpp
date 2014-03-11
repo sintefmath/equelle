@@ -14,7 +14,7 @@
 #include "DeviceGrid.hpp"
 #include "CollOfIndices.hpp"
 #include "CollOfScalar.hpp"
-
+#include "CollOfVector.hpp"
 
 using namespace equelleCUDA;
 
@@ -30,6 +30,7 @@ int inputVectorComp(std::vector<int> host, int ans[], int ans_size, std::string 
 
 int scalar_test(EquelleRuntimeCUDA* er);
 
+int vector_test();
 
 
 //test_suite* init_unit_test_suite( int argc, char* argv[] )
@@ -51,6 +52,10 @@ int main( int argc, char** argv) {
     
     if ( scalar_test(&er) ) {
      	return 1;
+    }
+
+    if ( vector_test() ) {
+	return 1;
     }
 
     return 0;
@@ -231,6 +236,37 @@ int collOfScalarTest(EquelleRuntimeCUDA* er) {
 
     return 0;
 }
+
+
+// --------- TESTING COLL_OF_VECTOR ----------------
+int vector_test() {
+
+    // Set up a vector with 42 (14*3) elements {0,1,2,...,41}
+    std::vector<double> host_vec(0);
+    for( int i = 0; i < 42; ++i) {
+	host_vec.push_back(i);
+    }
+    CollOfVector myVec(host_vec,3);
+    
+    double sol0[] = {0,3,6,9,12,15,18,21,24,27,30,33,36,39};
+    double sol1[] = {1,4,7,10,13,16,19,22,25,28,31,34,37,40};
+    double sol2[] = {2,5,8,11,14,17,20,23,26,29,32,35,38,41};
+    CollOfScalar vec0 = myVec[0];
+    CollOfScalar vec1 = myVec[1];
+    CollOfScalar vec2 = myVec[2];
+    if ( compare( vec0, sol0, 14, "myVec[0]") ) {
+	return 1;
+    }
+    if ( compare( vec1, sol1, 14, "myVec[1]") ) {
+	return 1;
+    }
+    if ( compare( vec2, sol2, 14, "myVec[2]") ) {
+	return 1;
+    }
+    
+    return 0;
+}
+
 
 
 

@@ -86,29 +86,6 @@ public:
 
 
 
-class CollOfVector
-{
-public:
-    explicit CollOfVector(const int columns)
-        : v(columns)
-    {
-    }
-    const CollOfScalarCPU& col(const int c) const
-    {
-        return v[c];
-    }
-    CollOfScalarCPU& col(const int c)
-    {
-        return v[c];
-    }
-    int numCols() const
-    {
-        return v.size();
-    }
-private:
-    std::vector<CollOfScalarCPU> v;
-};
-
 
 
 
@@ -233,14 +210,14 @@ public:
     CollOfScalar norm(const CollOfIndices<codim>& set) const;
     CollOfScalarCPU norm(const CollOfFaceCPU& faces) const;
     CollOfScalarCPU norm(const CollOfCellCPU& cells) const;
-    CollOfScalarCPU norm(const CollOfVector& vectors) const;
-    CollOfVector centroid(const CollOfFaceCPU& faces) const;
-    CollOfVector centroid(const CollOfCellCPU& cells) const;
-    CollOfVector normal(const CollOfFaceCPU& faces) const;
+    //CollOfScalarCPU norm(const CollOfVector& vectors) const;
+    //CollOfVector centroid(const CollOfFaceCPU& faces) const;
+    //CollOfVector centroid(const CollOfCellCPU& cells) const;
+    //CollOfVector normal(const CollOfFaceCPU& faces) const;
 
     /// Operators and math functions.
     CollOfScalarCPU sqrt(const CollOfScalarCPU& x) const;
-    CollOfScalarCPU dot(const CollOfVector& v1, const CollOfVector& v2) const;
+    //CollOfScalarCPU dot(const CollOfVector& v1, const CollOfVector& v2) const;
     CollOfScalarCPU gradient(const CollOfScalarCPU& cell_scalarfield) const;
     CollOfScalarCPU negGradient(const CollOfScalarCPU& cell_scalarfield) const;
     CollOfScalarCPU divergence(const CollOfScalarCPU& face_fluxes) const;

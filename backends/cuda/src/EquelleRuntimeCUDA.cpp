@@ -119,7 +119,7 @@ CollOfCell EquelleRuntimeCUDA::secondCell(CollOfFace faces) const
 // of such a grid are boundary cells.
 // That points out that communicating the grid concepts is very important.
 
-
+/*
 CollOfVector EquelleRuntimeCUDA::centroid(const CollOfFaceCPU& faces) const
 {
     const int n = faces.size();
@@ -198,7 +198,7 @@ CollOfScalarCPU EquelleRuntimeCUDA::dot(const CollOfVector& v1, const CollOfVect
     return result;
 }
 
-
+*/
 
 
 void EquelleRuntimeCUDA::output(const String& tag, const double val) const
