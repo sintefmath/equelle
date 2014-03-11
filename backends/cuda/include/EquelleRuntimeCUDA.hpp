@@ -210,7 +210,8 @@ public:
     template <int codim>
     CollOfScalar norm(const CollOfIndices<codim>& set) const;
     CollOfScalar norm(const CollOfVector& vectors) const;
-    CollOfVector centroid(const CollOfCell& cells) const;
+    template <int codim>
+    CollOfVector centroid(const CollOfIndices<codim>& set) const;
     //CollOfScalarCPU norm(const CollOfFaceCPU& faces) const;
     //CollOfScalarCPU norm(const CollOfCellCPU& cells) const;
     //CollOfScalarCPU norm(const CollOfVector& vectors) const;

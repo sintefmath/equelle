@@ -188,4 +188,17 @@ CollOfIndices<codim> EquelleRuntimeCUDA::trinaryIf( const CollOfBool& predicate,
 
 
 
+
+// CENTRIOD
+template <int codim>
+CollOfVector EquelleRuntimeCUDA::centroid( const CollOfIndices<codim>& set) const 
+{
+    if ( codim != 0 && codim != 1) {
+	OPM_THROW(std::runtime_error, "Codim template parameter " << codim << " in EquelleRuntimeCUDA::centroid");
+    }
+    return dev_grid_.centroid(set.device_vector(), set.isFull(), codim);
+}
+
+
+
 #endif // EQUELLERUNTIMECUDA_HAVAHOL_HEADER_INCLUDED

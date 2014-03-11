@@ -312,6 +312,20 @@ int vector_test(EquelleRuntimeCUDA* er) {
 	return 1;
     }
 
+    CollOfVector centr_intface = er->centroid(er->interiorFaces());
+    CollOfScalar centr_intface0 = centr_intface[0];
+    CollOfScalar centr_intface1 = centr_intface[1];
+    double centr_intface0_sol[] = {0.5,1.0,1.5, 0.5,1.0,1.5, 0.5,1.0,1.5,
+				   0.25,0.75,1.25,1.75, 0.25,0.75,1.25,1.75};
+    double centr_intface1_sol[] = {0.15,0.15,0.15, 0.45,0.45,0.45, 0.75,0.75,0.75,
+				   0.3,0.3,0.3,0.3, 0.6,0.6,0.6,0.6};
+    if ( compare( centr_intface0, centr_intface0_sol, 17, "centroid(interiorFaces)[0]")){
+	return 1;
+    }
+    if ( compare( centr_intface1, centr_intface1_sol, 17, "centroid(interiorFaces)[1]")){
+	return 1;
+    }
+				   
 
     return 0;
 }

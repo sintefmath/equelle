@@ -45,6 +45,7 @@ DeviceGrid::DeviceGrid()
       number_of_faces_(0),
       size_cell_faces_(0),
       cell_centroids_(0),
+      face_centroids_(0),
       cell_facepos_(0),
       cell_faces_(0),
       cell_volumes_(0),
@@ -63,6 +64,7 @@ DeviceGrid::DeviceGrid( const UnstructuredGrid& grid)
       number_of_faces_(grid.number_of_faces),
       size_cell_faces_(grid.cell_facepos[number_of_cells_]),
       cell_centroids_(0),
+      face_centroids_(0),
       cell_facepos_(0),
       cell_faces_(0),
       cell_volumes_(0),
@@ -88,6 +90,18 @@ DeviceGrid::DeviceGrid( const UnstructuredGrid& grid)
 			      cudaMemcpyHostToDevice );
     checkError_("cudaMemcpy(cell_centroids_) in DeviceGrid::DeviceGrid(UnstructuredGrid&)");
     std::cout << "\tnew cell_centroids_ " << cell_centroids_ << "\n";
+
+    // Allocate memory for face_centroids_:
+    // type: double
+    // size: dimensions_ * number_of_faces_
+    cudaStatus_ = cudaMalloc( (void**)&face_centroids_ ,
+			      dimensions_ * number_of_faces_ * sizeof(double));
+    checkError_("cudaMalloc(face_centroids_) in DeviceGrid::DeviceGrid(UnstructuredGrid&)");
+    cudaStatus_ = cudaMemcpy( face_centroids_, grid.face_centroids,
+			      dimensions_ * number_of_faces_ * sizeof(double),
+			      cudaMemcpyHostToDevice );
+    checkError_("cudaMemcpy(face_centroids_) in DeviceGrid::DeviceGrid(UnstructuredGrid&)");
+    std::cout << "\tnew face_centroids_ " << face_centroids_ << "\n";
 
     // Allocate memory for cell_facepos_:
     // type: int
@@ -169,6 +183,7 @@ DeviceGrid::DeviceGrid(const DeviceGrid& grid)
     number_of_faces_(grid.number_of_faces_),
     size_cell_faces_(grid.size_cell_faces_),
     cell_centroids_(0),
+    face_centroids_(0),
     cell_facepos_(0),
     cell_faces_(0),
     cell_volumes_(0),
@@ -186,6 +201,15 @@ DeviceGrid::DeviceGrid(const DeviceGrid& grid)
 			      cudaMemcpyDeviceToDevice );
     checkError_("cudaMemcpy(cell_centroids_) in DeviceGrid::DeviceGrid(const DeviceGrid&)");
     //std::cout << "\tCopy cell_centroids_:\t" << cell_centroids_ << "\n";
+
+    // FACE_CENTROIDS_
+    cudaStatus_ = cudaMalloc( (void**)&face_centroids_,
+			      dimensions_ * number_of_faces_ * sizeof(double));
+    checkError_("cudaMalloc(face_centroids_) in DeviceGrid::DeviceGrid(const DeviceGrid&)");
+    cudaStatus_ = cudaMemcpy( face_centroids_, grid.face_centroids_,
+			      dimensions_ * number_of_faces_ * sizeof(double),
+			      cudaMemcpyDeviceToDevice);
+    checkError_("cudaMemcpy(face_centroids_) in DeviceGrid::DeviceGrid(const DeviceGrid&)");
 
     // CELL_FACEPOS_
     cudaStatus_ = cudaMalloc( (void**)&cell_facepos_, 
@@ -260,6 +284,10 @@ DeviceGrid::~DeviceGrid() {
 	//std::cout << "\tDel cell_centriods_\n";
 	cudaStatus_ = cudaFree(cell_centroids_);
 	checkError_("cudaFree(cell_centroids_) in DeviceGrid::~DeviceGrid()");
+    }
+    if ( face_centroids_ != 0 ) {
+	cudaStatus_ = cudaFree(face_centroids_);
+	checkError_("cudaFree(face_centroids) in DeviceGrid::~DeviceGrid()");
     }
     //std::cout << "\t\t" << cell_facepos_;
     if ( cell_facepos_ != 0 ) {
@@ -534,28 +562,51 @@ CollOfScalar DeviceGrid::norm_of_faces(const thrust::device_vector<int>& faces,
     }
 }
 
+
 // CENTROID
-CollOfVector DeviceGrid::cellCentroids(const CollOfCell& cells) const {
-    CollOfVector out(cells.size(), dimensions());
-    if ( cells.isFull() ) {
-	cudaStatus_ = cudaMemcpy(out.data(), cell_centroids_,
-				 sizeof(double)*dimensions_*number_of_cells_,
-				 cudaMemcpyDeviceToDevice);
-	checkError_("cudaMemcpy in DeviceGrid::cellCentroids(CollOfCell)");
+
+CollOfVector DeviceGrid::centroid(const thrust::device_vector<int>& indices,
+				  const bool& full,
+				  const int codim) const {
+    if (full) {
+	if (codim == 0) { // All cells
+	    CollOfVector out(number_of_cells_, dimensions_);
+	    cudaStatus_ = cudaMemcpy(out.data(), cell_centroids_,
+				     sizeof(double)*dimensions_*number_of_cells_,
+				     cudaMemcpyDeviceToDevice);
+	    checkError_("cudaMemcpy in DeviceGrid::centroid(..) -> full -> codim=0");
+	    return out;
+	}
+	else { // All faces
+	    CollOfVector out(number_of_faces_, dimensions_);
+	    cudaStatus_ = cudaMemcpy(out.data(), face_centroids_,
+				     sizeof(double)*dimensions_*number_of_faces_,
+				     cudaMemcpyDeviceToDevice);
+	    checkError_("cudaMemcpy in DeviceGrid::centroids(..) -> full -> codim=1");
+	    return out;
+	}
     }
     else {
-	// Set up a kernel that reads only required data
+	CollOfVector out(indices.size(), dimensions_);
+	// Set up a kernel to find the subset
 	dim3 block(out.block());
 	dim3 grid(out.grid());
-
+	const int* indices_ptr = thrust::raw_pointer_cast( &indices[0] );
+	
+	// Get a pointer to the correct set of centroids:
+	const double* all_centroids = cell_centroids_;
+	if ( codim == 1) {
+	    all_centroids = face_centroids_;
+	}
 	equelleCUDA::cellCentroidKernel<<<grid,block>>>( out.data(),
-							 cells.raw_pointer(),
-							 cell_centroids_,
+							 indices_ptr,
+							 all_centroids,
 							 out.numVectors(),
 							 dimensions_);
+	return out;
     }
-    return out;
 }
+
 
 
 // ----------- GET FUNCTIONS! ------------------

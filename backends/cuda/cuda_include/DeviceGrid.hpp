@@ -44,6 +44,9 @@ namespace equelleCUDA
       - double* cell_centroids_
           + Points to array of coordinates of the centroids of all cells. Size of the 
 	  array is ( dimensions_ * number_of_cells_ )
+      - double* face_centroids_
+          + Points to array of coordinates of the centroids of all faces. Size of the
+	  array is ( dimensions_ * number_of_faces_ )
       - int* cell_facepos_
 	  + Contains the range of indices for which faces belongs to each cell. 
 	  The face indices are found in the array cell_faces_, and a cell c is 
@@ -280,12 +283,17 @@ namespace equelleCUDA
 				   const bool& full) const ;
 
 
-	//! Vector of cell centroids
+	//! Creates a Vector of Centroids
 	/*!
-	  Returns a vector with the centroids from the given set of cells.
+	  Returns a vector with the centroids from the given set of either
+	  cells (codim = 0) or faces (codim = 1). 
+	  \param indices A vector of indices. Is empty if full is true
+	  \param full Indicates if the set is a full set or not
+	  \param codim 0 for cells and 1 for faces.
 	*/
-	CollOfVector cellCentroids(const CollOfCell& cells) const;
-
+	CollOfVector centroid(const thrust::device_vector<int>& indices,
+			      const bool& full,
+			      const int codim) const;
 
 	// ---------------- Get functions: -------------------------------
 
@@ -327,6 +335,7 @@ namespace equelleCUDA
 	
 	// Member arrays for unstructured grids
 	double* cell_centroids_; 
+	double* face_centroids_;
 	int* cell_facepos_;
 	int* cell_faces_;
 	double* cell_volumes_;
