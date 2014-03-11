@@ -23,6 +23,3 @@ target_link_libraries(zoltanintegration_test equelle_rt equelle_mpi
     ${Boost_LIBRARIES}
     ${Zoltan_LIBRARIES}
     opmautodiff opmcore dunecommon )
-
-
-

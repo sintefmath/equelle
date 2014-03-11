@@ -10,6 +10,7 @@ file( GLOB mpi_src "src/*.cpp" )
 file( GLOB mpi_inc "include/equelle/*.hpp" )
 
 set( MPI_INCLUDE_DIRS "/usr/include/eigen3" ${EQUELLE_EXTRA_INCLUDE_DIRS})
+
 include_directories( "include"
     ${MPI_INCLUDE_PATH}
     ${Zoltan_INCLUDE_DIRS}
