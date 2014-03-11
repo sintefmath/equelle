@@ -180,6 +180,18 @@ namespace equelleCUDA {
 					      const double scal, 
 					      const int size);
 
+    //! CUDA kernel for division as Scalar/CollOfScalar
+    /*!
+      Set each element in out as 
+      \code out[i] = scal/out[i] \endcode
+      \param[in,out] out Input is the denominator and is overwritten by the result.
+      \param[in] scal Scalar value numerator.
+      \param[in] size Number of elements.
+    */
+    __global__ void divScalCollection_kernel( double* out,
+					      const double scal,
+					      const int size);
+
     //! CUDA kernel for greater than operation
     /*!
       Compare elements in lhs with elements in rhs and return a Collection of Booleans.
@@ -264,6 +276,16 @@ namespace equelleCUDA {
      */
     CollOfScalar operator/(const CollOfScalar& lhs, const Scalar& rhs);
 
+    /*!
+      For Scalar / CollOfScalar. Elementwise division of the elements in 
+      the collection.
+      \param lhs Scalar 
+      \param rhs Collection of Scalars
+      \return out[i] = lhs / rhs[i]
+     */
+    CollOfScalar operator/(const Scalar& lhs, const CollOfScalar& rhs);
+
+    
     /*!
       Unary minus
       \return A collection with the negative values of the inpur collection.

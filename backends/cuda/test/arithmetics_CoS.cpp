@@ -156,6 +156,23 @@ BOOST_AUTO_TEST_CASE( coll_scal_division_test )
     compareVectorsDiv ( res.copyToHost(), lf);
 }
 
+BOOST_AUTO_TEST_CASE( scal_coll_division_test )
+{
+    int size = 10000;
+    std::vector<double> a, lf;
+    double myDoub = 4.25;
+    for (int i = 0; i < size; ++i) {
+	a.push_back( i%100 + 1);
+	//lf.push_back( i*2.4999999999/myDoub );
+	lf.push_back( myDoub/a[i]);
+    }
+    CollOfScalar col_a(a);
+    CollOfScalar res = myDoub / col_a;
+    compareVectorsDiv ( res.copyToHost(), lf);
+}
+
+
+
 BOOST_AUTO_TEST_CASE( unary_minus_test )
 {
     int size = 10000;
