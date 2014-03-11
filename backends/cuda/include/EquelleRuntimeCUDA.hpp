@@ -27,6 +27,7 @@
 //      and especially from any c++11 code.
 #include "CollOfIndices.hpp"
 #include "CollOfScalar.hpp"
+#include "CollOfVector.hpp"
 #include "DeviceGrid.hpp"
 #include "equelleTypedefs.hpp"
 
@@ -208,8 +209,9 @@ public:
     CollOfCell secondCell(equelleCUDA::CollOfFace faces) const;
     template <int codim>
     CollOfScalar norm(const CollOfIndices<codim>& set) const;
-    CollOfScalarCPU norm(const CollOfFaceCPU& faces) const;
-    CollOfScalarCPU norm(const CollOfCellCPU& cells) const;
+    CollOfScalar norm(const CollOfVector& vectors) const;
+    //CollOfScalarCPU norm(const CollOfFaceCPU& faces) const;
+    //CollOfScalarCPU norm(const CollOfCellCPU& cells) const;
     //CollOfScalarCPU norm(const CollOfVector& vectors) const;
     //CollOfVector centroid(const CollOfFaceCPU& faces) const;
     //CollOfVector centroid(const CollOfCellCPU& cells) const;

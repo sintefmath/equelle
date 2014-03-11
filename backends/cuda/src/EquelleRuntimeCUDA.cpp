@@ -8,6 +8,7 @@
 #include "CollOfScalar.hpp"
 #include "DeviceGrid.hpp"
 #include "CollOfIndices.hpp"
+#include "CollOfVector.hpp"
 
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/core/utility/StopWatch.hpp>
@@ -114,6 +115,11 @@ CollOfCell EquelleRuntimeCUDA::secondCell(CollOfFace faces) const
     return dev_grid_.secondCell(faces);
 }
 
+
+CollOfScalar EquelleRuntimeCUDA::norm(const CollOfVector& vectors) const
+{
+    return vectors.norm();
+}
 
 // Note that this will not produce what some would consider the expected results for a 1D grid realized as a 2D grid of dimension (n, 1) or (1, n), since all cells
 // of such a grid are boundary cells.

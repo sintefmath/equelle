@@ -31,6 +31,7 @@ int inputVectorComp(std::vector<int> host, int ans[], int ans_size, std::string 
 int scalar_test(EquelleRuntimeCUDA* er);
 
 int vector_test();
+double compNorm(double a, double b, double c);
 
 
 //test_suite* init_unit_test_suite( int argc, char* argv[] )
@@ -278,10 +279,21 @@ int vector_test() {
 	return 1;
     }
     
+    CollOfScalar norm = myVec.norm();
+    double norm_sol[14];
+    for (int i = 0; i < 14; ++i) {
+	norm_sol[i] = compNorm(sol0[i], sol1[i], sol2[i]);
+    }
+    if ( compare( norm, norm_sol, 14, "myVec.norm()") ) {
+	return 1;
+    }
+
     return 0;
 }
 
-
+double compNorm(double a, double b, double c) {
+    return sqrt( a*a + b*b + c*c);
+}
 
 
 int scalar_test(EquelleRuntimeCUDA* er) {

@@ -48,6 +48,14 @@ namespace equelleCUDA {
 	//! Copy constructor
 	CollOfVector(const CollOfVector& coll);
 
+
+	//! Norm of the vectors in the collection
+	/*!
+	  Returns a collection of scalars equal to the norm of every vector in
+	  the caller.
+	*/
+	CollOfScalar norm() const;
+
 	//! Index operator
 	/*!
 	  Returns a collection of Scalars with the values from the index of each of the
@@ -90,6 +98,15 @@ namespace equelleCUDA {
 						     const int index,
 						     const int dim);
 	
+
+    __global__ void normKernel( double* out,
+				const double* vectors,
+				const int numVectors,
+				const int dim);
+    
+
+
+    // --------------------- OPERATOR OVERLOADING -------------------------
 
     /*!
       Overloaded operator + for Collection of Vectors. Elementwise addition

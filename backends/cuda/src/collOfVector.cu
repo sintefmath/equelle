@@ -5,6 +5,8 @@
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <iostream>
 #include <vector>
+#include <math.h>
+
 
 
 #include "CollOfVector.hpp"
@@ -41,6 +43,20 @@ CollOfVector::CollOfVector(const CollOfVector& coll)
 }
   
 
+
+//  ----- NORM -----
+CollOfScalar CollOfVector::norm() const {
+    CollOfScalar out(numVectors());
+    dim3 block(out.block());
+    dim3 grid(out.grid());
+    normKernel<<<grid, block>>>(out.data(), data(), numVectors(), dim());
+    return out;
+}
+
+
+
+
+
 int CollOfVector::dim() const {
     return dim_;
 }
@@ -57,7 +73,7 @@ CollOfScalar CollOfVector::operator[](const int index) const {
 	OPM_THROW(std::runtime_error, "Illigal dimension index " << index << " for a vector of dimension " << dim_);
     }
     
-    CollOfScalar out(size()/dim_);
+    CollOfScalar out(numVectors());
     
     dim3 block(out.block());
     dim3 grid(out.grid());
@@ -81,6 +97,25 @@ __global__ void equelleCUDA::collOfVectorOperatorIndexKernel( double* out,
     int i = threadIdx.x + blockIdx.x*blockDim.x;
     if ( i < size_out ) {
 	out[i] = vec[i*dim + index];
+    }
+}
+
+
+
+// --------- NORM KERNEL ---------------------
+
+__global__ void equelleCUDA::normKernel( double* out,
+					 const double* vectors,
+					 const int numVectors,
+					 const int dim)
+{
+    int index = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( index < numVectors ){
+	double norm = 0;
+	for ( int i = 0; i < dim; i++) {
+	    norm += vectors[index*dim + i]*vectors[index*dim + i];
+	}
+	out[index] = sqrt(norm);
     }
 }
 
