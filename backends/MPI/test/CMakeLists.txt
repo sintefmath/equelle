@@ -24,9 +24,5 @@ target_link_libraries(zoltanintegration_test equelle_rt equelle_mpi
     ${Zoltan_LIBRARIES}
     opmautodiff opmcore dunecommon )
 
-set_target_properties( zoltanintegration_test PROPERTIES
-    COMPILE_FLAGS "${MPI_CXX_COMPILE_FLAGS}" )
 
-set_target_properties( zoltanintegration_test PROPERTIES
-    LINK_FLAGS "${MPI_CXX_LINK_FLAGS}"  )
 
