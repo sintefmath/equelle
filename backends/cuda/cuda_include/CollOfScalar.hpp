@@ -73,6 +73,21 @@ namespace equelleCUDA {
 	*/
 	CollOfScalar(const CollOfScalar& coll);  
 	
+
+	//! Copy assignment operator
+	/*!
+	  Overload the assignment operator. Needed for the third line here:
+	  \code
+	  CollOfScalar a = "something"
+	  CollOfScalar b = "something"
+	  a = b;
+	  \endcode
+	  Copy the array from other to this.
+	 */
+	CollOfScalar& operator= (const CollOfScalar& other);
+
+
+
 	//! Destructor
 	/*!
 	  Frees device memory as the CollOfScalar goes out of scope.

@@ -103,6 +103,50 @@ CollOfScalar::CollOfScalar(const CollOfScalar& coll)
 }
 
 
+// Copy assignment operator
+CollOfScalar& CollOfScalar::operator= (const CollOfScalar& other) {
+    
+    // Protect agains " var = var " , self assignment
+    if ( this != &other ) {
+
+	// First idea: Make this->dev_values_ point to other.dev_values_
+	// and set other.dev_values_ = 0.
+	// Why is this a bad idea? We should still be able to use other.
+	// THEREFORE: Need to copy the content of other.dev_values_ to
+	// this->dev_values_.
+
+	// this->dev_values will be overwritten, and can safely be freed,
+	// But if the collections are of the same size (likely) we
+	// Will just overwrite the old values.
+	
+	if ( this->size_ != other.size_) {
+	    // If different size: Is this even allowed?
+	    // Free memory:
+	    cudaStatus_ = cudaFree(this->dev_values_);
+	    checkError_("cudaFree(this->dev_values_) in CollOfScalar::operator=(const CollOfScalar&)");
+	    // Allocate new memory:
+	    cudaStatus_ = cudaMalloc((void**)&this->dev_values_,
+				     sizeof(double) * other.size_);
+	    checkError_("cudaMalloc(this->dev_values_) in CollOfScalar::operator=(const CollOfScalar&)");
+	    
+	    // Set variables depending on size_:
+	    this->size_ = other.size_;
+	    this->block_x_ = other.block_x_;
+	    this->grid_x_ = other.grid_x_;
+	}
+
+	// Copy memory block from other to this:
+	cudaStatus_ = cudaMemcpy( this->dev_values_, other.dev_values_,
+				  sizeof(double) * this->size_,
+				  cudaMemcpyDeviceToDevice);
+	checkError_("cudaMemcpy(dev_values_) in CollOfScalar::operator=(const CollOfScalar)");
+    } // if this == &other
+    
+    return *this;
+
+}
+
+
 // Destructor:
 CollOfScalar::~CollOfScalar() {
     if (dev_values_ != 0) {

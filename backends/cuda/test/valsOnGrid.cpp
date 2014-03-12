@@ -235,6 +235,12 @@ int collOfScalarTest(EquelleRuntimeCUDA* er) {
 	return 1;
     }
 
+    // Try to make div be equal to a_big
+    div = a_big;
+    if ( compare(div, a_big_sol, 12, "div = a_big")) {
+	return 1;
+    }
+
     return 0;
 }
 
