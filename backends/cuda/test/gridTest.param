@@ -1,0 +1,5 @@
+grid_dim=2
+nx=4
+dx=1
+ny=3
+dy=1

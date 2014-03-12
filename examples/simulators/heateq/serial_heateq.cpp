@@ -31,7 +31,7 @@ int main(int argc, char** argv)
     // ============= Generated code starts here ================
 
     const Scalar k = er.inputScalarWithDefault("k", double(0.3));
-    const Scalar dt = er.inputScalarWithDefault("dt", double(0.5));
+    const SeqOfScalar timesteps = er.inputSequenceOfScalar("timesteps");
     const CollOfScalar u0 = er.inputCollectionOfScalar("u0", er.allCells());
     const CollOfFace dirichlet_boundary = er.inputDomainSubsetOf("dirichlet_boundary", er.boundaryFaces());
     const CollOfScalar dirichlet_val = er.inputCollectionOfScalar("dirichlet_val", dirichlet_boundary);
@@ -53,17 +53,20 @@ int main(int argc, char** argv)
         const CollOfScalar dir_fluxes = ((er.operatorOn(btrans, er.boundaryFaces(), dirichlet_boundary) * dir_sign) * (u_dirbdycells - dirichlet_val));
         return er.operatorExtend(dir_fluxes, dirichlet_boundary, er.boundaryFaces());
     };
-    std::function<CollOfScalar(const CollOfScalar&)> computeResidual = [&](const CollOfScalar& u) -> CollOfScalar {
-        const CollOfScalar ifluxes = computeInteriorFlux(u);
-        const CollOfScalar bfluxes = computeBoundaryFlux(u);
-        const CollOfScalar fluxes = (er.operatorExtend(ifluxes, er.interiorFaces(), er.allFaces()) + er.operatorExtend(bfluxes, er.boundaryFaces(), er.allFaces()));
-        const CollOfScalar residual = ((u - u0) + ((dt / vol) * er.divergence(fluxes)));
-        return residual;
-    };
-    const CollOfScalar explicitu = (u0 - computeResidual(u0));
-    const CollOfScalar u = er.newtonSolve(computeResidual, u0);
-    er.output("explicitu", explicitu);
-    er.output("u", u);
+    CollOfScalar expU;
+    expU = u0;
+    for (const Scalar& dt : timesteps) {
+        std::function<CollOfScalar(const CollOfScalar&)> computeResidual = [&](const CollOfScalar& u) -> CollOfScalar {
+            const CollOfScalar ifluxes = computeInteriorFlux(u);
+            const CollOfScalar bfluxes = computeBoundaryFlux(u);
+            const CollOfScalar fluxes = (er.operatorExtend(ifluxes, er.interiorFaces(), er.allFaces()) + er.operatorExtend(bfluxes, er.boundaryFaces(), er.allFaces()));
+            const CollOfScalar residual = ((u - u0) + ((dt / vol) * er.divergence(fluxes)));
+            return residual;
+        };
+        expU = (expU - computeResidual(expU));
+        er.output("expU", expU);
+    }
+    er.output("expU", expU);
 
     // ============= Generated code ends here ================
 

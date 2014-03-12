@@ -1,6 +1,11 @@
 project(equelle)
 cmake_minimum_required(VERSION 2.8)
 
+#find_package( "CUDA" REQUIRED )
+
+# For running "make test"
+enable_testing()
+
 set(EQUELLE_MAJOR_VERSION 0)
 set(EQUELLE_MINOR_VERSION 1)
 set(EQUELLE_PATCH_VERSION 0)
@@ -28,13 +33,22 @@ foreach(p LIB BIN INCLUDE CMAKE)
   endif()
 endforeach()
 
-option(EQUELLE_BUILD_MPI "Build MPI backend and tools (requires MPI and Zoltan from Trilinos)" OFF )
+option(EQUELLE_BUILD_MPI "Build MPI backend and tools (requires MPI and Zoltan from Trilinos)" OFF)
+option(EQUELLE_BUILD_CUDA "Build CUDA backend and tools (requires CUDA)" OFF)
 
 add_subdirectory(compiler)
 add_subdirectory(backends)
 add_subdirectory(tools)
 
-export( TARGETS ec el equelle_rt 
+set(EQUELLE_TARGETS ec el equelle_rt)
+if(EQUELLE_BUILD_CUDA)
+  set(EQUELLE_TARGETS ${EQUELLE_TARGETS} equelle_cuda_cu equelle_cuda_cpu )
+endif()
+if(EQUELLE_BUILD_MPI)
+  set(EQUELLE_TARGETS ${EQUELLE_TARGETS} equelle_mpi )
+endif()
+
+export( TARGETS ${EQUELLE_TARGETS} 
 	FILE "${PROJECT_BINARY_DIR}/EquelleTargets.cmake")
 
 export(PACKAGE equelle)
