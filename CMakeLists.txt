@@ -28,6 +28,8 @@ foreach(p LIB BIN INCLUDE CMAKE)
   endif()
 endforeach()
 
+option(EQUELLE_BUILD_MPI "Build MPI backend and tools (requires MPI and Zoltan from Trilinos)" OFF )
+
 add_subdirectory(compiler)
 add_subdirectory(backends)
 add_subdirectory(tools)
