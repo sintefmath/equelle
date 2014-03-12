@@ -1,5 +1,7 @@
 add_subdirectory(runequelle)
 add_subdirectory(equellecontroller)
-add_subdirectory(standalonepartition)
+if(EQUELLE_BUILD_MPI)
+    add_subdirectory(standalonepartition)
+endif()
 
 

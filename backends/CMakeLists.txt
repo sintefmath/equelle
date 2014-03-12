@@ -2,7 +2,10 @@ project( equelle_backends )
 cmake_minimum_required( VERSION 2.8 )
 
 add_subdirectory(serial)
-add_subdirectory( MPI )
+
+if(EQUELLE_BUILD_MPI)
+    add_subdirectory( MPI )
+endif()
 
 
 # Needed to export libraries and include dirs for various backends out into EquelleConfig.cmake
