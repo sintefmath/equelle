@@ -14,11 +14,9 @@
 #include <cmath>
 #include <array>
 
-#include "EquelleRuntimeCUDA.hpp"
+#include "EquelleRuntimeCPU.hpp"
 
-using namespace equelleCUDA;
-
-void ensureRequirements(const EquelleRuntimeCUDA& er);
+void ensureRequirements(const EquelleRuntimeCPU& er);
 
 int main(int argc, char** argv)
 {
@@ -26,7 +24,7 @@ int main(int argc, char** argv)
     Opm::parameter::ParameterGroup param(argc, argv, false);
 
     // Create the Equelle runtime.
-    EquelleRuntimeCUDA er(param);
+    EquelleRuntimeCPU er(param);
 
     ensureRequirements(er);
 
@@ -75,7 +73,7 @@ int main(int argc, char** argv)
     return 0;
 }
 
-void ensureRequirements(const EquelleRuntimeCUDA& er)
+void ensureRequirements(const EquelleRuntimeCPU& er)
 {
     (void)er;
 }

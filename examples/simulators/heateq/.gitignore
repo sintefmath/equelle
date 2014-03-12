@@ -6,3 +6,4 @@ cmake_install.cmake
 *.output
 
 exp_heateq
+serial_heateq

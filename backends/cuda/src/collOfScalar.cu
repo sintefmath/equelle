@@ -119,7 +119,12 @@ CollOfScalar& CollOfScalar::operator= (const CollOfScalar& other) {
 	// But if the collections are of the same size (likely) we
 	// Will just overwrite the old values.
 	
+	std::cout << "COPY ASSIGNMENT OPERATOR ( this->size = " << this->size_ << ")\n";
+
 	if ( this->size_ != other.size_) {
+
+	    std::cout << "\tCHANGING SIZE FROM " << this->size_ << " TO " << other.size_ << "\n";
+		
 	    // If different size: Is this even allowed?
 	    // Free memory:
 	    cudaStatus_ = cudaFree(this->dev_values_);

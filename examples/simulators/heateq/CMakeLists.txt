@@ -7,5 +7,8 @@ include_directories( ${EQUELLE_INCLUDE_DIRS} "../../../../build/backends/cuda" "
 add_executable(exp_heateq exp_heateq.cpp)
 target_link_libraries( exp_heateq ${EQUELLE_LIBRARIES}  )
 
+add_executable(serial_heateq serial_heateq.cpp)
+target_link_libraries( serial_heateq ${EQUELLE_LIBRARIES} )
+
 # If cmake can't find equelle package, run:
 # cmake -DEquelle_DIR=/home/havahol/equelle/build/
