@@ -533,6 +533,10 @@ private:
     double abs_res_tol_;
 };
 
+namespace equelle {
+    Opm::GridManager* createGridManager(const Opm::parameter::ParameterGroup& param);
+}
+
 // Include the implementations of template members.
 #include "EquelleRuntimeCPU_impl.hpp"
 
