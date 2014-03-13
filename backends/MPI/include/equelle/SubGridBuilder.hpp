@@ -26,6 +26,8 @@ class SubGridBuilder
 public:
     static SubGrid build( const UnstructuredGrid* grid, const std::vector<int>& cellsToExtract );
     static std::set<int> extractNeighborCells(const UnstructuredGrid *grid, const std::vector<int> &cellsToExtract);
+    static std::set<int> extractNeighborFaces(const UnstructuredGrid *grid, const std::vector<int> &cellsToExtract);
+
 private:
     SubGridBuilder();
 };

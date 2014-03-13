@@ -18,7 +18,9 @@ std::set<int> SubGridBuilder::extractNeighborCells(const UnstructuredGrid *grid,
     Opm::HelperOps helperOps( *grid );
     Opm::HelperOps::M adj = helperOps.div * helperOps.ngrad;
 
-    std::cout << adj << std::endl;
+    //std::cout << helperOps.div << std::endl;
+    //std::cout << adj << std::endl;
+
     for( int i = 0; i < cellsToExtract.size(); ++i ) {
         int cell = cellsToExtract[i];
         for( Eigen::SparseMatrix<double>::InnerIterator it( adj, cell); it; ++it ) {
@@ -32,6 +34,25 @@ std::set<int> SubGridBuilder::extractNeighborCells(const UnstructuredGrid *grid,
     }
 
     return neighborCells;
+}
+
+std::set<int> SubGridBuilder::extractNeighborFaces(const UnstructuredGrid *grid, const std::vector<int> &cellsToExtract)
+{
+    Opm::HelperOps helperOps( *grid );
+    std::set<int> participatingFaces;
+
+    std::cout << helperOps.ngrad << std::endl;
+
+    for( int i = 0; i < cellsToExtract.size(); ++i ) {
+        int gid = cellsToExtract[i];
+        for( Eigen::SparseMatrix<double>::InnerIterator it( helperOps.ngrad, gid ); it; ++it ) {
+            //std::cout << it.row() << ", " << it.col() << std::endl;
+            participatingFaces.insert( it.row() );
+
+        }
+    }
+
+    return participatingFaces;
 }
 
 SubGrid SubGridBuilder::build(const UnstructuredGrid *grid, const std::vector<int> &cellsToExtract)
@@ -61,6 +82,13 @@ SubGrid SubGridBuilder::build(const UnstructuredGrid *grid, const std::vector<in
 
         subGrid.c_grid->cell_volumes[lid] = grid->cell_volumes[gid];
     }
+
+    // We are now ready to extract all the faces participating in our subdomain
+    auto participatingFaces = extractNeighborFaces(grid, subGrid.global_cell);
+    std::copy( participatingFaces.begin(), participatingFaces.end(), std::ostream_iterator<int>( std::cout, " " ) );
+    std::cout << std::endl;
+
+
 
     return subGrid;
 }
