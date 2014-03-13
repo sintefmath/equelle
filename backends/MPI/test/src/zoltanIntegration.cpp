@@ -18,7 +18,7 @@
 #include "equelle/mpiutils.hpp"
 #include "equelle/RuntimeMPI.hpp"
 #include "equelle/ZoltanGrid.hpp"
-
+#include "equelle/ZoltanGridMigrator.hpp"
 
 struct MPIConfig {
     MPIConfig() {
