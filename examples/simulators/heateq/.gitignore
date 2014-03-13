@@ -5,5 +5,7 @@ cmake_install.cmake
 
 *.output
 
+*.mat
+
 exp_heateq
 serial_heateq

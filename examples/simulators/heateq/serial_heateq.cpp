@@ -64,9 +64,9 @@ int main(int argc, char** argv)
             return residual;
         };
         expU = (expU - computeResidual(expU));
-        er.output("expU", expU);
+        er.output("expU_serial", expU);
     }
-    er.output("expU", expU);
+    er.output("expU_serial", expU);
 
     // ============= Generated code ends here ================
 
