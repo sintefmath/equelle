@@ -11,6 +11,8 @@
 #include <Eigen/Eigen>
 #include <Eigen/Sparse>
 
+#include "opm/core/grid.h"
+
 #define MPI_SAFE_CALL( err ) equelle::mpiSafeCall( err, __FILE__, __LINE__, __FUNCTION__ )
 #define ZOLTAN_SAFE_CALL( err ) equelle::zoltanSafeCall( err, __FILE__, __LINE__, __FUNCTION__ )
 
@@ -102,6 +104,35 @@ void dumpEigenCSR( const Eigen::SparseMatrix<double>& mat, std::ostream& s = std
     std::copy_n( comp.valuePtr(), comp.nonZeros(),
                  std::ostream_iterator<double>( s, " " ) );
     s << std::endl;
+}
+
+inline
+void dumpGrid( const UnstructuredGrid* grid ) {
+    std::stringstream centroids;
+    std::stringstream face_cells;
+    std::stringstream global_cell;
+    const auto dim = grid->dimensions;
+
+    centroids << "Centroids: ";
+    face_cells << "Face cells: ";
+    global_cell << "global_cell: ";
+
+    for( int i = 0; i < grid->number_of_cells; ++i ) {
+        centroids << "[";
+        std::copy( &grid->cell_centroids[i*dim], &grid->cell_centroids[i*dim + dim],
+                   std::ostream_iterator<double>( centroids, " " ) );
+        centroids << "]";
+
+        //global_cell << grid->global_cell[i] << " ";
+    }
+
+
+    for( int i = 0; i < grid->number_of_faces; ++i ) {
+        face_cells << i << ": [" << grid->face_cells[2*i] << ", " << grid->face_cells[2*i + 1 ] << "], ";
+    }
+
+    std::cerr << centroids.str() << std::endl;
+    std::cerr << face_cells.str();
 }
 
 

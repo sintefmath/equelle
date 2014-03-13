@@ -40,7 +40,7 @@ public:
                                   int *nbor_procs, int wgt_dim, float *ewgts, int *ierr);
 
     /** Debug function to dump exports to a stream. */
-    static void dumpRank0Exports( const int numCells, const zoltanReturns&, std::ostream& out );
+    static void dumpRank0Exports( const int numCells, const zoltanReturns&, std::ostream& out );    
 };
 
 } // namespace equelle

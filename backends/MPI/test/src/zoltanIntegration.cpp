@@ -1,5 +1,5 @@
 #define BOOST_TEST_MAIN
-#define BOOST_TEST_MODULE EquelleControllerTest
+#define BOOST_TEST_MODULE EquelleMPIBackendTest
 
 #include <memory>
 #include <iostream>
@@ -11,7 +11,6 @@
 #include <fstream>
 
 #include <boost/test/unit_test.hpp>
-
 
 #include <zoltan_cpp.h>
 #include "EquelleRuntimeCPU.hpp"
@@ -38,27 +37,7 @@ struct MPIConfig {
 
 BOOST_GLOBAL_FIXTURE( MPIConfig );
 
-void dumpGrid( const UnstructuredGrid* grid ) {
-    std::stringstream centroids;
-    std::stringstream face_cells;
-    const auto dim = grid->dimensions;
 
-    centroids << "Centroids: ";
-    face_cells << "Face cells: ";
-    for( int i = 0; i < grid->number_of_cells; ++i ) {
-        centroids << "[";
-        std::copy( &grid->cell_centroids[i*dim], &grid->cell_centroids[i*dim + dim],
-                   std::ostream_iterator<double>( centroids, " " ) );
-        centroids << "]";
-    }
-
-    for( int i = 0; i < grid->number_of_faces; ++i ) {
-        face_cells << i << ": [" << grid->face_cells[2*i] << ", " << grid->face_cells[2*i + 1 ] << "], ";
-    }
-
-    std::cerr << centroids.str() << std::endl;
-    std::cerr << face_cells.str();
-}
 
 BOOST_AUTO_TEST_CASE( gridExploration )
 {
@@ -68,7 +47,7 @@ BOOST_AUTO_TEST_CASE( gridExploration )
     std::unique_ptr<Opm::GridManager> grid ( equelle::createGridManager(paramgroup) );
 
     BOOST_CHECK_EQUAL( grid->c_grid()->number_of_cells, 6 );
-    //dumpGrid( grid->c_grid() );
+    equelle::dumpGrid( grid->c_grid() );
 
 }
 
