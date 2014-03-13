@@ -2,12 +2,11 @@
 
 #include <zoltan_cpp.h>
 
-/** Frontend to an OPM-grid so that it has suitable query functions for Zoltan. */
-
 namespace equelle {
 
 /**
  *  zoltanReturns holds all variables that are returen by pointer/reference from Zoltan::LB_Partition.
+ *  This is merely a convenience struct that is handy to pass around.
  */
 struct zoltanReturns {
     int changes{}, numGidEntries{}, numLidEntries{}, numImport{}, numExport{};
@@ -16,6 +15,13 @@ struct zoltanReturns {
 };
 
 
+/** ZoltanGrid is a wrapper for Opm::UnstructuredGrid that provides the neccessarry function
+ *  that is required by the Zoltan-domain decomposition library to use perform graph-partitioning
+ *  on Opm::UnstructuredGrid.
+ *
+ *  The intended usage is for the static-functions to be registered as callbacks to Zoltan
+ *  and an Opm::UnstructuredGrid (passed via void*) is accepted as the first argument.
+ */
 class ZoltanGrid {
 public:
     static int getNumberOfObjects( void* data, int *ierr );
