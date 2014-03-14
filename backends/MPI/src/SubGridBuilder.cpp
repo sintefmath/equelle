@@ -55,6 +55,14 @@ std::set<int> SubGridBuilder::extractNeighborFaces(const UnstructuredGrid *grid,
     return participatingFaces;
 }
 
+template<typename T>
+void reduceAndReindex( const T* src, T* dst, const int* oldIndices, const int numNew, const int dim = 1 ) {
+    for( int newIdx = 0; newIdx < numNew; ++newIdx ) {
+        int oldIdx = oldIndices[newIdx];
+        std::copy_n( &(src[dim*oldIdx]), dim, &(dst[dim*newIdx]) );
+    }
+}
+
 SubGrid SubGridBuilder::build(const UnstructuredGrid *grid, const std::vector<int> &cellsToExtract)
 {
     SubGrid subGrid;
@@ -75,13 +83,8 @@ SubGrid SubGridBuilder::build(const UnstructuredGrid *grid, const std::vector<in
 
     // We now have the new indexing for cells, so we extract all cell data we can based on that indexing
     const int dim = grid->dimensions;
-    for( int lid = 0; lid < subGrid.global_cell.size(); ++lid ) {
-        int gid = subGrid.global_cell[lid];
-
-        std::copy_n( &(grid->cell_centroids[dim*gid]), dim, &(subGrid.c_grid->cell_centroids[dim*lid]) );
-
-        subGrid.c_grid->cell_volumes[lid] = grid->cell_volumes[gid];
-    }
+    reduceAndReindex( grid->cell_centroids, subGrid.c_grid->cell_centroids, subGrid.global_cell.data(), subGrid.global_cell.size(), dim );
+    reduceAndReindex( grid->cell_volumes, subGrid.c_grid->cell_volumes, subGrid.global_cell.data(), subGrid.global_cell.size() );
 
     // We are now ready to extract all the faces participating in our subdomain
     auto participatingFaces = extractNeighborFaces(grid, subGrid.global_cell);
