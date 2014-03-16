@@ -275,6 +275,9 @@ public:
     Scalar maxReduce(const CollOfScalarCPU& x) const;
     Scalar sumReduce(const CollOfScalarCPU& x) const;
     Scalar prodReduce(const CollOfScalarCPU& x) const;
+    
+    // Special functions:
+    CollOfScalar sqrt(const CollOfScalar& x) const;
 
     /// Solver functions.
     template <class ResidualFunctor>
