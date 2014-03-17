@@ -213,7 +213,7 @@ int collOfScalarTest(EquelleRuntimeCUDA* er) {
 	return 1;
     }
 	
-
+ 
     // Test trinaryIf
     // a = {0, 10, 20, ..., 110} allCells
     // a_big = a > 50 ? a * 2 : a / 2;
@@ -332,6 +332,41 @@ int vector_test(EquelleRuntimeCUDA* er) {
 	return 1;
     }
 				   
+
+    // TESTING SQRT
+    // using vec2 and sol2[] = {2,5,8,11,14,17,20,23,26,29,32,35,38,41};
+    CollOfScalar sqrt_vec2 = er->sqrt(vec2);
+    double sqrt_vec2_sol[14];
+    for ( int i = 0; i < 14; ++i) {
+	sqrt_vec2_sol[i] = sqrt(sol2[i]);
+    }
+    if ( compare( sqrt_vec2, sqrt_vec2_sol, 14, "er->sqrt(vec2) where vec2 is CollOfScalar")) {
+	return 1;
+    }
+
+    // Testing Normals On AllFaces
+    CollOfVector normalAll = er->normal(er->allFaces());
+    double normalAll0_sol[] = {0.3,0.3,0.3,0.3,0.3, 0.3,0.3,0.3,0.3,0.3, 0.3,0.3,0.3,0.3,0.3, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};
+    double normalAll1_sol[] = {0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 0.5,0.5,0.5,0.5, 0.5,0.5,0.5,0.5, 0.5,0.5,0.5,0.5, 0.5,0.5,0.5,0.5};
+    if ( compare( normalAll[0], normalAll0_sol, 31, "(normal(allFaces()))[0]") ) {
+	return 1;
+    }
+    if (compare( normalAll[1], normalAll1_sol, 31, "(normal(allFaces()))[1]") ) {
+	return 1;
+    }
+
+    // Testing Normals On interiorFaces
+    CollOfVector normals = er->normal(er->interiorFaces());
+    CollOfScalar normals0 = normals[0];
+    CollOfScalar normals1 = normals[1];
+    double normals0_sol[] = {0.3,0.3,0.3, 0.3,0.3,0.3, 0.3,0.3,0.3, 0,0,0,0, 0,0,0,0};
+    double normals1_sol[] = {0,0,0, 0,0,0, 0,0,0, 0.5,0.5,0.5,0.5, 0.5,0.5,0.5,0.5};
+    if ( compare( normals0, normals0_sol, 17, "(normal(interiorFaces()))[0]") ) {
+	return 1;
+    }
+    if ( compare( normals1, normals1_sol, 17, "(normal(interiorFaces()))[1]") ) {
+	return 1;
+    }
 
     return 0;
 }

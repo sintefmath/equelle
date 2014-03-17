@@ -589,6 +589,7 @@ CollOfVector DeviceGrid::centroid(const thrust::device_vector<int>& indices,
     else {
 	CollOfVector out(indices.size(), dimensions_);
 	// Set up a kernel to find the subset
+	// Easy implementation: One thread for each vector.
 	dim3 block(out.block());
 	dim3 grid(out.grid());
 	const int* indices_ptr = thrust::raw_pointer_cast( &indices[0] );
@@ -605,6 +606,32 @@ CollOfVector DeviceGrid::centroid(const thrust::device_vector<int>& indices,
 							 dimensions_);
 	return out;
     }
+}
+
+
+// NORMAL:
+CollOfVector DeviceGrid::normal( const CollOfFace& faces) const {
+    CollOfVector out(faces.size(), dimensions_);
+    // cudaMemcpy to get the normals if the set is full.
+    if ( faces.isFull() ) {
+	
+	cudaStatus_ = cudaMemcpy(out.data(), face_normals_,
+				 sizeof(double)*out.numVectors()*dimensions_,
+				 cudaMemcpyDeviceToDevice);
+	checkError_("cudaMemcpy(face_normals) in DeviceGrid::normal(const CollOfFaces&)");
+    }
+    else {
+	// Need a Kernel to fetch only the correct ones.
+	// Easy implementation: One thread for each vector
+	dim3 grid(out.grid());
+	dim3 block(out.block());
+	equelleCUDA::faceNormalsKernel<<<grid,block>>>(out.data(),
+						       faces.raw_pointer(),
+						       face_normals_,
+						       out.numVectors(),
+						       dimensions_);
+    }
+    return out;
 }
 
 
@@ -806,6 +833,26 @@ __global__ void equelleCUDA::cellCentroidKernel( double* out,
 	// Iterating over the element in the vector we create
 	for (int i = 0; i < dimensions; i++) {
 	    out[vec_id*dimensions + i] = all_centroids[cell_index * dimensions + i];
+	}
+    }
+}
+
+
+
+// FACE NORMALS
+__global__ void equelleCUDA::faceNormalsKernel( double* out,
+						const int* faces,
+						const double* all_face_normals,
+						const int num_vectors,
+						const int dimensions)
+{
+    // EASY IMPLEMENTATION
+    // One thread for each vector
+    int vec_id = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( vec_id < num_vectors ) {
+	int face_id = faces[vec_id];
+	for( int i = 0; i < dimensions; i++) {
+	    out[vec_id*dimensions + i] = all_face_normals[face_id*dimensions + i];
 	}
     }
 }

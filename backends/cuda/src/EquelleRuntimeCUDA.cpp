@@ -121,90 +121,13 @@ CollOfScalar EquelleRuntimeCUDA::norm(const CollOfVector& vectors) const
     return vectors.norm();
 }
 
-// Note that this will not produce what some would consider the expected results for a 1D grid realized as a 2D grid of dimension (n, 1) or (1, n), since all cells
-// of such a grid are boundary cells.
-// That points out that communicating the grid concepts is very important.
-
-/*
-CollOfVector EquelleRuntimeCUDA::centroid(const CollOfFaceCPU& faces) const
+CollOfVector EquelleRuntimeCUDA::normal(const CollOfFace& faces) const
 {
-    const int n = faces.size();
-    const int dim = grid_.dimensions;
-    Eigen::Array<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor> c(n, dim);
-    for (int i = 0; i < n; ++i) {
-        const double* fc = grid_.face_centroids + dim * faces[i].index;
-        for (int d = 0; d < dim; ++d) {
-            c(i, d) = fc[d];
-        }
-    }
-    CollOfVector centroids(dim);
-    for (int d = 0; d < dim; ++d) {
-        //centroids.col(d) = CollOfScalarCPU(c.col(d));
-    }
-    return centroids;
-}
-
-
-CollOfVector EquelleRuntimeCUDA::centroid(const CollOfCellCPU& cells) const
-{
-    const int n = cells.size();
-    const int dim = grid_.dimensions;
-    Eigen::Array<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor> c(n, dim);
-    for (int i = 0; i < n; ++i) {
-        const double* fc = grid_.cell_centroids + dim * cells[i].index;
-        for (int d = 0; d < dim; ++d) {
-            c(i, d) = fc[d];
-        }
-    }
-    CollOfVector centroids(dim);
-    for (int d = 0; d < dim; ++d) {
-        //centroids.col(d) = CollOfScalarCPU(c.col(d));
-    }
-    return centroids;
-}
-
-
-CollOfVector EquelleRuntimeCUDA::normal(const CollOfFaceCPU& faces) const
-{
-    const int n = faces.size();
-    const int dim = grid_.dimensions;
-    Eigen::Array<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor> nor(n, dim);
-    for (int i = 0; i < n; ++i) {
-        const double* fn = grid_.face_normals + dim * faces[i].index;
-        for (int d = 0; d < dim; ++d) {
-            nor(i, d) = fn[d];
-        }
-    }
-    // Since the UnstructuredGrid uses the unorthodox convention that face
-    // normals are scaled with the face areas, we must renormalize them.
-    nor.colwise() /= nor.matrix().rowwise().norm().array();
-    CollOfVector normals(dim);
-    for (int d = 0; d < dim; ++d) {
-        //normals.col(d) = CollOfScalarCPU(nor.col(d));
-    }
-    return normals;
+    return dev_grid_.normal(faces);
 }
 
 
 
-
-CollOfScalarCPU EquelleRuntimeCUDA::dot(const CollOfVector& v1, const CollOfVector& v2) const
-{
-    if (v1.numCols() != v2.numCols()) {
-        OPM_THROW(std::logic_error, "Non-matching dimension of Vectors for dot().");
-    }
-    if (v1.col(0).size() != v2.col(0).size()) {
-        OPM_THROW(std::logic_error, "Non-matching size of Vector collections for dot().");
-    }
-    const int dim = grid_.dimensions;
-    CollOfScalarCPU result = v1.col(0);// * v2.col(0);
-    for (int d = 1; d < dim; ++d) {
-	// result += v1.col(d) * v2.col(d);
-    }
-    return result;
-}
-
-*/
 
 
 void EquelleRuntimeCUDA::output(const String& tag, const double val) const
@@ -212,12 +135,6 @@ void EquelleRuntimeCUDA::output(const String& tag, const double val) const
     std::cout << tag << " = " << val << std::endl;
 }
 
-
-//Scalar EquelleRuntimeCUDA::inputScalarWithDefault(const String& name,
-//                                                         const Scalar default_value)
-//{
-//    return param_.getDefault(name, default_value);
-//}
 
 
 CollOfFaceCPU EquelleRuntimeCUDA::inputDomainSubsetOf(const String& name,
