@@ -137,7 +137,14 @@ namespace equelleCUDA {
 	mutable cudaError_t cudaStatus_;
 	void checkError_(const std::string& msg) const;
 	
-	
+#ifdef EQUELLE_DEBUG
+	// This variable is only given a value in the copy constructors.
+	// The purpose of the variable is to follow values in a debugger,
+	// by running a program compiled from Equelle.
+	// All variables will therefore be const CollOfScalar var = something
+	// and assigned by the copy constructor.
+	std::vector<double> debug_vec_;
+#endif // EQUELLE_DEBUG
     };
 
        
