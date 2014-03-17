@@ -1,5 +1,5 @@
 #define BOOST_TEST_MAIN
-#define BOOST_TEST_MODULE EquelleControllerTest
+#define BOOST_TEST_MODULE EquelleMPIBackendTest
 
 #include <memory>
 #include <iostream>
@@ -12,13 +12,12 @@
 
 #include <boost/test/unit_test.hpp>
 
-
 #include <zoltan_cpp.h>
 #include "EquelleRuntimeCPU.hpp"
 #include "equelle/mpiutils.hpp"
 #include "equelle/RuntimeMPI.hpp"
 #include "equelle/ZoltanGrid.hpp"
-
+#include "equelle/ZoltanGridMigrator.hpp"
 
 struct MPIConfig {
     MPIConfig() {
@@ -38,27 +37,7 @@ struct MPIConfig {
 
 BOOST_GLOBAL_FIXTURE( MPIConfig );
 
-void dumpGrid( const UnstructuredGrid* grid ) {
-    std::stringstream centroids;
-    std::stringstream face_cells;
-    const auto dim = grid->dimensions;
 
-    centroids << "Centroids: ";
-    face_cells << "Face cells: ";
-    for( int i = 0; i < grid->number_of_cells; ++i ) {
-        centroids << "[";
-        std::copy( &grid->cell_centroids[i*dim], &grid->cell_centroids[i*dim + dim],
-                   std::ostream_iterator<double>( centroids, " " ) );
-        centroids << "]";
-    }
-
-    for( int i = 0; i < grid->number_of_faces; ++i ) {
-        face_cells << i << ": [" << grid->face_cells[2*i] << ", " << grid->face_cells[2*i + 1 ] << "], ";
-    }
-
-    std::cerr << centroids.str() << std::endl;
-    std::cerr << face_cells.str();
-}
 
 BOOST_AUTO_TEST_CASE( gridExploration )
 {
@@ -68,7 +47,7 @@ BOOST_AUTO_TEST_CASE( gridExploration )
     std::unique_ptr<Opm::GridManager> grid ( equelle::createGridManager(paramgroup) );
 
     BOOST_CHECK_EQUAL( grid->c_grid()->number_of_cells, 6 );
-    //dumpGrid( grid->c_grid() );
+    equelle::dumpGrid( grid->c_grid() );
 
 }
 
@@ -163,7 +142,16 @@ BOOST_AUTO_TEST_CASE( RuntimeMPI_6x2grid ) {
         std::ofstream f("rank0-6x2-exports");
         equelle::ZoltanGrid::dumpRank0Exports( runtime.grid_manager->c_grid()->number_of_cells, zr, f );
     }
+}
 
+BOOST_AUTO_TEST_CASE( ZoltanGridMigratorCallBackSignatures ) {
+    // This test really passes when the test compiles.
+    std::unique_ptr<Zoltan> zoltan( new Zoltan(MPI_COMM_WORLD) );
+    using equelle::ZoltanGridMigrator;
+
+    ZOLTAN_SAFE_CALL( zoltan->Set_Obj_Size_Fn( ZoltanGridMigrator::cellSize, NULL ) );
+    ZOLTAN_SAFE_CALL( zoltan->Set_Pack_Obj_Fn( ZoltanGridMigrator::packCell, NULL ) );
+    ZOLTAN_SAFE_CALL( zoltan->Set_Unpack_Obj_Fn( ZoltanGridMigrator::unpackCell, NULL ) );
 }
 
 

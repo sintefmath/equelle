@@ -29,16 +29,20 @@ std::once_flag flag;
 void RuntimeMPI::initializeZoltan()
 {
     zoltan.reset( new Zoltan( MPI_COMM_WORLD ) );
-    ZOLTAN_SAFE_CALL( zoltan->Set_Param( "DEBUG_LEVEL", "2" ) );
+
     // Use hypergraph partitioning
     ZOLTAN_SAFE_CALL( zoltan->Set_Param( "LB_METHOD", "GRAPH" ) );
     // Partition everything without concern for cost.
     ZOLTAN_SAFE_CALL( zoltan->Set_Param( "LB_APPROACH", "PARTITION" ) );
 
+    ZOLTAN_SAFE_CALL( zoltan->Set_Param( "PHG_EDGE_SIZE_THRESHOLD", "1.0" ) );
+
+#ifndef EQUELLE_DEBUG
     // Check that the query functions return valid input data; 0 or 1. (This slows performance; intended for debugging.)
     ZOLTAN_SAFE_CALL( zoltan->Set_Param( "CHECK_HYPERGRAPH", "1" ) );
+    ZOLTAN_SAFE_CALL( zoltan->Set_Param( "DEBUG_LEVEL", "2" ) );
+#endif
 
-    ZOLTAN_SAFE_CALL( zoltan->Set_Param( "PHG_EDGE_SIZE_THRESHOLD", "1.0" ) );
 }
 
 void RuntimeMPI::initializeGrid()
@@ -73,10 +77,10 @@ zoltanReturns RuntimeMPI::computePartition()
 
     void* grid = const_cast<void*>( reinterpret_cast<const void*>( grid_manager->c_grid() ) );
 
-    zoltan->Set_Num_Obj_Fn( ZoltanGrid::getNumberOfObjects, grid );
-    zoltan->Set_Obj_List_Fn( ZoltanGrid::getCellList, grid );
-    zoltan->Set_Num_Edges_Multi_Fn( ZoltanGrid::getNumberOfEdgesMulti, grid );
-    zoltan->Set_Edge_List_Multi_Fn( ZoltanGrid::getEdgeListMulti, grid );
+    ZOLTAN_SAFE_CALL( zoltan->Set_Num_Obj_Fn( ZoltanGrid::getNumberOfObjects, grid ) );
+    ZOLTAN_SAFE_CALL( zoltan->Set_Obj_List_Fn( ZoltanGrid::getCellList, grid ) );
+    ZOLTAN_SAFE_CALL( zoltan->Set_Num_Edges_Multi_Fn( ZoltanGrid::getNumberOfEdgesMulti, grid ) );
+    ZOLTAN_SAFE_CALL( zoltan->Set_Edge_List_Multi_Fn( ZoltanGrid::getEdgeListMulti, grid ) );
 
     ZOLTAN_SAFE_CALL(
                        zoltan->LB_Partition( zr.changes,         /* 1 if partitioning was changed, 0 otherwise */
