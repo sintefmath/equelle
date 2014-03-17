@@ -20,7 +20,7 @@ BOOST_AUTO_TEST_CASE( SubGridBuilder ) {
     auto globalGrid = runtime.grid_manager->c_grid();
     auto localGrid  = subGrid.c_grid;
 
-    //equelle::dumpGrid( runtime.grid_manager->c_grid() );
+    equelle::dumpGrid( runtime.grid_manager->c_grid() );
 
     BOOST_CHECK_EQUAL( subGrid.c_grid->number_of_cells, 3 );
     BOOST_CHECK_EQUAL( subGrid.number_of_ghost_cells, 1 );
@@ -46,6 +46,21 @@ BOOST_AUTO_TEST_CASE( SubGridBuilder ) {
     BOOST_CHECK_EQUAL( localGrid->cell_volumes[0], globalGrid->cell_volumes[4] );
     BOOST_CHECK_EQUAL( localGrid->cell_volumes[1], globalGrid->cell_volumes[5] );
     BOOST_CHECK_EQUAL( localGrid->cell_volumes[2], globalGrid->cell_volumes[3] );
-
+/*
+    // Check that we preserve the number of faces
+    BOOST_CHECK_EQUAL( equelle::GridQuerying::numFaces( globalGrid, 4), equelle::GridQuerying::numFaces( localGrid, 0 ) );
+    BOOST_CHECK_EQUAL( equelle::GridQuerying::numFaces( globalGrid, 5), equelle::GridQuerying::numFaces( localGrid, 1 ) );
+    BOOST_CHECK_EQUAL( equelle::GridQuerying::numFaces( globalGrid, 3), equelle::GridQuerying::numFaces( localGrid, 2 ) );
+*/
     destroy_grid( subGrid.c_grid );
+}
+
+BOOST_AUTO_TEST_CASE( GridQueryingFunctions ) {
+    equelle::RuntimeMPI runtime;
+
+    // Our well known 6x1 grid
+    runtime.grid_manager.reset( new Opm::GridManager( 6, 1 ) );
+
+    auto grid = runtime.grid_manager->c_grid();
+    BOOST_CHECK_EQUAL( equelle::GridQuerying::numFaces( grid, 0), 4 );
 }

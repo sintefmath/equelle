@@ -69,27 +69,32 @@ SubGrid SubGridBuilder::build(const UnstructuredGrid *grid, const std::vector<in
 
     std::set<int> neighborCells = extractNeighborCells(grid, cellsToExtract);
 
+    // Extract the cells that will be part of our subdomain.
     subGrid.global_cell = cellsToExtract;
-
     std::set_difference( neighborCells.begin(), neighborCells.end(), cellsToExtract.begin(), cellsToExtract.end(),
                          std::back_inserter( subGrid.global_cell ) );
-    /*  // Debug prints
-    std::copy( neighborCells.begin(), neighborCells.end(), std::ostream_iterator<int>( std::cout, " " ) ); std::cout << std::endl;
-    std::copy( subGrid.global_cell.begin(), subGrid.global_cell.end(), std::ostream_iterator<int>( std::cout, " " ) ); std::cout << std::endl;
-*/
-    subGrid.number_of_ghost_cells = subGrid.global_cell.size() - cellsToExtract.size();
 
-    subGrid.c_grid = allocate_grid( grid->dimensions, subGrid.global_cell.size(), 0, 0, 0, 0 );
+    // We are now ready to extract all the faces participating in our subdomain
+    auto participatingFaces = extractNeighborFaces(grid, subGrid.global_cell);
+    /*
+    std::copy( participatingFaces.begin(), participatingFaces.end(), std::ostream_iterator<int>( std::cout, " " ) );
+    std::cout << std::endl;
+    */
+
+    subGrid.number_of_ghost_cells = subGrid.global_cell.size() - cellsToExtract.size();
+    subGrid.c_grid = allocate_grid( grid->dimensions, subGrid.global_cell.size(), participatingFaces.size(), 0, 0, 0 );
 
     // We now have the new indexing for cells, so we extract all cell data we can based on that indexing
     const int dim = grid->dimensions;
     reduceAndReindex( grid->cell_centroids, subGrid.c_grid->cell_centroids, subGrid.global_cell.data(), subGrid.global_cell.size(), dim );
     reduceAndReindex( grid->cell_volumes, subGrid.c_grid->cell_volumes, subGrid.global_cell.data(), subGrid.global_cell.size() );
 
-    // We are now ready to extract all the faces participating in our subdomain
-    auto participatingFaces = extractNeighborFaces(grid, subGrid.global_cell);
-    std::copy( participatingFaces.begin(), participatingFaces.end(), std::ostream_iterator<int>( std::cout, " " ) );
-    std::cout << std::endl;
+    // Reindex for addressing based on faces
+    std::vector<int> global_face( participatingFaces.begin(), participatingFaces.end() );
+    reduceAndReindex( grid->face_areas, subGrid.c_grid->face_areas, global_face.data(), global_face.size() );
+    reduceAndReindex( grid->face_centroids, subGrid.c_grid->face_centroids, global_face.data(), global_face.size(), dim );
+    reduceAndReindex( grid->face_normals, subGrid.c_grid->face_normals, global_face.data(), global_face.size(), dim );
+
 
 
 
@@ -98,6 +103,11 @@ SubGrid SubGridBuilder::build(const UnstructuredGrid *grid, const std::vector<in
 
 SubGridBuilder::SubGridBuilder()
 {
+}
+
+int GridQuerying::numFaces(const UnstructuredGrid *grid, int cell)
+{
+    return grid->cell_facepos[cell+1] - grid->cell_facepos[cell];
 }
 
 }

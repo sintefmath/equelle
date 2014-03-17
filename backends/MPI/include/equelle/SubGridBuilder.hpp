@@ -33,6 +33,11 @@ private:
 };
 
 
+struct GridQuerying {
+    /** Return the number of faces for a cell. */
+    static int numFaces( const UnstructuredGrid* grid, int cell );
+};
+
 } // namespace equelle
 
 
