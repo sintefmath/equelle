@@ -71,9 +71,12 @@ SubGridBuilder::extractNeighborFaces(const UnstructuredGrid *grid, const std::ve
     }
 
     // Invert the list of indices.
-    std::vector<int> global_face; global_face.reserve( old2new.size() );
-    std::transform( begin( old2new ), end( old2new ), std::back_inserter( global_face ),
-                    []( std::pair<int,int> it )  { return it.first; } );
+    std::vector<int> global_face;
+    global_face.reserve( old2new.size() );
+
+    for( auto it: old2new ) {
+        global_face.push_back( it.first );
+    }
 
     // Set up the return structure.
     face_mapping fmap;
@@ -84,6 +87,13 @@ SubGridBuilder::extractNeighborFaces(const UnstructuredGrid *grid, const std::ve
     return fmap;
 }
 
+SubGridBuilder::node_mapping
+SubGridBuilder::extractNeighborNodes(const UnstructuredGrid *grid, const std::vector<int> &cellsToExtract)
+{
+
+}
+
+
 template<typename T>
 void reduceAndReindex( const T* src, T* dst, const int* oldIndices, const int numNew, const int dim = 1 ) {
     for( int newIdx = 0; newIdx < numNew; ++newIdx ) {
@@ -92,7 +102,7 @@ void reduceAndReindex( const T* src, T* dst, const int* oldIndices, const int nu
     }
 }
 
-SubGrid SubGridBuilder::build(const UnstructuredGrid *grid, const std::vector<int> &cellsToExtract)
+SubGrid SubGridBuilder::build(const UnstructuredGrid* grid, const std::vector<int>& cellsToExtract)
 {
     SubGrid subGrid;
 
