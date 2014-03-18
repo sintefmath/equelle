@@ -9,7 +9,7 @@ format compact
 N = 3000;
 
 % Number of timesteps:
-T = 20;
+T = 1;
 
 % Boundary conditions:
 dir_val = [0 1000]

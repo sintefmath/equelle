@@ -48,6 +48,20 @@ namespace equelleCUDA {
 	//! Copy constructor
 	CollOfVector(const CollOfVector& coll);
 
+	//! Copy assignment operator
+	/*!
+	  Overload the assignment operator to ensure correct behaviour when 
+	  we assign a CollOfVector to a CollOfVector that is already initialized.
+	*/
+	CollOfVector& operator= (const CollOfVector& other);
+
+	//! Destructor
+	/*!
+	  Needed in order to automatically call the base class destructor.
+	*/
+	~CollOfVector();
+	
+
 
 	//! Norm of the vectors in the collection
 	/*!
@@ -56,6 +70,7 @@ namespace equelleCUDA {
 	*/
 	CollOfScalar norm() const;
 
+	
 	//! Index operator
 	/*!
 	  Returns a collection of Scalars with the values from the index of each of the
@@ -80,6 +95,7 @@ namespace equelleCUDA {
 	int dim_;
 
 	// size_ from CollOfScalar is actually size_ * dim
+	// block() and grid() will therefore be evaluated as one thread per double
     };
 
     //! Kernel for getting the index element of all vectors in a collection.

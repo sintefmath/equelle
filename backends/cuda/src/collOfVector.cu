@@ -35,6 +35,14 @@ CollOfVector::CollOfVector(const std::vector<double>& host, const int dim)
 }
 
 
+// Copy assignment operator
+CollOfVector& CollOfVector::operator= (const CollOfVector& other) {
+    // Call the copy assignment operator for the base class:
+    CollOfScalar::operator=(other);
+    this->dim_ = other.dim();
+    return *this;
+}
+
 // Copy-constructor
 CollOfVector::CollOfVector(const CollOfVector& coll)
     : CollOfScalar(coll), dim_(coll.dim_)
@@ -43,6 +51,12 @@ CollOfVector::CollOfVector(const CollOfVector& coll)
 }
   
 
+
+// Destructor
+CollOfVector::~CollOfVector()
+{
+    // intentionally left blank.
+}
 
 //  ----- NORM -----
 CollOfScalar CollOfVector::norm() const {
@@ -58,6 +72,9 @@ CollOfScalar CollOfVector::norm() const {
 
 
 int CollOfVector::dim() const {
+    if ( dim_ == 0 ) {
+	OPM_THROW(std::runtime_error, "Calling numVectors() on a CollOfVector of dimension 0\n --> Dividing by zero!");
+    }
     return dim_;
 }
 

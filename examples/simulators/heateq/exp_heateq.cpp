@@ -100,6 +100,8 @@ int main(int argc, char** argv)
     }
     er.output("expU", expU);
 
+    std::cout << "------ End of program ------\n";
+
     // ============= Generated code ends here ================
 
     return 0;

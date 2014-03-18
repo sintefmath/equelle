@@ -285,6 +285,12 @@ int vector_test(EquelleRuntimeCUDA* er) {
 	return 1;
     }
     
+    // Testing copy assignment operator
+    subVec = myVec;
+    if( compare( subVec[1], sol1, 14, "(subVec = myVec)[1] - copy assignment op.") ) {
+	return 1;
+    }
+
     CollOfScalar norm = myVec.norm();
     double norm_sol[14];
     for (int i = 0; i < 14; ++i) {
