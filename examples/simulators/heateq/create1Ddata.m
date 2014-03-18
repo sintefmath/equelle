@@ -6,7 +6,7 @@
 
 format compact
 % Number of cells:
-N = 3000;
+N = 8000;
 
 % Number of timesteps:
 T = 1;

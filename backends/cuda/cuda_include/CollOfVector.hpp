@@ -27,6 +27,13 @@ namespace equelleCUDA {
     public:
 	//! Default constructor
 	CollOfVector();
+
+	//! Allocating constructor without dim -> throws an error
+	/*!
+	  Since we cannot create a vector without stating its dimension,
+	  calling this constructor will result in an error.
+	*/
+	explicit CollOfVector(const int size);
 	
 	//! Allocating constructor
 	/*!
@@ -35,6 +42,7 @@ namespace equelleCUDA {
 	  \param dim Dimension of each vector
 	*/
 	explicit CollOfVector(const int size, const int dim);
+
 	//! Constructor from std::vector
 	/*!
 	  Used for easy testing. The std::vectors contains the vector elements,
@@ -92,7 +100,7 @@ namespace equelleCUDA {
 	int numVectors() const;
 
     private:
-	int dim_;
+	const int dim_;
 
 	// size_ from CollOfScalar is actually size_ * dim
 	// block() and grid() will therefore be evaluated as one thread per double

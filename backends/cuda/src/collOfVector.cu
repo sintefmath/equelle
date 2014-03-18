@@ -17,14 +17,22 @@ using namespace equelleCUDA;
 
 
 CollOfVector::CollOfVector() 
-    : CollOfScalar()
+    : CollOfScalar(), dim_(1)
 {
     // intentionally left blank
 }
 
+CollOfVector::CollOfVector(const int size)
+    : CollOfScalar(size), dim_(-1) 
+{
+    OPM_THROW(std::logic_error, "Trying to create a CollOfVector without stating its dimension!");
+}
+
+
 CollOfVector::CollOfVector(const int size, const int dim)
     : CollOfScalar(size*dim), dim_(dim)
 {
+     std::cerr << __PRETTY_FUNCTION__ << std::endl;
     // intentionally left blank
 }
 
@@ -37,9 +45,14 @@ CollOfVector::CollOfVector(const std::vector<double>& host, const int dim)
 
 // Copy assignment operator
 CollOfVector& CollOfVector::operator= (const CollOfVector& other) {
+    std::cerr << __PRETTY_FUNCTION__ << std::endl;    
+
     // Call the copy assignment operator for the base class:
     CollOfScalar::operator=(other);
-    this->dim_ = other.dim();
+    //this->dim_ = other.dim_;
+    if ( this->dim_ != other.dim_ ) {
+	OPM_THROW(std::runtime_error, "Trying to assign a vector with another vector of different dim. lhs.dim_ = " << this->dim_ << " and rhs.dim_ = " << other.dim_);
+    }
     return *this;
 }
 
@@ -47,7 +60,8 @@ CollOfVector& CollOfVector::operator= (const CollOfVector& other) {
 CollOfVector::CollOfVector(const CollOfVector& coll)
     : CollOfScalar(coll), dim_(coll.dim_)
 {
-    // intentionally left blank
+    std::cerr << __PRETTY_FUNCTION__ << std::endl;    
+// intentionally left blank
 }
   
 
@@ -72,13 +86,13 @@ CollOfScalar CollOfVector::norm() const {
 
 
 int CollOfVector::dim() const {
-    if ( dim_ == 0 ) {
-	OPM_THROW(std::runtime_error, "Calling numVectors() on a CollOfVector of dimension 0\n --> Dividing by zero!");
-    }
     return dim_;
 }
 
 int CollOfVector::numVectors() const {
+    if ( dim_ == 0 ) {
+	OPM_THROW(std::runtime_error, "Calling numVectors() on a CollOfVector of dimension 0\n --> Dividing by zero!");
+    }
     return size()/dim_;
 }
 

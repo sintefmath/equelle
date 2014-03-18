@@ -66,11 +66,14 @@ int main(int argc, char** argv)
     const CollOfScalar centroid_diff_norm = er.norm(centroid_diff);
     std::cout << "-------norm(int_faces)\n";
     const CollOfScalar norm_int_faces = er.norm(interior_faces);
+    norm_int_faces.debug();
     std::cout << "-------division\n";
     const CollOfScalar scaled_itrans = norm_int_faces/centroid_diff_norm;
+    scaled_itrans.debug();
     std::cout << "-------Debug section finished\n";
 
     const CollOfScalar itrans = (k * (er.norm(interior_faces) / er.norm((er.centroid(first) - er.centroid(second)))));
+    itrans.debug();
     std::cout << "-----------After itrans--------------\n";
     const CollOfFace bf = er.boundaryFaces();
     const CollOfCell bf_cells = er.trinaryIf(er.isEmpty(er.firstCell(bf)), er.secondCell(bf), er.firstCell(bf));

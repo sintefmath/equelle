@@ -1,5 +1,5 @@
 grid_dim=2
-nx=3000
+nx=8000
 dx=1
 ny=1
 dy=1

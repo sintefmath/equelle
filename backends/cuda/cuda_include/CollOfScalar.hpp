@@ -122,7 +122,12 @@ namespace equelleCUDA {
 	*/
 	int block() const;
 	
-	
+#ifdef EQUELLE_DEBUG
+	//! Debug function copying the collOfScalar to host debug_vec_ member
+	void debug() const;
+#endif // EQUELLE_DEBUG	
+
+
     private:
 	int size_;
 	double* dev_values_;
@@ -143,7 +148,8 @@ namespace equelleCUDA {
 	// by running a program compiled from Equelle.
 	// All variables will therefore be const CollOfScalar var = something
 	// and assigned by the copy constructor.
-	std::vector<double> debug_vec_;
+	mutable std::vector<double> debug_vec_;
+	mutable double last_val;
 #endif // EQUELLE_DEBUG
     };
 

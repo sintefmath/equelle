@@ -32,6 +32,9 @@ CollOfScalar::CollOfScalar()
       dev_values_(0),
       block_x_(0),
       grid_x_(0)
+#ifdef EQUELLE_DEBUG
+    , debug_vec_(0)
+#endif // EQUELLE_DEBUG
 {
     // Intentionally left blank
 }
@@ -42,6 +45,9 @@ CollOfScalar::CollOfScalar(const int size)
       dev_values_(0),
       block_x_(equelleCUDA::MAX_THREADS),
       grid_x_((size_ + block_x_ - 1) / block_x_)
+#ifdef EQUELLE_DEBUG
+    , debug_vec_(size,0)
+#endif // EQUELLE_DEBUG
 {
     cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
     checkError_("cudaMalloc in CollOfScalar::CollOfScalar(int)");
@@ -55,18 +61,22 @@ CollOfScalar::CollOfScalar(const int size, const double value)
       dev_values_(0),
       block_x_(equelleCUDA::MAX_THREADS),
       grid_x_((size_ + block_x_ - 1) / block_x_)
+#ifdef EQUELLE_DEBUG
+    , debug_vec_(size, value)
+#endif // EQUELLE_DEBUG
 {
     // Can not use cudaMemset as it sets float values on a given
     // number of bytes.
+    std::cerr << __PRETTY_FUNCTION__ << std::endl;
 
     std::vector<double> host_vec(size_, value);
 
     cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
-    checkError_("cudaMalloc in CollOfScalar::CollOfScalar(int, int)");
+    checkError_("cudaMalloc in CollOfScalar::CollOfScalar(int, double)");
         
     cudaStatus_ = cudaMemcpy(dev_values_, &host_vec[0], size_*sizeof(double),
 				    cudaMemcpyHostToDevice);
-    checkError_("cudaMemcpy in CollOfScalar::CollOfScalar(int, int)");
+    checkError_("cudaMemcpy in CollOfScalar::CollOfScalar(int, double)");
 
 } 
 
@@ -77,6 +87,9 @@ CollOfScalar::CollOfScalar(const std::vector<double>& host_vec)
       dev_values_(0),
       block_x_(equelleCUDA::MAX_THREADS),
       grid_x_((size_ + block_x_ - 1) / block_x_)
+#ifdef EQUELLE_DEBUG
+    , debug_vec_(host_vec)
+#endif // EQUELLE_DEBUG
 {
     cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
     checkError_("cudaMalloc in CollOfScalar::CollOfScalar(std::vector<double>)");
@@ -98,7 +111,8 @@ CollOfScalar::CollOfScalar(const CollOfScalar& coll)
 #endif // EQUELLE_DEBUG
 {
     std::cout << "Copy constructor!\n";
-   
+    std::cerr << __PRETTY_FUNCTION__ << std::endl;    
+
     if (coll.dev_values_ != 0) {
 	cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
 	checkError_("cudaMalloc in CollOfScalar::CollOfScalar(const CollOfScalar&)"); 
@@ -110,10 +124,12 @@ CollOfScalar::CollOfScalar(const CollOfScalar& coll)
     
 #ifdef EQUELLE_DEBUG
     // Copy value to the std::vector debug_vec_
+    std::cout << "\tDEBUG IS ON!\n";
     if (coll.dev_values_ != 0 ) {
 	cudaStatus_ = cudaMemcpy( &debug_vec_[0], dev_values_, size_*sizeof(double),
 				  cudaMemcpyDeviceToHost );
 	checkError_("cudaMemcpy for DEBUG in CollOfScalar::CollOfScalar(const CollOfScalar&)");
+	last_val = debug_vec_[size_ - 1];
     }
 #endif // EQUELLE_DEBUG
 }
@@ -121,7 +137,8 @@ CollOfScalar::CollOfScalar(const CollOfScalar& coll)
 
 // Copy assignment operator
 CollOfScalar& CollOfScalar::operator= (const CollOfScalar& other) {
-    
+    std::cerr << __PRETTY_FUNCTION__ << std::endl;    
+
     // Protect agains " var = var " , self assignment
     if ( this != &other ) {
 
@@ -134,7 +151,7 @@ CollOfScalar& CollOfScalar::operator= (const CollOfScalar& other) {
 	// this->dev_values will be overwritten, and can safely be freed,
 	// But if the collections are of the same size (likely) we
 	// Will just overwrite the old values.
-	
+
 	std::cout << "COPY ASSIGNMENT OPERATOR ( this->size = " << this->size_ << ")\n";
 
 	if ( this->size_ != other.size_) {
@@ -179,6 +196,7 @@ CollOfScalar& CollOfScalar::operator= (const CollOfScalar& other) {
 				      cudaMemcpyDeviceToHost);
 	    checkError_("cudaMemcpy(debug_vec) in CollOfScalar::operator=(const CollOfScalar&)");
 	}
+	last_val = debug_vec_[size_-1];
 #endif // EQUELLE_DEBUG
 
 
@@ -186,7 +204,8 @@ CollOfScalar& CollOfScalar::operator= (const CollOfScalar& other) {
     
     return *this;
 
-}
+} // Assignment copy operator!
+
 
 
 // Destructor:
@@ -196,6 +215,18 @@ CollOfScalar::~CollOfScalar() {
 	checkError_("cudaFree in CollOfScalar::~CollOfScalar");
     }
 }
+
+#ifdef EQUELLE_DEBUG
+// Debug function to get all values to host so that they can be seen by e.g. qtcreator
+void CollOfScalar::debug() const {
+    cudaStatus_ = cudaMemcpy( &debug_vec_[0], dev_values_, sizeof(double)*size_,
+			      cudaMemcpyDeviceToHost);
+    checkError_("cudaMemcpy(debug_vec_) in CollOfScalar::debug()");
+    last_val = debug_vec_[size_ - 1];
+}
+#endif // EQUELLE_DEBUG
+
+
 
 const double* CollOfScalar::data() const {
     return dev_values_;

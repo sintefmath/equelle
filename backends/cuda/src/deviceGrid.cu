@@ -589,7 +589,9 @@ CollOfVector DeviceGrid::centroid(const thrust::device_vector<int>& indices,
     else {
 	CollOfVector out(indices.size(), dimensions_);
 	// Set up a kernel to find the subset
-	// Easy implementation: One thread for each vector.
+	// Easy implementation: 
+	// CollOfVector::block() and grid() assumes one thread per double value
+	// Our kernel use one thread per vector, so we overshoot a bit.
 	dim3 block(out.block());
 	dim3 grid(out.grid());
 	const int* indices_ptr = thrust::raw_pointer_cast( &indices[0] );
@@ -622,7 +624,9 @@ CollOfVector DeviceGrid::normal( const CollOfFace& faces) const {
     }
     else {
 	// Need a Kernel to fetch only the correct ones.
-	// Easy implementation: One thread for each vector
+	// Easy implementation:
+	// CollOfVector::block() and grid() assumes one thread per double value
+	// Our kernel use one thread per vector, so we overshoot a bit.
 	dim3 grid(out.grid());
 	dim3 block(out.block());
 	equelleCUDA::faceNormalsKernel<<<grid,block>>>(out.data(),

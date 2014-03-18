@@ -13,7 +13,11 @@ set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra -Wno-sign-compare -Wno-unused-par
 # Define 'EQUELLE_DEBUG' if we are in debug mode.
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
   add_definitions(-DEQUELLE_DEBUG)
+  #cuda_add_definitions(-DEQUELLE_DEBUG)
 endif(CMAKE_BUILD_TYPE MATCHES "Debug")
+# From FindCUDA.cmake
+# Flags passed into add_definitions with -D or /D are passed along to nvcc.
+
 
 file( GLOB cuda_src "src/*.cpp" )
 file( GLOB cuda_inc "include/*.hpp" )
@@ -41,6 +45,10 @@ set(CUDA_PROPAGATE_HOST_FLAGS OFF)
 set( CUDA_NVCC_FLAGS "-arch=sm_13" CACHE STRING "nvcc flags" FORCE)
 cuda_add_library( equelle_cuda_cu ${cuda_cuda_src} ${cuda_cuda_inc}  )
 				  #${cuda_cuda_cuh} )
+if( CMAKE_BUILD_TYPE MATCHES "Debug")
+  set( CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -DEQUELLE_DEBUG")
+endif( CMAKE_BUILD_TYPE MATCHES "Debug")
+
 
 # make non-cuda part of run-time library
 add_library( equelle_cuda_cpu ${cuda_src} ${cuda_inc} )
