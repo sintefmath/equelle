@@ -40,10 +40,8 @@ std::set<int> SubGridBuilder::extractNeighborCells(const UnstructuredGrid *grid,
 
 SubGridBuilder::face_mapping
 SubGridBuilder::extractNeighborFaces(const UnstructuredGrid *grid, const std::vector<int> &cellsToExtract )
-{
-    // We use map since we rely on ordered traversal to invert the index-list later.
-    // unordered_grid will probably give faster insertions.
-    std::map<int, int> old2new;
+{    
+    std::unordered_map<int, int> old2new;
 
     // new_cell_facepos will be of size numCells + 1, so we make the first element zero.
     std::vector<int> new_cell_facepos( 1, 0 ); new_cell_facepos.reserve( cellsToExtract.size() );
@@ -71,11 +69,11 @@ SubGridBuilder::extractNeighborFaces(const UnstructuredGrid *grid, const std::ve
     }
 
     // Invert the list of indices.
-    std::vector<int> global_face;
-    global_face.reserve( old2new.size() );
+    std::vector<int> global_face( old2new.size(), -1 );
+
 
     for( auto it: old2new ) {
-        global_face.push_back( it.first );
+        global_face[it.second] =  it.first;
     }
 
     // Set up the return structure.
