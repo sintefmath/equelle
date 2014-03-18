@@ -41,7 +41,37 @@ int main(int argc, char** argv)
     const CollOfFace interior_faces = er.interiorFaces();
     const CollOfCell first = er.firstCell(interior_faces);
     const CollOfCell second = er.secondCell(interior_faces);
+    std::cout << "-----------Before itrans-------------\n";
+    
+    std::cout << "-------Debug section:\n";
+    std::cout << "-------first\n";
+    const CollOfVector centroid_first = er.centroid(first);
+    std::cout << "-------first: Dim = " << centroid_first.dim() << " and size " << centroid_first.size() << "\n";
+    std::cout << "-------second\n";
+    const CollOfVector centroid_second = er.centroid(second);
+    std::cout << "-------second: Dim = " << centroid_second.dim() << " and size " << centroid_second.size() << "\n";
+    
+    std::cout << "-------first_const\n";
+    const CollOfVector centroid_first_const = centroid_first;
+    std::cout << "-------first_const: Dim = " << centroid_first_const.dim() << " and size " << centroid_first_const.size() << "\n";
+    std::cout << "-------second_const\n";
+    const CollOfVector centroid_second_const = centroid_second;
+    std::cout << "-------second_const: Dim = " << centroid_second_const.dim() << " and size " << centroid_second_const.size() << "\n";
+    std::cout << "-------second: Dim = " << centroid_second.dim() << " and size " << centroid_second.size() << "\n";
+
+    std::cout << "-------diff\n";
+    const CollOfVector centroid_diff = centroid_first - centroid_second;
+    std::cout << "-------diff: Dim = " << centroid_diff.dim() << " and size " << centroid_diff.size() << "\n";
+    std::cout << "-------norm(diff)\n";
+    const CollOfScalar centroid_diff_norm = er.norm(centroid_diff);
+    std::cout << "-------norm(int_faces)\n";
+    const CollOfScalar norm_int_faces = er.norm(interior_faces);
+    std::cout << "-------division\n";
+    const CollOfScalar scaled_itrans = norm_int_faces/centroid_diff_norm;
+    std::cout << "-------Debug section finished\n";
+
     const CollOfScalar itrans = (k * (er.norm(interior_faces) / er.norm((er.centroid(first) - er.centroid(second)))));
+    std::cout << "-----------After itrans--------------\n";
     const CollOfFace bf = er.boundaryFaces();
     const CollOfCell bf_cells = er.trinaryIf(er.isEmpty(er.firstCell(bf)), er.secondCell(bf), er.firstCell(bf));
     const CollOfScalar bf_sign = er.trinaryIf(er.isEmpty(er.firstCell(bf)), er.operatorExtend(-double(1), bf), er.operatorExtend(double(1), bf));
