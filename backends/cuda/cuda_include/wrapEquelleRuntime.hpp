@@ -178,6 +178,14 @@ namespace equelleCUDA
 				      const int number_of_cells,
 				      const int number_of_faces);
 				      
+    //! Square root
+    /*! 
+      Computes and return a Collection of Scalars containing the square root
+      of the input. 
+    */
+    CollOfScalar sqrtWrapper( const CollOfScalar& x);
+
+    __global__ void sqrtKernel( double* out, const int size);
 
 
 } // namespace equelleCUDA

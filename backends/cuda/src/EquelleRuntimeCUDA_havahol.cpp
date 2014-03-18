@@ -112,3 +112,10 @@ CollOfScalar EquelleRuntimeCUDA::divergence(const CollOfScalar& face_fluxes) con
     }
 }
 
+
+// SQRT
+CollOfScalar EquelleRuntimeCUDA::sqrt(const CollOfScalar& x) const {
+    
+
+    return equelleCUDA::sqrtWrapper(x);
+}

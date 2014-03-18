@@ -212,12 +212,8 @@ public:
     CollOfScalar norm(const CollOfVector& vectors) const;
     template <int codim>
     CollOfVector centroid(const CollOfIndices<codim>& set) const;
-    //CollOfScalarCPU norm(const CollOfFaceCPU& faces) const;
-    //CollOfScalarCPU norm(const CollOfCellCPU& cells) const;
-    //CollOfScalarCPU norm(const CollOfVector& vectors) const;
-    //CollOfVector centroid(const CollOfFaceCPU& faces) const;
-    //CollOfVector centroid(const CollOfCellCPU& cells) const;
-    //CollOfVector normal(const CollOfFaceCPU& faces) const;
+    CollOfVector normal(const CollOfFace& faces) const;
+
 
     /// Operators and math functions.
     CollOfScalarCPU sqrt(const CollOfScalarCPU& x) const;
@@ -275,6 +271,9 @@ public:
     Scalar maxReduce(const CollOfScalarCPU& x) const;
     Scalar sumReduce(const CollOfScalarCPU& x) const;
     Scalar prodReduce(const CollOfScalarCPU& x) const;
+    
+    // Special functions:
+    CollOfScalar sqrt(const CollOfScalar& x) const;
 
     /// Solver functions.
     template <class ResidualFunctor>

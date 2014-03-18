@@ -10,6 +10,11 @@ find_package(Boost)
 set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra -Wno-sign-compare -Wno-unused-parameter" )
 #set( CMAKE_CXX_FLAGS "-std=c++0x -Wall 	" )
 
+# Define 'EQUELLE_DEBUG' if we are in debug mode.
+if(CMAKE_BUILD_TYPE MATCHES "Debug")
+  add_definitions(-DEQUELLE_DEBUG)
+endif(CMAKE_BUILD_TYPE MATCHES "Debug")
+
 file( GLOB cuda_src "src/*.cpp" )
 file( GLOB cuda_inc "include/*.hpp" )
 file( GLOB cuda_cuda_src "src/*.cu" )

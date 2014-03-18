@@ -2,6 +2,7 @@
 #include <cuda_runtime.h>
 
 #include <thrust/detail/raw_pointer_cast.h>
+#include <math.h>
 
 #include "wrapEquelleRuntime.hpp"
 #include "CollOfScalar.hpp"
@@ -172,5 +173,29 @@ __global__ void equelleCUDA::divergenceKernel( double* div,
 	    div_temp += flux[face]*factor; 
 	}
 	div[cell] = div_temp;
+    }
+}
+
+
+// --------- SQRT ----------------
+CollOfScalar equelleCUDA::sqrtWrapper( const CollOfScalar& x) {
+    
+    CollOfScalar out = x;
+    dim3 block(out.block());
+    dim3 grid(out.grid());
+
+    sqrtKernel<<<grid,block>>> (out.data(), out.size());
+    // TODO
+    // CREATE THE KERNEL (AND DEFINE IT IN HEADER)
+    // CALL KERNEL.
+    
+    return out;
+}
+
+
+__global__ void equelleCUDA::sqrtKernel(double* out, const int size) {
+    int index = threadIdx.x + blockIdx.x * blockDim.x;
+    if ( index < size ) {
+	out[index] = sqrt(out[index]);
     }
 }

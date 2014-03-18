@@ -295,6 +295,10 @@ namespace equelleCUDA
 			      const bool& full,
 			      const int codim) const;
 
+
+	
+	CollOfVector normal( const CollOfFace& faces) const;
+
 	// ---------------- Get functions: -------------------------------
 
 	/*!
@@ -558,6 +562,13 @@ namespace equelleCUDA
 					const double* all_centroids,
 					const int num_vectors,
 					const int dimensions);
+
+
+    __global__ void faceNormalsKernel( double* out,
+				       const int* faces,
+				       const double* all_face_normals,
+				       const int num_vectors,
+				       const int dimensions);
 
 
 } // namespace equelleCUDA
