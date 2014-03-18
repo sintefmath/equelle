@@ -68,7 +68,11 @@ BOOST_AUTO_TEST_CASE( SubGridBuilder ) {
         BOOST_CHECK_EQUAL_COLLECTIONS( &(globalGrid->face_normals[dim*glob_face]), &(globalGrid->face_normals[dim*glob_face + dim]),
                                        &(localGrid->face_normals[dim*loc_face]), &(localGrid->face_normals[dim*loc_face + dim]) );
 
+        BOOST_CHECK_EQUAL( equelle::GridQuerying::numNodes( globalGrid, glob_face ),
+                           equelle::GridQuerying::numNodes( localGrid, loc_face) );
+
     }
+
 
 
 

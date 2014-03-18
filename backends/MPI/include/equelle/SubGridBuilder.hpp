@@ -8,7 +8,7 @@ class UnstructuredGrid;
 
 namespace equelle {
 
-/** UnstructuredSubGrid is as an augmented Opm::UnstructuredGrid with */
+/** UnstructuredSubGrid is as an augmented Opm::UnstructuredGrid */
 struct SubGrid {
     UnstructuredGrid* c_grid; //! Pointer to data for the subGrid with "local"-indexing. Owned by this class.
 
@@ -45,18 +45,23 @@ private:
     };
 
     struct node_mapping {
-
+        std::vector<int> face_nodepos; //! Mirrors UnstructuredGrid::face_nodepos;
+        std::vector<int> face_nodes;  //! Mirrors UnstructuredGrid::face_nodes;
+        std::vector<int> global_node;  //! The global node index of each node in the subgrid.
     };
 
     static std::set<int> extractNeighborCells(const UnstructuredGrid *grid, const std::vector<int>& cellsToExtract);
     static face_mapping extractNeighborFaces(const UnstructuredGrid *grid, const std::vector<int>& cellsToExtract);
-    static node_mapping extractNeighborNodes(const UnstructuredGrid *grid, const std::vector<int>& cellsToExtract);
+    static node_mapping extractNeighborNodes(const UnstructuredGrid *grid, const std::vector<int>& globalFaces);
 };
 
 
 struct GridQuerying {
     /** Return the number of faces for a cell. */
     static int numFaces( const UnstructuredGrid* grid, int cell );
+
+    /** Return the number of nodes for a face. */
+    static int numNodes( const UnstructuredGrid* grid, int face );
 };
 
 } // namespace equelle

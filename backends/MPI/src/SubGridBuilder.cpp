@@ -86,9 +86,40 @@ SubGridBuilder::extractNeighborFaces(const UnstructuredGrid *grid, const std::ve
 }
 
 SubGridBuilder::node_mapping
-SubGridBuilder::extractNeighborNodes(const UnstructuredGrid *grid, const std::vector<int> &cellsToExtract)
+SubGridBuilder::extractNeighborNodes(const UnstructuredGrid *grid, const std::vector<int> &globalFaces )
 {
+    std::unordered_map<int, int> old2new;
+    node_mapping nm;
+    nm.face_nodepos.reserve( globalFaces.size() );
+    nm.face_nodepos.push_back( 0 );
 
+    for( auto face: globalFaces ) {
+        const int startIndex = grid->face_nodepos[face];
+        const int endIndex   = grid->face_nodepos[face+1];
+
+        for( auto i = startIndex; i < endIndex; ++i ) {
+            const auto old_node_index = grid->face_nodes[i];
+
+            if ( old2new.find( old_node_index ) == old2new.end() ) {
+                const int new_node_index = old2new.size();
+                old2new[old_node_index] = new_node_index;
+            }
+
+            const auto new_node_index = old2new[old_node_index];
+            nm.face_nodes.push_back( new_node_index );
+        }
+
+        nm.face_nodepos.push_back( endIndex - startIndex + nm.face_nodepos.back() );
+    }
+
+    // Invert the list of indices.
+    nm.global_node.resize( old2new.size(), -1 );
+
+    for( auto it: old2new ) {
+        nm.global_node[it.second] = it.first;
+    }
+
+    return nm;
 }
 
 
@@ -113,6 +144,7 @@ SubGrid SubGridBuilder::build(const UnstructuredGrid* grid, const std::vector<in
 
     // We are now ready to extract all the faces participating in our subdomain
     auto participatingFaces = extractNeighborFaces(grid, subGrid.global_cell);
+    auto participatingNodes = extractNeighborNodes(grid, participatingFaces.global_face );
     /*
     std::copy( participatingFaces.begin(), participatingFaces.end(), std::ostream_iterator<int>( std::cout, " " ) );
     std::cout << std::endl;
@@ -120,17 +152,27 @@ SubGrid SubGridBuilder::build(const UnstructuredGrid* grid, const std::vector<in
 
     subGrid.number_of_ghost_cells = subGrid.global_cell.size() - cellsToExtract.size();
     subGrid.c_grid = allocate_grid( grid->dimensions, subGrid.global_cell.size(),
-                                    participatingFaces.global_face.size(), 0,
-                                    participatingFaces.cell_faces.size(), 0 );
+                                    participatingFaces.global_face.size(), participatingNodes.face_nodes.size(),
+                                    participatingFaces.cell_faces.size(), participatingNodes.global_node.size() );
 
     // We now have the new indexing for cells, so we extract all cell data we can based on that indexing
     const int dim = grid->dimensions;
+
     reduceAndReindex( grid->cell_centroids, subGrid.c_grid->cell_centroids, subGrid.global_cell.data(), subGrid.global_cell.size(), dim );
     reduceAndReindex( grid->cell_volumes, subGrid.c_grid->cell_volumes, subGrid.global_cell.data(), subGrid.global_cell.size() );
 
     // Fill the face information into the subGrid
-    std::copy( begin( participatingFaces.cell_facepos ), end( participatingFaces.cell_facepos ), subGrid.c_grid->cell_facepos );
-    std::copy( begin( participatingFaces.cell_faces ), end( participatingFaces.cell_faces ), subGrid.c_grid->cell_faces );
+    std::copy( begin( participatingFaces.cell_facepos ), end( participatingFaces.cell_facepos ),
+               subGrid.c_grid->cell_facepos );
+    std::copy( begin( participatingFaces.cell_faces ), end( participatingFaces.cell_faces ),
+               subGrid.c_grid->cell_faces );
+
+    // Fill the node information into the subGrid
+    std::copy( begin( participatingNodes.face_nodepos ), end( participatingNodes.face_nodepos),
+               subGrid.c_grid->face_nodepos );
+
+    std::copy( begin( participatingNodes.face_nodes ), end( participatingNodes.face_nodes),
+               subGrid.c_grid->face_nodes );
 
     // Reindex for addressing based on faces    
     auto& global_face = participatingFaces.global_face;
@@ -149,6 +191,11 @@ SubGridBuilder::SubGridBuilder()
 int GridQuerying::numFaces(const UnstructuredGrid *grid, int cell)
 {
     return grid->cell_facepos[cell+1] - grid->cell_facepos[cell];
+}
+
+int GridQuerying::numNodes(const UnstructuredGrid *grid, int face)
+{
+    return grid->face_nodepos[face+1] - grid->face_nodepos[face];
 }
 
 }
