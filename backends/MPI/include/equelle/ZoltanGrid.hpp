@@ -43,5 +43,6 @@ public:
     static void dumpRank0Exports( const int numCells, const zoltanReturns&, std::ostream& out );    
 };
 
+
 } // namespace equelle
 

@@ -126,16 +126,23 @@ void dumpGrid( const UnstructuredGrid* grid ) {
         //global_cell << grid->global_cell[i] << " ";
     }
 
-
+/*
     for( int i = 0; i < grid->number_of_faces; ++i ) {
         face_cells << i << ": [" << grid->face_cells[2*i] << ", " << grid->face_cells[2*i + 1 ] << "], ";
     }
 
     std::cerr << centroids.str() << std::endl;
     std::cerr << face_cells.str();
+*/
+    std::cout << "cell_facepos: ";
+    std::copy_n( grid->cell_facepos, grid->number_of_cells + 1, std::ostream_iterator<int>( std::cout, " " ) );
 }
 
-
+template<class T>
+void dumpVector( const std::vector<T>& v, std::ostream& s = std::cout ) {
+    std::copy( begin( v ), end( v ), std::ostream_iterator<T>( s, " " ) );
+    s << std::endl;
+}
 
 
 } // namespace equelle
