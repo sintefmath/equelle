@@ -65,7 +65,12 @@ BOOST_AUTO_TEST_CASE( SubGridBuilder ) {
         BOOST_CHECK_EQUAL_COLLECTIONS( &(globalGrid->face_centroids[dim*glob_face]), &(globalGrid->face_centroids[dim*glob_face + dim]),
                                        &(localGrid->face_centroids[dim*loc_face]), &(localGrid->face_centroids[dim*loc_face + dim]) );
 
+        BOOST_CHECK_EQUAL_COLLECTIONS( &(globalGrid->face_normals[dim*glob_face]), &(globalGrid->face_normals[dim*glob_face + dim]),
+                                       &(localGrid->face_normals[dim*loc_face]), &(localGrid->face_normals[dim*loc_face + dim]) );
+
     }
+
+
 
     destroy_grid( subGrid.c_grid );
 }
