@@ -54,11 +54,11 @@ BOOST_AUTO_TEST_CASE( SubGridBuilder ) {
 
     // Check that we have the right face areas for each face in the subgrid
     for( int i = 0; i <  equelle::GridQuerying::numFaces( globalGrid, 4); ++i ) {
-        int glob_startIndex = globalGrid->cell_facepos[4];
-        int loc_startIndex  = localGrid->cell_facepos[0];
+        const int glob_startIndex = globalGrid->cell_facepos[4];
+        const int loc_startIndex  = localGrid->cell_facepos[0];
 
-        int glob_face = globalGrid->cell_faces[glob_startIndex + i];
-        int loc_face  = localGrid->cell_faces[loc_startIndex   + i];
+        const int glob_face = globalGrid->cell_faces[glob_startIndex + i];
+        const int loc_face  = localGrid->cell_faces[loc_startIndex   + i];
 
         BOOST_CHECK_EQUAL( globalGrid->face_areas[glob_face], localGrid->face_areas[loc_face] );
 
@@ -70,6 +70,15 @@ BOOST_AUTO_TEST_CASE( SubGridBuilder ) {
 
         BOOST_CHECK_EQUAL( equelle::GridQuerying::numNodes( globalGrid, glob_face ),
                            equelle::GridQuerying::numNodes( localGrid, loc_face) );
+
+        // Check that we have copied the correct node-data
+        for( int j = 0; j < equelle::GridQuerying::numNodes( globalGrid, glob_face ); ++j ) {
+            int glob_node = globalGrid->face_nodes[ globalGrid->face_nodepos[glob_face] + j ];
+            int loc_node  = localGrid->face_nodes[ localGrid->face_nodepos[loc_face] + j ];
+
+            BOOST_CHECK_EQUAL_COLLECTIONS( &(globalGrid->node_coordinates[dim*glob_node]), &(globalGrid->node_coordinates[dim*glob_node + dim]),
+                                           &(localGrid->node_coordinates[dim*loc_node]),   &(localGrid->node_coordinates[dim*loc_node + dim]) );
+        }
 
     }
 
