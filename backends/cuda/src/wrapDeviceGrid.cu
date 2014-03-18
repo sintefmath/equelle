@@ -32,12 +32,17 @@ CollOfScalar wrapDeviceGrid::extendToFull( const CollOfScalar& in_data,
     CollOfScalar out(full_size);
     //double* out_ptr = thrust::raw_pointer_cast( &out[0] );
     const int* from_ptr = thrust::raw_pointer_cast( &from_set[0]);
-    wrapDeviceGrid::extendToFullKernel<<<grid,block>>>( out.data(),
-							from_ptr,
-							from_set.size(),
-							in_data.data(),
-							full_size);
-    
+    //wrapDeviceGrid::extendToFullKernel<<<grid,block>>>( out.data(),
+    //							from_ptr,
+    //							from_set.size(),
+    //							in_data.data(),
+    //							full_size);
+    wrapDeviceGrid::extendToFullKernel_step1<<<grid,block>>>( out.data(),
+							      full_size );
+    wrapDeviceGrid::extendToFullKernel_step2<<<grid,block>>>( out.data(),
+							      from_ptr,
+							      from_set.size(),
+							      in_data.data());
       
     return out;
 }
@@ -52,20 +57,39 @@ CollOfScalar wrapDeviceGrid::extendToSubset( const CollOfScalar& inData,
 
 }
 
-__global__ void wrapDeviceGrid::extendToFullKernel( double* outData,
-						    const int* from_set,
-						    const int from_size,
-						    const double* inData,
-						    const int to_size) 
+__global__ void wrapDeviceGrid::extendToFullKernel_step1( double* outData,
+							  const int out_size)
 {
     int outIndex = threadIdx.x + blockIdx.x*blockDim.x;
-    if ( outIndex < to_size) {
+    if ( outIndex < out_size ) {
 	outData[outIndex] = 0;
-	
-	__syncthreads();
-	if ( outIndex < from_size ) {
-	    outData[from_set[outIndex]] = inData[outIndex];
-	}
+    }
+}
+
+__global__ void wrapDeviceGrid::extendToFullKernel_step2( double* outData,
+							  const int* from_set,
+							  const int from_size,
+							  const double* inData)
+{
+    //
+    //      This kernel is sensitive to a race condition!
+    //      Each thread with outIndex < from_size performs 2 write operations,
+    //      but not to the same memory.
+    //      Hence, the we can have a kernel with 
+    //          outIndex = 3;
+    //	  outData[3] = 0;
+    //	  from_set[3] = 1000;
+    //	  outData[1000] = 3.14;
+    //     And then another block starting a bit later with
+    //         outIndex = 1000;
+    //	 outData[1000] = 0; // overwriting outIndex(3)'s correct value
+    //
+    //	 Only way to sync between blocks is to call seperate kernels!
+    //
+
+    int outIndex = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( outIndex < from_size ) {
+	outData[from_set[outIndex]] = inData[outIndex];
     }
 }
 

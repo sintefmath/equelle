@@ -68,18 +68,32 @@ namespace equelleCUDA
 				     const thrust::device_vector<int>& to_set,
 				     const int& full_size);
 			
-	//! Kernel for extend a subset to a full set.
+
+
+
+	__global__ void extendToFullKernel_step1( double* outData,
+						  const int fullSize);
+
+	//! Kernel for extend a subset to a full set - step 2
 	/*!
-	  This kernel maps the data from inData to the indices given in from_set
+	  This operation maps the data from inData to the indices given in from_set
 	  to outData. The elements in outData that has not any corresponding 
 	  elements in the inData are given the value zero.
 	  Since the outData array has to be a complete set, the integer values
 	  in from_set match the index of outData.
 	  
-	  Performs the following pseudocode:
+	  The operation has to be done in two steps, as we need full synchronization
+	  between all blocks to avoid race conditions. Since __syncthreads() only
+	  synchronize threads in the same block, we have to synchronize by 
+	  having two kernels.
+
+	  Step 1:
 	  \code
 	  For each i = 0:to_size-1
 	       outData[i] = 0
+	  \endcode
+	  Step 2:
+	  \code
 	  For each i = 0:from_size-1
 	       outData[from_set[i]] = inData[i]
 	  \endcode
@@ -89,15 +103,11 @@ namespace equelleCUDA
 	  mapped to the complete set.
 	  \param[in] from_size Size of from_set and inData.
 	  \param[in] inData The array that should be extended.
-	  \param[in] to_size Size of outData. Since outData is a complete set,
-	  this value will typically be number of all cells or faces a given grid.
 	*/
-	__global__ void extendToFullKernel( double* outData,
-					    const int* from_set,
-					    const int from_size,
-					    const double* inData,
-					    const int to_size);
-
+	__global__ void extendToFullKernel_step2( double* outData,
+						  const int* from_set,
+						  const int from_size,
+						  const double* inData);
 
 
 	//! On operator from a complete domain to a subset.
