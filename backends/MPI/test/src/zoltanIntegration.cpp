@@ -19,24 +19,10 @@
 #include "equelle/ZoltanGrid.hpp"
 #include "equelle/ZoltanGridMigrator.hpp"
 
-struct MPIConfig {
-    MPIConfig() {
-        MPI_SAFE_CALL( MPI_Init( NULL, NULL ) );
 
-        int size;
-        MPI_SAFE_CALL( MPI_Comm_size( MPI_COMM_WORLD, &size ) );
+using equelle::MPIInitializer;
 
-        float zoltanVersion;
-        ZOLTAN_SAFE_CALL( Zoltan_Initialize( 0, NULL, &zoltanVersion ) );
-    }
-
-    ~MPIConfig() {
-         MPI_SAFE_CALL( MPI_Finalize() );
-    }
-};
-
-BOOST_GLOBAL_FIXTURE( MPIConfig );
-
+BOOST_GLOBAL_FIXTURE( MPIInitializer );
 
 
 BOOST_AUTO_TEST_CASE( gridExploration )

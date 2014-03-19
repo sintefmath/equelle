@@ -55,8 +55,7 @@ void RuntimeMPI::initializeGrid()
 }
 
 RuntimeMPI::RuntimeMPI()
-{
-    //std::call_once( flag, impl::initMPIandZoltan );
+{ 
     initializeZoltan();
     initializeGrid();
 }

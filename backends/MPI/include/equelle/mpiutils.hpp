@@ -18,64 +18,45 @@
 
 namespace equelle {
 
-
-inline
-void zoltanSafeCall( const int err, const std::string file, const int line, const std::string functionName ) {
-    if ( err != ZOLTAN_OK ) {
-        std::stringstream ss;
-
-        ss << "Zoltan returned: ";
-        switch( err ) {
-        case ZOLTAN_WARN:
-            ss << "ZOLTAN_WARN";
-            break;
-        case ZOLTAN_FATAL:
-            ss << "ZOLTAN_FATAL";
-            break;
-        case ZOLTAN_MEMERR:
-            ss << "ZOLTAN_MEMERR";
-            break;
-        default:
-            ss << "Unknown Zoltan error code";
-        }
-
-        ss << "File: " << file << std::endl;
-        ss << "Line: " << line << std::endl;
-        ss << "Function" << functionName << std::endl;
-        throw std::runtime_error( ss.str() );
-    }
-}
-
-inline
-void mpiSafeCall( const int err, const std::string file, const int line, const std::string functionName ) {
-    if ( err == MPI_SUCCESS ) {
-        return;
-    }
-
-    int errlen = 0;
-    char message[MPI_MAX_ERROR_STRING]{};
-    MPI_Error_string( err, message, &errlen );
-
-    std::stringstream ss;
-    ss << "MPI error code: " << err << " " << message;
-    ss << "at File: " << file << std::endl;
-    ss << "Line: " << line << std::endl;
-    ss << "Function: " << functionName << std::endl;
-
-    throw std::runtime_error( ss.str() );
-}
-
-inline
-int getMPIRank() {
-    int rank;
-    MPI_SAFE_CALL( MPI_Comm_rank( MPI_COMM_WORLD, &rank ) );
-
-    return rank;
-}
+/**
+ * @brief The MPIInitializer class is responsible for initializing and finalizing MPI and Zoltan.
+ *
+ * The MPIInitializer class is responsible for initializing and finalizing MPI and Zoltan.
+ * It is intended to be used in program execution points (main(), BOOST_GLOBAL_FIXTURE etc.)
+ * The behaviour of MPI is undefined if it is initialized or finalized more than once, so
+ * the recommended practice is to use this class as a singleton, this is not enforced to allow
+ * for easy integration with test frameworks.
+ */
+class MPIInitializer {
+public:
+    MPIInitializer();
+    ~MPIInitializer();
+};
 
 
 /**
+ * @brief zoltanSafeCall is intended to be used with the ZOLTAN_SAFE_CALL macro to wrap around all calls to Zoltan to test for errors and report them.
+ * @param err
+ * @param file
+ * @param line
+ * @param functionName
+ */
+void zoltanSafeCall( const int err, const std::string file, const int line, const std::string functionName );
+
+/**
+ * @brief mpiSafeCallis intended to be used with the MPI_SAFE_CALL macro to wrap around all calls to MPI to test for errors and report them.
+ * @param err
+ * @param file
+ * @param line
+ * @param functionName
+ */
+void mpiSafeCall( const int err, const std::string file, const int line, const std::string functionName );
+
+int getMPIRank();
+
+/**
  * @brief dumpEigenCSR is a debug function to make it easy to import Eigen matrix into other libraries.
+ *
  * The following python code exemplifies how it can be imported into Python:
  * f = open('csr.txt')
  * lines = f.readlines()
@@ -87,56 +68,9 @@ int getMPIRank() {
  * @param mat Matrix to dump
  * @param s stream/file to dump to
  */
-inline
-void dumpEigenCSR( const Eigen::SparseMatrix<double>& mat, std::ostream& s = std::cout  ) {
-    Eigen::SparseMatrix<double> comp = mat;
+void dumpEigenCSR( const Eigen::SparseMatrix<double>& mat, std::ostream& s = std::cout  );
 
-    comp.makeCompressed();
-
-    std::copy_n( comp.innerIndexPtr(), comp.nonZeros(),
-                 std::ostream_iterator<int>( s, " " ) );
-    s << std::endl;
-
-    std::copy_n( comp.outerIndexPtr(), comp.outerSize()+1,
-                 std::ostream_iterator<int>( s, " " ) );
-    s << std::endl;
-
-    std::copy_n( comp.valuePtr(), comp.nonZeros(),
-                 std::ostream_iterator<double>( s, " " ) );
-    s << std::endl;
-}
-
-inline
-void dumpGrid( const UnstructuredGrid* grid ) {
-    std::stringstream centroids;
-    std::stringstream face_cells;
-    std::stringstream global_cell;
-    const auto dim = grid->dimensions;
-
-    centroids << "Centroids: ";
-    face_cells << "Face cells: ";
-    global_cell << "global_cell: ";
-
-    for( int i = 0; i < grid->number_of_cells; ++i ) {
-        centroids << "[";
-        std::copy( &grid->cell_centroids[i*dim], &grid->cell_centroids[i*dim + dim],
-                   std::ostream_iterator<double>( centroids, " " ) );
-        centroids << "]";
-
-        //global_cell << grid->global_cell[i] << " ";
-    }
-
-/*
-    for( int i = 0; i < grid->number_of_faces; ++i ) {
-        face_cells << i << ": [" << grid->face_cells[2*i] << ", " << grid->face_cells[2*i + 1 ] << "], ";
-    }
-
-    std::cerr << centroids.str() << std::endl;
-    std::cerr << face_cells.str();
-*/
-    std::cout << "cell_facepos: ";
-    std::copy_n( grid->cell_facepos, grid->number_of_cells + 1, std::ostream_iterator<int>( std::cout, " " ) );
-}
+void dumpGrid( const UnstructuredGrid* grid );
 
 template<class T>
 void dumpVector( const std::vector<T>& v, std::ostream& s = std::cout ) {
