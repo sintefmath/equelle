@@ -9,6 +9,8 @@
 #include <iterator>
 
 #include "equelle/mpiutils.hpp"
+#include "equelle/ZoltanGrid.hpp"
+
 namespace equelle {
 
 std::set<int> SubGridBuilder::extractNeighborCells(const UnstructuredGrid *grid, const std::vector<int> &cellsToExtract)
@@ -71,7 +73,6 @@ SubGridBuilder::extractNeighborFaces(const UnstructuredGrid *grid, const std::ve
     // Invert the list of indices.
     std::vector<int> global_face( old2new.size(), -1 );
 
-
     for( auto it: old2new ) {
         global_face[it.second] =  it.first;
     }
@@ -131,11 +132,40 @@ void reduceAndReindex( const T* src, T* dst, const int* oldIndices, const int nu
     }
 }
 
-SubGrid SubGridBuilder::build(const UnstructuredGrid* grid, const std::vector<int>& cellsToExtract)
+void SubGridBuilder::build_face_cells( const face_mapping &participatingFaces,
+                                       SubGrid &subGrid, const UnstructuredGrid* grid)
+{
+    std::unordered_map<int, int> cell_glob2loc;
+    for( int i = 0; i < subGrid.global_cell.size(); ++i ) {
+        cell_glob2loc[ subGrid.global_cell[i] ] = i;
+    }
+
+    for( int lface = 0; lface < participatingFaces.global_face.size(); ++lface ) {
+        int gface = participatingFaces.global_face[lface];
+
+        // A face always point to 2 cells, which might be boundary cells.
+        for( int i = 0; i < 2; ++i ) {
+            const int gcell = grid->face_cells[2*gface + i];
+
+            int lcell;
+
+            if ( gcell == Boundary::outer ) {
+                lcell = Boundary::outer;
+            } else { // Check if the cells is part of the subgrid or an inner-boundary.
+                auto it = cell_glob2loc.find( gcell );
+                lcell = ( it != cell_glob2loc.end() ) ? it->second : Boundary::inner;
+            }
+
+            subGrid.c_grid->face_cells[2*lface + i] = lcell;
+        }
+    }
+}
+
+SubGrid SubGridBuilder::build(const UnstructuredGrid* grid, const std::vector<int>& cellsToExtract )
 {
     SubGrid subGrid;
 
-    // Extract the cells and ghost-cells that that will be part of our subdomain
+    // Extract the cells and ghost-cells that that will be part of our subdomain    
     std::set<int> neighborCells = extractNeighborCells(grid, cellsToExtract);
 
     // Build up the local to global mapping based on the input and the additional neighbor cells found above
@@ -146,7 +176,7 @@ SubGrid SubGridBuilder::build(const UnstructuredGrid* grid, const std::vector<in
     subGrid.number_of_ghost_cells = subGrid.global_cell.size() - cellsToExtract.size();
 
     auto participatingFaces = extractNeighborFaces(grid, subGrid.global_cell);
-    auto participatingNodes = extractNeighborNodes(grid, participatingFaces.global_face );
+    auto participatingNodes = extractNeighborNodes(grid, participatingFaces.global_face);
 
     subGrid.global_face = participatingFaces.global_face;
 
@@ -167,6 +197,8 @@ SubGrid SubGridBuilder::build(const UnstructuredGrid* grid, const std::vector<in
                subGrid.c_grid->face_nodes );
 
     const int dim = grid->dimensions;
+
+    build_face_cells( participatingFaces, subGrid, grid );
 
     // Reindex for addressing based on cells
     reduceAndReindex( grid->cell_centroids, subGrid.c_grid->cell_centroids, subGrid.global_cell.data(), subGrid.global_cell.size(), dim );

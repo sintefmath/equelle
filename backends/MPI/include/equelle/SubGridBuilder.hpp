@@ -36,6 +36,7 @@ public:
      */
     static SubGrid build( const UnstructuredGrid* globalGrid, const std::vector<int>& cellsToExtract );
 
+
 private:
     SubGridBuilder();
 
@@ -54,6 +55,9 @@ private:
     static std::set<int> extractNeighborCells(const UnstructuredGrid *grid, const std::vector<int>& cellsToExtract);
     static face_mapping extractNeighborFaces(const UnstructuredGrid *grid, const std::vector<int>& cellsToExtract);
     static node_mapping extractNeighborNodes(const UnstructuredGrid *grid, const std::vector<int>& globalFaces);
+
+   static void build_face_cells(const face_mapping& participatingFaces,
+                           SubGrid& subGrid, const UnstructuredGrid* grid);
 };
 
 

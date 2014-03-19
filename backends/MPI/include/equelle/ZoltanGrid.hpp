@@ -6,6 +6,8 @@
 
 namespace equelle {
 
+enum Boundary { outer = -1, inner = -2 };
+
 /**
  *  zoltanReturns holds all variables that are returen by pointer/reference from Zoltan::LB_Partition.
  *  This is merely a convenience struct that is handy to pass around.
@@ -17,7 +19,8 @@ struct zoltanReturns {
 };
 
 
-/** ZoltanGrid is a wrapper for Opm::UnstructuredGrid that provides the neccessarry function
+/**
+ * ZoltanGrid is a wrapper for Opm::UnstructuredGrid that provides the neccessarry function
  *  that is required by the Zoltan-domain decomposition library to use perform graph-partitioning
  *  on Opm::UnstructuredGrid.
  *
