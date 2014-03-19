@@ -50,6 +50,8 @@ void mpiSafeCall( const int err, const std::string file, const int line, const s
 
 int getMPIRank();
 
+int getMPISize();
+
 /**
  * @brief dumpEigenCSR is a debug function to make it easy to import Eigen matrix into other libraries.
  *

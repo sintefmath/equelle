@@ -124,5 +124,12 @@ void dumpGrid(const UnstructuredGrid *grid) {
     std::copy_n( grid->cell_facepos, grid->number_of_cells + 1, std::ostream_iterator<int>( std::cout, " " ) );
 }
 
+int getMPISize()
+{
+    int size;
+    MPI_SAFE_CALL( MPI_Comm_size( MPI_COMM_WORLD, &size ) );
+    return size;
+}
+
 } // namespace equelle
 
