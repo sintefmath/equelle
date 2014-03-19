@@ -135,6 +135,8 @@ namespace equelleCUDA {
 	// Use 1D kernel grids for arithmetic operations
 	int block_x_;
 	int grid_x_;
+	kernelSetup setup_;
+	
 	
 	
 	// Error handling
@@ -335,12 +337,7 @@ namespace equelleCUDA {
     */
     std::vector<bool> cob_to_std(const CollOfBool& cob);
 
-    /*!
-      Define max number of threads in a kernel block:
-    */
-    //const int MAX_THREADS = 7;
-    const int MAX_THREADS = 512;
-    
+
 } // namespace equelleCUDA
 
 

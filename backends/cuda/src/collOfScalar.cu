@@ -31,7 +31,8 @@ CollOfScalar::CollOfScalar()
     : size_(0), 
       dev_values_(0),
       block_x_(0),
-      grid_x_(0)
+      grid_x_(0),
+      setup_(0)
 #ifdef EQUELLE_DEBUG
     , debug_vec_(0)
 #endif // EQUELLE_DEBUG
@@ -44,7 +45,8 @@ CollOfScalar::CollOfScalar(const int size)
     : size_(size),
       dev_values_(0),
       block_x_(equelleCUDA::MAX_THREADS),
-      grid_x_((size_ + block_x_ - 1) / block_x_)
+      grid_x_((size_ + block_x_ - 1) / block_x_),
+      setup_(size_)
 #ifdef EQUELLE_DEBUG
     , debug_vec_(size,0)
 #endif // EQUELLE_DEBUG
@@ -60,7 +62,8 @@ CollOfScalar::CollOfScalar(const int size, const double value)
     : size_(size),
       dev_values_(0),
       block_x_(equelleCUDA::MAX_THREADS),
-      grid_x_((size_ + block_x_ - 1) / block_x_)
+      grid_x_((size_ + block_x_ - 1) / block_x_),
+      setup_(size_)
 #ifdef EQUELLE_DEBUG
     , debug_vec_(size, value)
 #endif // EQUELLE_DEBUG
@@ -86,7 +89,8 @@ CollOfScalar::CollOfScalar(const std::vector<double>& host_vec)
     : size_(host_vec.size()),
       dev_values_(0),
       block_x_(equelleCUDA::MAX_THREADS),
-      grid_x_((size_ + block_x_ - 1) / block_x_)
+      grid_x_((size_ + block_x_ - 1) / block_x_),
+      setup_(size_)
 #ifdef EQUELLE_DEBUG
     , debug_vec_(host_vec)
 #endif // EQUELLE_DEBUG
@@ -105,7 +109,8 @@ CollOfScalar::CollOfScalar(const CollOfScalar& coll)
     : size_(coll.size_), 
       dev_values_(0),
       grid_x_(coll.grid_x_),
-      block_x_(coll.block_x_)
+      block_x_(coll.block_x_),
+      setup_(size_)
 #ifdef EQUELLE_DEBUG
     , debug_vec_(coll.size_, 0)
 #endif // EQUELLE_DEBUG
@@ -240,10 +245,12 @@ double* CollOfScalar::data() {
 
 int CollOfScalar::block() const {
     return block_x_;
+    //return setup_.block;
 }
 
 int CollOfScalar::grid() const {
     return grid_x_;
+    //return setup_.grid;
 }
 
 // Assumes that values are already allocated on host

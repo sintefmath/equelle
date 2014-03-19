@@ -28,13 +28,16 @@ namespace equelleCUDA {
       N vectors of 3 dimensions is stored  {1_x, 1_y, 1_z, 2_x, 2_y, 2_x,...,N_x, 
       N_y, N_z}, and the access to the raw data (data()) gives a pointer to this
       memory.
+
+      There are two ways of launching CUDA kernels that do operations on a 
+      CollOfVector. It is with one thread for each vector, or one thread for each
+      element. 
     */
     class CollOfVector
     {
     public:
 	//! Default constructor
 	CollOfVector();
-
 	
 	//! Allocating constructor
 	/*!
@@ -108,8 +111,14 @@ namespace equelleCUDA {
 	*/
 	int numVectors() const;
 
+	//! Number of elements in the collection
+	/*!
+	  This function returns the number of elements in total in the 
+	  collection of vectors. Hence, it returns numVectors()*dim
+	*/
+	int numElements() const;
 
-	
+
 	//! Index operator
 	/*!
 	  Returns a collection of Scalars with the values from the index of each of the
@@ -122,6 +131,8 @@ namespace equelleCUDA {
     private:
 	CollOfScalar elements_;
 	const int dim_;
+	kernelSetup element_setup_;
+	kernelSetup vector_setup_;
 
 	// size_ from CollOfScalar is actually size_ * dim
 	// block() and grid() will therefore be evaluated as one thread per double

@@ -17,7 +17,7 @@ using namespace equelleCUDA;
 
 
 CollOfVector::CollOfVector() 
-    : elements_(), dim_(1)
+    : elements_(), dim_(1), element_setup_(0), vector_setup_(0)
 {
     // intentionally left blank
 }
@@ -25,14 +25,17 @@ CollOfVector::CollOfVector()
 
 
 CollOfVector::CollOfVector(const int size, const int dim)
-    : elements_(size*dim), dim_(dim)
+    : elements_(size*dim), dim_(dim), element_setup_(size*dim), vector_setup_(size)
 {
      std::cerr << __PRETTY_FUNCTION__ << std::endl;
     // intentionally left blank
 }
 
 CollOfVector::CollOfVector(const std::vector<double>& host, const int dim)
-    : elements_(host), dim_(dim)
+    : elements_(host), 
+      dim_(dim),
+      element_setup_(host.size()),
+      vector_setup_(host.size()/dim)
 {
     // intentionally left blank
 }
@@ -52,7 +55,10 @@ CollOfVector& CollOfVector::operator= (const CollOfVector& other) {
 
 // Copy-constructor
 CollOfVector::CollOfVector(const CollOfVector& coll)
-    : elements_(coll.elements_), dim_(coll.dim_)
+    : elements_(coll.elements_), 
+      dim_(coll.dim_),
+      element_setup_(coll.numElements()),
+      vector_setup_(coll.numVectors())
 {
     std::cerr << __PRETTY_FUNCTION__ << std::endl;    
 // intentionally left blank
@@ -107,6 +113,10 @@ int CollOfVector::numVectors() const {
 	OPM_THROW(std::runtime_error, "Calling numVectors() on a CollOfVector of dimension 0\n --> Dividing by zero!");
     }
     return size()/dim_;
+}
+
+int CollOfVector::numElements() const {
+    return elements_.size();
 }
 
 //Operator []
