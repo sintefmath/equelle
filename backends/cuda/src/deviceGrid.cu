@@ -601,11 +601,11 @@ CollOfVector DeviceGrid::centroid(const thrust::device_vector<int>& indices,
 	if ( codim == 1) {
 	    all_centroids = face_centroids_;
 	}
-	equelleCUDA::cellCentroidKernel<<<grid,block>>>( out.data(),
-							 indices_ptr,
-							 all_centroids,
-							 out.numVectors(),
-							 dimensions_);
+	equelleCUDA::centroidKernel<<<grid,block>>>( out.data(),
+						     indices_ptr,
+						     all_centroids,
+						     out.numVectors(),
+						     dimensions_);
 	return out;
     }
 }
@@ -823,17 +823,17 @@ __global__ void equelleCUDA::normKernel( double* out,
 
 // CENTROID KERNEL
 
-__global__ void equelleCUDA::cellCentroidKernel( double* out,
-						 const int* cells,
-						 const double* all_centroids,
-						 const int num_vectors,
-						 const int dimensions)
+__global__ void equelleCUDA::centroidKernel( double* out,
+					     const int* subset_indices,
+					     const double* all_centroids,
+					     const int num_vectors,
+					     const int dimensions)
 {
     // EASY IMPLEMENTATION:
     // One thread for each vector
     int vec_id = threadIdx.x + blockIdx.x*blockDim.x;
     if ( vec_id < num_vectors ) {
-	int cell_index = cells[vec_id];
+	int cell_index = subset_indices[vec_id];
 	// Iterating over the element in the vector we create
 	for (int i = 0; i < dimensions; i++) {
 	    out[vec_id*dimensions + i] = all_centroids[cell_index * dimensions + i];

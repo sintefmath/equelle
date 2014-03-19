@@ -185,6 +185,13 @@ namespace equelleCUDA
     */
     CollOfScalar sqrtWrapper( const CollOfScalar& x);
 
+    //! Kernel for computing square roots.
+    /*!
+      \code out[i] = sqrt(out[i]) \endcode
+      \param[in,out] out Contains the elements we want to find the square root of
+      and overwrites them with the result.
+      \param[in] size Number of elements.
+    */
     __global__ void sqrtKernel( double* out, const int size);
 
 

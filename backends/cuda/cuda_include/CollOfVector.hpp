@@ -53,7 +53,12 @@ namespace equelleCUDA {
 	  \param dim The dimension of the vectors stored in host.
 	*/
 	explicit CollOfVector(const std::vector<double>& host, const int dim);
+
 	//! Copy constructor
+	/*!
+	  Allocates memory for a new CollOfVector and copies all data from coll 
+	  over to the new variable.
+	*/
 	CollOfVector(const CollOfVector& coll);
 
 	//! Copy assignment operator
@@ -74,7 +79,8 @@ namespace equelleCUDA {
 	//! Norm of the vectors in the collection
 	/*!
 	  Returns a collection of scalars equal to the norm of every vector in
-	  the caller.
+	  the caller. The norm used here is the 2-norm equal to the square root of 
+	  the sum of the squared elements of each vector.
 	*/
 	CollOfScalar norm() const;
 
@@ -122,7 +128,16 @@ namespace equelleCUDA {
 						     const int index,
 						     const int dim);
 	
-
+    //! Kernel for computing the norm of vectors
+    /*!
+      Uses one thread for each vector to compute the given vectors norm.
+      
+      \param[out] out The output with the norm of each vector
+      \param[in] vectors Array with vector elements so that each vector is 
+      continously in memory. The size of this array is numVectors*dim.
+      \param[in] numVectors Number of vectors given in input
+      \param[in] dim Dimension of each vector.
+    */
     __global__ void normKernel( double* out,
 				const double* vectors,
 				const int numVectors,
