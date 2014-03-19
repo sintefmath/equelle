@@ -142,10 +142,13 @@ SubGrid SubGridBuilder::build(const UnstructuredGrid* grid, const std::vector<in
     subGrid.global_cell = cellsToExtract;
     std::set_difference( neighborCells.begin(), neighborCells.end(), cellsToExtract.begin(), cellsToExtract.end(),
                          std::back_inserter( subGrid.global_cell ) );
+
     subGrid.number_of_ghost_cells = subGrid.global_cell.size() - cellsToExtract.size();
 
     auto participatingFaces = extractNeighborFaces(grid, subGrid.global_cell);
     auto participatingNodes = extractNeighborNodes(grid, participatingFaces.global_face );
+
+    subGrid.global_face = participatingFaces.global_face;
 
     subGrid.c_grid = allocate_grid( grid->dimensions, subGrid.global_cell.size(),
                                     participatingFaces.global_face.size(), participatingNodes.face_nodes.size(),

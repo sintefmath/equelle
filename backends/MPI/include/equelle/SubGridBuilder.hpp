@@ -15,6 +15,7 @@ struct SubGrid {
     int number_of_ghost_cells;
 
     std::vector<int> global_cell; //! Maps local cell indices to global cell indices.
+    std::vector<int> global_face; //! The global face index of each face in the subgrid.
 };
 
 /** SubGridBuilder is responsible for building a subgrid of an Opm::UnstructuredGrid,

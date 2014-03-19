@@ -24,6 +24,7 @@ BOOST_AUTO_TEST_CASE( SubGridBuilder ) {
 
     BOOST_CHECK_EQUAL( subGrid.c_grid->number_of_cells, 3 );
     BOOST_CHECK_EQUAL( subGrid.number_of_ghost_cells, 1 );
+    BOOST_CHECK_EQUAL( subGrid.global_face.size(), subGrid.c_grid->number_of_faces );
 
     // Check the local to global mapping
     BOOST_CHECK_EQUAL( 4, subGrid.global_cell[0] );
@@ -81,9 +82,6 @@ BOOST_AUTO_TEST_CASE( SubGridBuilder ) {
         }
 
     }
-
-
-
 
     destroy_grid( subGrid.c_grid );
 }
