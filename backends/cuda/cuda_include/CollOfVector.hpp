@@ -16,24 +16,25 @@ namespace equelleCUDA {
 
     //! Collection of Vectors
     /*!
-      This class is implemented as an extention of the CollOfScalar class. It has all the
-      same functionality, and is extended with a index operator which returns a
-      CollOfScalar. When talking about the dimension of the collection we are really
-      talking about the dimension of the vectors in the collection. The dimension is 
-      therefore ment ot be 2 or 3 corresponding to 2D or 3D grids.
+      This class is holds a collection of Vectors. In addition to the number of vectors
+      (numVectors()) we need a dimension (dim()) to state how many elements each 
+      vector in the collection have. Since all grids in Equelle is either 2D or 3D,
+      2 and 3 are the only legal dimensions that can be passed to this class. We can 
+      also talk about number of elements (numElements()) which returns the number of 
+      Vectors times the dimension.
+
+      The vector elements are stored in a private member variable of type CollOfScalar
+      packed so that each vector is contiguous in memory, hence a CollOfVector with
+      N vectors of 3 dimensions is stored  {1_x, 1_y, 1_z, 2_x, 2_y, 2_x,...,N_x, 
+      N_y, N_z}, and the access to the raw data (data()) gives a pointer to this
+      memory.
     */
-    class CollOfVector : public CollOfScalar 
+    class CollOfVector
     {
     public:
 	//! Default constructor
 	CollOfVector();
 
-	//! Allocating constructor without dim -> throws an error
-	/*!
-	  Since we cannot create a vector without stating its dimension,
-	  calling this constructor will result in an error.
-	*/
-	explicit CollOfVector(const int size);
 	
 	//! Allocating constructor
 	/*!
@@ -84,14 +85,16 @@ namespace equelleCUDA {
 	*/
 	CollOfScalar norm() const;
 
-	
-	//! Index operator
-	/*!
-	  Returns a collection of Scalars with the values from the index of each of the
-	  vectors. myVector[1] will not return the second vector in the collection
-	  but a collection of the second component from all the vectors.
-	*/
-	CollOfScalar operator[](const int index) const;
+	//! Pointer to the device memory block with all elements
+	const double* data() const;
+	//! Pointer to the device memory block with all elements
+	double* data();
+
+
+	// Temporary function to make everything work again
+	int size() const;
+	int block() const;
+	int grid() const;
 
 	//! Dimension of vectors in the collection
 	int dim() const;
@@ -105,7 +108,19 @@ namespace equelleCUDA {
 	*/
 	int numVectors() const;
 
+
+	
+	//! Index operator
+	/*!
+	  Returns a collection of Scalars with the values from the index of each of the
+	  vectors. myVector[1] will not return the second vector in the collection
+	  but a collection of the second component from all the vectors.
+	*/
+	CollOfScalar operator[](const int index) const;
+
+
     private:
+	CollOfScalar elements_;
 	const int dim_;
 
 	// size_ from CollOfScalar is actually size_ * dim

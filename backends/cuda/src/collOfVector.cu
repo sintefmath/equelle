@@ -17,27 +17,22 @@ using namespace equelleCUDA;
 
 
 CollOfVector::CollOfVector() 
-    : CollOfScalar(), dim_(1)
+    : elements_(), dim_(1)
 {
     // intentionally left blank
 }
 
-CollOfVector::CollOfVector(const int size)
-    : CollOfScalar(size), dim_(-1) 
-{
-    OPM_THROW(std::logic_error, "Trying to create a CollOfVector without stating its dimension!");
-}
 
 
 CollOfVector::CollOfVector(const int size, const int dim)
-    : CollOfScalar(size*dim), dim_(dim)
+    : elements_(size*dim), dim_(dim)
 {
      std::cerr << __PRETTY_FUNCTION__ << std::endl;
     // intentionally left blank
 }
 
 CollOfVector::CollOfVector(const std::vector<double>& host, const int dim)
-    : CollOfScalar(host), dim_(dim)
+    : elements_(host), dim_(dim)
 {
     // intentionally left blank
 }
@@ -47,18 +42,17 @@ CollOfVector::CollOfVector(const std::vector<double>& host, const int dim)
 CollOfVector& CollOfVector::operator= (const CollOfVector& other) {
     std::cerr << __PRETTY_FUNCTION__ << std::endl;    
 
-    // Call the copy assignment operator for the base class:
-    CollOfScalar::operator=(other);
-    //this->dim_ = other.dim_;
+    // Does not give sense to assign Vectors of different dimensions.
     if ( this->dim_ != other.dim_ ) {
 	OPM_THROW(std::runtime_error, "Trying to assign a vector with another vector of different dim. lhs.dim_ = " << this->dim_ << " and rhs.dim_ = " << other.dim_);
     }
+    this->elements_ = other.elements_;
     return *this;
 }
 
 // Copy-constructor
 CollOfVector::CollOfVector(const CollOfVector& coll)
-    : CollOfScalar(coll), dim_(coll.dim_)
+    : elements_(coll.elements_), dim_(coll.dim_)
 {
     std::cerr << __PRETTY_FUNCTION__ << std::endl;    
 // intentionally left blank
@@ -72,6 +66,9 @@ CollOfVector::~CollOfVector()
     // intentionally left blank.
 }
 
+// ------------ MEMBER FUNCTIONS -------------------- // 
+
+
 //  ----- NORM -----
 CollOfScalar CollOfVector::norm() const {
     CollOfScalar out(numVectors());
@@ -82,8 +79,24 @@ CollOfScalar CollOfVector::norm() const {
 }
 
 
+const double* CollOfVector::data() const {
+    return elements_.data();
+}
+
+double* CollOfVector::data() {
+    return elements_.data();
+}
 
 
+int CollOfVector::size() const {
+    return elements_.size();
+}
+int CollOfVector::block() const {
+    return elements_.block();
+}
+int CollOfVector::grid() const {
+    return elements_.grid();
+}
 
 int CollOfVector::dim() const {
     return dim_;
