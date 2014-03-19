@@ -109,18 +109,6 @@ namespace equelleCUDA {
 	/*! \return A host vector containing the values of the collection */
 	std::vector<double> copyToHost() const;
 	
-	//! For CUDA kernel calls.
-	/*! 
-	  Used for setting the CUDA grid size before calling a kernel.
-	  \return The appropriate CUDA gridDim.x size 
-	*/
-	int grid() const;
-	//! For CUDA kernel calls.
-	/*!
-	  Used for setting the CUDA block size before calling a kernel.
-	  \return The appropriate CUDA blockDim.x size
-	*/
-	int block() const;
 	
 	//! For CUDA kernel calls.
 	/*!

@@ -12,6 +12,7 @@
 #include "wrapDeviceGrid.hpp"
 #include "CollOfScalar.hpp"
 #include "CollOfIndices.hpp"
+#include "equelleTypedefs.hpp"
 
 using namespace equelleCUDA;
 
@@ -24,8 +25,7 @@ CollOfScalar wrapDeviceGrid::extendToFull( const CollOfScalar& in_data,
 					   const int& full_size) {
     std::cout << "WRAPPER\n";
     // setup how many threads/blocks we need:
-    dim3 block(MAX_THREADS);
-    dim3 grid( (int)((full_size + MAX_THREADS - 1)/ MAX_THREADS) );
+    kernelSetup s(full_size);
     
     // create a vector of size number_of_faces_:
     //thrust::device_vector<double> out(full_size);
@@ -37,12 +37,12 @@ CollOfScalar wrapDeviceGrid::extendToFull( const CollOfScalar& in_data,
     //							from_set.size(),
     //							in_data.data(),
     //							full_size);
-    wrapDeviceGrid::extendToFullKernel_step1<<<grid,block>>>( out.data(),
-							      full_size );
-    wrapDeviceGrid::extendToFullKernel_step2<<<grid,block>>>( out.data(),
-							      from_ptr,
-							      from_set.size(),
-							      in_data.data());
+    wrapDeviceGrid::extendToFullKernel_step1<<<s.grid, s.block>>>( out.data(),
+								   full_size );
+    wrapDeviceGrid::extendToFullKernel_step2<<<s.grid, s.block>>>( out.data(),
+								   from_ptr,
+								   from_set.size(),
+								   in_data.data());
       
     return out;
 }
@@ -107,16 +107,15 @@ CollOfScalar wrapDeviceGrid::onFromFull( const CollOfScalar& inData,
 
     std::cout << "WRAPPER\n";
     // setup how many threads/blocks we need:
-    dim3 block(MAX_THREADS);
-    dim3 grid( (int)(( to_set.size() + MAX_THREADS - 1)/ MAX_THREADS) );
-    
+    kernelSetup s(to_set.size());
+
     // Create the output vector:
     CollOfScalar out(to_set.size());
     const int* to_set_ptr = thrust::raw_pointer_cast( &to_set[0] );
-    wrapDeviceGrid::onFromFullKernel<<<grid,block>>>(out.data(),
-						     to_set_ptr,
-						     to_set.size(),
-						     inData.data());
+    wrapDeviceGrid::onFromFullKernel<<<s.grid, s.block>>>(out.data(),
+							  to_set_ptr,
+							  to_set.size(),
+							  inData.data());
     return out;
 }
 
@@ -157,18 +156,17 @@ thrust::device_vector<int> wrapDeviceGrid::onFromFullIndices( const thrust::devi
 
     std::cout << "WRAPPER\n";
     // setup how many threads/blocks we need:
-    dim3 block(MAX_THREADS);
-    dim3 grid( (int)(( to_set.size() + MAX_THREADS - 1)/ MAX_THREADS) );
-    
+    kernelSetup s(to_set.size());
+
     // Create the output vector:
     thrust::device_vector<int> out(to_set.size());
     const int* to_set_ptr = thrust::raw_pointer_cast( &to_set[0] );
     const int* inData_ptr = thrust::raw_pointer_cast( &inData[0] );
     int* out_ptr = thrust::raw_pointer_cast( &out[0] );
-    wrapDeviceGrid::onFromFullKernelIndices<<<grid,block>>>(out_ptr,
-							    to_set_ptr,
-							    to_set.size(),
-							    inData_ptr);
+    wrapDeviceGrid::onFromFullKernelIndices<<<s.grid, s.block>>>(out_ptr,
+								 to_set_ptr,
+								 to_set.size(),
+								 inData_ptr);
     return out;
 }
 
@@ -204,20 +202,19 @@ thrust::device_vector<int> wrapDeviceGrid::extendToFullIndices( const thrust::de
 								const int& full_size) {
     std::cout << "WRAPPER\n";
     // setup how many threads/blocks we need:
-    dim3 block(MAX_THREADS);
-    dim3 grid( (int)((full_size + MAX_THREADS - 1)/ MAX_THREADS) );
-    
+    kernelSetup s(full_size);
+
     // create a vector of size number_of_faces_:
     thrust::device_vector<int> out(full_size);
     int* out_ptr = thrust::raw_pointer_cast( &out[0] );
     const int* in_data_ptr = thrust::raw_pointer_cast( &in_data[0] );
     const int* from_ptr = thrust::raw_pointer_cast( &from_set[0]);
-    wrapDeviceGrid::extendToFullKernelIndices_step1<<<grid,block>>>( out_ptr,
-								     full_size);
-    wrapDeviceGrid::extendToFullKernelIndices_step2<<<grid,block>>>( out_ptr,
-								     from_ptr,
-								     from_set.size(),
-								     in_data_ptr);
+    wrapDeviceGrid::extendToFullKernelIndices_step1<<<s.grid, s.block>>>( out_ptr,
+									  full_size);
+    wrapDeviceGrid::extendToFullKernelIndices_step2<<<s.grid, s.block>>>( out_ptr,
+									  from_ptr,
+									  from_set.size(),
+									  in_data_ptr);
     
       
     return out;

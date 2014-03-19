@@ -18,13 +18,12 @@ CollOfScalar equelleCUDA::trinaryIfWrapper( const CollOfBool& predicate,
 					    const CollOfScalar& iffalse) {
     CollOfScalar out(iftrue.size());
     const bool* pred_ptr = thrust::raw_pointer_cast( &predicate[0] );
-    dim3 block(iftrue.block());
-    dim3 grid(iftrue.grid());
-    trinaryIfKernel<<<grid,block>>>(out.data(),
-				    pred_ptr,
-				    iftrue.data(),
-				    iffalse.data(),
-				    iftrue.size());
+    kernelSetup s = out.setup();
+    trinaryIfKernel<<<s.grid, s.block>>>(out.data(),
+					 pred_ptr,
+					 iftrue.data(),
+					 iffalse.data(),
+					 iftrue.size());
     return out;
     //return CollOfScalar(predicate.size(), 0);
 }
@@ -57,13 +56,12 @@ thrust::device_vector<int> equelleCUDA::trinaryIfWrapper(const CollOfBool& predi
     const bool* pred_ptr = thrust::raw_pointer_cast( &predicate[0] );
     const int* iftrue_ptr = thrust::raw_pointer_cast( &iftrue[0] );
     const int* iffalse_ptr = thrust::raw_pointer_cast( &iffalse[0] );
-    dim3 block(MAX_THREADS);
-    dim3 grid((int)( (iftrue.size() + MAX_THREADS - 1)/MAX_THREADS));
-    trinaryIfKernel<<<grid,block>>>( out_ptr,
-				     pred_ptr,
-				     iftrue_ptr,
-				     iffalse_ptr,
-				     iftrue.size());
+    kernelSetup s(iftrue.size());
+    trinaryIfKernel<<<s.grid, s.block>>>( out_ptr,
+					  pred_ptr,
+					  iftrue_ptr,
+					  iffalse_ptr,
+					  iftrue.size());
     return out;
 }
 
@@ -96,13 +94,12 @@ CollOfScalar equelleCUDA::gradientWrapper( const CollOfScalar& cell_scalarfield,
     // Output will be a collection on interiorFaces:
     CollOfScalar out(int_faces.size());
     // out now have info of how big kernel we need as well.
-    dim3 block(out.block());
-    dim3 grid(out.grid());
-    gradientKernel<<<grid,block>>>( out.data(),
-				    cell_scalarfield.data(),
-				    int_faces.raw_pointer(),
-				    face_cells,
-				    out.size());
+    kernelSetup s = out.setup();
+    gradientKernel<<<s.grid, s.block>>>( out.data(),
+					 cell_scalarfield.data(),
+					 int_faces.raw_pointer(),
+					 face_cells,
+					 out.size());
     return out;
 }
 
@@ -134,16 +131,14 @@ CollOfScalar equelleCUDA::divergenceWrapper( const CollOfScalar& fluxes,
     // output is of size number_of_cells:
     CollOfScalar out(dev_grid.number_of_cells());
     // out have now block and grid size as well.
-    dim3 block(out.block());
-    dim3 grid(out.grid());
-
-    divergenceKernel<<<grid,block>>>( out.data(),
-				      fluxes.data(),
-				      dev_grid.cell_facepos(),
-				      dev_grid.cell_faces(),
-				      dev_grid.face_cells(),
-				      dev_grid.number_of_cells(),
-				      dev_grid.number_of_faces() );
+    kernelSetup s = out.setup();
+    divergenceKernel<<<s.grid, s.block>>>( out.data(),
+					   fluxes.data(),
+					   dev_grid.cell_facepos(),
+					   dev_grid.cell_faces(),
+					   dev_grid.face_cells(),
+					   dev_grid.number_of_cells(),
+					   dev_grid.number_of_faces() );
 
     return out;
 }
@@ -181,10 +176,8 @@ __global__ void equelleCUDA::divergenceKernel( double* div,
 CollOfScalar equelleCUDA::sqrtWrapper( const CollOfScalar& x) {
     
     CollOfScalar out = x;
-    dim3 block(out.block());
-    dim3 grid(out.grid());
-
-    sqrtKernel<<<grid,block>>> (out.data(), out.size());
+    kernelSetup s = out.setup();
+    sqrtKernel<<<s.grid, s.block>>> (out.data(), out.size());
     // TODO
     // CREATE THE KERNEL (AND DEFINE IT IN HEADER)
     // CALL KERNEL.

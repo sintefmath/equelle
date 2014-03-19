@@ -352,9 +352,7 @@ CollOfFace DeviceGrid::boundaryFaces() const {
     // Launch a kernel where we use number_of_faces number of threads.
     // Use a 1D kernel for simplicity.
     // Assume that we do not need more blocks than available.
-    dim3 block_size(MAX_THREADS);
-    int num_blocks = (number_of_faces_ + MAX_THREADS - 1) / MAX_THREADS;
-    dim3 grid_size(num_blocks);
+    kernelSetup s(number_of_faces_);
 
     // Create a vector of size number_of_faces_:
     thrust::device_vector<int> b_faces(number_of_faces_);
@@ -362,9 +360,9 @@ CollOfFace DeviceGrid::boundaryFaces() const {
     //     this is an illigal faca index
     thrust::fill(b_faces.begin(), b_faces.end(), number_of_faces_);
     int* b_faces_ptr = thrust::raw_pointer_cast( &b_faces[0] );
-    boundaryFacesKernel<<<grid_size, block_size>>>( b_faces_ptr,
-						    face_cells_,
-						    number_of_faces_);
+    boundaryFacesKernel<<<s.grid, s.block>>>( b_faces_ptr,
+					      face_cells_,
+					      number_of_faces_);
     
     // Remove unchanged values
     // See  - thrust::remove_if documentation 
@@ -388,9 +386,7 @@ CollOfFace DeviceGrid::interiorFaces() const {
     // Launch a kernel where we use number_of_faces number of threads.
     // Use a 1D kernel for simplicity.
     // Assume that we do not need more blocks than available.
-    dim3 block_size(MAX_THREADS);
-    int num_blocks = (number_of_faces_ + MAX_THREADS - 1) / MAX_THREADS;
-    dim3 grid_size(num_blocks);
+     kernelSetup s(number_of_faces_);
 
     // Create a vector of size number_of_faces_:
     thrust::device_vector<int> i_faces(number_of_faces_);
@@ -398,9 +394,9 @@ CollOfFace DeviceGrid::interiorFaces() const {
     //     this is an illigal faca index
     thrust::fill(i_faces.begin(), i_faces.end(), number_of_faces_);
     int* i_faces_ptr = thrust::raw_pointer_cast( &i_faces[0] );
-    interiorFacesKernel<<<grid_size, block_size>>>( i_faces_ptr,
-						    face_cells_,
-						    number_of_faces_);
+    interiorFacesKernel<<<s.grid, s.block>>>( i_faces_ptr,
+					      face_cells_,
+					      number_of_faces_);
     // Remove unchanged values
     // See  - thrust::remove_if documentation 
     //      - the saxpy example in the algorithm chapter of the thrust pdf
@@ -430,16 +426,15 @@ CollOfCell DeviceGrid::boundaryCells() const {
     // Set cell index if boundary cell
     // Remove all elements equal to number_of_cells_.
 
-    dim3 block(MAX_THREADS);
-    dim3 grid( (int)((number_of_cells_ + MAX_THREADS - 1)/ MAX_THREADS) );
+    kernelSetup s(number_of_cells_);
     thrust::device_vector<int> b_cells(number_of_cells_);
     thrust::fill(b_cells.begin(), b_cells.end(), number_of_cells_);
     int* b_cells_ptr = thrust::raw_pointer_cast( &b_cells[0] );
-    boundaryCellsKernel<<<grid, block>>>( b_cells_ptr,
-					  number_of_cells_,
-					  cell_facepos_,
-					  cell_faces_,
-					  face_cells_);
+    boundaryCellsKernel<<<s.grid, s.block>>>( b_cells_ptr,
+					      number_of_cells_,
+					      cell_facepos_,
+					      cell_faces_,
+					      face_cells_);
 
     // Remove values which still are number_of_cells_
     thrust::device_vector<int>::iterator new_end = thrust::remove_if(thrust::device,
@@ -453,16 +448,15 @@ CollOfCell DeviceGrid::boundaryCells() const {
 // INTERIOR CELLS
 CollOfCell DeviceGrid::interiorCells() const {
     // Same as boundaryCells, but the kernel is the other way around
-    dim3 block(MAX_THREADS);
-    dim3 grid( (int)((number_of_cells_ + MAX_THREADS - 1)/ MAX_THREADS) );
+    kernelSetup s(number_of_cells_);
     thrust::device_vector<int> i_cells(number_of_cells_);
     thrust::fill(i_cells.begin(), i_cells.end(), number_of_cells_);
     int* i_cells_ptr = thrust::raw_pointer_cast( &i_cells[0] );
-    interiorCellsKernel<<<grid, block>>>( i_cells_ptr,
-					  number_of_cells_,
-					  cell_facepos_,
-					  cell_faces_,
-					  face_cells_);
+    interiorCellsKernel<<<s.grid, s.block>>>( i_cells_ptr,
+					      number_of_cells_,
+					      cell_facepos_,
+					      cell_faces_,
+					      face_cells_);
 
     // Remove values which still are number_of_cells_
     thrust::device_vector<int>::iterator new_end = thrust::remove_if(thrust::device,
@@ -481,18 +475,17 @@ CollOfCell DeviceGrid::firstCell(CollOfFace coll) const {
     //     first(f) = face_cells_[2*f]
     
     // setup how many threads/blocks we need:
-    dim3 block(MAX_THREADS);
-    dim3 grid( (int)((coll.size() + MAX_THREADS - 1)/ MAX_THREADS) );
-    
+    kernelSetup s(coll.size());
+
     // create a vector of size number_of_faces_:
     thrust::device_vector<int> first(coll.size());
     int* first_ptr = thrust::raw_pointer_cast( &first[0] );
     if (coll.isFull()) {
-	firstCellKernel<<<grid, block>>>( first_ptr, coll.size(), face_cells_);
+	firstCellKernel<<<s.grid, s.block>>>( first_ptr, coll.size(), face_cells_);
     } else {
 	int* index_ptr = coll.raw_pointer();
- 	firstCellSubsetKernel<<<grid, block>>>( first_ptr, coll.size(),
-					       index_ptr, face_cells_);
+ 	firstCellSubsetKernel<<<s.grid, s.block>>>( first_ptr, coll.size(),
+						    index_ptr, face_cells_);
     }					
     return CollOfCell(first);
 }
@@ -503,17 +496,16 @@ CollOfCell DeviceGrid::secondCell(CollOfFace coll) const {
     //     second(f) = face_cells_[2*f + 1]
 
     // setup how many threads/blocks we need:
-    dim3 block(MAX_THREADS);
-    dim3 grid( (int)((coll.size() + MAX_THREADS - 1)/ MAX_THREADS) );
+    kernelSetup s(coll.size());
     
     // create a vector of size number_of_faces_:
     thrust::device_vector<int> second(coll.size());
     int* second_ptr = thrust::raw_pointer_cast( &second[0] );
     if ( coll.isFull() ) {
-	secondCellKernel<<<grid,block>>>( second_ptr, coll.size(), face_cells_);
+	secondCellKernel<<<s.grid, s.block>>>( second_ptr, coll.size(), face_cells_);
     } else {
-	secondCellSubsetKernel<<<grid, block>>>( second_ptr, coll.size(),
-						 coll.raw_pointer(), face_cells_);
+	secondCellSubsetKernel<<<s.grid, s.block>>>( second_ptr, coll.size(),
+						     coll.raw_pointer(), face_cells_);
     }
     return CollOfCell(second);
 }
@@ -533,11 +525,10 @@ CollOfScalar DeviceGrid::norm_of_cells(const thrust::device_vector<int>& cells,
     }
     else {
 	CollOfScalar out(cells.size(),0);
-	dim3 block(MAX_THREADS);
-	dim3 grid( (int)((cells.size() + MAX_THREADS - 1)/ MAX_THREADS) );
+	kernelSetup s = out.setup();
 	const int* cells_ptr = thrust::raw_pointer_cast( &cells[0] );
-	normKernel<<<grid,block>>>( out.data(), cells_ptr, cells.size(),
-				    cell_volumes_);
+	normKernel<<<s.grid, s.block>>>( out.data(), cells_ptr, cells.size(),
+					 cell_volumes_);
 	return out;
     }
 }
@@ -554,11 +545,10 @@ CollOfScalar DeviceGrid::norm_of_faces(const thrust::device_vector<int>& faces,
     }
     else {
 	CollOfScalar out(faces.size(),0);
-	dim3 block(MAX_THREADS);
-	dim3 grid( (int)((faces.size() + MAX_THREADS - 1)/ MAX_THREADS) );
+	kernelSetup s = out.setup();
 	const int* faces_ptr = thrust::raw_pointer_cast( &faces[0] );
-	normKernel<<<grid,block>>>( out.data(), faces_ptr, faces.size(),
-				    face_areas_);
+	normKernel<<<s.grid, s.block>>>( out.data(), faces_ptr, faces.size(),
+					 face_areas_);
 	return out;
     }
 }
