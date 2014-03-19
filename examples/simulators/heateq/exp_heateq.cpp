@@ -35,9 +35,12 @@ int main(int argc, char** argv)
     const Scalar k = er.inputScalarWithDefault("k", double(0.3));
     const SeqOfScalar timesteps = er.inputSequenceOfScalar("timesteps");
     const CollOfScalar u0 = er.inputCollectionOfScalar("u0", er.allCells());
+    u0.debug();
     const CollOfFace dirichlet_boundary = er.inputDomainSubsetOf("dirichlet_boundary", er.boundaryFaces());
     const CollOfScalar dirichlet_val = er.inputCollectionOfScalar("dirichlet_val", dirichlet_boundary);
+    dirichlet_val.debug();
     const CollOfScalar vol = er.norm(er.allCells());
+    vol.debug();
     const CollOfFace interior_faces = er.interiorFaces();
     const CollOfCell first = er.firstCell(interior_faces);
     const CollOfCell second = er.secondCell(interior_faces);
@@ -78,27 +81,38 @@ int main(int argc, char** argv)
     const CollOfFace bf = er.boundaryFaces();
     const CollOfCell bf_cells = er.trinaryIf(er.isEmpty(er.firstCell(bf)), er.secondCell(bf), er.firstCell(bf));
     const CollOfScalar bf_sign = er.trinaryIf(er.isEmpty(er.firstCell(bf)), er.operatorExtend(-double(1), bf), er.operatorExtend(double(1), bf));
+    bf_sign.debug();
     const CollOfScalar btrans = (k * (er.norm(bf) / er.norm((er.centroid(bf) - er.centroid(bf_cells)))));
+    btrans.debug();
     const CollOfScalar dir_sign = er.operatorOn(bf_sign, er.boundaryFaces(), dirichlet_boundary);
+    dir_sign.debug();
     std::function<CollOfScalar(const CollOfScalar&)> computeInteriorFlux = [&](const CollOfScalar& u) -> CollOfScalar {
         return (-itrans * er.gradient(u));
     };
     std::function<CollOfScalar(const CollOfScalar&)> computeBoundaryFlux = [&](const CollOfScalar& u) -> CollOfScalar {
         const CollOfScalar u_dirbdycells = er.operatorOn(u, er.allCells(), er.operatorOn(bf_cells, er.boundaryFaces(), dirichlet_boundary));
+        u_dirbdycells.debug();
         const CollOfScalar dir_fluxes = ((er.operatorOn(btrans, er.boundaryFaces(), dirichlet_boundary) * dir_sign) * (u_dirbdycells - dirichlet_val));
+        dir_fluxes.debug();
         return er.operatorExtend(dir_fluxes, dirichlet_boundary, er.boundaryFaces());
     };
     CollOfScalar expU;
     expU = u0;
+    expU.debug();
     for (const Scalar& dt : timesteps) {
         std::function<CollOfScalar(const CollOfScalar&)> computeResidual = [&](const CollOfScalar& u) -> CollOfScalar {
             const CollOfScalar ifluxes = computeInteriorFlux(u);
+            ifluxes.debug();
             const CollOfScalar bfluxes = computeBoundaryFlux(u);
+            bfluxes.debug();
             const CollOfScalar fluxes = (er.operatorExtend(ifluxes, er.interiorFaces(), er.allFaces()) + er.operatorExtend(bfluxes, er.boundaryFaces(), er.allFaces()));
+            fluxes.debug();
             const CollOfScalar residual = ((u - u0) + ((dt / vol) * er.divergence(fluxes)));
+            residual.debug();
             return residual;
         };
         expU = (expU - computeResidual(expU));
+        expU.debug();
         er.output("expU", expU);
     }
     er.output("expU", expU);

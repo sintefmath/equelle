@@ -9,9 +9,9 @@
 
 format compact;
 
-nx = 14;
-ny = 6;
-nz = 11;
+nx = 70;
+ny = 111;
+nz = 42;
 timesteps = 20;
 
 t = ones(1,timesteps).*0.5;
