@@ -45,6 +45,8 @@ void RuntimeMPI::initializeGrid()
 
 RuntimeMPI::RuntimeMPI()
 {     
+    initializeZoltan();
+    initializeGrid();
 }
 
 
