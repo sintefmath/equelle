@@ -109,20 +109,22 @@ namespace equelleCUDA {
 	/*! \return A host vector containing the values of the collection */
 	std::vector<double> copyToHost() const;
 	
-	//! For CUDA kernel calls.
-	/*! 
-	  Used for setting the CUDA grid size before calling a kernel.
-	  \return The appropriate CUDA gridDim.x size 
-	*/
-	int grid() const;
+	
 	//! For CUDA kernel calls.
 	/*!
-	  Used for setting the CUDA block size before calling a kernel.
-	  \return The appropriate CUDA blockDim.x size
+	  Returns a struct with the block and grid size needed to launch a
+	  kernel such that we get one thread for each element in the CollOfScalar.
+	  
+	  Assumes 1D setup of grids and blocks.
 	*/
-	int block() const;
-	
-	
+	kernelSetup setup() const;
+
+#ifdef EQUELLE_DEBUG
+	//! Debug function copying the collOfScalar to host debug_vec_ member
+	void debug() const;
+#endif // EQUELLE_DEBUG	
+
+
     private:
 	int size_;
 	double* dev_values_;
@@ -130,6 +132,8 @@ namespace equelleCUDA {
 	// Use 1D kernel grids for arithmetic operations
 	int block_x_;
 	int grid_x_;
+	kernelSetup setup_;
+	
 	
 	
 	// Error handling
@@ -143,7 +147,8 @@ namespace equelleCUDA {
 	// by running a program compiled from Equelle.
 	// All variables will therefore be const CollOfScalar var = something
 	// and assigned by the copy constructor.
-	std::vector<double> debug_vec_;
+	mutable std::vector<double> debug_vec_;
+	mutable double last_val;
 #endif // EQUELLE_DEBUG
     };
 
@@ -329,12 +334,7 @@ namespace equelleCUDA {
     */
     std::vector<bool> cob_to_std(const CollOfBool& cob);
 
-    /*!
-      Define max number of threads in a kernel block:
-    */
-    //const int MAX_THREADS = 7;
-    const int MAX_THREADS = 512;
-    
+
 } // namespace equelleCUDA
 
 

@@ -2,26 +2,38 @@
 #ifndef EQUELLE_TYPEDEFS_HEADER_INCLUDED
 #define EQUELLE_TYPEDEFS_HEADER_INCLUDED
 
+#include <cuda.h>
 
 #include <thrust/device_vector.h>
 #include <vector>
 
-typedef thrust::device_vector<bool> CollOfBool;
-
-/*class CollOfBool : public thrust::device_vector<bool>
+namespace equelleCUDA
 {
-public:
-    CollOfBool(thrust::device_vector<bool>::iterator begin,
-	       thrust::device_vector<bool>::iterator end) 
-	: thrust::device_vector<bool>(begin, end)
-    {};
-    
-    std::vector<bool> stdToHost();
-    };*/
+    /*!
+      Define max number of threads in a kernel block:
+    */
+    const int MAX_THREADS = 512;
+    //const int MAX_THREADS = 7;
+}
+
+typedef thrust::device_vector<bool> CollOfBool;
 
 typedef double Scalar;
 typedef bool Bool;
 typedef std::string String;
+
+
+
+struct kernelSetup 
+{
+    const dim3 block;
+    const dim3 grid;
+    
+    kernelSetup(int threads_needed) 
+    : block(equelleCUDA::MAX_THREADS),
+      grid( (int)(( threads_needed + equelleCUDA::MAX_THREADS - 1)/equelleCUDA::MAX_THREADS) )
+    {}
+};
 
 
 #endif // EQUELLE_TYPEDEFS_HEADER_INCLUDED

@@ -20,6 +20,8 @@ gmon.out
 *~
 *.tlog
 *.lastbuildstate
+*.user
+
 
 ec
 el

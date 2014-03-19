@@ -296,7 +296,11 @@ namespace equelleCUDA
 			      const int codim) const;
 
 
-	
+	//! Finds the normal vectors for the given faces.
+	/*!
+	  Returns a collection of Vectors for the faces given in the input
+	  CollOfFace. 
+	*/
 	CollOfVector normal( const CollOfFace& faces) const;
 
 	// ---------------- Get functions: -------------------------------
@@ -555,15 +559,48 @@ namespace equelleCUDA
 				const double* norm_values);
 
 
+    //! Kernel for finding centroids from a subset of indices.
+    /*!
+      For finding the centroids of AllFaces or AllCells, we can simply perform
+      a cudaMemcpy, since all centroid are already stored on the device. If we 
+      however only want a subset of these centroid values, we need a kernel that
+      reads only the required values.
 
-    
-    __global__ void cellCentroidKernel( double* out,
-					const int* cells,
-					const double* all_centroids,
-					const int num_vectors,
-					const int dimensions);
+      The centroids are stored as vectors with their coordinates. Currently this
+      kernel is implemented as using one thread per vector, so that each thread 
+      performs dimensions reads and writes.
+      
+      \param[out] out The resulting set of centroid vectors.
+      \param[in] subset_indices The indices of the collection of faces or cells 
+      that we want to store the centroids of.
+      \param[in] all_centroids This is either the array cell_centroids_ or 
+      face_centroids_ depending of what kind of centroids we are requesting.
+      \param[in] num_vectors Number of vectors the result will be storing
+      \param[in] dimensions Dimension of each vector.
+    */
+    __global__ void centroidKernel( double* out,
+				    const int* subset_indices,
+				    const double* all_centroids,
+				    const int num_vectors,
+				    const int dimensions);
 
+    //! Kernel for finding the normal vectors of a subset of faces.
+    /*!
+      For finding the normal vectors of AllFaces we can simply make a cudaMemcpy call,
+      but when we only want the normal vectors of a subset of AllFaces we call this 
+      kernel to only read the ones we need.
 
+      The kernel use one thread for each face, so that each thread copies dimension 
+      values from all_face_normals to out.
+
+      \param[out] out The resulting set of normal vectors.
+      \param[in] faces The indices of the faces we want to find the normal vector of.
+      \param[in] all_face_normals The array holding the normal vector for all faces
+      in the grid.
+      \param[in] num_vectors The number of faces in faces.
+      \param[in] dimensions The dimension the grid is in, and therefore also the 
+      dimension of each normal vector.
+    */
     __global__ void faceNormalsKernel( double* out,
 				       const int* faces,
 				       const double* all_face_normals,

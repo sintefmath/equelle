@@ -1,9 +1,9 @@
 grid_dim=3
-nx=14
+nx=70
 dx=1
-ny=6
+ny=111
 dy=1
-nz=11
+nz=42
 dz=1
 u0_from_file=false
 u0=500
