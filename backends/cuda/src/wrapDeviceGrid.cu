@@ -212,31 +212,38 @@ thrust::device_vector<int> wrapDeviceGrid::extendToFullIndices( const thrust::de
     int* out_ptr = thrust::raw_pointer_cast( &out[0] );
     const int* in_data_ptr = thrust::raw_pointer_cast( &in_data[0] );
     const int* from_ptr = thrust::raw_pointer_cast( &from_set[0]);
-    wrapDeviceGrid::extendToFullKernelIndices<<<grid,block>>>( out_ptr,
-							       from_ptr,
-							       from_set.size(),
-							       in_data_ptr,
-							       full_size);
+    wrapDeviceGrid::extendToFullKernelIndices_step1<<<grid,block>>>( out_ptr,
+								     full_size);
+    wrapDeviceGrid::extendToFullKernelIndices_step2<<<grid,block>>>( out_ptr,
+								     from_ptr,
+								     from_set.size(),
+								     in_data_ptr);
     
       
     return out;
 }
 
 
-__global__ void wrapDeviceGrid::extendToFullKernelIndices( int* outData,
-							   const int* from_set,
-							   const int from_size,
-							   const int* inData,
-							   const int to_size) 
+
+// EXTEND TO FULL FOR INDICES DONE IN 2 STEPS
+
+__global__ void wrapDeviceGrid::extendToFullKernelIndices_step1( int* outData,
+								 const int full_size)
 {
     int outIndex = threadIdx.x + blockIdx.x*blockDim.x;
-    if ( outIndex < to_size) {
+    if ( outIndex < full_size) {
 	outData[outIndex] = 0;
-	
-	__syncthreads();
-	if ( outIndex < from_size ) {
-	    outData[from_set[outIndex]] = inData[outIndex];
-	}
+    }
+}
+
+__global__ void wrapDeviceGrid::extendToFullKernelIndices_step2( int* outData,
+								 const int* from_set,
+								 const int from_size,
+								 const int* inData)
+{
+    int outIndex = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( outIndex < from_size ) {
+	outData[from_set[outIndex]] = inData[outIndex];
     }
 }
 
