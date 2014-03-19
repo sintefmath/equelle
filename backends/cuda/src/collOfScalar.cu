@@ -253,6 +253,10 @@ int CollOfScalar::grid() const {
     //return setup_.grid;
 }
 
+kernelSetup CollOfScalar::setup() const {
+    return setup_;
+}
+
 // Assumes that values are already allocated on host
 std::vector<double> CollOfScalar::copyToHost() const
 {
@@ -302,10 +306,11 @@ CollOfScalar equelleCUDA::operator-(const CollOfScalar& lhs, const CollOfScalar&
     const double* rhs_dev = rhs.data();
     double* out_dev = out.data();
 
-    dim3 block(out.block());
-    dim3 grid(out.grid());
+    //dim3 block(out.block());
+    //dim3 grid(out.grid());
     std::cout << "Calling minus_kernel!\n";
-    minus_kernel <<<grid, block>>>(out_dev, rhs_dev, out.size());
+    kernelSetup s = out.setup();
+    minus_kernel <<<s.grid, s.block>>>(out_dev, rhs_dev, out.size());
     return out;
 }
 
@@ -315,9 +320,10 @@ CollOfScalar equelleCUDA::operator+(const CollOfScalar& lhs, const CollOfScalar&
     const double* rhs_dev = rhs.data();
     double* out_dev = out.data();
 
-    dim3 block(out.block());
-    dim3 grid(out.grid());
-    plus_kernel <<<grid, block>>>(out_dev, rhs_dev, out.size());
+    //    dim3 block(out.block());
+    //dim3 grid(out.grid());
+    kernelSetup s = out.setup();
+    plus_kernel <<<s.grid, s.block>>>(out_dev, rhs_dev, out.size());
     return out;
 }
 
@@ -327,9 +333,10 @@ CollOfScalar equelleCUDA::operator*(const CollOfScalar& lhs, const CollOfScalar&
     const double* rhs_dev = rhs.data();
     double* out_dev = out.data();
 
-    dim3 block(out.block());
-    dim3 grid(out.grid());
-    multiplication_kernel <<<grid, block>>>(out_dev, rhs_dev, out.size());
+    //    dim3 block(out.block());
+    //    dim3 grid(out.grid());
+    kernelSetup s = out.setup();
+    multiplication_kernel <<<s.grid, s.block>>>(out_dev, rhs_dev, out.size());
     return out;
 }
 
@@ -339,17 +346,19 @@ CollOfScalar equelleCUDA::operator/(const CollOfScalar& lhs, const CollOfScalar&
     const double* rhs_dev = rhs.data();
     double* out_dev = out.data();
 
-    dim3 block(out.block());
-    dim3 grid(out.grid());
-    division_kernel <<<grid, block>>>(out_dev, rhs_dev, out.size());
+    //    dim3 block(out.block());
+    //    dim3 grid(out.grid());
+    kernelSetup s = out.setup();
+    division_kernel <<<s.grid, s.block>>>(out_dev, rhs_dev, out.size());
     return out;
 }
 
 CollOfScalar equelleCUDA::operator*(const Scalar& lhs, const CollOfScalar& rhs) {
     CollOfScalar out = rhs;
-    dim3 block(out.block());
-    dim3 grid(out.grid());
-    multScalCollection_kernel<<<grid,block>>>(out.data(), lhs, out.size());
+    //    dim3 block(out.block());
+    //    dim3 grid(out.grid());
+    kernelSetup s = out.setup();
+    multScalCollection_kernel<<<s.grid,s.block>>>(out.data(), lhs, out.size());
     return out;
 }
 
@@ -363,9 +372,10 @@ CollOfScalar equelleCUDA::operator/(const CollOfScalar& lhs, const Scalar& rhs) 
 
 CollOfScalar equelleCUDA::operator/(const Scalar& lhs, const CollOfScalar& rhs) {
     CollOfScalar out = rhs;
-    dim3 block(out.block());
-    dim3 grid(out.grid());
-    divScalCollection_kernel<<<grid,block>>>(out.data(), lhs, out.size());
+    //    dim3 block(out.block());
+    //    dim3 grid(out.grid());
+    kernelSetup s = out.setup();
+    divScalCollection_kernel<<<s.grid,s.block>>>(out.data(), lhs, out.size());
     return out;
 }
 
@@ -376,9 +386,10 @@ CollOfScalar equelleCUDA::operator-(const CollOfScalar& arg) {
 CollOfBool equelleCUDA::operator>(const CollOfScalar& lhs, const CollOfScalar& rhs) {
     CollOfBool out(lhs.size());
     bool* out_ptr = thrust::raw_pointer_cast( &out[0] );
-    dim3 block(lhs.block());
-    dim3 grid(lhs.grid());
-    compGTkernel<<<grid,block>>>(out_ptr, lhs.data(), rhs.data(), lhs.size());
+    //    dim3 block(lhs.block());
+    //    dim3 grid(lhs.grid());
+    kernelSetup s = lhs.setup();
+    compGTkernel<<<s.grid,s.block>>>(out_ptr, lhs.data(), rhs.data(), lhs.size());
     return out;
 }
 

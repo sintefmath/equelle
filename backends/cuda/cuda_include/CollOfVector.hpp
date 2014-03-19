@@ -30,8 +30,10 @@ namespace equelleCUDA {
       memory.
 
       There are two ways of launching CUDA kernels that do operations on a 
-      CollOfVector. It is with one thread for each vector, or one thread for each
-      element. 
+      CollOfVector. The first is by using one thread for each vector, 
+      and the other one thread for each element. These block and grid sizes 
+      are stored in a kernelSetup datatype available through vector_setup()
+      and element_setup().
     */
     class CollOfVector
     {
@@ -96,8 +98,6 @@ namespace equelleCUDA {
 
 	// Temporary function to make everything work again
 	int size() const;
-	int block() const;
-	int grid() const;
 
 	//! Dimension of vectors in the collection
 	int dim() const;
@@ -118,6 +118,9 @@ namespace equelleCUDA {
 	*/
 	int numElements() const;
 
+	kernelSetup vector_setup() const;
+	kernelSetup element_setup() const;
+	
 
 	//! Index operator
 	/*!
@@ -131,7 +134,7 @@ namespace equelleCUDA {
     private:
 	CollOfScalar elements_;
 	const int dim_;
-	kernelSetup element_setup_;
+	//kernelSetup element_setup_; // Find this one as elements_.getKernelSetup()
 	kernelSetup vector_setup_;
 
 	// size_ from CollOfScalar is actually size_ * dim

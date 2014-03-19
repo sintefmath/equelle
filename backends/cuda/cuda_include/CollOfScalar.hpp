@@ -122,6 +122,15 @@ namespace equelleCUDA {
 	*/
 	int block() const;
 	
+	//! For CUDA kernel calls.
+	/*!
+	  Returns a struct with the block and grid size needed to launch a
+	  kernel such that we get one thread for each element in the CollOfScalar.
+	  
+	  Assumes 1D setup of grids and blocks.
+	*/
+	kernelSetup setup() const;
+
 #ifdef EQUELLE_DEBUG
 	//! Debug function copying the collOfScalar to host debug_vec_ member
 	void debug() const;

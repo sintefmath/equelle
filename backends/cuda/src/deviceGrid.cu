@@ -27,6 +27,7 @@
 #include "CollOfScalar.hpp"
 #include "CollOfIndices.hpp"
 #include "CollOfVector.hpp"
+#include "equelleTypedefs.hpp"
 
 
 
@@ -592,8 +593,7 @@ CollOfVector DeviceGrid::centroid(const thrust::device_vector<int>& indices,
 	// Easy implementation: 
 	// CollOfVector::block() and grid() assumes one thread per double value
 	// Our kernel use one thread per vector, so we overshoot a bit.
-	dim3 block(out.block());
-	dim3 grid(out.grid());
+	kernelSetup s = out.element_setup();
 	const int* indices_ptr = thrust::raw_pointer_cast( &indices[0] );
 	
 	// Get a pointer to the correct set of centroids:
@@ -601,11 +601,11 @@ CollOfVector DeviceGrid::centroid(const thrust::device_vector<int>& indices,
 	if ( codim == 1) {
 	    all_centroids = face_centroids_;
 	}
-	equelleCUDA::centroidKernel<<<grid,block>>>( out.data(),
-						     indices_ptr,
-						     all_centroids,
-						     out.numVectors(),
-						     dimensions_);
+	equelleCUDA::centroidKernel<<<s.grid, s.block>>>( out.data(),
+							  indices_ptr,
+							  all_centroids,
+							  out.numVectors(),
+							  dimensions_);
 	return out;
     }
 }
@@ -627,13 +627,12 @@ CollOfVector DeviceGrid::normal( const CollOfFace& faces) const {
 	// Easy implementation:
 	// CollOfVector::block() and grid() assumes one thread per double value
 	// Our kernel use one thread per vector, so we overshoot a bit.
-	dim3 grid(out.grid());
-	dim3 block(out.block());
-	equelleCUDA::faceNormalsKernel<<<grid,block>>>(out.data(),
-						       faces.raw_pointer(),
-						       face_normals_,
-						       out.numVectors(),
-						       dimensions_);
+	kernelSetup s = out.element_setup();
+	equelleCUDA::faceNormalsKernel<<<s.grid, s.block>>>(out.data(),
+							    faces.raw_pointer(),
+							    face_normals_,
+							    out.numVectors(),
+							    dimensions_);
     }
     return out;
 }

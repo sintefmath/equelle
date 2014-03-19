@@ -11,13 +11,15 @@
 
 #include "CollOfVector.hpp"
 #include "CollOfScalar.hpp"
-
+#include "equelleTypedefs.hpp"
 
 using namespace equelleCUDA;
 
 
 CollOfVector::CollOfVector() 
-    : elements_(), dim_(1), element_setup_(0), vector_setup_(0)
+    : elements_(),
+      dim_(1),
+      vector_setup_(0)
 {
     // intentionally left blank
 }
@@ -25,7 +27,9 @@ CollOfVector::CollOfVector()
 
 
 CollOfVector::CollOfVector(const int size, const int dim)
-    : elements_(size*dim), dim_(dim), element_setup_(size*dim), vector_setup_(size)
+    : elements_(size*dim), 
+      dim_(dim),
+      vector_setup_(size)
 {
      std::cerr << __PRETTY_FUNCTION__ << std::endl;
     // intentionally left blank
@@ -34,7 +38,6 @@ CollOfVector::CollOfVector(const int size, const int dim)
 CollOfVector::CollOfVector(const std::vector<double>& host, const int dim)
     : elements_(host), 
       dim_(dim),
-      element_setup_(host.size()),
       vector_setup_(host.size()/dim)
 {
     // intentionally left blank
@@ -57,7 +60,6 @@ CollOfVector& CollOfVector::operator= (const CollOfVector& other) {
 CollOfVector::CollOfVector(const CollOfVector& coll)
     : elements_(coll.elements_), 
       dim_(coll.dim_),
-      element_setup_(coll.numElements()),
       vector_setup_(coll.numVectors())
 {
     std::cerr << __PRETTY_FUNCTION__ << std::endl;    
@@ -78,9 +80,11 @@ CollOfVector::~CollOfVector()
 //  ----- NORM -----
 CollOfScalar CollOfVector::norm() const {
     CollOfScalar out(numVectors());
-    dim3 block(out.block());
-    dim3 grid(out.grid());
-    normKernel<<<grid, block>>>(out.data(), data(), numVectors(), dim());
+    //dim3 block(out.block());
+    //dim3 grid(out.grid());
+    // One thread for each vector:
+    kernelSetup s = vector_setup();
+    normKernel<<< s.grid, s.block >>>(out.data(), data(), numVectors(), dim());
     return out;
 }
 
@@ -97,12 +101,7 @@ double* CollOfVector::data() {
 int CollOfVector::size() const {
     return elements_.size();
 }
-int CollOfVector::block() const {
-    return elements_.block();
-}
-int CollOfVector::grid() const {
-    return elements_.grid();
-}
+
 
 int CollOfVector::dim() const {
     return dim_;
@@ -119,6 +118,14 @@ int CollOfVector::numElements() const {
     return elements_.size();
 }
 
+kernelSetup CollOfVector::vector_setup() const {
+    return vector_setup_;
+}
+
+kernelSetup CollOfVector::element_setup() const {
+    return elements_.setup();
+}
+
 //Operator []
 
 CollOfScalar CollOfVector::operator[](const int index) const {
@@ -128,16 +135,12 @@ CollOfScalar CollOfVector::operator[](const int index) const {
     }
     
     CollOfScalar out(numVectors());
-    
-    dim3 block(out.block());
-    dim3 grid(out.grid());
-
-    collOfVectorOperatorIndexKernel<<<grid,block>>>( out.data(),
-						     this->data(),
-						     out.size(),
-						     index,
-						     dim_);
-						    
+    kernelSetup s = vector_setup();
+    collOfVectorOperatorIndexKernel<<<s.grid,s.block>>>( out.data(),
+							 this->data(),
+							 out.size(),
+							 index,
+							 dim_);	
     return out;
 }
 
@@ -180,17 +183,15 @@ __global__ void equelleCUDA::normKernel( double* out,
 CollOfVector equelleCUDA::operator+(const CollOfVector& lhs, const CollOfVector& rhs) {
 
     CollOfVector out = lhs;
-    dim3 block(out.block());
-    dim3 grid(out.grid());
-    plus_kernel<<<grid,block>>>(out.data(), rhs.data(), out.size());
+    kernelSetup s = out.element_setup();
+    plus_kernel<<<s.grid, s.block>>>(out.data(), rhs.data(), out.size());
     return out;
 }
 
 
 CollOfVector equelleCUDA::operator-(const CollOfVector& lhs, const CollOfVector& rhs) {
     CollOfVector out = lhs;
-    dim3 block(out.block());
-    dim3 grid(out.grid());
-    minus_kernel<<<grid,block>>>(out.data(), rhs.data(), out.size());
+    kernelSetup s = out.element_setup();
+    minus_kernel<<<s.grid, s.block>>>(out.data(), rhs.data(), out.size());
     return out;
 }
