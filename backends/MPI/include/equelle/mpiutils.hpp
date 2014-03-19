@@ -1,17 +1,13 @@
 #pragma once
 
-#include <stdexcept>
-#include <sstream>
+#include <vector>
 #include <iterator>
 #include <algorithm>
-#include <mpi.h>
+#include <iostream>
 
-#include <zoltan_cpp.h>
-
-#include <Eigen/Eigen>
 #include <Eigen/Sparse>
 
-#include "opm/core/grid.h"
+struct UnstructuredGrid;
 
 #define MPI_SAFE_CALL( err ) equelle::mpiSafeCall( err, __FILE__, __LINE__, __FUNCTION__ )
 #define ZOLTAN_SAFE_CALL( err ) equelle::zoltanSafeCall( err, __FILE__, __LINE__, __FUNCTION__ )

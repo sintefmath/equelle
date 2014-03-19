@@ -1,5 +1,11 @@
 #include "equelle/mpiutils.hpp"
 
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include <zoltan_cpp.h>
+#pragma GCC diagnostic pop
+
+#include "opm/core/grid.h"
+
 namespace equelle {
 
 MPIInitializer::MPIInitializer()

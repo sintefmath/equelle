@@ -1,9 +1,12 @@
 #include "equelle/RuntimeMPI.hpp"
-#include <mutex>
 #include <iostream>
 
 #include <mpi.h>
+
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <zoltan_cpp.h>
+#pragma GCC diagnostic pop
+
 #include <opm/core/grid/GridManager.hpp>
 
 #include "EquelleRuntimeCPU.hpp"
@@ -11,20 +14,6 @@
 
 
 namespace equelle {
-
-namespace impl {
-void initMPIandZoltan() {
-    MPI_SAFE_CALL( MPI_Init( NULL, NULL ) );
-
-    int size;
-    MPI_SAFE_CALL( MPI_Comm_size( MPI_COMM_WORLD, &size ) );
-
-    float zoltanVersion;
-    ZOLTAN_SAFE_CALL( Zoltan_Initialize( 0, NULL, &zoltanVersion ) );
-}
-}
-
-std::once_flag flag;
 
 void RuntimeMPI::initializeZoltan()
 {
@@ -55,9 +44,7 @@ void RuntimeMPI::initializeGrid()
 }
 
 RuntimeMPI::RuntimeMPI()
-{ 
-    initializeZoltan();
-    initializeGrid();
+{     
 }
 
 
@@ -66,8 +53,6 @@ RuntimeMPI::~RuntimeMPI()
 {
     // Zoltan resources must be deleted before we call MPI_Finalize.
     zoltan.release();
-    //MPI_SAFE_CALL( MPI_Finalize() );
-
 }
 
 zoltanReturns RuntimeMPI::computePartition()

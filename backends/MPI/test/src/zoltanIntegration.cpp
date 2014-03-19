@@ -12,7 +12,10 @@
 
 #include <boost/test/unit_test.hpp>
 
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <zoltan_cpp.h>
+#pragma GCC diagnostic pop
+
 #include "EquelleRuntimeCPU.hpp"
 #include "equelle/mpiutils.hpp"
 #include "equelle/RuntimeMPI.hpp"

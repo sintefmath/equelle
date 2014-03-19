@@ -1,6 +1,8 @@
 #pragma once
 
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <zoltan_cpp.h>
+#pragma GCC diagnostic pop
 
 namespace equelle {
 
