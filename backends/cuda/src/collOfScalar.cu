@@ -386,6 +386,14 @@ CollOfBool equelleCUDA::operator<(const CollOfScalar& lhs, const CollOfScalar& r
     return out;
 }
 
+CollOfBool equelleCUDA::operator<(const CollOfScalar& lhs, const Scalar rhs) {
+    CollOfBool out(lhs.size());
+    bool* out_ptr = thrust::raw_pointer_cast( &out[0] );
+    kernelSetup s = lhs.setup();
+    comp_collLTscal_kernel<<<s.grid, s.block>>>(out_ptr, lhs.data(), rhs, lhs.size());
+    return out;
+}
+
 /////////////////////////////////////////////////////////////////////////////////
 /// ----------------------- KERNEL IMPLEMENTATIONS: ---------------------------//
 /////////////////////////////////////////////////////////////////////////////////
@@ -470,6 +478,19 @@ __global__ void equelleCUDA::comp_collLTcoll_kernel( bool* out,
 	out[index] = lhs[index] < rhs[index];
     }
 }
+
+__global__ void equelleCUDA::comp_collLTscal_kernel( bool* out,
+						     const double* lhs,
+						     const double rhs,
+						     const int size)
+{
+    int index = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( index < size ) {
+	out[index] = lhs[index] < rhs;
+    }
+}
+
+
 
 
 // Transforming CollOfBool

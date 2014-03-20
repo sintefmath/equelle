@@ -237,7 +237,7 @@ namespace equelleCUDA {
     /*!
       Compare elements in lhs with a single scalar rhs and return a Collection of Booleans.
       \code out[i] = lhs[i] > rhs \endcode
-      \param[out] The resulting collection of booleans
+      \param[out] out The resulting collection of booleans
       \param[in] lhs Left hand side collection of scalars
       \param[in] rhs Right hand side scalar
       \param[in] size Size of the lhs array.
@@ -251,7 +251,7 @@ namespace equelleCUDA {
     /*!
       Compare elements in lhs with elements in rhs and return a Collection Of Booleans.
       \code out[i] = lhs[i] < rhs[i] \endcode
-      \param[out] The resulting collection of booleans
+      \param[out] out The resulting collection of booleans
       \param[in] lhs Left hand side values
       \param[in] rhs Right hand side values
       \param[in] size Size of the arrays
@@ -260,6 +260,20 @@ namespace equelleCUDA {
 					    const double* lhs,
 					    const double* rhs,
 					    const int size);
+
+    //! CUDA kernel for less than scalar operation
+    /*!
+      Compare elements in lhs with a single scalar rhs and return a Collection of Booleans.
+      \code out[i] = lhs[i] < rhs \endcode
+      \param[out] The resulting collection of booleans
+      \param[in] lhs Left hand side collection of scalars
+      \param[in] rhs Right hand side scalar.
+      \param[in] size Size of the lhs array.
+     */
+    __global__ void comp_collLTscal_kernel( bool* out,
+					   const double* lhs,
+					   const double rhs,
+					   const int size);
 
     // -------------- Operation overloading ------------------- //
     
@@ -367,6 +381,14 @@ namespace equelleCUDA {
       \coded out[i] = lhs[i] < rhs[i] \endcode
     */
     CollOfBool operator<(const CollOfScalar& lhs, const CollOfScalar& rhs);
+
+    /*!
+      Less than operator comparing with a scalar
+      \return Collection of Booleans consisting of
+      \code out[i] = lhs[i] < rhs \endcode
+    */
+    CollOfBool operator<(const CollOfScalar& lhs, const Scalar rhs);
+
 
     //! CollOfBool -> std::vector<bool>
     /*!

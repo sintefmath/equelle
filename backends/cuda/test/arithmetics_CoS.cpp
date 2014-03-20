@@ -238,6 +238,22 @@ BOOST_AUTO_TEST_CASE( less_than_test )
     compareBools( lf, res);
 }
 
+BOOST_AUTO_TEST_CASE( less_than_scalar_test )
+{
+    int size = ALL_SIZES;
+    std::vector<double> a;
+    std::vector<bool> lf;
+    double b = (rand()%113)*1.244;
+    for (int i = 0; i < size; ++i) {
+	a.push_back( rand() % 124 );
+	lf.push_back( a[i] < b);
+    }
+    CollOfScalar a_col(a);
+    CollOfBool cob = a_col < b;
+    std::vector<bool> res = cob_to_std(cob);
+    compareBools( lf, res);
+
+}
 
 
 BOOST_AUTO_TEST_SUITE_END();
