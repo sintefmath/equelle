@@ -375,6 +375,8 @@ namespace equelleCUDA {
     std::vector<bool> cob_to_std(const CollOfBool& cob);
 
 
+
+
 } // namespace equelleCUDA
 
 

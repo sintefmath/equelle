@@ -119,3 +119,28 @@ CollOfScalar EquelleRuntimeCUDA::sqrt(const CollOfScalar& x) const {
 
     return equelleCUDA::sqrtWrapper(x);
 }
+
+
+
+// Array Of {X} Collection Of Scalar
+std::array<CollOfScalar, 1> makeArray( const CollOfScalar& t ) 
+{
+    return std::array<CollOfScalar, 1> {{t}};
+};
+std::array<CollOfScalar, 2> makeArray( const CollOfScalar& t1, const CollOfScalar& t2 )
+{
+    return std::array<CollOfScalar, 2> {{t1, t2}};
+};
+std::array<CollOfScalar, 3> makeArray( const CollOfScalar& t1,
+				       const CollOfScalar& t2,
+				       const CollOfScalar& t3 )
+{
+    return std::array<CollOfScalar, 3> {{t1, t2, t3}};
+}
+std::array<CollOfScalar, 4> makeArray( const CollOfScalar& t1,
+				       const CollOfScalar& t2,
+				       const CollOfScalar& t3,
+				       const CollOfScalar& t4 )
+{
+    return std::array<CollOfScalar, 4> {{t1, t2, t3, t4}};
+}

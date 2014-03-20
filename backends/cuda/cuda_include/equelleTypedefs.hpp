@@ -36,4 +36,6 @@ struct kernelSetup
 };
 
 
+
+
 #endif // EQUELLE_TYPEDEFS_HEADER_INCLUDED
