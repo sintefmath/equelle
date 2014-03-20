@@ -35,6 +35,11 @@ endforeach()
 
 option(EQUELLE_BUILD_MPI "Build MPI backend and tools (requires MPI and Zoltan from Trilinos)" OFF)
 option(EQUELLE_BUILD_CUDA "Build CUDA backend and tools (requires CUDA)" OFF)
+option(EQUELLE_DEBUG "Enable extra debugging messages and tests" ON)
+
+if(EQUELLE_DEBUG)
+   add_definitions(-DEQUELLE_DEBUG)
+endif()
 
 add_subdirectory(compiler)
 add_subdirectory(backends)
