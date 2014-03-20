@@ -235,7 +235,20 @@ int collOfScalarTest(EquelleRuntimeCUDA* er) {
 	return 1;
     }
 
-    // Try to make div be equal to a_big
+
+    // Make an array of collections:
+    std::array<CollOfScalar,3> myArray = makeArray(a_big, a_big_grad, div);
+    if ( compare( myArray[0], a_big_sol, 12, "myArray[0] (a_big)")) {
+	return 1;
+    }
+    if ( compare( myArray[1], a_big_grad_sol, 17, "myArray[1] (a_big_grad)")) {
+	return 1;
+    }
+    if ( compare( myArray[2], div_sol, 12, "myArray[2] (div)") ) {
+	return 1;
+    }
+
+   // Try to make div be equal to a_big
     div = a_big;
     if ( compare(div, a_big_sol, 12, "div = a_big")) {
 	return 1;
