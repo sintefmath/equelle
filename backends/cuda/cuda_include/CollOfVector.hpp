@@ -129,7 +129,13 @@ namespace equelleCUDA {
 	  but a collection of the second component from all the vectors.
 	*/
 	CollOfScalar operator[](const int index) const;
-
+	
+	// These functions are generated from the compiler, and we need therefore
+	// to implement them.
+	//CollOfScalar& col(const int c);
+	//const CollOfScalar& col(const int c) const;
+	CollOfScalar col(const int index) const;
+	// The one implemented here makes a copy though...
 
     private:
 	CollOfScalar elements_;

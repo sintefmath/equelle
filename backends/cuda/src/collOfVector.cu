@@ -126,9 +126,19 @@ kernelSetup CollOfVector::element_setup() const {
     return elements_.setup();
 }
 
+
+
 //Operator []
 
+// The output from the compiler do not use [] for Vectors (only for arrays)
+// Instead we need the member function col(int) that work the same way.
+// operator[] is still used in the tests, and therefore also tests col.
+
 CollOfScalar CollOfVector::operator[](const int index) const {
+    return col(index);
+}
+
+CollOfScalar CollOfVector::col(const int index) const {
     
     if ( index < 0 || index >= dim_) {
 	OPM_THROW(std::runtime_error, "Illigal dimension index " << index << " for a vector of dimension " << dim_);
