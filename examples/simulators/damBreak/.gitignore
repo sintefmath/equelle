@@ -1,0 +1,16 @@
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+
+.cproject
+.project
+*.cbp
+
+*.output
+serial_res
+
+*.mat
+
+cpu_swe
+gpu_swe
