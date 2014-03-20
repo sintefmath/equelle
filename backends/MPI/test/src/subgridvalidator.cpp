@@ -28,15 +28,13 @@ BOOST_AUTO_TEST_CASE( checkSubGrids ) {
     std::string filename("norne.grid");
 
     equelle::RuntimeMPI runtime;
-    if ( equelle::getMPIRank() == 0 ) {
-        runtime.grid_manager.reset( new Opm::GridManager( filename ) );
-    }
+    runtime.globalGrid.reset( new Opm::GridManager( filename ) );
 
     auto zr = runtime.computePartition();
 
     if ( equelle::getMPIRank() == 0 ) {
         const int numPartitions = equelle::getMPISize();
-        const int numberOfCells = runtime.grid_manager->c_grid()->number_of_cells;
+        const int numberOfCells = runtime.globalGrid->c_grid()->number_of_cells;
         std::vector<std::vector<int>> exports( numPartitions );
 
         for( int i = 0; i < zr.numExport; ++i ) {
@@ -63,11 +61,11 @@ BOOST_AUTO_TEST_CASE( checkSubGrids ) {
         }
 
         for( auto& v: exports ) {
-            auto subGrid = equelle::SubGridBuilder::build( runtime.grid_manager->c_grid(), v );
+            auto subGrid = equelle::SubGridBuilder::build( runtime.globalGrid->c_grid(), v );
 
             BOOST_CHECK_EQUAL( subGrid.c_grid->number_of_cells - subGrid.number_of_ghost_cells, v.size() );
 
-            auto globalGrid = runtime.grid_manager->c_grid();
+            auto globalGrid = runtime.globalGrid->c_grid();
             auto localGrid = subGrid.c_grid;
             auto dim = globalGrid->dimensions;
 

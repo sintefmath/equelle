@@ -10,7 +10,7 @@ namespace equelle {
 
 /** UnstructuredSubGrid is as an augmented Opm::UnstructuredGrid */
 struct SubGrid {
-    UnstructuredGrid* c_grid; //! Pointer to data for the subGrid with "local"-indexing. Owned by this class.
+    UnstructuredGrid *c_grid; //! Pointer to data for the subGrid with "local"-indexing. Owned by this class.
 
     int number_of_ghost_cells;
 

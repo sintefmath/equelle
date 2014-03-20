@@ -12,12 +12,12 @@
 
 BOOST_AUTO_TEST_CASE( SubGridBuilder ) {
     equelle::RuntimeMPI runtime;
-    runtime.grid_manager.reset( new Opm::GridManager( 6, 1 ) );
+    runtime.globalGrid.reset( new Opm::GridManager( 6, 1 ) );
     std::vector<int> cellsForSubGrid = { 4, 5 };
 
-    equelle::SubGrid subGrid = equelle::SubGridBuilder::build( runtime.grid_manager->c_grid(), cellsForSubGrid );
+    equelle::SubGrid subGrid = equelle::SubGridBuilder::build( runtime.globalGrid->c_grid(), cellsForSubGrid );
 
-    auto globalGrid = runtime.grid_manager->c_grid();
+    auto globalGrid = runtime.globalGrid->c_grid();
     auto localGrid  = subGrid.c_grid;
 
     //equelle::dumpGrid( runtime.grid_manager->c_grid() );
@@ -99,8 +99,8 @@ BOOST_AUTO_TEST_CASE( GridQueryingFunctions ) {
     equelle::RuntimeMPI runtime;
 
     // Our well known 6x1 grid
-    runtime.grid_manager.reset( new Opm::GridManager( 6, 1 ) );
+    runtime.globalGrid.reset( new Opm::GridManager( 6, 1 ) );
 
-    auto grid = runtime.grid_manager->c_grid();
+    auto grid = runtime.globalGrid->c_grid();
     BOOST_CHECK_EQUAL( equelle::GridQuerying::numFaces( grid, 0), 4 );
 }

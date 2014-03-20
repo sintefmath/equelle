@@ -20,14 +20,14 @@ int main( int argc, char* argv[] ) {
     } else {
         equelle::RuntimeMPI runtime;
         if ( equelle::getMPIRank() == 0 ) {
-            runtime.grid_manager.reset( new Opm::GridManager( argv[1] ) );
+            runtime.globalGrid.reset( new Opm::GridManager( argv[1] ) );
         }
 
         auto zr = runtime.computePartition();
 
         if ( equelle::getMPIRank() == 0 ) {
             std::ofstream f( std::string( argv[1]) + std::string( ".part.out")  );
-            equelle::ZoltanGrid::dumpRank0Exports( runtime.grid_manager->c_grid()->number_of_cells, zr, f );
+            equelle::ZoltanGrid::dumpRank0Exports( runtime.globalGrid->c_grid()->number_of_cells, zr, f );
         }
     }
 

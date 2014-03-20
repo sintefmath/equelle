@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE( gridExploration )
     std::unique_ptr<Opm::GridManager> grid ( equelle::createGridManager(paramgroup) );
 
     BOOST_CHECK_EQUAL( grid->c_grid()->number_of_cells, 6 );
-    equelle::dumpGrid( grid->c_grid() );
+    //equelle::dumpGrid( grid->c_grid() );
 
 }
 
@@ -44,18 +44,18 @@ BOOST_AUTO_TEST_CASE( gridExploration )
 BOOST_AUTO_TEST_CASE( RuntimeMPI_6x1grid ) {
     equelle::RuntimeMPI runtime;
 
-    BOOST_CHECK( runtime.zoltan != NULL );
+    //BOOST_CHECK( runtime.zoltan != NULL );
 
     int ierr;
-    void* grid = const_cast<void*>( reinterpret_cast<const void*>(runtime.grid_manager->c_grid() ) );
+    void* grid = const_cast<void*>( reinterpret_cast<const void*>(runtime.globalGrid->c_grid() ) );
 
 
     if ( equelle::getMPIRank() == 0 ) {
-        BOOST_CHECK_EQUAL( runtime.grid_manager->c_grid()->number_of_cells, 6 );
+        BOOST_CHECK_EQUAL( runtime.globalGrid->c_grid()->number_of_cells, 6 );
         BOOST_CHECK_EQUAL( equelle::ZoltanGrid::getNumberOfObjects( grid, &ierr ), 6 );
 
         // Check our querying of the 6x1 grid.
-        const auto numCells = runtime.grid_manager->c_grid()->number_of_cells;
+        const auto numCells = runtime.globalGrid->c_grid()->number_of_cells;
         std::vector<unsigned int> cells( numCells );
         for( unsigned int i = 0; i < numCells; ++i ) {
             cells[i] = i;
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE( RuntimeMPI_6x1grid ) {
 
         BOOST_CHECK_EQUAL( ierr, ZOLTAN_OK );
     } else {
-        BOOST_CHECK_EQUAL( runtime.grid_manager->c_grid()->number_of_cells, 0 );
+        BOOST_CHECK_EQUAL( runtime.globalGrid->c_grid()->number_of_cells, 0 );
         BOOST_CHECK_EQUAL( equelle::ZoltanGrid::getNumberOfObjects( grid, &ierr ), 0 );
     }
 
@@ -113,29 +113,27 @@ BOOST_AUTO_TEST_CASE( RuntimeMPI_6x1grid ) {
 
     if ( equelle::getMPIRank() == 0 ) {
         std::ofstream f("rank0-exports");
-        equelle::ZoltanGrid::dumpRank0Exports( runtime.grid_manager->c_grid()->number_of_cells, zr, f );
+        equelle::ZoltanGrid::dumpRank0Exports( runtime.globalGrid->c_grid()->number_of_cells, zr, f );
     }
 }
 
 
 BOOST_AUTO_TEST_CASE( RuntimeMPI_6x2grid ) {
-    equelle::RuntimeMPI runtime;
-    if ( equelle::getMPIRank() == 0 ) {
-        runtime.grid_manager.reset( new Opm::GridManager( 6, 2 ) );
-    } // else the grid for other MPI nodes are empty in RuntimeMPI ctor.
+    equelle::RuntimeMPI runtime;  
+    runtime.globalGrid.reset( new Opm::GridManager( 6, 2 ) );
 
     auto zr = runtime.computePartition();
     BOOST_CHECK_EQUAL( zr.changes, 1 );
 
     if ( equelle::getMPIRank() == 0 ) {
         std::ofstream f("rank0-6x2-exports");
-        equelle::ZoltanGrid::dumpRank0Exports( runtime.grid_manager->c_grid()->number_of_cells, zr, f );
+        equelle::ZoltanGrid::dumpRank0Exports( runtime.globalGrid->c_grid()->number_of_cells, zr, f );
     }
 }
 
 BOOST_AUTO_TEST_CASE( ZoltanGridMigratorCallBackSignatures ) {
     // This test really passes when the test compiles.
-    std::unique_ptr<Zoltan> zoltan( new Zoltan(MPI_COMM_WORLD) );
+    std::unique_ptr<Zoltan> zoltan( new Zoltan( MPI_COMM_WORLD ) );
     using equelle::ZoltanGridMigrator;
 
     ZOLTAN_SAFE_CALL( zoltan->Set_Obj_Size_Fn( ZoltanGridMigrator::cellSize, NULL ) );
@@ -143,7 +141,22 @@ BOOST_AUTO_TEST_CASE( ZoltanGridMigratorCallBackSignatures ) {
     ZOLTAN_SAFE_CALL( zoltan->Set_Unpack_Obj_Fn( ZoltanGridMigrator::unpackCell, NULL ) );
 }
 
+BOOST_AUTO_TEST_CASE( decompose ) {
+    equelle::RuntimeMPI runtime;
+    runtime.globalGrid.reset( new Opm::GridManager( 6, 2, 5 ) );
 
+    runtime.decompose();
+
+    BOOST_CHECK( runtime.subGrid.global_cell.size() > 0 );
+    int numOwnedCells = runtime.subGrid.global_cell.size() - runtime.subGrid.number_of_ghost_cells;
+
+    int totalCells = 0;
+    MPI_Reduce( &numOwnedCells, &totalCells, 1, MPI_INTEGER, MPI_SUM, 0, MPI_COMM_WORLD );
+
+    if ( equelle::getMPIRank() == 0 ) {
+        BOOST_CHECK_EQUAL( totalCells, runtime.globalGrid->c_grid()->number_of_cells );
+    }
+}
 
 
 
