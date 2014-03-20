@@ -36,7 +36,7 @@ void equelle::ZoltanGrid::getCellList( void *data, int /*sizeGID*/, int /*sizeLI
 
 // Should we call it getNumberOfNeighbors (for a given cell?) In other words, the number of interior edges.
 void equelle::ZoltanGrid::getNumberOfEdgesMulti( void *data, int /* num_gid_entries */, int /* num_lid_entries */,  int num_obj,
-                                           ZOLTAN_ID_PTR  global_id  , ZOLTAN_ID_PTR /* local_id */ , int* numEdges, int *ierr )
+                                           ZOLTAN_ID_PTR  /*global_id*/  , ZOLTAN_ID_PTR /* local_id */ , int* numEdges, int *ierr )
 {
     *ierr = ZOLTAN_FATAL;
 

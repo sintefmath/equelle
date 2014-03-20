@@ -1,8 +1,12 @@
 #pragma once
 
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <zoltan_cpp.h>
+#pragma GCC diagnostic pop
 
 namespace equelle {
+
+enum Boundary { outer = -1, inner = -2 };
 
 /**
  *  zoltanReturns holds all variables that are returen by pointer/reference from Zoltan::LB_Partition.
@@ -15,7 +19,8 @@ struct zoltanReturns {
 };
 
 
-/** ZoltanGrid is a wrapper for Opm::UnstructuredGrid that provides the neccessarry function
+/**
+ * ZoltanGrid is a wrapper for Opm::UnstructuredGrid that provides the neccessarry function
  *  that is required by the Zoltan-domain decomposition library to use perform graph-partitioning
  *  on Opm::UnstructuredGrid.
  *

@@ -12,18 +12,20 @@
 
 BOOST_AUTO_TEST_CASE( SubGridBuilder ) {
     equelle::RuntimeMPI runtime;
-    runtime.grid_manager.reset( new Opm::GridManager( 6, 1 ) );
+    runtime.globalGrid.reset( new Opm::GridManager( 6, 1 ) );
     std::vector<int> cellsForSubGrid = { 4, 5 };
 
-    equelle::SubGrid subGrid = equelle::SubGridBuilder::build( runtime.grid_manager->c_grid(), cellsForSubGrid );
+    equelle::SubGrid subGrid = equelle::SubGridBuilder::build( runtime.globalGrid->c_grid(), cellsForSubGrid );
 
-    auto globalGrid = runtime.grid_manager->c_grid();
+    auto globalGrid = runtime.globalGrid->c_grid();
     auto localGrid  = subGrid.c_grid;
 
     //equelle::dumpGrid( runtime.grid_manager->c_grid() );
 
     BOOST_CHECK_EQUAL( subGrid.c_grid->number_of_cells, 3 );
     BOOST_CHECK_EQUAL( subGrid.number_of_ghost_cells, 1 );
+    BOOST_CHECK_EQUAL( subGrid.global_face.size(), subGrid.c_grid->number_of_faces );
+    BOOST_CHECK_EQUAL( subGrid.global_cell.size(), subGrid.c_grid->number_of_cells );
 
     // Check the local to global mapping
     BOOST_CHECK_EQUAL( 4, subGrid.global_cell[0] );
@@ -51,6 +53,14 @@ BOOST_AUTO_TEST_CASE( SubGridBuilder ) {
     BOOST_CHECK_EQUAL( equelle::GridQuerying::numFaces( globalGrid, 4), equelle::GridQuerying::numFaces( localGrid, 0 ) );
     BOOST_CHECK_EQUAL( equelle::GridQuerying::numFaces( globalGrid, 5), equelle::GridQuerying::numFaces( localGrid, 1 ) );
     BOOST_CHECK_EQUAL( equelle::GridQuerying::numFaces( globalGrid, 3), equelle::GridQuerying::numFaces( localGrid, 2 ) );
+
+    // Check that the face_cell mapping is correct.
+    // We now that global_face 3 is the west-side of the ghost cell (global cell 3).
+    BOOST_REQUIRE_EQUAL( globalGrid->face_cells[2*3], 2 );
+    BOOST_REQUIRE_EQUAL( globalGrid->face_cells[2*3 + 1], 3 );
+
+    int newId = std::distance( subGrid.global_face.begin(), std::find( subGrid.global_face.begin(), subGrid.global_face.end(), 3 ) );
+    BOOST_REQUIRE_EQUAL( localGrid->face_cells[2*newId], equelle::Boundary::inner );
 
     // Check that we have the right face areas for each face in the subgrid
     for( int i = 0; i <  equelle::GridQuerying::numFaces( globalGrid, 4); ++i ) {
@@ -82,9 +92,6 @@ BOOST_AUTO_TEST_CASE( SubGridBuilder ) {
 
     }
 
-
-
-
     destroy_grid( subGrid.c_grid );
 }
 
@@ -92,8 +99,8 @@ BOOST_AUTO_TEST_CASE( GridQueryingFunctions ) {
     equelle::RuntimeMPI runtime;
 
     // Our well known 6x1 grid
-    runtime.grid_manager.reset( new Opm::GridManager( 6, 1 ) );
+    runtime.globalGrid.reset( new Opm::GridManager( 6, 1 ) );
 
-    auto grid = runtime.grid_manager->c_grid();
+    auto grid = runtime.globalGrid->c_grid();
     BOOST_CHECK_EQUAL( equelle::GridQuerying::numFaces( grid, 0), 4 );
 }
