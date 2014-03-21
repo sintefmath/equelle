@@ -10,7 +10,7 @@
 #include <opm/core/grid/GridManager.hpp>
 #include <boost/iterator/counting_iterator.hpp>
 
-#include "EquelleRuntimeCPU.hpp"
+#include "equelle/EquelleRuntimeCPU.hpp"
 #include "equelle/mpiutils.hpp"
 #include "equelle/SubGridBuilder.hpp"
 

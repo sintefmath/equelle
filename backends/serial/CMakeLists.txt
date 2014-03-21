@@ -4,7 +4,7 @@ cmake_minimum_required( VERSION 2.8 )
 set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra -Wno-sign-compare" )
 
 file( GLOB serial_src "src/*.cpp" )
-file( GLOB serial_inc "include/*.hpp" )
+file( GLOB serial_inc "include/equelle/*.hpp" )
 
 set( SERIAL_INCLUDE_DIRS "/usr/include/eigen3" ${EQUELLE_EXTRA_INCLUDE_DIRS})
 

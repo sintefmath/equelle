@@ -16,7 +16,7 @@
 #include <zoltan_cpp.h>
 #pragma GCC diagnostic pop
 
-#include "EquelleRuntimeCPU.hpp"
+#include "equelle/EquelleRuntimeCPU.hpp"
 #include "equelle/mpiutils.hpp"
 #include "equelle/RuntimeMPI.hpp"
 #include "equelle/ZoltanGrid.hpp"

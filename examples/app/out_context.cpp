@@ -14,18 +14,26 @@
 #include <cmath>
 #include <array>
 
-#include "EquelleRuntimeCPU.hpp"
+#include "equelle/EquelleRuntimeCPU.hpp"
 
-void ensureRequirements(const EquelleRuntimeCPU& er);
+void ensureRequirements(const equelle::EquelleRuntimeCPU& er);
+void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er);
 
+#ifndef EQUELLE_NO_MAIN
 int main(int argc, char** argv)
 {
     // Get user parameters.
     Opm::parameter::ParameterGroup param(argc, argv, false);
 
     // Create the Equelle runtime.
-    EquelleRuntimeCPU er(param);
+    equelle::EquelleRuntimeCPU er(param);
+    equelleGeneratedCode(er);
+    return 0;
+}
+#endif // EQUELLE_NO_MAIN
 
+void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er) {
+    using namespace equelle;
     ensureRequirements(er);
 
     // ============= Generated code starts here ================
@@ -41,10 +49,9 @@ int main(int argc, char** argv)
 
     // ============= Generated code ends here ================
 
-    return 0;
 }
 
-void ensureRequirements(const EquelleRuntimeCPU& er)
+void ensureRequirements(const equelle::EquelleRuntimeCPU& er)
 {
     (void)er;
 }

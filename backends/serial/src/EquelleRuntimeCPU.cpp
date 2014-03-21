@@ -3,7 +3,7 @@
 */
 
 
-#include "EquelleRuntimeCPU.hpp"
+#include "equelle/EquelleRuntimeCPU.hpp"
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/core/utility/StopWatch.hpp>
 #include <iomanip>
@@ -46,7 +46,7 @@ namespace equelle {
             OPM_THROW(std::runtime_error, "Cannot handle " << grid_dim << " dimensions.");
         }
     }
-} // equelle-namespace
+
 
 
 
@@ -287,9 +287,8 @@ CollOfVector EquelleRuntimeCPU::normal(const CollOfFace& faces) const
 
 CollOfScalar EquelleRuntimeCPU::sqrt(const CollOfScalar& x) const
 {
-    return ::sqrt(x);
+    return equelle::sqrt(x);
 }
-
 
 CollOfScalar EquelleRuntimeCPU::dot(const CollOfVector& v1, const CollOfVector& v2) const
 {
@@ -540,3 +539,5 @@ CollOfScalar EquelleRuntimeCPU::singlePrimaryVariable(const CollOfScalar& initia
     // Syntax below is: CollOfScalar::variable(block index, initialized from, block structure)
     return CollOfScalar::variable(0, initial_values.value(), block_pattern);
 }
+
+} // equelle-namespace

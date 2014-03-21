@@ -50,7 +50,7 @@ void PrintCPUBackendASTVisitor::postVisit(SequenceNode&)
         // Emit ensureRequirements() function.
         std::cout <<
             "\n"
-            "void ensureRequirements(const EquelleRuntimeCPU& er)\n"
+            "void ensureRequirements(const equelle::EquelleRuntimeCPU& er)\n"
             "{\n";
         if (requirement_strings_.empty()) {
             std::cout << "    (void)er;\n";
@@ -526,10 +526,10 @@ namespace
 "#include <cmath>\n"
 "#include <array>\n"
 "\n"
-"#include \"EquelleRuntimeCPU.hpp\"\n"
+"#include \"equelle/EquelleRuntimeCPU.hpp\"\n"
 "\n"
-"void ensureRequirements(const EquelleRuntimeCPU& er);\n"
-"void equelleGeneratedCode(EquelleRuntimeCPU& er);\n"
+"void ensureRequirements(const equelle::EquelleRuntimeCPU& er);\n"
+"void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er);\n"
 "\n"
  "#ifndef EQUELLE_NO_MAIN\n"
 "int main(int argc, char** argv)\n"
@@ -538,13 +538,14 @@ namespace
 "    Opm::parameter::ParameterGroup param(argc, argv, false);\n"
 "\n"
 "    // Create the Equelle runtime.\n"
-"    EquelleRuntimeCPU er(param);\n"
+"    equelle::EquelleRuntimeCPU er(param);\n"
 "    equelleGeneratedCode(er);\n"
 "    return 0;\n"
 "}\n"
 "#endif // EQUELLE_NO_MAIN\n"
 "\n"
-"void equelleGeneratedCode(EquelleRuntimeCPU& er) {\n"
+"void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er) {\n"
+"    using namespace equelle;\n"
 "    ensureRequirements(er);\n"
 "\n"
 "    // ============= Generated code starts here ================\n";
