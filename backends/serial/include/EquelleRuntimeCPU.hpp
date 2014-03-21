@@ -261,7 +261,6 @@ inline CollOfVector operator/(const CollOfVector& x, const CollOfScalar& s)
 }
 
 
-
 /// A helper type for ensuring AutoDiffBlock objects are converted
 /// to CollOfScalar when necessary for template functions.
 template <class Coll>

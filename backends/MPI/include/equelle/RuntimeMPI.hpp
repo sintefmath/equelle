@@ -1,14 +1,15 @@
 #pragma once
 
 #include <memory>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
+
 #include "equelle/mpiutils.hpp"
 #include "equelle/ZoltanGrid.hpp"
 #include "equelle/SubGridBuilder.hpp"
 
-
 class Zoltan;
 namespace Opm {
-    class GridManager;
+    class GridManager;    
 }
 
 namespace equelle {
@@ -25,6 +26,7 @@ namespace equelle {
 class  RuntimeMPI {
 public:
     RuntimeMPI();
+    //RuntimeMPI( const Opm::parameter::ParameterGroup& param );
     virtual ~RuntimeMPI();
 
     std::unique_ptr<Opm::GridManager> globalGrid; //! Assumed to be read from disk on every node.
