@@ -42,11 +42,8 @@ void RuntimeMPI::initializeZoltan()
 
 void RuntimeMPI::initializeGrid()
 {
-    if ( getMPIRank() == 0 ) {
-        globalGrid.reset( new Opm::GridManager( 6, 1 ) );
-    } else {
-        globalGrid.reset( new Opm::GridManager( 0, 0 ) );
-    }
+    globalGrid.reset( new Opm::GridManager( 6, 1 ) );
+
 }
 
 RuntimeMPI::RuntimeMPI()
@@ -54,8 +51,6 @@ RuntimeMPI::RuntimeMPI()
     initializeZoltan();
     initializeGrid();
 }
-
-
 
 RuntimeMPI::~RuntimeMPI()
 {
