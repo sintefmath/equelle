@@ -17,6 +17,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <array>
 
 #include <thrust/device_vector.h>
 
@@ -186,6 +187,25 @@ private:
     int stride_;
     int start_;
 };
+
+
+// Array Of {X} Collection Of Scalar:
+
+std::array<CollOfScalar, 1> makeArray( const CollOfScalar& t );
+
+std::array<CollOfScalar, 2> makeArray( const CollOfScalar& t1, 
+				       const CollOfScalar& t2 );
+
+std::array<CollOfScalar, 3> makeArray( const CollOfScalar& t1,
+				       const CollOfScalar& t2,
+				       const CollOfScalar& t3 );
+
+std::array<CollOfScalar, 4> makeArray( const CollOfScalar& t1,
+				       const CollOfScalar& t2,
+				       const CollOfScalar& t3,
+				       const CollOfScalar& t4 );
+
+
 
 
 
