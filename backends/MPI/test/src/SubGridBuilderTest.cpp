@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE( SubGridBuilder ) {
 
     }
 
-    destroy_grid( subGrid.c_grid );
+    //destroy_grid( subGrid.c_grid );
 }
 
 BOOST_AUTO_TEST_CASE( GridQueryingFunctions ) {

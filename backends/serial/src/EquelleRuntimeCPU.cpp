@@ -64,6 +64,13 @@ EquelleRuntimeCPU::EquelleRuntimeCPU(const Opm::parameter::ParameterGroup& param
 {
 }
 
+EquelleRuntimeCPU::EquelleRuntimeCPU(const UnstructuredGrid *grid, const Opm::parameter::ParameterGroup &param)
+    : grid_( *grid ),
+      ops_(grid_),
+      param_( param )
+{
+
+}
 
 CollOfCell EquelleRuntimeCPU::allCells() const
 {

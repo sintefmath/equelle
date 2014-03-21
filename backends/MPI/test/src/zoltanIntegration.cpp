@@ -49,8 +49,6 @@ BOOST_AUTO_TEST_CASE( RuntimeMPI_6x1grid ) {
     int ierr;
     void* grid = const_cast<void*>( reinterpret_cast<const void*>(runtime.globalGrid->c_grid() ) );
 
-
-
     BOOST_CHECK_EQUAL( runtime.globalGrid->c_grid()->number_of_cells, 6 );
     BOOST_CHECK_EQUAL( equelle::ZoltanGrid::getNumberOfObjects( grid, &ierr ), 6 );
 

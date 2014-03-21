@@ -15,7 +15,9 @@ include_directories( "include"
     ${MPI_INCLUDE_PATH}
     "../../serial/include" "/usr/include/eigen3" "../include" )
 
-add_executable(zoltanintegration_test "src/SubGridBuilderTest.cpp" "src/zoltanIntegration.cpp" "src/generatedCodeExamples.cpp" ${test_inc} )
+add_executable(zoltanintegration_test "src/SubGridBuilderTest.cpp" "src/zoltanIntegration.cpp"
+                                      "src/generatedCodeExamples.cpp" "src/RuntimeMPITest.cpp"
+                                      ${test_inc} )
 
 add_executable( subgridvalidator "src/subgridvalidator.cpp" )
 

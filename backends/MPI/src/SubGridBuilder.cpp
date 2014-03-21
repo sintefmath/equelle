@@ -82,6 +82,7 @@ SubGridBuilder::extractNeighborFaces(const UnstructuredGrid *grid, const std::ve
     fmap.cell_facepos = new_cell_facepos;
     fmap.cell_faces   = new_cell_faces;
     fmap.global_face  = global_face;
+    fmap.cell_global_to_local = old2new;
 
     return fmap;
 }
@@ -119,7 +120,7 @@ SubGridBuilder::extractNeighborNodes(const UnstructuredGrid *grid, const std::ve
     for( auto it: old2new ) {
         nm.global_node[it.second] = it.first;
     }
-
+    nm.face_global_to_local = old2new;
     return nm;
 }
 
@@ -229,6 +230,11 @@ int GridQuerying::numFaces(const UnstructuredGrid *grid, int cell)
 int GridQuerying::numNodes(const UnstructuredGrid *grid, int face)
 {
     return grid->face_nodepos[face+1] - grid->face_nodepos[face];
+}
+
+SubGrid::~SubGrid()
+{
+    //destroy_grid( c_grid );
 }
 
 }

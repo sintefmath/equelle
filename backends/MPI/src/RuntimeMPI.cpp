@@ -34,10 +34,6 @@ void RuntimeMPI::initializeZoltan()
     // Partition everything without concern for cost.
     ZOLTAN_SAFE_CALL( zoltan->Set_Param( "LB_APPROACH", "PARTITION" ) );
     ZOLTAN_SAFE_CALL( zoltan->Set_Param( "PHG_EDGE_SIZE_THRESHOLD", "1.0" ) );
-
-
-
-
 }
 
 void RuntimeMPI::initializeGrid()
@@ -50,6 +46,13 @@ RuntimeMPI::RuntimeMPI()
 {     
     initializeZoltan();
     initializeGrid();
+}
+
+RuntimeMPI::RuntimeMPI(const Opm::parameter::ParameterGroup &param)
+    : param_( param )
+{
+    initializeZoltan();
+    globalGrid.reset( equelle::createGridManager( param ) );
 }
 
 RuntimeMPI::~RuntimeMPI()
@@ -73,6 +76,8 @@ void RuntimeMPI::decompose()
     }
 
     subGrid = SubGridBuilder::build( globalGrid->c_grid(), localCells );
+
+    runtime.reset( new EquelleRuntimeCPU( subGrid.c_grid, param_ ) );
 }
 
 zoltanReturns RuntimeMPI::computePartition()
@@ -114,6 +119,42 @@ zoltanReturns RuntimeMPI::computePartition()
 CollOfCell RuntimeMPI::allCells() const
 {
     return runtime->allCells();
+}
+
+CollOfScalar RuntimeMPI::inputCollectionOfScalar(const String &name, const CollOfFace &coll)
+{
+    throw std::runtime_error("Not implemented");
+}
+
+CollOfScalar RuntimeMPI::inputCollectionOfScalar(const String &name, const CollOfCell &coll)
+{
+    const int size = coll.size();
+    const bool from_file = param_.getDefault(name + "_from_file", false);
+    if (from_file) {
+        const String filename = param_.get<String>(name + "_filename");
+        std::ifstream is(filename.c_str());
+        if (!is) {
+            OPM_THROW(std::runtime_error, "Could not find file " << filename);
+        }
+        std::istream_iterator<double> beg(is);
+        std::istream_iterator<double> end;
+        std::vector<double> data(beg, end);
+
+        std::vector<double> localData( coll.size() );
+
+        // Map into local cell enumeration
+        for( int i = 0; i < coll.size(); ++i ) {
+            auto glob = subGrid.global_cell[i];
+
+            localData[i] = data[glob];
+        }
+
+        return CollOfScalar(CollOfScalar::V(Eigen::Map<CollOfScalar::V>(&localData[0], size)));
+    } else {
+        // Uniform values.
+        return CollOfScalar(CollOfScalar::V::Constant(size, param_.get<double>(name)));
+    }
+
 }
 
 

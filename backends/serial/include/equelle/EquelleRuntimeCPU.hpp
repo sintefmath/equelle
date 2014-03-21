@@ -24,7 +24,8 @@ class EquelleRuntimeCPU
 {
 public:
     /// Constructor.
-    EquelleRuntimeCPU(const Opm::parameter::ParameterGroup& param);
+    EquelleRuntimeCPU( const Opm::parameter::ParameterGroup& param );
+    EquelleRuntimeCPU( const UnstructuredGrid* grid, const Opm::parameter::ParameterGroup& param );
 
     ///@{ Topology and geometry related.
     CollOfCell allCells() const;

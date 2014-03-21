@@ -40,10 +40,15 @@ public:
     CollOfCell allCells() const;
     ///@}
 
+    /// Return the number of cells in collection. Will do MPI-transfer.
+    int globalCollectionSize( const CollOfFace& coll );
+
     ///@{ Input
-    template <class SomeCollection>
     CollOfScalar inputCollectionOfScalar(const String& name,
-                                         const SomeCollection& coll);
+                                         const CollOfFace& coll);
+
+    CollOfScalar inputCollectionOfScalar(const String& name,
+                                         const CollOfCell& coll);
     ///@}
 
 private:
