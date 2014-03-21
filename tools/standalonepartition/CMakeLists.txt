@@ -15,7 +15,7 @@ include_directories(
 add_executable(standalone_partition standalonepartition.cpp )
 
 target_link_libraries(standalone_partition
-    equelle_rt equelle_mpi
+    equelle_mpi equelle_rt
     ${MPI_C_LIBRARIES}
     ${MPI_CXX_LIBRARIES}
     ${Zoltan_LIBRARIES}

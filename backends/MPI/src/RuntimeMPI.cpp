@@ -111,5 +111,10 @@ zoltanReturns RuntimeMPI::computePartition()
     return zr;
 }
 
+CollOfCell RuntimeMPI::allCells() const
+{
+    return runtime->allCells();
+}
+
 
 } // namespace equlle

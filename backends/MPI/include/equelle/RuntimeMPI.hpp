@@ -3,17 +3,18 @@
 #include <memory>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 
+#include "equelle/equelleTypes.hpp"
 #include "equelle/mpiutils.hpp"
 #include "equelle/ZoltanGrid.hpp"
 #include "equelle/SubGridBuilder.hpp"
 
 class Zoltan;
 namespace Opm {
-    class GridManager;    
+class GridManager;
 }
 
 namespace equelle {
-
+class EquelleRuntimeCPU;
 
 /** RuntimeMPI is responsible for executing Equelle-simulators using MPI.
  *  It handles both the MPI context and the domain decomposition, using Zoltan.
@@ -26,20 +27,37 @@ namespace equelle {
 class  RuntimeMPI {
 public:
     RuntimeMPI();
-    //RuntimeMPI( const Opm::parameter::ParameterGroup& param );
+    RuntimeMPI( const Opm::parameter::ParameterGroup& param );
     virtual ~RuntimeMPI();
 
     std::unique_ptr<Opm::GridManager> globalGrid; //! Assumed to be read from disk on every node.
     equelle::SubGrid subGrid; //! Filled with the local subGrid after call to decompose.
 
     void decompose();
-
     equelle::zoltanReturns computePartition();
+
+    ///@{ Topology and geometry related.
+    CollOfCell allCells() const;
+    ///@}
+
+    ///@{ Input
+    template <class SomeCollection>
+    CollOfScalar inputCollectionOfScalar(const String& name,
+                                         const SomeCollection& coll);
+    ///@}
+
 private:
     std::unique_ptr<Zoltan> zoltan;
+    std::unique_ptr<equelle::EquelleRuntimeCPU> runtime;
+    Opm::parameter::ParameterGroup param_;
+
+
     void initializeZoltan();
-    void initializeGrid();        
+    void initializeGrid();
 
 };
 
-}
+} // namespace equelle
+
+#include "RuntimeMPI_impl.hpp"
+

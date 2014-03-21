@@ -5,7 +5,6 @@
 
 #include "equelle/RuntimeMPI.hpp"
 
-
 BOOST_AUTO_TEST_CASE( distributedReadFile ) {
     // Get user parameters.
     //Opm::parameter::ParameterGroup param;//(argc, argv, false);
@@ -15,9 +14,10 @@ BOOST_AUTO_TEST_CASE( distributedReadFile ) {
 
     //ensureRequirements(er);
 
+    using namespace equelle;
     // ============= Generated code starts here ================
 
-    //const CollOfScalar a = er.inputCollectionOfScalar("a", er.allCells());
+    const CollOfScalar a = er.inputCollectionOfScalar("a", er.allCells());
 
 /*    const CollOfScalar b = er.inputCollectionOfScalar("b", er.allCells());
     const CollOfScalar d = er.inputCollectionOfScalar("d", er.allCells());
