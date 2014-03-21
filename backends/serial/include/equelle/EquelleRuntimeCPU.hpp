@@ -26,7 +26,7 @@ public:
     /// Constructor.
     EquelleRuntimeCPU(const Opm::parameter::ParameterGroup& param);
 
-    /// Topology and geometry related.    
+    ///@{ Topology and geometry related.
     CollOfCell allCells() const;
     CollOfCell boundaryCells() const;
     CollOfCell interiorCells() const;
@@ -41,8 +41,9 @@ public:
     CollOfVector centroid(const CollOfFace& faces) const;
     CollOfVector centroid(const CollOfCell& cells) const;
     CollOfVector normal(const CollOfFace& faces) const;
+    ///@}
 
-    /// Operators and math functions.
+    ///@{ Operators and math functions.
     CollOfScalar sqrt(const CollOfScalar& x) const;
     CollOfScalar dot(const CollOfVector& v1, const CollOfVector& v2) const;
     CollOfScalar gradient(const CollOfScalar& cell_scalarfield) const;
@@ -51,6 +52,7 @@ public:
     CollOfScalar interiorDivergence(const CollOfScalar& face_fluxes) const;
     CollOfBool isEmpty(const CollOfCell& cells) const;
     CollOfBool isEmpty(const CollOfFace& faces) const;
+
 
     template <class EntityCollection>
     CollOfScalar operatorExtend(const Scalar data, const EntityCollection& to_set);
@@ -66,14 +68,17 @@ public:
     trinaryIf(const CollOfBool& predicate,
               const SomeCollection1& iftrue,
               const SomeCollection2& iffalse) const;
+    ///@}
 
-    /// Reductions.
+
+    ///@{ Reductions.
     Scalar minReduce(const CollOfScalar& x) const;
     Scalar maxReduce(const CollOfScalar& x) const;
     Scalar sumReduce(const CollOfScalar& x) const;
     Scalar prodReduce(const CollOfScalar& x) const;
+    ///@}
 
-    /// Solver functions.
+    ///@{ Solver functions.
     template <class ResidualFunctor>
     CollOfScalar newtonSolve(const ResidualFunctor& rescomp,
                              const CollOfScalar& u_initialguess);
@@ -81,12 +86,14 @@ public:
     template <int Num>
     std::array<CollOfScalar, Num> newtonSolveSystem(const std::array<typename ResCompType<Num>::type, Num>& rescomp,
                                                     const std::array<CollOfScalar, Num>& u_initialguess);
+    ///@}
 
-    /// Output.
+    ///@{ Output.
     void output(const String& tag, Scalar val) const;
     void output(const String& tag, const CollOfScalar& vals);
+    ///@}
 
-    /// Input.
+    ///@{ Input.
     Scalar inputScalarWithDefault(const String& name,
                                           const Scalar default_value);
     CollOfFace inputDomainSubsetOf(const String& name,
@@ -98,7 +105,7 @@ public:
                                          const SomeCollection& coll);
 
     SeqOfScalar inputSequenceOfScalar(const String& name);
-
+    ///@}
 
     /// Ensuring requirements that may be imposed by Equelle programs.
     void ensureGridDimensionMin(const int minimum_grid_dimension) const;
