@@ -42,6 +42,7 @@ set(EQUELLE_LIBS_FOR_CONFIG ${EQUELLE_LIBS_FOR_CONFIG}
 
 set(EQUELLE_LIB_DIRS_FOR_CONFIG ${EQUELLE_LIB_DIRS_FOR_CONFIG}
     ${EQUELLE_EXTRA_LIB_DIRS}
+    ${Zoltan_LIBRARY_DIRS}
     PARENT_SCOPE)
 
 # This is used for building/linking against the installed tree
