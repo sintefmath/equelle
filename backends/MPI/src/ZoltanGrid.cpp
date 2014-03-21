@@ -9,6 +9,7 @@
 #include <opm/core/grid.h>
 #include <opm/autodiff/AutoDiffHelpers.hpp>
 
+
 #include "equelle/mpiutils.hpp"
 
 int equelle::ZoltanGrid::getNumberOfObjects(void *data, int *ierr)
