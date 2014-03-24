@@ -1,7 +1,9 @@
 project(equelle_serial_backend)
 cmake_minimum_required( VERSION 2.8 )
 
-set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra -Wno-sign-compare" )
+if(NOT MSVC)
+	set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra -Wno-sign-compare" )
+ENDIF()
 
 file( GLOB serial_src "src/*.cpp" )
 file( GLOB serial_inc "include/*.hpp" )
