@@ -44,6 +44,8 @@ endif()
 add_subdirectory(compiler)
 add_subdirectory(backends)
 add_subdirectory(tools)
+add_subdirectory(experimental/cartesian)
+
 
 set(EQUELLE_TARGETS ec el equelle_rt)
 if(EQUELLE_BUILD_CUDA)
