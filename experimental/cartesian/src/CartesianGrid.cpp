@@ -81,18 +81,22 @@ double& equelle::CartesianGrid::cellAt( int i, int j, equelle::CartesianGrid::Ca
     return coll[ index ];
 }
 
-/*
-double *equelle::CartesianGrid::faceAt(int i, int j, equelle::CartesianGrid::Face face, CartesianCollectionOfScalar &coll)
+double &equelle::CartesianGrid::faceAt(int i, int j, equelle::CartesianGrid::Face face, equelle::CartesianGrid::CartesianCollectionOfScalar &coll)
 {
     switch (face) {
-        case Face::negX
+    case Face::posX:
+        ++i;
+        break;
+    case Face::posY:
+        ++j;
+        break;
+    default:
+        // Intentional, the other
+        break;
     }
-
-
-
-    return nullptr;
 }
-*/
+
+
 
 void equelle::CartesianGrid::dumpGrid(const equelle::CartesianGrid::CartesianCollectionOfScalar &grid, std::ostream &stream)
 {

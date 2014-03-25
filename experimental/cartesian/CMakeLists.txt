@@ -15,6 +15,6 @@ include_directories( "include"
 add_executable(cartesian_test ${test_src}
                               ${test_inc} )
 
-target_link_libraries(cartesian_test equelle_mpi equelle_rt
+target_link_libraries(cartesian_test equelle_rt
     ${Boost_LIBRARIES}
     opmautodiff opmcore dunecommon )

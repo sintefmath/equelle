@@ -51,7 +51,7 @@ public:
     int getStride( Dimension );
 
     double& cellAt( int i, int j, CartesianCollectionOfScalar& coll );
-    //double* faceAt( int i, int j, std::tuple<Face, Face>, CartesianCollectionOfScalar& coll );
+    double& faceAt( int i, int j, Face, CartesianCollectionOfScalar& coll );
 
     /**
      * @brief dumpGrid a grid to a stream or file.
