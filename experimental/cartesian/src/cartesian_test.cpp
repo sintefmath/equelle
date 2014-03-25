@@ -86,12 +86,26 @@ BOOST_AUTO_TEST_CASE( faceTest ) {
     equelle::CartesianGrid grid( std::make_tuple( dim_x, dim_y),  ghostWidth );
 
     equelle::CartesianGrid::CartesianCollectionOfScalar flux = grid.inputFaceScalarWithDefault( "permability", 0.5 );
-    int i = 1; int j = 2;
-    BOOST_CHECK_EQUAL( &grid.faceAt( i, j, equelle::CartesianGrid::Face::negX, flux ),
-                       &grid.faceAt( i-1, j, equelle::CartesianGrid::Face::posX, flux ) );
+    for( int i = 0; i <= dim_x; ++i ) {
+        for ( int j = 0; j <= dim_y; ++j ) {
+            BOOST_CHECK_EQUAL( &grid.faceAt( i, j, equelle::CartesianGrid::Face::negX, flux ),
+                               &grid.faceAt( i-1, j, equelle::CartesianGrid::Face::posX, flux ) );
 
-    BOOST_CHECK_EQUAL( &grid.faceAt( i, j, equelle::CartesianGrid::Face::negY, flux ),
-                       &grid.faceAt( i, j-1, equelle::CartesianGrid::Face::posY, flux ) );
+            BOOST_CHECK_EQUAL( &grid.faceAt( i, j, equelle::CartesianGrid::Face::negY, flux ),
+                               &grid.faceAt( i, j-1, equelle::CartesianGrid::Face::posY, flux ) );
+        }
+    }
+
+    // Check that we are zero on the ghost faces.
+    using equelle::CartesianGrid;
+
+    BOOST_CHECK_EQUAL( grid.faceAt( -1, -1, CartesianGrid::Face::negX, flux ), 0.0 );
+    BOOST_CHECK_EQUAL( grid.faceAt( -1, -1, CartesianGrid::Face::negY, flux ), 0.0 );
+    BOOST_CHECK_EQUAL( grid.faceAt( -1, -1, CartesianGrid::Face::posX, flux ), 0.0 );
+    BOOST_CHECK_EQUAL( grid.faceAt( -1, -1, CartesianGrid::Face::posY, flux ), 0.0 );
+
+
+
 
 
 }

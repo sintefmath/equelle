@@ -54,10 +54,22 @@ equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inpu
 
 equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inputFaceScalarWithDefault(std::string name, double d)
 {
-    int num = number_of_faces_with_ghost_cells[Dimension::x] * cartdims[1] +
-              number_of_faces_with_ghost_cells[Dimension::y] * cartdims[0];
+    int num = number_of_faces_with_ghost_cells[Dimension::x] * (cartdims[1]+2*ghost_width) +
+              number_of_faces_with_ghost_cells[Dimension::y] * (cartdims[0]+2*ghost_width);
 
     CartesianCollectionOfScalar v( num, 0.0 );
+
+    for( int j = 0; j < cartdims[1]; ++j ) {
+        for( int i = 0; i <= cartdims[0]; ++i ) {
+            faceAt( i, j, Face::negX, v ) = d;
+        }
+    }
+
+    for( int j = 0; j <= cartdims[1]; ++j ) {
+        for( int i = 0; i < cartdims[0]; ++i ) {
+            faceAt( i, j, Face::negY, v ) = d;
+        }
+    }
 
     return v;
 }
@@ -89,6 +101,9 @@ double& equelle::CartesianGrid::cellAt( int i, int j, equelle::CartesianGrid::Ca
 
 double &equelle::CartesianGrid::faceAt(int i, int j, equelle::CartesianGrid::Face face, equelle::CartesianGrid::CartesianCollectionOfScalar &coll)
 {
+    i += ghost_width;
+    j += ghost_width;
+
     // Update index to the correct cell.
     switch (face) {
     case Face::posX:
