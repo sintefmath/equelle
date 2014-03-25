@@ -3,6 +3,8 @@
 #include <array>
 #include <vector>
 #include <tuple>
+#include <unordered_map>
+#include <map>
 
 namespace equelle {
 
@@ -34,14 +36,17 @@ public:
     ~CartesianGrid();
 
     std::array<int, 2> cartdims{{-1,-1}}; //! Number of interior cells in each dimension.
-    std::array<int, 2> cellStrides;
-    std::array<int, 2> faceStrides;
+    typedef std::array<int, 2> strideArray;
+    strideArray cellStrides;
+
+    std::map<Dimension, strideArray> faceStrides;
+    std::map<Dimension, int>         number_of_faces_with_ghost_cells;
 
     int dimensions;            //! Number of spatial dimensions.
     int number_of_cells;       //! Number of interior cells in the grid.
     int ghost_width; //! Number of ghost cells. Assumed to be the same for all directions and on every side of the domain.
     int number_of_cells_and_ghost_cells;
-    int number_of_faces_and_ghost_faces;
+    //int number_of_faces_and_ghost_faces;
 
     typedef std::vector<double> CartesianCollectionOfScalar;
 

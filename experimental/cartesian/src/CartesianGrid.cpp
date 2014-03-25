@@ -20,15 +20,18 @@ equelle::CartesianGrid::CartesianGrid(std::tuple<int, int> dims, int ghostWidth 
     cellStrides[0] = 1;
     cellStrides[1] = 2*ghostWidth + cartdims[0];
 
-    faceStrides[0] = 1;
-    faceStrides[1] = cellStrides[1] + 1;
+    faceStrides[Dimension::x] = {{1, cellStrides[1] + 1}};
+    faceStrides[Dimension::y] = {{1, cellStrides[1]}};
+
 
     this->ghost_width = ghostWidth;
     this->dimensions = 2;
     this->number_of_cells = cartdims[0]*cartdims[1];
 
     this->number_of_cells_and_ghost_cells = (cartdims[0]+2*ghostWidth) * (cartdims[1]+2*ghostWidth);
-    this->number_of_faces_and_ghost_faces = (cartdims[0]+2*ghostWidth+1) * (cartdims[1]+2*ghostWidth+1);
+
+    number_of_faces_with_ghost_cells[Dimension::x] = (cartdims[0]+2*ghostWidth+1);
+    number_of_faces_with_ghost_cells[Dimension::y] = (cartdims[1]+2*ghostWidth+1);
 }
 
 equelle::CartesianGrid::~CartesianGrid()
@@ -51,7 +54,10 @@ equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inpu
 
 equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inputFaceScalarWithDefault(std::string name, double d)
 {
-    CartesianCollectionOfScalar v( number_of_faces_and_ghost_faces, 0.0 );
+    int num = number_of_faces_with_ghost_cells[Dimension::x] * cartdims[1] +
+              number_of_faces_with_ghost_cells[Dimension::y] * cartdims[0];
+
+    CartesianCollectionOfScalar v( num, 0.0 );
 
     return v;
 }
@@ -83,6 +89,7 @@ double& equelle::CartesianGrid::cellAt( int i, int j, equelle::CartesianGrid::Ca
 
 double &equelle::CartesianGrid::faceAt(int i, int j, equelle::CartesianGrid::Face face, equelle::CartesianGrid::CartesianCollectionOfScalar &coll)
 {
+    // Update index to the correct cell.
     switch (face) {
     case Face::posX:
         ++i;
@@ -91,12 +98,30 @@ double &equelle::CartesianGrid::faceAt(int i, int j, equelle::CartesianGrid::Fac
         ++j;
         break;
     default:
+        // Intentional, the other faces does not need index manipulation.
+        break;
+    }
+
+    int offset = 0;
+    strideArray strides;
+
+    switch (face) {
+    case Face::posX:
+    case Face::negX:
+        offset = 0;
+        strides = faceStrides[Dimension::x];
+        break;
+    case Face::posY:
+    case Face::negY:
+        offset = number_of_faces_with_ghost_cells[Dimension::x] * ( cartdims[1] + 2*ghost_width );
+        strides = faceStrides[Dimension::y];
+    default:
         // Intentional, the other
         break;
     }
+
+    return coll[offset + j*strides[1] + i*strides[0] ];
 }
-
-
 
 void equelle::CartesianGrid::dumpGrid(const equelle::CartesianGrid::CartesianCollectionOfScalar &grid, std::ostream &stream)
 {
