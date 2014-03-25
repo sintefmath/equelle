@@ -31,7 +31,7 @@ namespace {
 BOOST_AUTO_TEST_CASE( generateCartesianGrid ) {
     int dim_x = 3;
     int dim_y = 5;
-    int ghostWidth = 1;
+    int ghostWidth = 2;
 
     equelle::CartesianGrid grid( std::make_tuple( dim_x, dim_y),  ghostWidth );
 
@@ -48,9 +48,23 @@ BOOST_AUTO_TEST_CASE( generateCartesianGrid ) {
 
 
     BOOST_REQUIRE_EQUAL( waveheights_0.size(), grid.number_of_cells_and_ghost_cells );
-    BOOST_CHECK_EQUAL( grid.cellAt( 0, 0, waveheights_0 ), 1.0 );
-    BOOST_CHECK_EQUAL( grid.cellAt( -1, -1, waveheights_0 ), 0.0 );
-    BOOST_CHECK_EQUAL( grid.cellAt( dim_x -1, dim_y -1, waveheights_0 ),  1.0 );
+
+    for( int j = -ghostWidth; j < dim_y+ghostWidth; ++j ) {
+        for( int i = -ghostWidth; i < dim_x+ghostWidth; ++i ) {
+        	//Outside domain
+        	if (i < 0 || j < 0) {
+                BOOST_CHECK_EQUAL( grid.cellAt( i, j, waveheights_0 ), 0.0 );
+        	}
+        	//Outside domain
+        	else if (i >= dim_x || j >= dim_y) {
+                BOOST_CHECK_EQUAL( grid.cellAt( i, j, waveheights_0 ), 0.0 );
+        	}
+        	//Inside domain
+        	else {
+        		BOOST_CHECK_EQUAL( grid.cellAt( i, j, waveheights_0 ), 1.0 );
+        	}
+        }
+    }
 
     equelle::CartesianGrid::CartesianCollectionOfScalar waveheights_1( waveheights_0.size() );
 
@@ -81,7 +95,7 @@ BOOST_AUTO_TEST_CASE( generateCartesianGrid ) {
 BOOST_AUTO_TEST_CASE( faceTest ) {
     int dim_x = 3;
     int dim_y = 5;
-    int ghostWidth = 1;
+    int ghostWidth = 2;
 
     equelle::CartesianGrid grid( std::make_tuple( dim_x, dim_y),  ghostWidth );
 
@@ -105,7 +119,49 @@ BOOST_AUTO_TEST_CASE( faceTest ) {
     BOOST_CHECK_EQUAL( grid.faceAt( -1, -1, CartesianGrid::Face::posY, flux ), 0.0 );
 
 
+    for( int j = -ghostWidth; j < dim_y+ghostWidth; ++j ) {
+        for( int i = -ghostWidth; i < dim_x+ghostWidth; ++i ) {
+        	//Outside domain
+        	if (i < 0 || i > dim_x) {
+                BOOST_CHECK_EQUAL( grid.faceAt( i, j, CartesianGrid::Face::negX, flux ), 0.0 );
+        	}
+        	else {
+            	//Outside domain
+        		if (j <0 || j >= dim_y) {
+        			BOOST_CHECK_EQUAL( grid.faceAt( i, j, CartesianGrid::Face::negX, flux ), 0.0 );
+        		}
+            	//Inside domain
+        		else {
+        			BOOST_CHECK_EQUAL( grid.faceAt( i, j, CartesianGrid::Face::negX, flux ), 0.5 );
+        		}
+        	}
 
+        	//Outside domain
+        	if (j < 0 || j > dim_y) {
+                BOOST_CHECK_EQUAL( grid.faceAt( i, j, CartesianGrid::Face::negY, flux ), 0.0 );
+        	}
+        	else {
+            	//Outside domain
+        		if (i <0 || i >= dim_x) {
+        			BOOST_CHECK_EQUAL( grid.faceAt( i, j, CartesianGrid::Face::negY, flux ), 0.0 );
+        		}
+            	//Inside domain
+        		else {
+        			BOOST_CHECK_EQUAL( grid.faceAt( i, j, CartesianGrid::Face::negY, flux ), 0.5 );
+        		}
+        	}
+        }
+    }
 
-
+    //Sum over all faces for a cell
+    for( int j = 0; j < dim_y; ++j ) {
+        for( int i = 0; i < dim_x; ++i ) {
+        	double sum = 0.0f;
+        	sum += grid.faceAt( i, j, CartesianGrid::Face::negX, flux );
+        	sum += grid.faceAt( i, j, CartesianGrid::Face::posX, flux );
+        	sum += grid.faceAt( i, j, CartesianGrid::Face::negY, flux );
+        	sum += grid.faceAt( i, j, CartesianGrid::Face::posY, flux );
+        	BOOST_CHECK_EQUAL( sum, 2.0 );
+        }
+    }
 }
