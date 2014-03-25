@@ -38,6 +38,13 @@ public:
 
     double* cellAt( int i, int j, CartesianCollectionOfScalar& coll );
 
+    /**
+     * @brief dumpGrid a grid to a stream or file.
+     * @param grid
+     * @param stream
+     */
+    void dumpGrid( const CartesianCollectionOfScalar& grid, std::ostream& stream );
+
 
 };
 

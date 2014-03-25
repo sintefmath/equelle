@@ -1,6 +1,9 @@
 #include <algorithm>
 #include <numeric>
 #include <cassert>
+#include <iterator>
+#include <algorithm>
+#include <iomanip>
 
 #include "equelle/CartesianGrid.hpp"
 
@@ -15,7 +18,7 @@ equelle::CartesianGrid::CartesianGrid(std::tuple<int, int> dims, int numGhost )
     cartdims[1] = std::get<1>( dims );
 
     strides[0] = 1;
-    strides[1] = 2*numGhost + cartdims[1];
+    strides[1] = 2*numGhost + cartdims[0];
     strides[2] = -1;
 
     this->ghost_width = numGhost;
@@ -43,14 +46,36 @@ equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inpu
     return v;
 }
 
-int equelle::CartesianGrid::getStride(equelle::Dimension)
+int equelle::CartesianGrid::getStride(equelle::Dimension dim)
 {
-    return 0;
+    switch (dim) {
+    case equelle::Dimension::x:
+        return strides[0];
+        break;
+    case equelle::Dimension::y:
+        return strides[1];
+        break;
+    case equelle::Dimension::z:
+        return strides[2];
+        break;
+    default:
+        throw std::runtime_error( "Trying to get stride for nonexisten dimension" );
+    }
 }
 
 double *equelle::CartesianGrid::cellAt( int i, int j, equelle::CartesianGrid::CartesianCollectionOfScalar &coll )
 {
     int origin = ghost_width * strides[1] + ghost_width * strides[0];
-    return &coll[ origin + j*strides[1] + i*strides[0] ];
+
+    int index = origin + j*strides[1] + i*strides[0];
+    return &coll[ index ];
+}
+
+void equelle::CartesianGrid::dumpGrid(const equelle::CartesianGrid::CartesianCollectionOfScalar &grid, std::ostream &stream)
+{
+    for( int j = 0; j < cartdims[1] + 2*ghost_width; ++j ) {
+        std::copy_n( grid.begin() + j*strides[1], cartdims[0] + 2*ghost_width, std::ostream_iterator<double>( stream, "," ) );
+        stream << std::endl;
+    }
 }
 

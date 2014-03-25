@@ -39,6 +39,8 @@ option(EQUELLE_DEBUG "Enable extra debugging messages and tests" ON)
 
 if(EQUELLE_DEBUG)
    add_definitions(-DEQUELLE_DEBUG)
+   add_definitions(-D_GLIBCXX_DEBUG)
+   add_definitions(-D_GLIBCXX_DEBUG_PEDANTIC)
 endif()
 
 add_subdirectory(compiler)

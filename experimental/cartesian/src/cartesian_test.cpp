@@ -54,6 +54,7 @@ BOOST_AUTO_TEST_CASE( generateCartesianGrid ) {
     BOOST_REQUIRE_EQUAL( waveheights_0.size(), grid.number_of_cells_and_ghost_cells );
     BOOST_CHECK_EQUAL( *grid.cellAt( 0, 0, waveheights_0 ), 1.0 );
     BOOST_CHECK_EQUAL( *grid.cellAt( -1, -1, waveheights_0 ), 0.0 );
+    BOOST_CHECK_EQUAL( *grid.cellAt( dim_x -1, dim_y -1, waveheights_0 ),  1.0 );
 
 
     equelle::CartesianGrid::CartesianCollectionOfScalar waveheights_1( waveheights_0.size() );
@@ -62,19 +63,24 @@ BOOST_AUTO_TEST_CASE( generateCartesianGrid ) {
     double* waveheights_1_ptr = grid.cellAt( 0, 0, waveheights_1 );
 
     int stride_x = grid.getStride( equelle::Dimension::x );
-    BOOST_REQUIRE_EQUAL( stride_x, dim_x + 2*ghostWidth );
+    BOOST_REQUIRE_EQUAL( stride_x, 1 );
 
     int stride_y = grid.getStride( equelle::Dimension::y );
-
+    BOOST_REQUIRE_EQUAL( stride_y, dim_x + 2*ghostWidth );
     const double k = 1.0/8.0;
 
-    for( int j = 0; j < grid.cartdims[1]; ++j ) {
-        for( int i = 0; i < grid.cartdims[0]; ++i ) {
-            waveheights_1_ptr[j*stride_x + i*stride_y] =    k * ( waveheights_0_ptr[(j-1)*stride_x + (i-1)*stride_y] +
-                                                                  waveheights_0_ptr[(j-1)*stride_x + (i+1)*stride_y] +
-                                                                  waveheights_0_ptr[(j+1)*stride_x + (i-1)*stride_y] +
-                                                                  waveheights_0_ptr[(j+1)*stride_x + (i+1)*stride_y] +
-                                                              4.0*waveheights_0_ptr[(j-0)*stride_x + (i-0)*stride_y] );
+    for( int j = 0; j < dim_y; ++j ) {
+        for( int i = 0; i < dim_x; ++i ) {
+            waveheights_1_ptr[j*stride_y + i*stride_x] =  k * ( waveheights_0_ptr[(j-1)*stride_y + (i-1)*stride_x] +
+                                                                waveheights_0_ptr[(j-1)*stride_y + (i+1)*stride_x] +
+                                                                waveheights_0_ptr[(j+1)*stride_y + (i-1)*stride_x] +
+                                                                waveheights_0_ptr[(j+1)*stride_y + (i+1)*stride_x] +
+                                                            4.0*waveheights_0_ptr[(j-0)*stride_y + (i-0)*stride_x] );
         }
     }
+
+    std::ofstream f("waveheights_1.csv");
+    grid.dumpGrid( waveheights_1, f );
+
+
 }
