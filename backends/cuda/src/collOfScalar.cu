@@ -70,7 +70,6 @@ CollOfScalar::CollOfScalar(const int size, const double value)
 {
     // Can not use cudaMemset as it sets float values on a given
     // number of bytes.
-    std::cerr << __PRETTY_FUNCTION__ << std::endl;
 
     std::vector<double> host_vec(size_, value);
 
@@ -115,8 +114,6 @@ CollOfScalar::CollOfScalar(const CollOfScalar& coll)
     , debug_vec_(coll.size_, 0)
 #endif // EQUELLE_DEBUG
 {
-    std::cout << "Copy constructor!\n";
-    std::cerr << __PRETTY_FUNCTION__ << std::endl;    
 
     if (coll.dev_values_ != 0) {
 	cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
@@ -142,7 +139,6 @@ CollOfScalar::CollOfScalar(const CollOfScalar& coll)
 
 // Copy assignment operator
 CollOfScalar& CollOfScalar::operator= (const CollOfScalar& other) {
-    std::cerr << __PRETTY_FUNCTION__ << std::endl;    
 
     // Protect agains " var = var " , self assignment
     if ( this != &other ) {
@@ -157,12 +153,8 @@ CollOfScalar& CollOfScalar::operator= (const CollOfScalar& other) {
 	// But if the collections are of the same size (likely) we
 	// Will just overwrite the old values.
 
-	std::cout << "COPY ASSIGNMENT OPERATOR ( this->size = " << this->size_ << ")\n";
-
 	if ( this->size_ != other.size_) {
 
-	    std::cout << "\tCHANGING SIZE FROM " << this->size_ << " TO " << other.size_ << "\n";
-		
 	    // If different size: Is this even allowed?
 	    // Free memory:
 	    cudaStatus_ = cudaFree(this->dev_values_);
@@ -251,8 +243,6 @@ kernelSetup CollOfScalar::setup() const {
 // Assumes that values are already allocated on host
 std::vector<double> CollOfScalar::copyToHost() const
 {
-    //std::cout << "copyToHost() - val_ptr = " << dev_values << std::endl;
-    
     // Fill host_vec with zeros:
     std::vector<double> host_vec(size_, 0);
 
@@ -274,8 +264,6 @@ int CollOfScalar::size() const
 void CollOfScalar::checkError_(const std::string& msg) const {
     if ( cudaStatus_ != cudaSuccess ) {
 	OPM_THROW(std::runtime_error, "\nCuda error\n\t" << msg << " - Error code: " << cudaGetErrorString(cudaStatus_));
-	//std::cout <<  "Cuda error\n\t" << msg << "\n\tError code: " << cudaGetErrorString(cudaStatus) << std::endl;
-	//exit(0);
     }
 }
 
@@ -293,46 +281,32 @@ void CollOfScalar::checkError_(const std::string& msg) const {
 CollOfScalar equelleCUDA::operator-(const CollOfScalar& lhs, const CollOfScalar& rhs) {
 
     CollOfScalar out = lhs;
-    //double* lhs_dev = lhs.data();
-    const double* rhs_dev = rhs.data();
-    double* out_dev = out.data();
-
-    std::cout << "Calling minus_kernel!\n";
     kernelSetup s = out.setup();
-    minus_kernel <<<s.grid, s.block>>>(out_dev, rhs_dev, out.size());
+    minus_kernel <<<s.grid, s.block>>>(out.data(), rhs.data(), out.size());
     return out;
 }
 
 CollOfScalar equelleCUDA::operator+(const CollOfScalar& lhs, const CollOfScalar& rhs) {
 
     CollOfScalar out = lhs;
-    const double* rhs_dev = rhs.data();
-    double* out_dev = out.data();
-
     kernelSetup s = out.setup();
-    plus_kernel <<<s.grid, s.block>>>(out_dev, rhs_dev, out.size());
+    plus_kernel <<<s.grid, s.block>>>(out.data(), rhs.data(), out.size());
     return out;
 }
 
 CollOfScalar equelleCUDA::operator*(const CollOfScalar& lhs, const CollOfScalar& rhs) {
 
     CollOfScalar out = lhs;
-    const double* rhs_dev = rhs.data();
-    double* out_dev = out.data();
-
     kernelSetup s = out.setup();
-    multiplication_kernel <<<s.grid, s.block>>>(out_dev, rhs_dev, out.size());
+    multiplication_kernel <<<s.grid, s.block>>>(out.data(), rhs.data(), out.size());
     return out;
 }
 
 CollOfScalar equelleCUDA::operator/(const CollOfScalar& lhs, const CollOfScalar& rhs) {
 
     CollOfScalar out = lhs;
-    const double* rhs_dev = rhs.data();
-    double* out_dev = out.data();
-
     kernelSetup s = out.setup();
-    division_kernel <<<s.grid, s.block>>>(out_dev, rhs_dev, out.size());
+    division_kernel <<<s.grid, s.block>>>(out.data(), rhs.data(), out.size());
     return out;
 }
 

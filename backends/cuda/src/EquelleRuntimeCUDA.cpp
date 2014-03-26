@@ -77,7 +77,6 @@ EquelleRuntimeCUDA::EquelleRuntimeCUDA(const Opm::parameter::ParameterGroup& par
 CollOfCell EquelleRuntimeCUDA::allCells() const
 {
     return dev_grid_.allCells();
-   //return boundaryCells();
 }
 
 CollOfCell EquelleRuntimeCUDA::boundaryCells() const 

@@ -47,6 +47,7 @@ CollOfIndices<codim>::CollOfIndices()
       size_(0),
       dev_vec_(0)
 {
+    // Intentionally left empty
 }
 
 template <int codim>
@@ -85,6 +86,7 @@ CollOfIndices<codim>::CollOfIndices(const CollOfIndices& coll)
       size_(coll.size_),
       dev_vec_(coll.dev_vec_.begin(), coll.dev_vec_.end())
 {
+    // Intentionally left empty
 }
 
 template <int codim>
@@ -121,13 +123,6 @@ int CollOfIndices<codim>::size() const {
     return size_;
 }
 
-//thrust::device_vector<int>::iterator CollOfIndices::begin() const {
-//    return dev_vec_.begin();
-//}
-
-//thrust::device_vector<int>::iterator CollOfIndices::end() const {
-//    return dev_vec_.end();
-//}
 
 
 template <int codim>
@@ -141,13 +136,8 @@ thrust::device_vector<int>::iterator CollOfIndices<codim>::end() {
 }
 
 
-// This one should be const, but raw_pointer_cast is incompitible with const...
 template <int codim>
 int* CollOfIndices<codim>::raw_pointer() {
-    //thrust::device_vector<int> temp(8);
-    //thrust::fill(temp.begin(), temp.end(), 9);
-    //const int* out = thrust::raw_pointer_cast( &dev_vec_[0] );
-    //int* out2 = out;
     return thrust::raw_pointer_cast( &dev_vec_[0] );
 }
 
@@ -183,9 +173,6 @@ CollOfBool CollOfIndices<codim>::isEmpty() const {
     return wrapCollOfIndices::isEmpty(dev_vec_);
 }
 
-
-//template class CollOfIndices<0>;
-//template class CollOfIndices<1>;
 
 
 #endif // EQUELLE_COLLOFINDICES_IMPL_INCLUDED

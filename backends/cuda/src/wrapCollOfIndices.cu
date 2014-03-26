@@ -26,7 +26,6 @@ void wrapCollOfIndices::containsFull(const thrust::device_vector<int>& subset,
     // subset is sorted.
     // Check only first and large element of subset.
 
-    std::cout << "\n\nCONTAINS FULL!\n\n";
     if (subset[0] < 0 ) {
 	OPM_THROW(std::runtime_error, "Input set " << name << " contains invalid (negative) indices");
     }
@@ -46,7 +45,6 @@ void wrapCollOfIndices::containsSubset(const thrust::device_vector<int>& superse
 				       const int& codim,
 				       const std::string& name) {
 
-    std::cout << "\n\nCONTAINS SUBSET!\n\n";
     //merging:
     thrust::device_vector<int> merged(superset.size() + subset.size());
     thrust::device_vector<int>::iterator merge_end = thrust::merge(superset.begin(), superset.end(), subset.begin(), subset.end(), merged.begin());
