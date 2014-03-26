@@ -140,8 +140,11 @@ double &equelle::CartesianGrid::faceAt(int i, int j, equelle::CartesianGrid::Fac
 
 void equelle::CartesianGrid::dumpGrid(const equelle::CartesianGrid::CartesianCollectionOfScalar &grid, std::ostream &stream)
 {
+	int num_columns = cartdims[0] + 2*ghost_width;
     for( int j = 0; j < cartdims[1] + 2*ghost_width; ++j ) {
-        std::copy_n( grid.begin() + j*cellStrides[1], cartdims[0] + 2*ghost_width, std::ostream_iterator<double>( stream, "," ) );
+    	int row_offset  = j*cellStrides[1];
+        std::copy_n( grid.begin() + row_offset, num_columns - 1, std::ostream_iterator<double>( stream, "," ) );
+        stream << grid[row_offset + num_columns-1];
         stream << std::endl;
     }
 }
