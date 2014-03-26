@@ -24,14 +24,22 @@ enum class Dimension {
  */
 class CartesianGrid {
 public:
+
+    /**
+     * @brief The Face enum is used to indicate which face one is referring to for a given cell id.
+     *        This allows for staggered grids.
+     */
     enum class Face {
         negX, posX, negY, posY, negZ, posZ
     };
 
+    typedef std::array<int, 2> strideArray;
+    typedef std::vector<double> CartesianCollectionOfScalar;
+
     CartesianGrid();
 
     /**
-     * @brief CartesianGrid
+     * @brief CartesianGrid constructor for a parameter object.
      * @param param Is a parameter object where the following keys are used for grid initialization.
      *              - grid_dim Dimension of grid. (default 2)
      *              - nx Number of interior cells in x-direction. (default 3)
@@ -50,28 +58,21 @@ public:
 
     ~CartesianGrid();
 
-    std::array<int, 2> cartdims{{-1,-1}}; //! Number of interior cells in each dimension.
-    typedef std::array<int, 2> strideArray;
+    std::array<int, 2> cartdims{{-1,-1}}; //!< Number of interior cells in each dimension.
     strideArray cellStrides;
-
     std::map<Dimension, strideArray> faceStrides;
     std::map<Dimension, int>         number_of_faces_with_ghost_cells;
 
-    int dimensions;            //! Number of spatial dimensions.
-    int number_of_cells;       //! Number of interior cells in the grid.
-    int ghost_width; //! Number of ghost cells. Assumed to be the same for all directions and on every side of the domain.
-    int number_of_cells_and_ghost_cells;
-    //int number_of_faces_and_ghost_faces;
-
-    typedef std::vector<double> CartesianCollectionOfScalar;
-
+    int dimensions;            //!< Number of spatial dimensions.
+    int number_of_cells;       //!< Number of interior cells in the grid.
+    int ghost_width;           //!< Width of ghost cell boundary. Assumed to be the same for all directions and on every side of the domain.
+    int number_of_cells_and_ghost_cells; //!< Total number of cells and ghost cells in grid.
 
     CartesianCollectionOfScalar inputCellCollectionOfScalar( std::string name );
     CartesianCollectionOfScalar inputFaceCollectionOfScalar( std::string name );
 
-
     CartesianCollectionOfScalar inputCellScalarWithDefault( std::string name, double d );
-    CartesianCollectionOfScalar inputFaceScalarWithDefault( std::string name, double d );
+    CartesianCollectionOfScalar inputFaceScalarWithDefault( std::string name, double d );s
 
     int getStride( Dimension );
 
