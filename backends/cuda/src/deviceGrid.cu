@@ -294,10 +294,6 @@ DeviceGrid::~DeviceGrid() {
 } // Destructor
 
 
-int DeviceGrid::setID(int a) {
-    id_ = a;
-    return 4;
-}
 
 // ------------ GRID OPERATIONS! ------------
 CollOfCell DeviceGrid::allCells() const {

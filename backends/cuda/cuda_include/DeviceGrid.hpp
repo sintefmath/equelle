@@ -95,12 +95,6 @@ namespace equelleCUDA
 	*/
 	DeviceGrid( const DeviceGrid& grid);
 
-	// This is a pure debugger function.
-	// We mark each collection with an ID to keep track of
-	// which ones are destructed.
-	//! Dummy function for debugging. REMOVE IN THE FUTURE!
-	int setID(int a);
-
 	// Grid operations
 	//! Collection of all cells
 	/*!
