@@ -77,7 +77,8 @@ public:
      * @param grid
      * @param stream
      */
-    void dumpGrid( const CartesianCollectionOfScalar& grid, std::ostream& stream );
+    void dumpGridCells( const CartesianCollectionOfScalar& grid, std::ostream& stream );
+    void dumpGridFaces( /*const*/ CartesianCollectionOfScalar& grid, Face, std::ostream& stream );
 
 
     void init2D( std::tuple<int, int> dims, int ghostWidth );

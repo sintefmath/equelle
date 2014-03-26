@@ -160,13 +160,51 @@ double &equelle::CartesianGrid::faceAt(int i, int j, equelle::CartesianGrid::Fac
     return coll[offset + j*strides[1] + i*strides[0] ];
 }
 
-void equelle::CartesianGrid::dumpGrid(const equelle::CartesianGrid::CartesianCollectionOfScalar &grid, std::ostream &stream)
+void equelle::CartesianGrid::dumpGridCells(const equelle::CartesianGrid::CartesianCollectionOfScalar &cells, std::ostream &stream)
 {
-	int num_columns = cartdims[0] + 2*ghost_width;
+    int num_columns = cartdims[0] + 2*ghost_width;
     for( int j = 0; j < cartdims[1] + 2*ghost_width; ++j ) {
-    	int row_offset  = j*cellStrides[1];
-        std::copy_n( grid.begin() + row_offset, num_columns - 1, std::ostream_iterator<double>( stream, "," ) );
-        stream << grid[row_offset + num_columns-1];
+        int row_offset  = j*cellStrides[1];
+        std::copy_n( cells.begin() + row_offset, num_columns - 1, std::ostream_iterator<double>( stream, "," ) );
+        stream << cells[row_offset + num_columns-1];
+        stream << std::endl;
+    }
+}
+
+
+void equelle::CartesianGrid::dumpGridFaces(/*const*/ equelle::CartesianGrid::CartesianCollectionOfScalar &faces, Face input_face, std::ostream &stream)
+{
+    Face face = input_face;
+    int face_offset_x = 0;
+    int face_offset_y = 0;
+
+    switch(face) {
+    case Face::posX:
+    case Face::negX:
+        face = Face::negX;
+        face_offset_x = 1;
+        break;
+    case Face::posY:
+    case Face::negY:
+        face = Face::negY;
+        face_offset_y = 1;
+        break;
+    default:
+        throw std::runtime_error("Unknown face position");
+    }
+
+    int start_x = -ghost_width;
+    int end_x = cartdims[0] + ghost_width + face_offset_x;
+
+    int start_y = -ghost_width;
+    int end_y = cartdims[1] + ghost_width + face_offset_y;
+
+
+    for( int j = start_y; j < end_y; ++j ) {
+        stream << faceAt( start_x, j, face, faces);
+        for( int i = start_x+1; i < end_x; ++i ) {
+            stream << "," << faceAt( i, j, face, faces);
+        }
         stream << std::endl;
     }
 }
