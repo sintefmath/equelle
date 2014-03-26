@@ -52,6 +52,7 @@ void equelle::CartesianGrid::init2D( std::tuple<int, int> dims, int ghostWidth )
     this->number_of_cells = cartdims[0]*cartdims[1];
 
     this->number_of_cells_and_ghost_cells = (cartdims[0]+2*ghostWidth) * (cartdims[1]+2*ghostWidth);
+    this->cellOrigin = ghost_width * cellStrides[1] + ghost_width * cellStrides[0];
 
     number_of_faces_with_ghost_cells[Dimension::x] = (cartdims[0]+2*ghostWidth+1);
     number_of_faces_with_ghost_cells[Dimension::y] = (cartdims[1]+2*ghostWidth+1);
@@ -185,11 +186,9 @@ equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inpu
     return v;
 }
 
-double& equelle::CartesianGrid::cellAt( int i, int j, equelle::CartesianGrid::CartesianCollectionOfScalar &coll )
+double& equelle::CartesianGrid::cellAt( const int i, const int j, equelle::CartesianGrid::CartesianCollectionOfScalar &coll )
 {
-    int origin = ghost_width * cellStrides[1] + ghost_width * cellStrides[0];
-
-    int index = origin + j*cellStrides[1] + i*cellStrides[0];
+    const int index = cellOrigin + j*cellStrides[1] + i*cellStrides[0];
     return coll[ index ];
 }
 

@@ -107,6 +107,7 @@ public:
 private:
     const Opm::parameter::ParameterGroup param_;
     void init2D( std::tuple<int, int> dims, int ghostWidth );
+    int cellOrigin;
 };
 
 } // namespace equelle
