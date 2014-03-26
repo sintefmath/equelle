@@ -478,7 +478,7 @@ CollOfCell DeviceGrid::secondCell(CollOfFace coll) const {
 // ----- NORM ----
 
 CollOfScalar DeviceGrid::norm_of_cells(const thrust::device_vector<int>& cells,
-				       const bool& full) const {
+				       const bool full) const {
     if (full) {
 	CollOfScalar out(number_of_cells_,0);
 	cudaStatus_ = cudaMemcpy( out.data(), cell_volumes_, 
@@ -498,7 +498,7 @@ CollOfScalar DeviceGrid::norm_of_cells(const thrust::device_vector<int>& cells,
 }
 
 CollOfScalar DeviceGrid::norm_of_faces(const thrust::device_vector<int>& faces,
-				       const bool& full) const {
+				       const bool full) const {
     if (full) {
 	CollOfScalar out(number_of_faces_,0);
 	cudaStatus_ = cudaMemcpy(out.data(), face_areas_, 
@@ -521,7 +521,7 @@ CollOfScalar DeviceGrid::norm_of_faces(const thrust::device_vector<int>& faces,
 // CENTROID
 
 CollOfVector DeviceGrid::centroid(const thrust::device_vector<int>& indices,
-				  const bool& full,
+				  const bool full,
 				  const int codim) const {
     if (full) {
 	if (codim == 0) { // All cells

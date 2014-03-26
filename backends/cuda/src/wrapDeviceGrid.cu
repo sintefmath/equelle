@@ -22,7 +22,7 @@ using namespace equelleCUDA;
 
 CollOfScalar wrapDeviceGrid::extendToFull( const CollOfScalar& in_data,
 					   const thrust::device_vector<int>& from_set,
-					   const int& full_size) {
+					   const int full_size) {
     // setup how many threads/blocks we need:
     kernelSetup s(full_size);
     
@@ -49,7 +49,7 @@ CollOfScalar wrapDeviceGrid::extendToFull( const CollOfScalar& in_data,
 CollOfScalar wrapDeviceGrid::extendToSubset( const CollOfScalar& inData,
 					     const thrust::device_vector<int>& from_set,
 					     const thrust::device_vector<int>& to_set,
-					     const int& full_size) {
+					     const int full_size) {
     CollOfScalar temp_full = extendToFull( inData, from_set, full_size);
     return onFromFull(temp_full, to_set);
 
@@ -119,7 +119,7 @@ CollOfScalar wrapDeviceGrid::onFromFull( const CollOfScalar& inData,
 CollOfScalar wrapDeviceGrid::onFromSubset( const CollOfScalar& inData,
 					   const thrust::device_vector<int>& from_set,
 					   const thrust::device_vector<int>& to_set,
-					   const int& full_size) {
+					   const int full_size) {
     
     CollOfScalar temp_full = extendToFull(inData, from_set, full_size);
     return onFromFull(temp_full, to_set);
@@ -170,7 +170,7 @@ thrust::device_vector<int> wrapDeviceGrid::onFromFullIndices( const thrust::devi
 thrust::device_vector<int> wrapDeviceGrid::onFromSubsetIndices( const thrust::device_vector<int>& inData,
 								const thrust::device_vector<int>& from_set,
 								const thrust::device_vector<int>& to_set,
-								const int& full_size) {
+								const int full_size) {
     
     thrust::device_vector<int> temp_full = extendToFullIndices(inData, from_set, full_size);
     return onFromFullIndices(temp_full, to_set);
@@ -193,7 +193,7 @@ __global__ void wrapDeviceGrid::onFromFullKernelIndices( int* outData,
 
 thrust::device_vector<int> wrapDeviceGrid::extendToFullIndices( const thrust::device_vector<int>& in_data,
 								const thrust::device_vector<int>& from_set,
-								const int& full_size) {
+								const int full_size) {
     // setup how many threads/blocks we need:
     kernelSetup s(full_size);
 

@@ -20,8 +20,8 @@ using namespace equelleCUDA;
 
 
 void wrapCollOfIndices::containsFull(const thrust::device_vector<int>& subset,
-				     const int& full_size,
-				     const int& codim,
+				     const int full_size,
+				     const int codim,
 				     const std::string& name) {
     // subset is sorted.
     // Check only first and large element of subset.
@@ -42,7 +42,7 @@ void wrapCollOfIndices::containsFull(const thrust::device_vector<int>& subset,
 
 void wrapCollOfIndices::containsSubset(const thrust::device_vector<int>& superset,
 				       const thrust::device_vector<int>& subset,
-				       const int& codim,
+				       const int codim,
 				       const std::string& name) {
 
     //merging:
