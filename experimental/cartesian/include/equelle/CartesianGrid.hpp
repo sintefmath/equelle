@@ -26,8 +26,10 @@ class CartesianGrid {
 public:
 
     /**
-     * @brief The Face enum is used to indicate which face one is referring to for a given cell id.
-     *        This allows for staggered grids.
+     * @brief The Face enum is used to indicate which adjacent face one is referring to for a given cell id.
+     *
+     *        This enum is used as a parameter to faceAt, and can be interprented as a way of "half-index", thus
+     *        allowing for staggered grids.
      */
     enum class Face {
         negX, posX, negY, posY, negZ, posZ
@@ -72,12 +74,28 @@ public:
     CartesianCollectionOfScalar inputFaceCollectionOfScalar( std::string name );
 
     CartesianCollectionOfScalar inputCellScalarWithDefault( std::string name, double d );
-    CartesianCollectionOfScalar inputFaceScalarWithDefault( std::string name, double d );s
+    CartesianCollectionOfScalar inputFaceScalarWithDefault( std::string name, double d );
 
-    int getStride( Dimension );
-
+    /**
+     * @brief cellAt Return a reference to an element of cell(i,j)
+     * @param i Index i of cell
+     * @param j Index j of cell
+     * @param coll  A scalar collection representing face values in the grid.
+     * @return The value of the collection at the given edge.
+     */
     double& cellAt( int i, int j, CartesianCollectionOfScalar& coll );
-    double& faceAt( int i, int j, Face, CartesianCollectionOfScalar& coll );
+
+    /**
+     * @brief faceAt Return a reference to an element of a face adjacent to cell (i,j).
+     *
+     * The method is intended both for reading from and writing to a variable.
+     * @param i Index i of cell
+     * @param j Index j of cell
+     * @param face Id of which adjacent face one is referring to.
+     * @param coll A scalar collection representing face values in the grid.
+     * @return The value of the collection at the given face.
+     */
+    double& faceAt( int i, int j, Face face, CartesianCollectionOfScalar& coll );
 
     /**
      * @brief dumpGrid a grid to a stream or file.

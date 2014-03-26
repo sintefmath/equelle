@@ -185,23 +185,6 @@ equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inpu
     return v;
 }
 
-int equelle::CartesianGrid::getStride(equelle::Dimension dim)
-{
-    switch (dim) {
-    case equelle::Dimension::x:
-        return cellStrides[0];
-        break;
-    case equelle::Dimension::y:
-        return cellStrides[1];
-        break;
-    case equelle::Dimension::z:
-        return cellStrides[2];
-        break;
-    default:
-        throw std::runtime_error( "Trying to get stride for nonexistent dimension" );
-    }
-}
-
 double& equelle::CartesianGrid::cellAt( int i, int j, equelle::CartesianGrid::CartesianCollectionOfScalar &coll )
 {
     int origin = ghost_width * cellStrides[1] + ghost_width * cellStrides[0];
@@ -210,7 +193,7 @@ double& equelle::CartesianGrid::cellAt( int i, int j, equelle::CartesianGrid::Ca
     return coll[ index ];
 }
 
-double &equelle::CartesianGrid::faceAt(int i, int j, equelle::CartesianGrid::Face face, equelle::CartesianGrid::CartesianCollectionOfScalar &coll)
+double &equelle::CartesianGrid::faceAt(int i, int j, const equelle::CartesianGrid::Face face, equelle::CartesianGrid::CartesianCollectionOfScalar &coll)
 {
     i += ghost_width;
     j += ghost_width;
@@ -241,8 +224,9 @@ double &equelle::CartesianGrid::faceAt(int i, int j, equelle::CartesianGrid::Fac
     case Face::negY:
         offset = number_of_faces_with_ghost_cells[Dimension::x] * ( cartdims[1] + 2*ghost_width );
         strides = faceStrides[Dimension::y];
+        break;
     default:
-        // Intentional, the other
+        throw std::runtime_error("Only 2D-cartesian grids are supported, so far...");
         break;
     }
 

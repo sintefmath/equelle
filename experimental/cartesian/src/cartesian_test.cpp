@@ -47,11 +47,8 @@ BOOST_AUTO_TEST_CASE( cartesianGridTest ) {
 
     BOOST_CHECK_EQUAL( grid.number_of_cells_and_ghost_cells, (dim_x+2*ghostWidth)*(dim_y+2*ghostWidth) );
 
-    int stride_x = grid.getStride( equelle::Dimension::x );
-    BOOST_REQUIRE_EQUAL( stride_x, 1 );
-
-    int stride_y = grid.getStride( equelle::Dimension::y );
-    BOOST_REQUIRE_EQUAL( stride_y, dim_x + 2*ghostWidth );
+    BOOST_REQUIRE_EQUAL( grid.cellStrides[0], 1 );
+    BOOST_REQUIRE_EQUAL( grid.cellStrides[1], dim_x + 2*ghostWidth );
 }
 
 /**
@@ -200,11 +197,8 @@ BOOST_AUTO_TEST_CASE( heatEquation ) {
         }
     }
 
-    int stride_x = grid.getStride( equelle::Dimension::x );
-    BOOST_REQUIRE_EQUAL( stride_x, 1 );
-
-    int stride_y = grid.getStride( equelle::Dimension::y );
-    BOOST_REQUIRE_EQUAL( stride_y, dim_x + 2*ghostWidth );
+    BOOST_REQUIRE_EQUAL( grid.cellStrides[0], 1 );
+    BOOST_REQUIRE_EQUAL( grid.cellStrides[1], dim_x + 2*ghostWidth );
 
     const double k = 1.0; //Material specific heat diffusion constant
     const double dx = 1.0;//5.0 / static_cast<double>(dim_x);
