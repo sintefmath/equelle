@@ -3,20 +3,16 @@
 #include <array>
 #include <vector>
 #include <tuple>
-#include <unordered_map>
-#include <map>
 
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 
 namespace equelle {
 
-enum class Dimension {
+enum Dimension {
     x = 0,
     y = 1,
     z = 2
 };
-
-
 
 
 /**
@@ -62,8 +58,9 @@ public:
 
     std::array<int, 2> cartdims{{-1,-1}}; //!< Number of interior cells in each dimension.
     strideArray cellStrides;
-    std::map<Dimension, strideArray> faceStrides;
-    std::map<Dimension, int>         number_of_faces_with_ghost_cells;
+
+    std::array<strideArray, 2>       faceStrides;
+    std::array<int, 2 >              number_of_faces_with_ghost_cells;
 
     int dimensions;            //!< Number of spatial dimensions.
     int number_of_cells;       //!< Number of interior cells in the grid.
