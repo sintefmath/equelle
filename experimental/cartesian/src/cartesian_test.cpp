@@ -165,11 +165,16 @@ BOOST_AUTO_TEST_CASE( faceTest ) {
     }
 }
 
-BOOST_AUTO_TEST_CASE( parameterObject ) {
+BOOST_AUTO_TEST_CASE( disallow3DGrids ) {
     Opm::parameter::ParameterGroup param;
-    param.insertParameter( "grid_dim", "3" );
 
+    // Test that we do not allow for constructions of other than 2D-grids.
+    param.insertParameter( "grid_dim", "3" );
     BOOST_CHECK_THROW( equelle::CartesianGrid grid( param ), std::runtime_error  );
+}
+
+BOOST_AUTO_TEST_CASE( ctorFromParamterObject ) {
+    Opm::parameter::ParameterGroup param;
 
     param.insertParameter( "grid_dim", "2");
     param.insertParameter( "nx", "10" );
@@ -177,9 +182,41 @@ BOOST_AUTO_TEST_CASE( parameterObject ) {
     param.insertParameter( "ghost_width", "2" );
 
     equelle::CartesianGrid grid(param);
+    BOOST_CHECK_EQUAL( grid.ghost_width, 2 );
     BOOST_CHECK_EQUAL( grid.dimensions, 2 );
     BOOST_CHECK_EQUAL( grid.cartdims[0], 10 );
     BOOST_CHECK_EQUAL( grid.cartdims[1], 12 );
+}
 
+BOOST_AUTO_TEST_CASE( cellDataFromFile ) {
+    Opm::parameter::ParameterGroup param;
+    param.insertParameter( "nx", "2" );
+    param.insertParameter( "ny", "2" );
+
+
+    std::vector<double> defaults = {{1,2,3,4}};
+    injectMockData( param, "waveheights", defaults.begin(), defaults.end() );
+
+    equelle::CartesianGrid grid(param);
+    auto u = grid.inputCellCollectionOfScalar( "waveheights" );
+    BOOST_CHECK_EQUAL( grid.cellAt( 0, 0, u ), 1 );
+    BOOST_CHECK_EQUAL( grid.cellAt( 1, 0, u ), 2 );
+    BOOST_CHECK_EQUAL( grid.cellAt( 0, 1, u ), 3 );
+    BOOST_CHECK_EQUAL( grid.cellAt( 1, 1, u ), 4 );
+}
+
+BOOST_AUTO_TEST_CASE( constantCellData ) {
+    Opm::parameter::ParameterGroup param;
+    param.insertParameter( "nx", "2" );
+    param.insertParameter( "ny", "2" );
+
+    param.insertParameter( "waveheights", "42" );
+
+    equelle::CartesianGrid grid(param);
+    auto u = grid.inputCellCollectionOfScalar( "waveheights" );
+    BOOST_CHECK_EQUAL( grid.cellAt( 0, 0, u ), 42 );
+    BOOST_CHECK_EQUAL( grid.cellAt( 1, 0, u ), 42 );
+    BOOST_CHECK_EQUAL( grid.cellAt( 0, 1, u ), 42 );
+    BOOST_CHECK_EQUAL( grid.cellAt( 1, 1, u ), 42 );
 }
 

@@ -4,8 +4,14 @@
 #include <iterator>
 #include <algorithm>
 #include <iomanip>
+#include <fstream>
+#include <iostream>
+
+#include <opm/autodiff/AutoDiffHelpers.hpp>
+
 
 #include "equelle/CartesianGrid.hpp"
+#include "equelle/equelleTypes.hpp"
 
 equelle::CartesianGrid::CartesianGrid()
 {
@@ -13,7 +19,7 @@ equelle::CartesianGrid::CartesianGrid()
 }
 
 equelle::CartesianGrid::CartesianGrid(const Opm::parameter::ParameterGroup &param)
-    : param( param )
+    : param_( param )
 {
     int grid_dim = param.getDefault( "grid_dim", 2 );
     if ( grid_dim != 2 ) {
@@ -61,8 +67,42 @@ equelle::CartesianGrid::~CartesianGrid()
 
 }
 
-equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inputCellScalarWithDefault(std::string name, double d)
+equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inputCellCollectionOfScalar(std::string name)
 {
+
+    CartesianCollectionOfScalar v;
+
+    const bool from_file = param_.getDefault(name + "_from_file", false);
+    if ( from_file ) {
+        const String filename = param_.get<String>(name + "_filename");
+        std::ifstream is(filename.c_str());
+        if (!is) {
+            OPM_THROW(std::runtime_error, "Could not find file " << filename);
+        }
+        std::istream_iterator<double> beg(is);
+        std::istream_iterator<double> end;
+
+        v.resize( number_of_cells_and_ghost_cells, 0.0 );
+
+        for( int j = 0; j < cartdims[1]; ++j ) {
+            for( int i = 0; i < cartdims[0]; ++i ) {
+                if ( beg == end ) {
+                    OPM_THROW(std::runtime_error, "Unexpected size of input data for " << name << " in file " << filename);
+                }
+                cellAt( i, j, v ) = *beg;
+                beg++;
+            }
+        }
+    } else { // Constant value
+        const double value = param_.get<double>( name );
+        v = inputCellScalarWithDefault( name, value );
+    }
+
+    return v;
+}
+
+equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inputCellScalarWithDefault(std::string /*name*/, double d)
+{    
     CartesianCollectionOfScalar v( number_of_cells_and_ghost_cells, 0.0 );
 
     for( int j = 0; j < cartdims[1]; ++j ) {
@@ -77,7 +117,7 @@ equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inpu
 equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inputFaceScalarWithDefault(std::string name, double d )
 {
     int num = number_of_faces_with_ghost_cells[Dimension::x] * (cartdims[1]+2*ghost_width) +
-              number_of_faces_with_ghost_cells[Dimension::y] * (cartdims[0]+2*ghost_width);
+            number_of_faces_with_ghost_cells[Dimension::y] * (cartdims[0]+2*ghost_width);
 
     CartesianCollectionOfScalar v( num, 0.0 );
 

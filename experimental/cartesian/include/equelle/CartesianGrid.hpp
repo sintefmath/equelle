@@ -31,11 +31,11 @@ public:
 
     /**
      * @brief CartesianGrid
-     * @param param Is a parameter object where the following keys are used for grid initialization;
-     *              - grid_dim
-     *              - nx
-     *              - ny
-     *              - ghost_width
+     * @param param Is a parameter object where the following keys are used for grid initialization.
+     *              - grid_dim Dimension of grid. (default 2)
+     *              - nx Number of interior cells in x-direction. (default 3)
+     *              - ny Number of interior cells in y-direction. (default 2)
+     *              - ghost_width width of ghost boundary. (default 1)
      *              In addition how to read initial and boundary conditions can be specified.
      */
     CartesianGrid( const Opm::parameter::ParameterGroup& param );
@@ -64,6 +64,9 @@ public:
 
     typedef std::vector<double> CartesianCollectionOfScalar;
 
+
+    CartesianCollectionOfScalar inputCellCollectionOfScalar( std::string name );
+
     CartesianCollectionOfScalar inputCellScalarWithDefault( std::string name, double d );
     CartesianCollectionOfScalar inputFaceScalarWithDefault( std::string name, double d );
 
@@ -79,10 +82,9 @@ public:
      */
     void dumpGrid( const CartesianCollectionOfScalar& grid, std::ostream& stream );
 
-
-    void init2D( std::tuple<int, int> dims, int ghostWidth );
 private:
-    const Opm::parameter::ParameterGroup param;
+    const Opm::parameter::ParameterGroup param_;
+    void init2D( std::tuple<int, int> dims, int ghostWidth );
 };
 
 } // namespace equelle
