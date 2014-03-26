@@ -320,12 +320,17 @@ BOOST_AUTO_TEST_CASE( faceDataFromFile ) {
     param.insertParameter( "ny", "2" );
 
 
-    std::vector<double> defaults = {{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 }};
+    std::vector<double> defaults = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
 
     injectMockData( param, "flux", defaults.begin(), defaults.end() );
 
     equelle::CartesianGrid grid(param);
-    auto u = grid.inputCellCollectionOfScalar( "flux" );
+    auto u = grid.inputFaceCollectionOfScalar( "flux" );
     BOOST_CHECK_EQUAL( grid.faceAt( 0, 0, equelle::CartesianGrid::Face::negX, u ), 1 );
+    BOOST_CHECK_EQUAL( grid.faceAt( 1, 0, equelle::CartesianGrid::Face::posX, u ), 3 );
+
+    BOOST_CHECK_EQUAL( grid.faceAt( 1, 1, equelle::CartesianGrid::Face::negY, u ), 11 );
+    BOOST_CHECK_EQUAL( grid.faceAt( 1, 1, equelle::CartesianGrid::Face::posY, u ), 12 );
+
 
 }

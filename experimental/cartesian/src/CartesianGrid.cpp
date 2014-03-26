@@ -130,9 +130,11 @@ equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inpu
             }
         }
 
-        // Y-faces
-        for( int j = 0; j <= cartdims[1]; ++j ) {
-            for( int i = 0; i < cartdims[0]; ++i ) {
+        // Y-faces        
+        // NB. Here we have switch the order we traverse the dimensions, in order to allow for
+        // the natural indexing of storing y-data in input files.
+        for( int i = 0; i < cartdims[0]; ++i ) {
+            for( int j = 0; j <= cartdims[1]; ++j ) {
                 if ( beg == end ) {
                     OPM_THROW(std::runtime_error, "Unexpected size of input data for " << name << " in file " << filename);
                 }
