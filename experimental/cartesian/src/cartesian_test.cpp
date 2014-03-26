@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE( heatEquation ) {
         std::stringstream filename;
         std::showpoint(filename);
         filename << "waveheights_" << boost::format("%011.5f") % t << ".csv";
-        //filename << "waveheights_" << std::setw(10) << std::setfill('0') << t << ".csv";
+        filename << "waveheights_" << std::setw(10) << std::setfill('0') << t << ".csv";
         std::ofstream f(filename.str());
         grid.dumpGrid( u, f );
 
@@ -237,6 +237,7 @@ BOOST_AUTO_TEST_CASE( heatEquation ) {
 
 BOOST_AUTO_TEST_CASE( disallow3DGrids ) {
     Opm::parameter::ParameterGroup param;
+    param.disableOutput();
 
     // Test that we do not allow for constructions of other than 2D-grids.
     param.insertParameter( "grid_dim", "3" );
@@ -245,6 +246,7 @@ BOOST_AUTO_TEST_CASE( disallow3DGrids ) {
 
 BOOST_AUTO_TEST_CASE( ctorFromParamterObject ) {
     Opm::parameter::ParameterGroup param;
+    param.disableOutput();
 
     param.insertParameter( "grid_dim", "2");
     param.insertParameter( "nx", "10" );
@@ -260,6 +262,8 @@ BOOST_AUTO_TEST_CASE( ctorFromParamterObject ) {
 
 BOOST_AUTO_TEST_CASE( cellDataFromFile ) {
     Opm::parameter::ParameterGroup param;
+    param.disableOutput();
+
     param.insertParameter( "nx", "2" );
     param.insertParameter( "ny", "2" );
 
@@ -277,6 +281,8 @@ BOOST_AUTO_TEST_CASE( cellDataFromFile ) {
 
 BOOST_AUTO_TEST_CASE( constantCellData ) {
     Opm::parameter::ParameterGroup param;
+    param.disableOutput();
+
     param.insertParameter( "nx", "2" );
     param.insertParameter( "ny", "2" );
     param.insertParameter( "waveheights", "42" );
@@ -292,6 +298,8 @@ BOOST_AUTO_TEST_CASE( constantCellData ) {
 
 BOOST_AUTO_TEST_CASE( constantFaceData ) {
     Opm::parameter::ParameterGroup param;
+    param.disableOutput();
+
     param.insertParameter( "nx", "2" );
     param.insertParameter( "ny", "2" );
     param.insertParameter( "flux", "-1.5" );
@@ -310,9 +318,10 @@ BOOST_AUTO_TEST_CASE( constantFaceData ) {
 
 BOOST_AUTO_TEST_CASE( faceDataFromFile ) {
     Opm::parameter::ParameterGroup param;
+    param.disableOutput();
+
     param.insertParameter( "nx", "2" );
     param.insertParameter( "ny", "2" );
-
 
     std::vector<double> defaults = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
 
