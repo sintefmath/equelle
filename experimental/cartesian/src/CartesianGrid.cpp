@@ -186,13 +186,59 @@ equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inpu
     return v;
 }
 
-double& equelle::CartesianGrid::cellAt( const int i, const int j, equelle::CartesianGrid::CartesianCollectionOfScalar &coll )
+double& equelle::CartesianGrid::cellAt( const int i, const int j, equelle::CartesianGrid::CartesianCollectionOfScalar &coll ) const
 {
     const int index = cellOrigin + j*cellStrides[1] + i*cellStrides[0];
     return coll[ index ];
 }
 
-double &equelle::CartesianGrid::faceAt(int i, int j, const equelle::CartesianGrid::Face face, equelle::CartesianGrid::CartesianCollectionOfScalar &coll)
+const double &equelle::CartesianGrid::cellAt( const int i, const int j, const equelle::CartesianGrid::CartesianCollectionOfScalar &coll) const
+{
+    const int index = cellOrigin + j*cellStrides[1] + i*cellStrides[0];
+    return coll[ index ];
+}
+
+double &equelle::CartesianGrid::faceAt(int i, int j, const equelle::CartesianGrid::Face face, equelle::CartesianGrid::CartesianCollectionOfScalar &coll) const
+{
+    i += ghost_width;
+    j += ghost_width;
+
+    // Update index to the correct cell.
+    switch (face) {
+    case Face::posX:
+        ++i;
+        break;
+    case Face::posY:
+        ++j;
+        break;
+    default:
+        // Intentional, the other faces does not need index manipulation.
+        break;
+    }
+
+    int offset = 0;
+    strideArray strides;
+
+    switch (face) {
+    case Face::posX:
+    case Face::negX:
+        offset = 0;
+        strides = faceStrides[Dimension::x];
+        break;
+    case Face::posY:
+    case Face::negY:
+        offset = number_of_faces_with_ghost_cells[Dimension::x] * ( cartdims[1] + 2*ghost_width );
+        strides = faceStrides[Dimension::y];
+        break;
+    default:
+        throw std::runtime_error("Only 2D-cartesian grids are supported, so far...");
+        break;
+    }
+
+    return coll[offset + j*strides[1] + i*strides[0] ];
+}
+
+const double &equelle::CartesianGrid::faceAt(int i, int j, equelle::CartesianGrid::Face face, const equelle::CartesianGrid::CartesianCollectionOfScalar &coll) const
 {
     i += ghost_width;
     j += ghost_width;

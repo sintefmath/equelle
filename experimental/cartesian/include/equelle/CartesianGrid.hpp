@@ -80,7 +80,8 @@ public:
      * @param coll  A scalar collection representing face values in the grid.
      * @return The value of the collection at the given edge.
      */
-    double& cellAt( int i, int j, CartesianCollectionOfScalar& coll );
+    double& cellAt( int i, int j, CartesianCollectionOfScalar& coll ) const;
+    const double& cellAt( int i, int j, const CartesianCollectionOfScalar& coll ) const ;
 
     /**
      * @brief faceAt Return a reference to an element of a face adjacent to cell (i,j).
@@ -92,7 +93,8 @@ public:
      * @param coll A scalar collection representing face values in the grid.
      * @return The value of the collection at the given face.
      */
-    double& faceAt( int i, int j, Face face, CartesianCollectionOfScalar& coll );
+    double& faceAt( int i, int j, Face face, CartesianCollectionOfScalar& coll ) const;
+    const double& faceAt( int i, int j, Face face, const CartesianCollectionOfScalar& coll ) const;
 
     /**
      * @brief dumpGrid a grid to a stream or file.
