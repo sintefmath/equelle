@@ -118,7 +118,6 @@ BOOST_AUTO_TEST_CASE( faceTest ) {
     BOOST_CHECK_EQUAL( grid.faceAt( -1, -1, CartesianGrid::Face::posX, flux ), 0.0 );
     BOOST_CHECK_EQUAL( grid.faceAt( -1, -1, CartesianGrid::Face::posY, flux ), 0.0 );
 
-
     for( int j = -ghostWidth; j < dim_y+ghostWidth; ++j ) {
         for( int i = -ghostWidth; i < dim_x+ghostWidth; ++i ) {
         	//Outside domain
@@ -165,3 +164,22 @@ BOOST_AUTO_TEST_CASE( faceTest ) {
         }
     }
 }
+
+BOOST_AUTO_TEST_CASE( parameterObject ) {
+    Opm::parameter::ParameterGroup param;
+    param.insertParameter( "grid_dim", "3" );
+
+    BOOST_CHECK_THROW( equelle::CartesianGrid grid( param ), std::runtime_error  );
+
+    param.insertParameter( "grid_dim", "2");
+    param.insertParameter( "nx", "10" );
+    param.insertParameter( "ny", "12" );
+    param.insertParameter( "ghost_width", "2" );
+
+    equelle::CartesianGrid grid(param);
+    BOOST_CHECK_EQUAL( grid.dimensions, 2 );
+    BOOST_CHECK_EQUAL( grid.cartdims[0], 10 );
+    BOOST_CHECK_EQUAL( grid.cartdims[1], 12 );
+
+}
+

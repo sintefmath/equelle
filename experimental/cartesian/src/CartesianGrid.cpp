@@ -12,7 +12,24 @@ equelle::CartesianGrid::CartesianGrid()
 
 }
 
-equelle::CartesianGrid::CartesianGrid(std::tuple<int, int> dims, int ghostWidth )
+equelle::CartesianGrid::CartesianGrid(const Opm::parameter::ParameterGroup &param)
+    : param( param )
+{
+    int grid_dim = param.getDefault( "grid_dim", 2 );
+    if ( grid_dim != 2 ) {
+        throw std::runtime_error( "Only 2D-cartesian grids are supported, so far..." );
+    }
+
+    std::tuple<int, int> dims;
+    std::get<0>( dims ) = param.getDefault( "nx", 3 );
+    std::get<1>( dims ) = param.getDefault( "ny", 5 );
+
+    int ghostWidth = param.getDefault( "ghost_width", 1 );
+
+    init2D( dims, ghostWidth );
+}
+
+void equelle::CartesianGrid::init2D( std::tuple<int, int> dims, int ghostWidth )
 {
     cartdims[0] = std::get<0>( dims );
     cartdims[1] = std::get<1>( dims );
@@ -34,6 +51,11 @@ equelle::CartesianGrid::CartesianGrid(std::tuple<int, int> dims, int ghostWidth 
     number_of_faces_with_ghost_cells[Dimension::y] = (cartdims[1]+2*ghostWidth+1);
 }
 
+equelle::CartesianGrid::CartesianGrid( std::tuple<int, int> dims, int ghostWidth )
+{
+    init2D( dims, ghostWidth );
+}
+
 equelle::CartesianGrid::~CartesianGrid()
 {
 
@@ -52,7 +74,7 @@ equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inpu
     return v;
 }
 
-equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inputFaceScalarWithDefault(std::string name, double d)
+equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inputFaceScalarWithDefault(std::string name, double d )
 {
     int num = number_of_faces_with_ghost_cells[Dimension::x] * (cartdims[1]+2*ghost_width) +
               number_of_faces_with_ghost_cells[Dimension::y] * (cartdims[0]+2*ghost_width);
