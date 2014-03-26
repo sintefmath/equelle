@@ -18,6 +18,7 @@ enum class Dimension {
 
 
 
+
 /**
  * @brief The CartesianGrid class models Opm::UnstructuredGrid in spirit, but is tailored for cartesian dense grids.
  */
@@ -66,6 +67,8 @@ public:
 
 
     CartesianCollectionOfScalar inputCellCollectionOfScalar( std::string name );
+    CartesianCollectionOfScalar inputFaceCollectionOfScalar( std::string name );
+
 
     CartesianCollectionOfScalar inputCellScalarWithDefault( std::string name, double d );
     CartesianCollectionOfScalar inputFaceScalarWithDefault( std::string name, double d );

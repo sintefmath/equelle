@@ -69,7 +69,6 @@ equelle::CartesianGrid::~CartesianGrid()
 
 equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inputCellCollectionOfScalar(std::string name)
 {
-
     CartesianCollectionOfScalar v;
 
     const bool from_file = param_.getDefault(name + "_from_file", false);
@@ -96,6 +95,54 @@ equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inpu
     } else { // Constant value
         const double value = param_.get<double>( name );
         v = inputCellScalarWithDefault( name, value );
+    }
+
+    return v;
+}
+
+equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inputFaceCollectionOfScalar(std::string name)
+{
+    CartesianCollectionOfScalar v;
+
+    const bool from_file = param_.getDefault(name + "_from_file", false);
+    if ( from_file ) {
+        const String filename = param_.get<String>(name + "_filename");
+        std::ifstream is(filename.c_str());
+        if (!is) {
+            OPM_THROW(std::runtime_error, "Could not find file " << filename);
+        }
+        std::istream_iterator<double> beg(is);
+        std::istream_iterator<double> end;
+
+        int num = number_of_faces_with_ghost_cells[Dimension::x] * (cartdims[1]+2*ghost_width) +
+                number_of_faces_with_ghost_cells[Dimension::y] * (cartdims[0]+2*ghost_width);
+
+        v.resize( num, 0.0 );
+
+        // X-faces
+        for( int j = 0; j < cartdims[1]; ++j ) {
+            for( int i = 0; i <= cartdims[0]; ++i ) {
+                if ( beg == end ) {
+                    OPM_THROW(std::runtime_error, "Unexpected size of input data for " << name << " in file " << filename);
+                }
+                faceAt( i, j, Face::negX, v ) = *beg;
+                beg++;
+            }
+        }
+
+        // Y-faces
+        for( int j = 0; j <= cartdims[1]; ++j ) {
+            for( int i = 0; i < cartdims[0]; ++i ) {
+                if ( beg == end ) {
+                    OPM_THROW(std::runtime_error, "Unexpected size of input data for " << name << " in file " << filename);
+                }
+                faceAt( i, j, Face::negY, v ) = *beg;
+                beg++;
+            }
+        }
+    } else { // Constant value
+        const double value = param_.get<double>( name );
+        v = inputFaceScalarWithDefault( name, value );
     }
 
     return v;

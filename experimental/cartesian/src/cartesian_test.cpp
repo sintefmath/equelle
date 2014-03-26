@@ -209,10 +209,10 @@ BOOST_AUTO_TEST_CASE( constantCellData ) {
     Opm::parameter::ParameterGroup param;
     param.insertParameter( "nx", "2" );
     param.insertParameter( "ny", "2" );
-
     param.insertParameter( "waveheights", "42" );
 
     equelle::CartesianGrid grid(param);
+
     auto u = grid.inputCellCollectionOfScalar( "waveheights" );
     BOOST_CHECK_EQUAL( grid.cellAt( 0, 0, u ), 42 );
     BOOST_CHECK_EQUAL( grid.cellAt( 1, 0, u ), 42 );
@@ -220,3 +220,36 @@ BOOST_AUTO_TEST_CASE( constantCellData ) {
     BOOST_CHECK_EQUAL( grid.cellAt( 1, 1, u ), 42 );
 }
 
+BOOST_AUTO_TEST_CASE( constantFaceData ) {
+    Opm::parameter::ParameterGroup param;
+    param.insertParameter( "nx", "2" );
+    param.insertParameter( "ny", "2" );
+    param.insertParameter( "flux", "-1.5" );
+
+    equelle::CartesianGrid grid(param);
+
+    auto f = grid.inputFaceCollectionOfScalar( "flux" );
+
+    BOOST_CHECK_EQUAL( grid.faceAt( 0, 0, equelle::CartesianGrid::Face::negX, f ), -1.5 );
+    BOOST_CHECK_EQUAL( grid.faceAt( 1, 0, equelle::CartesianGrid::Face::negX, f ), -1.5 );
+    BOOST_CHECK_EQUAL( grid.faceAt( 2, 0, equelle::CartesianGrid::Face::negX, f ), -1.5 );
+
+    // Check that ghost face is not set.
+    BOOST_CHECK_EQUAL( grid.faceAt( 2, 0, equelle::CartesianGrid::Face::posX, f ), 0.0 );
+}
+
+BOOST_AUTO_TEST_CASE( faceDataFromFile ) {
+    Opm::parameter::ParameterGroup param;
+    param.insertParameter( "nx", "2" );
+    param.insertParameter( "ny", "2" );
+
+
+    std::vector<double> defaults = {{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 }};
+
+    injectMockData( param, "flux", defaults.begin(), defaults.end() );
+
+    equelle::CartesianGrid grid(param);
+    auto u = grid.inputCellCollectionOfScalar( "flux" );
+    BOOST_CHECK_EQUAL( grid.faceAt( 0, 0, equelle::CartesianGrid::Face::negX, u ), 1 );
+
+}
