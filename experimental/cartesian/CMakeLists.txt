@@ -17,4 +17,4 @@ add_executable(cartesian_test ${test_src}
 
 target_link_libraries(cartesian_test equelle_rt
     ${Boost_LIBRARIES}
-    opmautodiff opmcore dunecommon )
+    opmcore  )
