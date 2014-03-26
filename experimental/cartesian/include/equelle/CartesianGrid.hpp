@@ -6,6 +6,8 @@
 #include <unordered_map>
 #include <map>
 
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
+
 namespace equelle {
 
 enum class Dimension {
@@ -26,6 +28,18 @@ public:
     };
 
     CartesianGrid();
+
+    /**
+     * @brief CartesianGrid
+     * @param param Is a parameter object where the following keys are used for grid initialization;
+     *              - grid_dim
+     *              - nx
+     *              - ny
+     *              - ghost_width
+     *              In addition how to read initial and boundary conditions can be specified.
+     */
+    CartesianGrid( const Opm::parameter::ParameterGroup& param );
+
     /**
      * @brief CartesianGrid constructor for 2D-grids.
      * @param dims number of cells in x and y dimension.
@@ -66,6 +80,9 @@ public:
     void dumpGrid( const CartesianCollectionOfScalar& grid, std::ostream& stream );
 
 
+    void init2D( std::tuple<int, int> dims, int ghostWidth );
+private:
+    const Opm::parameter::ParameterGroup param;
 };
 
 } // namespace equelle

@@ -240,3 +240,22 @@ BOOST_AUTO_TEST_CASE( heatEquation ) {
         u0 = u;
     }
 }
+
+BOOST_AUTO_TEST_CASE( parameterObject ) {
+    Opm::parameter::ParameterGroup param;
+    param.insertParameter( "grid_dim", "3" );
+
+    BOOST_CHECK_THROW( equelle::CartesianGrid grid( param ), std::runtime_error  );
+
+    param.insertParameter( "grid_dim", "2");
+    param.insertParameter( "nx", "10" );
+    param.insertParameter( "ny", "12" );
+    param.insertParameter( "ghost_width", "2" );
+
+    equelle::CartesianGrid grid(param);
+    BOOST_CHECK_EQUAL( grid.dimensions, 2 );
+    BOOST_CHECK_EQUAL( grid.cartdims[0], 10 );
+    BOOST_CHECK_EQUAL( grid.cartdims[1], 12 );
+
+}
+
