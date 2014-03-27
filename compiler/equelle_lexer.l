@@ -31,7 +31,7 @@ INT      {DIGIT}+
 FLOAT    {INT}[.]{INT}
 BLANKS   [\t ]+
 STRING   \"(\\.|[^\\"])*\"
-SINGLES  [:=()+\-*/^<>{},|?\[\]]
+SINGLES  [@:=()+\-*/^<>{},|?\[\]]
 ELLIPSIS [.][.][.]
 LINECONT {ELLIPSIS}[\t ]*\n
 

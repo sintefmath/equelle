@@ -1,0 +1,11 @@
+fourPoint : Function( u: Collection Of Scalar On AllCells() ) -> ...
+                         Collection Of Scalar On InteriorCells()
+fourPoint(u) = {
+    i = StencilI()
+    j = StencilJ()
+
+    a = u@i,j@
+
+    -> 0.25 * ( u@i-1,j@ + u@i+1,j@ + u@i,j-1@ + u@i,j+1@ ) - u@i,j@
+}
+

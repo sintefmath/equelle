@@ -615,6 +615,11 @@ SymbolTable::SymbolTable()
                             FunctionType({ Variable("x", EquelleType(Scalar, Collection)) },
                                          EquelleType(Scalar)));
 
+    functions_.emplace_back("StencilI",
+                            FunctionType( EquelleType( StencilI ) ) );
+    functions_.emplace_back("StencilJ",
+                                FunctionType( EquelleType( StencilJ ) ) );
+
 
     // ----- Set main function ref and current (initially equal to main). -----
     main_function_ = functions_.begin();

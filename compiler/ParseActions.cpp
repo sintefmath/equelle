@@ -8,6 +8,7 @@
 #include "ASTNodes.hpp"
 #include "ParseActions.hpp"
 #include <sstream>
+#include <iostream>
 
 
 
@@ -586,4 +587,22 @@ RandomAccessNode* handleRandomAccess(Node* expr, const int index)
         yyerror("cannot use '[<index>]' random access operator with anything other than a Vector or Array");
     }
     return new RandomAccessNode(expr, index);
+}
+
+
+Node *handleStencilAccessStatement(Node *expr )
+{
+    std::cout << __PRETTY_FUNCTION__ << std::endl;
+    //std::cout << expr << std::endl;
+
+    return new Node();
+    //return expr;
+}
+
+
+Node *handleStencilAccess(FuncArgsNode* expr_list)
+{
+    std::cout << __PRETTY_FUNCTION__ << std::endl;
+
+    return new Node();
 }

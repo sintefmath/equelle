@@ -74,4 +74,10 @@ LoopNode* handleLoopStatement(LoopNode* loop_start, SequenceNode* loop_block);
 
 RandomAccessNode* handleRandomAccess(Node* expr, const int index);
 
+Node* handleStencilAccessStatement( Node* expr );
+
+Node *handleStencilAccess( FuncArgsNode* expr_list );
+
+
+
 #endif // PARSEACTIONS_HEADER_INCLUDED
