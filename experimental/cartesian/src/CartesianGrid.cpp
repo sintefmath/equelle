@@ -331,6 +331,10 @@ equelle::CartesianGrid::CellRange equelle::CartesianGrid::allCells() {
     return CellRange(0, cartdims[0], 0, cartdims[1]);
 }
 
-equelle::CartesianGrid::FaceRange equelle::CartesianGrid::allFaces() {
-    return FaceRange(0, cartdims[0], 0, cartdims[1]);
+equelle::CartesianGrid::FaceRange equelle::CartesianGrid::allXFaces() {
+    return FaceRange(0, cartdims[0]+1, 0, cartdims[1]);
+}
+
+equelle::CartesianGrid::FaceRange equelle::CartesianGrid::allYFaces() {
+    return FaceRange(0, cartdims[0], 0, cartdims[1]+1);
 }

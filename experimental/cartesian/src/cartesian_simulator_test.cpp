@@ -27,8 +27,11 @@ BOOST_AUTO_TEST_CASE( heatEquation ) {
     int dim_y = 50;
     int ghostWidth = 1;
 
+    typedef equelle::CartesianGrid::Face Face;
+
     equelle::CartesianGrid grid( std::make_tuple( dim_x, dim_y),  ghostWidth );
     equelle::CartesianGrid::CartesianCollectionOfScalar u = grid.inputCellScalarWithDefault( "u", 1.0 );
+    equelle::CartesianGrid::CartesianCollectionOfScalar u_faces = grid.inputFaceScalarWithDefault( "u_faces", 0.0 );
 
     const double k = 1.0; //Material specific heat diffusion constant
     const double dx = 1.0;//5.0 / static_cast<double>(dim_x);
@@ -41,28 +44,33 @@ BOOST_AUTO_TEST_CASE( heatEquation ) {
     double t = 0.0;
 
     equelle::CartesianGrid::CellRange allCells = grid.allCells();
+    equelle::CartesianGrid::FaceRange allXFaces = grid.allXFaces();
+    equelle::CartesianGrid::FaceRange allYFaces = grid.allYFaces();
+
     equelle::CartesianGrid::CartesianCollectionOfScalar u0 = u;
 
+    //Our stencil for cells
+    auto cell_stencil = [&] (int i, int j) {
+        grid.cellAt( i, j, u ) = //grid.cellAt( i, j, u0 ) +
+                     1.0/4.0 * ( grid.faceAt(i, j, Face::negX, u_faces) +
+                                 grid.faceAt(i, j, Face::posX, u_faces) +
+                                 grid.faceAt(i, j, Face::negY, u_faces) +
+                                 grid.faceAt(i, j, Face::posY, u_faces) );
+    };
 
-    //Our stencil
-    auto f = [&] (int i, int j) {
-        grid.cellAt( i, j, u ) = grid.cellAt( i+0, j+0, u0 ) +
-                                 a * 1.0/8.0 * ( grid.cellAt( i+0, j-1, u0 ) +
-                                                 grid.cellAt( i+0, j+1, u0 ) +
-                                                 grid.cellAt( i-1, j+0, u0 ) +
-                                                 grid.cellAt( i+1, j+0, u0 ) -
-                                             4.0*grid.cellAt( i+0, j+0, u0 ) );
+    auto x_face_stencil = [&] (int i, int j) {
+        grid.faceAt( i, j, Face::negX, u_faces ) = 0.5f * ( grid.cellAt( i-1, j, u0 ) + grid.cellAt( i, j, u0 ) );
+    };
+
+    auto y_face_stencil = [&] (int i, int j) {
+        grid.faceAt( i, j, Face::negY, u_faces ) = 0.5f * ( grid.cellAt( i, j-1, u0 ) + grid.cellAt( i, j, u0 ) );
     };
 
     while (t < t_end) {
-        allCells.execute(f);
-        /*
-        for( int j = 0; j < dim_y; ++j ) {
-            for( int i = 0; i < dim_x; ++i ) {
-                f(i, j);
-            }
-        }
-        */
+        allXFaces.execute(x_face_stencil);
+        allYFaces.execute(y_face_stencil);
+        allCells.execute(cell_stencil);
+
         t = t + dt;
         u0 = u;
 
@@ -74,6 +82,8 @@ BOOST_AUTO_TEST_CASE( heatEquation ) {
         grid.dumpGridCells( u, file );
     }
 }
+
+#if 0
 
 inline double sign(double& a) {
     /**
@@ -261,3 +271,4 @@ BOOST_AUTO_TEST_CASE( heatEquation_2nd_order ) {
         u0 = u;
     }
 }
+#endif

@@ -113,7 +113,8 @@ public:
      * Returns an object that can execute a stencil on all cells/faces within a given range
      */
     CellRange allCells();
-    FaceRange allFaces();
+    FaceRange allXFaces();
+    FaceRange allYFaces();
 
 private:
     const Opm::parameter::ParameterGroup param_;
@@ -168,16 +169,7 @@ public:
     void execute(std::function<void(int, int)> stencil)
     {
 //#pragma omp parallel for here for parallelism
-        //FIXME Does not work!
-        //X faces
         for (int j=j_begin; j < j_end; ++j) {
-            for (int i=i_begin; i < i_end+1; ++i) {
-                stencil(i, j);
-            }
-        }
-
-        //Y faces
-        for (int j=j_begin; j < j_end+1; ++j) {
             for (int i=i_begin; i < i_end; ++i) {
                 stencil(i, j);
             }
