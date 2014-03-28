@@ -916,4 +916,17 @@ private:
     int index_;
 };
 
+struct StencilStatementNode : public Node {
+    StencilStatementNode( Node* node ) {
+    }
+
+    virtual ~StencilStatementNode() {
+
+    }
+};
+
+struct StencilAccessNode : public Node {
+
+};
+
 #endif // ASTNODES_HEADER_INCLUDED

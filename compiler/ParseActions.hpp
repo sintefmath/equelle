@@ -74,9 +74,13 @@ LoopNode* handleLoopStatement(LoopNode* loop_start, SequenceNode* loop_block);
 
 RandomAccessNode* handleRandomAccess(Node* expr, const int index);
 
-Node* handleStencilAccessStatement( Node* expr );
 
-Node *handleStencilAccess( FuncArgsNode* expr_list );
+StencilAccessNode *handleStencilAccess( const std::string grid_variable,
+                                        FuncArgsNode* expr_list );
+
+StencilStatementNode *handleStencilStatement( StencilAccessNode* lhsStencilAccess,
+                                              Node* expr );
+
 
 
 

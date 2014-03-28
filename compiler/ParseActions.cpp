@@ -600,9 +600,19 @@ Node *handleStencilAccessStatement(Node *expr )
 }
 
 
-Node *handleStencilAccess(FuncArgsNode* expr_list)
+StencilAccessNode *handleStencilAccess(const std::string grid_variable,
+                                       FuncArgsNode* expr_list)
 {
     std::cout << __PRETTY_FUNCTION__ << std::endl;
 
-    return new Node();
+    return new StencilAccessNode();
+}
+
+
+StencilStatementNode *handleStencilStatement( StencilAccessNode *lhsStencilAccess,
+                                              Node *expr)
+{
+    std::cout << __PRETTY_FUNCTION__ << std::endl;
+
+    return new StencilStatementNode( expr );
 }

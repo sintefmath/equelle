@@ -29,6 +29,10 @@ std::string basicTypeString(const BasicType bt)
         return "String";
     case Void:
         return "Void";
+    case StencilI:
+    case StencilJ:
+    case StencilK:
+        return "// Stencilobject defined - but they don't exist in the generated code";
     default:
         return "basicTypeString() error";
     }

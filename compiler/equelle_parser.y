@@ -63,7 +63,8 @@
 %type <seq> block
 %type <node> f_startdef
 %type <loop> loop_start
-%type <node> stencil_access
+%type <stencilAccess> stencil_access
+%type <stencilStmnt> stencil_statement
 
 %start program
 %error-verbose
@@ -93,15 +94,17 @@
 
 %union{
     Node* node;
-    TypeNode* type;
-    VarDeclNode* vardecl;
-    FuncTypeNode* ftype;
-    FuncArgsNode* farg;
-    FuncArgsDeclNode* fargdecl;
-    FuncCallNode* fcall;
-    SequenceNode* seq;
-    LoopNode* loop;
-    std::string* str;
+    TypeNode*               type;
+    VarDeclNode*            vardecl;
+    FuncTypeNode*           ftype;
+    FuncArgsNode*           farg;
+    FuncArgsDeclNode*       fargdecl;
+    FuncCallNode*           fcall;
+    SequenceNode*           seq;
+    LoopNode*               loop;
+    StencilStatementNode*   stencilStmnt;
+    StencilAccessNode*      stencilAccess;
+    std::string*            str;
 }
 
 
@@ -126,9 +129,10 @@ statement: declaration          { $$ = $1; }
          | f_declaration        { $$ = $1; }
          | assignment           { $$ = $1; }
          | comb_decl_assign     { $$ = $1; }
-         | function_call        { $$ = handleFuncCallStatement($1); }         
+         | function_call        { $$ = handleFuncCallStatement($1); }
          | RET expr             { $$ = handleReturnStatement($2); }
          | loop_start block     { $$ = handleLoopStatement($1, $2); }
+         | stencil_statement    { $$ = $1; }
          ;
 
 declaration: ID ':' type_expr  { $$ = handleDeclaration(*($1), $3); delete $1; }
@@ -138,6 +142,10 @@ f_declaration: ID ':' f_type_expr  { $$ = handleFuncDeclaration(*($1), $3); dele
 assignment: ID '=' expr       { $$ = handleAssignment(*($1), $3); delete $1; }
           | f_startdef block  { $$ = handleFuncAssignment($1, $2); }
           ;
+
+stencil_statement: '$' stencil_access '=' expr '$' { $$ = handleStencilStatement($2, $4); };
+
+stencil_access: ID  '@' f_call_args '@' { $$ = handleStencilAccess( *($1), $3 ); delete $1; };
 
 f_startdef: ID '(' f_call_args ')' '='       { $$ = handleFuncStart(*($1), $3); delete $1; }
 
@@ -163,8 +171,8 @@ expr: number              { $$ = $1; }
     | expr ON expr        { $$ = handleOn($1, $3); }
     | expr EXTEND expr    { $$ = handleExtend($1, $3); }
     | ID                  { $$ = handleIdentifier(*($1)); delete $1; }
-    | STRING_LITERAL      { $$ = handleString(*($1)); delete $1; }
-    | stencil_access      { $$ = handleStencilAccessStatement($1);  delete $1; }
+    | STRING_LITERAL      { $$ = handleString(*($1)); delete $1; }      
+    | stencil_access      { $$ = $1; }
     | array               { $$ = $1; }
     ;
 
@@ -205,7 +213,9 @@ function_call: BUILTIN '(' f_call_args ')'  { $$ = handleFuncCall(*($1), $3); de
              | ID '(' f_call_args ')'       { $$ = handleFuncCall(*($1), $3); delete $1; }
              ;
 
-stencil_access: ID  '@' f_call_args '@' { $$ = handleStencilAccess( $3 ); }; // Check number of arguments and dimension.
+
+
+
 
 f_call_args: f_call_args ',' expr     { $$ = $1; $$->addArg($3); }
            | expr                     { $$ = new FuncArgsNode($1); }
