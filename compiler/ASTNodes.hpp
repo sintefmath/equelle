@@ -920,13 +920,21 @@ struct StencilStatementNode : public Node {
     StencilStatementNode( Node* node ) {
     }
 
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+    }
+
     virtual ~StencilStatementNode() {
 
     }
 };
 
 struct StencilAccessNode : public Node {
-
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+    }
 };
 
 #endif // ASTNODES_HEADER_INCLUDED

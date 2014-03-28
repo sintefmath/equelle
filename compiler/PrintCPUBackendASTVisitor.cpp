@@ -8,6 +8,7 @@
 #include <iostream>
 #include <cctype>
 #include <sstream>
+#include <stdexcept>
 
 
 namespace
@@ -504,6 +505,37 @@ void PrintCPUBackendASTVisitor::addRequirementString(const std::string& req)
 {
     requirement_strings_.insert(req);
 }
+
+void PrintCPUBackendASTVisitor::visit(StencilAccessNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintCPUBackendASTVisitor::midVisit(StencilAccessNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintCPUBackendASTVisitor::postVisit(StencilAccessNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintCPUBackendASTVisitor::visit(StencilStatementNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintCPUBackendASTVisitor::midVisit(StencilStatementNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintCPUBackendASTVisitor::postVisit(StencilStatementNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
 
 namespace
 {

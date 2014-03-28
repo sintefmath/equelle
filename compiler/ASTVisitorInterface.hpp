@@ -33,6 +33,8 @@ class FuncCallStatementNode;
 class LoopNode;
 class ArrayNode;
 class RandomAccessNode;
+class StencilAccessNode;
+class StencilStatementNode;
 
 
 class ASTVisitorInterface
@@ -93,6 +95,14 @@ public:
     virtual void postVisit(ArrayNode& node) = 0;
     virtual void visit(RandomAccessNode& node) = 0;
     virtual void postVisit(RandomAccessNode& node) = 0;
+
+    virtual void visit( StencilAccessNode& node ) = 0;
+    virtual void midVisit( StencilAccessNode& node ) = 0;
+    virtual void postVisit( StencilAccessNode& node ) = 0;
+    virtual void visit( StencilStatementNode& node ) = 0;
+    virtual void midVisit( StencilStatementNode& node ) = 0;
+    virtual void postVisit( StencilStatementNode& node ) = 0;
+
 
     virtual ~ASTVisitorInterface()
     {
