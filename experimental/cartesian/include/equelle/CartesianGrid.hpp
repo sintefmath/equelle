@@ -18,34 +18,13 @@ enum Dimension {
 };
 
 
-class AllCellsRange {
-public:
-    AllCellsRange() {
-        //begin/end/...;
-
-    }
-
-    void execute(std::function<void(int, int)> stencil) {
-        for (int j=begin_j(); j < end_j(); ++j) {
-            for (int i=begin_i(); i < end_i(); ++i) {
-                stencil(i, j);
-            }
-        }
-    }
-
-private:
-    int begin_i();
-    int begin_j();
-
-    int end_i();
-    int end_j();
-};
-
 /**
  * @brief The CartesianGrid class models Opm::UnstructuredGrid in spirit, but is tailored for cartesian dense grids.
  */
 class CartesianGrid {
 public:
+    class CellRange;
+    class FaceRange;
 
     /**
      * @brief The Face enum is used to indicate which adjacent face one is referring to for a given cell id.
@@ -130,10 +109,81 @@ public:
     void dumpGridCells( const CartesianCollectionOfScalar& grid, std::ostream& stream );
     void dumpGridFaces( /*const*/ CartesianCollectionOfScalar& grid, Face, std::ostream& stream );
 
+    /**
+     * Returns an object that can execute a stencil on all cells/faces within a given range
+     */
+    CellRange allCells();
+    FaceRange allXFaces();
+    FaceRange allYFaces();
+
 private:
     const Opm::parameter::ParameterGroup param_;
     void init2D( std::tuple<int, int> dims, int ghostWidth );
     int cellOrigin;
 };
+
+
+
+
+
+/**
+ * Class that enables execution of a stencil on all cells within the range
+ */
+class CartesianGrid::CellRange {
+public:
+    CellRange(int i0, int i1, int j0, int j1)
+        : i_begin(i0), i_end(i1), j_begin(j0), j_end(j1)
+    {
+
+    }
+
+    void execute(std::function<void(int, int)> stencil)
+    {
+//#pragma omp parallel for here for parallelism
+        for (int j=j_begin; j < j_end; ++j) {
+            for (int i=i_begin; i < i_end; ++i) {
+                stencil(i, j);
+            }
+        }
+    }
+
+private:
+    int i_begin;
+    int i_end;
+
+    int j_begin;
+    int j_end;
+};
+
+/**
+ * Same as a cellrange, but it loops over all faces
+ */
+class CartesianGrid::FaceRange {
+public:
+    FaceRange(int i0, int i1, int j0, int j1)
+        : i_begin(i0), i_end(i1), j_begin(j0), j_end(j1)
+    {
+
+    }
+
+    void execute(std::function<void(int, int)> stencil)
+    {
+//#pragma omp parallel for here for parallelism
+        for (int j=j_begin; j < j_end; ++j) {
+            for (int i=i_begin; i < i_end; ++i) {
+                stencil(i, j);
+            }
+        }
+    }
+
+private:
+    int i_begin;
+    int i_end;
+
+    int j_begin;
+    int j_end;
+};
+
+
 
 } // namespace equelle
