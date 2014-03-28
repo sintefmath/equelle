@@ -929,7 +929,10 @@ struct StencilAccessNode : public Node {
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
+        expr_list->accept( visitor );
+        visitor.postVisit( *this );
     }
+
     std::string grid_variable;
     FuncArgsNode* expr_list;
 };
