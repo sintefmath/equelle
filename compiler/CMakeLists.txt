@@ -25,7 +25,7 @@ add_executable( ec ${EC_SOURCES} ${EC_HEADERS} ${FLEX_MyScanner_OUTPUTS}
 ${BISON_MyParser_OUTPUTS} )
 set_target_properties( ec PROPERTIES COMPILE_DEFINITIONS "RETURN_TOKENS=1" )
 
-add_executable( el el.cpp ${FLEX_MyScanner_OUTPUTS} ) 
+add_executable( el el.cpp equelle_parser.y equelle_lexer.l ${FLEX_MyScanner_OUTPUTS} )
 
 install(TARGETS ec el 
 	EXPORT EquelleTargets

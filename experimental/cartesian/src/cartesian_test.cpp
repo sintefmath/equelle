@@ -47,11 +47,8 @@ BOOST_AUTO_TEST_CASE( cartesianGridTest ) {
 
     BOOST_CHECK_EQUAL( grid.number_of_cells_and_ghost_cells, (dim_x+2*ghostWidth)*(dim_y+2*ghostWidth) );
 
-    int stride_x = grid.getStride( equelle::Dimension::x );
-    BOOST_REQUIRE_EQUAL( stride_x, 1 );
-
-    int stride_y = grid.getStride( equelle::Dimension::y );
-    BOOST_REQUIRE_EQUAL( stride_y, dim_x + 2*ghostWidth );
+    BOOST_REQUIRE_EQUAL( grid.cellStrides[0], 1 );
+    BOOST_REQUIRE_EQUAL( grid.cellStrides[1], dim_x + 2*ghostWidth );
 }
 
 BOOST_AUTO_TEST_CASE( cartesianCollectionOfScalarTest ) {
@@ -389,17 +386,23 @@ BOOST_AUTO_TEST_CASE( heatEquation_2nd_order ) {
         file << std::endl;
         grid.dumpGridFaces( f, Face::negY, file );
 
-
         u0 = u;
     }
 }
 
 
-BOOST_AUTO_TEST_CASE( parameterObject ) {
+BOOST_AUTO_TEST_CASE( disallow3DGrids ) {
     Opm::parameter::ParameterGroup param;
-    param.insertParameter( "grid_dim", "3" );
+    param.disableOutput();
 
+    // Test that we do not allow for constructions of other than 2D-grids.
+    param.insertParameter( "grid_dim", "3" );
     BOOST_CHECK_THROW( equelle::CartesianGrid grid( param ), std::runtime_error  );
+}
+
+BOOST_AUTO_TEST_CASE( ctorFromParamterObject ) {
+    Opm::parameter::ParameterGroup param;
+    param.disableOutput();
 
     param.insertParameter( "grid_dim", "2");
     param.insertParameter( "nx", "10" );
@@ -407,9 +410,86 @@ BOOST_AUTO_TEST_CASE( parameterObject ) {
     param.insertParameter( "ghost_width", "2" );
 
     equelle::CartesianGrid grid(param);
+    BOOST_CHECK_EQUAL( grid.ghost_width, 2 );
     BOOST_CHECK_EQUAL( grid.dimensions, 2 );
     BOOST_CHECK_EQUAL( grid.cartdims[0], 10 );
     BOOST_CHECK_EQUAL( grid.cartdims[1], 12 );
-
 }
 
+BOOST_AUTO_TEST_CASE( cellDataFromFile ) {
+    Opm::parameter::ParameterGroup param;
+    param.disableOutput();
+
+    param.insertParameter( "nx", "2" );
+    param.insertParameter( "ny", "2" );
+
+
+    std::vector<double> defaults = {{1,2,3,4}};
+    injectMockData( param, "waveheights", defaults.begin(), defaults.end() );
+
+    equelle::CartesianGrid grid(param);
+    auto u = grid.inputCellCollectionOfScalar( "waveheights" );
+    BOOST_CHECK_EQUAL( grid.cellAt( 0, 0, u ), 1 );
+    BOOST_CHECK_EQUAL( grid.cellAt( 1, 0, u ), 2 );
+    BOOST_CHECK_EQUAL( grid.cellAt( 0, 1, u ), 3 );
+    BOOST_CHECK_EQUAL( grid.cellAt( 1, 1, u ), 4 );
+}
+
+BOOST_AUTO_TEST_CASE( constantCellData ) {
+    Opm::parameter::ParameterGroup param;
+    param.disableOutput();
+
+    param.insertParameter( "nx", "2" );
+    param.insertParameter( "ny", "2" );
+    param.insertParameter( "waveheights", "42" );
+
+    equelle::CartesianGrid grid(param);
+
+    auto u = grid.inputCellCollectionOfScalar( "waveheights" );
+    BOOST_CHECK_EQUAL( grid.cellAt( 0, 0, u ), 42 );
+    BOOST_CHECK_EQUAL( grid.cellAt( 1, 0, u ), 42 );
+    BOOST_CHECK_EQUAL( grid.cellAt( 0, 1, u ), 42 );
+    BOOST_CHECK_EQUAL( grid.cellAt( 1, 1, u ), 42 );
+}
+
+BOOST_AUTO_TEST_CASE( constantFaceData ) {
+    Opm::parameter::ParameterGroup param;
+    param.disableOutput();
+
+    param.insertParameter( "nx", "2" );
+    param.insertParameter( "ny", "2" );
+    param.insertParameter( "flux", "-1.5" );
+
+    equelle::CartesianGrid grid(param);
+
+    auto f = grid.inputFaceCollectionOfScalar( "flux" );
+
+    BOOST_CHECK_EQUAL( grid.faceAt( 0, 0, equelle::CartesianGrid::Face::negX, f ), -1.5 );
+    BOOST_CHECK_EQUAL( grid.faceAt( 1, 0, equelle::CartesianGrid::Face::negX, f ), -1.5 );
+    BOOST_CHECK_EQUAL( grid.faceAt( 2, 0, equelle::CartesianGrid::Face::negX, f ), -1.5 );
+
+    // Check that ghost face is not set.
+    BOOST_CHECK_EQUAL( grid.faceAt( 2, 0, equelle::CartesianGrid::Face::posX, f ), 0.0 );
+}
+
+BOOST_AUTO_TEST_CASE( faceDataFromFile ) {
+    Opm::parameter::ParameterGroup param;
+    param.disableOutput();
+
+    param.insertParameter( "nx", "2" );
+    param.insertParameter( "ny", "2" );
+
+    std::vector<double> defaults = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+
+    injectMockData( param, "flux", defaults.begin(), defaults.end() );
+
+    equelle::CartesianGrid grid(param);
+    auto u = grid.inputFaceCollectionOfScalar( "flux" );
+    BOOST_CHECK_EQUAL( grid.faceAt( 0, 0, equelle::CartesianGrid::Face::negX, u ), 1 );
+    BOOST_CHECK_EQUAL( grid.faceAt( 1, 0, equelle::CartesianGrid::Face::posX, u ), 3 );
+
+    BOOST_CHECK_EQUAL( grid.faceAt( 1, 1, equelle::CartesianGrid::Face::negY, u ), 11 );
+    BOOST_CHECK_EQUAL( grid.faceAt( 1, 1, equelle::CartesianGrid::Face::posY, u ), 12 );
+
+
+}

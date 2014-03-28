@@ -4,6 +4,8 @@
 */
 %}
 
+%glr-parser
+
 %token COLLECTION
 %token SEQUENCE
 %token ARRAY
@@ -61,6 +63,7 @@
 %type <seq> block
 %type <node> f_startdef
 %type <loop> loop_start
+%type <node> stencil_access
 
 %start program
 %error-verbose
@@ -123,7 +126,7 @@ statement: declaration          { $$ = $1; }
          | f_declaration        { $$ = $1; }
          | assignment           { $$ = $1; }
          | comb_decl_assign     { $$ = $1; }
-         | function_call        { $$ = handleFuncCallStatement($1); }
+         | function_call        { $$ = handleFuncCallStatement($1); }         
          | RET expr             { $$ = handleReturnStatement($2); }
          | loop_start block     { $$ = handleLoopStatement($1, $2); }
          ;
@@ -161,6 +164,7 @@ expr: number              { $$ = $1; }
     | expr EXTEND expr    { $$ = handleExtend($1, $3); }
     | ID                  { $$ = handleIdentifier(*($1)); delete $1; }
     | STRING_LITERAL      { $$ = handleString(*($1)); delete $1; }
+    | stencil_access      { $$ = handleStencilAccessStatement($1);  delete $1; }
     | array               { $$ = $1; }
     ;
 
@@ -201,13 +205,14 @@ function_call: BUILTIN '(' f_call_args ')'  { $$ = handleFuncCall(*($1), $3); de
              | ID '(' f_call_args ')'       { $$ = handleFuncCall(*($1), $3); delete $1; }
              ;
 
+stencil_access: ID  '@' f_call_args '@' { $$ = handleStencilAccess( $3 ); }; // Check number of arguments and dimension.
+
 f_call_args: f_call_args ',' expr     { $$ = $1; $$->addArg($3); }
            | expr                     { $$ = new FuncArgsNode($1); }
            |                          { $$ = new FuncArgsNode(); }
            ;
 
-loop_start: FOR ID IN ID              { $$ = handleLoopStart(*($2), *($4)); delete $2; delete $4; }
-
+loop_start: FOR ID IN ID              { $$ = handleLoopStart(*($2), *($4)); delete $2; delete $4; };
 
 
 %%

@@ -4,8 +4,14 @@
 #include <iterator>
 #include <algorithm>
 #include <iomanip>
+#include <fstream>
+#include <iostream>
+
+#include <opm/autodiff/AutoDiffHelpers.hpp>
+
 
 #include "equelle/CartesianGrid.hpp"
+#include "equelle/equelleTypes.hpp"
 
 equelle::CartesianGrid::CartesianGrid()
 {
@@ -13,7 +19,7 @@ equelle::CartesianGrid::CartesianGrid()
 }
 
 equelle::CartesianGrid::CartesianGrid(const Opm::parameter::ParameterGroup &param)
-    : param( param )
+    : param_( param )
 {
     int grid_dim = param.getDefault( "grid_dim", 2 );
     if ( grid_dim != 2 ) {
@@ -46,6 +52,7 @@ void equelle::CartesianGrid::init2D( std::tuple<int, int> dims, int ghostWidth )
     this->number_of_cells = cartdims[0]*cartdims[1];
 
     this->number_of_cells_and_ghost_cells = (cartdims[0]+2*ghostWidth) * (cartdims[1]+2*ghostWidth);
+    this->cellOrigin = ghost_width * cellStrides[1] + ghost_width * cellStrides[0];
 
     number_of_faces_with_ghost_cells[Dimension::x] = (cartdims[0]+2*ghostWidth+1);
     number_of_faces_with_ghost_cells[Dimension::y] = (cartdims[1]+2*ghostWidth+1);
@@ -61,8 +68,91 @@ equelle::CartesianGrid::~CartesianGrid()
 
 }
 
-equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inputCellScalarWithDefault(std::string name, double d)
+equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inputCellCollectionOfScalar(std::string name)
 {
+    CartesianCollectionOfScalar v;
+
+    const bool from_file = param_.getDefault(name + "_from_file", false);
+    if ( from_file ) {
+        const String filename = param_.get<String>(name + "_filename");
+        std::ifstream is(filename.c_str());
+        if (!is) {
+            OPM_THROW(std::runtime_error, "Could not find file " << filename);
+        }
+        std::istream_iterator<double> beg(is);
+        std::istream_iterator<double> end;
+
+        v.resize( number_of_cells_and_ghost_cells, 0.0 );
+
+        for( int j = 0; j < cartdims[1]; ++j ) {
+            for( int i = 0; i < cartdims[0]; ++i ) {
+                if ( beg == end ) {
+                    OPM_THROW(std::runtime_error, "Unexpected size of input data for " << name << " in file " << filename);
+                }
+                cellAt( i, j, v ) = *beg;
+                beg++;
+            }
+        }
+    } else { // Constant value
+        const double value = param_.get<double>( name );
+        v = inputCellScalarWithDefault( name, value );
+    }
+
+    return v;
+}
+
+equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inputFaceCollectionOfScalar(std::string name)
+{
+    CartesianCollectionOfScalar v;
+
+    const bool from_file = param_.getDefault(name + "_from_file", false);
+    if ( from_file ) {
+        const String filename = param_.get<String>(name + "_filename");
+        std::ifstream is(filename.c_str());
+        if (!is) {
+            OPM_THROW(std::runtime_error, "Could not find file " << filename);
+        }
+        std::istream_iterator<double> beg(is);
+        std::istream_iterator<double> end;
+
+        int num = number_of_faces_with_ghost_cells[Dimension::x] * (cartdims[1]+2*ghost_width) +
+                number_of_faces_with_ghost_cells[Dimension::y] * (cartdims[0]+2*ghost_width);
+
+        v.resize( num, 0.0 );
+
+        // X-faces
+        for( int j = 0; j < cartdims[1]; ++j ) {
+            for( int i = 0; i <= cartdims[0]; ++i ) {
+                if ( beg == end ) {
+                    OPM_THROW(std::runtime_error, "Unexpected size of input data for " << name << " in file " << filename);
+                }
+                faceAt( i, j, Face::negX, v ) = *beg;
+                beg++;
+            }
+        }
+
+        // Y-faces        
+        // NB. Here we have switch the order we traverse the dimensions, in order to allow for
+        // the natural indexing of storing y-data in input files.
+        for( int i = 0; i < cartdims[0]; ++i ) {
+            for( int j = 0; j <= cartdims[1]; ++j ) {
+                if ( beg == end ) {
+                    OPM_THROW(std::runtime_error, "Unexpected size of input data for " << name << " in file " << filename);
+                }
+                faceAt( i, j, Face::negY, v ) = *beg;
+                beg++;
+            }
+        }
+    } else { // Constant value
+        const double value = param_.get<double>( name );
+        v = inputFaceScalarWithDefault( name, value );
+    }
+
+    return v;
+}
+
+equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inputCellScalarWithDefault(std::string /*name*/, double d)
+{    
     CartesianCollectionOfScalar v( number_of_cells_and_ghost_cells, 0.0 );
 
     for( int j = 0; j < cartdims[1]; ++j ) {
@@ -77,7 +167,7 @@ equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inpu
 equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inputFaceScalarWithDefault(std::string name, double d )
 {
     int num = number_of_faces_with_ghost_cells[Dimension::x] * (cartdims[1]+2*ghost_width) +
-              number_of_faces_with_ghost_cells[Dimension::y] * (cartdims[0]+2*ghost_width);
+            number_of_faces_with_ghost_cells[Dimension::y] * (cartdims[0]+2*ghost_width);
 
     CartesianCollectionOfScalar v( num, 0.0 );
 
@@ -96,32 +186,19 @@ equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inpu
     return v;
 }
 
-int equelle::CartesianGrid::getStride(equelle::Dimension dim)
+double& equelle::CartesianGrid::cellAt( const int i, const int j, equelle::CartesianGrid::CartesianCollectionOfScalar &coll ) const
 {
-    switch (dim) {
-    case equelle::Dimension::x:
-        return cellStrides[0];
-        break;
-    case equelle::Dimension::y:
-        return cellStrides[1];
-        break;
-    case equelle::Dimension::z:
-        return cellStrides[2];
-        break;
-    default:
-        throw std::runtime_error( "Trying to get stride for nonexistent dimension" );
-    }
-}
-
-double& equelle::CartesianGrid::cellAt( int i, int j, equelle::CartesianGrid::CartesianCollectionOfScalar &coll )
-{
-    int origin = ghost_width * cellStrides[1] + ghost_width * cellStrides[0];
-
-    int index = origin + j*cellStrides[1] + i*cellStrides[0];
+    const int index = cellOrigin + j*cellStrides[1] + i*cellStrides[0];
     return coll[ index ];
 }
 
-double &equelle::CartesianGrid::faceAt(int i, int j, equelle::CartesianGrid::Face face, equelle::CartesianGrid::CartesianCollectionOfScalar &coll)
+const double &equelle::CartesianGrid::cellAt( const int i, const int j, const equelle::CartesianGrid::CartesianCollectionOfScalar &coll) const
+{
+    const int index = cellOrigin + j*cellStrides[1] + i*cellStrides[0];
+    return coll[ index ];
+}
+
+double &equelle::CartesianGrid::faceAt(int i, int j, const equelle::CartesianGrid::Face face, equelle::CartesianGrid::CartesianCollectionOfScalar &coll) const
 {
     i += ghost_width;
     j += ghost_width;
@@ -152,8 +229,49 @@ double &equelle::CartesianGrid::faceAt(int i, int j, equelle::CartesianGrid::Fac
     case Face::negY:
         offset = number_of_faces_with_ghost_cells[Dimension::x] * ( cartdims[1] + 2*ghost_width );
         strides = faceStrides[Dimension::y];
+        break;
     default:
-        // Intentional, the other
+        throw std::runtime_error("Only 2D-cartesian grids are supported, so far...");
+        break;
+    }
+
+    return coll[offset + j*strides[1] + i*strides[0] ];
+}
+
+const double &equelle::CartesianGrid::faceAt(int i, int j, equelle::CartesianGrid::Face face, const equelle::CartesianGrid::CartesianCollectionOfScalar &coll) const
+{
+    i += ghost_width;
+    j += ghost_width;
+
+    // Update index to the correct cell.
+    switch (face) {
+    case Face::posX:
+        ++i;
+        break;
+    case Face::posY:
+        ++j;
+        break;
+    default:
+        // Intentional, the other faces does not need index manipulation.
+        break;
+    }
+
+    int offset = 0;
+    strideArray strides;
+
+    switch (face) {
+    case Face::posX:
+    case Face::negX:
+        offset = 0;
+        strides = faceStrides[Dimension::x];
+        break;
+    case Face::posY:
+    case Face::negY:
+        offset = number_of_faces_with_ghost_cells[Dimension::x] * ( cartdims[1] + 2*ghost_width );
+        strides = faceStrides[Dimension::y];
+        break;
+    default:
+        throw std::runtime_error("Only 2D-cartesian grids are supported, so far...");
         break;
     }
 

@@ -44,8 +44,11 @@ bool isEntityType(const BasicType bt)
     case Scalar:
     case Vector:
     case String:
+    case StencilI:
+    case StencilJ:
+    case StencilK:
     case Void:
-    case Invalid:
+    case Invalid:        
         return false;
     case Cell:
     case Face:
@@ -75,6 +78,9 @@ bool isNumericType(const BasicType bt)
         return false;
     case Scalar:
     case Vector:
+    case StencilI:
+    case StencilJ:
+    case StencilK:
         return true;
     default:
         yyerror("internal compiler error in isNumericType().");
@@ -263,5 +269,14 @@ bool EquelleType::operator!=(const EquelleType& et) const
     return !operator==(et);
 }
 
-
-
+bool isStencilType(const BasicType bt)
+{
+    switch (bt) {
+    case StencilI:
+    case StencilJ:
+    case StencilK:
+        return true;
+    default:
+        return false;
+    }
+}
