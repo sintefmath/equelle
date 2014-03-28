@@ -5,6 +5,7 @@
 #include <tuple>
 #include <unordered_map>
 #include <map>
+#include <functional>
 
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 
@@ -17,6 +18,28 @@ enum class Dimension {
 };
 
 
+class AllCellsRange {
+public:
+    AllCellsRange() {
+        //begin/end/...;
+
+    }
+
+    void execute(std::function<void(int, int)> stencil) {
+        for (int j=begin_j(); j < end_j(); ++j) {
+            for (int i=begin_i(); i < end_i(); ++i) {
+                stencil(i, j);
+            }
+        }
+    }
+
+private:
+    int begin_i();
+    int begin_j();
+
+    int end_i();
+    int end_j();
+};
 
 /**
  * @brief The CartesianGrid class models Opm::UnstructuredGrid in spirit, but is tailored for cartesian dense grids.
