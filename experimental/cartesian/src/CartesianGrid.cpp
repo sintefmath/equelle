@@ -327,3 +327,10 @@ void equelle::CartesianGrid::dumpGridFaces(/*const*/ equelle::CartesianGrid::Car
     }
 }
 
+equelle::CartesianGrid::CellRange equelle::CartesianGrid::allCells() {
+    return CellRange(0, cartdims[0], 0, cartdims[1]);
+}
+
+equelle::CartesianGrid::FaceRange equelle::CartesianGrid::allFaces() {
+    return FaceRange(0, cartdims[0], 0, cartdims[1]);
+}
