@@ -916,25 +916,48 @@ private:
     int index_;
 };
 
-struct StencilStatementNode : public Node {
-    StencilStatementNode( Node* node ) {
+
+struct StencilAccessNode : public Node {
+    StencilAccessNode( const std::string grid_variable,
+                       FuncArgsNode* expr_list )
+        : grid_variable( grid_variable),
+          expr_list( expr_list )
+    {
+
     }
 
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
+    }
+    std::string grid_variable;
+    FuncArgsNode* expr_list;
+};
+
+struct StencilStatementNode : public Node {
+    StencilStatementNode( StencilAccessNode* lhs, Node* node ) : lhs(lhs), expr( node ) {
+    }
+
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        lhs->accept( visitor );
+        visitor.midVisit( *this );
+        expr->accept(visitor);
+        visitor.postVisit(*this);
     }
 
     virtual ~StencilStatementNode() {
-
+        delete lhs;
+        delete expr;
     }
+
+private:
+    StencilAccessNode* lhs;
+    Node* expr;
+
 };
 
-struct StencilAccessNode : public Node {
-    virtual void accept(ASTVisitorInterface& visitor)
-    {
-        visitor.visit(*this);
-    }
-};
+
 
 #endif // ASTNODES_HEADER_INCLUDED

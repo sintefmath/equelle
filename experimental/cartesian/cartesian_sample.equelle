@@ -4,7 +4,7 @@ fourPoint(u) = {
     i = StencilI()
     j = StencilJ()
 
-    $ u@i,j@ = u_0@i,j@ $
+    $ u@i,j@ = u_0@i,j@ + u_0@i+1,j@ $
 
     -> u
 }

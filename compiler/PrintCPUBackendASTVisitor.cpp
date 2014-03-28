@@ -508,7 +508,11 @@ void PrintCPUBackendASTVisitor::addRequirementString(const std::string& req)
 
 void PrintCPUBackendASTVisitor::visit(StencilAccessNode &node)
 {
-    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+    //std::cout << __PRETTY_FUNCTION__ << std::endl;
+    std::cout << indent() << "grid.cellAt( i, j, " << node.grid_variable << " )";
+
+    //std::cout << node.grid_variable << "[" << "]"
+    //throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
 }
 
 void PrintCPUBackendASTVisitor::midVisit(StencilAccessNode &node)
@@ -523,17 +527,22 @@ void PrintCPUBackendASTVisitor::postVisit(StencilAccessNode &node)
 
 void PrintCPUBackendASTVisitor::visit(StencilStatementNode &node)
 {
-    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+    std::cout << indent() << "auto cell_stencil = [&]( int i, int j ) {\n";
+    indent_++;
 }
 
 void PrintCPUBackendASTVisitor::midVisit(StencilStatementNode &node)
 {
-    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+    //throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+    std::cout << "\n" << indent() << "= \n";
 }
 
 void PrintCPUBackendASTVisitor::postVisit(StencilStatementNode &node)
 {
-    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+    indent_--;
+    std::cout << ";\n" << indent() << "} // End of stencil-lambda\n";
+    std::cout << indent() << "grid.allCells().execute( cell_stencil );\n";
+
 }
 
 

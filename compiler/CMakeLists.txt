@@ -4,7 +4,7 @@ cmake_minimum_required( VERSION 2.8 )
 # The -Wno-sign-compare is because flex generates a scanner with
 # signed/unsigned comparison!
 
-set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra -Wno-sign-compare" )
+set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra -Wno-sign-compare -Wno-unused-parameter" )
 
 find_package( BISON REQUIRED )
 find_package( FLEX REQUIRED )
