@@ -25,7 +25,6 @@ CollOfScalar equelleCUDA::trinaryIfWrapper( const CollOfBool& predicate,
 					 iffalse.data(),
 					 iftrue.size());
     return out;
-    //return CollOfScalar(predicate.size(), 0);
 }
 
 
@@ -178,10 +177,6 @@ CollOfScalar equelleCUDA::sqrtWrapper( const CollOfScalar& x) {
     CollOfScalar out = x;
     kernelSetup s = out.setup();
     sqrtKernel<<<s.grid, s.block>>> (out.data(), out.size());
-    // TODO
-    // CREATE THE KERNEL (AND DEFINE IT IN HEADER)
-    // CALL KERNEL.
-    
     return out;
 }
 

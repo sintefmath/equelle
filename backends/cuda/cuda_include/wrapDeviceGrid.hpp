@@ -45,7 +45,7 @@ namespace equelleCUDA
 	*/
 	CollOfScalar extendToFull( const CollOfScalar& inData, 
 				   const thrust::device_vector<int>& from_set,
-				   const int& full_size);
+				   const int full_size);
 	
 	//! Extend a Collection of Scalars from a subset to another subset in the grid.
 	/*!
@@ -66,7 +66,7 @@ namespace equelleCUDA
 	CollOfScalar extendToSubset( const CollOfScalar& inData,
 				     const thrust::device_vector<int>& from_set,
 				     const thrust::device_vector<int>& to_set,
-				     const int& full_size);
+				     const int full_size);
 			
 
 
@@ -180,7 +180,7 @@ namespace equelleCUDA
 	CollOfScalar onFromSubset( const CollOfScalar& inData,
 				   const thrust::device_vector<int>& from_set,
 				   const thrust::device_vector<int>& to_set,
-				   const int& full_size);
+				   const int full_size);
 
 	//! Kernel for performing On from a complete set to a subset.
 	/*!
@@ -244,7 +244,7 @@ namespace equelleCUDA
 	thrust::device_vector<int> onFromSubsetIndices( const thrust::device_vector<int>& inData,
 							const thrust::device_vector<int>& from_set,
 							const thrust::device_vector<int>& to_set,
-							const int& full_size);
+							const int full_size);
 
 	//! Kernel to perform the On operation for Collection of Indices.
 	/*!
@@ -289,7 +289,7 @@ namespace equelleCUDA
 	*/
 	thrust::device_vector<int> extendToFullIndices( const thrust::device_vector<int>& inData,
 							const thrust::device_vector<int>& to_set,
-							const int& full_size);
+							const int full_size);
 
 
 

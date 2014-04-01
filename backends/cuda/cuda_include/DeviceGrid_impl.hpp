@@ -20,7 +20,6 @@ namespace equelleCUDA {
 					    const CollOfIndices<codim>& to_set) const 
     {
 	if ( to_set.isFull() ) {
-	    std::cout << "EXTEND\n";
 	    return wrapDeviceGrid::extendToFull(in_data, 
 						from_set.device_vector(),
 						to_set.size());
@@ -39,7 +38,6 @@ namespace equelleCUDA {
 						  from_set.device_vector(),
 						  to_set.device_vector(),
 						  full_size);
-	    //OPM_THROW(std::runtime_error, "Extend from subset to subset of full is not yet implemented");
 	}
     
     }
@@ -49,7 +47,6 @@ namespace equelleCUDA {
 					const CollOfIndices<codim>& from_set,
 					const CollOfIndices<codim>& to_set) 
     {
-	std::cout << "\n\nON\n\n";
 	if ( from_set.isFull() ) {
 	    return wrapDeviceGrid::onFromFull(in_data,
 					      to_set.device_vector());
@@ -70,7 +67,6 @@ namespace equelleCUDA {
 						from_set.device_vector(),
 						to_set.device_vector(),
 						full_size);
-	    //OPM_THROW(std::runtime_error, "On from subset to subset is not yet implemented. We appologize for the inconvinience");
 	}
     }
 
@@ -81,7 +77,6 @@ namespace equelleCUDA {
 						      const CollOfIndices<codim_set>& from_set,
 						      const CollOfIndices<codim_set>& to_set)
     {
-	std::cout << "\n\nON - COLL_OF_INDICES!!!\n\n";
 	if ( from_set.isFull() ) {
 	    return wrapDeviceGrid::onFromFullIndices(in_data.device_vector(),
 						     to_set.device_vector());
@@ -102,9 +97,11 @@ namespace equelleCUDA {
 						       from_set.device_vector(),
 						       to_set.device_vector(),
 						       full_size);
-	    //OPM_THROW(std::runtime_error, "On from subset to subset is not yet implemented. We appologize for the inconvinience");
 	}
     }
+
+
+
 }  // namespace equelleCUDA
 
 
