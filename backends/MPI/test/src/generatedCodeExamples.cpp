@@ -23,6 +23,7 @@ namespace {
 BOOST_AUTO_TEST_CASE( distributedReadFile ) {
     // Get user parameters.
     Opm::parameter::ParameterGroup param;
+    param.disableOutput();
 
     std::vector<double> v = {0, 1, 2, 3, 4, 5 };
 

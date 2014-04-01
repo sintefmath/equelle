@@ -44,6 +44,7 @@ void RuntimeMPI::initializeGrid()
 
 RuntimeMPI::RuntimeMPI()
 {     
+    param_.disableOutput();
     initializeZoltan();
     initializeGrid();
 }
@@ -51,8 +52,9 @@ RuntimeMPI::RuntimeMPI()
 RuntimeMPI::RuntimeMPI(const Opm::parameter::ParameterGroup &param)
     : param_( param )
 {
+    param_.disableOutput();
     initializeZoltan();
-    globalGrid.reset( equelle::createGridManager( param ) );
+    globalGrid.reset( equelle::createGridManager( param_ ) );
 }
 
 RuntimeMPI::~RuntimeMPI()
