@@ -48,17 +48,17 @@ BOOST_AUTO_TEST_CASE( heatEquation ) {
 
     equelle::CartesianGrid::CartesianCollectionOfScalar u0 = u;
 
-    //Our stencil for cells
-    auto cell_stencil = [&] (int i, int j) {
-        grid.cellAt( i, j, u ) = grid.cellAt( i, j, u0 ) +
-                  a* 1.0/8.0 * ( grid.cellAt(i+1, j, u0) +
-                                 grid.cellAt(i-1, j, u0) +
-                                 grid.cellAt(i, j+1, u0) +
-                                 grid.cellAt(i, j-1, u0) -
-                                 4*grid.cellAt(i, j, u0) );
-    };
 
     while (t < t_end) {
+        //Our stencil for cells
+        auto cell_stencil = [&] (int i, int j) {
+            grid.cellAt( i, j, u ) = grid.cellAt( i, j, u0 ) +
+                      a* 1.0/8.0 * ( grid.cellAt(i+1, j, u0) +
+                                     grid.cellAt(i-1, j, u0) +
+                                     grid.cellAt(i, j+1, u0) +
+                                     grid.cellAt(i, j-1, u0) -
+                                     4*grid.cellAt(i, j, u0) );
+        };
         allCells.execute(cell_stencil);
 
         t = t + dt;
