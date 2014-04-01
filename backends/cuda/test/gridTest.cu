@@ -126,9 +126,6 @@ int cuda_main(DeviceGrid dg) {
     DeviceGrid dg2(dg);
 
 
-    std::cout << "Test:  (4?) " << dg.setID(1)  << std::endl;
-    std::cout << "Test2: (4?) " << dg2.setID(2) << std::endl;
-
     // Test allCells:
     int empty_array[] = {};
     if ( compare_collection(dg.allCells(), empty_array, 0, true, "allCells()") ) {

@@ -32,8 +32,8 @@ namespace equelleCUDA
 	  \param[in] name Name of the variable we try to read.
 	*/
 	void containsFull( const thrust::device_vector<int>& subset,
-			   const int& full_size,
-			   const int& codim,
+			   const int full_size,
+			   const int codim,
 			   const std::string& name);
 
 	//! Makes sure that the given subset is a valid subset of another set of indices.
@@ -52,7 +52,7 @@ namespace equelleCUDA
 	*/
 	void containsSubset(const thrust::device_vector<int>& superset, 
 			    const thrust::device_vector<int>& subset,
-			    const int& codim,
+			    const int codim,
 			    const std::string& name);
 
 	//! Check for empty cell / empty face flag in the input.

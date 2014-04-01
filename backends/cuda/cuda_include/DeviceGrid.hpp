@@ -95,12 +95,6 @@ namespace equelleCUDA
 	*/
 	DeviceGrid( const DeviceGrid& grid);
 
-	// This is a pure debugger function.
-	// We mark each collection with an ID to keep track of
-	// which ones are destructed.
-	//! Dummy function for debugging. REMOVE IN THE FUTURE!
-	int setID(int a);
-
 	// Grid operations
 	//! Collection of all cells
 	/*!
@@ -267,7 +261,7 @@ namespace equelleCUDA
 	  return A Collection of the cell volumes for the cells given by the input.
 	*/
 	CollOfScalar norm_of_cells(const thrust::device_vector<int>& cells,
-				   const bool& full) const;
+				   const bool full) const;
 	
 	/*!
 	  Gives the sizes of the faces in the given set.
@@ -280,7 +274,7 @@ namespace equelleCUDA
 	  return A Collection of the face area for the cells given by the input.
 	*/
 	CollOfScalar norm_of_faces(const thrust::device_vector<int>& faces,
-				   const bool& full) const ;
+				   const bool full) const ;
 
 
 	//! Creates a Vector of Centroids
@@ -292,7 +286,7 @@ namespace equelleCUDA
 	  \param codim 0 for cells and 1 for faces.
 	*/
 	CollOfVector centroid(const thrust::device_vector<int>& indices,
-			      const bool& full,
+			      const bool full,
 			      const int codim) const;
 
 
