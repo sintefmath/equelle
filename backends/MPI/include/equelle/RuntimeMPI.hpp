@@ -50,6 +50,8 @@ public:
                                          const CollOfCell& coll);
     ///@}
 
+    void output(const String& tag, const CollOfScalar& vals);
+
     ///@{ Communication between nodes
 
     /**

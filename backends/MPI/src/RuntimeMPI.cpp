@@ -159,6 +159,14 @@ CollOfScalar RuntimeMPI::inputCollectionOfScalar(const String &name, const CollO
 
 }
 
+void RuntimeMPI::output(const String &tag, const CollOfScalar &vals)
+{
+    auto val = allGather( vals );
+    if ( equelle::getMPIRank() == 0 ) {
+        runtime->output( tag, val );
+    }
+}
+
 equelle::CollOfScalar equelle::RuntimeMPI::allGather( const equelle::CollOfScalar &coll )
 {
     // Get the size of the collection on every node
