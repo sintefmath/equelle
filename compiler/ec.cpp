@@ -13,41 +13,86 @@ extern int yyparse();
 #include "PrintCUDABackendASTVisitor.hpp"
 #include "PrintMPIBackendASTVisitor.hpp"
 #include "ASTNodes.hpp"
+#include "CommandLineOptions.hpp"
+
 #include <iostream>
 
+extern int yylex();
+extern int yyparse();
+extern FILE * yyin;
+
+/**
+ * Trivial class to properly close yyin
+ */
+class YYInOwner {
+public:
+	YYInOwner(const std::string filename_) {
+		yyin = fopen(filename_.c_str(),"r");
+	}
+	~YYInOwner() {
+	    fclose(yyin);
+	    yyin = NULL;
+	}
+};
+
+
 int main(int argc, char** argv)
-{    
+{
+	CommandLineOptions options;
+	boost::program_options::variables_map cli_vars;
+	boost::shared_ptr<YYInOwner> yyin_owner;
+
+	//Parse commandline
+	try {
+		cli_vars = options.parse(argc, argv);
+
+		if (cli_vars.count("help")) {
+			options.printOptions();
+			return -1;
+		}
+	}
+	catch (const std::exception& e) {
+		std::cout << "Error parsing options: ";
+		std::cout << e.what() << std::endl;
+		return -1;
+	}
+
+	//Get input file
+	if (cli_vars.count("input")) {
+		std::string infile = cli_vars["input"].as<std::string>();
+		if (infile != "-") { //"-" signifies use stdin
+			yyin_owner.reset(new YYInOwner(infile));
+		}
+	}
+
+	//Parse equelle program
     yyparse();
-    PrintASTVisitor v0;
-    PrintEquelleASTVisitor v1;
-    PrintCPUBackendASTVisitor v2;
-    PrintMRSTBackendASTVisitor v3;
-    PrintCUDABackendASTVisitor v4;
-    PrintMPIBackendASTVisitor v5;
-    int which = 2;
-    if (argc > 1) {
-        which = std::atoi(argv[1]);
+
+    //Write output
+    std::string backend = cli_vars["backend"].as<std::string>();
+    if (backend == "ast") {
+        PrintASTVisitor v;
+        SymbolTable::program()->accept(v);
     }
-    switch (which) {
-    case 0:
-        SymbolTable::program()->accept(v0);
-        break;
-    case 1:
-        SymbolTable::program()->accept(v1);
-        break;
-    case 2:
-        SymbolTable::program()->accept(v2);
-        break;
-    case 3:
-        SymbolTable::program()->accept(v3);
-        break;
-    case 4:
-    	SymbolTable::program()->accept(v4);
-    	break;
-    case 5:
-        SymbolTable::program()->accept(v5);
-        break;
-    default:
-        std::cerr << "Unknown back-end choice: " << which << '\n';
+    else if (backend == "equelle_ast") {
+        PrintEquelleASTVisitor v;
+        SymbolTable::program()->accept(v);
     }
+    else if (backend == "cpu") {
+        PrintCPUBackendASTVisitor v;
+        SymbolTable::program()->accept(v);
+    }
+    else if (backend == "cuda") {
+        PrintCUDABackendASTVisitor v;
+        SymbolTable::program()->accept(v);
+    }
+    else if (backend == "mrst") {
+        PrintMRSTBackendASTVisitor v;
+        SymbolTable::program()->accept(v);
+    }
+    else {
+        std::cerr << "Unknown back-end choice: " << backend << '\n';
+    }
+
+    return 0;
 }
