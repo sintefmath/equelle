@@ -22,9 +22,10 @@ public:
 	CommandLineOptions() {
 		options.add_options()
 			("help,h", "produce help message")
+			("verbose", "Verbose output")
 			("config,c", boost::program_options::value<std::string>(), "Configuration filename (specify command line parameters in file)")
 			("input,i", boost::program_options::value<std::string>()->required(), "Input Equelle file to compile")
-			("backend", boost::program_options::value<std::string>()->default_value("cpu"), "Backend of compiler to use");
+			("backend", boost::program_options::value<std::string>()->default_value("cpu"), "Backend of compiler to use (ast, ast_equelle, cpu, cuda, mrst)");
 	}
 
 	void printOptions() {
@@ -58,9 +59,7 @@ public:
 			}
 		}
 		notify(cli_vars);
-	#ifndef NDEBUG
-		printVars(cli_vars);
-	#endif
+
 		return cli_vars;
 	}
 
