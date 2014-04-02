@@ -618,7 +618,9 @@ SymbolTable::SymbolTable()
     functions_.emplace_back("StencilI",
                             FunctionType( EquelleType( StencilI ) ) );
     functions_.emplace_back("StencilJ",
-                                FunctionType( EquelleType( StencilJ ) ) );
+                            FunctionType( EquelleType( StencilJ ) ) );
+    functions_.emplace_back("StencilK",
+                            FunctionType( EquelleType( StencilK ) ) );
 
 
     // ----- Set main function ref and current (initially equal to main). -----

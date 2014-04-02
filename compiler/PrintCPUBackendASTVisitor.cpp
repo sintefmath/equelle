@@ -249,7 +249,13 @@ void PrintCPUBackendASTVisitor::visit(VarAssignNode& node)
 {
     std::cout << indent();
     if (!SymbolTable::variableType(node.name()).isMutable()) {
-        std::cout << "const " << cppTypeString(node.type()) << " ";
+    	if (node.type() == StencilI || node.type() == StencilJ || node.type() == StencilK) {
+    		//This goes into the stencil-lambda definition. Let's keep the comment for now
+    		std::cout << "// Not necessary: " << cppTypeString(node.type()) << " ";
+    	}
+    	else {
+    		std::cout << "const " << cppTypeString(node.type()) << " ";
+    	}
     }
     std::cout << node.name() << " = ";
 }
@@ -523,7 +529,9 @@ void PrintCPUBackendASTVisitor::postVisit(StencilAccessNode &node)
 
 void PrintCPUBackendASTVisitor::visit(StencilStatementNode &node)
 {
-    std::cout << indent() << "//Declare u" << std::endl;
+	//FIXME: This will not work if node.name() is already defined elsewhere...
+	//std::cout << indent() << "equelle::CartesianGrid::CartesianCollectionOfScalar " << node.name()
+	//		<< " = grid.inputCellScalarWithDefault( \"" << node.name() << "\", 0.0 );" << std::endl;
     std::cout << indent() << "//Start of stencil-lambda" << std::endl;
     std::cout << indent() << "auto cell_stencil = [&]( int i, int j ) {" << std::endl;
     indent_++;

@@ -926,6 +926,11 @@ struct StencilAccessNode : public Node {
 
     }
 
+    const std::string& name() const
+    {
+        return grid_variable;
+    }
+
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
@@ -952,6 +957,23 @@ struct StencilStatementNode : public Node {
     StencilStatementNode( StencilAccessNode* lhs, Node* node ) : lhs(lhs), expr( node ) {
     }
 
+    const std::string& name() const
+    {
+        return lhs->name();
+    }
+
+	// All stencils are at this time scalars
+	EquelleType type() const
+	{
+		// We do not want mutability of a variable to be passed on to
+		// expressions involving that variable.
+		EquelleType et = SymbolTable::variableType(name());
+		if (et.isMutable()) {
+			et.setMutable(false);
+		}
+		return et;
+	}
+
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
@@ -969,7 +991,6 @@ struct StencilStatementNode : public Node {
 private:
     StencilAccessNode* lhs;
     Node* expr;
-
 };
 
 

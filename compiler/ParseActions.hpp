@@ -78,7 +78,7 @@ RandomAccessNode* handleRandomAccess(Node* expr, const int index);
 StencilAccessNode *handleStencilAccess( const std::string grid_variable,
                                         FuncArgsNode* expr_list );
 
-StencilStatementNode *handleStencilStatement( StencilAccessNode* lhsStencilAccess,
+SequenceNode *handleStencilStatement( StencilAccessNode* lhsStencilAccess,
                                               Node* expr );
 
 

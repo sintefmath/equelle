@@ -608,8 +608,20 @@ StencilAccessNode *handleStencilAccess(const std::string grid_variable,
 }
 
 
-StencilStatementNode *handleStencilStatement( StencilAccessNode *lhsStencilAccess,
+SequenceNode *handleStencilStatement( StencilAccessNode *lhsStencilAccess,
                                               Node *expr)
 {
-    return new StencilStatementNode( lhsStencilAccess, expr );
+    SequenceNode* seq = new SequenceNode;
+    TypeNode* type = new TypeNode(EquelleType(Scalar));
+    /**FIXME: Need stencilDeclnode here.........
+    Right now it ends up with
+    const Scalar u = auto cell_stencil = [&] (int i, int j) { ...
+    instead of the more sensible
+    equelle::CartesianGrid::CartesianCollectionOfScalar u = grid.inputCellScalarWithDefault( "u", 1.0 );
+    auto cell_stencil = [&] (int i, int j) { ...
+    */
+    StencilStatementNode* stencil = new StencilStatementNode( lhsStencilAccess, expr );
+    seq->pushNode(handleDeclaration(lhsStencilAccess->name(), type));
+    seq->pushNode(handleAssignment(lhsStencilAccess->name(), stencil));
+    return seq;
 }

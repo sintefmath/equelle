@@ -64,7 +64,7 @@
 %type <node> f_startdef
 %type <loop> loop_start
 %type <stencilAccess> stencil_access
-%type <stencilStmnt> stencil_statement
+%type <seq> stencil_statement
 
 %start program
 %error-verbose
