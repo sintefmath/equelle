@@ -10,18 +10,10 @@
 
 #include "equelle/RuntimeMPI.hpp"
 
-namespace {
-    template<class T>
-    void injectMockData( Opm::parameter::ParameterGroup& param, std::string key, T begin, T end ) {
-        std::string filename = key + ".mockdata";
-        param.insertParameter( key + "_from_file", "true" );
-        param.insertParameter( key + "_filename", filename );
 
-        std::ofstream f(filename);
-        std::copy( begin, end, std::ostream_iterator<typename T::value_type>( f, " " ) );
-    }
+using namespace equelle;
 
-}
+
 
 BOOST_AUTO_TEST_CASE( basicCalculator ) {
     // Get user parameters.
@@ -44,7 +36,7 @@ BOOST_AUTO_TEST_CASE( basicCalculator ) {
     er.decompose();
     //ensureRequirements(er);
 
-    using namespace equelle;
+
 
     // ============= Generated code starts here ================
     BOOST_MESSAGE( er.subGrid.global_cell.size() );
