@@ -1,5 +1,5 @@
-#if(EQUELLE_BUILD_MPI)
+if(EQUELLE_BUILD_MPI)
     add_subdirectory( mpi-calculator )
-#endif()
+endif()
 
 
