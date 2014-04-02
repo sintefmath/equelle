@@ -326,7 +326,7 @@ namespace equelleCUDA {
       \return lhs * rhs
       \sa multScalCollection_kernel
     */
-    CollOfScalar operator*(const Scalar& lhs, const CollOfScalar& rhs);
+    CollOfScalar operator*(const Scalar lhs, const CollOfScalar& rhs);
 
     /*! 
       Since multiplication is commutative, this implementation simply return
@@ -335,7 +335,7 @@ namespace equelleCUDA {
       \param rhs Right han side Scalar
       \return lhs * rhs
     */
-    CollOfScalar operator*(const CollOfScalar& lhs, const Scalar& rhs);
+    CollOfScalar operator*(const CollOfScalar& lhs, const Scalar rhs);
 
     /*!
       Implemented as (1/rhs)*lhs in order to reuse kernel
@@ -343,7 +343,7 @@ namespace equelleCUDA {
       \param rhs Right hand side Scalar
       \return lhs / rhs
      */
-    CollOfScalar operator/(const CollOfScalar& lhs, const Scalar& rhs);
+    CollOfScalar operator/(const CollOfScalar& lhs, const Scalar rhs);
 
     /*!
       For Scalar / CollOfScalar. Elementwise division of the elements in 
@@ -352,7 +352,7 @@ namespace equelleCUDA {
       \param rhs Collection of Scalars
       \return out[i] = lhs / rhs[i]
      */
-    CollOfScalar operator/(const Scalar& lhs, const CollOfScalar& rhs);
+    CollOfScalar operator/(const Scalar lhs, const CollOfScalar& rhs);
 
     
     /*!

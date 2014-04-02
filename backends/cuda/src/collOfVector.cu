@@ -31,7 +31,6 @@ CollOfVector::CollOfVector(const int size, const int dim)
       dim_(dim),
       vector_setup_(size)
 {
-     std::cerr << __PRETTY_FUNCTION__ << std::endl;
     // intentionally left blank
 }
 
@@ -46,7 +45,6 @@ CollOfVector::CollOfVector(const std::vector<double>& host, const int dim)
 
 // Copy assignment operator
 CollOfVector& CollOfVector::operator= (const CollOfVector& other) {
-    std::cerr << __PRETTY_FUNCTION__ << std::endl;    
 
     // Does not give sense to assign Vectors of different dimensions.
     if ( this->dim_ != other.dim_ ) {
@@ -62,8 +60,7 @@ CollOfVector::CollOfVector(const CollOfVector& coll)
       dim_(coll.dim_),
       vector_setup_(coll.numVectors())
 {
-    std::cerr << __PRETTY_FUNCTION__ << std::endl;    
-// intentionally left blank
+    // intentionally left blank
 }
   
 
@@ -80,8 +77,6 @@ CollOfVector::~CollOfVector()
 //  ----- NORM -----
 CollOfScalar CollOfVector::norm() const {
     CollOfScalar out(numVectors());
-    //dim3 block(out.block());
-    //dim3 grid(out.grid());
     // One thread for each vector:
     kernelSetup s = vector_setup();
     normKernel<<< s.grid, s.block >>>(out.data(), data(), numVectors(), dim());
