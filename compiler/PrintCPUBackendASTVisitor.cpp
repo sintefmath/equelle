@@ -12,8 +12,8 @@
 
 namespace
 {
-    const char* cppStartString();
-    const char* cppEndString();
+    const char* impl_cppStartString();
+    const char* impl_cppEndString();
 }
 
 PrintCPUBackendASTVisitor::PrintCPUBackendASTVisitor()
@@ -460,6 +460,15 @@ void PrintCPUBackendASTVisitor::postVisit(RandomAccessNode& node)
     }
 }
 
+const char *PrintCPUBackendASTVisitor::cppStartString() const
+{
+    return ::impl_cppStartString();
+}
+
+const char *PrintCPUBackendASTVisitor::cppEndString() const
+{
+    return ::impl_cppEndString();
+}
 
 
 void PrintCPUBackendASTVisitor::endl() const
@@ -507,7 +516,7 @@ void PrintCPUBackendASTVisitor::addRequirementString(const std::string& req)
 
 namespace
 {
-    const char* cppStartString()
+    const char* impl_cppStartString()
     {
         return
 "\n"
@@ -551,7 +560,7 @@ namespace
 "    // ============= Generated code starts here ================\n";
     }
 
-    const char* cppEndString()
+    const char* impl_cppEndString()
     {
         return "\n"
 "    // ============= Generated code ends here ================\n"
