@@ -1,0 +1,11 @@
+a = InputCollectionOfScalar("a", AllCells() )
+b = InputCollectionOfScalar("b", AllCells() )
+d = InputCollectionOfScalar("d", AllCells() )
+
+c = a - b
+e = d - c
+f = e / d
+g = f + b
+h = g * d
+
+Output("h", h )

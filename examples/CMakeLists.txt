@@ -13,6 +13,7 @@ link_directories(
   ${EXTRA_LIBDIRS_FOR_EQUELLE}
 )
 
+add_subdirectory( benchmarks )
 
 file( GLOB sources     "src/*.cpp" )
 file( GLOB app_sources "app/*.cpp" )

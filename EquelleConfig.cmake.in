@@ -4,6 +4,7 @@
 #  EQUELLE_LIBRARIES    - libraries to link against
 #  EQUELLE_LIB_DIRS     - libraries directories
 #  EQUELLE_EXECUTABLE   - the equelle compiler executables
+#  EQUELLE_COMPILER     - The equelle compiler
  
 # Compute paths
 get_filename_component(EQUELLE_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
@@ -18,3 +19,5 @@ set(EQUELLE_LIBRARIES @EQUELLE_LIBS_FOR_CONFIG@)
 set(EQUELLE_LIB_DIRS  @EQUELLE_LIB_DIRS_FOR_CONFIG@)
 set(EQUELLE_APPS_DIR  @CONF_APPS_DIR@)
 set(EQUELLE_EXECUTABLE el ec)
+set(EQUELLE_COMPILER ec)
+
