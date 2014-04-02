@@ -14,8 +14,9 @@
 #include <cmath>
 #include <array>
 
-#include "EquelleRuntimeCPU.hpp"
+#include "equelle/EquelleRuntimeCPU.hpp"
 
+using namespace equelle;
 void ensureRequirements(const EquelleRuntimeCPU& er);
 
 int main(int argc, char** argv)
