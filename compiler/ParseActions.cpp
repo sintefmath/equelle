@@ -272,7 +272,17 @@ BinaryOpNode* handleBinaryOp(BinaryOp op, Node* left, Node* right)
         // Intentional fall-through.
     case Subtract:
         if (lt != rt) {
-            yyerror("addition and subtraction only allowed between identical types.");
+        	if ((lt.basicType() == StencilI || lt.basicType() == StencilJ || lt.basicType() == StencilK)
+        			&& rt.basicType() == Scalar) {
+        		//i,j,k OP n is OK
+        	}
+        	else if (lt.basicType() == Scalar &&
+        			(rt.basicType() == StencilI || rt.basicType() == StencilJ || rt.basicType() == StencilK)) {
+        		//n OP i,j,k is OK
+        	}
+        	else {
+        		yyerror("addition and subtraction only allowed between identical types.");
+        	}
         }
         break;
     case Multiply:
@@ -590,21 +600,10 @@ RandomAccessNode* handleRandomAccess(Node* expr, const int index)
 }
 
 
-Node *handleStencilAccessStatement(Node *expr )
-{
-    std::cout << __PRETTY_FUNCTION__ << std::endl;
-    //std::cout << expr << std::endl;
-
-    return new Node();
-    //return expr;
-}
-
 
 StencilAccessNode *handleStencilAccess(const std::string grid_variable,
                                        FuncArgsNode* expr_list)
 {
-    std::cout << __PRETTY_FUNCTION__ << std::endl;
-
     return new StencilAccessNode( grid_variable, expr_list );
 }
 
@@ -612,7 +611,5 @@ StencilAccessNode *handleStencilAccess(const std::string grid_variable,
 StencilStatementNode *handleStencilStatement( StencilAccessNode *lhsStencilAccess,
                                               Node *expr)
 {
-    std::cout << __PRETTY_FUNCTION__ << std::endl;
-
     return new StencilStatementNode( lhsStencilAccess, expr );
 }

@@ -932,6 +932,17 @@ struct StencilAccessNode : public Node {
         expr_list->accept( visitor );
         visitor.postVisit( *this );
     }
+	// All stencils are at this time scalars
+	EquelleType type() const
+	{
+		// We do not want mutability of a variable to be passed on to
+		// expressions involving that variable.
+		EquelleType et = SymbolTable::variableType(grid_variable);
+		if (et.isMutable()) {
+			et.setMutable(false);
+		}
+		return et;
+	}
 
     std::string grid_variable;
     FuncArgsNode* expr_list;
