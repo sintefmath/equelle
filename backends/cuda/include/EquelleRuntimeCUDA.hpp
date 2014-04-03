@@ -36,6 +36,8 @@
 //class CollOfScalar;
 
 
+namespace equelleCUDA {
+
 
 /// Topological entities.
 template <int Codim>
@@ -366,6 +368,9 @@ private:
     int max_iter_;
     double abs_res_tol_;
 };
+
+} // namespace EquelleCUDA
+
 
 // Include the implementations of template members.
 #include "EquelleRuntimeCUDA_impl.hpp"
