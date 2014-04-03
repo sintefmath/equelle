@@ -158,6 +158,10 @@ namespace equelleCUDA {
 	// block() and grid() will therefore be evaluated as one thread per double
     };
 
+    
+    //! Functions closely related to the CollOfVector class
+    namespace wrapCollOfVector {
+
     //! Kernel for getting the index element of all vectors in a collection.
     /*!
       \param[out] out Collection Of Scalar where out[i] is the index element of
@@ -189,6 +193,7 @@ namespace equelleCUDA {
 				const int numVectors,
 				const int dim);
     
+    } // namespace wrapCollOfVector
 
 
     // --------------------- OPERATOR OVERLOADING -------------------------
@@ -208,6 +213,8 @@ namespace equelleCUDA {
       Works as a wrapper for the CUDA kernel which subtract collection of scalars.
     */
     CollOfVector operator-(const CollOfVector& lhs, const CollOfVector& rhs);
+
+
 
 } // namespace equelleCUDA
 

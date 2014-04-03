@@ -150,131 +150,149 @@ namespace equelleCUDA {
 	mutable std::vector<double> debug_vec_;
 	mutable double last_val;
 #endif // EQUELLE_DEBUG
-    };
-
-       
-    // ---------------- CUDA KERNELS ------------------- //
     
-    //! CUDA kernel for the minus operator
-    /*!
-      Performs elementwise operation for device arrays:
-      \code{.cpp} out[i] = out[i] - rhs[i] \endcode
-      \param[in,out] out Input is left hand side operand and is overwritten by the result.
-      \param[in] rhs right hand side operand.
-      \param[in] size number of elements.
-    */
-    __global__ void minus_kernel(double* out, const double* rhs, const int size);
+    }; // class CollOfScalar 
 
-    //! CUDA kernel for the plus operator
-    /*! 
-      Performs elementwise operation for device arrays: 
-      \code out[i] = out[i] + rhs[i] \endcode
-      \param[in,out] out Input is left hand side operand and is overwritten by the result.
-      \param[in] rhs Right hand side operand.
-      \param[in] size Number of elements.
-    */
-    __global__ void plus_kernel(double* out, const double* rhs, const int size);
 
-    //! CUDA kernel for the multiplication operator
-    /*! 
-      Performs elementwise operation for device arrays: 
-      \code out[i] = out[i] * rhs[i] \endcode
-      \param[in,out] out Input is left hand side operand and is overwritten by the result.
-      \param[in] rhs Right hand side operand.
-      \param[in] size Number of elements.
-    */
-    __global__ void multiplication_kernel(double* out, const double* rhs, const int size);
-    
-    //! CUDA kernel for the division operator
-    /*! 
-      Performs elementwise operation for device arrays: 
-      \code out[i] = out[i] / rhs[i] \endcode
-      \param[in,out] out Input is left hand side operand and is overwritten by the result.
-      \param[in] rhs Right hand side operand.
-      \param[in] size Number of elements.
-    */
-    __global__ void division_kernel(double* out, const double* rhs, const int size);
 
-    //! CUDA kernel for multiplication with scalar and collection
-    /*!
-      Multiply each element in out with the value scal.
-      \code out[i] = out[i] * scal \endcode
-      \param[in,out] out Input is the collection operand and is overwritten by the result.
-      \param[in] scal Scalar value operand.
-      \param[in] size Number of elements.
-    */
-    __global__ void multScalCollection_kernel(double* out, 
-					      const double scal, 
+
+    //! Functions closely related to the CollOfScalar class
+    namespace wrapCollOfScalar {
+	
+	// ---------------- CUDA KERNELS ------------------- //
+	
+	//! CUDA kernel for the minus operator
+	/*!
+	  Performs elementwise operation for device arrays:
+	  \code{.cpp} out[i] = out[i] - rhs[i] \endcode
+	  \param[in,out] out Input is left hand side operand and is overwritten 
+	  by the result.
+	  \param[in] rhs right hand side operand.
+	  \param[in] size number of elements.
+	*/
+	__global__ void minus_kernel(double* out, const double* rhs, const int size);
+	
+	//! CUDA kernel for the plus operator
+	/*! 
+	  Performs elementwise operation for device arrays: 
+	  \code out[i] = out[i] + rhs[i] \endcode
+	  \param[in,out] out Input is left hand side operand and is overwritten 
+	  by the result.
+	  \param[in] rhs Right hand side operand.
+	  \param[in] size Number of elements.
+	*/
+	__global__ void plus_kernel(double* out, const double* rhs, const int size);
+	
+	//! CUDA kernel for the multiplication operator
+	/*! 
+	  Performs elementwise operation for device arrays: 
+	  \code out[i] = out[i] * rhs[i] \endcode
+	  \param[in,out] out Input is left hand side operand and is overwritten
+	  by the result.
+	  \param[in] rhs Right hand side operand.
+	  \param[in] size Number of elements.
+	*/
+	__global__ void multiplication_kernel(double* out, 
+					      const double* rhs, 
 					      const int size);
-
-    //! CUDA kernel for division as Scalar/CollOfScalar
-    /*!
-      Set each element in out as 
-      \code out[i] = scal/out[i] \endcode
-      \param[in,out] out Input is the denominator and is overwritten by the result.
-      \param[in] scal Scalar value numerator.
-      \param[in] size Number of elements.
-    */
-    __global__ void divScalCollection_kernel( double* out,
-					      const double scal,
-					      const int size);
-
-    //! CUDA kernel for greater than operation
-    /*!
-      Compare elements in lhs with elements in rhs and return a Collection of Booleans.
-      \code out[i] = lhs[i] > rhs[i] \endcode
-      \param[in,out] out The resulting collection of booleans
-      \param[in] lhs Left hand side values
-      \param[in] rhs Right hand side values
-      \param[in] size Size of the arrays.
-    */
-    __global__ void comp_collGTcoll_kernel( bool* out,
-					    const double* lhs,
-					    const double* rhs,
-					    const int size);
-
-    //! CUDA kernel for greater than scalar operation
-    /*!
-      Compare elements in lhs with a single scalar rhs and return a Collection of Booleans.
-      \code out[i] = lhs[i] > rhs \endcode
-      \param[out] out The resulting collection of booleans
-      \param[in] lhs Left hand side collection of scalars
-      \param[in] rhs Right hand side scalar
-      \param[in] size Size of the lhs array.
-     */
-    __global__ void comp_collGTscal_kernel( bool* out,
-					    const double* lhs,
-					    const double rhs,
-					    const int size);
-
-    //! CUDA kernel for less than operation
-    /*!
-      Compare elements in lhs with elements in rhs and return a Collection Of Booleans.
-      \code out[i] = lhs[i] < rhs[i] \endcode
-      \param[out] out The resulting collection of booleans
-      \param[in] lhs Left hand side values
-      \param[in] rhs Right hand side values
-      \param[in] size Size of the arrays
-    */
-    __global__ void comp_collLTcoll_kernel( bool* out,
-					    const double* lhs,
-					    const double* rhs,
-					    const int size);
-
-    //! CUDA kernel for less than scalar operation
-    /*!
-      Compare elements in lhs with a single scalar rhs and return a Collection of Booleans.
-      \code out[i] = lhs[i] < rhs \endcode
-      \param[out] out The resulting collection of booleans
-      \param[in] lhs Left hand side collection of scalars
-      \param[in] rhs Right hand side scalar.
-      \param[in] size Size of the lhs array.
-     */
-    __global__ void comp_collLTscal_kernel( bool* out,
-					   const double* lhs,
-					   const double rhs,
-					   const int size);
-
+	
+	//! CUDA kernel for the division operator
+	/*! 
+	  Performs elementwise operation for device arrays: 
+	  \code out[i] = out[i] / rhs[i] \endcode
+	  \param[in,out] out Input is left hand side operand and is overwritten
+	  by the result.
+	  \param[in] rhs Right hand side operand.
+	  \param[in] size Number of elements.
+	*/
+	__global__ void division_kernel(double* out, const double* rhs, const int size);
+	
+	//! CUDA kernel for multiplication with scalar and collection
+	/*!
+	  Multiply each element in out with the value scal.
+	  \code out[i] = out[i] * scal \endcode
+	  \param[in,out] out Input is the collection operand and is overwritten
+	  by the result.
+	  \param[in] scal Scalar value operand.
+	  \param[in] size Number of elements.
+	*/
+	__global__ void multScalCollection_kernel(double* out, 
+						  const double scal, 
+						  const int size);
+	
+	//! CUDA kernel for division as Scalar/CollOfScalar
+	/*!
+	  Set each element in out as 
+	  \code out[i] = scal/out[i] \endcode
+	  \param[in,out] out Input is the denominator and is overwritten by the result.
+	  \param[in] scal Scalar value numerator.
+	  \param[in] size Number of elements.
+	*/
+	__global__ void divScalCollection_kernel( double* out,
+						  const double scal,
+						  const int size);
+	
+	//! CUDA kernel for greater than operation
+	/*!
+	  Compare elements in lhs with elements in rhs and return a Collection of Booleans.
+	  \code out[i] = lhs[i] > rhs[i] \endcode
+	  \param[in,out] out The resulting collection of booleans
+	  \param[in] lhs Left hand side values
+	  \param[in] rhs Right hand side values
+	  \param[in] size Size of the arrays.
+	*/
+	__global__ void comp_collGTcoll_kernel( bool* out,
+						const double* lhs,
+						const double* rhs,
+						const int size);
+	
+	//! CUDA kernel for greater than scalar operation
+	/*!
+	  Compare elements in lhs with a single scalar rhs and return a 
+	  Collection of Booleans.
+	  \code out[i] = lhs[i] > rhs \endcode
+	  \param[out] out The resulting collection of booleans
+	  \param[in] lhs Left hand side collection of scalars
+	  \param[in] rhs Right hand side scalar
+	  \param[in] size Size of the lhs array.
+	*/
+	__global__ void comp_collGTscal_kernel( bool* out,
+						const double* lhs,
+						const double rhs,
+						const int size);
+	
+	//! CUDA kernel for less than operation
+	/*!
+	  Compare elements in lhs with elements in rhs and return a Collection Of Booleans.
+	  \code out[i] = lhs[i] < rhs[i] \endcode
+	  \param[out] out The resulting collection of booleans
+	  \param[in] lhs Left hand side values
+	  \param[in] rhs Right hand side values
+	  \param[in] size Size of the arrays
+	*/
+	__global__ void comp_collLTcoll_kernel( bool* out,
+						const double* lhs,
+						const double* rhs,
+						const int size);
+	
+	//! CUDA kernel for less than scalar operation
+	/*!
+	  Compare elements in lhs with a single scalar rhs and return a 
+	  Collection of Booleans.
+	  \code out[i] = lhs[i] < rhs \endcode
+	  \param[out] out The resulting collection of booleans
+	  \param[in] lhs Left hand side collection of scalars
+	  \param[in] rhs Right hand side scalar.
+	  \param[in] size Size of the lhs array.
+	*/
+	__global__ void comp_collLTscal_kernel( bool* out,
+						const double* lhs,
+						const double rhs,
+						const int size);
+	
+    } // namespace wrapCollOfScalar
+	
+	
     // -------------- Operation overloading ------------------- //
     
     // Overloading of operator -

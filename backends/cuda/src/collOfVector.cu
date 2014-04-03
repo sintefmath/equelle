@@ -14,7 +14,7 @@
 #include "equelleTypedefs.hpp"
 
 using namespace equelleCUDA;
-
+using namespace wrapCollOfVector;
 
 CollOfVector::CollOfVector() 
     : elements_(),
@@ -144,7 +144,7 @@ CollOfScalar CollOfVector::col(const int index) const {
     return out;
 }
 
-__global__ void equelleCUDA::collOfVectorOperatorIndexKernel( double* out,
+__global__ void wrapCollOfVector::collOfVectorOperatorIndexKernel( double* out,
 							      const double* vec,
 							      const int size_out,
 							      const int index,
@@ -161,7 +161,7 @@ __global__ void equelleCUDA::collOfVectorOperatorIndexKernel( double* out,
 
 // --------- NORM KERNEL ---------------------
 
-__global__ void equelleCUDA::normKernel( double* out,
+__global__ void wrapCollOfVector::normKernel( double* out,
 					 const double* vectors,
 					 const int numVectors,
 					 const int dim)
@@ -184,7 +184,7 @@ CollOfVector equelleCUDA::operator+(const CollOfVector& lhs, const CollOfVector&
 
     CollOfVector out = lhs;
     kernelSetup s = out.element_setup();
-    plus_kernel<<<s.grid, s.block>>>(out.data(), rhs.data(), out.numElements());
+    wrapCollOfScalar::plus_kernel<<<s.grid, s.block>>>(out.data(), rhs.data(), out.numElements());
     return out;
 }
 
@@ -192,6 +192,6 @@ CollOfVector equelleCUDA::operator+(const CollOfVector& lhs, const CollOfVector&
 CollOfVector equelleCUDA::operator-(const CollOfVector& lhs, const CollOfVector& rhs) {
     CollOfVector out = lhs;
     kernelSetup s = out.element_setup();
-    minus_kernel<<<s.grid, s.block>>>(out.data(), rhs.data(), out.numElements());
+    wrapCollOfScalar::minus_kernel<<<s.grid, s.block>>>(out.data(), rhs.data(), out.numElements());
     return out;
 }

@@ -25,7 +25,7 @@
 // Implementation of the class CollOfScalar
 
 using namespace equelleCUDA;
-
+using namespace wrapCollOfScalar;
 
 CollOfScalar::CollOfScalar() 
     : size_(0), 
@@ -374,8 +374,7 @@ CollOfBool equelleCUDA::operator<(const CollOfScalar& lhs, const Scalar rhs) {
 
 
 
-__global__ void equelleCUDA::minus_kernel(double* out, const double* rhs, const int size) {
-    
+__global__ void wrapCollOfScalar::minus_kernel(double* out, const double* rhs, const int size) {
     int index = threadIdx.x + blockDim.x*blockIdx.x;
     if ( index < size ) {
 	out[index] = out[index] - rhs[index];
@@ -383,28 +382,28 @@ __global__ void equelleCUDA::minus_kernel(double* out, const double* rhs, const 
 }
 
 
-__global__ void equelleCUDA::plus_kernel(double* out, const double* rhs, const int size) {
+__global__ void wrapCollOfScalar::plus_kernel(double* out, const double* rhs, const int size) {
     int index = threadIdx.x + blockDim.x*blockIdx.x;
     if( index < size ) {
 	out[index] = out[index] + rhs[index];
     }
 }
 
-__global__ void equelleCUDA::multiplication_kernel(double* out, const double* rhs, const int size) {
+__global__ void wrapCollOfScalar::multiplication_kernel(double* out, const double* rhs, const int size) {
     int index = threadIdx.x + blockDim.x*blockIdx.x;
     if ( index < size ) {
 	out[index] = out[index] * rhs[index];
     }
 }
 
-__global__ void equelleCUDA::division_kernel(double* out, const double* rhs, const int size) {
+__global__ void wrapCollOfScalar::division_kernel(double* out, const double* rhs, const int size) {
     int index = threadIdx.x + blockDim.x*blockIdx.x;
     if ( index < size ) {
 	out[index] = out[index] / rhs[index];
     }
 }
 
-__global__ void equelleCUDA::multScalCollection_kernel(double* out, const double scal,
+__global__ void wrapCollOfScalar::multScalCollection_kernel(double* out, const double scal,
 						       const int size) {
     int index = threadIdx.x + blockDim.x*blockIdx.x;
     if ( index < size ) {
@@ -412,7 +411,7 @@ __global__ void equelleCUDA::multScalCollection_kernel(double* out, const double
     }
 }
 
-__global__ void equelleCUDA::divScalCollection_kernel(double* out, const double scal,
+__global__ void wrapCollOfScalar::divScalCollection_kernel(double* out, const double scal,
 						     const int size) {
     int index = threadIdx.x + blockDim.x*blockIdx.x;
     if ( index < size ) {
@@ -420,7 +419,7 @@ __global__ void equelleCUDA::divScalCollection_kernel(double* out, const double 
     }
 }
 						   
-__global__ void equelleCUDA::comp_collGTcoll_kernel( bool* out,
+__global__ void wrapCollOfScalar::comp_collGTcoll_kernel( bool* out,
 						     const double* lhs,
 						     const double* rhs,
 						     const int size)
@@ -431,7 +430,7 @@ __global__ void equelleCUDA::comp_collGTcoll_kernel( bool* out,
     }
 }
 
-__global__ void equelleCUDA::comp_collGTscal_kernel( bool* out,
+__global__ void wrapCollOfScalar::comp_collGTscal_kernel( bool* out,
 						     const double* lhs,
 						     const double rhs,
 						     const int size)
@@ -442,7 +441,7 @@ __global__ void equelleCUDA::comp_collGTscal_kernel( bool* out,
     }
 }
 
-__global__ void equelleCUDA::comp_collLTcoll_kernel( bool* out,
+__global__ void wrapCollOfScalar::comp_collLTcoll_kernel( bool* out,
 						     const double* lhs,
 						     const double* rhs,
 						     const int size)
@@ -453,7 +452,7 @@ __global__ void equelleCUDA::comp_collLTcoll_kernel( bool* out,
     }
 }
 
-__global__ void equelleCUDA::comp_collLTscal_kernel( bool* out,
+__global__ void wrapCollOfScalar::comp_collLTscal_kernel( bool* out,
 						     const double* lhs,
 						     const double rhs,
 						     const int size)
