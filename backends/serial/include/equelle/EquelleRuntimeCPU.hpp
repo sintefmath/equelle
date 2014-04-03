@@ -27,7 +27,9 @@ public:
     EquelleRuntimeCPU( const Opm::parameter::ParameterGroup& param );
     EquelleRuntimeCPU( const UnstructuredGrid* grid, const Opm::parameter::ParameterGroup& param );
 
-    ///@{ Topology and geometry related.
+    /** @name Topology
+     * Topology and geometry related. */
+    ///@{
     CollOfCell allCells() const;
     CollOfCell boundaryCells() const;
     CollOfCell interiorCells() const;
@@ -44,7 +46,9 @@ public:
     CollOfVector normal(const CollOfFace& faces) const;
     ///@}
 
-    ///@{ Operators and math functions.
+    /** @name Math
+     * Operators and math functions. */
+    ///@{
     CollOfScalar sqrt(const CollOfScalar& x) const;
     CollOfScalar dot(const CollOfVector& v1, const CollOfVector& v2) const;
     CollOfScalar gradient(const CollOfScalar& cell_scalarfield) const;
@@ -72,14 +76,16 @@ public:
     ///@}
 
 
-    ///@{ Reductions.
+    /** @name Reductions. */
+    ///@{
     Scalar minReduce(const CollOfScalar& x) const;
     Scalar maxReduce(const CollOfScalar& x) const;
     Scalar sumReduce(const CollOfScalar& x) const;
     Scalar prodReduce(const CollOfScalar& x) const;
     ///@}
 
-    ///@{ Solver functions.
+    /// @name Solver functions.
+    ///@{
     template <class ResidualFunctor>
     CollOfScalar newtonSolve(const ResidualFunctor& rescomp,
                              const CollOfScalar& u_initialguess);
@@ -89,12 +95,14 @@ public:
                                                     const std::array<CollOfScalar, Num>& u_initialguess);
     ///@}
 
-    ///@{ Output.
+    /// @name Output
+    ///@{
     void output(const String& tag, Scalar val) const;
     void output(const String& tag, const CollOfScalar& vals);
     ///@}
 
-    ///@{ Input.
+    /// @name Input
+    ///@{
     Scalar inputScalarWithDefault(const String& name,
                                           const Scalar default_value);
     CollOfFace inputDomainSubsetOf(const String& name,

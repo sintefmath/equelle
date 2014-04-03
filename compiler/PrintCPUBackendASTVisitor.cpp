@@ -8,6 +8,7 @@
 #include <iostream>
 #include <cctype>
 #include <sstream>
+#include <stdexcept>
 
 
 namespace
@@ -248,7 +249,13 @@ void PrintCPUBackendASTVisitor::visit(VarAssignNode& node)
 {
     std::cout << indent();
     if (!SymbolTable::variableType(node.name()).isMutable()) {
-        std::cout << "const " << cppTypeString(node.type()) << " ";
+    	if (node.type() == StencilI || node.type() == StencilJ || node.type() == StencilK) {
+    		//This goes into the stencil-lambda definition. Let's keep the comment for now
+    		std::cout << "// Not necessary: " << cppTypeString(node.type()) << " ";
+    	}
+    	else {
+    		std::cout << "const " << cppTypeString(node.type()) << " ";
+    	}
     }
     std::cout << node.name() << " = ";
 }
@@ -513,6 +520,50 @@ void PrintCPUBackendASTVisitor::addRequirementString(const std::string& req)
 {
     requirement_strings_.insert(req);
 }
+
+void PrintCPUBackendASTVisitor::visit(StencilAccessNode &node)
+{
+    std::cout << "grid.cellAt( ";
+}
+
+void PrintCPUBackendASTVisitor::midVisit(StencilAccessNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintCPUBackendASTVisitor::postVisit(StencilAccessNode &node)
+{
+    std::cout <<  ", "  << node.grid_variable << " )";
+}
+
+void PrintCPUBackendASTVisitor::visit(StencilStatementNode &node)
+{
+	//FIXME: This will not work if node.name() is already defined elsewhere...
+	//std::cout << indent() << "equelle::CartesianGrid::CartesianCollectionOfScalar " << node.name()
+	//		<< " = grid.inputCellScalarWithDefault( \"" << node.name() << "\", 0.0 );" << std::endl;
+    std::cout << indent() << "//Start of stencil-lambda" << std::endl;
+    std::cout << indent() << "auto cell_stencil = [&]( int i, int j ) {" << std::endl;
+    indent_++;
+    std::cout << indent();
+}
+
+void PrintCPUBackendASTVisitor::midVisit(StencilStatementNode &node)
+{
+    std::cout << " = " << std::endl;
+    indent_++;
+    std::cout << indent();
+}
+
+void PrintCPUBackendASTVisitor::postVisit(StencilStatementNode &node)
+{
+    indent_--;
+    indent_--;
+    std::cout << ";" << std::endl;
+    std::cout << indent() << "} // End of stencil-lambda\n";
+    std::cout << indent() << "grid.allCells().execute( cell_stencil );\n";
+
+}
+
 
 namespace
 {

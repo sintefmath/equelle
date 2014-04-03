@@ -5,7 +5,7 @@ cmake_minimum_required( VERSION 2.8 )
 # signed/unsigned comparison!
 
 if(NOT MSVC)
-	set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra -Wno-sign-compare" )
+	set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra -Wno-sign-compare -Wno-unused-parameter" )
 endif()
 
 find_package( BISON REQUIRED )
@@ -29,7 +29,7 @@ ${BISON_MyParser_OUTPUTS} )
 set_target_properties( ec PROPERTIES COMPILE_DEFINITIONS "RETURN_TOKENS=1" )
 target_link_libraries(ec ${Boost_LIBRARIES})
 
-add_executable( el el.cpp ${FLEX_MyScanner_OUTPUTS} ) 
+add_executable( el el.cpp equelle_parser.y equelle_lexer.l ${FLEX_MyScanner_OUTPUTS} )
 
 install(TARGETS ec el 
 	EXPORT EquelleTargets

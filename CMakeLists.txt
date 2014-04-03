@@ -39,11 +39,15 @@ option(EQUELLE_DEBUG "Enable extra debugging messages and tests" ON)
 
 if(EQUELLE_DEBUG)
    add_definitions(-DEQUELLE_DEBUG)
+   #add_definitions(-D_GLIBCXX_DEBUG)
+   #add_definitions(-D_GLIBCXX_DEBUG_PEDANTIC)
 endif()
 
 add_subdirectory(compiler)
 add_subdirectory(backends)
 add_subdirectory(tools)
+add_subdirectory(experimental/cartesian)
+
 
 set(EQUELLE_TARGETS ec el equelle_rt)
 if(EQUELLE_BUILD_CUDA)

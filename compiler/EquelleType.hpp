@@ -12,7 +12,7 @@
 
 // ------ EquelleType class and type-related utilities ------ 
 
-enum BasicType { Bool, Scalar, Vector, Cell, Face, Edge, Vertex, String, Void, Invalid };
+enum BasicType { Bool, Scalar, Vector, Cell, Face, Edge, Vertex, String, StencilI, StencilJ, StencilK, Void, Invalid };
 
 enum CanonicalEntitySet { InteriorCells = 0, BoundaryCells, AllCells,
                           InteriorFaces, BoundaryFaces, AllFaces,
@@ -31,6 +31,8 @@ std::string basicTypeString(const BasicType bt);
 bool isEntityType(const BasicType bt);
 
 bool isNumericType(const BasicType bt);
+
+bool isStencilType( const BasicType bt );
 
 BasicType canonicalGridMappingEntity(const int gridmapping);
 

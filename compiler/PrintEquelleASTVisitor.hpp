@@ -70,6 +70,13 @@ public:
     void visit(RandomAccessNode& node);
     void postVisit(RandomAccessNode& node);
 
+    void visit( StencilAccessNode& node );
+    void midVisit( StencilAccessNode& node );
+    void postVisit( StencilAccessNode& node );
+    void visit( StencilStatementNode& node );
+    void midVisit( StencilStatementNode& node );
+    void postVisit( StencilStatementNode& node );
+
 private:
     int indent_;
     void endl() const;

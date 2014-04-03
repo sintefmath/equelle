@@ -8,7 +8,7 @@
 namespace equelle {
 
 
-/// Topological entities.
+/// Topological entities.r
 template <int Codim>
 struct TopologicalEntity
 {

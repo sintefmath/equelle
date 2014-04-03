@@ -6,7 +6,7 @@
 #include "ASTNodes.hpp"
 #include "SymbolTable.hpp"
 #include <iostream>
-
+#include <stdexcept>
 
 
 
@@ -360,6 +360,36 @@ void PrintASTVisitor::postVisit(ArrayNode&)
 void PrintASTVisitor::postVisit(RandomAccessNode&)
 {
     --indent_;
+}
+
+void PrintASTVisitor::visit(StencilAccessNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintASTVisitor::midVisit(StencilAccessNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintASTVisitor::postVisit(StencilAccessNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintASTVisitor::visit(StencilStatementNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintASTVisitor::midVisit(StencilStatementNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintASTVisitor::postVisit(StencilStatementNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
 }
 
 

@@ -8,6 +8,7 @@
 #include <iostream>
 #include <cctype>
 #include <sstream>
+#include <stdexcept>
 
 
 namespace
@@ -504,6 +505,36 @@ std::string PrintCUDABackendASTVisitor::cppTypeString(const EquelleType& et) con
         cppstring += ", " + std::to_string(et.arraySize()) + ">";
     }
     return cppstring;
+}
+
+void PrintCUDABackendASTVisitor::visit(StencilAccessNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintCUDABackendASTVisitor::midVisit(StencilAccessNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintCUDABackendASTVisitor::postVisit(StencilAccessNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintCUDABackendASTVisitor::visit(StencilStatementNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintCUDABackendASTVisitor::midVisit(StencilStatementNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintCUDABackendASTVisitor::postVisit(StencilStatementNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
 }
 
 void PrintCUDABackendASTVisitor::addRequirementString(const std::string& req)

@@ -9,6 +9,7 @@
 #include <iostream>
 #include <cctype>
 #include <sstream>
+#include <stdexcept>
 
 
 namespace
@@ -394,6 +395,35 @@ void PrintMRSTBackendASTVisitor::postVisit(RandomAccessNode& node)
     std::cout << "(:, " << node.index() + 1 << ")";
 }
 
+void PrintMRSTBackendASTVisitor::visit(StencilAccessNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintMRSTBackendASTVisitor::midVisit(StencilAccessNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintMRSTBackendASTVisitor::postVisit(StencilAccessNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintMRSTBackendASTVisitor::visit(StencilStatementNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintMRSTBackendASTVisitor::midVisit(StencilStatementNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintMRSTBackendASTVisitor::postVisit(StencilStatementNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
 
 
 void PrintMRSTBackendASTVisitor::endl() const
