@@ -1,0 +1,3 @@
+[submodule "experimental/cartesian/ipython/JSAnimation"]
+	path = experimental/cartesian/ipython/JSAnimation
+	url = https://github.com/jakevdp/JSAnimation.git

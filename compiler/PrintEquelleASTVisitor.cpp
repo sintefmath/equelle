@@ -6,6 +6,7 @@
 #include "ASTNodes.hpp"
 #include "SymbolTable.hpp"
 #include <iostream>
+#include <stdexcept>
 
 
 
@@ -343,6 +344,36 @@ void PrintEquelleASTVisitor::postVisit(RandomAccessNode& node)
     std::cout << "[" << node.index() << "]";
 }
 
+
+void PrintEquelleASTVisitor::visit(StencilAccessNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintEquelleASTVisitor::midVisit(StencilAccessNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintEquelleASTVisitor::postVisit(StencilAccessNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintEquelleASTVisitor::visit(StencilStatementNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintEquelleASTVisitor::midVisit(StencilStatementNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintEquelleASTVisitor::postVisit(StencilStatementNode &node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
 
 
 void PrintEquelleASTVisitor::endl() const

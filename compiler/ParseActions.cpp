@@ -8,6 +8,7 @@
 #include "ASTNodes.hpp"
 #include "ParseActions.hpp"
 #include <sstream>
+#include <iostream>
 
 
 
@@ -271,7 +272,17 @@ BinaryOpNode* handleBinaryOp(BinaryOp op, Node* left, Node* right)
         // Intentional fall-through.
     case Subtract:
         if (lt != rt) {
-            yyerror("addition and subtraction only allowed between identical types.");
+        	if ((lt.basicType() == StencilI || lt.basicType() == StencilJ || lt.basicType() == StencilK)
+        			&& rt.basicType() == Scalar) {
+        		//i,j,k OP n is OK
+        	}
+        	else if (lt.basicType() == Scalar &&
+        			(rt.basicType() == StencilI || rt.basicType() == StencilJ || rt.basicType() == StencilK)) {
+        		//n OP i,j,k is OK
+        	}
+        	else {
+        		yyerror("addition and subtraction only allowed between identical types.");
+        	}
         }
         break;
     case Multiply:
@@ -586,4 +597,31 @@ RandomAccessNode* handleRandomAccess(Node* expr, const int index)
         yyerror("cannot use '[<index>]' random access operator with anything other than a Vector or Array");
     }
     return new RandomAccessNode(expr, index);
+}
+
+
+
+StencilAccessNode *handleStencilAccess(const std::string grid_variable,
+                                       FuncArgsNode* expr_list)
+{
+    return new StencilAccessNode( grid_variable, expr_list );
+}
+
+
+SequenceNode *handleStencilStatement( StencilAccessNode *lhsStencilAccess,
+                                              Node *expr)
+{
+    SequenceNode* seq = new SequenceNode;
+    TypeNode* type = new TypeNode(EquelleType(Scalar));
+    /**FIXME: Need stencilDeclnode here.........
+    Right now it ends up with
+    const Scalar u = auto cell_stencil = [&] (int i, int j) { ...
+    instead of the more sensible
+    equelle::CartesianGrid::CartesianCollectionOfScalar u = grid.inputCellScalarWithDefault( "u", 1.0 );
+    auto cell_stencil = [&] (int i, int j) { ...
+    */
+    StencilStatementNode* stencil = new StencilStatementNode( lhsStencilAccess, expr );
+    seq->pushNode(handleDeclaration(lhsStencilAccess->name(), type));
+    seq->pushNode(handleAssignment(lhsStencilAccess->name(), stencil));
+    return seq;
 }

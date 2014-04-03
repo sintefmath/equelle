@@ -71,7 +71,12 @@ public:
     void postVisit(ArrayNode& node);
     void visit(RandomAccessNode& node);
     void postVisit(RandomAccessNode& node);
-
+    void visit( StencilAccessNode& node );
+    void midVisit( StencilAccessNode& node );
+    void postVisit( StencilAccessNode& node );
+    void visit( StencilStatementNode& node );
+    void midVisit( StencilStatementNode& node );
+    void postVisit( StencilStatementNode& node );
     // These are overriden by subclasses who only need to alter the surroundings of the generated code.
     virtual const char* cppStartString() const;
     virtual const char* cppEndString() const;

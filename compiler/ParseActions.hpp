@@ -74,4 +74,14 @@ LoopNode* handleLoopStatement(LoopNode* loop_start, SequenceNode* loop_block);
 
 RandomAccessNode* handleRandomAccess(Node* expr, const int index);
 
+
+StencilAccessNode *handleStencilAccess( const std::string grid_variable,
+                                        FuncArgsNode* expr_list );
+
+SequenceNode *handleStencilStatement( StencilAccessNode* lhsStencilAccess,
+                                              Node* expr );
+
+
+
+
 #endif // PARSEACTIONS_HEADER_INCLUDED

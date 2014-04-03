@@ -916,4 +916,83 @@ private:
     int index_;
 };
 
+
+struct StencilAccessNode : public Node {
+    StencilAccessNode( const std::string grid_variable,
+                       FuncArgsNode* expr_list )
+        : grid_variable( grid_variable),
+          expr_list( expr_list )
+    {
+
+    }
+
+    const std::string& name() const
+    {
+        return grid_variable;
+    }
+
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        expr_list->accept( visitor );
+        visitor.postVisit( *this );
+    }
+	// All stencils are at this time scalars
+	EquelleType type() const
+	{
+		// We do not want mutability of a variable to be passed on to
+		// expressions involving that variable.
+		EquelleType et = SymbolTable::variableType(grid_variable);
+		if (et.isMutable()) {
+			et.setMutable(false);
+		}
+		return et;
+	}
+
+    std::string grid_variable;
+    FuncArgsNode* expr_list;
+};
+
+struct StencilStatementNode : public Node {
+    StencilStatementNode( StencilAccessNode* lhs, Node* node ) : lhs(lhs), expr( node ) {
+    }
+
+    const std::string& name() const
+    {
+        return lhs->name();
+    }
+
+	// All stencils are at this time scalars
+	EquelleType type() const
+	{
+		// We do not want mutability of a variable to be passed on to
+		// expressions involving that variable.
+		EquelleType et = SymbolTable::variableType(name());
+		if (et.isMutable()) {
+			et.setMutable(false);
+		}
+		return et;
+	}
+
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        lhs->accept( visitor );
+        visitor.midVisit( *this );
+        expr->accept(visitor);
+        visitor.postVisit(*this);
+    }
+
+    virtual ~StencilStatementNode() {
+        delete lhs;
+        delete expr;
+    }
+
+private:
+    StencilAccessNode* lhs;
+    Node* expr;
+};
+
+
+
 #endif // ASTNODES_HEADER_INCLUDED
