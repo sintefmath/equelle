@@ -47,8 +47,13 @@ int main(int argc, char** argv)
 		cli_vars = options.parse(argc, argv);
 
 		if (cli_vars.count("help")) {
+			std::cout << "Usage: ./eq <options>" << std::endl;
+			std::cout << "The following options are supported:" << std::endl;
 			options.printOptions();
 			return -1;
+		}
+		if (cli_vars.count("verbose")) {
+			options.printVars(cli_vars);
 		}
 	}
 	catch (const std::exception& e) {
