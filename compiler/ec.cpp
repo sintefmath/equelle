@@ -89,6 +89,9 @@ int main(int argc, char** argv)
     else if (backend == "mrst") {
         PrintMRSTBackendASTVisitor v;
         SymbolTable::program()->accept(v);
+    } else if(backend == "MPI") {
+        PrintMPIBackendASTVisitor v;
+        SymbolTable::program()->accept(v);
     }
     else {
         std::cerr << "Unknown back-end choice: " << backend << '\n';

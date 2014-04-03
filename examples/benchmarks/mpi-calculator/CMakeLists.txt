@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/calculator.cpp
-    COMMAND ${EQUELLE_COMPILER} 5  < ${CMAKE_CURRENT_SOURCE_DIR}/calculator.equelle > ${CMAKE_CURRENT_BINARY_DIR}/calculator.cpp
+    COMMAND ${EQUELLE_COMPILER} --backend MPI --input ${CMAKE_CURRENT_SOURCE_DIR}/calculator.equelle > ${CMAKE_CURRENT_BINARY_DIR}/calculator.cpp
     DEPENDS  ${CMAKE_CURRENT_SOURCE_DIR}/calculator.equelle
 )
 
