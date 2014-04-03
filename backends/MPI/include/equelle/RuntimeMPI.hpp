@@ -2,6 +2,8 @@
 
 #include <memory>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
+#include <opm/core/grid/GridManager.hpp>
+#include <opm/core/grid.h>
 
 #include "equelle/equelleTypes.hpp"
 #include "equelle/mpiutils.hpp"
@@ -9,9 +11,6 @@
 #include "equelle/SubGridBuilder.hpp"
 
 class Zoltan;
-namespace Opm {
-class GridManager;
-}
 
 namespace equelle {
 class EquelleRuntimeCPU;
@@ -51,6 +50,19 @@ public:
                                          const CollOfCell& coll);
     ///@}
 
+    void output(const String& tag, const CollOfScalar& vals);
+
+    ///@{ Communication between nodes
+
+    /**
+     * @brief allGather Assembles a distributed collection of scalar to all nodes
+     * @param coll
+     * @todo So far only the constant (value) part of an CollOfScalar is returned.
+     * @return
+     */
+    CollOfScalar allGather( const CollOfScalar& coll );
+
+    ///@}
 private:
     std::unique_ptr<Zoltan> zoltan;
     std::unique_ptr<equelle::EquelleRuntimeCPU> runtime;

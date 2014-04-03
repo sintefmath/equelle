@@ -4,8 +4,10 @@
 #include <iterator>
 #include <algorithm>
 #include <iostream>
+#include <fstream>
 
 #include <Eigen/Sparse>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
 
 struct UnstructuredGrid;
 
@@ -73,6 +75,22 @@ void dumpGrid( const UnstructuredGrid* grid );
 template<class T>
 void dumpVector( const std::vector<T>& v, std::ostream& s = std::cout ) {
     std::copy( begin( v ), end( v ), std::ostream_iterator<T>( s, " " ) );
+    s << std::endl;
+}
+
+template<class T>
+void injectMockData( Opm::parameter::ParameterGroup& param, std::string key, T begin, T end ) {
+    std::string filename = key + ".mockdata";
+    param.insertParameter( key + "_from_file", "true" );
+    param.insertParameter( key + "_filename", filename );
+
+    std::ofstream f(filename);
+    std::copy( begin, end, std::ostream_iterator<typename T::value_type>( f, " " ) );
+}
+
+template<class T>
+void dumpArray( const  std::vector<T>& v, std::ostream& s = std::cout  ) {
+    std::copy( v.begin(), v.end(), std::ostream_iterator<T>( s, " " ) );
     s << std::endl;
 }
 

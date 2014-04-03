@@ -44,6 +44,7 @@ void RuntimeMPI::initializeGrid()
 
 RuntimeMPI::RuntimeMPI()
 {     
+    param_.disableOutput();
     initializeZoltan();
     initializeGrid();
 }
@@ -51,8 +52,9 @@ RuntimeMPI::RuntimeMPI()
 RuntimeMPI::RuntimeMPI(const Opm::parameter::ParameterGroup &param)
     : param_( param )
 {
+    param_.disableOutput();
     initializeZoltan();
-    globalGrid.reset( equelle::createGridManager( param ) );
+    globalGrid.reset( equelle::createGridManager( param_ ) );
 }
 
 RuntimeMPI::~RuntimeMPI()
@@ -155,6 +157,75 @@ CollOfScalar RuntimeMPI::inputCollectionOfScalar(const String &name, const CollO
         return CollOfScalar(CollOfScalar::V::Constant(size, param_.get<double>(name)));
     }
 
+}
+
+void RuntimeMPI::output(const String &tag, const CollOfScalar &vals)
+{
+    auto val = allGather( vals );
+    if ( equelle::getMPIRank() == 0 ) {
+        runtime->output( tag, val );
+    }
+}
+
+equelle::CollOfScalar equelle::RuntimeMPI::allGather( const equelle::CollOfScalar &coll )
+{
+    // Get the size of the collection on every node
+    struct CollOfScalarSize {
+        int size = 0;
+        int numBlocks = 0;
+    };
+
+    int rank = equelle::getMPIRank();
+    int world_size = equelle::getMPISize();
+    std::vector<CollOfScalarSize> sizes( world_size );
+
+    sizes[rank].size = coll.size();
+    sizes[rank].numBlocks = coll.numBlocks();
+
+    MPI_SAFE_CALL( MPI_Allgather( &sizes[rank], 2, MPI_INT,
+                                  sizes.data(), 2, MPI_INT, MPI_COMM_WORLD ) );
+
+    // Get the globalgids for the elements in coll.
+    // NB. These globalgids are the global ID for the collection! As the serial backend would see them.
+
+    std::vector<int> recvcounts( world_size); // Number of elements in each node
+    std::vector<int> displacements( world_size +1 ); // Displacements where each node store the data
+
+    for( int i = 0; i < equelle::getMPISize(); ++i ) {
+        recvcounts[i] = sizes[i].size;
+        displacements[i+1] = displacements[i] + sizes[i].size;
+    }
+
+    // Total number of elements, including duplicates
+    const int total_number_of_elements = displacements.back();
+    std::vector<int> global_id_mapping( total_number_of_elements );
+
+    // We do not need to copy the local data into the global structure.
+    // That is handeled by MPI_Allgatherv
+    MPI_SAFE_CALL(
+        MPI_Allgatherv( subGrid.global_cell.data(), subGrid.global_cell.size(), MPI_INT,
+                        global_id_mapping.data(), recvcounts.data(), displacements.data(),
+                        MPI_INT, MPI_COMM_WORLD ) );
+
+    // Send the value part of an AutoDiffBlock, collect them in a global array
+    // offsets are the same as for the global_id_mapping
+    std::vector<double> adbvalues( total_number_of_elements );
+
+    MPI_SAFE_CALL( MPI_Allgatherv( const_cast<double*>( coll.value().data() ), coll.value().size(), MPI_DOUBLE,
+                     adbvalues.data(), recvcounts.data(), displacements.data(),
+                     MPI_DOUBLE, MPI_COMM_WORLD ) );
+
+    int unique_number_of_elements = 1 + *std::max_element( global_id_mapping.begin(), global_id_mapping.end() );
+
+    typedef Eigen::Array<Scalar, Eigen::Dynamic, 1> V;
+    V v_new( unique_number_of_elements );
+
+    for( int i = 0; i < total_number_of_elements; ++i ) {
+        int global_id = global_id_mapping[i];
+        v_new[global_id] = adbvalues[i];
+    }
+
+    return CollOfScalar( v_new );
 }
 
 

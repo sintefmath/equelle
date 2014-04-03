@@ -7,12 +7,15 @@ endif()
 
 find_package( Equelle REQUIRED )
 
+option(EQUELLE_BUILD_MPI "Build MPI backend and tools (requires MPI and Zoltan from Trilinos)" OFF)
+
 link_directories(
   ${EQUELLE_LIB_DIRS}
   ${EQUELLE_INCLUDE_DIRS}
   ${EXTRA_LIBDIRS_FOR_EQUELLE}
 )
 
+add_subdirectory( benchmarks )
 
 file( GLOB sources     "src/*.cpp" )
 file( GLOB app_sources "app/*.cpp" )

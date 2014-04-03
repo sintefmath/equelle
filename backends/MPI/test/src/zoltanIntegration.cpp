@@ -31,6 +31,7 @@ BOOST_GLOBAL_FIXTURE( MPIInitializer );
 BOOST_AUTO_TEST_CASE( gridExploration )
 {
     Opm::parameter::ParameterGroup paramgroup;
+    paramgroup.disableOutput();
 
 
     std::unique_ptr<Opm::GridManager> grid ( equelle::createGridManager(paramgroup) );
@@ -44,7 +45,11 @@ BOOST_AUTO_TEST_CASE( gridExploration )
 BOOST_AUTO_TEST_CASE( RuntimeMPI_6x1grid ) {
     equelle::RuntimeMPI runtime;
 
-    //BOOST_CHECK( runtime.zoltan != NULL );
+    if ( equelle::getMPISize() <= 1 ) {
+        BOOST_MESSAGE( "Invoke with mpirun -np <num> in order to run this test." );
+        return;
+    }
+
 
     int ierr;
     void* grid = const_cast<void*>( reinterpret_cast<const void*>(runtime.globalGrid->c_grid() ) );
@@ -116,6 +121,12 @@ BOOST_AUTO_TEST_CASE( RuntimeMPI_6x1grid ) {
 BOOST_AUTO_TEST_CASE( RuntimeMPI_6x2grid ) {
     equelle::RuntimeMPI runtime;
     runtime.globalGrid.reset( new Opm::GridManager( 6, 2 ) );
+
+    if ( equelle::getMPISize() <= 1 ) {
+        BOOST_MESSAGE( "Invoke with mpirun -np <num> in order to run this test." );
+        return;
+    }
+
 
     auto zr = runtime.computePartition();
     BOOST_CHECK_EQUAL( zr.changes, 1 );
