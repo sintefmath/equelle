@@ -265,7 +265,7 @@ namespace equelleCUDA {
     /*!
       Compare elements in lhs with a single scalar rhs and return a Collection of Booleans.
       \code out[i] = lhs[i] < rhs \endcode
-      \param[out] The resulting collection of booleans
+      \param[out] out The resulting collection of booleans
       \param[in] lhs Left hand side collection of scalars
       \param[in] rhs Right hand side scalar.
       \param[in] size Size of the lhs array.
@@ -378,7 +378,7 @@ namespace equelleCUDA {
     /*! 
       Less than operator
       \return Collection of Booleans consisting of
-      \coded out[i] = lhs[i] < rhs[i] \endcode
+      \code out[i] = lhs[i] < rhs[i] \endcode
     */
     CollOfBool operator<(const CollOfScalar& lhs, const CollOfScalar& rhs);
 

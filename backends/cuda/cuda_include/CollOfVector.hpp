@@ -107,7 +107,7 @@ namespace equelleCUDA {
 	  This function returns the number of vectors in the collection.
 	  Not to be confused with size() which returns total number of 
 	  elements in the collection.
-	  size() = numVectors()*dim()
+	  numElements() = numVectors()*dim()
 	*/
 	int numVectors() const;
 
@@ -118,7 +118,17 @@ namespace equelleCUDA {
 	*/
 	int numElements() const;
 
+
+	//! Gives grid and block sizes for one thread per vector.
+	/*!
+	  \sa kernelSetup
+	*/
 	kernelSetup vector_setup() const;
+
+	//! Gives grid and block sizes for one thread per element.
+	/*!
+	  \sa kernelSetup
+	*/
 	kernelSetup element_setup() const;
 	
 
@@ -134,6 +144,10 @@ namespace equelleCUDA {
 	// to implement them.
 	//CollOfScalar& col(const int c);
 	//const CollOfScalar& col(const int c) const;
+	//! Get only one vector component.
+	/*!
+	  Returns a CollOfScalar with the index element of every vector.
+	 */
 	CollOfScalar col(const int index) const;
 	// The one implemented here makes a copy though...
 
