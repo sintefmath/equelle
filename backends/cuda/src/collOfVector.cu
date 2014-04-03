@@ -93,11 +93,6 @@ double* CollOfVector::data() {
 }
 
 
-int CollOfVector::size() const {
-    return elements_.size();
-}
-
-
 int CollOfVector::dim() const {
     return dim_;
 }
@@ -106,7 +101,7 @@ int CollOfVector::numVectors() const {
     if ( dim_ == 0 ) {
 	OPM_THROW(std::runtime_error, "Calling numVectors() on a CollOfVector of dimension 0\n --> Dividing by zero!");
     }
-    return size()/dim_;
+    return elements_.size()/dim_;
 }
 
 int CollOfVector::numElements() const {
@@ -189,7 +184,7 @@ CollOfVector equelleCUDA::operator+(const CollOfVector& lhs, const CollOfVector&
 
     CollOfVector out = lhs;
     kernelSetup s = out.element_setup();
-    plus_kernel<<<s.grid, s.block>>>(out.data(), rhs.data(), out.size());
+    plus_kernel<<<s.grid, s.block>>>(out.data(), rhs.data(), out.numElements());
     return out;
 }
 
@@ -197,6 +192,6 @@ CollOfVector equelleCUDA::operator+(const CollOfVector& lhs, const CollOfVector&
 CollOfVector equelleCUDA::operator-(const CollOfVector& lhs, const CollOfVector& rhs) {
     CollOfVector out = lhs;
     kernelSetup s = out.element_setup();
-    minus_kernel<<<s.grid, s.block>>>(out.data(), rhs.data(), out.size());
+    minus_kernel<<<s.grid, s.block>>>(out.data(), rhs.data(), out.numElements());
     return out;
 }

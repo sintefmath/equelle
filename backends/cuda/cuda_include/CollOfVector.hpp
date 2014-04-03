@@ -96,9 +96,6 @@ namespace equelleCUDA {
 	double* data();
 
 
-	// Temporary function to make everything work again
-	int size() const;
-
 	//! Dimension of vectors in the collection
 	int dim() const;
 
