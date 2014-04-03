@@ -25,7 +25,7 @@ public:
 			("verbose", "Verbose output")
 			("config,c", boost::program_options::value<std::string>(), "Configuration filename (specify command line parameters in file)")
 			("input,i", boost::program_options::value<std::string>()->required(), "Input Equelle file to compile")
-			("backend", boost::program_options::value<std::string>()->default_value("cpu"), "Backend of compiler to use (ast, ast_equelle, cpu, cuda, mrst)");
+            ("backend", boost::program_options::value<std::string>()->default_value("cpu"), "Backend of compiler to use (ast, ast_equelle, cpu, cuda, mrst)");
 	}
 
 	void printOptions() {
@@ -67,7 +67,7 @@ public:
 	void printVars(boost::program_options::variables_map &cli_vars) {
 		const unsigned int field_one_width = 25;
 		const unsigned int field_two_width = 10;
-		std::cout << "Options on command line:" << std::endl;
+        std::cout << "Options on command line:" << std::endl;
 		for (boost::program_options::variables_map::iterator it=cli_vars.begin(); it!=cli_vars.end(); ++it) {
 			std::stringstream tmp;
 			std::cout << std::setw(field_one_width) << std::left << it->first;
@@ -173,7 +173,7 @@ public:
 		std::vector<std::string> unrecognized = boost::program_options::collect_unrecognized(cli_po.options, boost::program_options::exclude_positional);
 
 		for (unsigned int i=0; i<unrecognized.size(); ++i) {
-			std::cout << "Warning: Unrecognized option '" << unrecognized.at(i) << "'. Ignoring..." << std::endl;
+            std::cerr << "Warning: Unrecognized option '" << unrecognized.at(i) << "'. Ignoring..." << std::endl;
 		}
 	}
 private:

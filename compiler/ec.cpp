@@ -57,8 +57,8 @@ int main(int argc, char** argv)
 		}
 	}
 	catch (const std::exception& e) {
-		std::cout << "Error parsing options: ";
-		std::cout << e.what() << std::endl;
+        std::cerr << "Error parsing options: ";
+        std::cerr << e.what() << std::endl;
 		return -1;
 	}
 
