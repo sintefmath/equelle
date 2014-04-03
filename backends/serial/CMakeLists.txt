@@ -6,7 +6,7 @@ if(NOT MSVC)
 ENDIF()
 
 file( GLOB serial_src "src/*.cpp" )
-file( GLOB serial_inc "include/*.hpp" )
+file( GLOB serial_inc "include/equelle/*.hpp" )
 
 set( SERIAL_INCLUDE_DIRS "/usr/include/eigen3" ${EQUELLE_EXTRA_INCLUDE_DIRS})
 

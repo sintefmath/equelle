@@ -14,7 +14,7 @@ class PrintCPUBackendASTVisitor : public ASTVisitorInterface
 {
 public:
     PrintCPUBackendASTVisitor();
-    ~PrintCPUBackendASTVisitor();
+    virtual ~PrintCPUBackendASTVisitor();
 
     void visit(SequenceNode& node);
     void midVisit(SequenceNode& node);
@@ -71,6 +71,10 @@ public:
     void postVisit(ArrayNode& node);
     void visit(RandomAccessNode& node);
     void postVisit(RandomAccessNode& node);
+
+    // These are overriden by subclasses who only need to alter the surroundings of the generated code.
+    virtual const char* cppStartString() const;
+    virtual const char* cppEndString() const;
 
 private:
     bool suppressed_;

@@ -33,7 +33,7 @@ add_subdirectory(test)
 set(CONF_INCLUDE_DIRS "${CONF_INCLUDE_DIRS}" "${PROJECT_SOURCE_DIR}/include" "${PROJECT_BINARY_DIR}" PARENT_SCOPE)
 
 set(EQUELLE_LIBS_FOR_CONFIG ${EQUELLE_LIBS_FOR_CONFIG}
-    equelle_rt opmautodiff opmcore dunecommon 
+    equelle_mpi equelle_rt opmautodiff opmcore dunecommon
     ${MPI_C_LIBRARIES}
     ${MPI_CXX_LIBRARIES}
     ${Zoltan_LIBRARIES}
@@ -42,11 +42,12 @@ set(EQUELLE_LIBS_FOR_CONFIG ${EQUELLE_LIBS_FOR_CONFIG}
 
 set(EQUELLE_LIB_DIRS_FOR_CONFIG ${EQUELLE_LIB_DIRS_FOR_CONFIG}
     ${EQUELLE_EXTRA_LIB_DIRS}
+    ${Zoltan_LIBRARY_DIRS}
     PARENT_SCOPE)
 
 # This is used for building/linking against the installed tree
 set(EQUELLE_INCLUDE_DIRS_FOR_CONFIG ${EQUELLE_INCLUDE_DIRS_FOR_CONFIG}
-    ${SERIAL_INCLUDE_DIRS}
+    ${SERIAL_INCLUDE_DIRS} ${Zoltan_INCLUDE_DIRS}
     PARENT_SCOPE )
 
 install(TARGETS equelle_mpi

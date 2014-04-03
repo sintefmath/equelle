@@ -2,6 +2,8 @@
   Copyright 2013 SINTEF ICT, Applied Mathematics.
 */
 
+extern int yylex();
+extern int yyparse();
 
 #include "SymbolTable.hpp"
 #include "PrintASTVisitor.hpp"
@@ -9,6 +11,7 @@
 #include "PrintCPUBackendASTVisitor.hpp"
 #include "PrintMRSTBackendASTVisitor.hpp"
 #include "PrintCUDABackendASTVisitor.hpp"
+#include "PrintMPIBackendASTVisitor.hpp"
 #include "ASTNodes.hpp"
 #include "CommandLineOptions.hpp"
 
@@ -90,6 +93,9 @@ int main(int argc, char** argv)
     }
     else if (backend == "mrst") {
         PrintMRSTBackendASTVisitor v;
+        SymbolTable::program()->accept(v);
+    } else if(backend == "MPI") {
+        PrintMPIBackendASTVisitor v;
         SymbolTable::program()->accept(v);
     }
     else {

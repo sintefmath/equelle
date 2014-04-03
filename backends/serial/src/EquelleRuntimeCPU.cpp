@@ -3,7 +3,7 @@
 */
 
 
-#include "EquelleRuntimeCPU.hpp"
+#include "equelle/EquelleRuntimeCPU.hpp"
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/core/utility/StopWatch.hpp>
 #include <iomanip>
@@ -16,37 +16,38 @@
 
 
 namespace equelle {
-    Opm::GridManager* createGridManager(const Opm::parameter::ParameterGroup& param)
-    {
-        if (param.has("grid_filename")) {
-            return new Opm::GridManager(param.get<std::string>("grid_filename"));
-        }
-        const int grid_dim = param.getDefault("grid_dim", 2);
-        int num[3] = { 6, 1, 1 };
-        double size[3] = { 1.0, 1.0, 1.0 };
-        switch (grid_dim) { // Fall-throughs are intentional in this
-        case 3:
-            num[2] = param.getDefault("nz", num[2]);
-            size[2] = param.getDefault("dz", size[2]);
-        case 2:
-            num[1] = param.getDefault("ny", num[1]);
-            size[1] = param.getDefault("dy", size[1]);
-            num[0] = param.getDefault("nx", num[0]);
-            size[0] = param.getDefault("dx", size[0]);
-            break;
-        default:
-            OPM_THROW(std::runtime_error, "Cannot handle " << grid_dim << " dimensions.");
-        }
-        switch (grid_dim) {
-        case 2:
-            return new Opm::GridManager(num[0], num[1], size[0], size[1]);
-        case 3:
-            return new Opm::GridManager(num[0], num[1], num[2], size[0], size[1], size[2]);
-        default:
-            OPM_THROW(std::runtime_error, "Cannot handle " << grid_dim << " dimensions.");
-        }
+
+Opm::GridManager* createGridManager(const Opm::parameter::ParameterGroup& param)
+{
+    if (param.has("grid_filename")) {
+        return new Opm::GridManager(param.get<std::string>("grid_filename"));
     }
-} // equelle-namespace
+    const int grid_dim = param.getDefault("grid_dim", 2);
+    int num[3] = { 6, 1, 1 };
+    double size[3] = { 1.0, 1.0, 1.0 };
+    switch (grid_dim) { // Fall-throughs are intentional in this
+    case 3:
+        num[2] = param.getDefault("nz", num[2]);
+        size[2] = param.getDefault("dz", size[2]);
+    case 2:
+        num[1] = param.getDefault("ny", num[1]);
+        size[1] = param.getDefault("dy", size[1]);
+        num[0] = param.getDefault("nx", num[0]);
+        size[0] = param.getDefault("dx", size[0]);
+        break;
+    default:
+        OPM_THROW(std::runtime_error, "Cannot handle " << grid_dim << " dimensions.");
+    }
+    switch (grid_dim) {
+    case 2:
+        return new Opm::GridManager(num[0], num[1], size[0], size[1]);
+    case 3:
+        return new Opm::GridManager(num[0], num[1], num[2], size[0], size[1], size[2]);
+    default:
+        OPM_THROW(std::runtime_error, "Cannot handle " << grid_dim << " dimensions.");
+    }
+}
+
 
 
 
@@ -63,6 +64,13 @@ EquelleRuntimeCPU::EquelleRuntimeCPU(const Opm::parameter::ParameterGroup& param
 {
 }
 
+EquelleRuntimeCPU::EquelleRuntimeCPU(const UnstructuredGrid *grid, const Opm::parameter::ParameterGroup &param)
+    : grid_( *grid ),
+      ops_(grid_),
+      param_( param )
+{
+
+}
 
 CollOfCell EquelleRuntimeCPU::allCells() const
 {
@@ -287,9 +295,8 @@ CollOfVector EquelleRuntimeCPU::normal(const CollOfFace& faces) const
 
 CollOfScalar EquelleRuntimeCPU::sqrt(const CollOfScalar& x) const
 {
-    return ::sqrt(x);
+    return equelle::sqrt(x);
 }
-
 
 CollOfScalar EquelleRuntimeCPU::dot(const CollOfVector& v1, const CollOfVector& v2) const
 {
@@ -397,9 +404,9 @@ CollOfScalar EquelleRuntimeCPU::solveForUpdate(const CollOfScalar& residual) con
     // here...), array of actual values ("val") (I guess... '*sa'...),
     // rhs, solution)
     Opm::LinearSolverInterface::LinearSolverReport rep
-        = linsolver_.solve(matr.rows(), matr.nonZeros(),
-                           matr.outerIndexPtr(), matr.innerIndexPtr(), matr.valuePtr(),
-                           residual.value().data(), du.data());
+            = linsolver_.solve(matr.rows(), matr.nonZeros(),
+                               matr.outerIndexPtr(), matr.innerIndexPtr(), matr.valuePtr(),
+                               residual.value().data(), du.data());
 
     if (verbose_ > 2) {
         std::cout << "        solveForUpdate: Linear solver took: " << clock.secsSinceLast() << " seconds." << std::endl;
@@ -454,7 +461,7 @@ void EquelleRuntimeCPU::output(const String& tag, const CollOfScalar& vals)
 
 
 Scalar EquelleRuntimeCPU::inputScalarWithDefault(const String& name,
-                                                         const Scalar default_value)
+                                                 const Scalar default_value)
 {
     return param_.getDefault(name, default_value);
 }
@@ -540,3 +547,5 @@ CollOfScalar EquelleRuntimeCPU::singlePrimaryVariable(const CollOfScalar& initia
     // Syntax below is: CollOfScalar::variable(block index, initialized from, block structure)
     return CollOfScalar::variable(0, initial_values.value(), block_pattern);
 }
+
+} // equelle-namespace

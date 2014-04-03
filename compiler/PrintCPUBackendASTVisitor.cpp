@@ -12,8 +12,8 @@
 
 namespace
 {
-    const char* cppStartString();
-    const char* cppEndString();
+    const char* impl_cppStartString();
+    const char* impl_cppEndString();
 }
 
 PrintCPUBackendASTVisitor::PrintCPUBackendASTVisitor()
@@ -50,7 +50,7 @@ void PrintCPUBackendASTVisitor::postVisit(SequenceNode&)
         // Emit ensureRequirements() function.
         std::cout <<
             "\n"
-            "void ensureRequirements(const EquelleRuntimeCPU& er)\n"
+            "void ensureRequirements(const equelle::EquelleRuntimeCPU& er)\n"
             "{\n";
         if (requirement_strings_.empty()) {
             std::cout << "    (void)er;\n";
@@ -460,6 +460,15 @@ void PrintCPUBackendASTVisitor::postVisit(RandomAccessNode& node)
     }
 }
 
+const char *PrintCPUBackendASTVisitor::cppStartString() const
+{
+    return ::impl_cppStartString();
+}
+
+const char *PrintCPUBackendASTVisitor::cppEndString() const
+{
+    return ::impl_cppEndString();
+}
 
 
 void PrintCPUBackendASTVisitor::endl() const
@@ -507,7 +516,7 @@ void PrintCPUBackendASTVisitor::addRequirementString(const std::string& req)
 
 namespace
 {
-    const char* cppStartString()
+    const char* impl_cppStartString()
     {
         return
 "\n"
@@ -526,10 +535,10 @@ namespace
 "#include <cmath>\n"
 "#include <array>\n"
 "\n"
-"#include \"EquelleRuntimeCPU.hpp\"\n"
+"#include \"equelle/EquelleRuntimeCPU.hpp\"\n"
 "\n"
-"void ensureRequirements(const EquelleRuntimeCPU& er);\n"
-"void equelleGeneratedCode(EquelleRuntimeCPU& er);\n"
+"void ensureRequirements(const equelle::EquelleRuntimeCPU& er);\n"
+"void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er);\n"
 "\n"
  "#ifndef EQUELLE_NO_MAIN\n"
 "int main(int argc, char** argv)\n"
@@ -538,19 +547,20 @@ namespace
 "    Opm::parameter::ParameterGroup param(argc, argv, false);\n"
 "\n"
 "    // Create the Equelle runtime.\n"
-"    EquelleRuntimeCPU er(param);\n"
+"    equelle::EquelleRuntimeCPU er(param);\n"
 "    equelleGeneratedCode(er);\n"
 "    return 0;\n"
 "}\n"
 "#endif // EQUELLE_NO_MAIN\n"
 "\n"
-"void equelleGeneratedCode(EquelleRuntimeCPU& er) {\n"
+"void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er) {\n"
+"    using namespace equelle;\n"
 "    ensureRequirements(er);\n"
 "\n"
 "    // ============= Generated code starts here ================\n";
     }
 
-    const char* cppEndString()
+    const char* impl_cppEndString()
     {
         return "\n"
 "    // ============= Generated code ends here ================\n"

@@ -4,7 +4,7 @@ cmake_minimum_required( VERSION 2.8 )
 add_subdirectory(serial)
 
 if(EQUELLE_BUILD_CUDA)
-	add_subdirectory(cuda)
+   add_subdirectory(cuda)
 endif()
 
 if(EQUELLE_BUILD_MPI)

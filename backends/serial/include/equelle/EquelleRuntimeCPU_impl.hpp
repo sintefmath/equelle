@@ -2,15 +2,14 @@
   Copyright 2013 SINTEF ICT, Applied Mathematics.
 */
 
-#ifndef EQUELLERUNTIMECPU_IMPL_HEADER_INCLUDED
-#define EQUELLERUNTIMECPU_IMPL_HEADER_INCLUDED
-
+#pragma once
 
 #include <fstream>
 #include <iterator>
 #include <opm/core/utility/StopWatch.hpp>
 #include <opm/autodiff/AutoDiffHelpers.hpp>
 
+namespace equelle {
 
 template <class EntityCollection>
 CollOfScalar EquelleRuntimeCPU::operatorExtend(const double data,
@@ -353,5 +352,5 @@ CollOfScalar EquelleRuntimeCPU::inputCollectionOfScalar(const String& name,
     }
 }
 
+} // namespace equelle
 
-#endif // EQUELLERUNTIMECPU_IMPL_HEADER_INCLUDED
