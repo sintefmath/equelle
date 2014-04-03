@@ -181,9 +181,9 @@ CollOfIndices<codim> EquelleRuntimeCUDA::trinaryIf( const CollOfBool& predicate,
     if ( predicate.size() != iftrue.size() || predicate.size() != iffalse.size() ) {
 	OPM_THROW(std::runtime_error, "The sets are not of the same size");
     }
-    return CollOfIndices<codim>(equelleCUDA::trinaryIfWrapper(predicate,
-							      iftrue.device_vector(),
-							      iffalse.device_vector()));
+    return CollOfIndices<codim>(wrapEquelleRuntimeCUDA::trinaryIfWrapper(predicate,
+									 iftrue.device_vector(),
+									 iffalse.device_vector()));
 }
 
 

@@ -15,6 +15,7 @@
 
 
 using namespace equelleCUDA;
+using namespace wrapEquelleRuntimeCUDA;
 
 //
 //   CPP for implementation of non-cuda functions
@@ -74,7 +75,7 @@ CollOfScalar EquelleRuntimeCUDA::trinaryIf( const CollOfBool& predicate,
 	OPM_THROW(std::runtime_error, "Collections are not of the same size");
     }
     // Call a wrapper which calls a kernel
-    return equelleCUDA::trinaryIfWrapper(predicate, iftrue, iffalse);
+    return trinaryIfWrapper(predicate, iftrue, iffalse);
 }
 
 
@@ -84,9 +85,9 @@ CollOfScalar EquelleRuntimeCUDA::gradient( const CollOfScalar& cell_scalarfield 
 	OPM_THROW(std::runtime_error, "Gradient need input defined on AllCells()");
     }
 
-    return equelleCUDA::gradientWrapper(cell_scalarfield,
-					dev_grid_.interiorFaces(),
-					dev_grid_.face_cells());
+    return gradientWrapper(cell_scalarfield,
+			   dev_grid_.interiorFaces(),
+			   dev_grid_.face_cells());
 }
 
 
@@ -102,13 +103,13 @@ CollOfScalar EquelleRuntimeCUDA::divergence(const CollOfScalar& face_fluxes) con
 	}
 	// Extend to AllFaces():
 	CollOfScalar allFluxes = operatorExtend(face_fluxes, int_faces, allFaces());
-	return equelleCUDA::divergenceWrapper(allFluxes,
-					      dev_grid_);
+	return divergenceWrapper(allFluxes,
+				 dev_grid_);
     }
     else {
 	// We are on allFaces already, so let's go!
-	return equelleCUDA::divergenceWrapper(face_fluxes,
-					      dev_grid_); 
+	return divergenceWrapper(face_fluxes,
+				 dev_grid_); 
     }
 }
 
@@ -116,7 +117,7 @@ CollOfScalar EquelleRuntimeCUDA::divergence(const CollOfScalar& face_fluxes) con
 // SQRT
 CollOfScalar EquelleRuntimeCUDA::sqrt(const CollOfScalar& x) const {
 
-    return equelleCUDA::sqrtWrapper(x);
+    return sqrtWrapper(x);
 }
 
 

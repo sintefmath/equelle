@@ -15,6 +15,10 @@
 
 namespace equelleCUDA
 {
+
+    //! Functions related to the EquelleRuntimeCUDA class.
+    namespace wrapEquelleRuntimeCUDA {
+
     //! Wrapper for calling the trinaryIf kernel for CollOfScalar
     /*!
       Set up the kernel for a trinaryIf. Assumes that the given input parameters 
@@ -193,6 +197,9 @@ namespace equelleCUDA
       \param[in] size Number of elements.
     */
     __global__ void sqrtKernel( double* out, const int size);
+
+
+    } // namespace wrapEquelleRuntimeCUDA
 
 
 } // namespace equelleCUDA
