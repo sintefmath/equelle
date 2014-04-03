@@ -30,6 +30,8 @@
 %token FOR
 %token IN
 %token MUTABLE
+%token DOUBLELB
+%token DOUBLERB
 %token <str> BUILTIN
 %token <str> ID
 %token <str> INT
@@ -143,9 +145,9 @@ assignment: ID '=' expr       { $$ = handleAssignment(*($1), $3); delete $1; }
           | f_startdef block  { $$ = handleFuncAssignment($1, $2); }
           ;
 
-stencil_statement: '$' stencil_access '=' expr '$' { $$ = handleStencilStatement($2, $4); };
+stencil_statement: stencil_access '=' expr { $$ = handleStencilStatement($1, $3); };
 
-stencil_access: ID  '@' f_call_args '@' { $$ = handleStencilAccess( *($1), $3 ); delete $1; };
+stencil_access: ID  DOUBLELB f_call_args DOUBLERB { $$ = handleStencilAccess( *($1), $3 ); delete $1; };
 
 f_startdef: ID '(' f_call_args ')' '='       { $$ = handleFuncStart(*($1), $3); delete $1; }
 
