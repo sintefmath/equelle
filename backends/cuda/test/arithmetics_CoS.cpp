@@ -186,6 +186,8 @@ BOOST_AUTO_TEST_CASE( unary_minus_test )
     compareVectors ( res.copyToHost(), lf);
 }
 
+
+// > tests
 BOOST_AUTO_TEST_CASE( greater_than_test )
 {
     int size = ALL_SIZES;
@@ -253,6 +255,8 @@ BOOST_AUTO_TEST_CASE( less_than_test )
     compareBools( lf, res);
 }
 
+
+// < tests
 BOOST_AUTO_TEST_CASE( less_than_scalar_test )
 {
     int size = ALL_SIZES;
@@ -267,7 +271,6 @@ BOOST_AUTO_TEST_CASE( less_than_scalar_test )
     CollOfBool cob = a_col < b;
     std::vector<bool> res = cob_to_std(cob);
     compareBools( lf, res);
-
 }
 
 BOOST_AUTO_TEST_CASE( scalar_less_than_test )
@@ -284,8 +287,65 @@ BOOST_AUTO_TEST_CASE( scalar_less_than_test )
     CollOfBool cob = a < b_col ;
     std::vector<bool> res = cob_to_std(cob);
     compareBools( lf, res);
+}
+
+
+// >= tests:
+BOOST_AUTO_TEST_CASE( greater_than_equal_test )
+{
+    int size = ALL_SIZES;
+    std::vector<double> a, b;
+    std::vector<bool> lf;
+    for (int i = 0; i < size; ++i) {
+	a.push_back( rand() % 124 );
+	b.push_back( rand() % 87 );
+	lf.push_back( a[i] >= b[i]);
+	//if ( (b[i] < a[i]) != lf[i] ) {
+	//    std::cout << "Error: a[i] = " << a[i] << ", b[i] = " << b[i];
+	//    std::cout << " -  a[i] >= b[i] = " << (a[i] >= b[i]) << " but ";
+	//    std::cout << " b[i] < a[i] = " << (b[i] < a[i]) <<  std::endl;
+	//}
+    }
+    CollOfScalar a_col(a);
+    CollOfScalar b_col(b);
+    CollOfBool cob = a_col >= b_col;
+    std::vector<bool> res = cob_to_std(cob);
+    compareBools( lf, res);
 
 }
+
+BOOST_AUTO_TEST_CASE( greater_than_equal_scalar_test )
+{
+    int size = ALL_SIZES;
+    std::vector<double> a;
+    std::vector<bool> lf;
+    double b = (rand()%113)*1.244;
+    for (int i = 0; i < size; ++i) {
+	a.push_back( rand() % 124 );
+	lf.push_back( a[i] >= b);
+    }
+    CollOfScalar a_col(a);
+    CollOfBool cob = a_col >= b;
+    std::vector<bool> res = cob_to_std(cob);
+    compareBools( lf, res);
+}
+
+BOOST_AUTO_TEST_CASE( scalar_greater_equal_than_test )
+{
+    int size = ALL_SIZES;
+    std::vector<double> b;
+    std::vector<bool> lf;
+    double a = (rand()%113)*1.124;
+    for (int i = 0; i < size; ++i) {
+	b.push_back( rand() % 125);
+	lf.push_back( a >= b[i] );
+    }
+    CollOfScalar b_col(b);
+    CollOfBool cob = a >= b_col;
+    std::vector<bool> res = cob_to_std(cob);
+    compareBools( lf, res );
+}
+
 
 
 BOOST_AUTO_TEST_SUITE_END();

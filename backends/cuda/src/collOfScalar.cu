@@ -336,6 +336,8 @@ CollOfScalar equelleCUDA::operator-(const CollOfScalar& arg) {
     return -1.0*arg;
 }
 
+
+//  >
 CollOfBool equelleCUDA::operator>(const CollOfScalar& lhs, const CollOfScalar& rhs) {
     CollOfBool out(lhs.size());
     bool* out_ptr = thrust::raw_pointer_cast( &out[0] );
@@ -360,29 +362,50 @@ CollOfBool equelleCUDA::operator>(const Scalar lhs, const CollOfScalar& rhs) {
     return out;
 }
 
+
+// <
 CollOfBool equelleCUDA::operator<(const CollOfScalar& lhs, const CollOfScalar& rhs) {
-    CollOfBool out(lhs.size());
-    bool* out_ptr = thrust::raw_pointer_cast( &out[0] );
-    kernelSetup s = lhs.setup();
-    comp_collLTcoll_kernel<<<s.grid,s.block>>>(out_ptr, lhs.data(), rhs.data(), lhs.size());
-    return out;
+    // if   a < b   then b > a
+    return rhs > lhs;
 }
 
 CollOfBool equelleCUDA::operator<(const CollOfScalar& lhs, const Scalar rhs) {
-    CollOfBool out(lhs.size());
-    bool* out_ptr = thrust::raw_pointer_cast( &out[0] );
-    kernelSetup s = lhs.setup();
-    comp_collLTscal_kernel<<<s.grid, s.block>>>(out_ptr, lhs.data(), rhs, lhs.size());
-    return out;
+    // if  a < b  then   b > a
+    return rhs > lhs;
 }
 
 CollOfBool equelleCUDA::operator<(const Scalar lhs, const CollOfScalar& rhs) {
+    // if   a < b   then b > a
+    return rhs > lhs;
+}
+
+
+// >=
+CollOfBool equelleCUDA::operator>=(const CollOfScalar& lhs, const CollOfScalar& rhs) {
+    CollOfBool out(lhs.size());
+    bool* out_ptr = thrust::raw_pointer_cast( &out[0] );
+    kernelSetup s = lhs.setup();
+    comp_collGEcoll_kernel<<<s.grid,s.block>>>(out_ptr, lhs.data(), rhs.data(), lhs.size());
+    return out;
+}
+
+CollOfBool equelleCUDA::operator>=(const CollOfScalar& lhs, const Scalar rhs) {
+    CollOfBool out(lhs.size());
+    bool* out_ptr = thrust::raw_pointer_cast( &out[0] );
+    kernelSetup s = lhs.setup();
+    comp_collGEscal_kernel<<<s.grid, s.block>>>(out_ptr, lhs.data(), rhs, lhs.size());
+    return out;
+}
+
+CollOfBool equelleCUDA::operator>=(const Scalar lhs, const CollOfScalar& rhs) {
     CollOfBool out(rhs.size());
     bool* out_ptr = thrust::raw_pointer_cast( &out[0] );
     kernelSetup s = rhs.setup();
-    comp_scalLTcoll_kernel<<<s.grid, s.block>>>(out_ptr, lhs, rhs.data(), rhs.size());
+    comp_scalGEcoll_kernel<<<s.grid, s.block>>>(out_ptr, lhs, rhs.data(), rhs.size());
     return out;
 }
+
+
 
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -469,36 +492,36 @@ __global__ void wrapCollOfScalar::comp_scalGTcoll_kernel( bool* out,
     }
 }
 
-__global__ void wrapCollOfScalar::comp_collLTcoll_kernel( bool* out,
+__global__ void wrapCollOfScalar::comp_collGEcoll_kernel( bool* out,
 							  const double* lhs,
 							  const double* rhs,
 							  const int size)
 {
     int index = threadIdx.x + blockIdx.x*blockDim.x;
     if ( index < size ) {
-	out[index] = lhs[index] < rhs[index];
+	out[index] = lhs[index] >= rhs[index];
     }
 }
 
-__global__ void wrapCollOfScalar::comp_collLTscal_kernel( bool* out,
+__global__ void wrapCollOfScalar::comp_collGEscal_kernel( bool* out,
 							  const double* lhs,
 							  const double rhs,
 							  const int size)
 {
     int index = threadIdx.x + blockIdx.x*blockDim.x;
     if ( index < size ) {
-	out[index] = lhs[index] < rhs;
+	out[index] = lhs[index] >= rhs;
     }
 }
 
-__global__ void wrapCollOfScalar::comp_scalLTcoll_kernel( bool* out,
+__global__ void wrapCollOfScalar::comp_scalGEcoll_kernel( bool* out,
 							  const double lhs,
 							  const double* rhs,
 							  const int size) 
 {
     int index = threadIdx.x + blockIdx.x*blockDim.x;
     if ( index < size ) {
-	out[index] = lhs < rhs[index];
+	out[index] = lhs >= rhs[index];
     }
 }
 

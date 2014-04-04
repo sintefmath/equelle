@@ -276,46 +276,46 @@ namespace equelleCUDA {
 						const double* rhs,
 						const int size);
 	
-	//! CUDA kernel for less than operation
+	//! CUDA kernel for greater than or equal operation
 	/*!
 	  Compare elements in lhs with elements in rhs and return a Collection Of Booleans.
-	  \code out[i] = lhs[i] < rhs[i] \endcode
+	  \code out[i] = lhs[i] >= rhs[i] \endcode
 	  \param[out] out The resulting collection of booleans
 	  \param[in] lhs Left hand side values
 	  \param[in] rhs Right hand side values
 	  \param[in] size Size of the arrays
 	*/
-	__global__ void comp_collLTcoll_kernel( bool* out,
+	__global__ void comp_collGEcoll_kernel( bool* out,
 						const double* lhs,
 						const double* rhs,
 						const int size);
 	
-	//! CUDA kernel for less than scalar operation
+	//! CUDA kernel for greater than or equal scalar operation
 	/*!
 	  Compare elements in lhs with a single scalar rhs and return a 
 	  Collection of Booleans.
-	  \code out[i] = lhs[i] < rhs \endcode
+	  \code out[i] = lhs[i] >= rhs \endcode
 	  \param[out] out The resulting collection of booleans
 	  \param[in] lhs Left hand side collection of scalars
 	  \param[in] rhs Right hand side scalar.
 	  \param[in] size Size of the lhs array.
 	*/
-	__global__ void comp_collLTscal_kernel( bool* out,
+	__global__ void comp_collGEscal_kernel( bool* out,
 						const double* lhs,
 						const double rhs,
 						const int size);
 	
-	//! CUDA kernel for scalar less than collection operation
+	//! CUDA kernel for scalar greater than or equal collection operation
 	/*!
 	  Compare scalar lhs with elements in rhs and return a 
 	  Collection Of Booleans.
-	  \code out[i] = lhs < rhs[i] \endcode
+	  \code out[i] = lhs >= rhs[i] \endcode
 	  \param[out] out The resulting collection of booleans
 	  \param[in] lhs Left hand side scalar
 	  \param[in] rhs Right hand side collection of scalar
 	  \param[in] size Size of rhs.
 	*/
-	__global__ void comp_scalLTcoll_kernel( bool* out,
+	__global__ void comp_scalGEcoll_kernel( bool* out,
 						const double lhs,
 						const double* rhs,
 						const int size);
@@ -450,6 +450,28 @@ namespace equelleCUDA {
       \code out[i] = lhs < rhs[i] \endcode
     */
     CollOfBool operator<(const Scalar lhs, const CollOfScalar& rhs);
+
+
+    /*!
+      Greater than or equal operator
+      \return Collection of Booleans consisting of
+      \code out[i] = lhs[i] >= rhs[i] \endcode
+    */
+    CollOfBool operator>=(const CollOfScalar& lhs, const CollOfScalar& rhs);
+
+    /*!
+      Greater than or equal operator comparing collection to scalar
+      \return Collection of Booleans consisting of
+      \code out[i] = lhs[i] >= rhs \endcode
+    */
+    CollOfBool operator>=(const CollOfScalar& lhs, const Scalar rhs);
+
+    /*!
+      Greater than or equal operator comparing scalar to collection.
+      \return Collection of Booleans consisting of
+      \code out[i] = lhs >= rhs[i] \endcode
+    */
+    CollOfBool operator>=(const Scalar lhs, const CollOfScalar& rhs);
 
 
 
