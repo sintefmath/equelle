@@ -406,6 +406,22 @@ CollOfBool equelleCUDA::operator>=(const Scalar lhs, const CollOfScalar& rhs) {
 }
 
 
+// <= 
+CollOfBool equelleCUDA::operator<=(const CollOfScalar& lhs, const CollOfScalar& rhs) {
+    // if   a <= b   then b >= a
+    return rhs >= lhs;
+}
+
+CollOfBool equelleCUDA::operator<=(const CollOfScalar& lhs, const Scalar rhs) {
+    // if  a <= b  then   b >= a
+    return rhs >= lhs;
+}
+
+CollOfBool equelleCUDA::operator<=(const Scalar lhs, const CollOfScalar& rhs) {
+    // if   a <= b   then b >= a
+    return rhs >= lhs;
+}
+
 
 
 /////////////////////////////////////////////////////////////////////////////////

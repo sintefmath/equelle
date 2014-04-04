@@ -474,6 +474,29 @@ namespace equelleCUDA {
     CollOfBool operator>=(const Scalar lhs, const CollOfScalar& rhs);
 
 
+   /*!
+      Less than or equal operator
+      \return Collection of Booleans consisting of
+      \code out[i] = lhs[i] <= rhs[i] \endcode
+    */
+    CollOfBool operator<=(const CollOfScalar& lhs, const CollOfScalar& rhs);
+
+    /*!
+      Less than or equal operator comparing collection to scalar
+      \return Collection of Booleans consisting of
+      \code out[i] = lhs[i] <= rhs \endcode
+    */
+    CollOfBool operator<=(const CollOfScalar& lhs, const Scalar rhs);
+
+    /*!
+      Less than or equal operator comparing scalar to collection.
+      \return Collection of Booleans consisting of
+      \code out[i] = lhs <= rhs[i] \endcode
+    */
+    CollOfBool operator<=(const Scalar lhs, const CollOfScalar& rhs);
+
+
+
 
     //! CollOfBool -> std::vector<bool>
     /*!
