@@ -319,7 +319,39 @@ namespace equelleCUDA {
 						const double lhs,
 						const double* rhs,
 						const int size);
+
+
+	//! CUDA kernel for collection equal collection operation
+	/*!
+	  Compare elements in lhs with elements in rhs and return a
+	  Collection Of Booleans.
+	  \code out[i] = lhs[i] == rhs[i] \endcode
+	  \param[out] The resulting collection of booleans
+	  \param[in] lhs Left hand side collection
+	  \param[in] rhs Right hand side collection
+	  \param[in] size Size of the collections.
+	*/
+	__global__ void comp_collEQcoll_kernel( bool* out,
+						const double* lhs,
+						const double* rhs,
+						const int size);
 	
+	//! CUDA kernel for collection equal scalar operation
+	/*!
+	  Compare elements in lhs with the scalar rhs and return a
+	  Collection Of Booleans.
+	  \code out[i] = lhs[i] == rhs \endcode
+	  \param[out] The resulting collection of booleans
+	  \param[in] lhs Left hand side collection
+	  \param[in] rhs Right hand side scalar
+	  \param[in] size Size of the collections.
+	*/
+	__global__ void comp_collEQscal_kernel( bool* out,
+						const double* lhs,
+						const double rhs,
+						const int size);
+
+
     } // namespace wrapCollOfScalar
 	
 	
@@ -495,6 +527,28 @@ namespace equelleCUDA {
     */
     CollOfBool operator<=(const Scalar lhs, const CollOfScalar& rhs);
 
+
+    // OPERATOR == 
+    /*!
+      Equal operator comparing two collections
+      \return Collection of Booleans consisting of
+      \code out[i] = lhs[i] == rhs[i] \endcode
+    */
+    CollOfBool operator==(const CollOfScalar& lhs, const CollOfScalar& rhs);
+
+    /*!
+      Equal operator comparing collection with scalar
+      \return Collection of Booleans consisting of
+      \code out[i] = lhs[i] == rhs \endcode
+    */
+    CollOfBool operator==(const CollOfScalar& lhs, const Scalar rhs);
+    
+    /*!
+      Equal operator comparing scalar with collection
+      \return Collection of Booleans consisting of
+      \code out[i] = lhs == rhs[i] \endcode
+    */
+    CollOfBool operator==(const Scalar lhs, const CollOfScalar& rhs);
 
 
 
