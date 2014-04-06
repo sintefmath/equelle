@@ -454,7 +454,59 @@ BOOST_AUTO_TEST_CASE( equal_scalar_test )
 }
 
 
+// != tests
+BOOST_AUTO_TEST_CASE( inequal_test )
+{
+    int size = ALL_SIZES;
+    std::vector<double> a(size, 0);
+    std::vector<double> b(size, 0);
+    std::vector<bool> lf(size, false);
+    int equals = 0;
+    while (equals == 0) {
+	for (int i = 0; i < size; ++i ) {
+	    a[i] = rand() % 37;
+	    b[i] = rand() % 37;
+	    lf[i] = ( a[i] != b[i] );
+	    if ( !lf[i] ) {
+		equals++;
+	    }
+	}
+	std::cout << "Coll != Coll: " << equals << std::endl;
+    }
+    CollOfScalar a_col(a);
+    CollOfScalar b_col(b);
+    CollOfBool cob = (a_col != b_col);
+    std::vector<bool> res = cob_to_std(cob);
+    compareBools( lf, res);
+}
 
+BOOST_AUTO_TEST_CASE( inequal_scalar_test )
+{
+    int size = ALL_SIZES;
+    std::vector<double> a(size, 0);
+    double b = rand() % 37;
+    std::vector<bool> lf(size, false);
+    int equals = 0;
+    while (equals == 0) {
+	for (int i = 0; i < size; ++i ) {
+	    a[i] = rand() % 37;
+	    lf[i] = ( a[i] != b );
+	    if ( !lf[i] ) {
+		equals++;
+	    }
+	}
+	std::cout << "Coll != Scal: " << equals << std::endl;
+    }
+    CollOfScalar a_col(a);
+    CollOfBool cob = (a_col != b);
+    std::vector<bool> res = cob_to_std(cob);
+    compareBools( lf, res);
+    
+    // Add the opposite test here as well:
+    CollOfBool cob_opposite = (b != a_col);
+    std::vector<bool> res_opposite = cob_to_std(cob_opposite);
+    compareBools( lf, res_opposite);
+}
 
 
 BOOST_AUTO_TEST_SUITE_END();
