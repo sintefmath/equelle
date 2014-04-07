@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <fstream>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <opm/core/grid/GridManager.hpp>
 #include <opm/core/grid.h>
@@ -63,10 +64,14 @@ public:
     CollOfScalar allGather( const CollOfScalar& coll );
 
     ///@}
+
+    void log( std::string s );
+
 private:
     std::unique_ptr<Zoltan> zoltan;
     std::unique_ptr<equelle::EquelleRuntimeCPU> runtime;
     Opm::parameter::ParameterGroup param_;
+    std::ofstream logstream;
 
 
     void initializeZoltan();
