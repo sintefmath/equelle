@@ -1,3 +1,4 @@
+project( Equelle_examples )
 cmake_minimum_required(VERSION 2.8)
 
 # We need C++11 features.
