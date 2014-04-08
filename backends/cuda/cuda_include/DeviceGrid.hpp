@@ -357,9 +357,9 @@ namespace equelleCUDA
 
     // ------------- END OF CLASS ------------------------------------------
 
-
-
-
+    namespace wrapDeviceGrid {
+	
+	
     //! Functor checking if an input is equal to its stored value.
     /*! 
       This functor is used together with iterators for evaluating a function to all
@@ -600,6 +600,9 @@ namespace equelleCUDA
 				       const double* all_face_normals,
 				       const int num_vectors,
 				       const int dimensions);
+
+
+    } // namespace wrapDeviceGrid
 
 
 } // namespace equelleCUDA

@@ -25,7 +25,7 @@
 // Implementation of the class CollOfScalar
 
 using namespace equelleCUDA;
-
+using namespace wrapCollOfScalar;
 
 CollOfScalar::CollOfScalar() 
     : size_(0), 
@@ -336,6 +336,8 @@ CollOfScalar equelleCUDA::operator-(const CollOfScalar& arg) {
     return -1.0*arg;
 }
 
+
+//  >
 CollOfBool equelleCUDA::operator>(const CollOfScalar& lhs, const CollOfScalar& rhs) {
     CollOfBool out(lhs.size());
     bool* out_ptr = thrust::raw_pointer_cast( &out[0] );
@@ -352,20 +354,116 @@ CollOfBool equelleCUDA::operator>(const CollOfScalar& lhs, const Scalar rhs) {
     return out;
 }
 
-CollOfBool equelleCUDA::operator<(const CollOfScalar& lhs, const CollOfScalar& rhs) {
-    CollOfBool out(lhs.size());
+CollOfBool equelleCUDA::operator>(const Scalar lhs, const CollOfScalar& rhs) {
+    CollOfBool out(rhs.size());
     bool* out_ptr = thrust::raw_pointer_cast( &out[0] );
-    kernelSetup s = lhs.setup();
-    comp_collLTcoll_kernel<<<s.grid,s.block>>>(out_ptr, lhs.data(), rhs.data(), lhs.size());
+    kernelSetup s = rhs.setup();
+    comp_scalGTcoll_kernel<<<s.grid, s.block>>>(out_ptr, lhs, rhs.data(), rhs.size());
     return out;
 }
 
+
+// <
+CollOfBool equelleCUDA::operator<(const CollOfScalar& lhs, const CollOfScalar& rhs) {
+    // if   a < b   then b > a
+    return rhs > lhs;
+}
+
 CollOfBool equelleCUDA::operator<(const CollOfScalar& lhs, const Scalar rhs) {
+    // if  a < b  then   b > a
+    return rhs > lhs;
+}
+
+CollOfBool equelleCUDA::operator<(const Scalar lhs, const CollOfScalar& rhs) {
+    // if   a < b   then b > a
+    return rhs > lhs;
+}
+
+
+// >=
+CollOfBool equelleCUDA::operator>=(const CollOfScalar& lhs, const CollOfScalar& rhs) {
     CollOfBool out(lhs.size());
     bool* out_ptr = thrust::raw_pointer_cast( &out[0] );
     kernelSetup s = lhs.setup();
-    comp_collLTscal_kernel<<<s.grid, s.block>>>(out_ptr, lhs.data(), rhs, lhs.size());
+    comp_collGEcoll_kernel<<<s.grid,s.block>>>(out_ptr, lhs.data(), rhs.data(), lhs.size());
     return out;
+}
+
+CollOfBool equelleCUDA::operator>=(const CollOfScalar& lhs, const Scalar rhs) {
+    CollOfBool out(lhs.size());
+    bool* out_ptr = thrust::raw_pointer_cast( &out[0] );
+    kernelSetup s = lhs.setup();
+    comp_collGEscal_kernel<<<s.grid, s.block>>>(out_ptr, lhs.data(), rhs, lhs.size());
+    return out;
+}
+
+CollOfBool equelleCUDA::operator>=(const Scalar lhs, const CollOfScalar& rhs) {
+    CollOfBool out(rhs.size());
+    bool* out_ptr = thrust::raw_pointer_cast( &out[0] );
+    kernelSetup s = rhs.setup();
+    comp_scalGEcoll_kernel<<<s.grid, s.block>>>(out_ptr, lhs, rhs.data(), rhs.size());
+    return out;
+}
+
+
+// <= 
+CollOfBool equelleCUDA::operator<=(const CollOfScalar& lhs, const CollOfScalar& rhs) {
+    // if   a <= b   then b >= a
+    return rhs >= lhs;
+}
+
+CollOfBool equelleCUDA::operator<=(const CollOfScalar& lhs, const Scalar rhs) {
+    // if  a <= b  then   b >= a
+    return rhs >= lhs;
+}
+
+CollOfBool equelleCUDA::operator<=(const Scalar lhs, const CollOfScalar& rhs) {
+    // if   a <= b   then b >= a
+    return rhs >= lhs;
+}
+
+
+// ==
+CollOfBool equelleCUDA::operator==(const CollOfScalar& lhs, const CollOfScalar& rhs) {
+    CollOfBool out(lhs.size());
+    bool *out_ptr = thrust::raw_pointer_cast( &out[0] );
+    kernelSetup s = lhs.setup();
+    comp_collEQcoll_kernel<<<s.grid, s.block>>>(out_ptr, lhs.data(), rhs.data(), lhs.size());
+    return out;
+}
+
+CollOfBool equelleCUDA::operator==(const CollOfScalar& lhs, const Scalar rhs) {
+    CollOfBool out(lhs.size());
+    bool *out_ptr = thrust::raw_pointer_cast( &out[0] );
+    kernelSetup s = lhs.setup();
+    comp_collEQscal_kernel<<<s.grid, s.block>>>(out_ptr, lhs.data(), rhs, lhs.size());
+    return out;
+}
+
+CollOfBool equelleCUDA::operator==(const Scalar lhs, const CollOfScalar& rhs) {
+    return (rhs == lhs);
+}
+
+
+// !=
+CollOfBool equelleCUDA::operator!=(const CollOfScalar& lhs, const CollOfScalar& rhs) {
+    CollOfBool out(lhs.size());
+    bool *out_ptr = thrust::raw_pointer_cast( &out[0] );
+    kernelSetup s = lhs.setup();
+    comp_collNEcoll_kernel<<<s.grid, s.block>>>(out_ptr, lhs.data(), rhs.data(), lhs.size());
+    return out;
+}
+
+CollOfBool equelleCUDA::operator!=(const CollOfScalar& lhs, const Scalar rhs) {
+    CollOfBool out(lhs.size());
+    bool *out_ptr = thrust::raw_pointer_cast( &out[0] );
+    kernelSetup s = lhs.setup();
+    comp_collNEscal_kernel<<<s.grid, s.block>>>(out_ptr, lhs.data(), rhs, lhs.size());
+    return out;
+}
+
+CollOfBool equelleCUDA::operator!=(const Scalar lhs, const CollOfScalar& rhs) {
+    return (rhs != lhs);
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -374,8 +472,7 @@ CollOfBool equelleCUDA::operator<(const CollOfScalar& lhs, const Scalar rhs) {
 
 
 
-__global__ void equelleCUDA::minus_kernel(double* out, const double* rhs, const int size) {
-    
+__global__ void wrapCollOfScalar::minus_kernel(double* out, const double* rhs, const int size) {
     int index = threadIdx.x + blockDim.x*blockIdx.x;
     if ( index < size ) {
 	out[index] = out[index] - rhs[index];
@@ -383,28 +480,28 @@ __global__ void equelleCUDA::minus_kernel(double* out, const double* rhs, const 
 }
 
 
-__global__ void equelleCUDA::plus_kernel(double* out, const double* rhs, const int size) {
+__global__ void wrapCollOfScalar::plus_kernel(double* out, const double* rhs, const int size) {
     int index = threadIdx.x + blockDim.x*blockIdx.x;
     if( index < size ) {
 	out[index] = out[index] + rhs[index];
     }
 }
 
-__global__ void equelleCUDA::multiplication_kernel(double* out, const double* rhs, const int size) {
+__global__ void wrapCollOfScalar::multiplication_kernel(double* out, const double* rhs, const int size) {
     int index = threadIdx.x + blockDim.x*blockIdx.x;
     if ( index < size ) {
 	out[index] = out[index] * rhs[index];
     }
 }
 
-__global__ void equelleCUDA::division_kernel(double* out, const double* rhs, const int size) {
+__global__ void wrapCollOfScalar::division_kernel(double* out, const double* rhs, const int size) {
     int index = threadIdx.x + blockDim.x*blockIdx.x;
     if ( index < size ) {
 	out[index] = out[index] / rhs[index];
     }
 }
 
-__global__ void equelleCUDA::multScalCollection_kernel(double* out, const double scal,
+__global__ void wrapCollOfScalar::multScalCollection_kernel(double* out, const double scal,
 						       const int size) {
     int index = threadIdx.x + blockDim.x*blockIdx.x;
     if ( index < size ) {
@@ -412,7 +509,7 @@ __global__ void equelleCUDA::multScalCollection_kernel(double* out, const double
     }
 }
 
-__global__ void equelleCUDA::divScalCollection_kernel(double* out, const double scal,
+__global__ void wrapCollOfScalar::divScalCollection_kernel(double* out, const double scal,
 						     const int size) {
     int index = threadIdx.x + blockDim.x*blockIdx.x;
     if ( index < size ) {
@@ -420,10 +517,10 @@ __global__ void equelleCUDA::divScalCollection_kernel(double* out, const double 
     }
 }
 						   
-__global__ void equelleCUDA::comp_collGTcoll_kernel( bool* out,
-						     const double* lhs,
-						     const double* rhs,
-						     const int size)
+__global__ void wrapCollOfScalar::comp_collGTcoll_kernel( bool* out,
+							  const double* lhs,
+							  const double* rhs,
+							  const int size)
 {
     int index = threadIdx.x + blockIdx.x * blockDim.x;
     if ( index < size ) {
@@ -431,10 +528,10 @@ __global__ void equelleCUDA::comp_collGTcoll_kernel( bool* out,
     }
 }
 
-__global__ void equelleCUDA::comp_collGTscal_kernel( bool* out,
-						     const double* lhs,
-						     const double rhs,
-						     const int size)
+__global__ void wrapCollOfScalar::comp_collGTscal_kernel( bool* out,
+							  const double* lhs,
+							  const double rhs,
+							  const int size)
 {
     int index = threadIdx.x + blockIdx.x*blockDim.x;
     if ( index < size ) {
@@ -442,25 +539,93 @@ __global__ void equelleCUDA::comp_collGTscal_kernel( bool* out,
     }
 }
 
-__global__ void equelleCUDA::comp_collLTcoll_kernel( bool* out,
-						     const double* lhs,
-						     const double* rhs,
-						     const int size)
+__global__ void wrapCollOfScalar::comp_scalGTcoll_kernel( bool* out,
+							  const double lhs,
+							  const double* rhs,
+							  const int size)
 {
     int index = threadIdx.x + blockIdx.x*blockDim.x;
     if ( index < size ) {
-	out[index] = lhs[index] < rhs[index];
+	out[index] = lhs > rhs[index];
     }
 }
 
-__global__ void equelleCUDA::comp_collLTscal_kernel( bool* out,
-						     const double* lhs,
-						     const double rhs,
-						     const int size)
+__global__ void wrapCollOfScalar::comp_collGEcoll_kernel( bool* out,
+							  const double* lhs,
+							  const double* rhs,
+							  const int size)
 {
     int index = threadIdx.x + blockIdx.x*blockDim.x;
     if ( index < size ) {
-	out[index] = lhs[index] < rhs;
+	out[index] = lhs[index] >= rhs[index];
+    }
+}
+
+__global__ void wrapCollOfScalar::comp_collGEscal_kernel( bool* out,
+							  const double* lhs,
+							  const double rhs,
+							  const int size)
+{
+    int index = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( index < size ) {
+	out[index] = lhs[index] >= rhs;
+    }
+}
+
+__global__ void wrapCollOfScalar::comp_scalGEcoll_kernel( bool* out,
+							  const double lhs,
+							  const double* rhs,
+							  const int size) 
+{
+    int index = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( index < size ) {
+	out[index] = lhs >= rhs[index];
+    }
+}
+
+
+__global__ void wrapCollOfScalar::comp_collEQcoll_kernel( bool* out,
+							  const double* lhs,
+							  const double* rhs,
+							  const int size)
+{
+    int index = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( index < size ) {
+	out[index] = ( lhs[index] == rhs[index] );
+    }
+}
+							
+__global__ void wrapCollOfScalar::comp_collEQscal_kernel( bool* out,
+							  const double* lhs,
+							  const double rhs,
+							  const int size)
+{
+    int index = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( index < size ) {
+	out[index] = ( lhs[index] == rhs );
+    }
+}
+							
+
+__global__ void wrapCollOfScalar::comp_collNEcoll_kernel( bool* out,
+							  const double* lhs,
+							  const double* rhs,
+							  const int size)
+{
+    int index = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( index < size ) {
+	out[index] = ( lhs[index] != rhs[index] );
+    }
+}
+							
+__global__ void wrapCollOfScalar::comp_collNEscal_kernel( bool* out,
+							  const double* lhs,
+							  const double rhs,
+							  const int size)
+{
+    int index = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( index < size ) {
+	out[index] = ( lhs[index] != rhs );
     }
 }
 

@@ -32,6 +32,7 @@
 
 
 using namespace equelleCUDA;
+using namespace wrapDeviceGrid;
 
 
 // --------------------------------------------------- //
@@ -551,11 +552,11 @@ CollOfVector DeviceGrid::centroid(const thrust::device_vector<int>& indices,
 	if ( codim == 1) {
 	    all_centroids = face_centroids_;
 	}
-	equelleCUDA::centroidKernel<<<s.grid, s.block>>>( out.data(),
-							  indices_ptr,
-							  all_centroids,
-							  out.numVectors(),
-							  dimensions_);
+	centroidKernel<<<s.grid, s.block>>>( out.data(),
+					     indices_ptr,
+					     all_centroids,
+					     out.numVectors(),
+					     dimensions_);
 	return out;
     }
 }
@@ -578,11 +579,11 @@ CollOfVector DeviceGrid::normal( const CollOfFace& faces) const {
 	// CollOfVector::block() and grid() assumes one thread per double value
 	// Our kernel use one thread per vector, so we overshoot a bit.
 	kernelSetup s = out.element_setup();
-	equelleCUDA::faceNormalsKernel<<<s.grid, s.block>>>(out.data(),
-							    faces.raw_pointer(),
-							    face_normals_,
-							    out.numVectors(),
-							    dimensions_);
+	faceNormalsKernel<<<s.grid, s.block>>>(out.data(),
+					       faces.raw_pointer(),
+					       face_normals_,
+					       out.numVectors(),
+					       dimensions_);
     }
     return out;
 }
@@ -625,11 +626,13 @@ void DeviceGrid::checkError_(const std::string& msg) const {
 }
 
 
+
+
 // ----------- GRID KERNELS -------------------------
 
-__global__ void equelleCUDA::boundaryFacesKernel( int* b_faces,
-						  const int* face_cells,
-						  const int number_of_faces) 
+__global__ void wrapDeviceGrid::boundaryFacesKernel( int* b_faces,
+						     const int* face_cells,
+						     const int number_of_faces) 
 {
     int face = threadIdx.x + blockIdx.x*blockDim.x;
     if (face < number_of_faces) {
@@ -640,9 +643,9 @@ __global__ void equelleCUDA::boundaryFacesKernel( int* b_faces,
 }
 
 
-__global__ void equelleCUDA::interiorFacesKernel( int* i_faces,
-						  const int* face_cells,
-						  const int number_of_faces)
+__global__ void wrapDeviceGrid::interiorFacesKernel( int* i_faces,
+						     const int* face_cells,
+						     const int number_of_faces)
 {
     int face = threadIdx.x + blockIdx.x*blockDim.x;
     if ( face < number_of_faces) {
@@ -653,11 +656,11 @@ __global__ void equelleCUDA::interiorFacesKernel( int* i_faces,
 }
 
 
-__global__ void equelleCUDA::boundaryCellsKernel(int* b_cells,
-						 const int number_of_cells,
-						 const int* cell_facepos,
-						 const int* cell_faces,
-						 const int* face_cells)
+__global__ void wrapDeviceGrid::boundaryCellsKernel(int* b_cells,
+						    const int number_of_cells,
+						    const int* cell_facepos,
+						    const int* cell_faces,
+						    const int* face_cells)
 {
     int cell = threadIdx.x + blockIdx.x*blockDim.x;
     if ( cell < number_of_cells) {
@@ -676,11 +679,11 @@ __global__ void equelleCUDA::boundaryCellsKernel(int* b_cells,
 }
 
 
-__global__ void equelleCUDA::interiorCellsKernel( int* i_cells,
-						  const int number_of_cells,
-						  const int* cell_facepos,
-						  const int* cell_faces,
-						  const int* face_cells)
+__global__ void wrapDeviceGrid::interiorCellsKernel( int* i_cells,
+						     const int number_of_cells,
+						     const int* cell_facepos,
+						     const int* cell_faces,
+						     const int* face_cells)
 {
     int cell = threadIdx.x + blockIdx.x*blockDim.x;
     if ( cell < number_of_cells) {
@@ -700,9 +703,9 @@ __global__ void equelleCUDA::interiorCellsKernel( int* i_cells,
 }
 
 
-__global__ void equelleCUDA::firstCellKernel( int* first,
-					      const int number_of_faces,
-					      const int* face_cells)
+__global__ void wrapDeviceGrid::firstCellKernel( int* first,
+						 const int number_of_faces,
+						 const int* face_cells)
 {
     // For face f:
     //     first(f) = face_cells[2*f]
@@ -712,10 +715,10 @@ __global__ void equelleCUDA::firstCellKernel( int* first,
     }
 }
 
-__global__ void equelleCUDA::firstCellSubsetKernel( int* first,
-						    const int number_of_faces,
-						    const int* face_index,
-						    const int* face_cells)
+__global__ void wrapDeviceGrid::firstCellSubsetKernel( int* first,
+						       const int number_of_faces,
+						       const int* face_index,
+						       const int* face_cells)
 {
     // For thread i:
     //      first(i) = face_cells[2*face_index[i]]
@@ -725,9 +728,9 @@ __global__ void equelleCUDA::firstCellSubsetKernel( int* first,
     }
 }
 
-__global__ void equelleCUDA::secondCellKernel( int* second,
-					       const int number_of_faces,
-					       const int* face_cells)
+__global__ void wrapDeviceGrid::secondCellKernel( int* second,
+						  const int number_of_faces,
+						  const int* face_cells)
 {
     // For face f:
     //     second(f) = face_cells[2*f + 1]
@@ -737,10 +740,10 @@ __global__ void equelleCUDA::secondCellKernel( int* second,
     }
  }
 
-__global__ void equelleCUDA::secondCellSubsetKernel( int* second,
-						     const int number_of_faces,
-						     const int* face_index,
-						     const int* face_cells)
+__global__ void wrapDeviceGrid::secondCellSubsetKernel( int* second,
+							const int number_of_faces,
+							const int* face_index,
+							const int* face_cells)
 {
     // for thread i
     //     second[i] = face_cells[2*face_index[i] + 1]
@@ -754,10 +757,10 @@ __global__ void equelleCUDA::secondCellSubsetKernel( int* second,
 // NORM KERNEL
 
 
-__global__ void equelleCUDA::normKernel( double* out,
-					 const int* indices,
-					 const int out_size,
-					 const double* norm_values) 
+__global__ void wrapDeviceGrid::normKernel( double* out,
+					    const int* indices,
+					    const int out_size,
+					    const double* norm_values) 
 {
     int index = threadIdx.x + blockIdx.x*blockDim.x;
     if ( index < out_size ) {
@@ -767,11 +770,11 @@ __global__ void equelleCUDA::normKernel( double* out,
 
 // CENTROID KERNEL
 
-__global__ void equelleCUDA::centroidKernel( double* out,
-					     const int* subset_indices,
-					     const double* all_centroids,
-					     const int num_vectors,
-					     const int dimensions)
+__global__ void wrapDeviceGrid::centroidKernel( double* out,
+						const int* subset_indices,
+						const double* all_centroids,
+						const int num_vectors,
+						const int dimensions)
 {
     // EASY IMPLEMENTATION:
     // One thread for each vector
@@ -788,11 +791,11 @@ __global__ void equelleCUDA::centroidKernel( double* out,
 
 
 // FACE NORMALS
-__global__ void equelleCUDA::faceNormalsKernel( double* out,
-						const int* faces,
-						const double* all_face_normals,
-						const int num_vectors,
-						const int dimensions)
+__global__ void wrapDeviceGrid::faceNormalsKernel( double* out,
+						   const int* faces,
+						   const double* all_face_normals,
+						   const int num_vectors,
+						   const int dimensions)
 {
     // EASY IMPLEMENTATION
     // One thread for each vector

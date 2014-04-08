@@ -14,7 +14,7 @@
 #include "equelleTypedefs.hpp"
 
 using namespace equelleCUDA;
-
+using namespace wrapCollOfVector;
 
 CollOfVector::CollOfVector() 
     : elements_(),
@@ -93,11 +93,6 @@ double* CollOfVector::data() {
 }
 
 
-int CollOfVector::size() const {
-    return elements_.size();
-}
-
-
 int CollOfVector::dim() const {
     return dim_;
 }
@@ -106,7 +101,7 @@ int CollOfVector::numVectors() const {
     if ( dim_ == 0 ) {
 	OPM_THROW(std::runtime_error, "Calling numVectors() on a CollOfVector of dimension 0\n --> Dividing by zero!");
     }
-    return size()/dim_;
+    return elements_.size()/dim_;
 }
 
 int CollOfVector::numElements() const {
@@ -149,7 +144,7 @@ CollOfScalar CollOfVector::col(const int index) const {
     return out;
 }
 
-__global__ void equelleCUDA::collOfVectorOperatorIndexKernel( double* out,
+__global__ void wrapCollOfVector::collOfVectorOperatorIndexKernel( double* out,
 							      const double* vec,
 							      const int size_out,
 							      const int index,
@@ -166,7 +161,7 @@ __global__ void equelleCUDA::collOfVectorOperatorIndexKernel( double* out,
 
 // --------- NORM KERNEL ---------------------
 
-__global__ void equelleCUDA::normKernel( double* out,
+__global__ void wrapCollOfVector::normKernel( double* out,
 					 const double* vectors,
 					 const int numVectors,
 					 const int dim)
@@ -189,7 +184,7 @@ CollOfVector equelleCUDA::operator+(const CollOfVector& lhs, const CollOfVector&
 
     CollOfVector out = lhs;
     kernelSetup s = out.element_setup();
-    plus_kernel<<<s.grid, s.block>>>(out.data(), rhs.data(), out.size());
+    wrapCollOfScalar::plus_kernel<<<s.grid, s.block>>>(out.data(), rhs.data(), out.numElements());
     return out;
 }
 
@@ -197,6 +192,6 @@ CollOfVector equelleCUDA::operator+(const CollOfVector& lhs, const CollOfVector&
 CollOfVector equelleCUDA::operator-(const CollOfVector& lhs, const CollOfVector& rhs) {
     CollOfVector out = lhs;
     kernelSetup s = out.element_setup();
-    minus_kernel<<<s.grid, s.block>>>(out.data(), rhs.data(), out.size());
+    wrapCollOfScalar::minus_kernel<<<s.grid, s.block>>>(out.data(), rhs.data(), out.numElements());
     return out;
 }

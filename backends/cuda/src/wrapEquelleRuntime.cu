@@ -11,11 +11,12 @@
 #include "DeviceGrid.hpp"
 
 using namespace equelleCUDA;
+using namespace wrapEquelleRuntimeCUDA;
 
 // Have already performed a check on sizes.
-CollOfScalar equelleCUDA::trinaryIfWrapper( const CollOfBool& predicate,
-					    const CollOfScalar& iftrue,
-					    const CollOfScalar& iffalse) {
+CollOfScalar wrapEquelleRuntimeCUDA::trinaryIfWrapper( const CollOfBool& predicate,
+						       const CollOfScalar& iftrue,
+						       const CollOfScalar& iffalse) {
     CollOfScalar out(iftrue.size());
     const bool* pred_ptr = thrust::raw_pointer_cast( &predicate[0] );
     kernelSetup s = out.setup();
@@ -28,11 +29,11 @@ CollOfScalar equelleCUDA::trinaryIfWrapper( const CollOfBool& predicate,
 }
 
 
-__global__ void equelleCUDA::trinaryIfKernel( double* out,
-					      const bool* predicate,
-					      const double* iftrue,
-					      const double* iffalse,
-					      const int size) 
+__global__ void wrapEquelleRuntimeCUDA::trinaryIfKernel( double* out,
+							 const bool* predicate,
+							 const double* iftrue,
+							 const double* iffalse,
+							 const int size) 
 {
     int index = threadIdx.x + blockIdx.x * blockDim.x;
     if ( index < size) {
@@ -47,9 +48,11 @@ __global__ void equelleCUDA::trinaryIfKernel( double* out,
     }
 }
 
-thrust::device_vector<int> equelleCUDA::trinaryIfWrapper(const CollOfBool& predicate,
-							 const thrust::device_vector<int>& iftrue,
-							 const thrust::device_vector<int>& iffalse) {
+
+thrust::device_vector<int> 
+wrapEquelleRuntimeCUDA::trinaryIfWrapper(const CollOfBool& predicate,
+					 const thrust::device_vector<int>& iftrue,
+					 const thrust::device_vector<int>& iffalse) {
     thrust::device_vector<int> out(predicate.size());
     int* out_ptr = thrust::raw_pointer_cast( &out[0] );
     const bool* pred_ptr = thrust::raw_pointer_cast( &predicate[0] );
@@ -66,11 +69,11 @@ thrust::device_vector<int> equelleCUDA::trinaryIfWrapper(const CollOfBool& predi
 
 
 
-__global__ void equelleCUDA::trinaryIfKernel( int* out,
-					      const bool* predicate,
-					      const int* iftrue,
-					      const int* iffalse,
-					      const int size) {
+__global__ void wrapEquelleRuntimeCUDA::trinaryIfKernel( int* out,
+							 const bool* predicate,
+							 const int* iftrue,
+							 const int* iffalse,
+							 const int size) {
     int index = threadIdx.x + blockIdx.x*blockDim.x;
     if ( index < size ) {
 	int temp;
@@ -86,10 +89,10 @@ __global__ void equelleCUDA::trinaryIfKernel( int* out,
 
 
 // Gradient implementation:
-CollOfScalar equelleCUDA::gradientWrapper( const CollOfScalar& cell_scalarfield,
-					   const CollOfFace& int_faces,
-					   const int* face_cells) {
-
+CollOfScalar wrapEquelleRuntimeCUDA::gradientWrapper( const CollOfScalar& cell_scalarfield,
+						      const CollOfFace& int_faces,
+						      const int* face_cells) {
+    
     // Output will be a collection on interiorFaces:
     CollOfScalar out(int_faces.size());
     // out now have info of how big kernel we need as well.
@@ -104,11 +107,11 @@ CollOfScalar equelleCUDA::gradientWrapper( const CollOfScalar& cell_scalarfield,
 
 
 
-__global__ void equelleCUDA::gradientKernel( double* grad,
-					     const double* cell_vals,
-					     const int* int_faces,
-					     const int* face_cells,
-					     const int size_out)
+__global__ void wrapEquelleRuntimeCUDA::gradientKernel( double* grad,
+							const double* cell_vals,
+							const int* int_faces,
+							const int* face_cells,
+							const int size_out)
 {
     // Compute index in interior_faces:
     int i = threadIdx.x + blockIdx.x*blockDim.x;
@@ -124,8 +127,8 @@ __global__ void equelleCUDA::gradientKernel( double* grad,
 
 // ------------- DIVERGENCE --------------- //
 
-CollOfScalar equelleCUDA::divergenceWrapper( const CollOfScalar& fluxes,
-					     const DeviceGrid& dev_grid) {
+CollOfScalar wrapEquelleRuntimeCUDA::divergenceWrapper( const CollOfScalar& fluxes,
+							const DeviceGrid& dev_grid) {
 
     // output is of size number_of_cells:
     CollOfScalar out(dev_grid.number_of_cells());
@@ -143,13 +146,13 @@ CollOfScalar equelleCUDA::divergenceWrapper( const CollOfScalar& fluxes,
 }
 
 
-__global__ void equelleCUDA::divergenceKernel( double* div,
-					       const double* flux,
-					       const int* cell_facepos,
-					       const int* cell_faces,
-					       const int* face_cells,
-					       const int number_of_cells,
-					       const int number_of_faces) 
+__global__ void wrapEquelleRuntimeCUDA::divergenceKernel( double* div,
+							  const double* flux,
+							  const int* cell_facepos,
+							  const int* cell_faces,
+							  const int* face_cells,
+							  const int number_of_cells,
+							  const int number_of_faces) 
 {
     // My index: cell
     int cell = threadIdx.x + blockIdx.x*blockDim.x;
@@ -172,7 +175,7 @@ __global__ void equelleCUDA::divergenceKernel( double* div,
 
 
 // --------- SQRT ----------------
-CollOfScalar equelleCUDA::sqrtWrapper( const CollOfScalar& x) {
+CollOfScalar wrapEquelleRuntimeCUDA::sqrtWrapper( const CollOfScalar& x) {
     
     CollOfScalar out = x;
     kernelSetup s = out.setup();
@@ -181,7 +184,7 @@ CollOfScalar equelleCUDA::sqrtWrapper( const CollOfScalar& x) {
 }
 
 
-__global__ void equelleCUDA::sqrtKernel(double* out, const int size) {
+__global__ void wrapEquelleRuntimeCUDA::sqrtKernel(double* out, const int size) {
     int index = threadIdx.x + blockIdx.x * blockDim.x;
     if ( index < size ) {
 	out[index] = sqrt(out[index]);
