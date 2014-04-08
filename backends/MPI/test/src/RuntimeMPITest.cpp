@@ -38,3 +38,11 @@ BOOST_AUTO_TEST_CASE( allGather ) {
 
 }
 
+BOOST_AUTO_TEST_CASE( logging ) {    
+    equelle::RuntimeMPI runtime;
+
+    runtime.logstream << "Hello world\n";
+
+    BOOST_CHECK_MESSAGE( true, "If this compiles, the observeable state of the program is corret");
+}
+

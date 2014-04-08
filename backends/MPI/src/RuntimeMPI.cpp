@@ -1,5 +1,6 @@
 #include "equelle/RuntimeMPI.hpp"
 #include <iostream>
+#include <fstream>
 
 #include <mpi.h>
 
@@ -16,6 +17,12 @@
 
 
 namespace equelle {
+
+std::string logfilename() {
+    std::stringstream ss;
+    ss << "runtimempi-" << equelle::getMPIRank() << ".log";
+    return ss.str();
+}
 
 void RuntimeMPI::initializeZoltan()
 {
@@ -43,6 +50,7 @@ void RuntimeMPI::initializeGrid()
 }
 
 RuntimeMPI::RuntimeMPI()
+    : logstream( logfilename() )
 {     
     param_.disableOutput();
     initializeZoltan();
@@ -50,11 +58,15 @@ RuntimeMPI::RuntimeMPI()
 }
 
 RuntimeMPI::RuntimeMPI(const Opm::parameter::ParameterGroup &param)
-    : param_( param )
+    : logstream( logfilename() ),
+      param_( param )
+
 {
     param_.disableOutput();
     initializeZoltan();
     globalGrid.reset( equelle::createGridManager( param_ ) );
+
+    logstream << "Hello from rank " << equelle::getMPIRank() << std::endl;
 }
 
 RuntimeMPI::~RuntimeMPI()
@@ -65,6 +77,8 @@ RuntimeMPI::~RuntimeMPI()
 
 void RuntimeMPI::decompose()
 {
+    auto startTime = MPI_Wtime();
+
     auto zr = computePartition();
     std::vector<int> localCells;
 
@@ -80,6 +94,12 @@ void RuntimeMPI::decompose()
     subGrid = SubGridBuilder::build( globalGrid->c_grid(), localCells );
 
     runtime.reset( new EquelleRuntimeCPU( subGrid.c_grid, param_ ) );
+
+    auto endTime = MPI_Wtime();
+
+    logstream << "Decomposing took " << endTime-startTime << " seconds\n";
+    logstream << "subGrid.number_of_ghost_cells: " << subGrid.number_of_ghost_cells << std::endl;
+    logstream << "subGrid.global_cell.size(): " << subGrid.global_cell.size() << std::endl;
 }
 
 zoltanReturns RuntimeMPI::computePartition()
@@ -123,7 +143,7 @@ CollOfCell RuntimeMPI::allCells() const
     return runtime->allCells();
 }
 
-CollOfScalar RuntimeMPI::inputCollectionOfScalar(const String &name, const CollOfFace &coll)
+CollOfScalar RuntimeMPI::inputCollectionOfScalar(const String& /* name */, const CollOfFace & /* coll */ )
 {
     throw std::runtime_error("Not implemented");
 }
@@ -227,6 +247,5 @@ equelle::CollOfScalar equelle::RuntimeMPI::allGather( const equelle::CollOfScala
 
     return CollOfScalar( v_new );
 }
-
 
 } // namespace equlle

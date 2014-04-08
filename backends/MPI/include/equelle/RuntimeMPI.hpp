@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <fstream>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <opm/core/grid/GridManager.hpp>
 #include <opm/core/grid.h>
@@ -63,15 +64,22 @@ public:
     CollOfScalar allGather( const CollOfScalar& coll );
 
     ///@}
+
+    /**
+     *  @brief logstream is used for writing logging information to.
+     *
+     *  Logstream is useful in an MPI setting, in order to do debugging and
+     *  profiling on a per-node basis. Currently it is tied to a fstream
+     *  with the name runtimempi-<rank>.log. This fstream is set up in the constructor.
+     */
+    std::ofstream logstream;
 private:
     std::unique_ptr<Zoltan> zoltan;
     std::unique_ptr<equelle::EquelleRuntimeCPU> runtime;
     Opm::parameter::ParameterGroup param_;
 
-
     void initializeZoltan();
     void initializeGrid();
-
 };
 
 } // namespace equelle
