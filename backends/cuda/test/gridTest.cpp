@@ -5,6 +5,11 @@
 //using namespace boost::unit_test;
 
 // CUDA code and BOOST don't mix. Need to write tests without the BOOST framework.
+//
+// This file tests grid relations
+//    all, interior, boundary, first/second and trinary if. 
+//    on a 3*4 grid.
+
 
 #include <cuda.h>
 #include <cuda_runtime.h>

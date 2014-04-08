@@ -1,3 +1,11 @@
+
+// This file implements test for the following:
+// - CollOfScalar without arithmetics without use of AutoDiff
+// - CollOfScalar comparisons.
+
+
+
+
 #define BOOST_TEST_MODULE CollOfScalarClass
 
 #include <boost/test/included/unit_test.hpp>

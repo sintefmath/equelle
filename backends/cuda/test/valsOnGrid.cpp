@@ -1,4 +1,36 @@
 
+/* This file implements test for the following in given order:
+   
+   Since this file has become so large, here is a list of its content:
+// - main
+// - collOfScalarTest(&er): 
+        - Read input from file
+	- Extend test
+	- On
+	- Extend (subset -> subset)
+	- On (subset -> subset)
+	- Extend (from scalar)
+	- Volume / area
+	- Trinary if
+	- Gradient and Divergence
+	- Array of collections
+	- mutable (copy assignment)
+// - vector_test(&er):
+        - Indexing by [] operator
+	- arithmetics (+, -)
+	- copy assignment
+	- norm
+	- centroid
+	- sqrt(collOfScalar)
+	- Normals
+// - scalar_test(&er):
+        - inputScalarWithDefault
+// - inputDomainTest(&er):
+        - inputDomainSubsetOf
+	- On for CollOfIndices
+	- 
+*/
+
 #include <iostream>
 
 #include <vector>
