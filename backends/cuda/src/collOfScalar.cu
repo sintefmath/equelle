@@ -103,54 +103,31 @@ const CudaArray& CollOfScalar::val() const {
 CollOfScalar equelleCUDA::operator+ (const CollOfScalar& lhs,
 					 const CollOfScalar& rhs)
 {
-    CudaArray val = lhs.val_ + rhs.val_;
+    //CudaArray val = lhs.val_ + rhs.val_;
     std::cout << "pluss completed\n";
-    return CollOfScalar(val);
+    return CollOfScalar(lhs.val_ + rhs.val_);
 }
 
 
 
 CollOfScalar equelleCUDA::operator-(const CollOfScalar& lhs, const CollOfScalar& rhs) {
-
-    CollOfScalar out = lhs;
-    kernelSetup s = out.setup();
-    minus_kernel <<<s.grid, s.block>>>(out.data(), rhs.data(), out.size());
-    return out;
+    return CollOfScalar( lhs.val_ - rhs.val_);
 }
 
-//CollOfScalar equelleCUDA::operator+(const CollOfScalar& lhs, const CollOfScalar& rhs) {
-//
-//    CollOfScalar out = lhs;
-//    kernelSetup s = out.setup();
-//    plus_kernel <<<s.grid, s.block>>>(out.data(), rhs.data(), out.size());
-//    return out;
-//}
-
 CollOfScalar equelleCUDA::operator*(const CollOfScalar& lhs, const CollOfScalar& rhs) {
-
-    CollOfScalar out = lhs;
-    kernelSetup s = out.setup();
-    multiplication_kernel <<<s.grid, s.block>>>(out.data(), rhs.data(), out.size());
-    return out;
+    return CollOfScalar(lhs.val_ * rhs.val_);
 }
 
 CollOfScalar equelleCUDA::operator/(const CollOfScalar& lhs, const CollOfScalar& rhs) {
-
-    CollOfScalar out = lhs;
-    kernelSetup s = out.setup();
-    division_kernel <<<s.grid, s.block>>>(out.data(), rhs.data(), out.size());
-    return out;
+    return CollOfScalar(lhs.val_ / rhs.val_);
 }
 
 CollOfScalar equelleCUDA::operator*(const Scalar lhs, const CollOfScalar& rhs) {
-    CollOfScalar out = rhs;
-    kernelSetup s = out.setup();
-    multScalCollection_kernel<<<s.grid,s.block>>>(out.data(), lhs, out.size());
-    return out;
+    return CollOfScalar( lhs * rhs.val_);
 }
 
 CollOfScalar equelleCUDA::operator*(const CollOfScalar& lhs, const Scalar rhs) {
-    return (rhs * lhs);
+    return ( rhs * lhs);
 }
 
 CollOfScalar equelleCUDA::operator/(const CollOfScalar& lhs, const Scalar rhs) {
@@ -158,10 +135,7 @@ CollOfScalar equelleCUDA::operator/(const CollOfScalar& lhs, const Scalar rhs) {
 }
 
 CollOfScalar equelleCUDA::operator/(const Scalar lhs, const CollOfScalar& rhs) {
-    CollOfScalar out = rhs;
-    kernelSetup s = out.setup();
-    divScalCollection_kernel<<<s.grid,s.block>>>(out.data(), lhs, out.size());
-    return out;
+    return CollOfScalar( lhs / rhs.val_ );
 }
 
 CollOfScalar equelleCUDA::operator-(const CollOfScalar& arg) {
@@ -171,27 +145,15 @@ CollOfScalar equelleCUDA::operator-(const CollOfScalar& arg) {
 
 //  >
 CollOfBool equelleCUDA::operator>(const CollOfScalar& lhs, const CollOfScalar& rhs) {
-    CollOfBool out(lhs.size());
-    bool* out_ptr = thrust::raw_pointer_cast( &out[0] );
-    kernelSetup s = lhs.setup();
-    comp_collGTcoll_kernel<<<s.grid,s.block>>>(out_ptr, lhs.data(), rhs.data(), lhs.size());
-    return out;
+    return ( lhs.val_ > rhs.val_ );
 }
 
 CollOfBool equelleCUDA::operator>(const CollOfScalar& lhs, const Scalar rhs) {
-    CollOfBool out(lhs.size());
-    bool* out_ptr = thrust::raw_pointer_cast( &out[0] );
-    kernelSetup s = lhs.setup();
-    comp_collGTscal_kernel<<<s.grid, s.block>>>(out_ptr, lhs.data(), rhs, lhs.size());
-    return out;
+    return ( lhs.val_ > rhs );
 }
 
 CollOfBool equelleCUDA::operator>(const Scalar lhs, const CollOfScalar& rhs) {
-    CollOfBool out(rhs.size());
-    bool* out_ptr = thrust::raw_pointer_cast( &out[0] );
-    kernelSetup s = rhs.setup();
-    comp_scalGTcoll_kernel<<<s.grid, s.block>>>(out_ptr, lhs, rhs.data(), rhs.size());
-    return out;
+    return ( lhs > rhs.val_ );
 }
 
 
@@ -214,27 +176,15 @@ CollOfBool equelleCUDA::operator<(const Scalar lhs, const CollOfScalar& rhs) {
 
 // >=
 CollOfBool equelleCUDA::operator>=(const CollOfScalar& lhs, const CollOfScalar& rhs) {
-    CollOfBool out(lhs.size());
-    bool* out_ptr = thrust::raw_pointer_cast( &out[0] );
-    kernelSetup s = lhs.setup();
-    comp_collGEcoll_kernel<<<s.grid,s.block>>>(out_ptr, lhs.data(), rhs.data(), lhs.size());
-    return out;
+    return ( lhs.val_ >= rhs.val_ );
 }
 
 CollOfBool equelleCUDA::operator>=(const CollOfScalar& lhs, const Scalar rhs) {
-    CollOfBool out(lhs.size());
-    bool* out_ptr = thrust::raw_pointer_cast( &out[0] );
-    kernelSetup s = lhs.setup();
-    comp_collGEscal_kernel<<<s.grid, s.block>>>(out_ptr, lhs.data(), rhs, lhs.size());
-    return out;
+    return ( lhs.val_ >= rhs );
 }
 
 CollOfBool equelleCUDA::operator>=(const Scalar lhs, const CollOfScalar& rhs) {
-    CollOfBool out(rhs.size());
-    bool* out_ptr = thrust::raw_pointer_cast( &out[0] );
-    kernelSetup s = rhs.setup();
-    comp_scalGEcoll_kernel<<<s.grid, s.block>>>(out_ptr, lhs, rhs.data(), rhs.size());
-    return out;
+    return ( lhs >= rhs.val_ );
 }
 
 
@@ -257,19 +207,11 @@ CollOfBool equelleCUDA::operator<=(const Scalar lhs, const CollOfScalar& rhs) {
 
 // ==
 CollOfBool equelleCUDA::operator==(const CollOfScalar& lhs, const CollOfScalar& rhs) {
-    CollOfBool out(lhs.size());
-    bool *out_ptr = thrust::raw_pointer_cast( &out[0] );
-    kernelSetup s = lhs.setup();
-    comp_collEQcoll_kernel<<<s.grid, s.block>>>(out_ptr, lhs.data(), rhs.data(), lhs.size());
-    return out;
+    return ( lhs.val_ == rhs.val_ );
 }
 
 CollOfBool equelleCUDA::operator==(const CollOfScalar& lhs, const Scalar rhs) {
-    CollOfBool out(lhs.size());
-    bool *out_ptr = thrust::raw_pointer_cast( &out[0] );
-    kernelSetup s = lhs.setup();
-    comp_collEQscal_kernel<<<s.grid, s.block>>>(out_ptr, lhs.data(), rhs, lhs.size());
-    return out;
+    return ( lhs.val_ == rhs );
 }
 
 CollOfBool equelleCUDA::operator==(const Scalar lhs, const CollOfScalar& rhs) {
@@ -279,19 +221,11 @@ CollOfBool equelleCUDA::operator==(const Scalar lhs, const CollOfScalar& rhs) {
 
 // !=
 CollOfBool equelleCUDA::operator!=(const CollOfScalar& lhs, const CollOfScalar& rhs) {
-    CollOfBool out(lhs.size());
-    bool *out_ptr = thrust::raw_pointer_cast( &out[0] );
-    kernelSetup s = lhs.setup();
-    comp_collNEcoll_kernel<<<s.grid, s.block>>>(out_ptr, lhs.data(), rhs.data(), lhs.size());
-    return out;
+    return ( lhs.val_ != rhs.val_ );
 }
 
 CollOfBool equelleCUDA::operator!=(const CollOfScalar& lhs, const Scalar rhs) {
-    CollOfBool out(lhs.size());
-    bool *out_ptr = thrust::raw_pointer_cast( &out[0] );
-    kernelSetup s = lhs.setup();
-    comp_collNEscal_kernel<<<s.grid, s.block>>>(out_ptr, lhs.data(), rhs, lhs.size());
-    return out;
+    return ( lhs.val_ != rhs );
 }
 
 CollOfBool equelleCUDA::operator!=(const Scalar lhs, const CollOfScalar& rhs) {
