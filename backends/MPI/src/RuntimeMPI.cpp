@@ -58,8 +58,9 @@ RuntimeMPI::RuntimeMPI()
 }
 
 RuntimeMPI::RuntimeMPI(const Opm::parameter::ParameterGroup &param)
-    : param_( param ),
-      logstream( logfilename() )
+    : logstream( logfilename() ),
+      param_( param )
+
 {
     param_.disableOutput();
     initializeZoltan();
@@ -142,7 +143,7 @@ CollOfCell RuntimeMPI::allCells() const
     return runtime->allCells();
 }
 
-CollOfScalar RuntimeMPI::inputCollectionOfScalar(const String &name, const CollOfFace &coll)
+CollOfScalar RuntimeMPI::inputCollectionOfScalar(const String& /* name */, const CollOfFace & /* coll */ )
 {
     throw std::runtime_error("Not implemented");
 }
@@ -246,11 +247,5 @@ equelle::CollOfScalar equelle::RuntimeMPI::allGather( const equelle::CollOfScala
 
     return CollOfScalar( v_new );
 }
-
-void RuntimeMPI::log(std::string s)
-{
-    logstream << s << std::endl;
-}
-
 
 } // namespace equlle

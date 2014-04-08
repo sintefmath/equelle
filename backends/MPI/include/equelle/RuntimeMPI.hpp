@@ -65,18 +65,21 @@ public:
 
     ///@}
 
-    void log( std::string s );
-
+    /**
+     *  @brief logstream is used for writing logging information to.
+     *
+     *  Logstream is useful in an MPI setting, in order to do debugging and
+     *  profiling on a per-node basis. Currently it is tied to a fstream
+     *  with the name runtimempi-<rank>.log. This fstream is set up in the constructor.
+     */
+    std::ofstream logstream;
 private:
     std::unique_ptr<Zoltan> zoltan;
     std::unique_ptr<equelle::EquelleRuntimeCPU> runtime;
     Opm::parameter::ParameterGroup param_;
-    std::ofstream logstream;
-
 
     void initializeZoltan();
     void initializeGrid();
-
 };
 
 } // namespace equelle

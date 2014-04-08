@@ -27,6 +27,7 @@ namespace equelle {
  */
 class MPIInitializer {
 public:
+    MPIInitializer( int argc, char* argv[] );
     MPIInitializer();
     ~MPIInitializer();
 };

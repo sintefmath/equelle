@@ -8,6 +8,18 @@
 
 namespace equelle {
 
+MPIInitializer::MPIInitializer(int argc, char *argv[])
+{
+    MPI_SAFE_CALL( MPI_Init( &argc, &argv ) );
+
+    int size;
+    MPI_SAFE_CALL( MPI_Comm_size( MPI_COMM_WORLD, &size ) );
+
+    float zoltanVersion;
+    ZOLTAN_SAFE_CALL( Zoltan_Initialize( argc, argv, &zoltanVersion ) );
+}
+
+
 MPIInitializer::MPIInitializer()
 {
     MPI_SAFE_CALL( MPI_Init( NULL, NULL ) );
