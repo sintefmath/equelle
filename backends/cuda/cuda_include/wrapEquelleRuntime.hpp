@@ -7,7 +7,7 @@
 
 #include <thrust/device_vector.h>
 
-#include "CollOfScalar.hpp"
+#include "CudaArray.hpp"
 #include "CollOfIndices.hpp"
 #include "DeviceGrid.hpp"
 #include "equelleTypedefs.hpp"

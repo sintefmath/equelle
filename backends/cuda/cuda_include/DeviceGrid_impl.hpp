@@ -4,7 +4,7 @@
 
 
 
-#include "CollOfScalar.hpp"
+#include "CudaArray.hpp"
 #include "CollOfIndices.hpp"
 //#include "DeviceGrid.hpp"
 #include "wrapDeviceGrid.hpp"

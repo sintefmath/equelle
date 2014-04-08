@@ -45,7 +45,7 @@
 #include "EquelleRuntimeCUDA.hpp"
 #include "DeviceGrid.hpp"
 #include "CollOfIndices.hpp"
-#include "CollOfScalar.hpp"
+#include "CudaArray.hpp"
 #include "CollOfVector.hpp"
 
 using namespace equelleCUDA;

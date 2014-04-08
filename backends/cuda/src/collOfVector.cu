@@ -10,7 +10,7 @@
 
 
 #include "CollOfVector.hpp"
-#include "CollOfScalar.hpp"
+#include "CudaArray.hpp"
 #include "equelleTypedefs.hpp"
 
 using namespace equelleCUDA;

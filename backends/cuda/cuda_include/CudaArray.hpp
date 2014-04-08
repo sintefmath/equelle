@@ -1,6 +1,6 @@
 
-#ifndef EQUELLE_COLLOFSCALAR_HEADER_INCLUDED
-#define EQUELLE_COLLOFSCALAR_HEADER_INCLUDED
+#ifndef EQUELLE_CUDAARRAY_HEADER_INCLUDED
+#define EQUELLE_CUDAARRAY_HEADER_INCLUDED
 
 //#include <thrust/device_ptr.h>
 //#include <thrust/host_vector.h>
@@ -27,28 +27,33 @@
 
 
 // Kernel declarations:
-//! CUDA kernels for arithmetic operations on CollOfScalars
+//
 namespace equelleCUDA {
     
 
 
-    //! Class for the Equelle CUDA Back-end
+    //! Class for the Equelle CUDA Back-End
     /*!
-      Class for storing and handeling CollectionOfScalar variables in Equelle.
+      Class for storing and handeling the non-derivative part of 
+      CollOfScalar variables in Equelle.
+
+      For Equelle code that do not use NewtonSolve or NewtonSolve system,
+      this class would be sufficient as a CollOfScalar.
+
       The class is part of the CUDA back-end of the Equelle compiler.
     */
-    class CollOfScalar
+    class CudaArray
     {
     public:
 	//! Default constructor
-	CollOfScalar();
+	CudaArray();
 	
 	//! Allocating constructor
 	/*! 
 	  Allocates device memory for the collection. Does not initialize the collection. 
 	  \param size number of scalars in the collection.
 	*/
-	explicit CollOfScalar(const int size);
+	explicit CudaArray(const int size);
 	
 	//! Constructor for uniform value
 	/*!
@@ -56,43 +61,43 @@ namespace equelleCUDA {
 	  \param size Collection size
 	  \param value Value assigned to each of the elements in the collection.
 	*/
-	explicit CollOfScalar(const int size, const double value);
+	explicit CudaArray(const int size, const double value);
 	
 	//! Constructor from std::vector
 	/*! 
-	  Used for initialize CollOfScalar when using unit tests.
+	  Used for initialize CudaArray (via CollOfScalar) when using unit tests.
 	  Allocates memory and copy the vector stored on the host to the device.
 	  \param host_vec Vector with the scalar values stored in host memory
 	*/
-	explicit CollOfScalar(const std::vector<double>& host_vec);
+	explicit CudaArray(const std::vector<double>& host_vec);
 	
 	//! Copy constructor
 	/*!
 	  Allocates new device memory block, and makes a copy of the collection values.
-	  \param coll Collection of Scalar to copy from.
+	  \param coll cudaArray to copy from.
 	*/
-	CollOfScalar(const CollOfScalar& coll);  
+	CudaArray(const CudaArray& coll);  
 	
 
 	//! Copy assignment operator
 	/*!
 	  Overload the assignment operator. Needed for the third line here:
 	  \code
-	  CollOfScalar a = "something"
-	  CollOfScalar b = "something"
+	  CudaArray a = "something"
+	  CudaArray b = "something"
 	  a = b;
 	  \endcode
 	  Copy the array from other to this.
-	 */
-	CollOfScalar& operator= (const CollOfScalar& other);
+	*/
+	CudaArray& operator= (const CudaArray& other);
 
 
 
 	//! Destructor
 	/*!
-	  Frees device memory as the CollOfScalar goes out of scope.
+	  Frees device memory as the CudaArray goes out of scope.
 	*/
-	~CollOfScalar();
+	~CudaArray();
 	
 	/*! \return The size of the collection */
 	int size() const;
@@ -113,7 +118,7 @@ namespace equelleCUDA {
 	//! For CUDA kernel calls.
 	/*!
 	  Returns a struct with the block and grid size needed to launch a
-	  kernel such that we get one thread for each element in the CollOfScalar.
+	  kernel such that we get one thread for each element in the CudaArray.
 	  
 	  Assumes 1D setup of grids and blocks.
 	*/
@@ -151,7 +156,10 @@ namespace equelleCUDA {
 	mutable double last_val;
 #endif // EQUELLE_DEBUG
     
-    }; // class CollOfScalar 
+    }; // class CudaArray
+
+
+    typedef CudaArray CollOfScalar;
 
 
 
@@ -618,4 +626,4 @@ namespace equelleCUDA {
 } // namespace equelleCUDA
 
 
-#endif // EQUELLE_COLLOFSCALAR_CUDA_HEADER_INCLUDED
+#endif // EQUELLE_CUDAARRAY_HEADER_INCLUDED

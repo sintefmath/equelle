@@ -17,7 +17,7 @@
 // For error exception macro:
 #include <opm/core/utility/ErrorMacros.hpp>
 
-#include "CollOfScalar.hpp"
+#include "CudaArray.hpp"
 #include "DeviceGrid.hpp"
 #include "CollOfIndices.hpp"
 
@@ -27,7 +27,7 @@
 using namespace equelleCUDA;
 using namespace wrapCollOfScalar;
 
-CollOfScalar::CollOfScalar() 
+CudaArray::CudaArray() 
     : size_(0), 
       dev_values_(0),
       block_x_(0),
@@ -41,7 +41,7 @@ CollOfScalar::CollOfScalar()
 }
 
 // Allocating memory without initialization
-CollOfScalar::CollOfScalar(const int size) 
+CudaArray::CudaArray(const int size) 
     : size_(size),
       dev_values_(0),
       block_x_(equelleCUDA::MAX_THREADS),
@@ -58,7 +58,7 @@ CollOfScalar::CollOfScalar(const int size)
 #endif // EQUELLE_DEBUG
 }
 
-CollOfScalar::CollOfScalar(const int size, const double value) 
+CudaArray::CudaArray(const int size, const double value) 
     : size_(size),
       dev_values_(0),
       block_x_(equelleCUDA::MAX_THREADS),
@@ -84,7 +84,7 @@ CollOfScalar::CollOfScalar(const int size, const double value)
 
 
 // Constructor from vector, in order to do testing
-CollOfScalar::CollOfScalar(const std::vector<double>& host_vec)
+CudaArray::CudaArray(const std::vector<double>& host_vec)
     : size_(host_vec.size()),
       dev_values_(0),
       block_x_(equelleCUDA::MAX_THREADS),
@@ -104,7 +104,7 @@ CollOfScalar::CollOfScalar(const std::vector<double>& host_vec)
 
 
 // Copy constructor
-CollOfScalar::CollOfScalar(const CollOfScalar& coll) 
+CudaArray::CudaArray(const CudaArray& coll) 
     : size_(coll.size_), 
       dev_values_(0),
       grid_x_(coll.grid_x_),
@@ -138,7 +138,7 @@ CollOfScalar::CollOfScalar(const CollOfScalar& coll)
 
 
 // Copy assignment operator
-CollOfScalar& CollOfScalar::operator= (const CollOfScalar& other) {
+CudaArray& CudaArray::operator= (const CudaArray& other) {
 
     // Protect agains " var = var " , self assignment
     if ( this != &other ) {
@@ -206,7 +206,7 @@ CollOfScalar& CollOfScalar::operator= (const CollOfScalar& other) {
 
 
 // Destructor:
-CollOfScalar::~CollOfScalar() {
+CudaArray::~CudaArray() {
     if (dev_values_ != 0) {
 	cudaStatus_ = cudaFree(dev_values_);
 	checkError_("cudaFree in CollOfScalar::~CollOfScalar");
@@ -215,7 +215,7 @@ CollOfScalar::~CollOfScalar() {
 
 #ifdef EQUELLE_DEBUG
 // Debug function to get all values to host so that they can be seen by e.g. qtcreator
-void CollOfScalar::debug() const {
+void CudaArray::debug() const {
     cudaStatus_ = cudaMemcpy( &debug_vec_[0], dev_values_, sizeof(double)*size_,
 			      cudaMemcpyDeviceToHost);
     checkError_("cudaMemcpy(debug_vec_) in CollOfScalar::debug()");
@@ -225,23 +225,23 @@ void CollOfScalar::debug() const {
 
 
 
-const double* CollOfScalar::data() const {
+const double* CudaArray::data() const {
     return dev_values_;
 }
 
-double* CollOfScalar::data() {
+double* CudaArray::data() {
     return dev_values_;
 }
 
 
 
 
-kernelSetup CollOfScalar::setup() const {
+kernelSetup CudaArray::setup() const {
     return setup_;
 }
 
 // Assumes that values are already allocated on host
-std::vector<double> CollOfScalar::copyToHost() const
+std::vector<double> CudaArray::copyToHost() const
 {
     // Fill host_vec with zeros:
     std::vector<double> host_vec(size_, 0);
@@ -254,14 +254,14 @@ std::vector<double> CollOfScalar::copyToHost() const
 }
 
 
-int CollOfScalar::size() const
+int CudaArray::size() const
 {
     return size_;
 }
 
 
 
-void CollOfScalar::checkError_(const std::string& msg) const {
+void CudaArray::checkError_(const std::string& msg) const {
     if ( cudaStatus_ != cudaSuccess ) {
 	OPM_THROW(std::runtime_error, "\nCuda error\n\t" << msg << " - Error code: " << cudaGetErrorString(cudaStatus_));
     }

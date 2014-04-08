@@ -28,7 +28,7 @@
 #include <thrust/unique.h>
 
 //#include "DeviceGrid.hpp"
-//#include "CollOfScalar.hpp"
+//#include "CudaArray.hpp"
 #include "CollOfIndices.hpp"
 #include "wrapCollOfIndices.hpp"
 #include "equelleTypedefs.hpp"
