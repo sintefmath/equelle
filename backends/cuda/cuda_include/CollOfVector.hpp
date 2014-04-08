@@ -23,7 +23,7 @@ namespace equelleCUDA {
       also talk about number of elements (numElements()) which returns the number of 
       Vectors times the dimension.
 
-      The vector elements are stored in a private member variable of type CollOfScalar
+      The vector elements are stored in a private member variable of type CudaArray
       packed so that each vector is contiguous in memory, hence a CollOfVector with
       N vectors of 3 dimensions is stored  {1_x, 1_y, 1_z, 2_x, 2_y, 2_x,...,N_x, 
       N_y, N_z}, and the access to the raw data (data()) gives a pointer to this
@@ -149,7 +149,7 @@ namespace equelleCUDA {
 	// The one implemented here makes a copy though...
 
     private:
-	CollOfScalar elements_;
+	CudaArray elements_;
 	const int dim_;
 	//kernelSetup element_setup_; // Find this one as elements_.getKernelSetup()
 	kernelSetup vector_setup_;
