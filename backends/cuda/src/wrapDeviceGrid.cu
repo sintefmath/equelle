@@ -10,7 +10,7 @@
 
 #include "DeviceGrid.hpp"
 #include "wrapDeviceGrid.hpp"
-#include "CudaArray.hpp"
+#include "CollOfScalar.hpp"
 #include "CollOfIndices.hpp"
 #include "equelleTypedefs.hpp"
 

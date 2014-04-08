@@ -5,7 +5,7 @@
 
 #include "EquelleRuntimeCUDA.hpp"
 #include "EquelleRuntimeCUDA_havahol.hpp"
-#include "CudaArray.hpp"
+#include "CollOfScalar.hpp"
 #include "DeviceGrid.hpp"
 #include "CollOfIndices.hpp"
 #include "CollOfVector.hpp"

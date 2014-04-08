@@ -9,7 +9,7 @@
 #include <thrust/host_vector.h>
 
 #include "EquelleRuntimeCUDA.hpp"
-#include "CudaArray.hpp"
+#include "CollOfScalar.hpp"
 #include "CollOfIndices.hpp"
 #include "DeviceGrid.hpp"
 #include "equelleTypedefs.hpp"

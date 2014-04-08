@@ -27,7 +27,7 @@
 // This should be independent from the rest of the host code
 //      and especially from any c++11 code.
 #include "CollOfIndices.hpp"
-#include "CudaArray.hpp"
+#include "CollOfScalar.hpp"
 #include "CollOfVector.hpp"
 #include "DeviceGrid.hpp"
 #include "equelleTypedefs.hpp"

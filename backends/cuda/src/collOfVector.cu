@@ -10,7 +10,7 @@
 
 
 #include "CollOfVector.hpp"
-#include "CudaArray.hpp"
+#include "CollOfScalar.hpp"
 #include "equelleTypedefs.hpp"
 
 using namespace equelleCUDA;
@@ -184,7 +184,7 @@ CollOfVector equelleCUDA::operator+(const CollOfVector& lhs, const CollOfVector&
 
     CollOfVector out = lhs;
     kernelSetup s = out.element_setup();
-    wrapCollOfScalar::plus_kernel<<<s.grid, s.block>>>(out.data(), rhs.data(), out.numElements());
+    wrapCudaArray::plus_kernel<<<s.grid, s.block>>>(out.data(), rhs.data(), out.numElements());
     return out;
 }
 
@@ -192,6 +192,6 @@ CollOfVector equelleCUDA::operator+(const CollOfVector& lhs, const CollOfVector&
 CollOfVector equelleCUDA::operator-(const CollOfVector& lhs, const CollOfVector& rhs) {
     CollOfVector out = lhs;
     kernelSetup s = out.element_setup();
-    wrapCollOfScalar::minus_kernel<<<s.grid, s.block>>>(out.data(), rhs.data(), out.numElements());
+    wrapCudaArray::minus_kernel<<<s.grid, s.block>>>(out.data(), rhs.data(), out.numElements());
     return out;
 }

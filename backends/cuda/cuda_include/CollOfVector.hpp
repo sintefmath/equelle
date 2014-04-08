@@ -8,7 +8,7 @@
 
 #include <vector>
 
-#include "CudaArray.hpp"
+#include "CollOfScalar.hpp"
 #include "equelleTypedefs.hpp"
 
 

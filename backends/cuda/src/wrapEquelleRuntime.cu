@@ -5,7 +5,7 @@
 #include <math.h>
 
 #include "wrapEquelleRuntime.hpp"
-#include "CudaArray.hpp"
+#include "CollOfScalar.hpp"
 #include "CollOfIndices.hpp"
 #include "equelleTypedefs.hpp"
 #include "DeviceGrid.hpp"

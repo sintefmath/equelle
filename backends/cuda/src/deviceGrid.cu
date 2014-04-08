@@ -24,7 +24,7 @@
 
 #include "DeviceGrid.hpp"
 #include "wrapDeviceGrid.hpp"
-#include "CudaArray.hpp"
+#include "CollOfScalar.hpp"
 #include "CollOfIndices.hpp"
 #include "CollOfVector.hpp"
 #include "equelleTypedefs.hpp"

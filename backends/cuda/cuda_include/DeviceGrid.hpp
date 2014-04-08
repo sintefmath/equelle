@@ -12,7 +12,7 @@
 
 #include <opm/core/grid/GridManager.hpp>
 
-#include "CudaArray.hpp"
+#include "CollOfScalar.hpp"
 #include "CollOfIndices.hpp"
 #include "CollOfVector.hpp"
 

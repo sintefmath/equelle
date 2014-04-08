@@ -150,7 +150,7 @@ namespace equelleCUDA {
 	// This variable is only given a value in the copy constructors.
 	// The purpose of the variable is to follow values in a debugger,
 	// by running a program compiled from Equelle.
-	// All variables will therefore be const CollOfScalar var = something
+	// All variables will therefore be const CudaArray var = something
 	// and assigned by the copy constructor.
 	mutable std::vector<double> debug_vec_;
 	mutable double last_val;
@@ -159,13 +159,10 @@ namespace equelleCUDA {
     }; // class CudaArray
 
 
-    typedef CudaArray CollOfScalar;
+    
 
-
-
-
-    //! Functions closely related to the CollOfScalar class
-    namespace wrapCollOfScalar {
+    //! Functions closely related to the CudaArray class
+    namespace wrapCudaArray {
 	
 	// ---------------- CUDA KERNELS ------------------- //
 	
@@ -228,7 +225,7 @@ namespace equelleCUDA {
 						  const double scal, 
 						  const int size);
 	
-	//! CUDA kernel for division as Scalar/CollOfScalar
+	//! CUDA kernel for division as Scalar/CudaArray
 	/*!
 	  Set each element in out as 
 	  \code out[i] = scal/out[i] \endcode
@@ -390,7 +387,7 @@ namespace equelleCUDA {
 						const double rhs,
 						const int size);
 
-    } // namespace wrapCollOfScalar
+    } // namespace wrapCudaArray
 	
 	
     // -------------- Operation overloading ------------------- //
@@ -403,7 +400,7 @@ namespace equelleCUDA {
       \return lhs - rhs 
       \sa minus_kernel.
     */
-    CollOfScalar operator-(const CollOfScalar& lhs, const CollOfScalar& rhs);
+    CudaArray operator-(const CudaArray& lhs, const CudaArray& rhs);
 
     // Overloading of operator +
     /*!
@@ -413,7 +410,7 @@ namespace equelleCUDA {
       \return lhs + rhs 
       \sa plus_kernel.
     */
-    CollOfScalar operator+(const CollOfScalar& lhs, const CollOfScalar& rhs);
+    CudaArray operator+(const CudaArray& lhs, const CudaArray& rhs);
     
     // Overloading of operator *
     /*!
@@ -423,7 +420,7 @@ namespace equelleCUDA {
       \return lhs * rhs 
       \sa multiplication_kernel.
     */
-    CollOfScalar operator*(const CollOfScalar& lhs, const CollOfScalar& rhs);
+    CudaArray operator*(const CudaArray& lhs, const CudaArray& rhs);
 
     // Overloading of operator /
     /*!
@@ -433,7 +430,7 @@ namespace equelleCUDA {
       \return lhs / rhs 
       \sa division_kernel.
     */
-    CollOfScalar operator/(const CollOfScalar& lhs, const CollOfScalar& rhs);
+    CudaArray operator/(const CudaArray& lhs, const CudaArray& rhs);
     
 
     // Multiplication:  Scalar * Collection Of Scalars
@@ -444,7 +441,7 @@ namespace equelleCUDA {
       \return lhs * rhs
       \sa multScalCollection_kernel
     */
-    CollOfScalar operator*(const Scalar lhs, const CollOfScalar& rhs);
+    CudaArray operator*(const Scalar lhs, const CudaArray& rhs);
 
     /*! 
       Since multiplication is commutative, this implementation simply return
@@ -453,7 +450,7 @@ namespace equelleCUDA {
       \param rhs Right han side Scalar
       \return lhs * rhs
     */
-    CollOfScalar operator*(const CollOfScalar& lhs, const Scalar rhs);
+    CudaArray operator*(const CudaArray& lhs, const Scalar rhs);
 
     /*!
       Implemented as (1/rhs)*lhs in order to reuse kernel
@@ -461,65 +458,65 @@ namespace equelleCUDA {
       \param rhs Right hand side Scalar
       \return lhs / rhs
      */
-    CollOfScalar operator/(const CollOfScalar& lhs, const Scalar rhs);
+    CudaArray operator/(const CudaArray& lhs, const Scalar rhs);
 
     /*!
-      For Scalar / CollOfScalar. Elementwise division of the elements in 
+      For Scalar / CudaArray. Elementwise division of the elements in 
       the collection.
       \param lhs Scalar 
       \param rhs Collection of Scalars
       \return out[i] = lhs / rhs[i]
      */
-    CollOfScalar operator/(const Scalar lhs, const CollOfScalar& rhs);
+    CudaArray operator/(const Scalar lhs, const CudaArray& rhs);
 
     
     /*!
       Unary minus
       \return A collection with the negative values of the inpur collection.
     */
-    CollOfScalar operator-(const CollOfScalar& arg);
+    CudaArray operator-(const CudaArray& arg);
 
     /*!
       Greater than operator
       \return Collection of Booleans consisting of
       \code out[i] = lhs[i] > rhs[i] \endcode
     */
-    CollOfBool operator>(const CollOfScalar& lhs, const CollOfScalar& rhs);
+    CollOfBool operator>(const CudaArray& lhs, const CudaArray& rhs);
 
     /*!
       Greater than operator comparing collection to scalar
       \return Collection of Booleans consisting of
       \code out[i] = lhs[i] > rhs \endcode
     */
-    CollOfBool operator>(const CollOfScalar& lhs, const Scalar rhs);
+    CollOfBool operator>(const CudaArray& lhs, const Scalar rhs);
 
     /*!
       Greater than operator comparing scalar to collection.
       \return Collection of Booleans consisting of
       \code out[i] = lhs > rhs[i] \endcode
     */
-    CollOfBool operator>(const Scalar lhs, const CollOfScalar& rhs);
+    CollOfBool operator>(const Scalar lhs, const CudaArray& rhs);
 
     /*! 
       Less than operator
       \return Collection of Booleans consisting of
       \code out[i] = lhs[i] < rhs[i] \endcode
     */
-    CollOfBool operator<(const CollOfScalar& lhs, const CollOfScalar& rhs);
+    CollOfBool operator<(const CudaArray& lhs, const CudaArray& rhs);
 
     /*!
       Less than operator comparing with a scalar
       \return Collection of Booleans consisting of
       \code out[i] = lhs[i] < rhs \endcode
     */
-    CollOfBool operator<(const CollOfScalar& lhs, const Scalar rhs);
+    CollOfBool operator<(const CudaArray& lhs, const Scalar rhs);
 
     /*!
       Less than operator comparing scalar with collection
       \return Collection of Booleans consisting of
       \code out[i] = lhs < rhs[i] \endcode
     */
-    CollOfBool operator<(const Scalar lhs, const CollOfScalar& rhs);
+    CollOfBool operator<(const Scalar lhs, const CudaArray& rhs);
 
 
     /*!
@@ -527,21 +524,21 @@ namespace equelleCUDA {
       \return Collection of Booleans consisting of
       \code out[i] = lhs[i] >= rhs[i] \endcode
     */
-    CollOfBool operator>=(const CollOfScalar& lhs, const CollOfScalar& rhs);
+    CollOfBool operator>=(const CudaArray& lhs, const CudaArray& rhs);
 
     /*!
       Greater than or equal operator comparing collection to scalar
       \return Collection of Booleans consisting of
       \code out[i] = lhs[i] >= rhs \endcode
     */
-    CollOfBool operator>=(const CollOfScalar& lhs, const Scalar rhs);
+    CollOfBool operator>=(const CudaArray& lhs, const Scalar rhs);
 
     /*!
       Greater than or equal operator comparing scalar to collection.
       \return Collection of Booleans consisting of
       \code out[i] = lhs >= rhs[i] \endcode
     */
-    CollOfBool operator>=(const Scalar lhs, const CollOfScalar& rhs);
+    CollOfBool operator>=(const Scalar lhs, const CudaArray& rhs);
 
 
    /*!
@@ -549,21 +546,21 @@ namespace equelleCUDA {
       \return Collection of Booleans consisting of
       \code out[i] = lhs[i] <= rhs[i] \endcode
     */
-    CollOfBool operator<=(const CollOfScalar& lhs, const CollOfScalar& rhs);
+    CollOfBool operator<=(const CudaArray& lhs, const CudaArray& rhs);
 
     /*!
       Less than or equal operator comparing collection to scalar
       \return Collection of Booleans consisting of
       \code out[i] = lhs[i] <= rhs \endcode
     */
-    CollOfBool operator<=(const CollOfScalar& lhs, const Scalar rhs);
+    CollOfBool operator<=(const CudaArray& lhs, const Scalar rhs);
 
     /*!
       Less than or equal operator comparing scalar to collection.
       \return Collection of Booleans consisting of
       \code out[i] = lhs <= rhs[i] \endcode
     */
-    CollOfBool operator<=(const Scalar lhs, const CollOfScalar& rhs);
+    CollOfBool operator<=(const Scalar lhs, const CudaArray& rhs);
 
 
     // OPERATOR == 
@@ -572,21 +569,21 @@ namespace equelleCUDA {
       \return Collection of Booleans consisting of
       \code out[i] = lhs[i] == rhs[i] \endcode
     */
-    CollOfBool operator==(const CollOfScalar& lhs, const CollOfScalar& rhs);
+    CollOfBool operator==(const CudaArray& lhs, const CudaArray& rhs);
 
     /*!
       Equal operator comparing collection with scalar
       \return Collection of Booleans consisting of
       \code out[i] = lhs[i] == rhs \endcode
     */
-    CollOfBool operator==(const CollOfScalar& lhs, const Scalar rhs);
+    CollOfBool operator==(const CudaArray& lhs, const Scalar rhs);
     
     /*!
       Equal operator comparing scalar with collection
       \return Collection of Booleans consisting of
       \code out[i] = lhs == rhs[i] \endcode
     */
-    CollOfBool operator==(const Scalar lhs, const CollOfScalar& rhs);
+    CollOfBool operator==(const Scalar lhs, const CudaArray& rhs);
 
 
     // OPERATOR !=
@@ -595,21 +592,21 @@ namespace equelleCUDA {
       \return Collection of Booleans consisting of
       \code out[i] = lhs[i] != rhs[i] \endcode
     */
-    CollOfBool operator!=(const CollOfScalar& lhs, const CollOfScalar& rhs);
+    CollOfBool operator!=(const CudaArray& lhs, const CudaArray& rhs);
 
     /*!
       Inequal operator comparing collection with scalar
       \return Collection of Booleans consisting of
       \code out[i] = lhs[i] != rhs \endcode
     */
-    CollOfBool operator!=(const CollOfScalar& lhs, const Scalar rhs);
+    CollOfBool operator!=(const CudaArray& lhs, const Scalar rhs);
     
     /*!
       Inequal operator comparing scalar with collection
       \return Collection of Booleans consisting of
       \code out[i] = lhs != rhs[i] \endcode
     */
-    CollOfBool operator!=(const Scalar lhs, const CollOfScalar& rhs);
+    CollOfBool operator!=(const Scalar lhs, const CudaArray& rhs);
 
 
 
