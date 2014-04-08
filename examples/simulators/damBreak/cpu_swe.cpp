@@ -14,10 +14,10 @@
 #include <cmath>
 #include <array>
 
-#include "EquelleRuntimeCPU.hpp"
+#include "equelle/EquelleRuntimeCPU.hpp"
 
-void ensureRequirements(const EquelleRuntimeCPU& er);
-void equelleGeneratedCode(EquelleRuntimeCPU& er);
+void ensureRequirements(const equelle::EquelleRuntimeCPU& er);
+void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er);
 
 #ifndef EQUELLE_NO_MAIN
 int main(int argc, char** argv)
@@ -26,13 +26,14 @@ int main(int argc, char** argv)
     Opm::parameter::ParameterGroup param(argc, argv, false);
 
     // Create the Equelle runtime.
-    EquelleRuntimeCPU er(param);
+    equelle::EquelleRuntimeCPU er(param);
     equelleGeneratedCode(er);
     return 0;
 }
 #endif // EQUELLE_NO_MAIN
 
-void equelleGeneratedCode(EquelleRuntimeCPU& er) {
+void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er) {
+    using namespace equelle;
     ensureRequirements(er);
 
     // ============= Generated code starts here ================
@@ -217,9 +218,9 @@ void equelleGeneratedCode(EquelleRuntimeCPU& er) {
     er.output("q3", q0[2]);
     for (const Scalar& dt : timesteps) {
         const std::array<CollOfScalar, 3> q = rungeKutta(q0, dt);
-        er.output("q1", q[0]);
-        er.output("q2", q[1]);
-        er.output("q3", q[2]);
+        //er.output("q1", q[0]);
+        //er.output("q2", q[1]);
+        //er.output("q3", q[2]);
         q0 = q;
     }
 
@@ -227,7 +228,7 @@ void equelleGeneratedCode(EquelleRuntimeCPU& er) {
 
 }
 
-void ensureRequirements(const EquelleRuntimeCPU& er)
+void ensureRequirements(const equelle::EquelleRuntimeCPU& er)
 {
     er.ensureGridDimensionMin(1);
     er.ensureGridDimensionMin(2);

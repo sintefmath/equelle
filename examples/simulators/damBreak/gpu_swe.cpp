@@ -212,9 +212,9 @@ int main(int argc, char** argv)
     er.output("q3", q0[2]);
     for (const Scalar& dt : timesteps) {
         const std::array<CollOfScalar, 3> q = rungeKutta(q0, dt);
-        er.output("q1", q[0]);
-        er.output("q2", q[1]);
-        er.output("q3", q[2]);
+        //er.output("q1", q[0]);
+        //er.output("q2", q[1]);
+        //er.output("q3", q[2]);
         q0 = q;
     }
 
