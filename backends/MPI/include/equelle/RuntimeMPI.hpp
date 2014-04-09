@@ -38,6 +38,13 @@ public:
 
     ///@{ Topology and geometry related.
     CollOfCell allCells() const;
+
+    /**
+     * @brief boundaryCells
+     * @return Return indices of the cells (in the node-local enumeration)
+     *         that are on the boundary of the global-domain.
+     */
+    CollOfCell boundaryCells() const;
     ///@}
 
     /// Return the number of cells in collection. Will do MPI-transfer.

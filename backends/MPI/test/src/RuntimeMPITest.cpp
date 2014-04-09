@@ -2,6 +2,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include "equelle/RuntimeMPI.hpp"
+#include "equelle/EquelleRuntimeCPU.hpp"
 #include "equelle/mpiutils.hpp"
 
 using namespace equelle;
@@ -52,6 +53,62 @@ BOOST_AUTO_TEST_CASE( inputScalarWithDefault ) {
     BOOST_CHECK_CLOSE( k, 0.3, 1e-7 );
     BOOST_CHECK_CLOSE( a, 42.0, 1e-7 );
 }
+
+
+BOOST_AUTO_TEST_CASE( boundaryCells ) {
+    BOOST_REQUIRE_MESSAGE( equelle::getMPISize() > 1, "Test requires program to be run with mpirun." );
+    Opm::parameter::ParameterGroup param;
+
+    // Ensure we have at least one interior cell.
+    param.insertParameter( "nx", "3" );
+    param.insertParameter( "ny", "3" );
+
+    equelle::RuntimeMPI er( param );
+    er.decompose();
+
+    equelle::EquelleRuntimeCPU ser( param );
+    CollOfCell gold_global_boundary = ser.boundaryCells();
+
+    // Boundary return indices in node-enumeration so we must map them into the global index space.
+    CollOfCell boundary = er.boundaryCells();
+
+    BOOST_CHECK( !boundary.empty() );
+
+    auto global_boundary = er.subGrid.map_to_global( boundary );
+
+    er.logstream << "all cells (local coordinate system)";
+    for( auto c: er.allCells() ) {
+        er.logstream << c.index << ", ";
+    }
+    er.logstream << std::endl;
+
+    er.logstream << "local cells: ";
+    for( auto c: boundary ) {
+        er.logstream << c.index << ", ";
+    }
+    er.logstream << std::endl;
+
+    er.logstream << "global cells: ";
+    for( auto c: global_boundary ) {
+        er.logstream << c.index << ", ";
+    }
+    er.logstream << std::endl;
+
+
+    // Assert all the boundary cells are in the global boundary
+    for( auto c: global_boundary ) {
+        auto it = std::find( gold_global_boundary.begin(), gold_global_boundary.end(), c );
+        BOOST_CHECK_MESSAGE( it != global_boundary.end(),
+                     "global cell " << c.index << " is not in the global boundary");
+    }
+
+    er.logstream << "gold global boundary: ";
+    for( auto c: gold_global_boundary ) {
+        er.logstream << c.index << ", ";
+    }
+    er.logstream << std::endl;
+}
+
 
 BOOST_AUTO_TEST_CASE( logging ) {    
     equelle::RuntimeMPI runtime;

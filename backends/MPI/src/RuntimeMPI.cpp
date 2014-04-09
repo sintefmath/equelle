@@ -10,7 +10,6 @@
 
 #include <opm/core/grid/GridManager.hpp>
 #include <boost/iterator/counting_iterator.hpp>
-
 #include "equelle/EquelleRuntimeCPU.hpp"
 #include "equelle/mpiutils.hpp"
 #include "equelle/SubGridBuilder.hpp"
@@ -141,6 +140,12 @@ zoltanReturns RuntimeMPI::computePartition()
 CollOfCell RuntimeMPI::allCells() const
 {
     return runtime->allCells();
+}
+
+CollOfCell RuntimeMPI::boundaryCells() const
+{
+    CollOfCell cells;
+    return runtime->boundaryCells();
 }
 
 CollOfScalar RuntimeMPI::inputCollectionOfScalar(const String& /* name */, const CollOfFace & /* coll */ )

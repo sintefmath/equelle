@@ -232,6 +232,17 @@ int GridQuerying::numNodes(const UnstructuredGrid *grid, int face)
     return grid->face_nodepos[face+1] - grid->face_nodepos[face];
 }
 
+CollOfCell SubGrid::map_to_global(const CollOfCell &local_collection)
+{
+    CollOfCell global_collection;
+
+    for( auto x: local_collection ) {
+        global_collection.emplace_back( global_cell[ x.index ] );
+    }
+
+    return global_collection;
+}
+
 SubGrid::~SubGrid()
 {
     //destroy_grid( c_grid );
