@@ -35,7 +35,22 @@ BOOST_AUTO_TEST_CASE( allGather ) {
 
     BOOST_CHECK_EQUAL_COLLECTIONS( a_global.value().data(),  a_global.value().data() + a_global.value().size(),
                                    a_0.begin(), a_0.end() );
+}
 
+
+BOOST_AUTO_TEST_CASE( inputScalarWithDefault ) {
+    Opm::parameter::ParameterGroup param;
+
+    param.insertParameter( "a", "42.0" );
+
+    equelle::RuntimeMPI er( param );
+    er.decompose();
+
+    const Scalar k = er.inputScalarWithDefault("k", double(0.3));
+    const Scalar a = er.inputScalarWithDefault("a", double(-1.0));
+
+    BOOST_CHECK_CLOSE( k, 0.3, 1e-7 );
+    BOOST_CHECK_CLOSE( a, 42.0, 1e-7 );
 }
 
 BOOST_AUTO_TEST_CASE( logging ) {    

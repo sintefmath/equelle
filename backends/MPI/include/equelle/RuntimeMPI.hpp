@@ -49,6 +49,9 @@ public:
 
     CollOfScalar inputCollectionOfScalar(const String& name,
                                          const CollOfCell& coll);
+
+    Scalar inputScalarWithDefault(const String& name,
+                                  const Scalar default_value);
     ///@}
 
     void output(const String& tag, const CollOfScalar& vals);

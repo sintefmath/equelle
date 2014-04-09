@@ -179,6 +179,11 @@ CollOfScalar RuntimeMPI::inputCollectionOfScalar(const String &name, const CollO
 
 }
 
+Scalar RuntimeMPI::inputScalarWithDefault(const String &name, const Scalar default_value)
+{
+    return runtime->inputScalarWithDefault( name, default_value );
+}
+
 void RuntimeMPI::output(const String &tag, const CollOfScalar &vals)
 {
     auto val = allGather( vals );
