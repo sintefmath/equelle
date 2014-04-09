@@ -9,6 +9,7 @@
 #include "DeviceGrid.hpp"
 #include "CollOfIndices.hpp"
 #include "CollOfVector.hpp"
+#include "wrapEquelleRuntime.hpp"
 
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/core/utility/StopWatch.hpp>
@@ -71,6 +72,12 @@ EquelleRuntimeCUDA::EquelleRuntimeCUDA(const Opm::parameter::ParameterGroup& par
       max_iter_(param.getDefault("max_iter", 10)),
       abs_res_tol_(param.getDefault("abs_res_tol", 1e-6))
 {
+    wrapEquelleRuntimeCUDA::init_cusparse();
+}
+
+// Destructor:
+EquelleRuntimeCUDA::~EquelleRuntimeCUDA() {
+    wrapEquelleRuntimeCUDA::destroy_cusparse();
 }
 
 

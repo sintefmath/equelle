@@ -4,6 +4,9 @@
 
 #include <thrust/detail/raw_pointer_cast.h>
 #include <math.h>
+#include <iostream>
+
+#include <opm/core/utility/ErrorMacros.hpp>
 
 #include "wrapEquelleRuntime.hpp"
 #include "CollOfScalar.hpp"
@@ -16,6 +19,22 @@ using namespace wrapEquelleRuntimeCUDA;
 
 // Declaring the cuSparse handle!
 cusparseHandle_t equelleCUDA::CUSPARSE;
+
+void wrapEquelleRuntimeCUDA::init_cusparse() {
+    cusparseStatus_t status;
+    status = cusparseCreate(&CUSPARSE);
+    if (status != CUSPARSE_STATUS_SUCCESS ) {
+	OPM_THROW(std::runtime_error, "Cannot create cusparse handle.");
+    }
+}
+
+void wrapEquelleRuntimeCUDA::destroy_cusparse() {
+    cusparseStatus_t status;
+    status = cusparseDestroy(CUSPARSE);
+    if (status != CUSPARSE_STATUS_SUCCESS ) {
+	OPM_THROW(std::runtime_error, "Cannot destroy cusparse handle.");
+    }
+}
 
 
 // Have already performed a check on sizes.

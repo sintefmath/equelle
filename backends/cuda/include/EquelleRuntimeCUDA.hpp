@@ -220,6 +220,9 @@ public:
     /// Constructor.
     EquelleRuntimeCUDA(const Opm::parameter::ParameterGroup& param);
 
+    /// Destructor:
+    ~EquelleRuntimeCUDA();
+
     /// Topology and geometry related.
     CollOfCell allCells() const;
     CollOfCell boundaryCells() const;
@@ -238,15 +241,12 @@ public:
 
 
     /// Operators and math functions.
-    CollOfScalarCPU sqrt(const CollOfScalarCPU& x) const;
     //CollOfScalarCPU dot(const CollOfVector& v1, const CollOfVector& v2) const;
-    CollOfScalarCPU gradient(const CollOfScalarCPU& cell_scalarfield) const;
     CollOfScalarCPU negGradient(const CollOfScalarCPU& cell_scalarfield) const;
-    CollOfScalarCPU divergence(const CollOfScalarCPU& face_fluxes) const;
     CollOfScalarCPU interiorDivergence(const CollOfScalarCPU& face_fluxes) const;
     CollOfBool isEmpty(const CollOfCellCPU& cells) const;
     CollOfBool isEmpty(const CollOfFaceCPU& faces) const;
-
+    
     // Operators and math functions havahol
     CollOfScalar gradient(const CollOfScalar& cell_scalarfield) const;
     CollOfScalar divergence(const CollOfScalar& fluxes) const;
@@ -258,36 +258,36 @@ public:
     CollOfScalar operatorExtend(const CollOfScalar& data_in,
 				const CollOfIndices<codim>& from_set,
 				const CollOfIndices<codim>& to_set) const;
-
+    
     template<int codim>
     CollOfScalar operatorExtend(const Scalar& data, const CollOfIndices<codim>& set);
-
+    
     template<int codim>
     CollOfScalar operatorOn(const CollOfScalar& data_in,
 			    const CollOfIndices<codim>& from_set,
 			    const CollOfIndices<codim>& to_set);
-
+    
     // Implementation of the Equelle keyword On for CollOfIndices<>
     template<int codim_data, int codim_set>
     CollOfIndices<codim_data> operatorOn( const CollOfIndices<codim_data>& in_data,
 					  const CollOfIndices<codim_set>& from_set,
 					  const CollOfIndices<codim_set>& to_set);
-
+    
     CollOfScalar trinaryIf( const CollOfBool& predicate,
 			    const CollOfScalar& iftrue,
 			    const CollOfScalar& iffalse) const;
-
+    
     template <int codim>
     CollOfIndices<codim> trinaryIf( const CollOfBool& predicate,
 				    const CollOfIndices<codim>& iftrue,
 				    const CollOfIndices<codim>& iffalse) const;
-
+    
     //template <class SomeCollection1, class SomeCollection2>
     //typename CollType<SomeCollection1>::Type
     //trinaryIf(const CollOfBool& predicate,
     //          const SomeCollection1& iftrue,
     //          const SomeCollection2& iffalse) const;
-
+    
     /// Reductions.
     Scalar minReduce(const CollOfScalarCPU& x) const;
     Scalar maxReduce(const CollOfScalarCPU& x) const;
@@ -296,64 +296,64 @@ public:
     
     // Special functions:
     CollOfScalar sqrt(const CollOfScalar& x) const;
-
+    
     /// Solver functions.
     template <class ResidualFunctor>
     CollOfScalarCPU newtonSolve(const ResidualFunctor& rescomp,
-                             const CollOfScalarCPU& u_initialguess);
-
-//    template <int Num>
-//    std::array<CollOfScalarCPU, Num> newtonSolveSystem(const std::array<typename ResCompType<Num>::type, Num>& rescomp,
-//                                                    const std::array<CollOfScalarCPU, Num>& u_initialguess);
-
+				const CollOfScalarCPU& u_initialguess);
+    
+    //    template <int Num>
+    //    std::array<CollOfScalarCPU, Num> newtonSolveSystem(const std::array<typename ResCompType<Num>::type, Num>& rescomp,
+    //                                                    const std::array<CollOfScalarCPU, Num>& u_initialguess);
+    
     /// Output.
     void output(const String& tag, Scalar val) const;
     void output(const String& tag, const CollOfScalarCPU& vals);
     void output(const String& tag, const equelleCUDA::CollOfScalar& coll);
-
+    
     /// Input.
     Scalar inputScalarWithDefault(const String& name,
-                                          const Scalar default_value);
+				  const Scalar default_value);
     CollOfFaceCPU inputDomainSubsetOf(const String& name,
-                                   const CollOfFaceCPU& superset);
+				      const CollOfFaceCPU& superset);
     CollOfCellCPU inputDomainSubsetOf(const String& name,
-                                   const CollOfCellCPU& superset);
+				      const CollOfCellCPU& superset);
     template <class SomeCollection>
     equelleCUDA::CollOfScalar inputCollectionOfScalar(const String& name,
-                                         const SomeCollection& coll);
-
+						      const SomeCollection& coll);
+    
     // input havahol
     template <int codim>
     equelleCUDA::CollOfIndices<codim> inputDomainSubsetOf( const String& name,
-							 equelleCUDA::CollOfIndices<codim> superset);
-	
+							   equelleCUDA::CollOfIndices<codim> superset);
+    
     // input havahol
     template <int codim>
     equelleCUDA::CollOfScalar inputCollectionOfScalar(const String& name,
 						      const equelleCUDA::CollOfIndices<codim>& coll);
-										 
+    
     SeqOfScalar inputSequenceOfScalar(const String& name);
-
-
+    
+    
     /// Ensuring requirements that may be imposed by Equelle programs.
     void ensureGridDimensionMin(const int minimum_grid_dimension) const;
 
     // Havahol - add a function to return grid in order to do testing here.
     UnstructuredGrid getGrid() const;
-
+    
 private:
     /// Topology helpers
     bool boundaryCell(const int cell_index) const;
-
+    
     /// Creating primary variables.
     static CollOfScalarCPU singlePrimaryVariable(const CollOfScalarCPU& initial_values);
-
+    
     /// Solver helper.
     CollOfScalarCPU solveForUpdate(const CollOfScalarCPU& residual) const;
-
+    
     /// Norms.
     Scalar twoNorm(const CollOfScalarCPU& vals) const;
-
+    
     /// Data members.
     std::unique_ptr<Opm::GridManager> grid_manager_;
     const UnstructuredGrid& grid_;

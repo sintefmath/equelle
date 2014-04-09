@@ -45,6 +45,11 @@ set(CUDA_PROPAGATE_HOST_FLAGS OFF)
 set( CUDA_NVCC_FLAGS "-arch=sm_13" CACHE STRING "nvcc flags" FORCE)
 cuda_add_library( equelle_cuda_cu ${cuda_cuda_src} ${cuda_cuda_inc}  )
 				  #${cuda_cuda_cuh} )
+target_link_libraries ( equelle_cuda_cu
+  ${CUDA_LIBRARIES}
+  ${CUDA_cusparse_LIBRARY}
+)
+
 if( CMAKE_BUILD_TYPE MATCHES "Debug")
   set( CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -DEQUELLE_DEBUG")
 endif( CMAKE_BUILD_TYPE MATCHES "Debug")
