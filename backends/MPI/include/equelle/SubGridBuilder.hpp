@@ -26,6 +26,8 @@ struct SubGrid {
     std::unordered_map<int, int> face_global_to_local;
 
     CollOfCell map_to_global( const CollOfCell& local_collection );
+    CollOfFace map_to_global( const CollOfFace& local_collection );
+
     ~SubGrid();
 };
 

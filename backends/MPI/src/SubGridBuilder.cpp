@@ -243,6 +243,17 @@ CollOfCell SubGrid::map_to_global(const CollOfCell &local_collection)
     return global_collection;
 }
 
+CollOfFace SubGrid::map_to_global(const CollOfFace &local_collection)
+{
+    CollOfFace global_collection;
+    for( auto x: local_collection ) {
+        global_collection.emplace_back( global_face[x.index] );
+    }
+
+    return global_collection;
+}
+
+
 SubGrid::~SubGrid()
 {
     //destroy_grid( c_grid );
