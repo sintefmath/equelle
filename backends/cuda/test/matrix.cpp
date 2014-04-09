@@ -133,13 +133,25 @@ int main(int argc, char** argv) {
 	return 1;
     }
 
+    // Copy constructor:
+    CudaMatrix C(B);
+    if ( matrixCompare(C.toHost(), b_lf, "Copy constructor") ) {
+	return 1;
+    }
+
     // Create another matrix:
     vector<double> c_v = {1,-4,3,4,5,1,-5};
     vector<int> c_rp = {0,2,2,5,7};
     vector<int> c_ci = {0,2,1,2,3,1,3};
     hostMat c_lf = {c_v, c_rp, c_ci, 7,4,4};
-    CudaMatrix C(&c_v[0], &c_rp[0], &c_ci[0], 7,4,4);
-    if ( matrixCompare(C.toHost(), c_lf, "Init from host and copy to host - again") ) {
+    CudaMatrix C_temp(&c_v[0], &c_rp[0], &c_ci[0], 7,4,4);
+    if ( matrixCompare(C_temp.toHost(), c_lf, "Init from host and copy to host - again") ) {
+	return 1;
+    }
+
+    // Copy assignment constructor:
+    C = C_temp;
+    if ( matrixCompare(C.toHost(), c_lf, "Copy assignment constructor") ) {
 	return 1;
     }
 

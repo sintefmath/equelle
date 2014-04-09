@@ -85,6 +85,7 @@ namespace equelleCUDA {
 	cusparseMatDescr_t description_;
 
 	void checkError_(const std::string& msg) const;
+	void createGeneralDescription(const std::string& msg);
 	
     };
 
