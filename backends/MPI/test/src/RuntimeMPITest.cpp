@@ -173,9 +173,54 @@ BOOST_AUTO_TEST_CASE( boundaryFaces ) {
         er.logstream << c.index << ", ";
     }
     er.logstream << std::endl;
-
-
 }
+
+BOOST_AUTO_TEST_CASE( inputDomainSubsetOf ) {
+    BOOST_REQUIRE_MESSAGE( equelle::getMPISize() == 2, "Test requires program to be run on exactly two nodes" );
+    Opm::parameter::ParameterGroup param;
+    param.disableOutput();
+
+    // Ensure we have at least one interior cell.
+    param.insertParameter( "nx", "6" );
+    param.insertParameter( "ny", "1" );
+
+    // These faces are on the boundary, and face 9 is on both nodes (as part of the southern face of global cell 2.
+    std::vector<int> global_dirichlet_boundary = { 7, 8, 9 };
+    injectMockData( param, "dirichlet_boundary", global_dirichlet_boundary.begin(), global_dirichlet_boundary.end() );
+
+    equelle::RuntimeMPI er( param );
+    er.decompose();
+
+    CollOfFace dirichlet_boundary = er.inputDomainSubsetOf("dirichlet_boundary", er.boundaryFaces() );
+
+    if ( equelle::getMPIRank() == 0 ) {
+        BOOST_CHECK_EQUAL( dirichlet_boundary.size(), 3 );
+    } else if ( equelle::getMPIRank() == 1 ) {
+        BOOST_CHECK_EQUAL( dirichlet_boundary.size(), 1 );
+    }
+}
+
+BOOST_AUTO_TEST_CASE( inputDomainSubsetOf_invalid_superset ) {
+    BOOST_REQUIRE_MESSAGE( equelle::getMPISize() == 2, "Test requires program to be run on exactly two nodes" );
+    Opm::parameter::ParameterGroup param;
+    param.disableOutput();
+
+    // Ensure we have at least one interior cell.
+    param.insertParameter( "nx", "6" );
+    param.insertParameter( "ny", "1" );
+
+    // These faces are on the boundary, and face 9 is on both nodes (as part of the southern face of global cell 2.
+    // In addition we add face 2, which is an interor node but exists on both partitions
+    std::vector<int> global_dirichlet_boundary = { 2, 7, 8, 9 };
+    injectMockData( param, "dirichlet_boundary", global_dirichlet_boundary.begin(), global_dirichlet_boundary.end() );
+
+    equelle::RuntimeMPI er( param );
+    er.decompose();
+
+    BOOST_CHECK_THROW( er.inputDomainSubsetOf("dirichlet_boundary", er.boundaryFaces() ),
+                       std::runtime_error );
+}
+
 
 BOOST_AUTO_TEST_CASE( logging ) {    
     equelle::RuntimeMPI runtime;

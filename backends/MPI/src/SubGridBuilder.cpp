@@ -180,6 +180,7 @@ SubGrid SubGridBuilder::build(const UnstructuredGrid* grid, const std::vector<in
     auto participatingNodes = extractNeighborNodes(grid, participatingFaces.global_face);
 
     subGrid.global_face = participatingFaces.global_face;
+    subGrid.face_global_to_local = participatingFaces.cell_global_to_local;
 
     subGrid.c_grid = allocate_grid( grid->dimensions, subGrid.global_cell.size(),
                                     participatingFaces.global_face.size(), participatingNodes.face_nodes.size(),
