@@ -55,6 +55,9 @@ BOOST_AUTO_TEST_CASE( inputScalarWithDefault ) {
 }
 
 
+// In order to look at the outputs to the logstream (an easy way to do MPI printf debuggin)
+// it is recomenned to run the test application using the --run_test=boundaryCells
+// command line option.
 BOOST_AUTO_TEST_CASE( boundaryCells ) {
     BOOST_REQUIRE_MESSAGE( equelle::getMPISize() > 1, "Test requires program to be run with mpirun." );
     Opm::parameter::ParameterGroup param;
@@ -76,11 +79,20 @@ BOOST_AUTO_TEST_CASE( boundaryCells ) {
 
     auto global_boundary = er.subGrid.map_to_global( boundary );
 
+    er.logstream << "grid is " << param.getDefault("nx", 0) << "x" << param.getDefault("ny", 0) << std::endl;
     er.logstream << "all cells (local coordinate system)";
     for( auto c: er.allCells() ) {
         er.logstream << c.index << ", ";
     }
     er.logstream << std::endl;
+
+
+    er.logstream << "all cells (global coordinate system)";
+    for( auto c: er.subGrid.map_to_global( er.allCells() ) ) {
+        er.logstream << c.index << ", ";
+    }
+    er.logstream << std::endl;
+
 
     er.logstream << "local cells: ";
     for( auto c: boundary ) {
@@ -98,7 +110,7 @@ BOOST_AUTO_TEST_CASE( boundaryCells ) {
     // Assert all the boundary cells are in the global boundary
     for( auto c: global_boundary ) {
         auto it = std::find( gold_global_boundary.begin(), gold_global_boundary.end(), c );
-        BOOST_CHECK_MESSAGE( it != global_boundary.end(),
+        BOOST_CHECK_MESSAGE( it != gold_global_boundary.end(),
                      "global cell " << c.index << " is not in the global boundary");
     }
 
@@ -109,6 +121,61 @@ BOOST_AUTO_TEST_CASE( boundaryCells ) {
     er.logstream << std::endl;
 }
 
+BOOST_AUTO_TEST_CASE( boundaryFaces ) {
+    BOOST_REQUIRE_MESSAGE( equelle::getMPISize() > 1, "Test requires program to be run with mpirun." );
+    Opm::parameter::ParameterGroup param;
+
+    // Ensure we have at least one interior cell.
+    param.insertParameter( "nx", "6" );
+    param.insertParameter( "ny", "1" );
+
+    equelle::RuntimeMPI er( param );
+    er.decompose();
+
+    equelle::EquelleRuntimeCPU ser( param );
+    CollOfFace gold_global_boundary = ser.boundaryFaces();
+
+    auto boundary = er.boundaryFaces();
+
+    // All cells are on the boundary in the 6x1 grid so it should not be empty.
+    BOOST_CHECK( !boundary.empty() );
+
+    auto global_boundary = er.subGrid.map_to_global( boundary );
+
+    er.logstream << "all faces (local coordinate system)";
+    for( auto c: er.allFaces() ) {
+        er.logstream << c.index << ", ";
+    }
+    er.logstream << std::endl;
+
+    er.logstream << "local faces: ";
+    for( auto c: boundary ) {
+        er.logstream << c.index << ", ";
+    }
+    er.logstream << std::endl;
+
+    er.logstream << "global face: ";
+    for( auto c: global_boundary ) {
+        er.logstream << c.index << ", ";
+    }
+    er.logstream << std::endl;
+
+
+    // Assert all the boundary cells are in the global boundary
+    for( auto c: global_boundary ) {
+        auto it = std::find( gold_global_boundary.begin(), gold_global_boundary.end(), c );
+        BOOST_CHECK_MESSAGE( it != gold_global_boundary.end(),
+                     "global face " << c.index << " is not in the global boundary");
+    }
+
+    er.logstream << "gold global boundary: ";
+    for( auto c: gold_global_boundary ) {
+        er.logstream << c.index << ", ";
+    }
+    er.logstream << std::endl;
+
+
+}
 
 BOOST_AUTO_TEST_CASE( logging ) {    
     equelle::RuntimeMPI runtime;

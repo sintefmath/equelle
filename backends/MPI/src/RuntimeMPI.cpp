@@ -142,10 +142,28 @@ CollOfCell RuntimeMPI::allCells() const
     return runtime->allCells();
 }
 
+CollOfFace RuntimeMPI::allFaces() const
+{
+    return runtime->allFaces();
+}
+
 CollOfCell RuntimeMPI::boundaryCells() const
 {
     CollOfCell cells;
     return runtime->boundaryCells();
+}
+
+CollOfFace RuntimeMPI::boundaryFaces() const
+{
+    CollOfFace boundary;
+
+    for( int i = 0; i < subGrid.c_grid->number_of_faces; ++i ) {
+        if (subGrid.c_grid->face_cells[2*i] == Boundary::outer || subGrid.c_grid->face_cells[(2*i)+1] == Boundary::outer ) {
+            boundary.emplace_back( i );
+        }
+    }
+
+    return boundary;
 }
 
 CollOfScalar RuntimeMPI::inputCollectionOfScalar(const String& /* name */, const CollOfFace & /* coll */ )

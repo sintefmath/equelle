@@ -38,6 +38,7 @@ public:
 
     ///@{ Topology and geometry related.
     CollOfCell allCells() const;
+    CollOfFace allFaces() const;
 
     /**
      * @brief boundaryCells
@@ -45,6 +46,7 @@ public:
      *         that are on the boundary of the global-domain.
      */
     CollOfCell boundaryCells() const;
+    CollOfFace boundaryFaces() const;
     ///@}
 
     /// Return the number of cells in collection. Will do MPI-transfer.
