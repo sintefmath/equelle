@@ -40,6 +40,7 @@ CudaArray::CudaArray()
     // Intentionally left blank
 }
 
+
 // Allocating memory without initialization
 CudaArray::CudaArray(const int size) 
     : size_(size),

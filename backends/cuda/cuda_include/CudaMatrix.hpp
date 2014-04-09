@@ -2,6 +2,7 @@
 #ifndef EQUELLE_CUDAMATRIX_HEADER_INCLUDED
 #define EQUELLE_CUDAMATRIX_HEADER_INCLUDED
 
+#include <vector>
 
 #include <cuda.h>
 #include <cuda_runtime.h>
@@ -15,6 +16,17 @@
 
 namespace equelleCUDA {
 
+    //! Struct for holding transferring CudaMatrix to host.
+    struct hostMat
+    {
+	std::vector<double> vals;
+	std::vector<int> rowPtr;
+	std::vector<int> colInd;
+	int nnz;
+	int rows;
+	int cols;
+    };
+    
     
     //! Class for storing a Matrix on the device
     /*!
@@ -39,7 +51,7 @@ namespace equelleCUDA {
 	
 	//! Constructor for testing using host arrays
 	CudaMatrix( const double* val, const int* rowPtr, const int* colInd,
-		    int rows, int cols, int nnz);
+		    const int nnz, const int rows, const int cols);
 
 	//! Copy assignment operator
 	CudaMatrix& operator= (const CudaMatrix& other);
@@ -49,8 +61,11 @@ namespace equelleCUDA {
 	//! Destructor
 	~CudaMatrix();
 
-	int getNnz() const;
+	int nnz() const;
+	int rows() const;
+	int cols() const;
 
+	hostMat toHost() const;
 
 	friend CudaMatrix operator+ (const CudaMatrix& lhs, const CudaMatrix& rhs);
 	friend CudaMatrix operator* (const CudaMatrix& lhs, const CudaMatrix& rhs);
