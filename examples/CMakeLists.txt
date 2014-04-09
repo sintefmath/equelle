@@ -16,6 +16,13 @@ link_directories(
   ${EXTRA_LIBDIRS_FOR_EQUELLE}
 )
 
+# --- Stuff for making non-source code show up in IDEs
+
+file( GLOB_RECURSE EQUELLE_README "README.*" )
+file( GLOB_RECURSE EQUELLE_EXAMPLE_SOURCES "*.equelle" )
+source_group( "Assets" FILES ${EQUELLE_README} ${EQUELLE_EXAMPLE_SOURCES} ${EQUELLE_VAGRANT} )
+add_custom_target( Equelle_EXAMPLES_DEPS SOURCES ${EQUELLE_README} ${EQUELLE_EXAMPLE_SOURCES} )
+
 add_subdirectory( benchmarks )
 
 file( GLOB sources     "src/*.cpp" )
