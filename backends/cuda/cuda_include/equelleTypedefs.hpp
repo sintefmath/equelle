@@ -3,10 +3,13 @@
 #define EQUELLE_TYPEDEFS_HEADER_INCLUDED
 
 #include <cuda.h>
+#include <cusparse_v2.h>
 
 #include <thrust/device_vector.h>
 #include <vector>
 
+
+//! Namespace for the entire CUDA Back-End for Equelle.
 namespace equelleCUDA
 {
     /*!
@@ -14,6 +17,9 @@ namespace equelleCUDA
     */
     const int MAX_THREADS = 512;
     //const int MAX_THREADS = 7;
+
+    // This global variable is decleared in src/wrapEquelleRuntime.cu
+    extern cusparseHandle_t CUSPARSE;
     
     //! Collection of booleans as a thrust::device_vector<bool>
     typedef thrust::device_vector<bool> CollOfBool;

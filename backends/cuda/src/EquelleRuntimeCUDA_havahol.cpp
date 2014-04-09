@@ -22,6 +22,8 @@ using namespace wrapEquelleRuntimeCUDA;
 //
 
 
+
+
 void EquelleRuntimeCUDA::output(const String& tag, const CollOfScalar& coll)
 {
     // Get data back to host

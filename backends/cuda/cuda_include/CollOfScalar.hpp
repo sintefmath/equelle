@@ -24,19 +24,24 @@ namespace equelleCUDA {
 	
 	//! Allocating constructor
 	/*! 
-	  Allocates device memory for the collection. Does not initialize the collection. 
+	  Creates an uninitialized CudaArray, by calling its allocation constructor
 	  \param size number of scalars in the collection.
 	*/
 	explicit CollOfScalar(const int size);
 	
 	//! Constructor for uniform value
 	/*!
-	  Allocates device memory and initialize all elements to the same value.
+	  Create a CudaArray of given size with uniform value.
 	  \param size Collection size
 	  \param value Value assigned to each of the elements in the collection.
 	*/
 	explicit CollOfScalar(const int size, const double value);
 	
+	//! Constructor from CudaArray
+	/*!
+	  Copy the given CudaArray.
+	  \param val The CudaArray we want to create a CollOfScalar from.
+	*/
 	explicit CollOfScalar(const CudaArray& val);
 
 	//! Constructor from std::vector

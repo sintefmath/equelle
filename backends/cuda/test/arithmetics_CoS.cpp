@@ -13,7 +13,7 @@
 #include <stdlib.h>
 
 #include "CollOfScalar.hpp"
-#include "equelleTypedefs.hpp"
+//#include "equelleTypedefs.hpp"
 #include "EquelleRuntimeCUDA_havahol.hpp"
 #include "EquelleRuntimeCUDA.hpp"
 

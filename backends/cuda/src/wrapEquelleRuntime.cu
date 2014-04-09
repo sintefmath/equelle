@@ -1,5 +1,6 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
+#include <cusparse_v2.h>
 
 #include <thrust/detail/raw_pointer_cast.h>
 #include <math.h>
@@ -12,6 +13,10 @@
 
 using namespace equelleCUDA;
 using namespace wrapEquelleRuntimeCUDA;
+
+// Declaring the cuSparse handle!
+cusparseHandle_t equelleCUDA::CUSPARSE;
+
 
 // Have already performed a check on sizes.
 CollOfScalar wrapEquelleRuntimeCUDA::trinaryIfWrapper( const CollOfBool& predicate,
