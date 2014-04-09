@@ -31,6 +31,7 @@
 #include "CollOfVector.hpp"
 #include "DeviceGrid.hpp"
 #include "equelleTypedefs.hpp"
+#include "CudaMatrix.hpp"
 
 // Forward declarations for the Device types
 //class CollOfScalar;

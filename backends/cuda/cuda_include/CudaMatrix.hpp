@@ -8,7 +8,7 @@
 
 // This file include a global variable for the cusparse handle
 // It has to be created before any CudaMatrix objects are decleared!
-#include "equelleTypedefs"
+#include "equelleTypedefs.hpp"
 
 #include <cusparse_v2.h>
 
@@ -44,10 +44,13 @@ namespace equelleCUDA {
 	//! Copy assignment operator
 	CudaMatrix& operator= (const CudaMatrix& other);
 	
-
+	
 
 	//! Destructor
 	~CudaMatrix();
+
+	int getNnz() const;
+
 
 	friend CudaMatrix operator+ (const CudaMatrix& lhs, const CudaMatrix& rhs);
 	friend CudaMatrix operator* (const CudaMatrix& lhs, const CudaMatrix& rhs);
@@ -60,14 +63,15 @@ namespace equelleCUDA {
 	int* csrRowPtr_;
 	int* csrColInd_;
 	
-	cusparseMatDescr_t description_;
-	
 	// Error handling:
 	mutable cusparseStatus_t sparseStatus_;
 	mutable cudaError_t cudaStatus_;
+
+	cusparseMatDescr_t description_;
+
 	void checkError_(const std::string& msg) const;
 	
-    }
+    };
 
 
 
