@@ -155,6 +155,17 @@ int main(int argc, char** argv) {
 	return 1;
     }
 
+    
+    CudaMatrix D = B + C;
+    vector<double> d_v = {1,3,0,1,4.5,3,4,4,1,1,-4};
+    vector<int> d_rp = {0,3,4,8,11};
+    vector<int> d_ci = {0,1,2,3,0,1,2,3,1,2,3};
+    hostMat d_lf = {d_v, d_rp, d_ci, 11, 4, 4};
+    if ( matrixCompare(D.toHost(), d_lf, "B + C") ) {
+	return 1;
+    }
+
+
     return 0;
 }
 

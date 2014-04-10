@@ -104,7 +104,7 @@ CollOfScalar equelleCUDA::operator+ (const CollOfScalar& lhs,
 					 const CollOfScalar& rhs)
 {
     //CudaArray val = lhs.val_ + rhs.val_;
-    std::cout << "pluss completed\n";
+     std::cout << "pluss completed\n";
     return CollOfScalar(lhs.val_ + rhs.val_);
 }
 

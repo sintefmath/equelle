@@ -6,12 +6,11 @@
 
 #include <cuda.h>
 #include <cuda_runtime.h>
+#include <cusparse_v2.h>
 
 // This file include a global variable for the cusparse handle
 // It has to be created before any CudaMatrix objects are decleared!
 #include "equelleTypedefs.hpp"
-
-#include <cusparse_v2.h>
 
 
 namespace equelleCUDA {
@@ -26,8 +25,12 @@ namespace equelleCUDA {
 	int rows;
 	int cols;
     };
+} // namespace equelleCUDA
     
-    
+
+
+namespace equelleCUDA {
+
     //! Class for storing a Matrix on the device
     /*!
       This class stores a rows*cols sized Matrix in CSR (Compressed Sparse Row) 
@@ -67,8 +70,9 @@ namespace equelleCUDA {
 
 	hostMat toHost() const;
 
-	friend CudaMatrix operator+ (const CudaMatrix& lhs, const CudaMatrix& rhs);
-	friend CudaMatrix operator* (const CudaMatrix& lhs, const CudaMatrix& rhs);
+	friend CudaMatrix operator+(const CudaMatrix& lhs, const CudaMatrix& rhs);
+	friend CudaMatrix operator*(const CudaMatrix& lhs, const CudaMatrix& rhs);
+	friend CudaMatrix operator-(const CudaMatrix& lhs, const CudaMatrix& rhs);
     private:
 	int rows_;
 	int cols_;
@@ -87,8 +91,10 @@ namespace equelleCUDA {
 	void checkError_(const std::string& msg) const;
 	void createGeneralDescription(const std::string& msg);
 	
-    };
-
+    }; // class CudaMatrix
+    
+    CudaMatrix operator+(const CudaMatrix& lhs, const CudaMatrix& rhs);
+    
 
 
 } // namespace equelleCUDA
