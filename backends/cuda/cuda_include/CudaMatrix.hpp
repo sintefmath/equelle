@@ -94,8 +94,9 @@ namespace equelleCUDA {
     }; // class CudaMatrix
     
     CudaMatrix operator+(const CudaMatrix& lhs, const CudaMatrix& rhs);
+    CudaMatrix operator*(const CudaMatrix& lhs, const CudaMatrix& rhs);
+    CudaMatrix operator-(const CudaMatrix& lhs, const CudaMatrix& rhs);
     
-
 
 } // namespace equelleCUDA
 

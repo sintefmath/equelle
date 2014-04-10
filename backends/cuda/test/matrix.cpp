@@ -155,13 +155,23 @@ int main(int argc, char** argv) {
 	return 1;
     }
 
-    
+    // +
     CudaMatrix D = B + C;
     vector<double> d_v = {1,3,0,1,4.5,3,4,4,1,1,-4};
     vector<int> d_rp = {0,3,4,8,11};
     vector<int> d_ci = {0,1,2,3,0,1,2,3,1,2,3};
     hostMat d_lf = {d_v, d_rp, d_ci, 11, 4, 4};
-    if ( matrixCompare(D.toHost(), d_lf, "B + C") ) {
+    if ( matrixCompare(D.toHost(), d_lf, "D = B + C") ) {
+	return 1;
+    }
+
+    // Sparse matrix multiplication
+    CudaMatrix E = B*C;
+    vector<double> e_v = {12,16,20,1,-5,4.5,-1,-18,5,4,4,0};
+    vector<int> e_rp = {0,3,5,9,12};
+    vector<int> e_ci = {1,2,3,1,3,0,1,2,3,1,2,3};
+    hostMat e_lf = {e_v, e_rp, e_ci, 12, 4, 4};
+    if ( matrixCompare(E.toHost(), e_lf, "E = B * C") ) {
 	return 1;
     }
 

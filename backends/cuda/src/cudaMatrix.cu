@@ -331,4 +331,82 @@ CudaMatrix equelleCUDA::operator+(const CudaMatrix& lhs, const CudaMatrix& rhs) 
     out.checkError_("cusparseDcsrgream() in CudaMatrix operator +");
 
     return out;
-}
+
+} // operator +
+
+
+
+CudaMatrix equelleCUDA::operator*(const CudaMatrix& lhs, const CudaMatrix& rhs) {
+
+    if ( lhs.cols_ != rhs.rows_ ) {
+	OPM_THROW(std::runtime_error, "Error in CudaMatrix * CudaMatrix\n" << "\tMatrices of illegal sizes.\n" << "\tlhs.cols_ = " << lhs.cols_ << "\n\trhs.rows_ = " << rhs.rows_);
+    }
+
+    // Create an empty matrix. Need to set rows, cols, nnz, and allocate arrays!
+    CudaMatrix out;
+    out.rows_ = lhs.rows_;
+    out.cols_ = rhs.cols_;
+
+    // Addition in two steps
+    //    1) Find nonzero pattern of output
+    //    2) Multiply matrices.
+
+    // 1) Find nonzero pattern of output
+    // Allocate rowPtr:
+    out.cudaStatus_ = cudaMalloc( (void**)&out.csrRowPtr_, (out.rows_+1)*sizeof(int));
+    out.checkError_("cudaMalloc(out.csrRowPtr_) in CudaMatrix operator +");
+
+    // The following code for finding number of non-zeros is
+    // taken from the Nvidia cusparse documentation, section 9.2
+    // Only additions are the error checking.
+    int *nnzTotalDevHostPtr = &out.nnz_;
+    out.sparseStatus_ = cusparseSetPointerMode(CUSPARSE, CUSPARSE_POINTER_MODE_HOST);
+    out.checkError_("cusparseSetPointerMode() in CudaMatrix operator *");
+    out.sparseStatus_ = cusparseXcsrgemmNnz( CUSPARSE, 
+					     CUSPARSE_OPERATION_NON_TRANSPOSE,
+					     CUSPARSE_OPERATION_NON_TRANSPOSE,
+					     out.rows_, out.cols_, lhs.cols_,
+					     lhs.description_, lhs.nnz_,
+					     lhs.csrRowPtr_, lhs.csrColInd_,
+					     rhs.description_, rhs.nnz_,
+					     rhs.csrRowPtr_, rhs.csrColInd_,
+					     out.description_,
+					     out.csrRowPtr_, nnzTotalDevHostPtr);
+    out.checkError_("cusparseXcsrgemmNnz() in CudaMatrix operator *");
+    if ( nnzTotalDevHostPtr != NULL ) {
+	out.nnz_ = *nnzTotalDevHostPtr;
+    } else {
+	int baseC;
+	out.cudaStatus_ = cudaMemcpy(&out.nnz_, out.csrRowPtr_ + out.rows_,
+				     sizeof(int), cudaMemcpyDeviceToHost);
+	out.checkError_("cudaMemcpy(out.csrRowPtr_ + out.rows_) in CudaMatrix operator *");
+	out.cudaStatus_ = cudaMemcpy(&baseC, out.csrRowPtr_, sizeof(int),
+				     cudaMemcpyDeviceToHost);
+	out.checkError_("cudaMemcpy(baseC) in CudaMatrix operator *");
+	out.nnz_ -= baseC;
+    }
+
+    std::cout << "New nnz: " << out.nnz_ << "\n";
+    
+    // Allocate the other two arrays:
+    out.cudaStatus_ = cudaMalloc( (void**)&out.csrVal_, out.nnz_*sizeof(double));
+    out.checkError_("cudaMalloc(out.csrVal_) in CudaMatrix operator *");
+    out.cudaStatus_ = cudaMalloc( (void**)&out.csrColInd_, out.nnz_*sizeof(int));
+    out.checkError_("cudaMalloc(out.csrColInd_) in CudaMatrix operator *");
+    
+    // 2) Multiply the matrices:
+    out.sparseStatus_ = cusparseDcsrgemm(CUSPARSE,
+					 CUSPARSE_OPERATION_NON_TRANSPOSE,
+					 CUSPARSE_OPERATION_NON_TRANSPOSE,
+					 out.rows_, out.cols_, lhs.cols_,
+					 lhs.description_, lhs.nnz_,
+					 lhs.csrVal_, lhs.csrRowPtr_, lhs.csrColInd_,
+					 rhs.description_, rhs.nnz_,
+					 rhs.csrVal_, rhs.csrRowPtr_, rhs.csrColInd_,
+					 out.description_,
+					 out.csrVal_, out.csrRowPtr_, out.csrColInd_);
+    out.checkError_("cusparseDcsrgemm() in CudaMatrix operator *");
+    
+    return out;
+} // operator *
+
