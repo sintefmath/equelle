@@ -260,7 +260,18 @@ void CudaMatrix::createGeneralDescription(const std::string& msg) {
 
 // Operator +
 CudaMatrix equelleCUDA::operator+(const CudaMatrix& lhs, const CudaMatrix& rhs) {
+    return cudaMatrixSum(lhs, rhs, 1.0);
+}
 
+CudaMatrix equelleCUDA::operator-(const CudaMatrix& lhs, const CudaMatrix& rhs) {
+    return cudaMatrixSum(lhs, rhs, -1.0);
+}
+
+
+CudaMatrix equelleCUDA::cudaMatrixSum(const CudaMatrix& lhs, 
+				      const CudaMatrix& rhs,
+				      const double beta) {
+  
     if ( (lhs.rows_ != rhs.rows_) || (lhs.cols_ != rhs.cols_) ) {
     	OPM_THROW(std::runtime_error, "Error in CudaMatrix + CudaMatrix\n" << "\tMatrices of different size.\n" << "\tlhs: " << lhs.rows_ << " x " << lhs.cols_ << "\n" << "\trhs: " << rhs.rows_ << " x " << rhs.cols_ << ".");
     }
@@ -277,7 +288,7 @@ CudaMatrix equelleCUDA::operator+(const CudaMatrix& lhs, const CudaMatrix& rhs) 
     // 1) Find nonzero pattern:
     // Allocate rowPtr:
     out.cudaStatus_ = cudaMalloc( (void**)&out.csrRowPtr_, (out.rows_+1)*sizeof(int));
-    out.checkError_("cudaMalloc(out.csrRowPtr_) in CudaMatrix operator +");
+    out.checkError_("cudaMalloc(out.csrRowPtr_) in cudaMatrixSum()");
 
     // The following code for finding number of non-zeros is
     // taken from the Nvidia cusparse documentation, section 9.1
@@ -285,7 +296,7 @@ CudaMatrix equelleCUDA::operator+(const CudaMatrix& lhs, const CudaMatrix& rhs) 
     // The documentation has a typo, as it says cusparseSetPointerNode, not Mode.
     int *nnzTotalDevHostPtr = &out.nnz_;
     out.sparseStatus_ = cusparseSetPointerMode( CUSPARSE, CUSPARSE_POINTER_MODE_HOST);
-    out.checkError_("cusparseSetPointerMode() in CudaMatrix operator +");
+    out.checkError_("cusparseSetPointerMode() in cudaMatrixSum()");
     out.sparseStatus_ = cusparseXcsrgeamNnz( CUSPARSE, out.rows_, out.cols_,
 					     lhs.description_, lhs.nnz_,
 					     lhs.csrRowPtr_, lhs.csrColInd_,
@@ -293,17 +304,17 @@ CudaMatrix equelleCUDA::operator+(const CudaMatrix& lhs, const CudaMatrix& rhs) 
 					     rhs.csrRowPtr_, rhs.csrColInd_,
 					     out.description_, out.csrRowPtr_,
 					     nnzTotalDevHostPtr);
-    out.checkError_("cusparseXcsrgeamNnz() in CudaMatrix operator +");
+    out.checkError_("cusparseXcsrgeamNnz() in cudaMatrixSum()");
     if ( nnzTotalDevHostPtr != NULL) {
 	out.nnz_ = *nnzTotalDevHostPtr;
     } else {
 	out.cudaStatus_ = cudaMemcpy( &out.nnz_, out.csrRowPtr_ + out.rows_,
 				      sizeof(int), cudaMemcpyDeviceToHost);
-	out.checkError_("cudaMemcpy(out.csrRowPtr_ + rows_) in CudaMatrix operator +");
+	out.checkError_("cudaMemcpy(out.csrRowPtr_ + rows_) in cudaMatrixSum()");
 	int baseC;
 	out.cudaStatus_ = cudaMemcpy( &baseC, out.csrRowPtr_, sizeof(int),
 				      cudaMemcpyDeviceToHost);
-	out.checkError_("cudaMemcpy(&baseC) in CudaMatrix operator +");
+	out.checkError_("cudaMemcpy(&baseC) in cudaMatrixSum()");
 	out.nnz_ -= baseC;
     }
 
@@ -311,14 +322,14 @@ CudaMatrix equelleCUDA::operator+(const CudaMatrix& lhs, const CudaMatrix& rhs) 
     
     // Allocate the other two arrays:
     out.cudaStatus_ = cudaMalloc( (void**)&out.csrVal_, out.nnz_*sizeof(double));
-    out.checkError_("cudaMalloc(out.csrVal_) in CudaMatrix operator +");
+    out.checkError_("cudaMalloc(out.csrVal_) in cudaMatrixSum()");
     out.cudaStatus_ = cudaMalloc( (void**)&out.csrColInd_, out.nnz_*sizeof(int));
-    out.checkError_("cudaMalloc(out.csrColInd_) in CudaMatrix operator +");
+    out.checkError_("cudaMalloc(out.csrColInd_) in cudaMatrixSum()");
     
     // 2) Add matrices
     // Need to create alpha and beta:
-    double alpha = 1.0;
-    double beta = 1.0;
+    const double alpha = 1.0;
+    //double beta = 1.0;
     out.sparseStatus_ = cusparseDcsrgeam(CUSPARSE, out.rows_, out.cols_,
 					 &alpha,
 					 lhs.description_, lhs.nnz_,
@@ -328,11 +339,11 @@ CudaMatrix equelleCUDA::operator+(const CudaMatrix& lhs, const CudaMatrix& rhs) 
 					 rhs.csrVal_, rhs.csrRowPtr_, rhs.csrColInd_,
 					 out.description_,
 					 out.csrVal_, out.csrRowPtr_, out.csrColInd_);
-    out.checkError_("cusparseDcsrgream() in CudaMatrix operator +");
+    out.checkError_("cusparseDcsrgream() in cudaMatrixSum()");
 
     return out;
 
-} // operator +
+} // cudaMatrixSum
 
 
 

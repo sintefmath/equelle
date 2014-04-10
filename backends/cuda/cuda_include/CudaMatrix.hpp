@@ -71,8 +71,14 @@ namespace equelleCUDA {
 	hostMat toHost() const;
 
 	friend CudaMatrix operator+(const CudaMatrix& lhs, const CudaMatrix& rhs);
-	friend CudaMatrix operator*(const CudaMatrix& lhs, const CudaMatrix& rhs);
 	friend CudaMatrix operator-(const CudaMatrix& lhs, const CudaMatrix& rhs);
+	// C = A + beta*B
+	friend CudaMatrix cudaMatrixSum(const CudaMatrix& lhs,
+					const CudaMatrix& rhs,
+					const double beta);
+	
+	friend CudaMatrix operator*(const CudaMatrix& lhs, const CudaMatrix& rhs);
+	
     private:
 	int rows_;
 	int cols_;
@@ -94,9 +100,11 @@ namespace equelleCUDA {
     }; // class CudaMatrix
     
     CudaMatrix operator+(const CudaMatrix& lhs, const CudaMatrix& rhs);
-    CudaMatrix operator*(const CudaMatrix& lhs, const CudaMatrix& rhs);
     CudaMatrix operator-(const CudaMatrix& lhs, const CudaMatrix& rhs);
-    
+    CudaMatrix cudaMatrixSum( const CudaMatrix& lhs,
+			      const CudaMatrix& rhs,
+			      const double beta);
+    CudaMatrix operator*(const CudaMatrix& lhs, const CudaMatrix& rhs);    
 
 } // namespace equelleCUDA
 

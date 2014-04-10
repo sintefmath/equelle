@@ -165,6 +165,14 @@ int main(int argc, char** argv) {
 	return 1;
     }
 
+    // -
+    CudaMatrix F = B - C;
+    vector<double> f_v = {-1,3,8,1,4.5,-3,-4,-6, -1,1,6};
+    hostMat f_lf = {f_v, d_rp, d_ci, 11, 4, 4};
+    if ( matrixCompare(F.toHost(), f_lf, "F = B - C") ) {
+	return 1;
+    }
+
     // Sparse matrix multiplication
     CudaMatrix E = B*C;
     vector<double> e_v = {12,16,20,1,-5,4.5,-1,-18,5,4,4,0};
@@ -174,6 +182,8 @@ int main(int argc, char** argv) {
     if ( matrixCompare(E.toHost(), e_lf, "E = B * C") ) {
 	return 1;
     }
+
+    
 
 
     return 0;
