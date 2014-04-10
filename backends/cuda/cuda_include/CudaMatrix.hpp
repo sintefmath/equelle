@@ -78,7 +78,8 @@ namespace equelleCUDA {
 					const double beta);
 	
 	friend CudaMatrix operator*(const CudaMatrix& lhs, const CudaMatrix& rhs);
-	
+	friend CudaMatrix operator*(const CudaMatrix& lhs, const Scalar rhs);
+	friend CudaMatrix operator*(const Scalar lhs, const CudaMatrix& rhs);
     private:
 	int rows_;
 	int cols_;
@@ -104,7 +105,9 @@ namespace equelleCUDA {
     CudaMatrix cudaMatrixSum( const CudaMatrix& lhs,
 			      const CudaMatrix& rhs,
 			      const double beta);
-    CudaMatrix operator*(const CudaMatrix& lhs, const CudaMatrix& rhs);    
+    CudaMatrix operator*(const CudaMatrix& lhs, const CudaMatrix& rhs);
+    CudaMatrix operator*(const CudaMatrix& lhs, const Scalar rhs);
+    CudaMatrix operator*(const Scalar lhs, const CudaMatrix& rhs);
 
 } // namespace equelleCUDA
 

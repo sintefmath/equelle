@@ -183,6 +183,20 @@ int main(int argc, char** argv) {
 	return 1;
     }
 
+    // Scalar * matrix
+    CudaMatrix G = -4*E;
+    vector<double> g_v = {-48,-64,-80,-4,20,-18,4,72,-20,-16,-16,0};
+    hostMat g_lf = {g_v, e_rp, e_ci, 12, 4, 4};
+    if ( matrixCompare(G.toHost(), g_lf, "G = -4*E" ) ) {
+	return 1;
+    }
+    
+    // Matrix * Scalar
+    CudaMatrix G2 = E*(-4);
+    if ( matrixCompare(G2.toHost(), g_lf, "G2 = E*(-4)") ) {
+	return 1;
+    }
+
     
 
 
