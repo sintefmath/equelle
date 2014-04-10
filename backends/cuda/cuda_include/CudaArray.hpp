@@ -221,7 +221,7 @@ namespace equelleCUDA {
 	  \param[in] scal Scalar value operand.
 	  \param[in] size Number of elements.
 	*/
-	__global__ void multScalCollection_kernel(double* out, 
+	__global__ void scalMultColl_kernel(double* out, 
 						  const double scal, 
 						  const int size);
 	
@@ -233,7 +233,7 @@ namespace equelleCUDA {
 	  \param[in] scal Scalar value numerator.
 	  \param[in] size Number of elements.
 	*/
-	__global__ void divScalCollection_kernel( double* out,
+	__global__ void scalDivColl_kernel( double* out,
 						  const double scal,
 						  const int size);
 	
@@ -439,7 +439,7 @@ namespace equelleCUDA {
       \param lhs Left hand side Scalar
       \param rhs Right hand side Collection of Scalars
       \return lhs * rhs
-      \sa multScalCollection_kernel
+      \sa scalMultColl_kernel
     */
     CudaArray operator*(const Scalar lhs, const CudaArray& rhs);
 

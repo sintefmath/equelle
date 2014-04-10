@@ -316,7 +316,7 @@ CudaArray equelleCUDA::operator/(const CudaArray& lhs, const CudaArray& rhs) {
 CudaArray equelleCUDA::operator*(const Scalar lhs, const CudaArray& rhs) {
     CudaArray out = rhs;
     kernelSetup s = out.setup();
-    multScalCollection_kernel<<<s.grid,s.block>>>(out.data(), lhs, out.size());
+    scalMultColl_kernel<<<s.grid,s.block>>>(out.data(), lhs, out.size());
     return out;
 }
 
@@ -331,7 +331,7 @@ CudaArray equelleCUDA::operator/(const CudaArray& lhs, const Scalar rhs) {
 CudaArray equelleCUDA::operator/(const Scalar lhs, const CudaArray& rhs) {
     CudaArray out = rhs;
     kernelSetup s = out.setup();
-    divScalCollection_kernel<<<s.grid,s.block>>>(out.data(), lhs, out.size());
+    scalDivColl_kernel<<<s.grid,s.block>>>(out.data(), lhs, out.size());
     return out;
 }
 
@@ -504,7 +504,7 @@ __global__ void wrapCudaArray::division_kernel(double* out, const double* rhs, c
     }
 }
 
-__global__ void wrapCudaArray::multScalCollection_kernel(double* out, const double scal,
+__global__ void wrapCudaArray::scalMultColl_kernel(double* out, const double scal,
 						       const int size) {
     int index = threadIdx.x + blockDim.x*blockIdx.x;
     if ( index < size ) {
@@ -512,7 +512,7 @@ __global__ void wrapCudaArray::multScalCollection_kernel(double* out, const doub
     }
 }
 
-__global__ void wrapCudaArray::divScalCollection_kernel(double* out, const double scal,
+__global__ void wrapCudaArray::scalDivColl_kernel(double* out, const double scal,
 						     const int size) {
     int index = threadIdx.x + blockDim.x*blockIdx.x;
     if ( index < size ) {

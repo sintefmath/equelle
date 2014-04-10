@@ -426,7 +426,7 @@ CudaMatrix equelleCUDA::operator*(const CudaMatrix& lhs, const CudaMatrix& rhs) 
 CudaMatrix equelleCUDA::operator*(const CudaMatrix& lhs, const Scalar rhs) {
     CudaMatrix out(lhs);
     kernelSetup s(out.nnz_);
-    wrapCudaArray::multScalCollection_kernel<<<s.grid, s.block>>>(out.csrVal_,
+    wrapCudaArray::scalMultColl_kernel<<<s.grid, s.block>>>(out.csrVal_,
 								  rhs,
 								  out.nnz_);
     return out;
@@ -435,7 +435,7 @@ CudaMatrix equelleCUDA::operator*(const CudaMatrix& lhs, const Scalar rhs) {
 CudaMatrix equelleCUDA::operator*(const Scalar lhs, const CudaMatrix& rhs) {
     CudaMatrix out(rhs);
     kernelSetup s(out.nnz_);
-    wrapCudaArray::multScalCollection_kernel<<<s.grid, s.block>>>(out.csrVal_,
+    wrapCudaArray::scalMultColl_kernel<<<s.grid, s.block>>>(out.csrVal_,
 								  lhs,
 								  out.nnz_);
     return out;

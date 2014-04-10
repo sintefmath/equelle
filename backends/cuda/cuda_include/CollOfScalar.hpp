@@ -160,7 +160,7 @@ namespace equelleCUDA {
 	  \param lhs Left hand side Scalar
 	  \param rhs Right hand side Collection of Scalars
 	  \return lhs * rhs
-	  \sa multScalCollection_kernel
+	  \sa scalMultColl_kernel
 	*/
 	friend CollOfScalar operator*(const Scalar lhs, const CollOfScalar& rhs);
 	
