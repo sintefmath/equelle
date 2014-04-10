@@ -38,6 +38,15 @@ public:
 
     ///@{ Topology and geometry related.
     CollOfCell allCells() const;
+    CollOfFace allFaces() const;
+
+    /**
+     * @brief boundaryCells
+     * @return Return indices of the cells (in the node-local enumeration)
+     *         that are on the boundary of the global-domain.
+     */
+    CollOfCell boundaryCells() const;
+    CollOfFace boundaryFaces() const;
     ///@}
 
     /// Return the number of cells in collection. Will do MPI-transfer.
@@ -49,6 +58,12 @@ public:
 
     CollOfScalar inputCollectionOfScalar(const String& name,
                                          const CollOfCell& coll);
+
+    CollOfFace inputDomainSubsetOf(const String& name,
+                                   const CollOfFace& superset);
+
+    Scalar inputScalarWithDefault(const String& name,
+                                  const Scalar default_value);
     ///@}
 
     void output(const String& tag, const CollOfScalar& vals);

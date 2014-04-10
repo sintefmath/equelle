@@ -95,7 +95,7 @@ bool EquelleRuntimeCPU::boundaryCell(const int cell_index) const
 {
     for (int hface = grid_.cell_facepos[cell_index]; hface < grid_.cell_facepos[cell_index + 1]; ++hface) {
         const int face = grid_.cell_faces[hface];
-        if (grid_.face_cells[2*face] < 0 || grid_.face_cells[2*face + 1] < 0) {
+        if (grid_.face_cells[2*face] == Boundary::outer || grid_.face_cells[2*face + 1] == Boundary::outer ) {
             return true;
         }
     }

@@ -4,6 +4,8 @@
 #include <unordered_map>
 #include <set>
 
+#include "equelle/equelleTypes.hpp"
+
 class UnstructuredGrid;
 
 
@@ -22,6 +24,9 @@ struct SubGrid {
 
     std::vector<int> global_face; //! Maps local face indices to global face indices.
     std::unordered_map<int, int> face_global_to_local;
+
+    CollOfCell map_to_global( const CollOfCell& local_collection );
+    CollOfFace map_to_global( const CollOfFace& local_collection );
 
     ~SubGrid();
 };

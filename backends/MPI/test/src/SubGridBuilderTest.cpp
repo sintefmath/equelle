@@ -22,6 +22,7 @@ BOOST_AUTO_TEST_CASE( SubGridBuilder ) {
 
     //equelle::dumpGrid( runtime.grid_manager->c_grid() );
 
+    BOOST_CHECK( !subGrid.face_global_to_local.empty() );
     BOOST_CHECK_EQUAL( subGrid.c_grid->number_of_cells, 3 );
     BOOST_CHECK_EQUAL( subGrid.number_of_ghost_cells, 1 );
     BOOST_CHECK_EQUAL( subGrid.global_face.size(), subGrid.c_grid->number_of_faces );

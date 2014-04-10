@@ -7,6 +7,8 @@
 
 namespace equelle {
 
+/// Codes for inner and outer boundaries
+enum Boundary { outer = -1, inner = -2 };
 
 /// Topological entities.r
 template <int Codim>

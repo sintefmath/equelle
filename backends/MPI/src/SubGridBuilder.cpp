@@ -180,6 +180,7 @@ SubGrid SubGridBuilder::build(const UnstructuredGrid* grid, const std::vector<in
     auto participatingNodes = extractNeighborNodes(grid, participatingFaces.global_face);
 
     subGrid.global_face = participatingFaces.global_face;
+    subGrid.face_global_to_local = participatingFaces.cell_global_to_local;
 
     subGrid.c_grid = allocate_grid( grid->dimensions, subGrid.global_cell.size(),
                                     participatingFaces.global_face.size(), participatingNodes.face_nodes.size(),
@@ -231,6 +232,28 @@ int GridQuerying::numNodes(const UnstructuredGrid *grid, int face)
 {
     return grid->face_nodepos[face+1] - grid->face_nodepos[face];
 }
+
+CollOfCell SubGrid::map_to_global(const CollOfCell &local_collection)
+{
+    CollOfCell global_collection;
+
+    for( auto x: local_collection ) {
+        global_collection.emplace_back( global_cell[ x.index ] );
+    }
+
+    return global_collection;
+}
+
+CollOfFace SubGrid::map_to_global(const CollOfFace &local_collection)
+{
+    CollOfFace global_collection;
+    for( auto x: local_collection ) {
+        global_collection.emplace_back( global_face[x.index] );
+    }
+
+    return global_collection;
+}
+
 
 SubGrid::~SubGrid()
 {

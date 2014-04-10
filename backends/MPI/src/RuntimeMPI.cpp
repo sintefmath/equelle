@@ -10,7 +10,6 @@
 
 #include <opm/core/grid/GridManager.hpp>
 #include <boost/iterator/counting_iterator.hpp>
-
 #include "equelle/EquelleRuntimeCPU.hpp"
 #include "equelle/mpiutils.hpp"
 #include "equelle/SubGridBuilder.hpp"
@@ -143,6 +142,30 @@ CollOfCell RuntimeMPI::allCells() const
     return runtime->allCells();
 }
 
+CollOfFace RuntimeMPI::allFaces() const
+{
+    return runtime->allFaces();
+}
+
+CollOfCell RuntimeMPI::boundaryCells() const
+{
+    CollOfCell cells;
+    return runtime->boundaryCells();
+}
+
+CollOfFace RuntimeMPI::boundaryFaces() const
+{
+    CollOfFace boundary;
+
+    for( int i = 0; i < subGrid.c_grid->number_of_faces; ++i ) {
+        if (subGrid.c_grid->face_cells[2*i] == Boundary::outer || subGrid.c_grid->face_cells[(2*i)+1] == Boundary::outer ) {
+            boundary.emplace_back( i );
+        }
+    }
+
+    return boundary;
+}
+
 CollOfScalar RuntimeMPI::inputCollectionOfScalar(const String& /* name */, const CollOfFace & /* coll */ )
 {
     throw std::runtime_error("Not implemented");
@@ -177,6 +200,46 @@ CollOfScalar RuntimeMPI::inputCollectionOfScalar(const String &name, const CollO
         return CollOfScalar(CollOfScalar::V::Constant(size, param_.get<double>(name)));
     }
 
+}
+
+CollOfFace RuntimeMPI::inputDomainSubsetOf(const String &name, const CollOfFace &superset)
+{
+    // This implementation is based on a copy of EquelleRuntimeCPU::inputDomainSubsetOf
+    // but we rewrite the indices into our local index-space.
+    const String filename = param_.get<String>(name + "_filename");
+    std::ifstream is(filename.c_str());
+    if (!is) {
+        OPM_THROW(std::runtime_error, "Could not find file " << filename);
+    }
+    std::istream_iterator<int> beg(is);
+    std::istream_iterator<int> end;
+
+    CollOfFace data;
+    for (auto it = beg; it != end; ++it) {
+        logstream << "Read " << *it << std::endl;
+        auto jt = subGrid.face_global_to_local.find( *it );
+        if ( jt != subGrid.face_global_to_local.end() ) { // This face is part of our domain
+            data.emplace_back( jt->second );
+
+            logstream << "Adding " << *it << " -> " << jt->second << std::endl;
+        } // else the face is not part of our domain
+    }
+
+    // Needed to allow for std::includes to give valid results.
+    std::sort( data.begin(), data.end() );
+
+    if (!includes(superset.begin(), superset.end(), data.begin(), data.end())) {
+        logstream << "Rank: " << equelle::getMPIRank() << " is throwing." << std::endl;
+        OPM_THROW(std::runtime_error, "Given faces are not in the assumed subset.");
+    }
+
+    return data;
+}
+
+
+Scalar RuntimeMPI::inputScalarWithDefault(const String &name, const Scalar default_value)
+{
+    return runtime->inputScalarWithDefault( name, default_value );
 }
 
 void RuntimeMPI::output(const String &tag, const CollOfScalar &vals)

@@ -15,13 +15,13 @@ include_directories( "include"
     ${MPI_INCLUDE_PATH}
     "../../serial/include" "/usr/include/eigen3" "../include" )
 
-add_executable(zoltanintegration_test "src/SubGridBuilderTest.cpp" "src/zoltanIntegration.cpp"
+add_executable(RuntimeMPI_test "src/SubGridBuilderTest.cpp" "src/zoltanIntegration.cpp"
                                       "src/generatedCodeExamples.cpp" "src/RuntimeMPITest.cpp"
                                       ${test_inc} )
 
 add_executable( subgridvalidator "src/subgridvalidator.cpp" )
 
-target_link_libraries(zoltanintegration_test equelle_mpi equelle_rt
+target_link_libraries(RuntimeMPI_test equelle_mpi equelle_rt
     ${MPI_C_LIBRARIES}
     ${MPI_CXX_LIBRARIES}
     ${Boost_LIBRARIES}
