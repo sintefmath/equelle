@@ -197,9 +197,42 @@ int main(int argc, char** argv) {
 	return 1;
     }
 
+   
+    // Create matrix of size 3*5;
+    vector<double> wrong_v = {3, 4, 1, 4.5, -1, 1, 1};
+    vector<int> wrong_rp = {0, 2, 5, 7};
+    vector<int> wrong_ci = {1,2,2,3,4,0,3};
+    //hostMat wrong_lf = {wrong_v, wrong_rp, wrong_ci, 7, 4, 4};
+    CudaMatrix wrong(&wrong_v[0], &wrong_rp[0], &wrong_ci[0], 7, 3, 5);
+
+    CudaMatrix H;
+    bool correctCode = false;
+    try {
+	H = B + wrong;
+    } catch (const std::runtime_error exc) {
+	cout << "Threw exception on H = B + wrong\n" << exc.what() << "\n";
+	cout << "Good code!\n\n";
+	correctCode = true;
+    }
+    if ( !correctCode ) {
+	cout << "Did not throw exception on H = B + wrong\n";
+	return 1;
+    }
+
+    correctCode = false;
+    try {
+	H = B * wrong;
+    } catch (const std::runtime_error exc) {
+	cout << "Threw exception on H = B * wrong\n" << exc.what() << "\n";
+	cout << "Good code!\n\n";
+	correctCode = true;
+    }
+    if ( !correctCode ) {
+	cout << "Did not throw exception on H = B * wrong\n";
+	return 1;
+    }
+
     
-
-
     return 0;
 }
 
