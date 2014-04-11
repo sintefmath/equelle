@@ -12,7 +12,7 @@ BOOST_AUTO_TEST_CASE( globalCollectionSize ) {
 
     runtime.decompose();
 
-    BOOST_MESSAGE( "SubGrid.size: " << runtime.subGrid.global_cell.size() );
+    BOOST_MESSAGE( "SubGrid.size: " << runtime.subGrid.cell_local_to_global.size() );
 }
 
 BOOST_AUTO_TEST_CASE( allGather ) {
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE( inputDomainSubsetOf_cells ) {
     // Check that the global id of the subRegion is 0
     for( auto x: subRegion ) {
         auto localId = x.index;
-        BOOST_CHECK_EQUAL( er.subGrid.global_cell[ localId ], 0 );
+        BOOST_CHECK_EQUAL( er.subGrid.cell_local_to_global[ localId ], 0 );
     }
 }
 

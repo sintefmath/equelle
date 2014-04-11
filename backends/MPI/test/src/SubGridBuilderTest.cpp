@@ -25,13 +25,13 @@ BOOST_AUTO_TEST_CASE( SubGridBuilder ) {
     BOOST_CHECK( !subGrid.face_global_to_local.empty() );
     BOOST_CHECK_EQUAL( subGrid.c_grid->number_of_cells, 3 );
     BOOST_CHECK_EQUAL( subGrid.number_of_ghost_cells, 1 );
-    BOOST_CHECK_EQUAL( subGrid.global_face.size(), subGrid.c_grid->number_of_faces );
-    BOOST_CHECK_EQUAL( subGrid.global_cell.size(), subGrid.c_grid->number_of_cells );
+    BOOST_CHECK_EQUAL( subGrid.face_local_to_global.size(), subGrid.c_grid->number_of_faces );
+    BOOST_CHECK_EQUAL( subGrid.cell_local_to_global.size(), subGrid.c_grid->number_of_cells );
 
     // Check the local to global mapping
-    BOOST_CHECK_EQUAL( 4, subGrid.global_cell[0] );
-    BOOST_CHECK_EQUAL( 5, subGrid.global_cell[1] );
-    BOOST_CHECK_EQUAL( 3, subGrid.global_cell[2] );
+    BOOST_CHECK_EQUAL( 4, subGrid.cell_local_to_global[0] );
+    BOOST_CHECK_EQUAL( 5, subGrid.cell_local_to_global[1] );
+    BOOST_CHECK_EQUAL( 3, subGrid.cell_local_to_global[2] );
 
     const int dim = subGrid.c_grid->dimensions;
 
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE( SubGridBuilder ) {
     BOOST_REQUIRE_EQUAL( globalGrid->face_cells[2*3], 2 );
     BOOST_REQUIRE_EQUAL( globalGrid->face_cells[2*3 + 1], 3 );
 
-    int newId = std::distance( subGrid.global_face.begin(), std::find( subGrid.global_face.begin(), subGrid.global_face.end(), 3 ) );
+    int newId = std::distance( subGrid.face_local_to_global.begin(), std::find( subGrid.face_local_to_global.begin(), subGrid.face_local_to_global.end(), 3 ) );
     BOOST_REQUIRE_EQUAL( localGrid->face_cells[2*newId], equelle::Boundary::inner );
 
     // Check that we have the right face areas for each face in the subgrid
@@ -103,15 +103,15 @@ BOOST_AUTO_TEST_CASE( SubGridArrays ) {
 
     equelle::SubGrid subGrid = equelle::SubGridBuilder::build( runtime.globalGrid->c_grid(), cellsForSubGrid );
 
-    BOOST_CHECK_EQUAL( subGrid.global_cell.size(), subGrid.cell_global_to_local.size() );
-    BOOST_CHECK_EQUAL( subGrid.global_face.size(), subGrid.face_global_to_local.size()  );
+    BOOST_CHECK_EQUAL( subGrid.cell_local_to_global.size(), subGrid.cell_global_to_local.size() );
+    BOOST_CHECK_EQUAL( subGrid.face_local_to_global.size(), subGrid.face_global_to_local.size()  );
 
     for( auto x: subGrid.cell_global_to_local )  {
-        BOOST_CHECK_EQUAL( x.first, subGrid.global_cell[x.second] );
+        BOOST_CHECK_EQUAL( x.first, subGrid.cell_local_to_global[x.second] );
     }
 
     for( auto x: subGrid.face_global_to_local ) {
-        BOOST_CHECK_EQUAL( x.first, subGrid.global_face[x.second] );
+        BOOST_CHECK_EQUAL( x.first, subGrid.face_local_to_global[x.second] );
     }
 
 }

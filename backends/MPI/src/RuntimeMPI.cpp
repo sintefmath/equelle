@@ -98,7 +98,7 @@ void RuntimeMPI::decompose()
 
     logstream << "Decomposing took " << endTime-startTime << " seconds\n";
     logstream << "subGrid.number_of_ghost_cells: " << subGrid.number_of_ghost_cells << std::endl;
-    logstream << "subGrid.global_cell.size(): " << subGrid.global_cell.size() << std::endl;
+    logstream << "subGrid.global_cell.size(): " << subGrid.cell_local_to_global.size() << std::endl;
 }
 
 zoltanReturns RuntimeMPI::computePartition()
@@ -189,7 +189,7 @@ CollOfScalar RuntimeMPI::inputCollectionOfScalar(const String &name, const CollO
 
         // Map into local cell enumeration
         for( int i = 0; i < coll.size(); ++i ) {
-            auto glob = subGrid.global_cell[i];
+            auto glob = subGrid.cell_local_to_global[i];
 
             localData[i] = data[glob];
         }
@@ -320,7 +320,7 @@ equelle::CollOfScalar equelle::RuntimeMPI::allGather( const equelle::CollOfScala
     // We do not need to copy the local data into the global structure.
     // That is handeled by MPI_Allgatherv
     MPI_SAFE_CALL(
-        MPI_Allgatherv( subGrid.global_cell.data(), subGrid.global_cell.size(), MPI_INT,
+        MPI_Allgatherv( subGrid.cell_local_to_global.data(), subGrid.cell_local_to_global.size(), MPI_INT,
                         global_id_mapping.data(), recvcounts.data(), displacements.data(),
                         MPI_INT, MPI_COMM_WORLD ) );
 

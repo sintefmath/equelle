@@ -142,8 +142,8 @@ BOOST_AUTO_TEST_CASE( decompose ) {
 
     runtime.decompose();
 
-    BOOST_CHECK( runtime.subGrid.global_cell.size() > 0 );
-    int numOwnedCells = runtime.subGrid.global_cell.size() - runtime.subGrid.number_of_ghost_cells;
+    BOOST_CHECK( runtime.subGrid.cell_local_to_global.size() > 0 );
+    int numOwnedCells = runtime.subGrid.cell_local_to_global.size() - runtime.subGrid.number_of_ghost_cells;
 
     int totalCells = 0;
     MPI_Reduce( &numOwnedCells, &totalCells, 1, MPI_INTEGER, MPI_SUM, 0, MPI_COMM_WORLD );

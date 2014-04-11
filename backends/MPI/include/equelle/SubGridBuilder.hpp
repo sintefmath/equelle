@@ -17,13 +17,13 @@ struct SubGrid {
 
     int number_of_ghost_cells;
 
-    std::vector<int> global_cell; //! Maps local cell indices to global cell indices. The ghost cells are the
+    std::vector<int> cell_local_to_global; //! Maps local cell indices to global cell indices. The ghost cells are the
                                   //! last cells in this range.
 
     std::unordered_map<int, int> cell_global_to_local; //! Maps global cell indices to local cell indices.
                                                        //! This is the inverse of global_cell
 
-    std::vector<int> global_face; //! Maps local face indices to global face indices.
+    std::vector<int> face_local_to_global; //! Maps local face indices to global face indices.
     std::unordered_map<int, int> face_global_to_local; //! Maps global face indices to local face indices.
                                                        //! This is the inverse of global_face.
     CollOfCell map_to_global( const CollOfCell& local_collection );
