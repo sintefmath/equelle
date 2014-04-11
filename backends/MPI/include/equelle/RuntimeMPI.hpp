@@ -62,6 +62,9 @@ public:
     CollOfFace inputDomainSubsetOf(const String& name,
                                    const CollOfFace& superset);
 
+    CollOfCell inputDomainSubsetOf(const String& name,
+                                   const CollOfCell& superset);
+
     Scalar inputScalarWithDefault(const String& name,
                                   const Scalar default_value);
     ///@}

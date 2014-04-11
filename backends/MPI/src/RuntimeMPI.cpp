@@ -236,6 +236,40 @@ CollOfFace RuntimeMPI::inputDomainSubsetOf(const String &name, const CollOfFace 
     return data;
 }
 
+CollOfCell RuntimeMPI::inputDomainSubsetOf(const String &name, const CollOfCell &superset)
+{
+    // This implementation is based on a copy of EquelleRuntimeCPU::inputDomainSubsetOf
+    // but we rewrite the indices into our local index-space.
+    const String filename = param_.get<String>(name + "_filename");
+    std::ifstream is(filename.c_str());
+    if (!is) {
+        OPM_THROW(std::runtime_error, "Could not find file " << filename);
+    }
+    std::istream_iterator<int> beg(is);
+    std::istream_iterator<int> end;
+
+    CollOfCell data;
+    for (auto it = beg; it != end; ++it) {
+        logstream << "Read " << *it << std::endl;
+        auto jt = subGrid.cell_global_to_local.find( *it );
+        if ( jt != subGrid.cell_global_to_local.end() ) { // This cell is part of our domain
+            data.emplace_back( jt->second );
+
+            logstream << "Adding " << *it << " -> " << jt->second << std::endl;
+        } // else the cell is not part of our domain
+    }
+
+    // Needed to allow for std::includes to give valid results.
+    std::sort( data.begin(), data.end() );
+
+    if (!includes(superset.begin(), superset.end(), data.begin(), data.end())) {
+        logstream << "Rank: " << equelle::getMPIRank() << " is throwing." << std::endl;
+        OPM_THROW(std::runtime_error, "Given cells are not in the assumed subset.");
+    }
+
+    return data;
+}
+
 
 Scalar RuntimeMPI::inputScalarWithDefault(const String &name, const Scalar default_value)
 {
