@@ -96,6 +96,26 @@ BOOST_AUTO_TEST_CASE( SubGridBuilder ) {
     //destroy_grid( subGrid.c_grid );
 }
 
+BOOST_AUTO_TEST_CASE( SubGridArrays ) {
+    equelle::RuntimeMPI runtime;
+    runtime.globalGrid.reset( new Opm::GridManager( 6, 1 ) );
+    std::vector<int> cellsForSubGrid = { 4, 5 };
+
+    equelle::SubGrid subGrid = equelle::SubGridBuilder::build( runtime.globalGrid->c_grid(), cellsForSubGrid );
+
+    BOOST_CHECK_EQUAL( subGrid.global_cell.size(), subGrid.cell_global_to_local.size() );
+    BOOST_CHECK_EQUAL( subGrid.global_face.size(), subGrid.face_global_to_local.size()  );
+
+    for( auto x: subGrid.cell_global_to_local )  {
+        BOOST_CHECK_EQUAL( x.first, subGrid.global_cell[x.second] );
+    }
+
+    for( auto x: subGrid.face_global_to_local ) {
+        BOOST_CHECK_EQUAL( x.first, subGrid.global_face[x.second] );
+    }
+
+}
+
 BOOST_AUTO_TEST_CASE( GridQueryingFunctions ) {
     equelle::RuntimeMPI runtime;
 

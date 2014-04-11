@@ -82,7 +82,7 @@ SubGridBuilder::extractNeighborFaces(const UnstructuredGrid *grid, const std::ve
     fmap.cell_facepos = new_cell_facepos;
     fmap.cell_faces   = new_cell_faces;
     fmap.global_face  = global_face;
-    fmap.cell_global_to_local = old2new;
+    fmap.face_global_to_local = old2new;
 
     return fmap;
 }
@@ -120,7 +120,7 @@ SubGridBuilder::extractNeighborNodes(const UnstructuredGrid *grid, const std::ve
     for( auto it: old2new ) {
         nm.global_node[it.second] = it.first;
     }
-    nm.face_global_to_local = old2new;
+    nm.node_global_to_local = old2new;
     return nm;
 }
 
@@ -174,13 +174,20 @@ SubGrid SubGridBuilder::build(const UnstructuredGrid* grid, const std::vector<in
     std::set_difference( neighborCells.begin(), neighborCells.end(), cellsToExtract.begin(), cellsToExtract.end(),
                          std::back_inserter( subGrid.global_cell ) );
 
+    // Build the inverse of global_cell
+    subGrid.cell_global_to_local.reserve( subGrid.global_cell.size() );
+    for( int local_cell_id = 0; local_cell_id < subGrid.global_cell.size(); ++local_cell_id ) {
+        int global_cell_id = subGrid.global_cell[ local_cell_id ];
+        subGrid.cell_global_to_local[ global_cell_id ] = local_cell_id;
+    }
+
     subGrid.number_of_ghost_cells = subGrid.global_cell.size() - cellsToExtract.size();
 
     auto participatingFaces = extractNeighborFaces(grid, subGrid.global_cell);
     auto participatingNodes = extractNeighborNodes(grid, participatingFaces.global_face);
 
     subGrid.global_face = participatingFaces.global_face;
-    subGrid.face_global_to_local = participatingFaces.cell_global_to_local;
+    subGrid.face_global_to_local = participatingFaces.face_global_to_local;
 
     subGrid.c_grid = allocate_grid( grid->dimensions, subGrid.global_cell.size(),
                                     participatingFaces.global_face.size(), participatingNodes.face_nodes.size(),

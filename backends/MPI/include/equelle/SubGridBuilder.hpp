@@ -20,11 +20,12 @@ struct SubGrid {
     std::vector<int> global_cell; //! Maps local cell indices to global cell indices. The ghost cells are the
                                   //! last cells in this range.
 
-    std::unordered_map<int, int> cell_global_to_local;
+    std::unordered_map<int, int> cell_global_to_local; //! Maps global cell indices to local cell indices.
+                                                       //! This is the inverse of global_cell
 
     std::vector<int> global_face; //! Maps local face indices to global face indices.
-    std::unordered_map<int, int> face_global_to_local;
-
+    std::unordered_map<int, int> face_global_to_local; //! Maps global face indices to local face indices.
+                                                       //! This is the inverse of global_face.
     CollOfCell map_to_global( const CollOfCell& local_collection );
     CollOfFace map_to_global( const CollOfFace& local_collection );
 
@@ -53,18 +54,25 @@ public:
 private:
     SubGridBuilder();
 
+    /**
+     * @brief The face_mapping struct is a helper return type in the implemenation of build.
+     */
+
     struct face_mapping {
         std::vector<int> cell_facepos; //! Mirrors UnstructuredGrid::cell_facepos.
         std::vector<int> cell_faces;   //! Mirrors UnstructuredGrid::cell_faces.
-        std::vector<int> global_face;  //! The global face index of each face in the subgrid. */
-        std::unordered_map<int, int> cell_global_to_local;
+        std::vector<int> global_face;  //! The global face index of each face in the subgrid.
+        std::unordered_map<int, int> face_global_to_local; //! The inverse of global_face.
     };
 
+    /**
+     * @brief The node_mapping struct is a helper return type in the implementation of build.
+     */
     struct node_mapping {
         std::vector<int> face_nodepos; //! Mirrors UnstructuredGrid::face_nodepos;
         std::vector<int> face_nodes;   //! Mirrors UnstructuredGrid::face_nodes;
         std::vector<int> global_node;  //! The global node index of each node in the subgrid.
-        std::unordered_map<int, int> face_global_to_local;
+        std::unordered_map<int, int> node_global_to_local; //! The inverse of global_node.
     };
 
     static std::set<int> extractNeighborCells(const UnstructuredGrid *grid, const std::vector<int>& cellsToExtract);
