@@ -20,7 +20,6 @@
 #include "equelle/mpiutils.hpp"
 #include "equelle/RuntimeMPI.hpp"
 #include "equelle/ZoltanGrid.hpp"
-#include "equelle/ZoltanGridMigrator.hpp"
 
 
 using equelle::MPIInitializer;
@@ -135,16 +134,6 @@ BOOST_AUTO_TEST_CASE( RuntimeMPI_6x2grid ) {
         std::ofstream f("rank0-6x2-exports");
         equelle::ZoltanGrid::dumpRank0Exports( runtime.globalGrid->c_grid()->number_of_cells, zr, f );
     }
-}
-
-BOOST_AUTO_TEST_CASE( ZoltanGridMigratorCallBackSignatures ) {
-    // This test really passes when the test compiles.
-    std::unique_ptr<Zoltan> zoltan( new Zoltan( MPI_COMM_WORLD ) );
-    using equelle::ZoltanGridMigrator;
-
-    ZOLTAN_SAFE_CALL( zoltan->Set_Obj_Size_Fn( ZoltanGridMigrator::cellSize, NULL ) );
-    ZOLTAN_SAFE_CALL( zoltan->Set_Pack_Obj_Fn( ZoltanGridMigrator::packCell, NULL ) );
-    ZOLTAN_SAFE_CALL( zoltan->Set_Unpack_Obj_Fn( ZoltanGridMigrator::unpackCell, NULL ) );
 }
 
 BOOST_AUTO_TEST_CASE( decompose ) {
