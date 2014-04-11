@@ -214,7 +214,28 @@ namespace equelleCUDA {
     */
     CollOfVector operator-(const CollOfVector& lhs, const CollOfVector& rhs);
 
+    /*!
+      Overloaded operator unary minus for Collection of Vectors. Elementwise negation
+      of all values stored in the collection.
 
+      Works as a wrapper for the CUDA kernel which negate collection of scalars.
+    */
+    CollOfVector operator-(const CollOfVector& arg);
+    
+
+    /*!
+      Overloaded operator * for Scalar * CollOfVector. Elementwise multiplication
+      of all values stored in the collection with the single scalar value.
+      
+      Works as a wrapper for the CUDA kernel used for same operation on CollOfScalar.
+    */
+    CollOfVector operator*(const Scalar lhs, const CollOfVector& rhs);
+
+    /*!
+      Overloaded operator * for CollOfVector * Scalar. Elementwise multiplication
+      of all values stored in the collection with the single scalar value.
+    */
+    CollOfVector operator*(const CollOfVector& lhs, const Scalar rhs);
 
 } // namespace equelleCUDA
 

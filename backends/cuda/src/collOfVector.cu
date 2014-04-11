@@ -195,3 +195,18 @@ CollOfVector equelleCUDA::operator-(const CollOfVector& lhs, const CollOfVector&
     wrapCudaArray::minus_kernel<<<s.grid, s.block>>>(out.data(), rhs.data(), out.numElements());
     return out;
 }
+
+CollOfVector equelleCUDA::operator-(const CollOfVector& arg) {
+    return (-1.0)*arg;
+}
+
+CollOfVector equelleCUDA::operator*(const Scalar lhs, const CollOfVector& rhs) {
+    CollOfVector out = rhs;
+    kernelSetup s = out.element_setup();
+    wrapCudaArray::scalMultColl_kernel<<<s.grid, s.block>>>(out.data(), lhs, out.numElements());
+    return out;
+}
+
+CollOfVector equelleCUDA::operator*(const CollOfVector& lhs, const Scalar rhs) {
+    return rhs*lhs;
+}

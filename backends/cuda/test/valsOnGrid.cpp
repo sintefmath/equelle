@@ -332,9 +332,41 @@ int vector_test(EquelleRuntimeCUDA* er) {
     
     // Testing copy assignment operator
     subVec = myVec;
-    if( compare( subVec[1], sol1, 14, "(subVec = myVec)[1] - copy assignment op.") ) {
+    if(compare( subVec[0], sol0, 14, "(subVec = myVec)[0] - copy assigment op." ) ) {
 	return 1;
     }
+    if(compare( subVec[1], sol1, 14, "(subVec = myVec)[1] - copy assignment op.") ) {
+	return 1;
+    }
+    if(compare( subVec[2], sol2, 14, "(subVec = myVec)[2] - copy assignment op.") ) {
+	return 1;
+    }
+    // subVec is the same as the given on top of the function.
+
+
+    // Multiplication with scalar
+    CollOfVector scalVecMult = (-2.0)*subVec;
+    CollOfScalar scalVecMult1 = scalVecMult[1];
+    double solScalVecMult1[] = {-2,-8,-14,-20,-26,-32,-38,-44,-50,-56,-62,-68,-74,-80};
+    if ( compare ( scalVecMult1, solScalVecMult1, 14, "(-2*subVec)[1]") ) {
+	return 1;
+    }
+    CollOfVector vecScalMult = subVec*2.02;
+    CollOfScalar vecScalMult1 = vecScalMult[1];
+    double solVecScalMult1[] = {2.02, 8.08, 14.14, 20.20, 26.26, 32.32, 38.38, 44.44, 50.50, 56.56, 62.62, 68.68, 74.74, 80.80};
+    if ( compare ( vecScalMult1, solVecScalMult1, 14, "(subVec*2.02)[1]") ) {
+	return 1;
+    }
+    
+
+    // Unary minus
+    CollOfVector subVecNeg = -subVec;
+    CollOfScalar subNeg2 = subVecNeg[2];
+    double subNeg2_sol[] = {-2,-5,-8,-11,-14,-17,-20,-23,-26,-29,-32,-35,-38,-41};
+    if ( compare ( subNeg2, subNeg2_sol, 14, "(subVecNeg = -subVec)[2]") ) {
+	return 1;
+    }
+
 
     CollOfScalar norm = myVec.norm();
     double norm_sol[14];
