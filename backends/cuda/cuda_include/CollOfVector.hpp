@@ -237,6 +237,37 @@ namespace equelleCUDA {
     */
     CollOfVector operator*(const CollOfVector& lhs, const Scalar rhs);
 
+    /*!
+      Overloaded operator * for CollOfVector * CollOfScalar. Elementwise multiplication
+      of each vector with corresponding scalar.
+    */
+    CollOfVector operator*(const CollOfVector& lhs, const CollOfScalar& rhs);
+
+    /*!
+      Overloaded operator * for CollOfScalar * CollOfVector. Elementwise multiplication
+      of each vector with corresponding scalar.
+    */
+    CollOfVector operator*(const CollOfScalar& lhs, const CollOfVector& rhs);
+
+
+    namespace wrapCollOfVector{
+	//! CUDA kernel for computing CollOfVector * CollOfScalar.
+	/*! 
+	  Requires one thread for per vector.
+	  \param[in,out] vector CollOfVector data. Input overwritten to output
+	  \param[in] scal CollOfScalar data.
+	  \param[in] numVectors number of vectors
+	  \param[in] dim Dimensions of the vectors
+	*/
+	__global__ void collvecMultCollscal_kernel( double* vector,
+						    const double* scal,
+						    const int numVectors, 
+						    const int dim);
+
+
+    }
+
+
 } // namespace equelleCUDA
 
 

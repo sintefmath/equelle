@@ -358,6 +358,25 @@ int vector_test(EquelleRuntimeCUDA* er) {
 	return 1;
     }
     
+    // Multiplication CollOfVector and CollOfScalar
+    std::vector<double> multHost = {1,2,3,4,5,6,7,8,9,10,11,12,13,14};
+    CollOfScalar multCos(multHost);
+    CollOfVector cosMultcov = multCos * subVec;
+    double cosMultcov0[14], cosMultcov1[14], cosMultcov2[14];
+    for (int i = 0; i < 14; ++i) {
+	cosMultcov0[i] = sol0[i]*multHost[i];
+	cosMultcov1[i] = sol1[i]*multHost[i];
+	cosMultcov2[i] = sol2[i]*multHost[i];
+    }
+    if ( compare( cosMultcov[0], cosMultcov0, 14, "(multCos*subVec)[0]") ) {
+	return 1;
+    }
+    if ( compare( cosMultcov[1], cosMultcov1, 14, "(multCos*subVec)[1]") ) {
+	return 1;
+    }
+    if ( compare( cosMultcov[2], cosMultcov2, 14, "(multCos*subVec)[2]") ) {
+	return 1;
+    }
 
     // Unary minus
     CollOfVector subVecNeg = -subVec;
