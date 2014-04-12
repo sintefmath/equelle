@@ -413,7 +413,7 @@ int vector_test(EquelleRuntimeCUDA* er) {
     }
 
     // Division CollOfVector and Scalar
-    int scal = 0.75;
+    double scal = 0.2;
     CollOfVector covDivscal = covDivcos / scal;
     for (int i = 0; i < 14; ++i ) {
 	cosMultcov0[i] /= scal;
@@ -438,13 +438,25 @@ int vector_test(EquelleRuntimeCUDA* er) {
 	return 1;
     }
 
-
+    // Norm
     CollOfScalar norm = myVec.norm();
     double norm_sol[14];
     for (int i = 0; i < 14; ++i) {
 	norm_sol[i] = compNorm(sol0[i], sol1[i], sol2[i]);
     }
     if ( compare( norm, norm_sol, 14, "myVec.norm()") ) {
+	return 1;
+    }
+
+    // Dot
+    CollOfScalar dot = er->dot(covDivscal, myVec);
+    double dotSol[14];
+    for (int i = 0; i < 14; i++) {
+	dotSol[i] = cosMultcov0[i]*sol0[i];
+	dotSol[i] += cosMultcov1[i]*sol1[i];
+	dotSol[i] += cosMultcov2[i]*sol2[i];
+    }
+    if ( compare ( dot, dotSol, 14, "dot(covDivscal, myVec)" ) ) {
 	return 1;
     }
 
@@ -570,7 +582,7 @@ int compare(CollOfScalar scal, double sol[],
 	std::cout << host[i] << " ";
 	if (i < sol_size) {
 	    //if (host[i] != sol[i]) {
-	    if ( fabs(host[i] - sol[i]) > 10*std::numeric_limits<double>::epsilon() ) {
+	    if ( fabs(host[i] - sol[i]) > 1000*std::numeric_limits<double>::epsilon() ) {
 		std::cout << "(<- " << sol[i] << ") ";
 		correct = false;
 	    }

@@ -132,6 +132,11 @@ CollOfVector EquelleRuntimeCUDA::normal(const CollOfFace& faces) const
     return dev_grid_.normal(faces);
 }
 
+CollOfScalar EquelleRuntimeCUDA::dot( const CollOfVector& v1,
+				      const CollOfVector& v2 ) const 
+{
+    return v1.dot(v2);
+}
 
 
 

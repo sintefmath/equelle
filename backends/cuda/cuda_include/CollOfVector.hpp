@@ -90,6 +90,15 @@ namespace equelleCUDA {
 	*/
 	CollOfScalar norm() const;
 
+	//! Dot product with another vector
+	/*!
+	  Returns a collection of scalars equal to the dot product of this and the
+	  input.
+	*/
+	CollOfScalar dot(const CollOfVector& rhs) const;
+	
+
+
 	//! Pointer to the device memory block with all elements
 	const double* data() const;
 	//! Pointer to the device memory block with all elements
@@ -161,38 +170,45 @@ namespace equelleCUDA {
     
     //! Functions closely related to the CollOfVector class
     namespace wrapCollOfVector {
-
-    //! Kernel for getting the index element of all vectors in a collection.
-    /*!
-      \param[out] out Collection Of Scalar where out[i] is the index element of
-      vector number i in the collection of Vectors
-      \param[in] vec Collection of Vectors as a double array of size size_out*dim
-      \param[in] size_out Number of vectors in the collection and also the number 
-      of elements in the output collection of scalars.
-      \param[in] index The index we want to read from each vector
-      \param[in] dim The dimension of the vectors in the collection.
-    */
-    __global__ void collOfVectorOperatorIndexKernel( double* out,
-						     const double* vec,
-						     const int size_out,
-						     const int index,
-						     const int dim);
 	
-    //! Kernel for computing the norm of vectors
-    /*!
-      Uses one thread for each vector to compute the given vectors norm.
-      
-      \param[out] out The output with the norm of each vector
-      \param[in] vectors Array with vector elements so that each vector is 
-      continously in memory. The size of this array is numVectors*dim.
-      \param[in] numVectors Number of vectors given in input
-      \param[in] dim Dimension of each vector.
-    */
-    __global__ void normKernel( double* out,
-				const double* vectors,
-				const int numVectors,
-				const int dim);
-    
+	//! Kernel for getting the index element of all vectors in a collection.
+	/*!
+	  \param[out] out Collection Of Scalar where out[i] is the index element of
+	  vector number i in the collection of Vectors
+	  \param[in] vec Collection of Vectors as a double array of size size_out*dim
+	  \param[in] size_out Number of vectors in the collection and also the number 
+	  of elements in the output collection of scalars.
+	  \param[in] index The index we want to read from each vector
+	  \param[in] dim The dimension of the vectors in the collection.
+	*/
+	__global__ void collOfVectorOperatorIndexKernel( double* out,
+							 const double* vec,
+							 const int size_out,
+							 const int index,
+							 const int dim);
+	
+	//! Kernel for computing the norm of vectors
+	/*!
+	  Uses one thread for each vector to compute the given vectors norm.
+	  
+	  \param[out] out The output with the norm of each vector
+	  \param[in] vectors Array with vector elements so that each vector is 
+	  continously in memory. The size of this array is numVectors*dim.
+	  \param[in] numVectors Number of vectors given in input
+	  \param[in] dim Dimension of each vector.
+	*/
+	__global__ void normKernel( double* out,
+				    const double* vectors,
+				    const int numVectors,
+				    const int dim);
+	
+	__global__ void dotKernel( double* result, 
+				   const double* lhs,
+				   const double* rhs,
+				   const int numVectors,
+				   const int dim);
+	
+
     } // namespace wrapCollOfVector
 
 
@@ -260,6 +276,8 @@ namespace equelleCUDA {
       given scalar.
     */
     CollOfVector operator/(const CollOfVector& vec, const Scalar scal);
+
+    
 
     namespace wrapCollOfVector{
 	//! CUDA kernel for computing CollOfVector * CollOfScalar.

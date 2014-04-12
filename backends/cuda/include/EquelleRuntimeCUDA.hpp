@@ -242,7 +242,7 @@ public:
 
 
     /// Operators and math functions.
-    //CollOfScalarCPU dot(const CollOfVector& v1, const CollOfVector& v2) const;
+    CollOfScalar dot(const CollOfVector& v1, const CollOfVector& v2) const;
     CollOfScalarCPU negGradient(const CollOfScalarCPU& cell_scalarfield) const;
     CollOfScalarCPU interiorDivergence(const CollOfScalarCPU& face_fluxes) const;
     CollOfBool isEmpty(const CollOfCellCPU& cells) const;

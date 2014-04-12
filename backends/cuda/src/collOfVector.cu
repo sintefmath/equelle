@@ -84,6 +84,20 @@ CollOfScalar CollOfVector::norm() const {
 }
 
 
+// ------ DOT ------
+CollOfScalar CollOfVector::dot(const CollOfVector& rhs) const {
+    CollOfScalar out(numVectors());
+    // One thread for each vector:
+    kernelSetup s = vector_setup();
+    dotKernel<<< s.grid, s.block >>>( out.data(),
+				      this->data(),
+				      rhs.data(),
+				      out.size(),
+				      this->dim());
+    return out;
+}
+
+
 const double* CollOfVector::data() const {
     return elements_.data();
 }
@@ -145,10 +159,10 @@ CollOfScalar CollOfVector::col(const int index) const {
 }
 
 __global__ void wrapCollOfVector::collOfVectorOperatorIndexKernel( double* out,
-							      const double* vec,
-							      const int size_out,
-							      const int index,
-							      const int dim)
+								   const double* vec,
+								   const int size_out,
+								   const int index,
+								   const int dim)
 {
     // Index:
     int i = threadIdx.x + blockIdx.x*blockDim.x;
@@ -162,9 +176,9 @@ __global__ void wrapCollOfVector::collOfVectorOperatorIndexKernel( double* out,
 // --------- NORM KERNEL ---------------------
 
 __global__ void wrapCollOfVector::normKernel( double* out,
-					 const double* vectors,
-					 const int numVectors,
-					 const int dim)
+					      const double* vectors,
+					      const int numVectors,
+					      const int dim)
 {
     int index = threadIdx.x + blockIdx.x*blockDim.x;
     if ( index < numVectors ){
@@ -176,7 +190,23 @@ __global__ void wrapCollOfVector::normKernel( double* out,
     }
 }
 
+// --------- DOT KERNEL ---------------------------
 
+__global__ void wrapCollOfVector::dotKernel( double* out,
+					     const double* lhs,
+					     const double* rhs,
+					     const int numVectors,
+					     const int dim)
+{
+    int index = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( index < numVectors ) {
+	double dot = 0.0;
+	for ( int i = 0; i < dim; ++i ) {
+	    dot += lhs[index*dim + i] * rhs[index*dim + i];
+	}
+	out[index] = dot;
+    }
+}
 
 // ------------- OPERATOR OVERLOADING --------------------
 
