@@ -378,6 +378,58 @@ int vector_test(EquelleRuntimeCUDA* er) {
 	return 1;
     }
 
+    // Multiplication CollOfScalar and CollOfVector
+    CollOfVector covMultcos = cosMultcov * multCos;
+    for (int i = 0; i < 14; ++i ) {
+	cosMultcov0[i] = cosMultcov0[i] * multHost[i];
+	cosMultcov1[i] = cosMultcov1[i] * multHost[i];
+	cosMultcov2[i] = cosMultcov2[i] * multHost[i];
+    }
+    if ( compare( covMultcos[0], cosMultcov0, 14, "(cosMultcov * multCos)[0]") ) {
+	return 1;
+    }
+    if ( compare( covMultcos[1], cosMultcov1, 14, "(cosMultcov * subVec)[1]") ) {
+	return 1;
+    }
+    if ( compare( covMultcos[2], cosMultcov2, 14, "(cosMultcov * subVec)[2]") ) {
+	return 1;
+    }
+    
+    // Division CollOfVector and CollOfScalar
+    CollOfVector covDivcos = covMultcos / multCos;
+    for (int i = 0; i < 14; ++i ) {
+	cosMultcov0[i] = cosMultcov0[i] / multHost[i];
+	cosMultcov1[i] = cosMultcov1[i] / multHost[i];
+	cosMultcov2[i] = cosMultcov2[i] / multHost[i];
+    }
+    if ( compare( covDivcos[0], cosMultcov0, 14, "(cosMultcov / multCos)[0]") ) {
+	return 1;
+    }
+    if ( compare( covDivcos[1], cosMultcov1, 14, "(cosMultcov / subVec)[1]") ) {
+	return 1;
+    }
+    if ( compare( covDivcos[2], cosMultcov2, 14, "(cosMultcov / subVec)[2]") ) {
+	return 1;
+    }
+
+    // Division CollOfVector and Scalar
+    int scal = 0.75;
+    CollOfVector covDivscal = covDivcos / scal;
+    for (int i = 0; i < 14; ++i ) {
+	cosMultcov0[i] /= scal;
+	cosMultcov1[i] /= scal;
+       	cosMultcov2[i] /= scal;
+    }
+    if ( compare( covDivscal[0], cosMultcov0, 14, "(cosMultcov / scal)[0]") ) {
+	return 1;
+    }
+    if ( compare( covDivscal[1], cosMultcov1, 14, "(cosMultcov / scal)[1]") ) {
+	return 1;
+    }
+    if ( compare( covDivscal[2], cosMultcov2, 14, "(cosMultcov / scal)[2]") ) {
+	return 1;
+    }
+
     // Unary minus
     CollOfVector subVecNeg = -subVec;
     CollOfScalar subNeg2 = subVecNeg[2];
@@ -395,6 +447,8 @@ int vector_test(EquelleRuntimeCUDA* er) {
     if ( compare( norm, norm_sol, 14, "myVec.norm()") ) {
 	return 1;
     }
+
+    // End of plain vector testing. Put the above in its own test file.
 
     CollOfVector centrCells = er->centroid(er->allCells());
     CollOfScalar centrCells0 = centrCells[0];
@@ -471,7 +525,7 @@ int vector_test(EquelleRuntimeCUDA* er) {
     }
 
     return 0;
-}
+} // Testing vectors
 
 double compNorm(double a, double b, double c) {
     return sqrt( a*a + b*b + c*c);

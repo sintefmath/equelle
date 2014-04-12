@@ -241,19 +241,30 @@ namespace equelleCUDA {
       Overloaded operator * for CollOfVector * CollOfScalar. Elementwise multiplication
       of each vector with corresponding scalar.
     */
-    CollOfVector operator*(const CollOfVector& lhs, const CollOfScalar& rhs);
+    CollOfVector operator*(const CollOfVector& vec, const CollOfScalar& scal);
 
     /*!
       Overloaded operator * for CollOfScalar * CollOfVector. Elementwise multiplication
       of each vector with corresponding scalar.
     */
-    CollOfVector operator*(const CollOfScalar& lhs, const CollOfVector& rhs);
+    CollOfVector operator*(const CollOfScalar& scal, const CollOfVector& vec);
 
+    /*!
+      Overloaded operator / for CollOfVector / CollOfScalar. Elementwise division of 
+      each vector with corresponding scalar.'
+    */
+    CollOfVector operator/(const CollOfVector& vec, const CollOfScalar& scal);
+
+    /*!
+      Overloaded operator / for CollOfVector / Scalar. Elementwise division with the 
+      given scalar.
+    */
+    CollOfVector operator/(const CollOfVector& vec, const Scalar scal);
 
     namespace wrapCollOfVector{
 	//! CUDA kernel for computing CollOfVector * CollOfScalar.
 	/*! 
-	  Requires one thread for per vector.
+	  Requires one thread per vector.
 	  \param[in,out] vector CollOfVector data. Input overwritten to output
 	  \param[in] scal CollOfScalar data.
 	  \param[in] numVectors number of vectors
@@ -263,6 +274,20 @@ namespace equelleCUDA {
 						    const double* scal,
 						    const int numVectors, 
 						    const int dim);
+
+
+	//! CUDA kernel for computing CollOfVector / CollOfScalar.
+	/*!
+	  Requires one thread per vector.
+	  \param[in,out] vector CollOfVector data. Input overwritten to output.
+	  \param[in] scla CollOfScalar data.
+	  \param[in] numVectors number of vectors
+	  \param[in] dim Dimensions of the vectors.
+	*/
+	__global__ void collvecDivCollscal_kernel( double* vector,
+						   const double* scal,
+						   const int numVectors,
+						   const int dim);
 
 
     }

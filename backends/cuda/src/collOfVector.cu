@@ -231,13 +231,27 @@ CollOfVector equelleCUDA::operator*(const CollOfScalar& scal, const CollOfVector
     return out;
 }
 
+CollOfVector equelleCUDA::operator/(const CollOfVector& vec, const CollOfScalar& scal) {
+    CollOfVector out = vec;
+    kernelSetup s = out.vector_setup();
+    collvecDivCollscal_kernel<<<s.grid, s.block>>>( out.data(),
+						    scal.data(),
+						    out.numVectors(),
+						    out.dim());
+    return out;
+}
+
+CollOfVector equelleCUDA::operator/(const CollOfVector& vec, const Scalar scal) {
+    return (1.0/scal)*vec;
+}
+
 
 
 // KERNELS
 __global__ void wrapCollOfVector::collvecMultCollscal_kernel( double* vector,
-							    const double* scal,
-							    const int numVectors,
-							    const int dim)
+							      const double* scal,
+							      const int numVectors,
+							      const int dim)
 {
     int vec = threadIdx.x + blockIdx.x*blockDim.x;
     if ( vec < numVectors ) {
@@ -245,4 +259,18 @@ __global__ void wrapCollOfVector::collvecMultCollscal_kernel( double* vector,
 	    vector[vec*dim + i] *= scal[vec];
 	}
     }
+}
+
+__global__ void wrapCollOfVector::collvecDivCollscal_kernel( double* vector,
+							     const double* scal,
+							     const int numVectors,
+							     const int dim)
+{
+    int vec = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( vec < numVectors ) {
+	for ( int i = 0; i < dim; i++ ) {
+	    vector[vec*dim + i] = vector[vec*dim + i] / scal[vec];
+	}
+    }
+
 }
