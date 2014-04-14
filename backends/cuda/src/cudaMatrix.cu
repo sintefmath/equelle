@@ -13,6 +13,8 @@
 #include "equelleTypedefs.hpp"
 
 using namespace equelleCUDA;
+using namespace wrapCudaMatrix;
+
 using std::vector;
 
 // Implementation of member functions of CudaMatrix
@@ -29,7 +31,7 @@ CudaMatrix::CudaMatrix()
       cudaStatus_(cudaSuccess),
       description_(0)
 {
-    createGeneralDescription("CudaMatrix::CudaMatrix()");
+    createGeneralDescription_("CudaMatrix::CudaMatrix()");
 }
 
 
@@ -65,7 +67,34 @@ CudaMatrix::CudaMatrix( const double* val, const int* rowPtr, const int* colInd,
 			      cudaMemcpyHostToDevice);
     checkError_("cudaMemcpy(csrColInd_) in CudaMatrix host constructor");
 
-    createGeneralDescription("CudaMatrix host constructor");
+    createGeneralDescription_("CudaMatrix host constructor");
+}
+
+// Identity matrix constructor
+CudaMatrix::CudaMatrix(const int size) 
+    : rows_(size),
+      cols_(size),
+      nnz_(size),
+      csrVal_(0),
+      csrRowPtr_(0),
+      csrColInd_(0),
+      sparseStatus_(CUSPARSE_STATUS_SUCCESS),
+      cudaStatus_(cudaSuccess),
+      description_(0)
+{
+    // Allocate memory:
+    cudaStatus_ = cudaMalloc( (void**)&csrVal_, size*sizeof(double));
+    checkError_("cudaMalloc(csrVal_) in CudaMatrix identity matrix constructor");
+    cudaStatus_ = cudaMalloc( (void**)&csrRowPtr_, (size+1)*sizeof(int));
+    checkError_("cudaMalloc(csrRowPtr_) in CudaMatrix identity matrix constructor");
+    cudaStatus_ = cudaMalloc( (void**)&csrColInd_, size*sizeof(int));
+    checkError_("cudaMalloc(csrColInd_) in CudaMatrix identity matrix constructor");
+
+    // Call a kernel that writes the correct data:
+    kernelSetup s(size+1);
+    initIdentityMatrix<<<s.grid, s.block>>>(csrVal_, csrRowPtr_, csrColInd_, nnz_);
+
+    createGeneralDescription_("CudaMatrix identity matrix constructor");
 }
 
 
@@ -104,7 +133,7 @@ CudaMatrix::CudaMatrix(const CudaMatrix& mat)
 	checkError_("cudaMemcpy(csrColInd_) in CudaMatrix copy constructor");
     }
     
-    createGeneralDescription("CudaMatrix copy constructor");
+    createGeneralDescription_("CudaMatrix copy constructor");
 }
 
 
@@ -185,6 +214,7 @@ CudaMatrix::~CudaMatrix() {
 	checkError_("cudaFree(csrColInd_) in CudaMatrix::~CudaMatrix");
     }
 
+    // Destroy description_ 
     sparseStatus_ = cusparseDestroyMatDescr( description_ );
     checkError_("cusparseDestroyMatDescr() in CudaMatrix::~CudaMatrix()");
 
@@ -247,7 +277,7 @@ void CudaMatrix::checkError_(const std::string& msg) const {
     }
 }
 
-void CudaMatrix::createGeneralDescription(const std::string& msg) {
+void CudaMatrix::createGeneralDescription_(const std::string& msg) {
     sparseStatus_ = cusparseCreateMatDescr( &description_ );
     checkError_("cusparseCreateMatDescr() in " + msg);
     
@@ -439,4 +469,20 @@ CudaMatrix equelleCUDA::operator*(const Scalar lhs, const CudaMatrix& rhs) {
 								  lhs,
 								  out.nnz_);
     return out;
+}
+
+
+__global__ void wrapCudaMatrix::initIdentityMatrix(double* csrVal,
+						   int* csrRowPtr,
+						   int* csrColInd,
+						   const int nnz)
+{
+    int i = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( i < nnz + 1) {
+	csrRowPtr[i] = i;
+	if (i < nnz) {
+	    csrVal[i] = 1.0;
+	    csrColInd[i] = i;
+	}
+    }
 }

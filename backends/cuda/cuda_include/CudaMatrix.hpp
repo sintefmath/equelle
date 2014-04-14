@@ -56,6 +56,9 @@ namespace equelleCUDA {
 	CudaMatrix( const double* val, const int* rowPtr, const int* colInd,
 		    const int nnz, const int rows, const int cols);
 
+	//! Constructor creating a identity matrix of the given size.
+	CudaMatrix( const int size);
+
 	//! Copy assignment operator
 	CudaMatrix& operator= (const CudaMatrix& other);
 	
@@ -96,7 +99,7 @@ namespace equelleCUDA {
 	cusparseMatDescr_t description_;
 
 	void checkError_(const std::string& msg) const;
-	void createGeneralDescription(const std::string& msg);
+	void createGeneralDescription_(const std::string& msg);
 	
     }; // class CudaMatrix
     
@@ -108,6 +111,16 @@ namespace equelleCUDA {
     CudaMatrix operator*(const CudaMatrix& lhs, const CudaMatrix& rhs);
     CudaMatrix operator*(const CudaMatrix& lhs, const Scalar rhs);
     CudaMatrix operator*(const Scalar lhs, const CudaMatrix& rhs);
+
+    // Kernels for CudaMatrix:
+    namespace wrapCudaMatrix
+    {
+	__global__ void initIdentityMatrix(double* csrVal,
+					   int* csrRowPtr,
+					   int* csrColInd,
+					   const int nnz);
+
+    } // namespace wrapCudaMatrix
 
 } // namespace equelleCUDA
 

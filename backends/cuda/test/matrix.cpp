@@ -108,6 +108,8 @@ int matrixCompare(hostMat mat, hostMat lf, string msg) {
     return 0;
 }
 
+// ------------   START  MAIN    ------------------
+
 
 int main(int argc, char** argv) {
 
@@ -232,8 +234,20 @@ int main(int argc, char** argv) {
 	return 1;
     }
 
+    // Create an identity matrix
+    // Create matrix of size 4*4
+    vector<double> i_v = {1,1,1,1};
+    vector<int> i_rp = {0, 1, 2, 3, 4};
+    vector<int> i_ci = {0, 1, 2, 3};
+    hostMat i_lf = {i_v, i_rp, i_ci, 4,4,4};
+    CudaMatrix I(4);
+    if ( matrixCompare(I.toHost(), i_lf, "Identity matrix I(4)") ) {
+	return 1;
+    }
+    
     
     return 0;
-}
+
+} // main()
 
 
