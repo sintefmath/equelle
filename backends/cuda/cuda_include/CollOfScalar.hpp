@@ -108,7 +108,7 @@ namespace equelleCUDA {
 	
 
 	// Get a referance to the CudaArray with the actual values:
-	const CudaArray& val() const;
+	// const CudaArray& val() const;
 
 	
 	// ------------ Arithmetic operations as friends -----------------

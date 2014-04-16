@@ -331,7 +331,7 @@ namespace equelleCUDA {
 	  Compare elements in lhs with elements in rhs and return a
 	  Collection Of Booleans.
 	  \code out[i] = lhs[i] == rhs[i] \endcode
-	  \param[out] The resulting collection of booleans
+	  \param[out] out The resulting collection of booleans
 	  \param[in] lhs Left hand side collection
 	  \param[in] rhs Right hand side collection
 	  \param[in] size Size of the collections.
@@ -346,7 +346,7 @@ namespace equelleCUDA {
 	  Compare elements in lhs with the scalar rhs and return a
 	  Collection Of Booleans.
 	  \code out[i] = lhs[i] == rhs \endcode
-	  \param[out] The resulting collection of booleans
+	  \param[out] out The resulting collection of booleans
 	  \param[in] lhs Left hand side collection
 	  \param[in] rhs Right hand side scalar
 	  \param[in] size Size of the collections.
@@ -362,7 +362,7 @@ namespace equelleCUDA {
 	  Compare elements in lhs with elements in rhs and return a
 	  Collection Of Booleans.
 	  \code out[i] = lhs[i] != rhs[i] \endcode
-	  \param[out] The resulting collection of booleans
+	  \param[out] out The resulting collection of booleans
 	  \param[in] lhs Left hand side collection
 	  \param[in] rhs Right hand side collection
 	  \param[in] size Size of the collections.
@@ -377,7 +377,7 @@ namespace equelleCUDA {
 	  Compare elements in lhs with the scalar rhs and return a
 	  Collection Of Booleans.
 	  \code out[i] = lhs[i] != rhs \endcode
-	  \param[out] The resulting collection of booleans
+	  \param[out] out The resulting collection of booleans
 	  \param[in] lhs Left hand side collection
 	  \param[in] rhs Right hand side scalar
 	  \param[in] size Size of the collections.

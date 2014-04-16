@@ -93,7 +93,7 @@ namespace equelleCUDA {
 	//! Dot product with another vector
 	/*!
 	  Returns a collection of scalars equal to the dot product of this and the
-	  input.
+	  input vector.
 	*/
 	CollOfScalar dot(const CollOfVector& rhs) const;
 	
@@ -202,6 +202,17 @@ namespace equelleCUDA {
 				    const int numVectors,
 				    const int dim);
 	
+	//! Kernel for computing the dot product of lhs and rhs vectors.
+	/*!
+	  This kernel compute a collection of scalars of dot products from 
+	  two collections of vectors. \n
+	  Requires the number of vectors amount of threads.
+	  \param[out] result The dot products
+	  \param[in] lhs First collection of vectors
+	  \param[in] rhs Second collection of vectors
+	  \param[in] numVectors Number of vectors and size of result.
+	  \param[in] dim Dimension of all vectors.
+	*/
 	__global__ void dotKernel( double* result, 
 				   const double* lhs,
 				   const double* rhs,
@@ -298,7 +309,7 @@ namespace equelleCUDA {
 	/*!
 	  Requires one thread per vector.
 	  \param[in,out] vector CollOfVector data. Input overwritten to output.
-	  \param[in] scla CollOfScalar data.
+	  \param[in] scal CollOfScalar data.
 	  \param[in] numVectors number of vectors
 	  \param[in] dim Dimensions of the vectors.
 	*/

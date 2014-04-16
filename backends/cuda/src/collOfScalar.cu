@@ -91,9 +91,9 @@ int CollOfScalar::size() const {
 
 
 // Get referance to the CudaArray with the values:
-const CudaArray& CollOfScalar::val() const {
-    return val_;
-}
+//const CudaArray& CollOfScalar::val() const {
+//    return val_;
+//}
 
 
 

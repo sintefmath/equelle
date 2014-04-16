@@ -19,6 +19,7 @@ namespace equelleCUDA
     //const int MAX_THREADS = 7;
 
     // This global variable is decleared in src/wrapEquelleRuntime.cu
+    //! Handle needed for cusparse library calls.
     extern cusparseHandle_t CUSPARSE;
     
     //! Collection of booleans as a thrust::device_vector<bool>
