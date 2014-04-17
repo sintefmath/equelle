@@ -74,7 +74,7 @@ CudaMatrix::CudaMatrix( const double* val, const int* rowPtr, const int* colInd,
 
 
 // Constructor from Eigen Matrix
-CudaMatrix::CudaMatrix(const Eigen_M& eigen)
+CudaMatrix::CudaMatrix(const Eigen::SparseMatrix<Scalar>& eigen)
     : rows_(eigen.rows()),
       cols_(eigen.cols()),
       nnz_(eigen.nonZeros()),
@@ -263,8 +263,6 @@ CudaMatrix::~CudaMatrix() {
     // Destroy description_ 
     sparseStatus_ = cusparseDestroyMatDescr( description_ );
     checkError_("cusparseDestroyMatDescr() in CudaMatrix::~CudaMatrix()");
-
-    std::cout << "Freeing matrix\n";
 
 }
 

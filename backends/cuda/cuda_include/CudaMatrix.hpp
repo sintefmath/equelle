@@ -37,10 +37,6 @@ namespace equelleCUDA {
 	int cols;
     };
 
-    
-    typedef Eigen::SparseMatrix<Scalar> Eigen_M;
-    
-
 } // namespace equelleCUDA
     
 
@@ -86,8 +82,19 @@ namespace equelleCUDA {
 	CudaMatrix( const double* val, const int* rowPtr, const int* colInd,
 		    const int nnz, const int rows, const int cols);
 
-	// Constructor from Eigen sparse matrix
-	CudaMatrix( const Eigen_M& eigen);
+	//! Constructor from Eigen sparse matrix
+	/*!
+	  Creates a CudaMatrix from an Eigen Sparse Matrix. Eigen use column
+	  major formats by defaults, and we therefore have to copy the matrix 
+	  over to row major format before copying it to the device.
+	  
+	  This constructor is needed for the DeviceHelperOps matrices, since the
+	  Opm::HelperOps builds matrices of type Eigen::SparseMatrix<Scalar>. The
+	  transformation to row-major could also have been done on the GPU, but that
+	  would require more code, as well as this is an operation that happens only
+	  in the constructor of the EquelleRuntimeCUDA class.
+	*/
+	CudaMatrix( const Eigen::SparseMatrix<Scalar>& eigen);
 	
 
 	//! Constructor creating a identity matrix of the given size.
