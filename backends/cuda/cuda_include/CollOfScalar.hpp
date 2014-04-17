@@ -7,6 +7,7 @@
 
 #include "equelleTypedefs.hpp"
 #include "CudaArray.hpp"
+#include "CudaMatrix.hpp"
 
 
 namespace equelleCUDA {
@@ -95,6 +96,8 @@ namespace equelleCUDA {
 	/*! \return A host vector containing the values of the collection */
 	std::vector<double> copyToHost() const;
 	
+
+	bool useAutoDiff() const;
 	
 	//! For CUDA kernel calls.
 	/*!
@@ -340,6 +343,8 @@ namespace equelleCUDA {
 	
     private:
 	CudaArray val_;
+	CudaMatrix der_;
+	bool autodiff_;
 	
     }; // class CollOfScalar
 

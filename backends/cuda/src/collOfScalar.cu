@@ -7,44 +7,57 @@
 
 #include "CollOfScalar.hpp"
 #include "CudaArray.hpp"
+#include "CudaMatrix.hpp"
 
 
 using namespace equelleCUDA;
 using namespace wrapCudaArray;
 
 CollOfScalar::CollOfScalar() 
-    : val_()
+    : val_(),
+      der_(),
+      autodiff_(false)
 {
     // Intentionally left empty
 }
 
 CollOfScalar::CollOfScalar(const int size)
-    : val_(size)
+    : val_(size),
+      der_(),
+      autodiff_(false)
 {
     // Intentionally left empty
 }
 
 CollOfScalar::CollOfScalar(const int size, const double value)
-    : val_(size, value)
+    : val_(size, value),
+      der_(),
+      autodiff_(false)
 {
     // Intentionally left emtpy
 }
 
 CollOfScalar::CollOfScalar(const CudaArray& val)
-    : val_(val)
+    : val_(val),
+      der_(),
+      autodiff_(false)
 {
     // Intentionally left emtpy
 }
 
 CollOfScalar::CollOfScalar(const std::vector<double>& host_vec)
-    : val_(host_vec)
+    : val_(host_vec),
+      der_(),
+      autodiff_(false)
 {
     // Intentionally left emtpy
 }
 
 // Copy constructor
 CollOfScalar::CollOfScalar(const CollOfScalar& coll)
-    : val_(coll.val_)
+    : val_(coll.val_),
+      der_(coll.der_),
+      autodiff_(coll.autodiff_)
 {
     // Intentionally left emtpy
 }
@@ -55,6 +68,10 @@ CollOfScalar& CollOfScalar::operator= (const CollOfScalar& other)
     // Protect against self assignment:
     if (this != &other) {
 	val_ = other.val_;
+	autodiff_ = other.autodiff_;
+	if ( autodiff_ ) {
+	    der_ = other.der_;
+	}
     }
     return *this;
 }
@@ -73,6 +90,10 @@ const double* CollOfScalar::data() const {
 
 double* CollOfScalar::data() {
     return val_.data();
+}
+
+bool CollOfScalar::useAutoDiff() const {
+    return autodiff_;
 }
 
 kernelSetup CollOfScalar::setup() const {
