@@ -45,6 +45,23 @@ namespace equelleCUDA {
 	*/
 	explicit CollOfScalar(const CudaArray& val);
 
+	//! Constructor for creating a primary variable
+	/*!
+	  Input should be a non-autodiff CollOfScalar, and will be copied to
+	  this new CollOfScalar. In addition, we create an identity matrix 
+	  for the derivative and all operations based on this variable will
+	  be using Automatic Differentiation.
+	*/
+	explicit CollOfScalar(const CollOfScalar& val, const bool primaryVariable);
+
+	//! Constructor from CudaArray and CudaMatrix.
+	/*!
+	  Copy the given CudaArray and CudaMatrix into a CollOfScalar, as is 
+	  required when we return CollOfScalars from arithmetic expressions or
+	  other operations.
+	*/
+	explicit CollOfScalar(const CudaArray& val, const CudaMatrix& der);
+
 	//! Constructor from std::vector
 	/*! 
 	  Used for initialize CollOfScalar when using unit tests.
@@ -96,7 +113,7 @@ namespace equelleCUDA {
 	/*! \return A host vector containing the values of the collection */
 	std::vector<double> copyToHost() const;
 	
-
+	/*! \return True if the derivative matrix is non-empty */
 	bool useAutoDiff() const;
 	
 	//! For CUDA kernel calls.

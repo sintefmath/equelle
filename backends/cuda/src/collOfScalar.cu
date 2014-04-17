@@ -53,6 +53,30 @@ CollOfScalar::CollOfScalar(const std::vector<double>& host_vec)
     // Intentionally left emtpy
 }
 
+
+// Primary variable constructor
+CollOfScalar::CollOfScalar(const CollOfScalar& val, const bool primaryVariable)
+    : val_(val.val_),
+      der_(val.size()),
+      autodiff_(true)
+{
+    // It makes no sence to use this constructor with primaryVariable = false,
+    // so we check that it is used correctly:
+    if ( !primaryVariable ) {
+	OPM_THROW(std::runtime_error, "Trying to create a primary variable with primaryVarible = " << primaryVariable );
+    }
+}
+
+// Constructor from CudaArray and CudaMatrix
+CollOfScalar::CollOfScalar(const CudaArray& val, const CudaMatrix& der)
+    : val_(val),
+      der_(der),
+      autodiff_(true)
+{
+    // Intentionally left empty
+}
+
+
 // Copy constructor
 CollOfScalar::CollOfScalar(const CollOfScalar& coll)
     : val_(coll.val_),
@@ -128,8 +152,6 @@ CollOfScalar equelleCUDA::operator+ (const CollOfScalar& lhs,
      std::cout << "pluss completed\n";
     return CollOfScalar(lhs.val_ + rhs.val_);
 }
-
-
 
 CollOfScalar equelleCUDA::operator-(const CollOfScalar& lhs, const CollOfScalar& rhs) {
     return CollOfScalar( lhs.val_ - rhs.val_);
