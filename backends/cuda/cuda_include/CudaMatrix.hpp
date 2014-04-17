@@ -8,6 +8,8 @@
 #include <cuda_runtime.h>
 #include <cusparse_v2.h>
 
+#include <Eigen/Sparse>
+
 // This file include a global variable for the cusparse handle
 // It has to be created before any CudaMatrix objects are decleared!
 #include "equelleTypedefs.hpp"
@@ -34,6 +36,11 @@ namespace equelleCUDA {
 	//! Number of columns
 	int cols;
     };
+
+    
+    typedef Eigen::SparseMatrix<Scalar> Eigen_M;
+    
+
 } // namespace equelleCUDA
     
 
@@ -79,6 +86,10 @@ namespace equelleCUDA {
 	CudaMatrix( const double* val, const int* rowPtr, const int* colInd,
 		    const int nnz, const int rows, const int cols);
 
+	// Constructor from Eigen sparse matrix
+	CudaMatrix( const Eigen_M& eigen);
+	
+
 	//! Constructor creating a identity matrix of the given size.
 	/*!
 	  Allocates and create a size by size identity matrix.
@@ -123,6 +134,7 @@ namespace equelleCUDA {
 	friend CudaMatrix operator*(const CudaMatrix& lhs, const CudaMatrix& rhs);
 	friend CudaMatrix operator*(const CudaMatrix& lhs, const Scalar rhs);
 	friend CudaMatrix operator*(const Scalar lhs, const CudaMatrix& rhs);
+
     private:
 	int rows_;
 	int cols_;

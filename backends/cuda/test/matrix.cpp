@@ -244,7 +244,39 @@ int main(int argc, char** argv) {
     if ( matrixCompare(I.toHost(), i_lf, "Identity matrix I(4)") ) {
 	return 1;
     }
+
+    // Check the matrices from DeviceHelperOps:
+    vector<double> grad_v = {-1,1,-1,1,-1,1, -1,1,-1,1,-1,1, -1,1,-1,1,-1,1,
+			     -1,1,-1,1,-1,1,-1,1, -1,1,-1,1,-1,1,-1,1};
+    vector<int> grad_rp = {0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34};
+    vector<int> grad_ic = {0,1,1,2,2,3, 4,5,5,6,6,7, 8,9,9,10,10,11,
+			   0,4,1,5,2,6,3,7, 4,8,5,9,6,10,7,11};
+    hostMat grad_host = {grad_v, grad_rp, grad_ic, 34, 17, 12};
+    if ( matrixCompare(er.getGradMatrix().toHost(), grad_host, "DeviceHelperOps::grad")){
+	return 1;
+    }
     
+    vector<double> div_v = {1,1, -1,1,1, -1,1,1, -1,1, 1,-1,1, -1,1,-1,1, -1,1,-1,1, 
+			    -1,-1,1, 1,-1, -1,1,-1, -1,1,-1, -1,-1};
+    vector<int> div_rp = {0,2,5,8,10,13,17,21,24,26,29,32,34};
+    vector<int> div_ci = {0,9, 0,1,10, 1,2,11, 2,12, 3,9,13, 3,4,10,14, 4,5,11,15,
+			  5,12,16, 6,13, 6,7,14, 7,8,15, 8,16};
+    hostMat div_host = {div_v, div_rp, div_ci, 34, 12, 17};
+    if ( matrixCompare(er.getDivMatrix().toHost(), div_host, "DeviceHelperOps::div") ) {
+	return 1;
+    }
+
+    vector<double> fulldiv_v = { -1,1,-1,1, -1,1,-1,1, -1,1,-1,1, -1,1,-1,1, -1,1,-1,1, 
+				 -1,1,-1,1, -1,1,-1,1, -1,1,-1,1, -1,1,-1,1, -1,1,-1,1, 
+				 -1,1,-1,1, -1,1,-1,1};
+    vector<int> fulldiv_rp = {0,4,8,12,16,20,24,28,32,36,40,44,48};
+    vector<int> fulldiv_ci = {0,1,15,19, 1,2,16,20, 2,3,17,21, 3,4,18,22,
+			      5,6,19,23, 6,7,20,24, 7,8,21,25, 8,9,22,26,
+			      10,11,23,27, 11,12,24,28, 12,13,25,29, 13,14,26,30};
+    hostMat fulldiv_host = {fulldiv_v, fulldiv_rp, fulldiv_ci, 48, 12, 31};
+    if ( matrixCompare(er.getFulldivMatrix().toHost(), fulldiv_host, "DeviceHelperOps::fulldiv") ) {
+	return 1;
+    }
     
     return 0;
 

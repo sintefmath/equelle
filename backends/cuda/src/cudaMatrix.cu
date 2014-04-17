@@ -8,6 +8,8 @@
 #include <iostream>
 #include <string>
 
+#include <Eigen/Sparse>
+
 #include "CudaMatrix.hpp"
 #include "CudaArray.hpp" // kernels for scalar multiplications
 #include "equelleTypedefs.hpp"
@@ -69,6 +71,50 @@ CudaMatrix::CudaMatrix( const double* val, const int* rowPtr, const int* colInd,
 
     createGeneralDescription_("CudaMatrix host constructor");
 }
+
+
+// Constructor from Eigen Matrix
+CudaMatrix::CudaMatrix(const Eigen_M& eigen)
+    : rows_(eigen.rows()),
+      cols_(eigen.cols()),
+      nnz_(eigen.nonZeros()),
+      csrVal_(0),
+      csrRowPtr_(0),
+      csrColInd_(0),
+      sparseStatus_(CUSPARSE_STATUS_SUCCESS),
+      cudaStatus_(cudaSuccess),
+      description_(0)
+{
+    // Should have a check here to ensure that the matrix is stored 
+    // in a row-major format.
+    
+    // Opm::HelperOps creates helper matrices in column major format.
+    // Copy the input to a row major matrix instead:
+    Eigen::SparseMatrix<Scalar, Eigen::RowMajor> rowmajor(eigen);
+    std::cout << "Rowmajor:\n" << rowmajor << "\n";
+
+    // Allocate memory:
+    cudaStatus_ = cudaMalloc( (void**)&csrVal_, nnz_*sizeof(double));
+    checkError_("cudaMalloc(csrVal_) in CudaMatrix Eigen constructor");
+    cudaStatus_ = cudaMalloc( (void**)&csrRowPtr_, (rows_+1)*sizeof(int));
+    checkError_("cudaMalloc(csrRowPtr_) in CudaMatrix Eigen constructor");
+    cudaStatus_ = cudaMalloc( (void**)&csrColInd_, nnz_*sizeof(int));
+    checkError_("cudaMalloc(csrColInd_) in CudaMatrix Eigen constructor");
+
+    // Copy arrays:
+    cudaStatus_ = cudaMemcpy( csrVal_, rowmajor.valuePtr(), nnz_*sizeof(double),
+			      cudaMemcpyHostToDevice);
+    checkError_("cudaMemcpy(csrVal_) in CudaMatrix Eigen constructor");
+    cudaStatus_ = cudaMemcpy( csrRowPtr_, rowmajor.outerIndexPtr(), (rows_+1)*sizeof(int),
+			      cudaMemcpyHostToDevice);
+    checkError_("cudaMemcpy(csrRowPtr_) in CudaMatrix Eigen constructor");
+    cudaStatus_ = cudaMemcpy( csrColInd_, rowmajor.innerIndexPtr(), nnz_*sizeof(int),
+			      cudaMemcpyHostToDevice);
+    checkError_("cudaMemcpy(csrColInd_) in CudaMatrix Eigen constructor");
+
+    createGeneralDescription_("CudaMatrix Eigen constructor");
+} // constructor from Eigen
+
 
 // Identity matrix constructor
 CudaMatrix::CudaMatrix(const int size) 
@@ -217,6 +263,8 @@ CudaMatrix::~CudaMatrix() {
     // Destroy description_ 
     sparseStatus_ = cusparseDestroyMatDescr( description_ );
     checkError_("cusparseDestroyMatDescr() in CudaMatrix::~CudaMatrix()");
+
+    std::cout << "Freeing matrix\n";
 
 }
 

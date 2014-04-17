@@ -7,7 +7,7 @@
 
 
 //#include <opm/autodiff/AutoDiffBlock.hpp>
-//#include <opm/autodiff/AutoDiffHelpers.hpp>
+#include <opm/autodiff/AutoDiffHelpers.hpp>
 
 //#include <Eigen/Eigen>
 
@@ -32,6 +32,7 @@
 #include "DeviceGrid.hpp"
 #include "equelleTypedefs.hpp"
 #include "CudaMatrix.hpp"
+#include "DeviceHelperOps.hpp"
 
 // Forward declarations for the Device types
 //class CollOfScalar;
@@ -339,9 +340,17 @@ public:
     /// Ensuring requirements that may be imposed by Equelle programs.
     void ensureGridDimensionMin(const int minimum_grid_dimension) const;
 
+    
+    // ------- FUNCTIONS ONLY FOR TESTING -----------------------
+
     // Havahol - add a function to return grid in order to do testing here.
     UnstructuredGrid getGrid() const;
     
+    CudaMatrix getGradMatrix() const { return devOps_.grad;};
+    CudaMatrix getDivMatrix() const { return devOps_.div;};
+    CudaMatrix getFulldivMatrix() const {return devOps_.fulldiv;};
+
+    // ------------ PRIVATE MEMBERS -------------------------- //
 private:
     /// Topology helpers
     bool boundaryCell(const int cell_index) const;
@@ -359,7 +368,8 @@ private:
     std::unique_ptr<Opm::GridManager> grid_manager_;
     const UnstructuredGrid& grid_;
     equelleCUDA::DeviceGrid dev_grid_;
-    //Opm::HelperOps ops_;
+    Opm::HelperOps ops_;
+    const DeviceHelperOps devOps_;
     Opm::LinearSolverFactory linsolver_;
     bool output_to_file_;
     int verbose_;
@@ -370,7 +380,7 @@ private:
     double abs_res_tol_;
 };
 
-} // namespace EquelleCUDA
+} // namespace equelleCUDA
 
 
 // Include the implementations of template members.
