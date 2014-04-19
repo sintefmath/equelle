@@ -245,6 +245,36 @@ int main(int argc, char** argv) {
 	return 1;
     }
 
+    CudaMatrix J = -G;
+    vector<double> j_v = {48,64,80,4,-20,18,-4,-72,20,16,16,0};
+    hostMat j_lf = {j_v, e_rp, e_ci, 12, 4, 4};
+    if ( matrixCompare(J.toHost(), j_lf, "J = -G" ) ) {
+	return 1;
+    }
+
+    // Create an empty matrix and do tests with it
+    CudaMatrix empty;
+    if ( !empty.isEmpty() ) {
+	std::cout << "Empty is not empty: " << empty.isEmpty() << "\n";
+	return 1;
+    }
+    CudaMatrix J2 = J + empty;
+    if ( matrixCompare( J2.toHost(), j_lf, "J2 = J + empty") ) {
+	return 1;
+    }
+    CudaMatrix J3 = empty - G;
+    if ( matrixCompare( J3.toHost(), j_lf, "J3 = empty - G") ) {
+	return 1;
+    }
+    CudaMatrix J4 = empty*G;
+    if ( !J4.isEmpty() ) {
+	std::cout << "J4 should be empty after J4 = empty*G, but it is not\n";
+	return 1;
+    }
+
+    
+
+
     // Check the matrices from DeviceHelperOps:
     vector<double> grad_v = {-1,1,-1,1,-1,1, -1,1,-1,1,-1,1, -1,1,-1,1,-1,1,
 			     -1,1,-1,1,-1,1,-1,1, -1,1,-1,1,-1,1,-1,1};
@@ -278,6 +308,8 @@ int main(int argc, char** argv) {
 	return 1;
     }
     
+        
+
     return 0;
 
 } // main()

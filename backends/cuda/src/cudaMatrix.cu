@@ -571,6 +571,9 @@ CudaMatrix equelleCUDA::operator*(const Scalar lhs, const CudaMatrix& rhs) {
     return out;
 }
 
+CudaMatrix equelleCUDA::operator-(const CudaMatrix& arg) {
+    return -1.0*arg;
+}
 
 __global__ void wrapCudaMatrix::initIdentityMatrix(double* csrVal,
 						   int* csrRowPtr,

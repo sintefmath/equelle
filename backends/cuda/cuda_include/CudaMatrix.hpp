@@ -159,6 +159,7 @@ namespace equelleCUDA {
 	friend CudaMatrix operator*(const CudaMatrix& lhs, const CudaMatrix& rhs);
 	friend CudaMatrix operator*(const CudaMatrix& lhs, const Scalar rhs);
 	friend CudaMatrix operator*(const Scalar lhs, const CudaMatrix& rhs);
+	friend CudaMatrix operator-(const CudaMatrix& arg);
 
     private:
 	int rows_;
@@ -253,6 +254,14 @@ namespace equelleCUDA {
       \sa wrapCudaArray::scalMultColl_kernel
     */
     CudaMatrix operator*(const Scalar lhs, const CudaMatrix& rhs);
+    
+    //! Unary minus
+    /*!
+      Returns -1.0* arg;
+    */
+    CudaMatrix operator-(const CudaMatrix& arg);
+
+
 
     //! Kernels and other related functions to for CudaMatrix:
     namespace wrapCudaMatrix
