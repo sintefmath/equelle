@@ -3,6 +3,7 @@
 #define EQUELLE_CUDAMATRIX_HEADER_INCLUDED
 
 #include <vector>
+#include <string>
 
 #include <cuda.h>
 #include <cuda_runtime.h>
@@ -13,6 +14,7 @@
 // This file include a global variable for the cusparse handle
 // It has to be created before any CudaMatrix objects are decleared!
 #include "equelleTypedefs.hpp"
+//#include "CollOfScalar.hpp"
 
 
 namespace equelleCUDA {
@@ -42,6 +44,10 @@ namespace equelleCUDA {
 
 
 namespace equelleCUDA {
+    
+    // Forward declaration of CollOfScalar:
+    class CollOfScalar;
+    
 
     //! Class for storing a Matrix on the device
     /*!
@@ -106,6 +112,15 @@ namespace equelleCUDA {
 	*/
 	CudaMatrix( const int size);
 
+	//! Constructor creating a diagonal matrix from a CollOfScalar
+	/*!
+	  Allocates memory for a diagonal matrix, and insert the values CollOfScalar 
+	  values on the diagonal elements. This is regardless if the CollOfScalar has 
+	  a derivative or not, we only use its values.
+	*/
+	CudaMatrix( const CollOfScalar& coll ); // Need to be implemented
+	                                        // Create a private allocate memory func.
+
 	//! Copy assignment operator
 	/*!
 	  Allocates and copies the device memory from the input matrix to this. 
@@ -127,6 +142,9 @@ namespace equelleCUDA {
 	int rows() const;
 	//! The number of columns in the matrix.
 	int cols() const;
+
+	//! Check if the matrix holds values or not
+	bool isEmpty() const;
 
 	//! Copies the device memory to host memory in a hostMat struct.
 	hostMat toHost() const;
@@ -158,7 +176,10 @@ namespace equelleCUDA {
 	cusparseMatDescr_t description_;
 
 	void checkError_(const std::string& msg) const;
+	void checkError_(const std::string& msg, const std::string& caller) const;
 	void createGeneralDescription_(const std::string& msg);
+
+	void allocateMemory(const std::string& caller);
 	
     }; // class CudaMatrix
     
@@ -166,15 +187,24 @@ namespace equelleCUDA {
     //! Matrix + Matrix operator
     /*!
       Makes a call to cudaMatrixSum with beta = 1.0.
+
+      Matrices are allowed to be empty, and will then be interpreted as 
+      correctly sized matrices filled with zeros.
+      
       \sa cudaMatrixSum
     */
     CudaMatrix operator+(const CudaMatrix& lhs, const CudaMatrix& rhs);
-    //! Matrix - Matrix operator
+
+    //! Matrix-  Matrix operator
     /*!
       Makes a call to cudaMatrixSum with beta = -1.0.
+
+      Matrices are allowed to be empty, and will then be interpreted as
+      correctly sized matrices filled with zeros.
       \sa cudaMatrixSum
      */
     CudaMatrix operator-(const CudaMatrix& lhs, const CudaMatrix& rhs);
+
     //! Summation of two sparse matrices.
     /*!
       Performs a sparse matrix + sparse matrix operation of the form 
@@ -185,16 +215,23 @@ namespace equelleCUDA {
       In order to add the two matrices we do a two step use of the cusparse library.\n
       1) Find the number of non-zeros for each row of the resulting matrix.\n
       2) Allocate memory for result and add matrices.
+
+      Matrices cannot be empty.
     */
     CudaMatrix cudaMatrixSum( const CudaMatrix& lhs,
 			      const CudaMatrix& rhs,
 			      const double beta);
+
     //! Matrix * Matrix operator
     /*!
       Performs a sparse matrix * sparse matrix operation in two steps by using the
       cusparse library.\n
       1) Find the number of non-zeros for each row of the resulting matrix.\n
       2) Allocate memory for the result and find the matrix product.
+
+      The matrices are allowed to be empty, and an empty matrix is
+      interpreted as a correctly sized matrix of zeros.
+      This lets us not worry about empty derivatives for autodiff.
     */
     CudaMatrix operator*(const CudaMatrix& lhs, const CudaMatrix& rhs);
 
@@ -202,6 +239,8 @@ namespace equelleCUDA {
     /*!
       Make a call to the kernel multiplying a scalar to a cudaArray, since all non-zero
       entries are at the same positions, and the values are continuously stored in memory.
+
+      The matrix is not allowed to be empty.
       \sa wrapCudaArray::scalMultColl_kernel
      */
     CudaMatrix operator*(const CudaMatrix& lhs, const Scalar rhs);
@@ -209,6 +248,9 @@ namespace equelleCUDA {
     /*!
       Make a call to the kernel multiplying a scalar to a cudaArray, since all non-zero
       entries are at the same positions, and the values are continuously stored in memory.
+
+      The matrix is not allowed to be empty.
+      \sa wrapCudaArray::scalMultColl_kernel
     */
     CudaMatrix operator*(const Scalar lhs, const CudaMatrix& rhs);
 

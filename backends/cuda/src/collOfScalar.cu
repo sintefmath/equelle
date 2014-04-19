@@ -149,16 +149,37 @@ CollOfScalar equelleCUDA::operator+ (const CollOfScalar& lhs,
 					 const CollOfScalar& rhs)
 {
     //CudaArray val = lhs.val_ + rhs.val_;
-     std::cout << "pluss completed\n";
-    return CollOfScalar(lhs.val_ + rhs.val_);
+    std::cout << "pluss completed\n";
+    //return CollOfScalar(lhs.val_ + rhs.val_);
+    CollOfScalar out;
+    out.val_ = lhs.val_ + rhs.val_;
+    if (lhs.autodiff_ || rhs.autodiff_) {
+	out.autodiff_ = true;
+	if ( lhs.autodiff_ && rhs.autodiff_ ) {
+	    out.der_ = lhs.der_ + rhs.der_;
+	}
+	else if ( lhs.autodiff_ ) {
+	    out.der_ = lhs.der_;
+	}
+	else {
+	    out.der_ = rhs.der_;
+	}   
+    }
+    return out;
 }
 
 CollOfScalar equelleCUDA::operator-(const CollOfScalar& lhs, const CollOfScalar& rhs) {
-    return CollOfScalar( lhs.val_ - rhs.val_);
+    //return CollOfScalar( lhs.val_ - rhs.val_);
+    CollOfScalar out;
+    out.val_ = lhs.val_ - rhs.val_;
+    return out;
 }
 
 CollOfScalar equelleCUDA::operator*(const CollOfScalar& lhs, const CollOfScalar& rhs) {
-    return CollOfScalar(lhs.val_ * rhs.val_);
+    //return CollOfScalar(lhs.val_ * rhs.val_);
+    CollOfScalar out;
+    out.val_ = lhs.val_ * rhs.val_;
+    return out;
 }
 
 CollOfScalar equelleCUDA::operator/(const CollOfScalar& lhs, const CollOfScalar& rhs) {

@@ -50,21 +50,18 @@ CudaMatrix::CudaMatrix( const double* val, const int* rowPtr, const int* colInd,
       cudaStatus_(cudaSuccess),
       description_(0)
 {
-    // Allocate memory and copy data to host
-    cudaStatus_ = cudaMalloc( (void**)&csrVal_, nnz_*sizeof(double));
-    checkError_("cudaMalloc(csrVal_) in CudaMatrix host constructor");
+    // Allocate memory
+    allocateMemory("CudaMatrix host constructor");
+
+    // Copy data:
     cudaStatus_ = cudaMemcpy( csrVal_, val, nnz_*sizeof(double), 
 			      cudaMemcpyHostToDevice);
     checkError_("cudaMemcpy(csrVal_) in CudaMatrix host constructor");
 
-    cudaStatus_ = cudaMalloc( (void**)&csrRowPtr_, (rows_ + 1)*sizeof(int));
-    checkError_("cudaMalloc(csrRowPtr_) in CudaMatrix host constructor");
     cudaStatus_ = cudaMemcpy( csrRowPtr_, rowPtr, (rows_ + 1)*sizeof(int),
 			      cudaMemcpyHostToDevice);
     checkError_("cudaMemcpy(csrRowPtr_) in CudaMatrix host constructor");
 
-    cudaStatus_ = cudaMalloc( (void**)&csrColInd_, nnz_*sizeof(int));
-    checkError_("cudaMalloc(csrColInd_) in CudaMatrix host constructor");
     cudaStatus_ = cudaMemcpy( csrColInd_, colInd, nnz_*sizeof(int),
 			      cudaMemcpyHostToDevice);
     checkError_("cudaMemcpy(csrColInd_) in CudaMatrix host constructor");
@@ -91,15 +88,9 @@ CudaMatrix::CudaMatrix(const Eigen::SparseMatrix<Scalar>& eigen)
     // Opm::HelperOps creates helper matrices in column major format.
     // Copy the input to a row major matrix instead:
     Eigen::SparseMatrix<Scalar, Eigen::RowMajor> rowmajor(eigen);
-    std::cout << "Rowmajor:\n" << rowmajor << "\n";
 
     // Allocate memory:
-    cudaStatus_ = cudaMalloc( (void**)&csrVal_, nnz_*sizeof(double));
-    checkError_("cudaMalloc(csrVal_) in CudaMatrix Eigen constructor");
-    cudaStatus_ = cudaMalloc( (void**)&csrRowPtr_, (rows_+1)*sizeof(int));
-    checkError_("cudaMalloc(csrRowPtr_) in CudaMatrix Eigen constructor");
-    cudaStatus_ = cudaMalloc( (void**)&csrColInd_, nnz_*sizeof(int));
-    checkError_("cudaMalloc(csrColInd_) in CudaMatrix Eigen constructor");
+    allocateMemory("CudaMatrix Eigen constructor");
 
     // Copy arrays:
     cudaStatus_ = cudaMemcpy( csrVal_, rowmajor.valuePtr(), nnz_*sizeof(double),
@@ -129,12 +120,7 @@ CudaMatrix::CudaMatrix(const int size)
       description_(0)
 {
     // Allocate memory:
-    cudaStatus_ = cudaMalloc( (void**)&csrVal_, size*sizeof(double));
-    checkError_("cudaMalloc(csrVal_) in CudaMatrix identity matrix constructor");
-    cudaStatus_ = cudaMalloc( (void**)&csrRowPtr_, (size+1)*sizeof(int));
-    checkError_("cudaMalloc(csrRowPtr_) in CudaMatrix identity matrix constructor");
-    cudaStatus_ = cudaMalloc( (void**)&csrColInd_, size*sizeof(int));
-    checkError_("cudaMalloc(csrColInd_) in CudaMatrix identity matrix constructor");
+    allocateMemory("CudaMatrix identity matrix constructor");
 
     // Call a kernel that writes the correct data:
     kernelSetup s(size+1);
@@ -280,6 +266,11 @@ int CudaMatrix::cols() const {
     return cols_;
 }
 
+bool CudaMatrix::isEmpty() const {
+    return (csrVal_ == NULL);
+}
+
+
 
 // Copy to host:
 hostMat CudaMatrix::toHost() const {
@@ -323,6 +314,10 @@ void CudaMatrix::checkError_(const std::string& msg) const {
     }
 }
 
+void CudaMatrix::checkError_(const std::string& msg, const std::string& caller) const {
+    checkError_(msg + caller);
+}
+
 void CudaMatrix::createGeneralDescription_(const std::string& msg) {
     sparseStatus_ = cusparseCreateMatDescr( &description_ );
     checkError_("cusparseCreateMatDescr() in " + msg);
@@ -334,14 +329,59 @@ void CudaMatrix::createGeneralDescription_(const std::string& msg) {
 }
 
 
+// MEMORY ALLOCATIONS
+void CudaMatrix::allocateMemory(const std::string& caller) {
+    // Error checking:
+    if ( csrVal_ != 0 ) 
+	OPM_THROW(std::runtime_error, "Error in CudaMatrix::allocateMemory\n" << "\tcsrVal_ already allocated.\n\tCalled from " << caller);
+    if ( csrRowPtr_ != 0 ) {
+	OPM_THROW(std::runtime_error, "Error in CudaMatrix::allocateMemory\n" << "\tcsrRowPtr_ already allocated.\n\tCalled from " << caller);
+    }
+    if ( csrColInd_ != 0 ) {
+	OPM_THROW(std::runtime_error, "Error in CudaMatrix::allocateMemory\n" << "\tcsrColInd_ already allocated.\n\tCalled from " << caller);
+    }
+    
+    // Allocating
+    cudaStatus_ = cudaMalloc( (void**)&csrVal_, nnz_*sizeof(double));
+    checkError_("cudaMalloc(csrVal_) in ", caller);
+    cudaStatus_ = cudaMalloc( (void**)&csrRowPtr_, (rows_+1)*sizeof(int));
+    checkError_("cudaMalloc(csrRowPtr_) in ", caller);
+    cudaStatus_ = cudaMalloc( (void**)&csrColInd_, nnz_*sizeof(int));
+    checkError_("cudaMalloc(csrColInd_) in ", caller);
+}
+
+
+// --------------------- OVERLOADING OF OPERATORS -------------------------- //
 
 // Operator +
 CudaMatrix equelleCUDA::operator+(const CudaMatrix& lhs, const CudaMatrix& rhs) {
-    return cudaMatrixSum(lhs, rhs, 1.0);
+    // If one of the matrices is emtpy, we interpret it as a matrix filled with
+    // zeros, and therefore just return the other matrix.
+    // This is convenient when we implement autodiff by using CudaMatrix.
+    if ( lhs.isEmpty() ) {
+	return rhs;
+    } 
+    else if ( rhs.isEmpty() ) {
+	return lhs;
+    } 
+    else {
+	return cudaMatrixSum(lhs, rhs, 1.0);
+    }
 }
 
 CudaMatrix equelleCUDA::operator-(const CudaMatrix& lhs, const CudaMatrix& rhs) {
-    return cudaMatrixSum(lhs, rhs, -1.0);
+    // If one of the matrices is emtpy, we interpret it as a matrix filled with
+    // zeros, and therefore just return the other matrix.
+    // This is convenient when we implement autodiff by using CudaMatrix.
+    if ( lhs.isEmpty() ) {
+	return -1.0*rhs;
+    }
+    else if ( rhs.isEmpty() ) {
+	return lhs;
+    }
+    else {
+	return cudaMatrixSum(lhs, rhs, -1.0);
+    }
 }
 
 
@@ -349,6 +389,13 @@ CudaMatrix equelleCUDA::cudaMatrixSum(const CudaMatrix& lhs,
 				      const CudaMatrix& rhs,
 				      const double beta) {
   
+    if ( lhs.isEmpty() || rhs.isEmpty() ) {
+	if ( lhs.isEmpty() ) 
+	    OPM_THROW(std::runtime_error, "Calling cudaMatrixSum with lhs empty");
+	else 
+	    OPM_THROW(std::runtime_error, "Calling cudaMatrixSum with rhs empty");
+    }
+
     if ( (lhs.rows_ != rhs.rows_) || (lhs.cols_ != rhs.cols_) ) {
     	OPM_THROW(std::runtime_error, "Error in CudaMatrix + CudaMatrix\n" << "\tMatrices of different size.\n" << "\tlhs: " << lhs.rows_ << " x " << lhs.cols_ << "\n" << "\trhs: " << rhs.rows_ << " x " << rhs.cols_ << ".");
     }
@@ -426,6 +473,13 @@ CudaMatrix equelleCUDA::cudaMatrixSum(const CudaMatrix& lhs,
 
 CudaMatrix equelleCUDA::operator*(const CudaMatrix& lhs, const CudaMatrix& rhs) {
 
+    // If any of them are empty, we return an empty matrix.
+    // An empty matrix is interpreted as a correctly sized matrix of zeros.
+    // This lets us not worry about empty derivatives for autodiff.
+    if ( lhs.isEmpty() || rhs.isEmpty() ) {
+	return CudaMatrix();
+    }
+    
     if ( lhs.cols_ != rhs.rows_ ) {
 	OPM_THROW(std::runtime_error, "Error in CudaMatrix * CudaMatrix\n" << "\tMatrices of illegal sizes.\n" << "\tlhs.cols_ = " << lhs.cols_ << "\n\trhs.rows_ = " << rhs.rows_);
     }
@@ -500,15 +554,15 @@ CudaMatrix equelleCUDA::operator*(const CudaMatrix& lhs, const CudaMatrix& rhs) 
 
 // Scalar multiplications with matrix:
 CudaMatrix equelleCUDA::operator*(const CudaMatrix& lhs, const Scalar rhs) {
-    CudaMatrix out(lhs);
-    kernelSetup s(out.nnz_);
-    wrapCudaArray::scalMultColl_kernel<<<s.grid, s.block>>>(out.csrVal_,
-							    rhs,
-							    out.nnz_);
-    return out;
+    return (rhs * lhs);
 }
 
 CudaMatrix equelleCUDA::operator*(const Scalar lhs, const CudaMatrix& rhs) {
+    // rhs should not be empty
+    if ( rhs.isEmpty() ) {
+	OPM_THROW(std::runtime_error, "Calling CudaMatrix * Scalar with empty matrix...");
+    }
+    
     CudaMatrix out(rhs);
     kernelSetup s(out.nnz_);
     wrapCudaArray::scalMultColl_kernel<<<s.grid, s.block>>>(out.csrVal_,
