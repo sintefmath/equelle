@@ -12,6 +12,7 @@
 
 #include "CudaMatrix.hpp"
 #include "CudaArray.hpp" // kernels for scalar multiplications
+#include "CollOfScalar.hpp" // for constructor for diagonal matrix.
 #include "equelleTypedefs.hpp"
 
 using namespace equelleCUDA;
@@ -128,6 +129,32 @@ CudaMatrix::CudaMatrix(const int size)
 
     createGeneralDescription_("CudaMatrix identity matrix constructor");
 }
+
+
+
+// Constructor for creating a diagonal matrix from the value of a CollOfScalar
+CudaMatrix::CudaMatrix(const CollOfScalar& coll)
+    : rows_(coll.size()),
+      cols_(rows_),
+      nnz_(rows_),
+      csrVal_(0),
+      csrRowPtr_(0),
+      csrColInd_(0),
+      sparseStatus_(CUSPARSE_STATUS_SUCCESS),
+      cudaStatus_(cudaSuccess),
+      description_(0)
+{
+    // Allocate memory:
+    allocateMemory("CudaMatrix diagonal matrix constructor");
+
+    // Call a kernel to write the correct data:
+    kernelSetup s(nnz_+1);
+    initDiagonalMatrix<<<s.grid, s.block>>>(csrVal_, csrRowPtr_, csrColInd_, coll.data(),
+					    nnz_);
+    
+    createGeneralDescription_("CudaMatrix diagonal matrix constructor");
+}
+					    
 
 
 // Copy constructor:
@@ -603,6 +630,11 @@ CudaMatrix equelleCUDA::operator-(const CudaMatrix& arg) {
     return -1.0*arg;
 }
 
+
+
+// KERNELS -------------------------------------------------
+
+
 __global__ void wrapCudaMatrix::initIdentityMatrix(double* csrVal,
 						   int* csrRowPtr,
 						   int* csrColInd,
@@ -613,6 +645,23 @@ __global__ void wrapCudaMatrix::initIdentityMatrix(double* csrVal,
 	csrRowPtr[i] = i;
 	if (i < nnz) {
 	    csrVal[i] = 1.0;
+	    csrColInd[i] = i;
+	}
+    }
+}
+
+
+__global__ void wrapCudaMatrix::initDiagonalMatrix( double* csrVal,
+						    int* csrRowPtr,
+						    int* csrColInd,
+						    const double* scalars,
+						    const int nnz)
+{
+    int i = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( i < nnz + 1) {
+	csrRowPtr[i] = i;
+	if ( i < nnz) {
+	    csrVal[i] = scalars[i];
 	    csrColInd[i] = i;
 	}
     }

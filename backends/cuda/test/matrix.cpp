@@ -277,6 +277,16 @@ int main(int argc, char** argv) {
 	std::cout << "J3 should be empty but is not, after J3 = empty\n";
 	return 1;
     }
+
+    // Create a diagonal matrix from CollOfScalar
+    CollOfScalar k_cos(j_v);
+    CudaMatrix K(k_cos);
+    vector<int> k_rp = {0,1,2,3,4,5,6,7,8,9,10,11,12};
+    vector<int> k_ci = {0,1,2,3,4,5,6,7,8,9,10,11};
+    hostMat k_lf = { j_v, k_rp, k_ci, 12,12,12};
+    if ( matrixCompare( K.toHost(), k_lf, "K(CollOfScalar)") ) {
+	return 1;
+    }
 			   
 
 

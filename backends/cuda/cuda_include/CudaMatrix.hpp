@@ -275,14 +275,35 @@ namespace equelleCUDA {
 	  \param[out] csrRowPtr Indices for where in the csrVal array each row starts.
 	  Here: csrRowPtr[i] = i for i=0..nnz
 	  \param[out] csrColInd The column index for each entry in csrVal.
-	  Here: csrColInd[i] = i
+	  Here: csrColInd[i] = i for i=0..nnz
 	  \param[in] nnz Number of nonzero entries. Same as the number of rows and
 	  columns as well.
 	*/
-	__global__ void initIdentityMatrix(double* csrVal,
-					   int* csrRowPtr,
-					   int* csrColInd,
-					   const int nnz);
+	__global__ void initIdentityMatrix( double* csrVal,
+					    int* csrRowPtr,
+					    int* csrColInd,
+					    const int nnz);
+
+	//! Kernel for initializing a diagonal matrix from a CollOfScalar value array
+	/*!
+
+	  \param[out] csrVal Matrix values: Here copy of scalars:
+	  csrVal[i] = scalars[i] for i=0..nnz-1
+	  \param[out] csrRowPtr Indices for where in the csrVal array each row starts.
+	  Here: csrRowPtr[i] = i for i=0..nnz
+	  \param[out] csrColInd The column index for each entry in csrVal.
+	  Here: csrColInd[i] = i for i=0..nnz-1
+	  \param[in] scalars The input collection of scalar that will be the diagonal
+	  entries.
+	  \param[in] nnz Number of nonzero entries. Same as the number of rows and
+	  columns as well.
+	*/
+	__global__ void initDiagonalMatrix( double* csrVal,
+					    int* csrRowPtr,
+					    int* csrColInd,
+					    const double* scalars,
+					    const int nnz);
+
 
     } // namespace wrapCudaMatrix
 
