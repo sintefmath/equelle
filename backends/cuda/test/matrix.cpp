@@ -272,7 +272,12 @@ int main(int argc, char** argv) {
 	return 1;
     }
 
-    
+    J3 = empty;
+    if ( !J3.isEmpty() ) {
+	std::cout << "J3 should be empty but is not, after J3 = empty\n";
+	return 1;
+    }
+			   
 
 
     // Check the matrices from DeviceHelperOps:
