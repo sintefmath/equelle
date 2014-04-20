@@ -115,7 +115,7 @@ CudaArray::CudaArray(const CudaArray& coll)
     , debug_vec_(coll.size_, 0)
 #endif // EQUELLE_DEBUG
 {
-    std::cout << __PRETTY_FUNCTION__ << std::endl;
+    //std::cout << __PRETTY_FUNCTION__ << std::endl;
 
     if (coll.dev_values_ != 0) {
 	cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
@@ -128,7 +128,7 @@ CudaArray::CudaArray(const CudaArray& coll)
     
 #ifdef EQUELLE_DEBUG
     // Copy value to the std::vector debug_vec_
-    std::cout << "\tDEBUG IS ON!\n";
+    //std::cout << "\tDEBUG IS ON!\n";
     if (coll.dev_values_ != 0 ) {
 	cudaStatus_ = cudaMemcpy( &debug_vec_[0], dev_values_, size_*sizeof(double),
 				  cudaMemcpyDeviceToHost );
@@ -141,7 +141,7 @@ CudaArray::CudaArray(const CudaArray& coll)
 
 // Copy assignment operator
 CudaArray& CudaArray::operator= (const CudaArray& other) {
-    std::cout << __PRETTY_FUNCTION__ << std::endl;
+    //std::cout << __PRETTY_FUNCTION__ << std::endl;
 
     // Protect agains " var = var " , self assignment
     if ( this != &other ) {

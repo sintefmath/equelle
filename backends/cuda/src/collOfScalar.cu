@@ -162,15 +162,7 @@ CollOfScalar equelleCUDA::operator+ (const CollOfScalar& lhs,
     out.val_ = lhs.val_ + rhs.val_;
     if (lhs.autodiff_ || rhs.autodiff_) {
 	out.autodiff_ = true;
-	if ( lhs.autodiff_ && rhs.autodiff_ ) {
-	    out.der_ = lhs.der_ + rhs.der_;
-	}
-	else if ( lhs.autodiff_ ) {
-	    out.der_ = lhs.der_;
-	}
-	else {
-	    out.der_ = rhs.der_;
-	}   
+	out.der_ = lhs.der_ + rhs.der_;
     }
     return out;
 }

@@ -31,7 +31,7 @@ int compare( CollOfScalar coll, ADB adb, std::string msg) {
     for ( int i = 0; i < coll.size(); i++) {
 	if ( fabs(vals[i] - v[i]) > 10*std::numeric_limits<double>::epsilon() ) {
 	    std::cout << "vals[" << i << "] = " << vals[i];
-	    std::cout << "but v[" << i << "] = " << v[i] << "\n";
+	    std::cout << " but v[" << i << "] = " << v[i] << "\n";
 	    correct = false;
 	}
     }
@@ -122,6 +122,16 @@ int compare( CollOfScalar coll, ADB adb, std::string msg) {
     return 0;
 } 
 
+// Printing function:
+void printNonzeros(ADB adb) {
+    for (int i = 0; i < adb.derivative()[0].nonZeros(); i++) {
+	std::cout << adb.derivative()[0].valuePtr()[i] << "\t";
+	if ( i % 8 == 7) {
+	    std::cout << "\n";
+	}
+    }
+}
+
 
 
 int main(int argc, char** argv) {
@@ -144,20 +154,59 @@ int main(int argc, char** argv) {
     ADB::V init_V(numCells);
     std::vector<double> init_vec; 
     for ( int i = 0; i < numCells; ++i) {
-	init_V[i] = i;
-	init_vec.push_back(i);
+	init_V[i] = i + (i-(313%17))*0.1;
+	//init_vec.push_back(i);
     }
     std::vector<int> blocksize = { numCells };
-    ADB lf = ADB::variable(0, init_V, blocksize);
+    ADB initADB = ADB::variable(0, init_V, blocksize);
+    
+    // Do some wierd stuff to the derivative of myADB, so that
+    // it is not just a identity matrix:
+    ADB grad_init = hops.grad * initADB;
+    ADB myADB = hops.div * grad_init;
+    grad_init = hops.grad * myADB;
+    myADB = hops.div * grad_init;
+
+    // Create a constant:
+    ADB::V const_v(numCells);
+    std::vector<double> const_vec;
+    for (int i = 0; i < numCells; ++i) {
+	const_v[i] = (i%30)*0.1;
+	const_vec.push_back(const_v[i]);
+	init_vec.push_back(myADB.value()[i]);
+    }
+    ADB myScalADB = ADB::constant(const_v, blocksize);
 
     // Init a CollOfScalar:
     CudaArray init_array(init_vec);
-    CudaMatrix init_matrix(lf.derivative()[0]);
+    CudaMatrix init_matrix(myADB.derivative()[0]);
     CollOfScalar myColl(init_array, init_matrix);
+    CollOfScalar myScal(const_vec);
 
     // Create test for CollOfScalar vs ADB and test 
-    if ( compare( myColl, lf, "Init CollOfScalar") ) { return 1; }
+    if ( compare( myColl, myADB, "Init CollOfScalar") ) { return 1; }
 
+
+
+    //----------- START TESTS --------------- //
+    
+    // +
+    
+    // Autodiff + non-autodiff
+    CollOfScalar myColl2 = myColl + myScal;
+    ADB myADB2 = myADB + myScalADB;
+    if (compare(myColl2, myADB2, "adb + non-adb") ) { return 1;}
+
+    // AD + AD
+    myColl2 = myColl + myColl2;
+    myADB2 = myADB + myADB2;
+    if ( compare( myColl2, myADB2, "adb + adb") ) {return 1;}
+
+    
+    // -
+    
+    
+    //printNonzeros(myADB2);
 
     return 0;
 }
