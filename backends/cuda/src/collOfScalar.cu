@@ -128,6 +128,13 @@ std::vector<double> CollOfScalar::copyToHost() const {
     return val_.copyToHost();
 }
 
+hostMat CollOfScalar::matrixToHost() const {
+    if ( !autodiff_ ) {
+	OPM_THROW(std::runtime_error, "Trying to copy empty matrix to host\n");
+    }
+    return der_.toHost();
+}
+
 int CollOfScalar::size() const {
     return val_.size();
 }

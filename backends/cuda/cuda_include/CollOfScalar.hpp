@@ -112,6 +112,8 @@ namespace equelleCUDA {
 	
 	/*! \return A host vector containing the values of the collection */
 	std::vector<double> copyToHost() const;
+	/*! \return A hostMat struct of the derivative stored on host */
+	hostMat matrixToHost() const;
 	
 	/*! \return True if the derivative matrix is non-empty */
 	bool useAutoDiff() const;
