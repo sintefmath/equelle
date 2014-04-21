@@ -154,6 +154,29 @@ CudaMatrix::CudaMatrix(const CollOfScalar& coll)
     
     createGeneralDescription_("CudaMatrix diagonal matrix constructor");
 }
+
+// Constructor for creating a diagonal matrcit from a CudaArray
+CudaMatrix::CudaMatrix(const CudaArray& array)
+    : rows_(array.size()),
+      cols_(rows_),
+      nnz_(rows_),
+      csrVal_(0),
+      csrRowPtr_(0),
+      csrColInd_(0),
+      sparseStatus_(CUSPARSE_STATUS_SUCCESS),
+      cudaStatus_(cudaSuccess),
+      description_(0)
+{
+    // Allocate memory:
+    allocateMemory("CudaMatrix::CudaMatrix(CudaArray)");
+
+    // Call a kerenl to write the correct data:
+    kernelSetup s(nnz_ + 1);
+    initDiagonalMatrix<<<s.grid, s.block>>>(csrVal_, csrRowPtr_, csrColInd_,
+					    array.data(), nnz_);
+    
+    createGeneralDescription_("CudaMatrix::CudaMatrix(CudaArray)");
+}
 					    
 
 

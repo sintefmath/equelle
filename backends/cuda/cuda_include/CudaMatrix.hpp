@@ -14,8 +14,8 @@
 // This file include a global variable for the cusparse handle
 // It has to be created before any CudaMatrix objects are decleared!
 #include "equelleTypedefs.hpp"
-//#include "CollOfScalar.hpp"
-
+//#include "CollOfScalar.hpp" // forward declaration of this class.
+#include "CudaArray.hpp"
 
 namespace equelleCUDA {
 
@@ -89,7 +89,7 @@ namespace equelleCUDA {
 			     const int nnz, const int rows, const int cols);
 
 	//! Constructor from Eigen sparse matrix
-	/*!
+ 	/*!
 	  Creates a CudaMatrix from an Eigen Sparse Matrix. Eigen use column
 	  major formats by defaults, and we therefore have to copy the matrix 
 	  over to row major format before copying it to the device.
@@ -114,11 +114,18 @@ namespace equelleCUDA {
 
 	//! Constructor creating a diagonal matrix from a CollOfScalar
 	/*!
-	  Allocates memory for a diagonal matrix, and insert the values CollOfScalar 
+	  Allocates memory for a diagonal matrix, and insert the CollOfScalar 
 	  values on the diagonal elements. This is regardless if the CollOfScalar has 
 	  a derivative or not, we only use its values.
 	*/
 	explicit CudaMatrix( const CollOfScalar& coll ); 
+
+	//! Constructor for creating a diagonal matrix from a CudaArray
+	/*!
+	  Allocates memory for a diagonal matrix and insert the CudaArray values on
+	  the diagonal elements.
+	*/
+	explicit CudaMatrix( const CudaArray& array);
 
 	//! Copy assignment operator
 	/*!

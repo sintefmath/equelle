@@ -18,7 +18,7 @@ typedef Opm::AutoDiffBlock<Scalar> ADB;
 int matrixCompare( hostMat mat, ADB::M m, std::string msg, double tol = 0.0);
 
 // Comparison function:
-int compare( CollOfScalar coll, ADB adb, std::string msg) {
+int compare( CollOfScalar coll, ADB adb, std::string msg, double tol = 0.0) {
 
     std::cout << "Comparing: " << msg << "\n";
     ADB::V v = adb.value();
@@ -47,7 +47,7 @@ int compare( CollOfScalar coll, ADB adb, std::string msg) {
     // Comparing matrix:
     if ( coll.useAutoDiff() ) {
 	hostMat mat = coll.matrixToHost();
-	if ( matrixCompare( mat, m, msg) ) {
+	if ( matrixCompare( mat, m, msg, tol) ) {
 	    return 1;
 	}
     } // Use autodiff
@@ -273,7 +273,7 @@ int main(int argc, char** argv) {
     
     //printNonzeros(myADB4);
 
-    // / 
+    // /
     
     // / scalar
     CollOfScalar myColl5 = myColl4 / 0.25;
@@ -344,7 +344,28 @@ int main(int argc, char** argv) {
     //printNonzeros(myADB7);
 
 
+    // Division: /
     
+    // Check AD / AD:
+    CollOfScalar myColl8 = myColl7 / myColl6;
+    ADB myADB8 = myADB7 / myADB6;
+    if ( compare( myColl8, myADB8, "AD / AD") ) { return 1; }
+    
+    // Check AD / nonAD
+    CollOfScalar myColl9 = myColl7 / myScal;
+    ADB myADB9 = myADB7 / myScalADB;
+    if ( compare( myColl9, myADB9, "AD / nonAD") ) {return 1; }
+    
+    // Check nonAD / AD
+    myColl9 = myScal / myColl6;
+    myADB9 = myScalADB / myADB6;
+    if ( compare( myColl9, myADB9, "nonAD / AD") ) { return 1; }
 
+    // Check scalar / AD
+    // Can't test this as "scalar / ADB" is not implemented...
+    //CollOfScalar myColl10 = 10000 / myColl6;
+    //ADB myADB10 = 10000 / myADB6;
+    //if ( compare( myColl10, myADB10, "scalar / AD") ) {return 1; }
+    
     return 0;
 }
