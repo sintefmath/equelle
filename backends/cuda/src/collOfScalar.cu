@@ -139,6 +139,10 @@ int CollOfScalar::size() const {
     return val_.size();
 }
 
+CudaMatrix CollOfScalar::derivative() const {
+    return der_;
+}
+
 
 
 
@@ -153,11 +157,10 @@ int CollOfScalar::size() const {
 // ------- ARITHMETIC OPERATIONS --------------------
 
 CollOfScalar equelleCUDA::operator+ (const CollOfScalar& lhs,
-					 const CollOfScalar& rhs)
+				     const CollOfScalar& rhs)
 {
     //CudaArray val = lhs.val_ + rhs.val_;
     std::cout << "pluss completed\n";
-    //return CollOfScalar(lhs.val_ + rhs.val_);
     CollOfScalar out;
     out.val_ = lhs.val_ + rhs.val_;
     if (lhs.autodiff_ || rhs.autodiff_) {
@@ -168,25 +171,52 @@ CollOfScalar equelleCUDA::operator+ (const CollOfScalar& lhs,
 }
 
 CollOfScalar equelleCUDA::operator-(const CollOfScalar& lhs, const CollOfScalar& rhs) {
-    //return CollOfScalar( lhs.val_ - rhs.val_);
     CollOfScalar out;
     out.val_ = lhs.val_ - rhs.val_;
+    if ( lhs.autodiff_ || rhs.autodiff_ ) {
+	out.autodiff_ = true;
+	out.der_ = lhs.der_ - rhs.der_;
+    }
     return out;
 }
 
 CollOfScalar equelleCUDA::operator*(const CollOfScalar& lhs, const CollOfScalar& rhs) {
-    //return CollOfScalar(lhs.val_ * rhs.val_);
     CollOfScalar out;
     out.val_ = lhs.val_ * rhs.val_;
+    if ( lhs.autodiff_ || rhs.autodiff_ ) {
+	out.autodiff_ = true;
+	// (u*v)' = u'*v + v'*u = diag(v)*u' + diag(u)*v'
+	// where u = lhs and v = rhs
+	CudaMatrix diag_u(lhs);
+	CudaMatrix diag_v(rhs);
+	std::cout << "Finding derivative of product\n";
+	out.der_ = diag_v*lhs.der_ + diag_u*rhs.der_;
+    }
     return out;
 }
 
 CollOfScalar equelleCUDA::operator/(const CollOfScalar& lhs, const CollOfScalar& rhs) {
-    return CollOfScalar(lhs.val_ / rhs.val_);
+    // Need AD
+    CollOfScalar out;
+    out.val_ = lhs.val_ / rhs.val_;
+    if ( lhs.autodiff_ || rhs.autodiff_ ) {
+	out.autodiff_ = true;
+	// (u/v)' = (u'*v - v'*u)/(v^2)
+	// where u = lhs and v = rhs
+	CudaMatrix diag_u(lhs);
+	CudaMatrix diag_v(rhs);
+    }
+    return out;
 }
 
 CollOfScalar equelleCUDA::operator*(const Scalar lhs, const CollOfScalar& rhs) {
-    return CollOfScalar( lhs * rhs.val_);
+    CollOfScalar out;
+    out.val_ = lhs * rhs.val_;
+    if ( rhs.autodiff_ ) {
+	out.autodiff_ = true;
+	out.der_ = lhs * rhs.der_;
+    }
+    return out; 
 }
 
 CollOfScalar equelleCUDA::operator*(const CollOfScalar& lhs, const Scalar rhs) {
@@ -198,6 +228,7 @@ CollOfScalar equelleCUDA::operator/(const CollOfScalar& lhs, const Scalar rhs) {
 }
 
 CollOfScalar equelleCUDA::operator/(const Scalar lhs, const CollOfScalar& rhs) {
+    // Need AD
     return CollOfScalar( lhs / rhs.val_ );
 }
 

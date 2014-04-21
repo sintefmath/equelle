@@ -127,6 +127,8 @@ namespace equelleCUDA {
 	*/
 	kernelSetup setup() const;
 
+	CudaMatrix derivative() const;
+
 	
 
 	// Get a referance to the CudaArray with the actual values:

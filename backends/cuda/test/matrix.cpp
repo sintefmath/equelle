@@ -49,7 +49,10 @@ int matrixCompare(hostMat mat, hostMat lf, string msg) {
 
     // Vals:
     for (int i = 0; i < mat.vals.size(); ++i) {
-	std::cout << mat.vals[i] << " ";
+	if ( i < 100 )
+	    std::cout << mat.vals[i] << " ";
+	if (i == 100 )
+	    std::cout << "...\n";
 	if (i < lf.vals.size()) {
 	    if ( fabs(mat.vals[i] - lf.vals[i]) > 10*std::numeric_limits<double>::epsilon() ) {
 		std::cout << "(<- " << lf.vals[i] << ") ";
@@ -68,7 +71,10 @@ int matrixCompare(hostMat mat, hostMat lf, string msg) {
 
     // Row ptr
     for (int i = 0; i < mat.rowPtr.size(); ++i) {
-	std::cout << mat.rowPtr[i] << " ";
+	if ( i < 100 )
+	    std::cout << mat.rowPtr[i] << " ";
+	if (i == 100 )
+	    std::cout << "...\n";
 	if (i < lf.rowPtr.size()) {
 	    if ( fabs(mat.rowPtr[i] - lf.rowPtr[i]) > 10*std::numeric_limits<double>::epsilon() ) {
 		std::cout << "(<- " << lf.rowPtr[i] << ") ";
@@ -87,7 +93,10 @@ int matrixCompare(hostMat mat, hostMat lf, string msg) {
 
     // Col ind
     for (int i = 0; i < mat.colInd.size(); ++i) {
-	std::cout << mat.colInd[i] << " ";
+	if (i < 100)
+	    std::cout << mat.colInd[i] << " ";
+	if ( i == 100 ) 
+	    std::cout << "...\n";
 	if (i < lf.colInd.size()) {
 	    if ( fabs(mat.colInd[i] - lf.colInd[i]) > 10*std::numeric_limits<double>::epsilon() ) {
 		std::cout << "(<- " << lf.colInd[i] << ") ";
@@ -287,7 +296,38 @@ int main(int argc, char** argv) {
     if ( matrixCompare( K.toHost(), k_lf, "K(CollOfScalar)") ) {
 	return 1;
     }
+
+    // Create a big diagonal matrix from CollOfScalar
+    vector<double> diag_vec;
+    vector<int> diag_rp;
+    vector<int> diag_ci;
+    int diag_size = 1000000;
+    for( int i = 0; i < diag_size; i++) {
+	diag_vec.push_back(i*0.01);
+	diag_rp.push_back(i);
+	diag_ci.push_back(i);
+    }
+    diag_rp.push_back(diag_size);
+    CollOfScalar diag_cos(diag_vec);
+    CudaMatrix diag(diag_cos);
+    hostMat diag_lf = {diag_vec, diag_rp, diag_ci, diag_size, diag_size, diag_size};
+    if ( matrixCompare( diag.toHost(), diag_lf, "Big diagonal matrix") ) {
+	return 1;
+    }
 			   
+    // 4 by 4 diag:
+    vector<double> small_v = {10,100,1000, 10000};
+    vector<int> small_rp = {0,1,2,3,4};
+    vector<int> small_ci = {0,1,2,3};
+    vector<double> smallDiagMult_val = {120, 160, 200, 100, -500, 4500, -1000, -18000,
+					5000, 40000, 40000, 0};
+    CollOfScalar small_cos(small_v);
+    CudaMatrix small(small_cos);
+    CudaMatrix smallDiagMult = small * E;
+    hostMat smallDiagMult_lf = {smallDiagMult_val, e_rp, e_ci, 12, 4, 4};
+    if ( matrixCompare( smallDiagMult.toHost(), smallDiagMult_lf, "smallDiagMult") ) {
+	return 1;
+    }
 
 
     // Check the matrices from DeviceHelperOps:

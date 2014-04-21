@@ -420,6 +420,7 @@ CudaMatrix equelleCUDA::operator+(const CudaMatrix& lhs, const CudaMatrix& rhs) 
 	return lhs;
     } 
     else {
+	std::cout << "Matrix plus!\n";
 	return cudaMatrixSum(lhs, rhs, 1.0);
     }
 }
@@ -538,6 +539,7 @@ CudaMatrix equelleCUDA::operator*(const CudaMatrix& lhs, const CudaMatrix& rhs) 
     if ( lhs.cols_ != rhs.rows_ ) {
 	OPM_THROW(std::runtime_error, "Error in CudaMatrix * CudaMatrix\n" << "\tMatrices of illegal sizes.\n" << "\tlhs.cols_ = " << lhs.cols_ << "\n\trhs.rows_ = " << rhs.rows_);
     }
+    std::cout << "Matrix mult\n";
 
     // Create an empty matrix. Need to set rows, cols, nnz, and allocate arrays!
     CudaMatrix out;

@@ -85,8 +85,8 @@ namespace equelleCUDA {
 
 	  This constructor is mostly used for testing.
 	*/
-	CudaMatrix( const double* val, const int* rowPtr, const int* colInd,
-		    const int nnz, const int rows, const int cols);
+	explicit CudaMatrix( const double* val, const int* rowPtr, const int* colInd,
+			     const int nnz, const int rows, const int cols);
 
 	//! Constructor from Eigen sparse matrix
 	/*!
@@ -100,7 +100,7 @@ namespace equelleCUDA {
 	  would require more code, as well as this is an operation that happens only
 	  in the constructor of the EquelleRuntimeCUDA class.
 	*/
-	CudaMatrix( const Eigen::SparseMatrix<Scalar>& eigen);
+	explicit CudaMatrix( const Eigen::SparseMatrix<Scalar>& eigen);
 	
 
 	//! Constructor creating a identity matrix of the given size.
@@ -110,7 +110,7 @@ namespace equelleCUDA {
 	  This is the constructor that should be used in order to create a primary
 	  variable for Automatic Differentiation.
 	*/
-	CudaMatrix( const int size);
+	explicit CudaMatrix( const int size);
 
 	//! Constructor creating a diagonal matrix from a CollOfScalar
 	/*!
@@ -118,8 +118,7 @@ namespace equelleCUDA {
 	  values on the diagonal elements. This is regardless if the CollOfScalar has 
 	  a derivative or not, we only use its values.
 	*/
-	CudaMatrix( const CollOfScalar& coll ); // Need to be implemented
-	                                        // Create a private allocate memory func.
+	explicit CudaMatrix( const CollOfScalar& coll ); 
 
 	//! Copy assignment operator
 	/*!
