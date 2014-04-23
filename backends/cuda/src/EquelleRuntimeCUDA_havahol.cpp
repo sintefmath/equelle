@@ -89,7 +89,8 @@ CollOfScalar EquelleRuntimeCUDA::gradient( const CollOfScalar& cell_scalarfield 
 
     return gradientWrapper(cell_scalarfield,
 			   dev_grid_.interiorFaces(),
-			   dev_grid_.face_cells());
+			   dev_grid_.face_cells(),
+			   devOps_.grad);
 }
 
 

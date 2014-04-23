@@ -115,18 +115,33 @@ __global__ void wrapEquelleRuntimeCUDA::trinaryIfKernel( int* out,
 // Gradient implementation:
 CollOfScalar wrapEquelleRuntimeCUDA::gradientWrapper( const CollOfScalar& cell_scalarfield,
 						      const CollOfFace& int_faces,
-						      const int* face_cells) {
+						      const int* face_cells,
+						      const CudaMatrix& grad) {
     
-    // Output will be a collection on interiorFaces:
-    CollOfScalar out(int_faces.size());
-    // out now have info of how big kernel we need as well.
-    kernelSetup s = out.setup();
-    gradientKernel<<<s.grid, s.block>>>( out.data(),
-					 cell_scalarfield.data(),
-					 int_faces.raw_pointer(),
-					 face_cells,
-					 out.size());
-    return out;
+    if ( cell_scalarfield.useAutoDiff() ) {
+	// Output will be a collection on interiorFaces:
+	CudaArray val(int_faces.size());
+	// out now have info of how big kernel we need as well.
+	kernelSetup s = val.setup();
+	gradientKernel<<<s.grid, s.block>>>( val.data(),
+					     cell_scalarfield.data(),
+					     int_faces.raw_pointer(),
+					     face_cells,
+					     val.size());
+    
+	CudaMatrix der = grad * cell_scalarfield.derivative();
+	return CollOfScalar(val, der);
+    }
+    else {
+	CollOfScalar out(int_faces.size());
+	kernelSetup s = out.setup();
+	gradientKernel<<<s.grid, s.block>>>( out.data(),
+					     cell_scalarfield.data(),
+					     int_faces.raw_pointer(),
+					     face_cells,
+					     out.size());
+	return out;
+    }
 }
 
 

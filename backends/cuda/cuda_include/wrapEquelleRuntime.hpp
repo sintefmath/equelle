@@ -140,7 +140,8 @@ namespace equelleCUDA
 	*/
 	CollOfScalar gradientWrapper( const CollOfScalar& cell_scalarfield,
 				      const CollOfFace& int_faces,
-				      const int* face_cells);
+				      const int* face_cells,
+				      const CudaMatrix& grad);
 	
 	//! Kernel for computing the Gradient
 	/*!

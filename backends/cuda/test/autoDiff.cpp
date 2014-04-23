@@ -315,6 +315,7 @@ int main(int argc, char** argv) {
     ADB::M m_test = myADB2.derivative()[0] * myADB5.derivative()[0];
     CudaMatrix cuda_m_test = myColl2.derivative() * myColl5.derivative();
     if (matrixCompare( cuda_m_test.toHost(), m_test, "Matrix mult test", 300000)) { return 1; }
+    //                                                                   300000
     std::cout << "Matrix mult test passed\n";
 
     // Check diagonal matrix * matrix
@@ -366,6 +367,18 @@ int main(int argc, char** argv) {
     //CollOfScalar myColl10 = 10000 / myColl6;
     //ADB myADB10 = 10000 / myADB6;
     //if ( compare( myColl10, myADB10, "scalar / AD") ) {return 1; }
+
+
+    // GRID OPERATIONS
+
+    // Gradient:
+    CollOfScalar myGrad_cuda = er.gradient(myColl9);
+    ADB myGrad_adb = hops.grad * myADB9;
+    if ( compare( myGrad_cuda, myGrad_adb, "Gradient(collection)") ) { return 1; }
+
+
+
+
     
     return 0;
 }
