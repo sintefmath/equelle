@@ -117,7 +117,9 @@ CollOfScalar wrapEquelleRuntimeCUDA::gradientWrapper( const CollOfScalar& cell_s
 						      const CollOfFace& int_faces,
 						      const int* face_cells,
 						      const CudaMatrix& grad) {
-    
+    // This function is at the moment kept in order to be able to compare efficiency
+    // against the new implementation, where we use the matrix from devOps_.
+
     if ( cell_scalarfield.useAutoDiff() ) {
 	// Output will be a collection on interiorFaces:
 	CudaArray val(int_faces.size());
@@ -128,7 +130,6 @@ CollOfScalar wrapEquelleRuntimeCUDA::gradientWrapper( const CollOfScalar& cell_s
 					     int_faces.raw_pointer(),
 					     face_cells,
 					     val.size());
-    
 	CudaMatrix der = grad * cell_scalarfield.derivative();
 	return CollOfScalar(val, der);
     }
@@ -140,6 +141,7 @@ CollOfScalar wrapEquelleRuntimeCUDA::gradientWrapper( const CollOfScalar& cell_s
 					     int_faces.raw_pointer(),
 					     face_cells,
 					     out.size());
+	
 	return out;
     }
 }
@@ -167,8 +169,24 @@ __global__ void wrapEquelleRuntimeCUDA::gradientKernel( double* grad,
 // ------------- DIVERGENCE --------------- //
 
 CollOfScalar wrapEquelleRuntimeCUDA::divergenceWrapper( const CollOfScalar& fluxes,
-							const DeviceGrid& dev_grid) {
+							const DeviceGrid& dev_grid,
+							const CudaMatrix& fulldiv) {
+    if ( fluxes.useAutoDiff() ) {
+	std::cout << "Making autodiff divergence\n";
+	CudaArray val(dev_grid.number_of_cells());
+	kernelSetup s = val.setup();
+	divergenceKernel<<<s.grid, s.block>>>( val.data(),
+					       fluxes.data(),
+					       dev_grid.cell_facepos(),
+					       dev_grid.cell_faces(),
+					       dev_grid.face_cells(),
+					       dev_grid.number_of_cells(),
+					       dev_grid.number_of_faces() );
+	CudaMatrix der = fulldiv * fluxes.derivative();
+	return CollOfScalar(val, der);	
+    }
 
+    std::cout << "Went through to make nonAutoDiff divergence\n";
     // output is of size number_of_cells:
     CollOfScalar out(dev_grid.number_of_cells());
     // out have now block and grid size as well.

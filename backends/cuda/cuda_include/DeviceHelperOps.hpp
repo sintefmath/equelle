@@ -38,16 +38,25 @@ namespace equelleCUDA {
 	*/
 	CudaMatrix fulldiv;
 
+	//! Number of internal faces
+	/*!
+	  The Opm helper class got this information, and it will be useful for
+	  error checking in the Divergence function.
+	*/
+	int num_int_faces;
+
 	//! Constructor
 	/*!
 	  Input is Eigen sparse matrices as stored by the Opm::HelperOps class.
 	*/
 	DeviceHelperOps( const Eigen::SparseMatrix<Scalar>& hostGrad, 
 			 const Eigen::SparseMatrix<Scalar>& hostDiv, 
-			 const Eigen::SparseMatrix<Scalar>& hostFullDiv)
+			 const Eigen::SparseMatrix<Scalar>& hostFullDiv,
+			 const int int_faces)
 	    : grad(hostGrad),
 	      div(hostDiv),
-	      fulldiv(hostFullDiv)
+	      fulldiv(hostFullDiv),
+	      num_int_faces(int_faces)
 	{ };
 
 	//! Destructor

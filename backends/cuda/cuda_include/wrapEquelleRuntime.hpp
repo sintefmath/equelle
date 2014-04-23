@@ -179,7 +179,8 @@ namespace equelleCUDA
 	  \return A Collection of Scalars on allCells with the resulting divergence.
 	*/
 	CollOfScalar divergenceWrapper( const CollOfScalar& fluxes,
-					const DeviceGrid& dev_grid);
+					const DeviceGrid& dev_grid,
+					const CudaMatrix& fulldiv);
 	
 	
 	//! Kernel for Divergence operator

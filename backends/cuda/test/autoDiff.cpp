@@ -8,6 +8,7 @@
 #include "EquelleRuntimeCUDA.hpp"
 #include "CudaArray.hpp"
 #include "CollOfScalar.hpp"
+//#include "EquelleRuntimeCPU.hpp"
 
 using namespace equelleCUDA;
 typedef Opm::AutoDiffBlock<Scalar> ADB;
@@ -19,6 +20,11 @@ int matrixCompare( hostMat mat, ADB::M m, std::string msg, double tol = 0.0);
 
 // Comparison function:
 int compare( CollOfScalar coll, ADB adb, std::string msg, double tol = 0.0) {
+
+    if (tol == 0.0) {
+	tol = 10;
+    }
+    tol = tol*std::numeric_limits<double>::epsilon();
 
     std::cout << "Comparing: " << msg << "\n";
     ADB::V v = adb.value();
@@ -32,9 +38,10 @@ int compare( CollOfScalar coll, ADB adb, std::string msg, double tol = 0.0) {
     bool correct = true;
     std::vector<double> vals = coll.copyToHost();
     for ( int i = 0; i < coll.size(); i++) {
-	if ( fabs((vals[i] - v[i])) > 10*std::numeric_limits<double>::epsilon() ) {
+	if ( fabs((vals[i] - v[i])/v[i]) > tol ) {
 	    std::cout << "vals[" << i << "] = " << vals[i];
-	    std::cout << " but v[" << i << "] = " << v[i] << "\n";
+	    std::cout << " but v[" << i << "] = " << v[i];
+	    std::cout << " with diff: "<< fabs((vals[i] - v[i])/v[i]) << "\n";
 	    correct = false;
 	}
     }
@@ -64,11 +71,13 @@ int compare( CollOfScalar coll, ADB adb, std::string msg, double tol = 0.0) {
 
 int matrixCompare( hostMat mat, ADB::M m_colMajor, std::string msg, double tol) {
     
-    if (tol == 0) {
+    if (tol == 0.0) {
 	tol = 10;
     }
-    tol = tol*std::numeric_limits<double>::epsilon();
-
+    if (tol > 1.0e-7) {
+	tol = tol*std::numeric_limits<double>::epsilon();
+    }
+	
     // ADB::M uses column major format!
     // Cannot compare arrays in column major format with arrays in
     // row major formats!
@@ -100,11 +109,13 @@ int matrixCompare( hostMat mat, ADB::M m_colMajor, std::string msg, double tol) 
     // Vals:
     double* lf_vals = m.valuePtr();
     for (int i = 0; i < mat.vals.size(); ++i) {
-	if ( fabs(mat.vals[i] - lf_vals[i]) > tol ) {
+	double diff = fabs((mat.vals[i] - lf_vals[i])/lf_vals[i]);
+	if ( diff > tol ) {
 	     // 100000*std::numeric_limits<double>::epsilon() ) {
 	    std::cout << "mat.vals[" << i << "] = " << mat.vals[i];
 	    std::cout << " but lf_vals[" << i << "] = " << lf_vals[i];
-	    std::cout << " with diff: "<< fabs(mat.vals[i] - lf_vals[i]) << "\n";
+	    std::cout << " with diff: "<< diff;
+	    std::cout << "\n";
 	    correct = false;
 	    errors++;
 	}
@@ -112,6 +123,7 @@ int matrixCompare( hostMat mat, ADB::M m_colMajor, std::string msg, double tol) 
     if ( !correct ) {
 	std::cout << "Error in matrix in " << msg << "\n";
 	std::cout << "\t" << errors << " indices in the val pointer is wrong\n";
+	std::cout << "\tWith tol = " << tol << "\n";
 	return 1;
     }
     
@@ -178,6 +190,7 @@ int main(int argc, char** argv) {
     Opm::GridManager gridMan(14,22,9,1,1,1);
     Opm::HelperOps hops(*(gridMan.c_grid()));
     int numCells = gridMan.c_grid()->number_of_cells;
+    int numFaces = gridMab.c_grid()->number_of_faces;
     std::cout << "Number of cells are: " << numCells << "\n";
     
     // Create an autodiff variable which we want to do tests on:
@@ -314,7 +327,7 @@ int main(int argc, char** argv) {
     // Check matrix multiplication
     ADB::M m_test = myADB2.derivative()[0] * myADB5.derivative()[0];
     CudaMatrix cuda_m_test = myColl2.derivative() * myColl5.derivative();
-    if (matrixCompare( cuda_m_test.toHost(), m_test, "Matrix mult test", 300000)) { return 1; }
+    if (matrixCompare( cuda_m_test.toHost(), m_test, "Matrix mult test")) { return 1; }
     //                                                                   300000
     std::cout << "Matrix mult test passed\n";
 
@@ -374,11 +387,16 @@ int main(int argc, char** argv) {
     // Gradient:
     CollOfScalar myGrad_cuda = er.gradient(myColl9);
     ADB myGrad_adb = hops.grad * myADB9;
-    if ( compare( myGrad_cuda, myGrad_adb, "Gradient(collection)") ) { return 1; }
+    if ( compare( myGrad_cuda, myGrad_adb, "Gradient(myColl9)") ) { return 1; }
 
+    // Divergence:
+    std::cout << "\nmyGrad_cuda.useAutoDiff() = " << myGrad_cuda.useAutoDiff() << "\n";
+    CollOfScalar myDiv_cuda = er.divergence(myGrad_cuda);
+    ADB myDiv_adb = hops.div * myGrad_adb;
+    if ( compare( myDiv_cuda, myDiv_adb, "Divergence(myGrad)", 1000) ) { return 1; }
 
-
-
+    // Full divergence:
+    // Wait until On and Extend works for this.
     
     return 0;
 }
