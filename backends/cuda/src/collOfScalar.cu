@@ -243,7 +243,7 @@ CollOfScalar equelleCUDA::operator/(const Scalar lhs, const CollOfScalar& rhs) {
 	CudaMatrix diag_u_squared(lhs/(rhs.val_ * rhs.val_));
 	out.der_ = - diag_u_squared*rhs.der_;
     }
-    return CollOfScalar( lhs / rhs.val_ );
+    return out;
 }
 
 CollOfScalar equelleCUDA::operator-(const CollOfScalar& arg) {

@@ -8,12 +8,13 @@
 #include "EquelleRuntimeCUDA.hpp"
 #include "CudaArray.hpp"
 #include "CollOfScalar.hpp"
-//#include "EquelleRuntimeCPU.hpp"
+#include "../../serial/include/equelle/EquelleRuntimeCPU.hpp"
 
 using namespace equelleCUDA;
 typedef Opm::AutoDiffBlock<Scalar> ADB;
 
-
+typedef equelle::CollOfScalar SerialCollOfScalar;
+//typedef equelle::EquelleRuntimeCPU
 
 
 int matrixCompare( hostMat mat, ADB::M m, std::string msg, double tol = 0.0);
@@ -185,12 +186,13 @@ int main(int argc, char** argv) {
 
     Opm::parameter::ParameterGroup param( argc, argv, false);
     EquelleRuntimeCUDA er(param);
+    equelle::EquelleRuntimeCPU serialER(param);
 
     // Need the helper ops outside of the runtime as well:
     Opm::GridManager gridMan(14,22,9,1,1,1);
     Opm::HelperOps hops(*(gridMan.c_grid()));
     int numCells = gridMan.c_grid()->number_of_cells;
-    int numFaces = gridMab.c_grid()->number_of_faces;
+    int numFaces = gridMan.c_grid()->number_of_faces;
     std::cout << "Number of cells are: " << numCells << "\n";
     
     // Create an autodiff variable which we want to do tests on:
@@ -377,9 +379,11 @@ int main(int argc, char** argv) {
 
     // Check scalar / AD
     // Can't test this as "scalar / ADB" is not implemented...
-    //CollOfScalar myColl10 = 10000 / myColl6;
+    CollOfScalar myColl10 = 10000 / myColl6;
+    SerialCollOfScalar serial_myColl6(myADB6);
+    SerialCollOfScalar serial_myColl10 = 10000 / serial_myColl6;
     //ADB myADB10 = 10000 / myADB6;
-    //if ( compare( myColl10, myADB10, "scalar / AD") ) {return 1; }
+    if ( compare( myColl10, ADB::function(serial_myColl10.value(), serial_myColl10.derivative()), "scalar / AD") ) {return 1; }
 
 
     // GRID OPERATIONS
@@ -397,6 +401,9 @@ int main(int argc, char** argv) {
 
     // Full divergence:
     // Wait until On and Extend works for this.
+    
+
+    // ADB -> ADB::Function(serialCollOfScalar.value(), serialCollOfScalar.derivative())
     
     return 0;
 }

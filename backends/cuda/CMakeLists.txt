@@ -28,7 +28,7 @@ file( GLOB cuda_test_src "test/*.cpp" )
 file( GLOB cuda_test_src_cu "test/*.cu" )
 set( SUPERLU_LIB          "superlu" CACHE PATH "" ) 	# havahol
 
-set( SERIAL_INCLUDE_DIRS "/usr/local/include/Eigen" ${EQUELLE_EXTRA_INCLUDE_DIRS})
+set( SERIAL_INCLUDE_DIRS "/usr/local/include/Eigen" "../serial/include" ${EQUELLE_EXTRA_INCLUDE_DIRS})
 
 # Create function for printing text:
 # Use: CleanMessage("My message")
@@ -77,6 +77,7 @@ if (Boost_FOUND)
 			${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
 			equelle_cuda_cpu
 			equelle_cuda_cu
+			equelle_rt
 			opmcore boost_filesystem-mt boost_system-mt 
 			tinyxml umfpack ${SUPERLU_LIB} dunecommon
 		)
