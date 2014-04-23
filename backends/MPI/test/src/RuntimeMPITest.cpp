@@ -12,7 +12,7 @@ BOOST_AUTO_TEST_CASE( globalCollectionSize ) {
 
     runtime.decompose();
 
-    BOOST_MESSAGE( "SubGrid.size: " << runtime.subGrid.global_cell.size() );
+    BOOST_MESSAGE( "SubGrid.size: " << runtime.subGrid.cell_local_to_global.size() );
 }
 
 BOOST_AUTO_TEST_CASE( allGather ) {
@@ -175,12 +175,11 @@ BOOST_AUTO_TEST_CASE( boundaryFaces ) {
     er.logstream << std::endl;
 }
 
-BOOST_AUTO_TEST_CASE( inputDomainSubsetOf ) {
+BOOST_AUTO_TEST_CASE( inputDomainSubsetOf_faces ) {
     BOOST_REQUIRE_MESSAGE( equelle::getMPISize() == 2, "Test requires program to be run on exactly two nodes" );
     Opm::parameter::ParameterGroup param;
     param.disableOutput();
 
-    // Ensure we have at least one interior cell.
     param.insertParameter( "nx", "6" );
     param.insertParameter( "ny", "1" );
 
@@ -193,10 +192,36 @@ BOOST_AUTO_TEST_CASE( inputDomainSubsetOf ) {
 
     CollOfFace dirichlet_boundary = er.inputDomainSubsetOf("dirichlet_boundary", er.boundaryFaces() );
 
+    // This could be dependent on the partitioning from Zoltan.
     if ( equelle::getMPIRank() == 0 ) {
-        BOOST_CHECK_EQUAL( dirichlet_boundary.size(), 3 );
+        BOOST_CHECK_EQUAL( dirichlet_boundary.size(),    3 );
     } else if ( equelle::getMPIRank() == 1 ) {
         BOOST_CHECK_EQUAL( dirichlet_boundary.size(), 1 );
+    }
+}
+
+BOOST_AUTO_TEST_CASE( inputDomainSubsetOf_cells ) {
+    BOOST_REQUIRE_MESSAGE( equelle::getMPISize() == 2, "Test requires program to be run on exactly two nodes" );
+    Opm::parameter::ParameterGroup param;
+    param.disableOutput();
+
+    // Ensure we have at least one interior cell - which is cell 4.
+    param.insertParameter( "nx", "3" );
+    param.insertParameter( "ny", "3" );
+
+    std::vector<int> global_subRegion = { 0 }; // This should only go to node 0, even with ghost cells.
+                                                  // (But this could be dependent on the partitioning....)
+    injectMockData( param, "subRegion", global_subRegion.begin(), global_subRegion.end() );
+
+    equelle::RuntimeMPI er( param );
+    er.decompose();
+
+    CollOfCell subRegion = er.inputDomainSubsetOf("subRegion", er.boundaryCells() );
+
+    // Check that the global id of the subRegion is 0
+    for( auto x: subRegion ) {
+        auto localId = x.index;
+        BOOST_CHECK_EQUAL( er.subGrid.cell_local_to_global[ localId ], 0 );
     }
 }
 
@@ -205,7 +230,7 @@ BOOST_AUTO_TEST_CASE( inputDomainSubsetOf_invalid_superset ) {
     Opm::parameter::ParameterGroup param;
     param.disableOutput();
 
-    // Ensure we have at least one interior cell.
+
     param.insertParameter( "nx", "6" );
     param.insertParameter( "ny", "1" );
 

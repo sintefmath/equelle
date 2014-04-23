@@ -98,7 +98,7 @@ void RuntimeMPI::decompose()
 
     logstream << "Decomposing took " << endTime-startTime << " seconds\n";
     logstream << "subGrid.number_of_ghost_cells: " << subGrid.number_of_ghost_cells << std::endl;
-    logstream << "subGrid.global_cell.size(): " << subGrid.global_cell.size() << std::endl;
+    logstream << "subGrid.global_cell.size(): " << subGrid.cell_local_to_global.size() << std::endl;
 }
 
 zoltanReturns RuntimeMPI::computePartition()
@@ -189,7 +189,7 @@ CollOfScalar RuntimeMPI::inputCollectionOfScalar(const String &name, const CollO
 
         // Map into local cell enumeration
         for( int i = 0; i < coll.size(); ++i ) {
-            auto glob = subGrid.global_cell[i];
+            auto glob = subGrid.cell_local_to_global[i];
 
             localData[i] = data[glob];
         }
@@ -231,6 +231,40 @@ CollOfFace RuntimeMPI::inputDomainSubsetOf(const String &name, const CollOfFace 
     if (!includes(superset.begin(), superset.end(), data.begin(), data.end())) {
         logstream << "Rank: " << equelle::getMPIRank() << " is throwing." << std::endl;
         OPM_THROW(std::runtime_error, "Given faces are not in the assumed subset.");
+    }
+
+    return data;
+}
+
+CollOfCell RuntimeMPI::inputDomainSubsetOf(const String &name, const CollOfCell &superset)
+{
+    // This implementation is based on a copy of EquelleRuntimeCPU::inputDomainSubsetOf
+    // but we rewrite the indices into our local index-space.
+    const String filename = param_.get<String>(name + "_filename");
+    std::ifstream is(filename.c_str());
+    if (!is) {
+        OPM_THROW(std::runtime_error, "Could not find file " << filename);
+    }
+    std::istream_iterator<int> beg(is);
+    std::istream_iterator<int> end;
+
+    CollOfCell data;
+    for (auto it = beg; it != end; ++it) {
+        logstream << "Read " << *it << std::endl;
+        auto jt = subGrid.cell_global_to_local.find( *it );
+        if ( jt != subGrid.cell_global_to_local.end() ) { // This cell is part of our domain
+            data.emplace_back( jt->second );
+
+            logstream << "Adding " << *it << " -> " << jt->second << std::endl;
+        } // else the cell is not part of our domain
+    }
+
+    // Needed to allow for std::includes to give valid results.
+    std::sort( data.begin(), data.end() );
+
+    if (!includes(superset.begin(), superset.end(), data.begin(), data.end())) {
+        logstream << "Rank: " << equelle::getMPIRank() << " is throwing." << std::endl;
+        OPM_THROW(std::runtime_error, "Given cells are not in the assumed subset.");
     }
 
     return data;
@@ -286,7 +320,7 @@ equelle::CollOfScalar equelle::RuntimeMPI::allGather( const equelle::CollOfScala
     // We do not need to copy the local data into the global structure.
     // That is handeled by MPI_Allgatherv
     MPI_SAFE_CALL(
-        MPI_Allgatherv( subGrid.global_cell.data(), subGrid.global_cell.size(), MPI_INT,
+        MPI_Allgatherv( subGrid.cell_local_to_global.data(), subGrid.cell_local_to_global.size(), MPI_INT,
                         global_id_mapping.data(), recvcounts.data(), displacements.data(),
                         MPI_INT, MPI_COMM_WORLD ) );
 

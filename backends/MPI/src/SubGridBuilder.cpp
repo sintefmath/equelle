@@ -82,7 +82,7 @@ SubGridBuilder::extractNeighborFaces(const UnstructuredGrid *grid, const std::ve
     fmap.cell_facepos = new_cell_facepos;
     fmap.cell_faces   = new_cell_faces;
     fmap.global_face  = global_face;
-    fmap.cell_global_to_local = old2new;
+    fmap.face_global_to_local = old2new;
 
     return fmap;
 }
@@ -120,7 +120,7 @@ SubGridBuilder::extractNeighborNodes(const UnstructuredGrid *grid, const std::ve
     for( auto it: old2new ) {
         nm.global_node[it.second] = it.first;
     }
-    nm.face_global_to_local = old2new;
+    nm.node_global_to_local = old2new;
     return nm;
 }
 
@@ -137,8 +137,8 @@ void SubGridBuilder::build_face_cells( const face_mapping &participatingFaces,
                                        SubGrid &subGrid, const UnstructuredGrid* grid)
 {
     std::unordered_map<int, int> cell_glob2loc;
-    for( int i = 0; i < subGrid.global_cell.size(); ++i ) {
-        cell_glob2loc[ subGrid.global_cell[i] ] = i;
+    for( int i = 0; i < subGrid.cell_local_to_global.size(); ++i ) {
+        cell_glob2loc[ subGrid.cell_local_to_global[i] ] = i;
     }
 
     for( int lface = 0; lface < participatingFaces.global_face.size(); ++lface ) {
@@ -170,19 +170,26 @@ SubGrid SubGridBuilder::build(const UnstructuredGrid* grid, const std::vector<in
     std::set<int> neighborCells = extractNeighborCells(grid, cellsToExtract);
 
     // Build up the local to global mapping based on the input and the additional neighbor cells found above
-    subGrid.global_cell = cellsToExtract;
+    subGrid.cell_local_to_global = cellsToExtract;
     std::set_difference( neighborCells.begin(), neighborCells.end(), cellsToExtract.begin(), cellsToExtract.end(),
-                         std::back_inserter( subGrid.global_cell ) );
+                         std::back_inserter( subGrid.cell_local_to_global ) );
 
-    subGrid.number_of_ghost_cells = subGrid.global_cell.size() - cellsToExtract.size();
+    // Build the inverse of global_cell
+    subGrid.cell_global_to_local.reserve( subGrid.cell_local_to_global.size() );
+    for( int local_cell_id = 0; local_cell_id < subGrid.cell_local_to_global.size(); ++local_cell_id ) {
+        int global_cell_id = subGrid.cell_local_to_global[ local_cell_id ];
+        subGrid.cell_global_to_local[ global_cell_id ] = local_cell_id;
+    }
 
-    auto participatingFaces = extractNeighborFaces(grid, subGrid.global_cell);
+    subGrid.number_of_ghost_cells = subGrid.cell_local_to_global.size() - cellsToExtract.size();
+
+    auto participatingFaces = extractNeighborFaces(grid, subGrid.cell_local_to_global);
     auto participatingNodes = extractNeighborNodes(grid, participatingFaces.global_face);
 
-    subGrid.global_face = participatingFaces.global_face;
-    subGrid.face_global_to_local = participatingFaces.cell_global_to_local;
+    subGrid.face_local_to_global = participatingFaces.global_face;
+    subGrid.face_global_to_local = participatingFaces.face_global_to_local;
 
-    subGrid.c_grid = allocate_grid( grid->dimensions, subGrid.global_cell.size(),
+    subGrid.c_grid = allocate_grid( grid->dimensions, subGrid.cell_local_to_global.size(),
                                     participatingFaces.global_face.size(), participatingNodes.face_nodes.size(),
                                     participatingFaces.cell_faces.size(), participatingNodes.global_node.size() );
 
@@ -203,8 +210,8 @@ SubGrid SubGridBuilder::build(const UnstructuredGrid* grid, const std::vector<in
     build_face_cells( participatingFaces, subGrid, grid );
 
     // Reindex for addressing based on cells
-    reduceAndReindex( grid->cell_centroids, subGrid.c_grid->cell_centroids, subGrid.global_cell.data(), subGrid.global_cell.size(), dim );
-    reduceAndReindex( grid->cell_volumes, subGrid.c_grid->cell_volumes, subGrid.global_cell.data(), subGrid.global_cell.size() );
+    reduceAndReindex( grid->cell_centroids, subGrid.c_grid->cell_centroids, subGrid.cell_local_to_global.data(), subGrid.cell_local_to_global.size(), dim );
+    reduceAndReindex( grid->cell_volumes, subGrid.c_grid->cell_volumes, subGrid.cell_local_to_global.data(), subGrid.cell_local_to_global.size() );
 
     // Reindex for addressing based on faces
     auto& global_face = participatingFaces.global_face;
@@ -238,7 +245,7 @@ CollOfCell SubGrid::map_to_global(const CollOfCell &local_collection)
     CollOfCell global_collection;
 
     for( auto x: local_collection ) {
-        global_collection.emplace_back( global_cell[ x.index ] );
+        global_collection.emplace_back( cell_local_to_global[ x.index ] );
     }
 
     return global_collection;
@@ -248,7 +255,7 @@ CollOfFace SubGrid::map_to_global(const CollOfFace &local_collection)
 {
     CollOfFace global_collection;
     for( auto x: local_collection ) {
-        global_collection.emplace_back( global_face[x.index] );
+        global_collection.emplace_back( face_local_to_global[x.index] );
     }
 
     return global_collection;

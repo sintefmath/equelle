@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE( checkSubGrids ) {
 
             for( int cell = 0; cell < subGrid.c_grid->number_of_cells; ++cell ) {
                 const int lid = cell;
-                const int gid = subGrid.global_cell[cell];
+                const int gid = subGrid.cell_local_to_global[cell];
 
                 BOOST_CHECK_EQUAL_COLLECTIONS(
                             &(globalGrid->cell_centroids[dim*gid]), &(globalGrid->cell_centroids[dim*gid + dim]),
