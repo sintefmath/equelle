@@ -632,6 +632,33 @@ CudaMatrix equelleCUDA::operator*(const CudaMatrix& lhs, const CudaMatrix& rhs) 
     return out;
 } // operator *
 
+
+// Matrix * vector
+CudaArray equelleCUDA::operator*(const CudaMatrix& mat, const CudaArray& vec) {
+    // Check that sizes match
+    if ( mat.cols_ != vec.size() ) {
+	OPM_THROW(std::runtime_error, "Error in matrix * vector operation as matrix is of size " << mat.rows_ << " by " << mat.cols_ << " and the vector of size " << vec.size());
+    }
+    
+    // Call cusparse matrix-vector operation:
+    // y = alpha*op(A)*x + beta*y
+    // with alpha=1, beta=0, op=non_transpose
+    CudaArray out(mat.rows());
+    const double alpha = 1.0;
+    const double beta = 0.0;
+    mat.sparseStatus_ = cusparseDcsrmv( CUSPARSE,
+					CUSPARSE_OPERATION_NON_TRANSPOSE,
+					mat.rows_, mat.cols_, mat.nnz_, 
+					&alpha, mat.description_,
+					mat.csrVal_, mat.csrRowPtr_, mat.csrColInd_,
+					vec.data(), &beta,
+					out.data());
+    mat.checkError_("cusparseDcsrmv() in operator*(CudaMatrix, CudaArray)");
+    return out;
+}
+
+
+
 // Scalar multiplications with matrix:
 CudaMatrix equelleCUDA::operator*(const CudaMatrix& lhs, const Scalar rhs) {
     return (rhs * lhs);

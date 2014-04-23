@@ -129,6 +129,7 @@ namespace equelleCUDA {
 
 	CudaMatrix derivative() const;
 
+	CudaArray value() const;
 	
 
 	// Get a referance to the CudaArray with the actual values:

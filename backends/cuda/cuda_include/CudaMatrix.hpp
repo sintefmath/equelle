@@ -163,6 +163,7 @@ namespace equelleCUDA {
 					const double beta);
 	
 	friend CudaMatrix operator*(const CudaMatrix& lhs, const CudaMatrix& rhs);
+	friend CudaArray operator*(const CudaMatrix& mat, const CudaArray& vec);
 	friend CudaMatrix operator*(const CudaMatrix& lhs, const Scalar rhs);
 	friend CudaMatrix operator*(const Scalar lhs, const CudaMatrix& rhs);
 	friend CudaMatrix operator-(const CudaMatrix& arg);
@@ -241,6 +242,16 @@ namespace equelleCUDA {
       This lets us not worry about empty derivatives for autodiff.
     */
     CudaMatrix operator*(const CudaMatrix& lhs, const CudaMatrix& rhs);
+
+    //! Matrix * vector operator
+    /*!
+      Performs a matrix vector product, where the vector is represented by a 
+      CudaArray object.
+
+      It is useful for some of the neighbour relations such as gradient and
+      divergence.
+    */
+    CudaArray operator*(const CudaMatrix& mat, const CudaArray& vec);
 
     //! Multiplication with Matrix and scalar
     /*!

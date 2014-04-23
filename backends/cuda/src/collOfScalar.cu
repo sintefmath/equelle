@@ -143,6 +143,9 @@ CudaMatrix CollOfScalar::derivative() const {
     return der_;
 }
 
+CudaArray CollOfScalar::value() const {
+    return val_;
+}
 
 
 

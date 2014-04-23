@@ -117,6 +117,50 @@ int matrixCompare(hostMat mat, hostMat lf, string msg) {
     return 0;
 }
 
+
+// COMPARING ARRAYS
+
+int arrayCompare( const std::vector<double>& host, 
+		  const std::vector<double>&lf, 
+		  const std::string& msg ) {
+    
+    if ( host.size() != lf.size()) {
+	cout << "Error in matrix.cpp - testing " <<  msg << endl; 
+	cout << "host.size() = " << host.size() << " but should be " << lf.size();
+	cout << endl;
+	return 1;
+    }
+    bool correct = true;
+
+    // Vals:
+    for (int i = 0; i < host.size(); ++i) {
+	if ( i < 100 )
+	    std::cout << host[i] << " ";
+	if (i == 100 )
+	    std::cout << "...\n";
+	if (i < lf.size()) {
+	    if ( fabs(host[i] - lf[i]) > 10*std::numeric_limits<double>::epsilon() ) {
+		std::cout << "(<- " << lf[i] << ") ";
+		correct = false;
+	    }
+	}
+    }
+    if (correct) {
+	std::cout << "\n\tThis is correct\n\n";
+    } else {
+	std::cout << "\n\tThis is wrong\n";
+	std::cout << "Error in matrix.cpp - testing " << msg << "\n";
+	std::cout << "\tThe indices in the array is wrong\n";
+	return 1;
+    }
+    
+    // Test passed:
+    return 0;
+}
+
+
+
+
 // ------------   START  MAIN    ------------------
 
 
@@ -294,6 +338,15 @@ int main(int argc, char** argv) {
     vector<int> k_ci = {0,1,2,3,4,5,6,7,8,9,10,11};
     hostMat k_lf = { j_v, k_rp, k_ci, 12,12,12};
     if ( matrixCompare( K.toHost(), k_lf, "K(CollOfScalar)") ) {
+	return 1;
+    }
+
+    // MATRIX * VECTOR OPERATION
+    vector<double> L_ca_vec = {-3,4,2,1};
+    CudaArray L_ca(L_ca_vec);
+    CudaArray L = F*L_ca;
+    vector<double> l_lf = {31, 1, -39.5, 4};
+    if ( arrayCompare( L.copyToHost(), l_lf, "CudaArray L(CudaMatrix*CudaArray)") ) {
 	return 1;
     }
 
