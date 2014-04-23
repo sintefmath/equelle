@@ -234,10 +234,16 @@ __global__ void wrapEquelleRuntimeCUDA::divergenceKernel( double* div,
 // --------- SQRT ----------------
 CollOfScalar wrapEquelleRuntimeCUDA::sqrtWrapper( const CollOfScalar& x) {
     
-    CollOfScalar out = x;
-    kernelSetup s = out.setup();
-    sqrtKernel<<<s.grid, s.block>>> (out.data(), out.size());
-    return out;
+    CudaArray val = x.value();
+    kernelSetup s = val.setup();
+    sqrtKernel<<<s.grid, s.block>>> (val.data(), val.size());
+    if ( x.useAutoDiff() ) {
+	// sqrt(x)' = 1/(2*sqrt(x)) * x'
+	CudaMatrix diag(1/(2*val));
+	CudaMatrix der = diag * x.derivative();
+	return CollOfScalar(val, der);
+    }
+    return CollOfScalar(val);
 }
 
 

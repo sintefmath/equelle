@@ -17,10 +17,18 @@ typedef equelle::CollOfScalar SerialCollOfScalar;
 //typedef equelle::EquelleRuntimeCPU
 
 
+int compare( CollOfScalar coll, ADB adb, std::string msg, double tol = 0.0);
 int matrixCompare( hostMat mat, ADB::M m, std::string msg, double tol = 0.0);
 
+int compareER( CollOfScalar cuda, SerialCollOfScalar serial, std::string msg, double tol = 0.0) {
+    ADB adb = ADB::function(serial.value(), serial.derivative());
+    return compare(cuda, adb, msg, tol);
+}
+
+
+
 // Comparison function:
-int compare( CollOfScalar coll, ADB adb, std::string msg, double tol = 0.0) {
+int compare( CollOfScalar coll, ADB adb, std::string msg, double tol) {
 
     if (tol == 0.0) {
 	tol = 10;
@@ -37,19 +45,25 @@ int compare( CollOfScalar coll, ADB adb, std::string msg, double tol = 0.0) {
 	return 1;
     }
     bool correct = true;
+    int errors = 0;
+    double diff;
     std::vector<double> vals = coll.copyToHost();
     for ( int i = 0; i < coll.size(); i++) {
-	if ( fabs((vals[i] - v[i])/v[i]) > tol ) {
+	diff = fabs((vals[i] - v[i])/v[i]);
+	if ( diff > tol ) {
 	    std::cout << "vals[" << i << "] = " << vals[i];
 	    std::cout << " but v[" << i << "] = " << v[i];
-	    std::cout << " with diff: "<< fabs((vals[i] - v[i])/v[i]) << "\n";
+	    //std::cout << " with diff: " << fabs(vals[i] - v[i]) << "\n";
+	    std::cout << " with diff: "<< diff << "\n";
 	    correct = false;
+	    errors++;
 	}
     }
     if (!correct) {
 	std::cout << "Error in " << msg << "\n";
-	std::cout << "Scalar values are wrong (see above)\n";
-	return 1;
+	std::cout << "\t" << errors << " scalar values are wrong (see above)\n";
+	std::cout << "\tUsed tol = " << tol << "\n";
+	//return 1;
     }
     
     // Comparing matrix:
@@ -173,6 +187,11 @@ void printNonzeros(ADB adb) {
     }
 }
 
+void printNonzeros(SerialCollOfScalar s) {
+    printNonzeros( ADB::function(s.value(), s.derivative()));
+}
+
+
 // ------------------------------------------------------------
 // -----------------    MAIN    -------------------------------
 // ------------------------------------------------------------
@@ -192,7 +211,7 @@ int main(int argc, char** argv) {
     Opm::GridManager gridMan(14,22,9,1,1,1);
     Opm::HelperOps hops(*(gridMan.c_grid()));
     int numCells = gridMan.c_grid()->number_of_cells;
-    int numFaces = gridMan.c_grid()->number_of_faces;
+    //int numFaces = gridMan.c_grid()->number_of_faces;
     std::cout << "Number of cells are: " << numCells << "\n";
     
     // Create an autodiff variable which we want to do tests on:
@@ -379,12 +398,13 @@ int main(int argc, char** argv) {
 
     // Check scalar / AD
     // Can't test this as "scalar / ADB" is not implemented...
-    CollOfScalar myColl10 = 10000 / myColl6;
+    CollOfScalar myColl10 = 1000000 / myColl6;
     SerialCollOfScalar serial_myColl6(myADB6);
-    SerialCollOfScalar serial_myColl10 = 10000 / serial_myColl6;
-    //ADB myADB10 = 10000 / myADB6;
-    if ( compare( myColl10, ADB::function(serial_myColl10.value(), serial_myColl10.derivative()), "scalar / AD") ) {return 1; }
+    SerialCollOfScalar serial_myColl10 = 1000000 / serial_myColl6;
+    ADB myADB10 = ADB::function(serial_myColl10.value(), serial_myColl10.derivative());
+    if ( compareER( myColl10, myADB10, "scalar / AD") ) {return 1; }
 
+    
 
     // GRID OPERATIONS
 
@@ -400,10 +420,23 @@ int main(int argc, char** argv) {
     if ( compare( myDiv_cuda, myDiv_adb, "Divergence(myGrad)", 1000) ) { return 1; }
 
     // Full divergence:
-    // Wait until On and Extend works for this.
+    // Put 3.14 on the boundary
+    // BUT WE NEED OPERATOR EXTEND FIRST!
+    /*    CollOfScalar cuda_edge = er.operatorExtend(er.operatorExtend(3.14, er.boundaryFaces()), er.boundaryFaces(), er.allFaces()) + (er.operatorExtend(myGrad_cuda, er.interiorFaces(), er.allFaces()));
+    CollOfScalar cuda_fulldiv = er.divergence(cuda_edge);
+   
+    SerialCollOfScalar serial_edge = serialER.operatorExtend(serialER.operatorExtend(3.14, serialER.boundaryFaces()), serialER.boundaryFaces(), serialER.allFaces()) + (serialER.operatorExtend(SerialCollOfScalar(myGrad_adb), serialER.interiorFaces(), serialER.allFaces()));
+    SerialCollOfScalar serial_fulldiv = serialER.divergence(serial_edge);
     
+    if ( compareER(cuda_fulldiv, serial_fulldiv, "Divergence(AllFaces())", 100) ) { return 1; }*/
 
-    // ADB -> ADB::Function(serialCollOfScalar.value(), serialCollOfScalar.derivative())
     
+    // SQRT
+    CollOfScalar myColl4_squared = myColl4 * myColl4;
+    CollOfScalar myColl11 = er.sqrt(myColl4_squared);
+    SerialCollOfScalar serial4_squared(myADB4*myADB4);
+    SerialCollOfScalar serial11 = serialER.sqrt(serial4_squared);
+    if ( compareER( myColl11, serial11, "Sqrt(myColl4*myColl4)") ) { return 1; }
+
     return 0;
 }
