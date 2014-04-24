@@ -26,6 +26,7 @@ using std::string;
 
 
 int matrixCompare(hostMat mat, hostMat lf, string msg) {
+    cout << "Testing " << msg << "\n";
     if ( mat.nnz != lf.nnz) {
 	cout << "Error in matrix.cpp - testing " <<  msg << endl; 
 	cout << "mat.nnz = " << mat.nnz << " but should be " << lf.nnz;
@@ -350,6 +351,16 @@ int main(int argc, char** argv) {
 	return 1;
     }
 
+    // Matrix transpose
+    vector<double> ft_v = {-1,4.5,3,-3,-1,8,-4,1,1,-6,6};
+    vector<int> ft_rp = {0,2,5,8,11};
+    vector<int> ft_ci = {0,2,0,2,3,0,2,3,1,2,3};
+    hostMat ft_lf = { ft_v, ft_rp, ft_ci, 11, 4, 4};
+    CudaMatrix Ft = F.transpose();
+    if ( matrixCompare( Ft.toHost(), ft_lf, "F.transpose()") ) {
+	return 1;
+    }
+
     // Create a big diagonal matrix from CollOfScalar
     vector<double> diag_vec;
     vector<int> diag_rp;
@@ -416,7 +427,8 @@ int main(int argc, char** argv) {
 	return 1;
     }
     
-        
+    
+    
 
     return 0;
 

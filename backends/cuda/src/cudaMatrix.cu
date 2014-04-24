@@ -414,6 +414,28 @@ hostMat CudaMatrix::toHost() const {
 }
 
 
+
+// TRANSPOSE
+CudaMatrix CudaMatrix::transpose() const {
+    CudaMatrix out;
+    out.rows_ = cols_;
+    out.cols_ = rows_;
+    out.nnz_ = nnz_;
+    out.allocateMemory("CudaMatrix::transpose()");
+    
+    // Use the csr -> csc function to get the transpose
+    sparseStatus_ = cusparseDcsr2csc( CUSPARSE,
+				     rows_, cols_, nnz_,
+				     csrVal_, csrRowPtr_, csrColInd_,
+				     out.csrVal_, out.csrColInd_, out.csrRowPtr_,
+				     CUSPARSE_ACTION_NUMERIC,
+				     CUSPARSE_INDEX_BASE_ZERO );
+    checkError_("cusparseDcsr2csc in CudaMatrix::transpose()");
+    
+    return out;
+}
+
+
 // Error checking:
 void CudaMatrix::checkError_(const std::string& msg) const {
     if ( cudaStatus_ != cudaSuccess) {

@@ -161,6 +161,8 @@ namespace equelleCUDA {
 
 	//! Copies the device memory to host memory in a hostMat struct.
 	hostMat toHost() const;
+	
+	CudaMatrix transpose() const;
 
 	friend CudaMatrix operator+(const CudaMatrix& lhs, const CudaMatrix& rhs);
 	friend CudaMatrix operator-(const CudaMatrix& lhs, const CudaMatrix& rhs);
