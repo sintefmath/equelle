@@ -412,6 +412,14 @@ int main(int argc, char** argv) {
 							  serialER.interiorCells());
     if ( compareER( myOn_cuda, myOn_serial, "myColl10 On InteriorCells()") ) { return 1; }
     
+    // Extend
+    CollOfScalar myExt_cuda = er.operatorExtend( myOn_cuda, er.interiorCells(),
+						 er.allCells() );
+    SerialCollOfScalar myExt_serial = serialER.operatorExtend( myOn_serial,
+							       serialER.interiorCells(),
+							       serialER.allCells() );
+    if ( compareER( myExt_cuda, myExt_serial, "myOn On Extend") ) { return 1; }
+
 
     // GRID OPERATIONS
 

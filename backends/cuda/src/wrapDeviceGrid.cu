@@ -23,6 +23,8 @@ using namespace equelleCUDA;
 CollOfScalar wrapDeviceGrid::extendToFull( const CollOfScalar& in_data,
 					   const thrust::device_vector<int>& from_set,
 					   const int full_size) {
+ 
+    /*
     // setup how many threads/blocks we need:
     kernelSetup s(full_size);
     
@@ -44,6 +46,11 @@ CollOfScalar wrapDeviceGrid::extendToFull( const CollOfScalar& in_data,
 								   in_data.data());
       
     return out;
+    */
+    
+    // Create the transpose of the restrict matrix
+    CudaMatrix extendMatrix = CudaMatrix(from_set, full_size).transpose();
+    return extendMatrix * in_data;
 }
 
 CollOfScalar wrapDeviceGrid::extendToSubset( const CollOfScalar& inData,
