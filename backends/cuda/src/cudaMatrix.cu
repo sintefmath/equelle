@@ -2,6 +2,9 @@
 #include <cuda_runtime.h>
 #include <cusparse_v2.h>
 
+#include <thrust/device_vector.h>
+#include <thrust/detail/raw_pointer_cast.h>
+
 #include <opm/core/utility/ErrorMacros.hpp>
 
 #include <vector>
@@ -178,6 +181,35 @@ CudaMatrix::CudaMatrix(const CudaArray& array)
     createGeneralDescription_("CudaMatrix::CudaMatrix(CudaArray)");
 }
 					    
+
+// Restriction matrix constructor:
+CudaMatrix::CudaMatrix(const thrust::device_vector<int> set,
+		       const int full_size) 
+    : rows_(set.size()),
+      cols_(full_size),
+      nnz_(rows_),
+      csrVal_(0),
+      csrRowPtr_(0),
+      csrColInd_(0),
+      sparseStatus_(CUSPARSE_STATUS_SUCCESS),
+      cudaStatus_(cudaSuccess),
+      description_(0)
+{
+    // Allocate memory:
+    allocateMemory("CudaMatrix constructor for On from full set");
+    
+    // Matrix is flat, more cols than rows.
+    //   - each row has one element, hence csrRowPtr = [0,1,2,...,rows_] (size rows+1)
+    //   - all nnz elements are 1, hence csrVal = [1,1,1,...,1] (size rows)
+    //   - csrColInd = to_set (size rows)
+    const int* set_ptr = thrust::raw_pointer_cast( &set[0] );
+    kernelSetup s(rows_ + 1);
+    initRestrictionMatrix<<<s.grid, s.block>>>( csrVal_, csrRowPtr_, csrColInd_,
+						set_ptr, rows_);
+
+    createGeneralDescription_("CudaMatrix constructor for On from full set");
+}
+
 
 
 // Copy constructor:
@@ -715,6 +747,27 @@ __global__ void wrapCudaMatrix::initDiagonalMatrix( double* csrVal,
 	if ( i < nnz) {
 	    csrVal[i] = scalars[i];
 	    csrColInd[i] = i;
+	}
+    }
+}
+
+
+// Restriction matrix initialization kernel
+__global__ void wrapCudaMatrix::initRestrictionMatrix( double* csrVal,
+						       int* csrRowPtr,
+						       int* csrColInd,
+						       const int* set,
+						       const int rows) {
+    // Matrix is flat, more cols than rows.
+    //   - each row has one element, hence csrRowPtr = [0,1,2,...,rows_] (size rows+1)
+    //   - all nnz elements are 1, hence csrVal = [1,1,1,...,1] (size rows)
+    //   - csrColInd = to_set (size rows)
+    const int i = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( i < rows + 1) {
+	csrRowPtr[i] = i;
+	if ( i < rows ) {
+	    csrVal[i] = 1;
+	    csrColInd[i] = set[i];
 	}
     }
 }

@@ -9,6 +9,8 @@
 #include <cuda_runtime.h>
 #include <cusparse_v2.h>
 
+#include <thrust/device_vector.h>
+
 #include <Eigen/Sparse>
 
 // This file include a global variable for the cusparse handle
@@ -126,6 +128,11 @@ namespace equelleCUDA {
 	  the diagonal elements.
 	*/
 	explicit CudaMatrix( const CudaArray& array);
+
+	// Constructor for On from full matrix.
+	// Better name: Restriction matrix
+	explicit CudaMatrix( const thrust::device_vector<int> set,
+			     const int full_size);
 
 	//! Copy assignment operator
 	/*!
@@ -321,6 +328,17 @@ namespace equelleCUDA {
 					    const double* scalars,
 					    const int nnz);
 
+
+	// Restriction matrix initialization kernel
+	// Matrix is flat, more cols than rows.
+	//   - each row has one element, hence csrRowPtr = [0,1,2,...,rows_] (size rows+1)
+	//   - all nnz elements are 1, hence csrVal = [1,1,1,...,1] (size rows)
+	//   - csrColInd = to_set (size rows)
+	__global__ void initRestrictionMatrix( double* csrVal,
+					       int* csrRowPtr,
+					       int* csrColInd,
+					       const int* set,
+					       const int rows );
 
     } // namespace wrapCudaMatrix
 

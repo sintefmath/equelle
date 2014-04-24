@@ -104,7 +104,7 @@ CollOfScalar wrapDeviceGrid::onFromFull( const CollOfScalar& inData,
     // out will be same size as to_set.
 
     // setup how many threads/blocks we need:
-    kernelSetup s(to_set.size());
+    /*kernelSetup s(to_set.size());
 
     // Create the output vector:
     CollOfScalar out(to_set.size());
@@ -114,6 +114,15 @@ CollOfScalar wrapDeviceGrid::onFromFull( const CollOfScalar& inData,
 							  to_set.size(),
 							  inData.data());
     return out;
+    */
+
+    // Use the matrix and find the result from Matrix-vector multiplication
+    CudaMatrix onMatrix(to_set, inData.size());
+    if ( inData.useAutoDiff() ) {
+	return CollOfScalar( onMatrix * inData.value(),
+			     onMatrix * inData.derivative() );
+    }
+    return CollOfScalar( onMatrix * inData.value() );
 }
 
 CollOfScalar wrapDeviceGrid::onFromSubset( const CollOfScalar& inData,

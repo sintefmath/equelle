@@ -79,7 +79,7 @@ int compare( CollOfScalar coll, ADB adb, std::string msg, double tol) {
 	return 1;
     }
     
-    std::cout << "Test " << msg << " correct\n";
+    std::cout << "Test " << msg << " correct\n\n";
     
     return 0;
 }
@@ -137,7 +137,7 @@ int matrixCompare( hostMat mat, ADB::M m_colMajor, std::string msg, double tol) 
     }
     if ( !correct ) {
 	std::cout << "Error in matrix in " << msg << "\n";
-	std::cout << "\t" << errors << " indices in the val pointer is wrong\n";
+	std::cout << "\t" << errors << " values in the val pointer is wrong\n";
 	std::cout << "\tWith tol = " << tol << "\n";
 	return 1;
     }
@@ -402,8 +402,15 @@ int main(int argc, char** argv) {
     SerialCollOfScalar serial_myColl6(myADB6);
     SerialCollOfScalar serial_myColl10 = 1000000 / serial_myColl6;
     ADB myADB10 = ADB::function(serial_myColl10.value(), serial_myColl10.derivative());
-    if ( compareER( myColl10, myADB10, "scalar / AD") ) {return 1; }
+    if ( compareER( myColl10, serial_myColl10, "scalar / AD") ) {return 1; }
 
+
+    // On 
+    CollOfScalar myOn_cuda = er.operatorOn( myColl10, er.allCells(), er.interiorCells());
+    SerialCollOfScalar myOn_serial = serialER.operatorOn( serial_myColl10, 
+							  serialER.allCells(),
+							  serialER.interiorCells());
+    if ( compareER( myOn_cuda, myOn_serial, "myColl10 On InteriorCells()") ) { return 1; }
     
 
     // GRID OPERATIONS
