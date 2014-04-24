@@ -197,7 +197,7 @@ namespace equelleCUDA {
 	  \return lhs * rhs
 	*/
 	friend CollOfScalar operator*(const CollOfScalar& lhs, const Scalar rhs);
-	
+
 	/*!
 	  Implemented as (1/rhs)*lhs in order to reuse kernel
 	  \param lhs Left hand side Collection of Scalar
@@ -369,6 +369,14 @@ namespace equelleCUDA {
 	bool autodiff_;
 	
     }; // class CollOfScalar
+
+
+
+    // Matrix * CollOfScalar operator
+    // Many Equelle operations are used by multiplying with a matrix
+    CollOfScalar operator*(const CudaMatrix& mat, const CollOfScalar& coll);
+    
+    
 
 
 } // namespace equelleCUDA

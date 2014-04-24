@@ -118,11 +118,7 @@ CollOfScalar wrapDeviceGrid::onFromFull( const CollOfScalar& inData,
 
     // Use the matrix and find the result from Matrix-vector multiplication
     CudaMatrix onMatrix(to_set, inData.size());
-    if ( inData.useAutoDiff() ) {
-	return CollOfScalar( onMatrix * inData.value(),
-			     onMatrix * inData.derivative() );
-    }
-    return CollOfScalar( onMatrix * inData.value() );
+    return onMatrix * inData;
 }
 
 CollOfScalar wrapDeviceGrid::onFromSubset( const CollOfScalar& inData,

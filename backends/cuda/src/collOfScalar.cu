@@ -339,3 +339,13 @@ CollOfBool equelleCUDA::operator!=(const CollOfScalar& lhs, const Scalar rhs) {
 CollOfBool equelleCUDA::operator!=(const Scalar lhs, const CollOfScalar& rhs) {
     return (rhs != lhs);
 }
+
+
+
+// Matrix * CollOfScalar
+CollOfScalar equelleCUDA::operator*(const CudaMatrix& mat, const CollOfScalar& coll) {
+    if ( coll.useAutoDiff() ) {
+	return CollOfScalar( mat * coll.value(), mat * coll.derivative() );
+    }
+    return CollOfScalar( mat * coll.value() );
+}

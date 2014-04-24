@@ -101,12 +101,13 @@ CollOfScalar EquelleRuntimeCUDA::gradient( const CollOfScalar& cell_scalarfield 
 	OPM_THROW(std::runtime_error, "Gradient need input defined on AllCells()");
     }
 
-    if ( cell_scalarfield.useAutoDiff() ) {
-	return CollOfScalar( devOps_.grad * cell_scalarfield.value(),
-			     devOps_.grad * cell_scalarfield.derivative() );
-    }
+    //if ( cell_scalarfield.useAutoDiff() ) {
+    //	return CollOfScalar( devOps_.grad * cell_scalarfield.value(),
+    //			     devOps_.grad * cell_scalarfield.derivative() );
+    //}
     // else: 
-    return CollOfScalar( devOps_.grad * cell_scalarfield.value() );
+    //return CollOfScalar( devOps_.grad * cell_scalarfield.value() );
+    return devOps_.grad * cell_scalarfield;
 }
 
 CollOfScalar EquelleRuntimeCUDA::divergence_old(const CollOfScalar& face_fluxes) const {
@@ -141,22 +142,24 @@ CollOfScalar EquelleRuntimeCUDA::divergence(const CollOfScalar& face_fluxes) con
     }
     
     if ( face_fluxes.size() == dev_grid_.number_of_faces() ) {
-	if ( face_fluxes.useAutoDiff() ) {
-	    return CollOfScalar( devOps_.fulldiv * face_fluxes.value(),
-				 devOps_.fulldiv * face_fluxes.derivative() );
-	}
-	else {
-	    return CollOfScalar( devOps_.fulldiv * face_fluxes.value() );
-	}
+	//if ( face_fluxes.useAutoDiff() ) {
+	//   return CollOfScalar( devOps_.fulldiv * face_fluxes.value(),
+	//			 devOps_.fulldiv * face_fluxes.derivative() );
+	//}
+	//else {
+	//    return CollOfScalar( devOps_.fulldiv * face_fluxes.value() );
+	//}
+	return devOps_.fulldiv * face_fluxes;
     }
     else { // on internal faces
-	if ( face_fluxes.useAutoDiff() ) {
-	    return CollOfScalar( devOps_.div * face_fluxes.value(),
-				 devOps_.div * face_fluxes.derivative() );
-	}
-	else {
-	    return CollOfScalar( devOps_.div * face_fluxes.value() );
-	}
+	//if ( face_fluxes.useAutoDiff() ) {
+	//    return CollOfScalar( devOps_.div * face_fluxes.value(),
+	//			 devOps_.div * face_fluxes.derivative() );
+	//}
+	//else {
+	//    return CollOfScalar( devOps_.div * face_fluxes.value() );
+	//}
+	return devOps_.div * face_fluxes;
     }
 }
 
