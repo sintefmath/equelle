@@ -63,7 +63,7 @@ int compare( CollOfScalar coll, ADB adb, std::string msg, double tol) {
 	std::cout << "Error in " << msg << "\n";
 	std::cout << "\t" << errors << " scalar values are wrong (see above)\n";
 	std::cout << "\tUsed tol = " << tol << "\n";
-	//return 1;
+	return 1;
     }
     
     // Comparing matrix:
@@ -424,26 +424,27 @@ int main(int argc, char** argv) {
     // GRID OPERATIONS
 
     // Gradient:
-    CollOfScalar myGrad_cuda = er.gradient(myColl9);
-    ADB myGrad_adb = hops.grad * myADB9;
-    if ( compare( myGrad_cuda, myGrad_adb, "Gradient(myColl9)") ) { return 1; }
+    CollOfScalar myGrad_cuda = er.gradient(myColl3);
+    ADB myGrad_adb = hops.grad * myADB3;
+    if ( compare( myGrad_cuda, myGrad_adb, "Gradient(myColl3)") ) { return 1; }
+    // myColl9 creates difficulties...
 
     // Divergence:
     std::cout << "\nmyGrad_cuda.useAutoDiff() = " << myGrad_cuda.useAutoDiff() << "\n";
     CollOfScalar myDiv_cuda = er.divergence(myGrad_cuda);
     ADB myDiv_adb = hops.div * myGrad_adb;
-    if ( compare( myDiv_cuda, myDiv_adb, "Divergence(myGrad)", 1000) ) { return 1; }
+    if ( compare( myDiv_cuda, myDiv_adb, "Divergence(myGrad)") ) { return 1; }
 
     // Full divergence:
     // Put 3.14 on the boundary
     // BUT WE NEED OPERATOR EXTEND FIRST!
-    /*    CollOfScalar cuda_edge = er.operatorExtend(er.operatorExtend(3.14, er.boundaryFaces()), er.boundaryFaces(), er.allFaces()) + (er.operatorExtend(myGrad_cuda, er.interiorFaces(), er.allFaces()));
+        CollOfScalar cuda_edge = er.operatorExtend(er.operatorExtend(3.14, er.boundaryFaces()), er.boundaryFaces(), er.allFaces()) + (er.operatorExtend(myGrad_cuda, er.interiorFaces(), er.allFaces()));
     CollOfScalar cuda_fulldiv = er.divergence(cuda_edge);
    
     SerialCollOfScalar serial_edge = serialER.operatorExtend(serialER.operatorExtend(3.14, serialER.boundaryFaces()), serialER.boundaryFaces(), serialER.allFaces()) + (serialER.operatorExtend(SerialCollOfScalar(myGrad_adb), serialER.interiorFaces(), serialER.allFaces()));
     SerialCollOfScalar serial_fulldiv = serialER.divergence(serial_edge);
     
-    if ( compareER(cuda_fulldiv, serial_fulldiv, "Divergence(AllFaces())", 100) ) { return 1; }*/
+    if ( compareER(cuda_fulldiv, serial_fulldiv, "Divergence(AllFaces())",100) ) { return 1; }
 
     
     // SQRT
@@ -452,6 +453,18 @@ int main(int argc, char** argv) {
     SerialCollOfScalar serial4_squared(myADB4*myADB4);
     SerialCollOfScalar serial11 = serialER.sqrt(serial4_squared);
     if ( compareER( myColl11, serial11, "Sqrt(myColl4*myColl4)") ) { return 1; }
+
+
+    //printNonzeros(serial_fulldiv);
+    CollOfScalar myTri_cuda = er.trinaryIf( cuda_fulldiv > 0, 
+					    2.4 * cuda_fulldiv,
+					    -1.2 * cuda_fulldiv );
+    SerialCollOfScalar myTri_serial = serialER.trinaryIf ( serial_fulldiv > 0,
+							   2.4 * serial_fulldiv,
+							   -1.2 * serial_fulldiv);
+    if ( compareER( myTri_cuda, myTri_serial, "TrinaryIf", 100) ) { return 1; }
+
+
 
     return 0;
 }

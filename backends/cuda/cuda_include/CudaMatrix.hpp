@@ -129,6 +129,9 @@ namespace equelleCUDA {
 	*/
 	explicit CudaMatrix( const CudaArray& array);
 
+	// Construct diagonal matrix from CollOfBools
+	explicit CudaMatrix( const CollOfBool& array);
+
 	// Constructor for On from full matrix.
 	// Better name: Restriction matrix
 	explicit CudaMatrix( const thrust::device_vector<int> set,
@@ -341,6 +344,14 @@ namespace equelleCUDA {
 					       int* csrColInd,
 					       const int* set,
 					       const int rows );
+
+	// Kernel for diagonal matrix from booleans
+	__global__ void initBooleanDiagonal( double* csrVal,
+					     int* csrRowPtr,
+					     int* csrColInd,
+					     const bool* bool_ptr,
+					     const int rows);
+	
 
     } // namespace wrapCudaMatrix
 

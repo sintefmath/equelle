@@ -41,6 +41,7 @@ void wrapEquelleRuntimeCUDA::destroy_cusparse() {
 CollOfScalar wrapEquelleRuntimeCUDA::trinaryIfWrapper( const CollOfBool& predicate,
 						       const CollOfScalar& iftrue,
 						       const CollOfScalar& iffalse) {
+    /*
     CollOfScalar out(iftrue.size());
     const bool* pred_ptr = thrust::raw_pointer_cast( &predicate[0] );
     kernelSetup s = out.setup();
@@ -50,6 +51,9 @@ CollOfScalar wrapEquelleRuntimeCUDA::trinaryIfWrapper( const CollOfBool& predica
 					 iffalse.data(),
 					 iftrue.size());
     return out;
+    */
+    CudaMatrix diagBool(predicate);
+    return diagBool*iftrue + (CudaMatrix(predicate.size()) - diagBool)*iffalse;
 }
 
 

@@ -182,6 +182,28 @@ CudaMatrix::CudaMatrix(const CudaArray& array)
 }
 					    
 
+// Constructor for diagonal from booleans
+CudaMatrix::CudaMatrix(const CollOfBool& bools) 
+    : rows_(bools.size()),
+      cols_(rows_),
+      nnz_(rows_),
+      csrVal_(0),
+      csrRowPtr_(0),
+      csrColInd_(0),
+      sparseStatus_(CUSPARSE_STATUS_SUCCESS),
+      cudaStatus_(cudaSuccess),
+      description_(0)
+{ 
+    allocateMemory("CudaMatrix::CudaMatrix(CollOfBool)");
+    
+    kernelSetup s(nnz_ + 1);
+    const bool* bool_ptr = thrust::raw_pointer_cast( &bools[0] );
+    initBooleanDiagonal<<<s.grid, s.block>>>( csrVal_, csrRowPtr_, csrColInd_,
+					      bool_ptr, rows_);
+    
+    createGeneralDescription_("CudaMatrix::CudaMatrix(CollOfBool)");
+}
+
 // Restriction matrix constructor:
 CudaMatrix::CudaMatrix(const thrust::device_vector<int> set,
 		       const int full_size) 
@@ -790,6 +812,25 @@ __global__ void wrapCudaMatrix::initRestrictionMatrix( double* csrVal,
 	if ( i < rows ) {
 	    csrVal[i] = 1;
 	    csrColInd[i] = set[i];
+	}
+    }
+}
+
+
+__global__ void wrapCudaMatrix::initBooleanDiagonal( double* csrVal,
+						     int* csrRowPtr,
+						     int* csrColInd,
+						     const bool* bool_ptr,
+						     const int rows) {
+    const int i = threadIdx.x + blockIdx.x*blockDim.x;
+    if ( i < rows + 1) {
+	csrRowPtr[i] = i;
+	if ( i < rows ) {
+	    if (bool_ptr[i])
+		csrVal[i] = 1;
+	    else
+		csrVal[i] = 0;
+	    csrColInd[i] = i;
 	}
     }
 }
