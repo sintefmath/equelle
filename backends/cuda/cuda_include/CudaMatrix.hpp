@@ -174,6 +174,9 @@ namespace equelleCUDA {
 	const double* csrVal() const ;
 	const int* csrRowPtr() const ;
 	const int* csrColInd() const ;
+	double* csrVal();
+	int* csrRowPtr();
+	int* csrColInd();
 	
 	//! Check if the matrix holds values or not
 	bool isEmpty() const;

@@ -19,8 +19,10 @@ namespace equelleCUDA {
 	CollOfScalar solve(const CudaMatrix& A, const CudaArray& b);
 	
     private:
-	EquelleSolver solver;
-	EquellePrecond precond;
+	EquelleSolver solver_;
+	EquellePrecond precond_;
+	double tol_;
+	int maxit_;
 
     }; // class LinearSolver
 

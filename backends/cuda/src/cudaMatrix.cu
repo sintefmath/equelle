@@ -411,6 +411,15 @@ const int* CudaMatrix::csrRowPtr() const {
 const int* CudaMatrix::csrColInd() const {
     return csrColInd_;
 }
+double* CudaMatrix::csrVal() {
+    return csrVal_;
+}
+int* CudaMatrix::csrRowPtr() {
+    return csrRowPtr_;
+}
+int* CudaMatrix::csrColInd() {
+    return csrColInd_;
+}
 
 
 

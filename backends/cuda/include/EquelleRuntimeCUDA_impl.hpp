@@ -49,7 +49,7 @@ CollOfScalar EquelleRuntimeCUDA::newtonSolve(const ResidualFunctor& rescomp,
         // Solve linear equations for du, apply update.
         const CollOfScalar du = solver_.solve(residual.derivative(), residual.value());
 	std::cout << "Got in the while loop! Good work :) \n";
-	exit(0);
+	//exit(0);
 	u = u - du;
 
         // Recompute residual.
