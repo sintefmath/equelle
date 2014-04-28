@@ -127,8 +127,13 @@ namespace equelleCUDA {
 	*/
 	kernelSetup setup() const;
 
+	//! Returns a copy of the derivative matrix
+	/*!
+	  If the CollOfScalar do not use AutoDiff, then it returns an empty matrix. 
+	*/
 	CudaMatrix derivative() const;
 
+	//! Returns a copy of the values of the CudaArray.
 	CudaArray value() const;
 	
 
@@ -372,8 +377,15 @@ namespace equelleCUDA {
 
 
 
-    // Matrix * CollOfScalar operator
-    // Many Equelle operations are used by multiplying with a matrix
+    //! Matrix * CollOfScalar operator
+    /*! 
+      Many Equelle operations are used by multiplying with a matrix, and by overloading
+      the operator to operate on a CollOfScalar we avoid checking if we have to 
+      use AutoDiff in several functions.
+
+      This makes it easier to implement new functionality without having to 
+      think about the derivatives.
+    */
     CollOfScalar operator*(const CudaMatrix& mat, const CollOfScalar& coll);
     
     

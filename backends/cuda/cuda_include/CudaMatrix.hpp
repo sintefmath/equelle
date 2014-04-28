@@ -129,11 +129,23 @@ namespace equelleCUDA {
 	*/
 	explicit CudaMatrix( const CudaArray& array);
 
-	// Construct diagonal matrix from CollOfBools
+	//! Construct diagonal matrix from CollOfBools
+	/*!
+	  The diagonal entries are 1 for where array is true and 0 where array is false.
+	*/
 	explicit CudaMatrix( const CollOfBool& array);
 
-	// Constructor for On from full matrix.
-	// Better name: Restriction matrix
+	// Constructor for making a restriction matrix.
+	/*!
+	  Operations such as On and Extend can be done by applying a restriction or 
+	  prolongation operator. This constructor creates a restriction operator based
+	  on a vector of indices of which rows should be in the restricted matrix. The
+	  size input should be the number of rows in the origianal system.
+	  
+	  A prolongation matrix can be created by creating a restriction matrix for
+	  the opposite calculation (restriction for result to original), and then
+	  using the transpose matrix instead.
+	*/
 	explicit CudaMatrix( const thrust::device_vector<int> set,
 			     const int full_size);
 
@@ -165,6 +177,12 @@ namespace equelleCUDA {
 	//! Copies the device memory to host memory in a hostMat struct.
 	hostMat toHost() const;
 	
+	//! Returns the transpose of the matrix.
+	/*!
+	  Uses the cusparse routine to convert between row-major and column-major
+	  formats, which is the same as finding the row major format of the transpose
+	  of a row-major matrix.
+	*/
 	CudaMatrix transpose() const;
 
 	friend CudaMatrix operator+(const CudaMatrix& lhs, const CudaMatrix& rhs);
@@ -334,18 +352,43 @@ namespace equelleCUDA {
 					    const int nnz);
 
 
-	// Restriction matrix initialization kernel
-	// Matrix is flat, more cols than rows.
-	//   - each row has one element, hence csrRowPtr = [0,1,2,...,rows_] (size rows+1)
-	//   - all nnz elements are 1, hence csrVal = [1,1,1,...,1] (size rows)
-	//   - csrColInd = to_set (size rows)
+	//! Restriction matrix initialization kernel
+	/* Initialize a restriction matrix based on a set of indices.
+	   A restriction matrix is such that if multiplied from the left to another
+	   matrix, the resulting matrix will be a subset of the original matrix's rows.
+	   	   
+	   A restriction matrix will therefore have less rows than columns, and it
+	   will have one and only one value in each row. This value is one and it 
+	   is placed in the column corresponding to the row index we want to have 
+	   in the resulting matrix at the current row.
+	   
+	   \param[out] csrVal rows copies of 1.0
+	   \param[out] csrRowPtr where in csrVal each row starts. Since each row has
+	   only one value, this will therefore be an array [0,1,2,...,rows]
+	   \param[out] csrColInd Column index for each entry in the matrix, and is 
+	   a copy of the parameter set.
+	   \param[in] set The indices that the restriction matrix should map to.
+	   \param[in] rows Number of rows in the restriction matrix, and also the
+	   size of parameter set.
+	*/
 	__global__ void initRestrictionMatrix( double* csrVal,
 					       int* csrRowPtr,
 					       int* csrColInd,
 					       const int* set,
 					       const int rows );
 
-	// Kernel for diagonal matrix from booleans
+	//! Kernel for initializing diagonal matrix from booleans
+	/*
+	  Use the array of booleans to insert ones or zeros at the diagonal elements.
+	  
+	  \param[out] csrVal Diagonal elements og 1.0 or 0.0 and size rows.
+	  \param[out] csrRowPtr Index in csrVal and csrColInd that is the start of
+	  each row. Here: csrRowPtr[i] = i for i = 0,1,...,rows.
+	  \param[out] csrColInd Column index of each element in csrVal.
+	  Here: csrColInd[i] = i for i = 0,1,...,rows-1
+	  \param[in] bool_ptr The array of boolean values 
+	  \param[in] rows Number of rows in the matrix.
+	*/
 	__global__ void initBooleanDiagonal( double* csrVal,
 					     int* csrRowPtr,
 					     int* csrColInd,
