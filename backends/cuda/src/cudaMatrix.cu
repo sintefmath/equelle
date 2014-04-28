@@ -402,6 +402,16 @@ bool CudaMatrix::isEmpty() const {
     return (csrVal_ == NULL);
 }
 
+const double* CudaMatrix::csrVal() const {
+    return csrVal_;
+}
+const int* CudaMatrix::csrRowPtr() const {
+    return csrRowPtr_;
+}
+const int* CudaMatrix::csrColInd() const {
+    return csrColInd_;
+}
+
 
 
 // Copy to host:

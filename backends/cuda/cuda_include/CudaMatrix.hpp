@@ -171,6 +171,10 @@ namespace equelleCUDA {
 	//! The number of columns in the matrix.
 	int cols() const;
 
+	const double* csrVal() const ;
+	const int* csrRowPtr() const ;
+	const int* csrColInd() const ;
+	
 	//! Check if the matrix holds values or not
 	bool isEmpty() const;
 
