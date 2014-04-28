@@ -58,6 +58,9 @@ namespace equelleCUDA
     };
 
     enum EquelleReduce { SUM, PRODUCT, MAX, MIN };
+
+    enum EquelleSolver { BiCGStab };
+    enum EquellePrecond { DIAG };
     
 } // namespace equelleCUDA
 

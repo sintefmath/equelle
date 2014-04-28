@@ -10,6 +10,7 @@
 #include "CollOfIndices.hpp"
 #include "CollOfVector.hpp"
 #include "wrapEquelleRuntime.hpp"
+#include "LinearSolver.hpp"
 
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/core/utility/StopWatch.hpp>
@@ -68,6 +69,7 @@ EquelleRuntimeCUDA::EquelleRuntimeCUDA(const Opm::parameter::ParameterGroup& par
       devOps_(ops_.grad, ops_.div, ops_.fulldiv,
 	      ops_.internal_faces.rows()),
       linsolver_(param),
+      solver_(),
       output_to_file_(param.getDefault("output_to_file", false)),
       verbose_(param.getDefault("verbose", 0)),
       param_(param),

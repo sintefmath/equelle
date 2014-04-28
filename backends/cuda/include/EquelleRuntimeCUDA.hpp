@@ -33,6 +33,7 @@
 #include "equelleTypedefs.hpp"
 #include "CudaMatrix.hpp"
 #include "DeviceHelperOps.hpp"
+#include "LinearSolver.hpp"
 
 // Forward declarations for the Device types
 //class CollOfScalar;
@@ -379,6 +380,7 @@ private:
     Opm::HelperOps ops_;
     const DeviceHelperOps devOps_;
     Opm::LinearSolverFactory linsolver_;
+    LinearSolver solver_;
     bool output_to_file_;
     int verbose_;
     const Opm::parameter::ParameterGroup& param_;
