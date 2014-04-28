@@ -135,6 +135,9 @@ namespace equelleCUDA
 	  \param int_faces Contains the indices of the Interior Faces.
 	  \param face_cells The array with indices telling us which cells are on each side
 	  of what face.
+	  \param grad Precomputed matrix which contains the neighbour relations in
+	  the grid with respect to the gradient operator, 
+	  such that grad*cell_scalarfield gives the resulting gradients. 
 	  \return A Collection Of Scalars on all Interior Cells with the discrete gradient
 	  value computed from the value given in All Cells.
 	*/
@@ -176,6 +179,9 @@ namespace equelleCUDA
 	  number_of_cells_
 	  \param dev_grid A DeviceGrid referance since we need to a lot of its members
 	  in the kernel.
+	  \param fulldiv Precomputed matrix which contains the neighbour relations in
+	  the grid with respect to the divergence operator, 
+	  such that fulldiv*fluxes gives the resulting divergence. 
 	  \return A Collection of Scalars on allCells with the resulting divergence.
 	*/
 	CollOfScalar divergenceWrapper( const CollOfScalar& fluxes,
@@ -220,6 +226,9 @@ namespace equelleCUDA
 	*/
 	__global__ void sqrtKernel( double* out, const int size);
 	
+
+
+	double wrapReduction(const CollOfScalar& x, const EquelleReduce reduce);
 	
     } // namespace wrapEquelleRuntimeCUDA
     

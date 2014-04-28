@@ -293,10 +293,10 @@ public:
     //          const SomeCollection2& iffalse) const;
     
     /// Reductions.
-    Scalar minReduce(const CollOfScalarCPU& x) const;
-    Scalar maxReduce(const CollOfScalarCPU& x) const;
-    Scalar sumReduce(const CollOfScalarCPU& x) const;
-    Scalar prodReduce(const CollOfScalarCPU& x) const;
+    Scalar minReduce(const CollOfScalar& x) const;
+    Scalar maxReduce(const CollOfScalar& x) const;
+    Scalar sumReduce(const CollOfScalar& x) const;
+    Scalar prodReduce(const CollOfScalar& x) const;
     
     // Special functions:
     CollOfScalar sqrt(const CollOfScalar& x) const;
@@ -305,6 +305,10 @@ public:
     template <class ResidualFunctor>
     CollOfScalarCPU newtonSolve(const ResidualFunctor& rescomp,
 				const CollOfScalarCPU& u_initialguess);
+    
+    template <class ResidualFunctor> 
+    CollOfScalar newtonSolve(const ResidualFunctor& rescomp,
+			     const CollOfScalar& u_initialguess);
     
     //    template <int Num>
     //    std::array<CollOfScalarCPU, Num> newtonSolveSystem(const std::array<typename ResCompType<Num>::type, Num>& rescomp,
@@ -319,9 +323,9 @@ public:
     Scalar inputScalarWithDefault(const String& name,
 				  const Scalar default_value);
     CollOfFaceCPU inputDomainSubsetOf(const String& name,
-				      const CollOfFaceCPU& superset);
+    				      const CollOfFaceCPU& superset);
     CollOfCellCPU inputDomainSubsetOf(const String& name,
-				      const CollOfCellCPU& superset);
+    				      const CollOfCellCPU& superset);
     template <class SomeCollection>
     equelleCUDA::CollOfScalar inputCollectionOfScalar(const String& name,
 						      const SomeCollection& coll);
@@ -361,10 +365,10 @@ private:
     static CollOfScalarCPU singlePrimaryVariable(const CollOfScalarCPU& initial_values);
     
     /// Solver helper.
-    CollOfScalarCPU solveForUpdate(const CollOfScalarCPU& residual) const;
+    CollOfScalar solveForUpdate(const CollOfScalar& residual) const;
     
     /// Norms.
-    Scalar twoNorm(const CollOfScalarCPU& vals) const;
+    Scalar twoNorm(const CollOfScalar& vals) const;
     
     /// Data members.
     std::unique_ptr<Opm::GridManager> grid_manager_;

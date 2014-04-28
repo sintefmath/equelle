@@ -25,7 +25,7 @@ int compareER( CollOfScalar cuda, SerialCollOfScalar serial, std::string msg, do
     return compare(cuda, adb, msg, tol);
 }
 
-
+int compareScalars( double cuda, double serial, std::string msg, double tol = 0.0);
 
 // Comparison function:
 int compare( CollOfScalar coll, ADB adb, std::string msg, double tol) {
@@ -176,6 +176,28 @@ int matrixCompare( hostMat mat, ADB::M m_colMajor, std::string msg, double tol) 
     
     return 0;
 } // matrixCompare()
+
+
+int compareScalars( double cuda, double serial, std::string msg, double tol) {
+ 
+    if (tol == 0.0) {
+	tol = 10;
+    }
+    tol = tol*std::numeric_limits<double>::epsilon();
+
+    std::cout << "\nTesting " << msg << "\n";
+    std::cout << "Cuda   : " << cuda << "\n";
+    std::cout << "Serial : " << serial << "\n";
+    double diff = fabs((cuda - serial)/serial);
+    if ( diff > tol ) {
+	// 100000*std::numeric_limits<double>::epsilon() ) {
+	std::cout << "Differs by "<< diff << " (relative) with tolerance " << tol;
+	std::cout << "\n";
+	return 1;
+    }
+    std::cout << "Test " << msg << " correct\n";
+    return 0;
+}
 
 // Printing function:
 void printNonzeros(ADB adb) {
@@ -464,7 +486,25 @@ int main(int argc, char** argv) {
 							   -1.2 * serial_fulldiv);
     if ( compareER( myTri_cuda, myTri_serial, "TrinaryIf", 100) ) { return 1; }
 
+    
 
-
+    // REDUCTIONS
+    double cuda_sum = er.sumReduce(myTri_cuda);
+    double serial_sum = serialER.sumReduce(myTri_serial);
+    if ( compareScalars(cuda_sum, serial_sum, "SumReduce(myTri)") ) { return 1;}
+    
+    double cuda_min = er.minReduce(myTri_cuda);
+    double serial_min = serialER.minReduce(myTri_serial);
+    if ( compareScalars(cuda_min, serial_min, "MinReduce(myTri)") ) { return 1; }
+    
+    double cuda_max = er.maxReduce(myTri_cuda);
+    double serial_max = serialER.maxReduce(myTri_serial);
+    if ( compareScalars( cuda_max, serial_max, "MaxReduce(myTri)") ) { return 1; }
+    
+    double cuda_prod = er.prodReduce(0.001*er.operatorOn(myTri_cuda, er.allCells(), er.boundaryCells()));
+    double serial_prod = serialER.prodReduce(0.001*serialER.operatorOn(myTri_serial, serialER.allCells(), serialER.boundaryCells()));
+    if ( compareScalars( cuda_prod, serial_prod, "ProdReduce(myTri)",100) ) { return 1; }
+    
+    
     return 0;
 }

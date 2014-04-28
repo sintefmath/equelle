@@ -14,6 +14,7 @@
 #include <iterator>
 
 
+
 using namespace equelleCUDA;
 using namespace wrapEquelleRuntimeCUDA;
 
@@ -169,6 +170,29 @@ CollOfScalar EquelleRuntimeCUDA::sqrt(const CollOfScalar& x) const {
 
     return sqrtWrapper(x);
 }
+
+
+// ------------- REDUCTIONS --------------
+
+Scalar EquelleRuntimeCUDA::minReduce(const CollOfScalar& x) const {
+    return wrapReduction(x, MIN);
+}
+
+Scalar EquelleRuntimeCUDA::maxReduce(const CollOfScalar& x) const {
+    return wrapReduction(x, MAX);
+}
+
+Scalar EquelleRuntimeCUDA::sumReduce(const CollOfScalar& x) const {
+    return wrapReduction(x, SUM);
+}
+
+Scalar EquelleRuntimeCUDA::prodReduce(const CollOfScalar& x) const {
+    return wrapReduction(x, PRODUCT);
+}
+
+
+// -------------- END REDUCTIONS ----------------
+
 
 
 

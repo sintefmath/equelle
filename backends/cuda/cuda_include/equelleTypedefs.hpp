@@ -56,6 +56,8 @@ namespace equelleCUDA
 	  grid( (int)(( threads_needed + equelleCUDA::MAX_THREADS - 1)/equelleCUDA::MAX_THREADS) )
 	{}
     };
+
+    enum EquelleReduce { SUM, PRODUCT, MAX, MIN };
     
 } // namespace equelleCUDA
 
