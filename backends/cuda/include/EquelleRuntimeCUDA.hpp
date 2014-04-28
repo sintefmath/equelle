@@ -356,6 +356,8 @@ public:
     CudaMatrix getDivMatrix() const { return devOps_.div;};
     CudaMatrix getFulldivMatrix() const {return devOps_.fulldiv;};
 
+    Scalar twoNormTester(const CollOfScalar& val) const { return twoNorm(val); };
+
     // ------------ PRIVATE MEMBERS -------------------------- //
 private:
     /// Topology helpers

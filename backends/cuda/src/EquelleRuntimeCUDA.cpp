@@ -140,6 +140,10 @@ CollOfScalar EquelleRuntimeCUDA::dot( const CollOfVector& v1,
     return v1.dot(v2);
 }
 
+Scalar EquelleRuntimeCUDA::twoNorm(const CollOfScalar& vals) const {
+    return std::sqrt( sumReduce(vals*vals) );
+    // This should be implemented without having to multiply matrices.
+}
 
 
 

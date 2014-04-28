@@ -505,6 +505,14 @@ int main(int argc, char** argv) {
     double serial_prod = serialER.prodReduce(0.001*serialER.operatorOn(myTri_serial, serialER.allCells(), serialER.boundaryCells()));
     if ( compareScalars( cuda_prod, serial_prod, "ProdReduce(myTri)",100) ) { return 1; }
     
+    double cuda_norm = er.twoNormTester(myColl4);
+    ADB::V norm_vector = myADB4.value();
+    double serial_norm = 0;
+    for ( int i = 0; i < norm_vector.size(); i++) {
+	serial_norm += norm_vector[i]*norm_vector[i];
+    }
+    serial_norm = std::sqrt(serial_norm);
+    if (compareScalars( cuda_norm, serial_norm, "twoNorm(myColl4)", 13) ) { return 1; }
     
     return 0;
 }
