@@ -171,11 +171,17 @@ namespace equelleCUDA {
 	//! The number of columns in the matrix.
 	int cols() const;
 
+	//! Const pointer to the matrix data on the device
 	const double* csrVal() const ;
+	//! Const pointer to the row pointers on the device
 	const int* csrRowPtr() const ;
+	//! Const pointer to the column indices on the device
 	const int* csrColInd() const ;
+	//! Pointer to the matrix data on the device
 	double* csrVal();
+	//! Pointer to the row pointer on the device
 	int* csrRowPtr();
+	//! Pointers to the column indices on the device
 	int* csrColInd();
 	
 	//! Check if the matrix holds values or not

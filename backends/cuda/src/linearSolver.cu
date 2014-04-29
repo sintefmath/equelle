@@ -30,9 +30,10 @@ LinearSolver::~LinearSolver() {
 
 
 // Solver:
-CollOfScalar LinearSolver::solve(const CudaMatrix& A_cpy, const CudaArray& b_cpy) {
+CollOfScalar LinearSolver::solve(const CudaMatrix& A_cpy, const CudaArray& b_cpy) const {
     
     // Check square matrix, and that A.rows() = b.size()
+    // Need also to check which method and preconditioner to use.
    
     // hack to get around const issues...
     CudaMatrix A = A_cpy;

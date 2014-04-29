@@ -57,9 +57,13 @@ namespace equelleCUDA
 	{}
     };
 
+    //! Enumerator for specification of reduction operation.
     enum EquelleReduce { SUM, PRODUCT, MAX, MIN };
 
+    //! Enumerator for specifying available linear solvers
     enum EquelleSolver { BiCGStab };
+
+    //! Enumerator for specifying available preconditioners for linear solvers.
     enum EquellePrecond { DIAG };
     
 } // namespace equelleCUDA
