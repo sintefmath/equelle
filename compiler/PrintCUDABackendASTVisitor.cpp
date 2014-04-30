@@ -13,8 +13,8 @@
 
 namespace
 {
-    const char* cppStartString();
-    const char* cppEndString();
+    const char* impl_cppStartString();
+    const char* impl_cppEndString();
 }
 
 
@@ -467,7 +467,15 @@ void PrintCUDABackendASTVisitor::postVisit(RandomAccessNode& node)
     }
 }
 
+const char *PrintCUDABackendASTVisitor::cppStartString() const
+{
+    return ::impl_cppStartString();
+}
 
+const char *PrintCUDABackendASTVisitor::cppEndString() const
+{
+    return ::impl_cppEndString();
+}
 
 void PrintCUDABackendASTVisitor::endl() const
 {
@@ -544,17 +552,14 @@ void PrintCUDABackendASTVisitor::addRequirementString(const std::string& req)
 
 namespace
 {
-    const char* cppStartString()
+    const char* impl_cppStartString()
     {
         return
 "\n"
 "// This program was created by the Equelle compiler from SINTEF.\n"
 "\n"
 "#include <opm/core/utility/parameters/ParameterGroup.hpp>\n"
-"#include <opm/core/linalg/LinearSolverFactory.hpp>\n"
 "#include <opm/core/utility/ErrorMacros.hpp>\n"
-"#include <opm/autodiff/AutoDiffBlock.hpp>\n"
-"#include <opm/autodiff/AutoDiffHelpers.hpp>\n"
 "#include <opm/core/grid.h>\n"
 "#include <opm/core/grid/GridManager.hpp>\n"
 "#include <algorithm>\n"
@@ -565,29 +570,34 @@ namespace
 "\n"
 "#include \"EquelleRuntimeCUDA.hpp\"\n"
 "\n"
-"using namespace equelleCUDA;\n"
-"\n"
 "void ensureRequirements(const EquelleRuntimeCUDA& er);\n"
+"void equelleGeneratedCode(equelleCUDA::EquelleRuntimeCUDA& er);\n"
 "\n"
+"#ifndef EQUELLE_NO_MAIN\n"
 "int main(int argc, char** argv)\n"
 "{\n"
 "    // Get user parameters.\n"
 "    Opm::parameter::ParameterGroup param(argc, argv, false);\n"
 "\n"
 "    // Create the Equelle runtime.\n"
-"    EquelleRuntimeCUDA er(param);\n"
+"    equelleCUDA::EquelleRuntimeCUDA er(param);\n"
+"    equelleGeneratedCode(er);\n"
+"    return 0;\n"
+"}\n"
+"#endif // EQUELLE_NO_MAIN\n"
 "\n"
+"void equelleGeneratedCode(equelleCUDA::EquelleRuntimeCUDA& er) {\n"
+"    using namespace equelleCUDA;\n"
 "    ensureRequirements(er);\n"
 "\n"
 "    // ============= Generated code starts here ================\n";
     }
 
-    const char* cppEndString()
+    const char* impl_cppEndString()
     {
         return "\n"
 "    // ============= Generated code ends here ================\n"
 "\n"
-"    return 0;\n"
 "}\n";
     }
 }
