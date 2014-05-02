@@ -1,4 +1,7 @@
 #include <iostream>
+#include <string>
+
+#include <opm/core/utility/ErrorMacros.hpp>
 
 #include "LinearSolver.hpp"
 #include "CudaMatrix.hpp"
@@ -10,18 +13,71 @@
 #include <cusp/csr_matrix.h>
 #include <cusp/precond/diagonal.h>
 #include <cusp/krylov/bicgstab.h>
+#include <cusp/krylov/cg.h>
 
 
 
 using namespace equelleCUDA;
 
-LinearSolver::LinearSolver() 
+LinearSolver::LinearSolver(std::string solver,
+			   std::string precond,
+			   int maxit,
+			   double tol) 
     : solver_(BiCGStab),
       precond_(DIAG),
-      tol_(1e-10),
-      maxit_(1000)
+      tol_(tol),
+      maxit_(maxit)
 {
-    // intentionally left empty
+    // Check solver
+    if ( solver == "BiCGStab" ) {
+	// This is default value. Do nothing.
+    }
+    else if ( solver == "CG" ) {
+	solver_ = CG;
+    }
+    else {
+	printLegalInput();
+	OPM_THROW(std::runtime_error, "Illegal input " << solver << " for solver.");
+    }
+
+    // Check preconditioner
+    if ( precond == "diagonal" ) {
+	// This is default value. Do nothing.
+    }
+    else if ( precond == "none" ) {
+	precond_ = NONE;
+    }
+    else {
+	printLegalInput();
+	OPM_THROW(std::runtime_error, "Illegal input " << precond << " for preconditioner.");
+    }
+}
+
+
+// Print legal input to screen:
+void LinearSolver::printLegalInput() const {
+    std::cout << "\n\nThe following are legal input for solver:\n";
+    std::cout << "\t - CG\n";
+    std::cout << "\t - BiCGStab\n";
+    std::cout << "Example: solver=BiCGStab\n";
+    std::cout << "\n";
+    std::cout << "The following are legal input for preconditioner:\n";
+    std::cout << "\t - none\n";
+    std::cout << "\t - diagonal\n";
+    std::cout << "Example: preconditioner=diagonal\n";
+    std::cout << "\n";
+}
+
+void LinearSolver::printLegalCombos() const {
+    std::cout << "\nThe following combinations of solver and preconditioner";
+    std::cout << "are implemented:\n";
+    std::cout << "\tCG + none\n";
+    std::cout << "\tCG + diagonal\n";
+    std::cout << "\tBiCGStab + none\n";
+    std::cout << "\tBiCGStab + diagonal (default)\n";
+    std::cout << "Example use in parameter file:\n";
+    std::cout << "\tsolver=CG\n";
+    std::cout << "\tpreconditioner=diagonal\n";
 }
 
 LinearSolver::~LinearSolver() {
@@ -78,14 +134,31 @@ CollOfScalar LinearSolver::solve(const CudaMatrix& A_cpy, const CudaArray& b_cpy
     matrixView cusp_A( A.rows(), A.rows(), A.nnz(),
 		       cusp_A_csrRowPtr, cusp_A_csrColInd, cusp_A_csrVal );
 
+    
     // Create a monitor
     cusp::default_monitor<double> monitor(cusp_b, maxit_, tol_);
 
-    // create preconditioner
-    cusp::precond::diagonal<double, cusp::device_memory> M(cusp_A);
-
-    // Solve the system
-    cusp::krylov::bicgstab(cusp_A, cusp_x, cusp_b, monitor, M);
+    // Solve according to solver and preconditioner:
+    if ( solver_ == BiCGStab && precond_ == DIAG ) {
+	// create preconditioner
+	cusp::precond::diagonal<double, cusp::device_memory> M(cusp_A);
+	// Solve the system
+	cusp::krylov::bicgstab(cusp_A, cusp_x, cusp_b, monitor, M);
+    }
+    else if ( solver_ == CG && precond_ == DIAG ) {
+	cusp::precond::diagonal<double, cusp::device_memory> M(cusp_A);
+	cusp::krylov::cg(cusp_A, cusp_x, cusp_b, monitor, M);
+    }
+    else if ( solver_ == BiCGStab && precond_ == NONE ) {
+	cusp::krylov::bicgstab(cusp_A, cusp_x, cusp_b, monitor);
+    }
+    else if ( solver_ == CG && precond_ == NONE ) {
+	cusp::krylov::cg(cusp_A, cusp_x, cusp_b, monitor);
+    }
+    else {
+	printLegalCombos();
+	OPM_THROW(std::runtime_error, "The given combination of solver and preconditioner is not implemented");
+    }
 
     // Print info
     std::cout << "\n";

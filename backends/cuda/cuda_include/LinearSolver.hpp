@@ -2,12 +2,22 @@
 #ifndef EQUELLE_LINEARSOLVER_HEADER_INCLUDED
 #define EQUELLE_LINEARSOLVER_HEADER_INCLUDED
 
+#include <string>
+
 #include "CudaArray.hpp"
 #include "CudaMatrix.hpp"
 #include "CollOfScalar.hpp"
 #include "equelleTypedefs.hpp"
 
 namespace equelleCUDA {
+
+
+    //! Enumerator for specifying available linear solvers
+    enum EquelleSolver { CG, BiCGStab };
+
+    //! Enumerator for specifying available preconditioners for linear solvers.
+    enum EquellePrecond { NONE, DIAG };
+
 
     //! For finding implicit solutions
     /*!
@@ -32,7 +42,8 @@ namespace equelleCUDA {
 	  The default method s BiCGStab with diagonal preconditioner, precision 
 	  1e-10 and a maximum iteration of 1000.
 	*/
-	LinearSolver();
+	LinearSolver(std::string solver, std::string precond,
+		     int maxit, double tol);
 	//! Destructor
 	~LinearSolver();
 
@@ -51,6 +62,9 @@ namespace equelleCUDA {
 	EquellePrecond precond_;
 	double tol_;
 	int maxit_;
+
+	void printLegalInput() const ;
+	void printLegalCombos() const ;
 
     }; // class LinearSolver
 

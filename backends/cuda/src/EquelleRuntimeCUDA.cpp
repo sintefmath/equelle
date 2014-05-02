@@ -69,7 +69,10 @@ EquelleRuntimeCUDA::EquelleRuntimeCUDA(const Opm::parameter::ParameterGroup& par
       devOps_(ops_.grad, ops_.div, ops_.fulldiv,
 	      ops_.internal_faces.rows()),
       linsolver_(param),
-      solver_(),
+      solver_(param.getDefault<std::string>("solver", "BiCGStab"),
+	      param.getDefault<std::string>("preconditioner", "diagonal"),
+	      param.getDefault("solver_max_iter", 1000),
+	      param.getDefault("solver_tol", 1e-10)),
       output_to_file_(param.getDefault("output_to_file", false)),
       verbose_(param.getDefault("verbose", 0)),
       param_(param),
@@ -80,7 +83,8 @@ EquelleRuntimeCUDA::EquelleRuntimeCUDA(const Opm::parameter::ParameterGroup& par
 }
 
 // Destructor:
-EquelleRuntimeCUDA::~EquelleRuntimeCUDA() {
+EquelleRuntimeCUDA::~EquelleRuntimeCUDA() 
+{
     wrapEquelleRuntimeCUDA::destroy_cusparse();
 }
 
