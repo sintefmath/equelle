@@ -17,6 +17,7 @@
 #include "CudaArray.hpp" // kernels for scalar multiplications
 #include "CollOfScalar.hpp" // for constructor for diagonal matrix.
 #include "equelleTypedefs.hpp"
+#include "device_functions.cuh"
 
 using namespace equelleCUDA;
 using namespace wrapCudaMatrix;
@@ -787,7 +788,7 @@ __global__ void wrapCudaMatrix::initIdentityMatrix(double* csrVal,
 						   int* csrColInd,
 						   const int nnz)
 {
-    int i = threadIdx.x + blockIdx.x*blockDim.x;
+    int i = myID();
     if ( i < nnz + 1) {
 	csrRowPtr[i] = i;
 	if (i < nnz) {
@@ -804,7 +805,7 @@ __global__ void wrapCudaMatrix::initDiagonalMatrix( double* csrVal,
 						    const double* scalars,
 						    const int nnz)
 {
-    int i = threadIdx.x + blockIdx.x*blockDim.x;
+    int i = myID();
     if ( i < nnz + 1) {
 	csrRowPtr[i] = i;
 	if ( i < nnz) {
@@ -825,7 +826,7 @@ __global__ void wrapCudaMatrix::initRestrictionMatrix( double* csrVal,
     //   - each row has one element, hence csrRowPtr = [0,1,2,...,rows_] (size rows+1)
     //   - all nnz elements are 1, hence csrVal = [1,1,1,...,1] (size rows)
     //   - csrColInd = to_set (size rows)
-    const int i = threadIdx.x + blockIdx.x*blockDim.x;
+    const int i = myID();
     if ( i < rows + 1) {
 	csrRowPtr[i] = i;
 	if ( i < rows ) {
@@ -841,7 +842,7 @@ __global__ void wrapCudaMatrix::initBooleanDiagonal( double* csrVal,
 						     int* csrColInd,
 						     const bool* bool_ptr,
 						     const int rows) {
-    const int i = threadIdx.x + blockIdx.x*blockDim.x;
+    const int i = myID();
     if ( i < rows + 1) {
 	csrRowPtr[i] = i;
 	if ( i < rows ) {

@@ -18,9 +18,12 @@
 #include "CollOfIndices.hpp"
 #include "equelleTypedefs.hpp"
 #include "DeviceGrid.hpp"
+#include "device_functions.cuh"
 
 using namespace equelleCUDA;
 using namespace wrapEquelleRuntimeCUDA;
+
+
 
 // Declaring the cuSparse handle!
 cusparseHandle_t equelleCUDA::CUSPARSE;
@@ -68,7 +71,7 @@ __global__ void wrapEquelleRuntimeCUDA::trinaryIfKernel( double* out,
 							 const double* iffalse,
 							 const int size) 
 {
-    int index = threadIdx.x + blockIdx.x * blockDim.x;
+    int index = myID();
     if ( index < size) {
 	double temp;
 	if (predicate[index]) {
@@ -107,7 +110,7 @@ __global__ void wrapEquelleRuntimeCUDA::trinaryIfKernel( int* out,
 							 const int* iftrue,
 							 const int* iffalse,
 							 const int size) {
-    int index = threadIdx.x + blockIdx.x*blockDim.x;
+    int index = myID();
     if ( index < size ) {
 	int temp;
 	if ( predicate[index] ) {
@@ -164,7 +167,7 @@ __global__ void wrapEquelleRuntimeCUDA::gradientKernel( double* grad,
 							const int size_out)
 {
     // Compute index in interior_faces:
-    int i = threadIdx.x + blockIdx.x*blockDim.x;
+    int i = myID();
     if ( i < size_out ) {
 	// Compute face index:
 	int fi = int_faces[i];
@@ -221,7 +224,7 @@ __global__ void wrapEquelleRuntimeCUDA::divergenceKernel( double* div,
 							  const int number_of_faces) 
 {
     // My index: cell
-    int cell = threadIdx.x + blockIdx.x*blockDim.x;
+    int cell = myID();
     if ( cell < number_of_cells ) {
 	double div_temp = 0; // total divergence for this cell.
 	int factor, face;
@@ -257,7 +260,7 @@ CollOfScalar wrapEquelleRuntimeCUDA::sqrtWrapper( const CollOfScalar& x) {
 
 
 __global__ void wrapEquelleRuntimeCUDA::sqrtKernel(double* out, const int size) {
-    int index = threadIdx.x + blockIdx.x * blockDim.x;
+    int index = myID();
     if ( index < size ) {
 	out[index] = sqrt(out[index]);
     }

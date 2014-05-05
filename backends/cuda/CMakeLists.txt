@@ -23,7 +23,7 @@ file( GLOB cuda_src "src/*.cpp" )
 file( GLOB cuda_inc "include/*.hpp" )
 file( GLOB cuda_cuda_src "src/*.cu" )
 file( GLOB cuda_cuda_inc "cuda_include/*.hpp" )
-#file( GLOB cuda_cuda_cuh "cuda_include/*.cuh" )
+file( GLOB cuda_cuda_cuh "cuda_include/*.cuh" )
 file( GLOB cuda_test_src "test/*.cpp" )
 file( GLOB cuda_test_src_cu "test/*.cu" )
 set( SUPERLU_LIB          "superlu" CACHE PATH "" ) 	# havahol
@@ -43,8 +43,8 @@ include_directories( "include" "cuda_include" "test"
 # make cuda part of run-time library
 set(CUDA_PROPAGATE_HOST_FLAGS OFF)
 set( CUDA_NVCC_FLAGS "-arch=sm_13 -Xcudafe=--diag_suppress=boolean_controlling_expr_is_constant -Xcudafe=--diag_suppress=unrecognized_gcc_pragma -Xcudafe=--diag_suppress=code_is_unreachable" CACHE STRING "nvcc flags" FORCE)
-cuda_add_library( equelle_cuda_cu ${cuda_cuda_src} ${cuda_cuda_inc}  )
-				  #${cuda_cuda_cuh} )
+cuda_add_library( equelle_cuda_cu ${cuda_cuda_src} ${cuda_cuda_inc} 
+				  ${cuda_cuda_cuh} )
 target_link_libraries ( equelle_cuda_cu
   ${CUDA_LIBRARIES}
   ${CUDA_cusparse_LIBRARY}

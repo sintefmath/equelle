@@ -60,6 +60,7 @@ namespace equelleCUDA
     //! Enumerator for specification of reduction operation.
     enum EquelleReduce { SUM, PRODUCT, MAX, MIN };
 
+
     
 } // namespace equelleCUDA
 

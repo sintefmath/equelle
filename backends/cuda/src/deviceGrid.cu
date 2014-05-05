@@ -28,7 +28,7 @@
 #include "CollOfIndices.hpp"
 #include "CollOfVector.hpp"
 #include "equelleTypedefs.hpp"
-
+#include "device_functions.cuh"
 
 
 using namespace equelleCUDA;
@@ -634,7 +634,7 @@ __global__ void wrapDeviceGrid::boundaryFacesKernel( int* b_faces,
 						     const int* face_cells,
 						     const int number_of_faces) 
 {
-    int face = threadIdx.x + blockIdx.x*blockDim.x;
+    int face = myID();
     if (face < number_of_faces) {
 	if ( (face_cells[2*face] == -1) || (face_cells[2*face + 1] == -1) ) {
 	    b_faces[face] = face;
@@ -647,7 +647,7 @@ __global__ void wrapDeviceGrid::interiorFacesKernel( int* i_faces,
 						     const int* face_cells,
 						     const int number_of_faces)
 {
-    int face = threadIdx.x + blockIdx.x*blockDim.x;
+    int face = myID();
     if ( face < number_of_faces) {
 	if ( (face_cells[2*face] != -1) && (face_cells[2*face + 1] != -1) ) {
 	    i_faces[face] = face;
@@ -662,7 +662,7 @@ __global__ void wrapDeviceGrid::boundaryCellsKernel(int* b_cells,
 						    const int* cell_faces,
 						    const int* face_cells)
 {
-    int cell = threadIdx.x + blockIdx.x*blockDim.x;
+    int cell = myID();
     if ( cell < number_of_cells) {
 	bool boundary = false;
 	int face;
@@ -685,7 +685,7 @@ __global__ void wrapDeviceGrid::interiorCellsKernel( int* i_cells,
 						     const int* cell_faces,
 						     const int* face_cells)
 {
-    int cell = threadIdx.x + blockIdx.x*blockDim.x;
+    int cell = myID();
     if ( cell < number_of_cells) {
 	bool interior = true;
 	int face;
@@ -709,7 +709,7 @@ __global__ void wrapDeviceGrid::firstCellKernel( int* first,
 {
     // For face f:
     //     first(f) = face_cells[2*f]
-    int face = threadIdx.x + blockIdx.x*blockDim.x;
+    int face = myID();
     if ( face < number_of_faces ) {
 	first[face] = face_cells[2*face];
     }
@@ -722,7 +722,7 @@ __global__ void wrapDeviceGrid::firstCellSubsetKernel( int* first,
 {
     // For thread i:
     //      first(i) = face_cells[2*face_index[i]]
-    int index = threadIdx.x + blockIdx.x*blockDim.x;
+    int index = myID();
     if ( index < number_of_faces ) {
 	first[index] = face_cells[2*face_index[index]];
     }
@@ -734,7 +734,7 @@ __global__ void wrapDeviceGrid::secondCellKernel( int* second,
 {
     // For face f:
     //     second(f) = face_cells[2*f + 1]
-    int face = threadIdx.x + blockIdx.x*blockDim.x;
+    int face = myID();
     if ( face < number_of_faces ) {
 	second[face] = face_cells[2*face + 1];
     }
@@ -747,7 +747,7 @@ __global__ void wrapDeviceGrid::secondCellSubsetKernel( int* second,
 {
     // for thread i
     //     second[i] = face_cells[2*face_index[i] + 1]
-    int index = threadIdx.x + blockIdx.x*blockDim.x;
+    int index = myID();
     if ( index < number_of_faces ) {
 	second[index] = face_cells[2*face_index[index] + 1];
     }
@@ -762,7 +762,7 @@ __global__ void wrapDeviceGrid::normKernel( double* out,
 					    const int out_size,
 					    const double* norm_values) 
 {
-    int index = threadIdx.x + blockIdx.x*blockDim.x;
+    int index = myID();
     if ( index < out_size ) {
 	out[index] = norm_values[indices[index]];
     }
@@ -778,7 +778,7 @@ __global__ void wrapDeviceGrid::centroidKernel( double* out,
 {
     // EASY IMPLEMENTATION:
     // One thread for each vector
-    int vec_id = threadIdx.x + blockIdx.x*blockDim.x;
+    int vec_id = myID();
     if ( vec_id < num_vectors ) {
 	int cell_index = subset_indices[vec_id];
 	// Iterating over the element in the vector we create
@@ -799,7 +799,7 @@ __global__ void wrapDeviceGrid::faceNormalsKernel( double* out,
 {
     // EASY IMPLEMENTATION
     // One thread for each vector
-    int vec_id = threadIdx.x + blockIdx.x*blockDim.x;
+    int vec_id = myID();
     if ( vec_id < num_vectors ) {
 	int face_id = faces[vec_id];
 	for( int i = 0; i < dimensions; i++) {

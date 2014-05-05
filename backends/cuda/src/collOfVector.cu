@@ -12,6 +12,7 @@
 #include "CollOfVector.hpp"
 #include "CollOfScalar.hpp"
 #include "equelleTypedefs.hpp"
+#include "device_functions.cuh"
 
 using namespace equelleCUDA;
 using namespace wrapCollOfVector;
@@ -165,7 +166,7 @@ __global__ void wrapCollOfVector::collOfVectorOperatorIndexKernel( double* out,
 								   const int dim)
 {
     // Index:
-    int i = threadIdx.x + blockIdx.x*blockDim.x;
+    int i = myID();
     if ( i < size_out ) {
 	out[i] = vec[i*dim + index];
     }
@@ -180,7 +181,7 @@ __global__ void wrapCollOfVector::normKernel( double* out,
 					      const int numVectors,
 					      const int dim)
 {
-    int index = threadIdx.x + blockIdx.x*blockDim.x;
+    int index = myID();
     if ( index < numVectors ){
 	double norm = 0;
 	for ( int i = 0; i < dim; i++) {
@@ -198,7 +199,7 @@ __global__ void wrapCollOfVector::dotKernel( double* out,
 					     const int numVectors,
 					     const int dim)
 {
-    int index = threadIdx.x + blockIdx.x*blockDim.x;
+    int index = myID();
     if ( index < numVectors ) {
 	double dot = 0.0;
 	for ( int i = 0; i < dim; ++i ) {
@@ -283,7 +284,7 @@ __global__ void wrapCollOfVector::collvecMultCollscal_kernel( double* vector,
 							      const int numVectors,
 							      const int dim)
 {
-    int vec = threadIdx.x + blockIdx.x*blockDim.x;
+    int vec = myID();
     if ( vec < numVectors ) {
 	for ( int i = 0; i < dim; ++i ) {
 	    vector[vec*dim + i] *= scal[vec];
@@ -296,7 +297,7 @@ __global__ void wrapCollOfVector::collvecDivCollscal_kernel( double* vector,
 							     const int numVectors,
 							     const int dim)
 {
-    int vec = threadIdx.x + blockIdx.x*blockDim.x;
+    int vec = myID();
     if ( vec < numVectors ) {
 	for ( int i = 0; i < dim; i++ ) {
 	    vector[vec*dim + i] = vector[vec*dim + i] / scal[vec];
