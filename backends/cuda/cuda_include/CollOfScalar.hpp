@@ -136,6 +136,16 @@ namespace equelleCUDA {
 	//! Returns a copy of the values of the CudaArray.
 	CudaArray value() const;
 	
+	//! Reduction function
+	/*!
+	  This function takes care of all reduction operations in Equelle, and which 
+	  operation to do is given by the reduce parameter.
+	  
+	  It is implemented by using thrust algorithms that relays on thrust iterators.
+	  We therefore do a suboptimal copy of the data over to a 
+	  thrust::device_vector.
+	*/
+	double reduce(const EquelleReduce reduce) const;
 
 	// Get a referance to the CudaArray with the actual values:
 	// const CudaArray& val() const;

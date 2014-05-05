@@ -9,6 +9,9 @@
 #include "CudaArray.hpp"
 #include "CudaMatrix.hpp"
 
+#include <thrust/detail/raw_pointer_cast.h>
+#include <thrust/reduce.h>
+#include <thrust/device_ptr.h>
 
 using namespace equelleCUDA;
 using namespace wrapCudaArray;
@@ -147,7 +150,42 @@ CudaArray CollOfScalar::value() const {
     return val_;
 }
 
+// Reduction
+double CollOfScalar::reduce(const EquelleReduce reduce) const {
+    // Copy to a device vector?
+    thrust::device_vector<double> vec(this->size());
+    double* vec_ptr = thrust::raw_pointer_cast( &vec[0] );
 
+    cudaError_t stat = cudaMemcpy( vec_ptr, this->data(), 
+				   this->size()*sizeof(double), 
+				   cudaMemcpyDeviceToDevice);
+    if ( stat != cudaSuccess ) {
+	OPM_THROW(std::runtime_error, "Error in cudaMemcpy in CollOfScalar::reduce(const EquelleReduce) with EquelleReduce = " << reduce);
+    }
+    
+    double result = 0;
+    
+    //thrust::iterator<double>
+    //const thrust::device_ptr<double> start(x.data());
+    //const thrust::device_ptr<double> end(x.data() + x.size());
+    if ( reduce == SUM ) {
+	result = thrust::reduce(vec.begin(), vec.end(), 
+				(double) 0, thrust::plus<double>());
+    }
+    else if ( reduce == PRODUCT ) {
+	result = thrust::reduce(vec.begin(), vec.end(),
+				(double) 1.0, thrust::multiplies<double>());
+    }
+    else if ( reduce == MAX ) {
+	double init = std::numeric_limits<double>::min();
+	result = thrust::reduce( vec.begin(), vec.end(), init, thrust::maximum<double>());
+    }
+    else if ( reduce == MIN ) {
+	double init = std::numeric_limits<double>::max();
+	result = thrust::reduce( vec.begin(), vec.end(), init, thrust::minimum<double>());
+    }
+    return result;
+} // reduce
 
 // Get referance to the CudaArray with the values:
 //const CudaArray& CollOfScalar::val() const {

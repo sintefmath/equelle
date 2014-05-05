@@ -175,19 +175,19 @@ CollOfScalar EquelleRuntimeCUDA::sqrt(const CollOfScalar& x) const {
 // ------------- REDUCTIONS --------------
 
 Scalar EquelleRuntimeCUDA::minReduce(const CollOfScalar& x) const {
-    return wrapReduction(x, MIN);
+    return x.reduce(MIN);
 }
 
 Scalar EquelleRuntimeCUDA::maxReduce(const CollOfScalar& x) const {
-    return wrapReduction(x, MAX);
+    return x.reduce(MAX);
 }
 
 Scalar EquelleRuntimeCUDA::sumReduce(const CollOfScalar& x) const {
-    return wrapReduction(x, SUM);
+    return x.reduce(SUM);
 }
 
 Scalar EquelleRuntimeCUDA::prodReduce(const CollOfScalar& x) const {
-    return wrapReduction(x, PRODUCT);
+    return x.reduce(PRODUCT);
 }
 
 

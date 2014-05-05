@@ -266,43 +266,5 @@ __global__ void wrapEquelleRuntimeCUDA::sqrtKernel(double* out, const int size) 
     }
 }
 
-// --------- REDUCTIONS -------------------------
 
-
-
-double wrapEquelleRuntimeCUDA::wrapReduction(const CollOfScalar& x,
-					     const EquelleReduce reduce) {
-    // Copy to a device vector?
-    thrust::device_vector<double> vec(x.size());
-    double* vec_ptr = thrust::raw_pointer_cast( &vec[0] );
-
-    cudaError_t stat = 
-	cudaMemcpy( vec_ptr, x.data(), x.size()*sizeof(double), cudaMemcpyDeviceToDevice);
-    if ( stat != cudaSuccess ) {
-	OPM_THROW(std::runtime_error, "Error in cudaMemcpy in wrapEquelleRuntimeCUDA::wrapReduction(const CollOfScalar&, EquelleReduce) with EquelleReduce = " << reduce);
-    }
-    
-    double result = 0;
-    
-    //thrust::iterator<double>
-    //const thrust::device_ptr<double> start(x.data());
-    //const thrust::device_ptr<double> end(x.data() + x.size());
-    if ( reduce == SUM ) {
-	result = thrust::reduce(vec.begin(), vec.end(), 
-				(double) 0, thrust::plus<double>());
-    }
-    else if ( reduce == PRODUCT ) {
-	result = thrust::reduce(vec.begin(), vec.end(),
-				(double) 1.0, thrust::multiplies<double>());
-    }
-    else if ( reduce == MAX ) {
-	double init = std::numeric_limits<double>::min();
-	result = thrust::reduce( vec.begin(), vec.end(), init, thrust::maximum<double>());
-    }
-    else if ( reduce == MIN ) {
-	double init = std::numeric_limits<double>::max();
-	result = thrust::reduce( vec.begin(), vec.end(), init, thrust::minimum<double>());
-    }
-    return result;
-}
 

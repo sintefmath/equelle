@@ -227,17 +227,6 @@ namespace equelleCUDA
 	__global__ void sqrtKernel( double* out, const int size);
 	
 
-	//! Reduction function
-	/*!
-	  This function takes care of all reduction operations in Equelle, and which 
-	  operation to do is given by the reduce parameter.
-	  
-	  It is implemented by using thrust algorithms that relays on thrust iterators.
-	  We therefore do a suboptimal copy of the CollOfScalar over to a 
-	  thrust::device_vector.
-	*/
-	double wrapReduction(const CollOfScalar& x, const EquelleReduce reduce);
-	
     } // namespace wrapEquelleRuntimeCUDA
     
 
