@@ -539,7 +539,6 @@ CudaMatrix equelleCUDA::operator+(const CudaMatrix& lhs, const CudaMatrix& rhs) 
 	return lhs;
     } 
     else {
-	std::cout << "Matrix plus!\n";
 	return cudaMatrixSum(lhs, rhs, 1.0);
     }
 }
@@ -617,8 +616,6 @@ CudaMatrix equelleCUDA::cudaMatrixSum(const CudaMatrix& lhs,
 	out.nnz_ -= baseC;
     }
 
-    std::cout << "New nnz = " << out.nnz_ << std::endl;
-    
     // Allocate the other two arrays:
     out.cudaStatus_ = cudaMalloc( (void**)&out.csrVal_, out.nnz_*sizeof(double));
     out.checkError_("cudaMalloc(out.csrVal_) in cudaMatrixSum()");
@@ -658,7 +655,6 @@ CudaMatrix equelleCUDA::operator*(const CudaMatrix& lhs, const CudaMatrix& rhs) 
     if ( lhs.cols_ != rhs.rows_ ) {
 	OPM_THROW(std::runtime_error, "Error in CudaMatrix * CudaMatrix\n" << "\tMatrices of illegal sizes.\n" << "\tlhs.cols_ = " << lhs.cols_ << "\n\trhs.rows_ = " << rhs.rows_);
     }
-    std::cout << "Matrix mult\n";
 
     // Create an empty matrix. Need to set rows, cols, nnz, and allocate arrays!
     CudaMatrix out;
@@ -704,9 +700,7 @@ CudaMatrix equelleCUDA::operator*(const CudaMatrix& lhs, const CudaMatrix& rhs) 
 	out.nnz_ -= baseC;
     }
 
-    std::cout << "New nnz: " << out.nnz_ << "\n";
-    
-    // Allocate the other two arrays:
+     // Allocate the other two arrays:
     out.cudaStatus_ = cudaMalloc( (void**)&out.csrVal_, out.nnz_*sizeof(double));
     out.checkError_("cudaMalloc(out.csrVal_) in CudaMatrix operator *");
     out.cudaStatus_ = cudaMalloc( (void**)&out.csrColInd_, out.nnz_*sizeof(int));

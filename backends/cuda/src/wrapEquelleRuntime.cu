@@ -184,7 +184,6 @@ CollOfScalar wrapEquelleRuntimeCUDA::divergenceWrapper( const CollOfScalar& flux
 							const DeviceGrid& dev_grid,
 							const CudaMatrix& fulldiv) {
     if ( fluxes.useAutoDiff() ) {
-	std::cout << "Making autodiff divergence\n";
 	CudaArray val(dev_grid.number_of_cells());
 	kernelSetup s = val.setup();
 	divergenceKernel<<<s.grid, s.block>>>( val.data(),
@@ -198,7 +197,6 @@ CollOfScalar wrapEquelleRuntimeCUDA::divergenceWrapper( const CollOfScalar& flux
 	return CollOfScalar(val, der);	
     }
 
-    std::cout << "Went through to make nonAutoDiff divergence\n";
     // output is of size number_of_cells:
     CollOfScalar out(dev_grid.number_of_cells());
     // out have now block and grid size as well.

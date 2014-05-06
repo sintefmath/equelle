@@ -49,7 +49,6 @@ void EquelleRuntimeCUDA::output(const String& tag, const CollOfScalar& coll)
 	    OPM_THROW(std::runtime_error, "Failed to open " << fname.str());
 	}
 	file.precision(16);
-	std::cout << "Printing to file...(host.size() = " << host.size() << " )\n";
 	std::copy(host.data(), host.data() + host.size(),
 		  std::ostream_iterator<double>(file, "\n"));
     } else {

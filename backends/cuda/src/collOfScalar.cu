@@ -201,7 +201,6 @@ CollOfScalar equelleCUDA::operator+ (const CollOfScalar& lhs,
 				     const CollOfScalar& rhs)
 {
     //CudaArray val = lhs.val_ + rhs.val_;
-    std::cout << "pluss completed\n";
     CollOfScalar out;
     out.val_ = lhs.val_ + rhs.val_;
     if (lhs.autodiff_ || rhs.autodiff_) {
@@ -230,7 +229,6 @@ CollOfScalar equelleCUDA::operator*(const CollOfScalar& lhs, const CollOfScalar&
 	// where u = lhs and v = rhs
 	CudaMatrix diag_u(lhs.val_);
 	CudaMatrix diag_v(rhs.val_);
-	std::cout << "Finding derivative of product\n";
 	out.der_ = diag_v*lhs.der_ + diag_u*rhs.der_;
     }
     return out;
