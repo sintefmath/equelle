@@ -34,9 +34,6 @@ CudaArray::CudaArray()
       block_x_(0),
       grid_x_(0),
       setup_(0)
-#ifdef EQUELLE_DEBUG
-    , debug_vec_(0)
-#endif // EQUELLE_DEBUG
 {
     // Intentionally left blank
 }
@@ -49,15 +46,9 @@ CudaArray::CudaArray(const int size)
       block_x_(equelleCUDA::MAX_THREADS),
       grid_x_((size_ + block_x_ - 1) / block_x_),
       setup_(size_)
-#ifdef EQUELLE_DEBUG
-    , debug_vec_(size,0)
-#endif // EQUELLE_DEBUG
 {
     cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
     checkError_("cudaMalloc in CudaArray::CudaArray(int)");
-#ifdef EQUELLE_DEBUG
-    std::cout << "Debug mode is on!\n";
-#endif // EQUELLE_DEBUG
 }
 
 CudaArray::CudaArray(const int size, const double value) 
@@ -66,9 +57,6 @@ CudaArray::CudaArray(const int size, const double value)
       block_x_(equelleCUDA::MAX_THREADS),
       grid_x_((size_ + block_x_ - 1) / block_x_),
       setup_(size_)
-#ifdef EQUELLE_DEBUG
-    , debug_vec_(size, value)
-#endif // EQUELLE_DEBUG
 {
     // Can not use cudaMemset as it sets float values on a given
     // number of bytes.
@@ -92,9 +80,6 @@ CudaArray::CudaArray(const std::vector<double>& host_vec)
       block_x_(equelleCUDA::MAX_THREADS),
       grid_x_((size_ + block_x_ - 1) / block_x_),
       setup_(size_)
-#ifdef EQUELLE_DEBUG
-    , debug_vec_(host_vec)
-#endif // EQUELLE_DEBUG
 {
     cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
     checkError_("cudaMalloc in CudaArray::CudaArray(std::vector<double>)");
@@ -112,9 +97,6 @@ CudaArray::CudaArray(const CudaArray& coll)
       grid_x_(coll.grid_x_),
       block_x_(coll.block_x_),
       setup_(size_)
-#ifdef EQUELLE_DEBUG
-    , debug_vec_(coll.size_, 0)
-#endif // EQUELLE_DEBUG
 {
     //std::cout << __PRETTY_FUNCTION__ << std::endl;
 
@@ -125,18 +107,7 @@ CudaArray::CudaArray(const CudaArray& coll)
 	cudaStatus_ = cudaMemcpy(dev_values_, coll.dev_values_, size_*sizeof(double),
 				 cudaMemcpyDeviceToDevice);
 	checkError_("cudaMemcpy in CudaArray::CudaArray(const CudaArray&)");
-    }
-    
-#ifdef EQUELLE_DEBUG
-    // Copy value to the std::vector debug_vec_
-    //std::cout << "\tDEBUG IS ON!\n";
-    if (coll.dev_values_ != 0 ) {
-	cudaStatus_ = cudaMemcpy( &debug_vec_[0], dev_values_, size_*sizeof(double),
-				  cudaMemcpyDeviceToHost );
-	checkError_("cudaMemcpy for DEBUG in CudaArray::CudaArray(const CudaArray&)");
-	last_val = debug_vec_[size_ - 1];
-    }
-#endif // EQUELLE_DEBUG
+    }    
 }
 
 
@@ -180,27 +151,6 @@ CudaArray& CudaArray::operator= (const CudaArray& other) {
 				  cudaMemcpyDeviceToDevice);
 	checkError_("cudaMemcpy(dev_values_) in CudaArray::operator=(const CudaArray&)");
 	
-#ifdef EQUELLE_DEBUG
-	if ( debug_vec_.size() != this->size_) {
-	    std::cout << "\t\tDebug vector is of size " << debug_vec_.size() << 
-		" while this->size_ is " << this->size_ << "\n";
-	    std::vector<double> temp(this->size_, 0);
-	    cudaStatus_ = cudaMemcpy( &temp[0], other.dev_values_,
-				      sizeof(double) * this->size_,
-				      cudaMemcpyDeviceToHost);
-	    checkError_("cudaMemcpy(temp) in CudaArray::operator=(const CudaArray&)");
-	    debug_vec_ = temp;
-	}
-	else {
-	    cudaStatus_ = cudaMemcpy( &debug_vec_[0], other.dev_values_,
-				      sizeof(double) * this->size_,
-				      cudaMemcpyDeviceToHost);
-	    checkError_("cudaMemcpy(debug_vec) in CudaArray::operator=(const CudaArray&)");
-	}
-	last_val = debug_vec_[size_-1];
-#endif // EQUELLE_DEBUG
-
-
     } // if this != &other
     
     return *this;
@@ -217,15 +167,6 @@ CudaArray::~CudaArray() {
     }
 }
 
-#ifdef EQUELLE_DEBUG
-// Debug function to get all values to host so that they can be seen by e.g. qtcreator
-void CudaArray::debug() const {
-    cudaStatus_ = cudaMemcpy( &debug_vec_[0], dev_values_, sizeof(double)*size_,
-			      cudaMemcpyDeviceToHost);
-    checkError_("cudaMemcpy(debug_vec_) in CudaArray::debug()");
-    last_val = debug_vec_[size_ - 1];
-}
-#endif // EQUELLE_DEBUG
 
 
 

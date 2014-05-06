@@ -124,10 +124,6 @@ namespace equelleCUDA {
 	*/
 	kernelSetup setup() const;
 
-#ifdef EQUELLE_DEBUG
-	//! Debug function copying the collOfScalar to host debug_vec_ member
-	void debug() const;
-#endif // EQUELLE_DEBUG	
 
 
     private:
@@ -146,15 +142,6 @@ namespace equelleCUDA {
 	mutable cudaError_t cudaStatus_;
 	void checkError_(const std::string& msg) const;
 	
-#ifdef EQUELLE_DEBUG
-	// This variable is only given a value in the copy constructors.
-	// The purpose of the variable is to follow values in a debugger,
-	// by running a program compiled from Equelle.
-	// All variables will therefore be const CudaArray var = something
-	// and assigned by the copy constructor.
-	mutable std::vector<double> debug_vec_;
-	mutable double last_val;
-#endif // EQUELLE_DEBUG
     
     }; // class CudaArray
 
