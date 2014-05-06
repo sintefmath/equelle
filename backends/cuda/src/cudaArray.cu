@@ -31,8 +31,6 @@ using namespace wrapCudaArray;
 CudaArray::CudaArray() 
     : size_(0), 
       dev_values_(0),
-      block_x_(0),
-      grid_x_(0),
       setup_(0)
 {
     // Intentionally left blank
@@ -43,8 +41,6 @@ CudaArray::CudaArray()
 CudaArray::CudaArray(const int size) 
     : size_(size),
       dev_values_(0),
-      block_x_(equelleCUDA::MAX_THREADS),
-      grid_x_((size_ + block_x_ - 1) / block_x_),
       setup_(size_)
 {
     cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
@@ -54,8 +50,6 @@ CudaArray::CudaArray(const int size)
 CudaArray::CudaArray(const int size, const double value) 
     : size_(size),
       dev_values_(0),
-      block_x_(equelleCUDA::MAX_THREADS),
-      grid_x_((size_ + block_x_ - 1) / block_x_),
       setup_(size_)
 {
     // Can not use cudaMemset as it sets float values on a given
@@ -77,8 +71,6 @@ CudaArray::CudaArray(const int size, const double value)
 CudaArray::CudaArray(const std::vector<double>& host_vec)
     : size_(host_vec.size()),
       dev_values_(0),
-      block_x_(equelleCUDA::MAX_THREADS),
-      grid_x_((size_ + block_x_ - 1) / block_x_),
       setup_(size_)
 {
     cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
@@ -94,8 +86,6 @@ CudaArray::CudaArray(const std::vector<double>& host_vec)
 CudaArray::CudaArray(const CudaArray& coll) 
     : size_(coll.size_), 
       dev_values_(0),
-      grid_x_(coll.grid_x_),
-      block_x_(coll.block_x_),
       setup_(size_)
 {
     //std::cout << __PRETTY_FUNCTION__ << std::endl;
@@ -141,8 +131,6 @@ CudaArray& CudaArray::operator= (const CudaArray& other) {
 	    
 	    // Set variables depending on size_:
 	    this->size_ = other.size_;
-	    this->block_x_ = other.block_x_;
-	    this->grid_x_ = other.grid_x_;
 	}
 
 	// Copy memory block from other to this:

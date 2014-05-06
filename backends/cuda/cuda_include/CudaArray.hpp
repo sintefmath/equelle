@@ -131,8 +131,6 @@ namespace equelleCUDA {
 	double* dev_values_;
 	
 	// Use 1D kernel grids for arithmetic operations
-	int block_x_;
-	int grid_x_;
 	kernelSetup setup_;
 	
 	
