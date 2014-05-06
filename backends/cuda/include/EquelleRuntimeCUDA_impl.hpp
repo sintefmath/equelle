@@ -13,6 +13,7 @@
 
 using namespace equelleCUDA;
 
+
 template <class ResidualFunctor>
 CollOfScalar EquelleRuntimeCUDA::newtonSolve(const ResidualFunctor& rescomp,
                                             const CollOfScalar& u_initialguess)
@@ -21,7 +22,10 @@ CollOfScalar EquelleRuntimeCUDA::newtonSolve(const ResidualFunctor& rescomp,
     clock.start();
 
     // Set up Newton loop.
+ 
+    // Define the primary variable
     CollOfScalar u = CollOfScalar(u_initialguess, true);
+ 
     if (verbose_ > 2) {
         output("Initial u", u);
         output("    newtonSolve: norm (initial u)", twoNorm(u));

@@ -164,6 +164,18 @@ CollOfScalar EquelleRuntimeCUDA::divergence(const CollOfScalar& face_fluxes) con
 }
 
 
+CollOfScalar EquelleRuntimeCUDA::negGradient(const CollOfScalar& cell_scalarField) const
+{
+    OPM_THROW(std::runtime_error, "Not yet implemented...");
+}
+
+CollOfScalar EquelleRuntimeCUDA::interiorDivergence(const CollOfScalar& face_fluxes) const
+{
+    OPM_THROW(std::runtime_error, "Not yet implemented...");
+}
+
+
+
 // SQRT
 CollOfScalar EquelleRuntimeCUDA::sqrt(const CollOfScalar& x) const {
 

@@ -64,11 +64,10 @@ namespace
 EquelleRuntimeCUDA::EquelleRuntimeCUDA(const Opm::parameter::ParameterGroup& param)
     : grid_manager_(createGridManager(param)),
       grid_(*(grid_manager_->c_grid())),
-      dev_grid_(UnstructuredGrid(*(grid_manager_->c_grid()))),
+      dev_grid_(grid_),
       ops_(grid_),
       devOps_(ops_.grad, ops_.div, ops_.fulldiv,
 	      ops_.internal_faces.rows()),
-      linsolver_(param),
       solver_(param.getDefault<std::string>("solver", "BiCGStab"),
 	      param.getDefault<std::string>("preconditioner", "diagonal"),
 	      param.getDefault("solver_max_iter", 1000),
@@ -158,54 +157,6 @@ void EquelleRuntimeCUDA::output(const String& tag, const double val) const
     std::cout << tag << " = " << val << std::endl;
 }
 
-
-
-CollOfFaceCPU EquelleRuntimeCUDA::inputDomainSubsetOf(const String& name,
-                                                  const CollOfFaceCPU& face_superset)
-{
-    const String filename = param_.get<String>(name + "_filename");
-    std::ifstream is(filename.c_str());
-    if (!is) {
-        OPM_THROW(std::runtime_error, "Could not find file " << filename);
-    }
-    std::istream_iterator<int> beg(is);
-    std::istream_iterator<int> end;
-    CollOfFaceCPU data;
-    for (auto it = beg; it != end; ++it) {
-        data.push_back(Face(*it));
-    }
-    if (!is_sorted(data.begin(), data.end())) {
-        OPM_THROW(std::runtime_error, "Input set of faces was not sorted in ascending order.");
-    }
-    if (!includes(face_superset.begin(), face_superset.end(), data.begin(), data.end())) {
-        OPM_THROW(std::runtime_error, "Given faces are not in the assumed subset.");
-    }
-    return data;
-}
-
-
-CollOfCellCPU EquelleRuntimeCUDA::inputDomainSubsetOf(const String& name,
-                                                  const CollOfCellCPU& cell_superset)
-{
-    const String filename = param_.get<String>(name + "_filename");
-    std::ifstream is(filename.c_str());
-    if (!is) {
-        OPM_THROW(std::runtime_error, "Could not find file " << filename);
-    }
-    std::istream_iterator<int> beg(is);
-    std::istream_iterator<int> end;
-    CollOfCellCPU data;
-    for (auto it = beg; it != end; ++it) {
-        data.push_back(Cell(*it));
-    }
-    if (!is_sorted(data.begin(), data.end())) {
-        OPM_THROW(std::runtime_error, "Input set of cells was not sorted in ascending order.");
-    }
-    if (!includes(cell_superset.begin(), cell_superset.end(), data.begin(), data.end())) {
-        OPM_THROW(std::runtime_error, "Given cells are not in the assumed subset.");
-    }
-    return data;
-}
 
 
 SeqOfScalar EquelleRuntimeCUDA::inputSequenceOfScalar(const String& name)

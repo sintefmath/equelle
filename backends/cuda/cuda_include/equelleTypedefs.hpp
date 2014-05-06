@@ -22,9 +22,6 @@ namespace equelleCUDA
     //! Handle needed for cusparse library calls.
     extern cusparseHandle_t CUSPARSE;
     
-    //! Collection of booleans as a thrust::device_vector<bool>
-    typedef thrust::device_vector<bool> CollOfBool;
-    
     //! Use the Equelle name Scalar for double.
     typedef double Scalar;
     //! Use the Equelle name Bool for bool.
@@ -32,7 +29,15 @@ namespace equelleCUDA
     //! Add capitalized String as it is used in serial back-end.
     typedef std::string String;
     
+   
+    //! Collection of booleans as a thrust::device_vector<bool>
+    typedef thrust::device_vector<Bool> CollOfBool;
     
+    //! Sequence Of Scalar
+    typedef std::vector<Scalar> SeqOfScalar;
+
+
+
     //! Grid and block sizes for kernels.
     /*!
       This struct is used to calculate the grid and block sizes we need in order 

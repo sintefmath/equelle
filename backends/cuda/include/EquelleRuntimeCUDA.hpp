@@ -13,7 +13,6 @@
 
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <opm/core/grid/GridManager.hpp>
-#include <opm/core/linalg/LinearSolverFactory.hpp>
 #include <vector>
 #include <string>
 #include <map>
@@ -41,157 +40,6 @@
 
 namespace equelleCUDA {
 
-
-/// Topological entities.
-template <int Codim>
-struct TopologicalEntity
-{
-    TopologicalEntity() : index(-1) {}
-    explicit TopologicalEntity(const int ind) : index(ind) {}
-    int index;
-    bool operator<(const TopologicalEntity& t) const { return index < t.index; }
-    bool operator==(const TopologicalEntity& t) const { return index == t.index; }
-};
-
-/// Topological entity for cell.
-typedef TopologicalEntity<0> Cell;
-
-/// Topological entity for cell.
-typedef TopologicalEntity<1> Face;
-
-/// Topological collections.
-typedef std::vector<Cell> CollOfCellCPU;
-typedef std::vector<Face> CollOfFaceCPU;
-
-// Basic types. Note that we do not have Vector type defined
-// although the CollOfVector type is.
-
-// Collections and sequences (apart from Collection Of Scalar).
-//typedef Eigen::Array<bool, Eigen::Dynamic, 1> CollOfBool;
-//typedef std::vector<bool> CollOfBool;
-typedef std::vector<Scalar> SeqOfScalar;
-
-
-/// The Collection Of Scalar type is based on Eigen and opm-autodiff.
-/// It uses inheritance to provide extra interfaces for ease of use,
-/// notably converting constructors.
-class CollOfScalarCPU : public std::vector<double>
-{
-public:
-    typedef std::vector<double> ADB; //Opm::AutoDiffBlock<double> ADB;
-    //typedef ADB::V V;
-    CollOfScalarCPU()
-        : ADB(ADB())
-    {
-    }
-    CollOfScalarCPU(const ADB& adb)
-    : ADB(adb)
-    {
-    }
-
-};    
-
-
-
-
-
-
-/// This class is copied from the class Span in opm-autodiff's AutoDiffHelpers.hpp,
-/// since the version in the 2013.10 release has a minor misfeature:
-/// the data members are const, which prevents copying and assignment.
-/// Class name changed to ESpan to avoid conflict.
-class ESpan
-{
-public:
-    explicit ESpan(const int num)
-    : num_(num),
-      stride_(1),
-      start_(0)
-    {
-    }
-    ESpan(const int num, const int stride, const int start)
-        : num_(num),
-          stride_(stride),
-          start_(start)
-    {
-    }
-    int operator[](const int i) const
-    {
-        assert(i >= 0 && i < num_);
-        return start_ + i*stride_;
-    }
-    int size() const
-    {
-        return num_;
-    }
-
-
-    class ESpanIterator
-    {
-    public:
-        ESpanIterator(const ESpan* span, const int index)
-            : span_(span),
-              index_(index)
-        {
-        }
-        ESpanIterator operator++()
-        {
-            ++index_;
-            return *this;
-        }
-        ESpanIterator operator++(int)
-        {
-            ESpanIterator before_increment(*this);
-            ++index_;
-            return before_increment;
-        }
-        bool operator<(const ESpanIterator& rhs) const
-        {
-            assert(span_ == rhs.span_);
-            return index_ < rhs.index_;
-        }
-        bool operator==(const ESpanIterator& rhs) const
-        {
-            assert(span_ == rhs.span_);
-            return index_ == rhs.index_;
-        }
-        bool operator!=(const ESpanIterator& rhs) const
-        {
-            assert(span_ == rhs.span_);
-            return index_ != rhs.index_;
-        }
-        int operator*()
-        {
-            return (*span_)[index_];
-        }
-    private:
-        const ESpan* span_;
-        int index_;
-    };
-
-    typedef ESpanIterator iterator;
-    typedef ESpanIterator const_iterator;
-
-    ESpanIterator begin() const
-    {
-        return ESpanIterator(this, 0);
-    }
-
-    ESpanIterator end() const
-    {
-        return ESpanIterator(this, num_);
-    }
-
-    bool operator==(const ESpan& rhs)
-    {
-        return num_ == rhs.num_ && start_ == rhs.start_ && stride_ == rhs.stride_;
-    }
-
-private:
-    int num_;
-    int stride_;
-    int start_;
-};
 
 
 // Array Of {X} Collection Of Scalar:
@@ -233,8 +81,8 @@ public:
     CollOfFace allFaces() const;
     CollOfFace boundaryFaces() const;
     CollOfFace interiorFaces() const;
-    CollOfCell firstCell(equelleCUDA::CollOfFace faces) const;
-    CollOfCell secondCell(equelleCUDA::CollOfFace faces) const;
+    CollOfCell firstCell(CollOfFace faces) const;
+    CollOfCell secondCell(CollOfFace faces) const;
     template <int codim>
     CollOfScalar norm(const CollOfIndices<codim>& set) const;
     CollOfScalar norm(const CollOfVector& vectors) const;
@@ -245,10 +93,8 @@ public:
 
     /// Operators and math functions.
     CollOfScalar dot(const CollOfVector& v1, const CollOfVector& v2) const;
-    CollOfScalarCPU negGradient(const CollOfScalarCPU& cell_scalarfield) const;
-    CollOfScalarCPU interiorDivergence(const CollOfScalarCPU& face_fluxes) const;
-    CollOfBool isEmpty(const CollOfCellCPU& cells) const;
-    CollOfBool isEmpty(const CollOfFaceCPU& faces) const;
+    CollOfScalar negGradient(const CollOfScalar& cell_scalarfield) const;
+    CollOfScalar interiorDivergence(const CollOfScalar& face_fluxes) const;
     
     // Operators and math functions havahol
     CollOfScalar gradient(const CollOfScalar& cell_scalarfield) const;
@@ -287,12 +133,6 @@ public:
 				    const CollOfIndices<codim>& iftrue,
 				    const CollOfIndices<codim>& iffalse) const;
     
-    //template <class SomeCollection1, class SomeCollection2>
-    //typename CollType<SomeCollection1>::Type
-    //trinaryIf(const CollOfBool& predicate,
-    //          const SomeCollection1& iftrue,
-    //          const SomeCollection2& iffalse) const;
-    
     /// Reductions.
     Scalar minReduce(const CollOfScalar& x) const;
     Scalar maxReduce(const CollOfScalar& x) const;
@@ -302,10 +142,6 @@ public:
     // Special functions:
     CollOfScalar sqrt(const CollOfScalar& x) const;
     
-    /// Solver functions.
-    template <class ResidualFunctor>
-    CollOfScalarCPU newtonSolve(const ResidualFunctor& rescomp,
-				const CollOfScalarCPU& u_initialguess);
     
     template <class ResidualFunctor> 
     CollOfScalar newtonSolve(const ResidualFunctor& rescomp,
@@ -317,29 +153,24 @@ public:
     
     /// Output.
     void output(const String& tag, Scalar val) const;
-    void output(const String& tag, const CollOfScalarCPU& vals);
-    void output(const String& tag, const equelleCUDA::CollOfScalar& coll);
+    void output(const String& tag, const CollOfScalar& coll);
     
     /// Input.
     Scalar inputScalarWithDefault(const String& name,
 				  const Scalar default_value);
-    CollOfFaceCPU inputDomainSubsetOf(const String& name,
-    				      const CollOfFaceCPU& superset);
-    CollOfCellCPU inputDomainSubsetOf(const String& name,
-    				      const CollOfCellCPU& superset);
     template <class SomeCollection>
-    equelleCUDA::CollOfScalar inputCollectionOfScalar(const String& name,
-						      const SomeCollection& coll);
+    CollOfScalar inputCollectionOfScalar(const String& name,
+					 const SomeCollection& coll);
     
     // input havahol
     template <int codim>
-    equelleCUDA::CollOfIndices<codim> inputDomainSubsetOf( const String& name,
-							   equelleCUDA::CollOfIndices<codim> superset);
+    CollOfIndices<codim> inputDomainSubsetOf( const String& name,
+					      CollOfIndices<codim> superset);
     
     // input havahol
     template <int codim>
-    equelleCUDA::CollOfScalar inputCollectionOfScalar(const String& name,
-						      const equelleCUDA::CollOfIndices<codim>& coll);
+    CollOfScalar inputCollectionOfScalar(const String& name,
+						      const CollOfIndices<codim>& coll);
     
     SeqOfScalar inputSequenceOfScalar(const String& name);
     
@@ -361,15 +192,7 @@ public:
 
     // ------------ PRIVATE MEMBERS -------------------------- //
 private:
-    /// Topology helpers
-    bool boundaryCell(const int cell_index) const;
-    
-    /// Creating primary variables.
-    static CollOfScalarCPU singlePrimaryVariable(const CollOfScalarCPU& initial_values);
-    
-    /// Solver helper.
-    CollOfScalar solveForUpdate(const CollOfScalar& residual) const;
-    
+      
     /// Norms.
     Scalar twoNorm(const CollOfScalar& vals) const;
     
@@ -379,7 +202,6 @@ private:
     equelleCUDA::DeviceGrid dev_grid_;
     Opm::HelperOps ops_;
     const DeviceHelperOps devOps_;
-    Opm::LinearSolverFactory linsolver_;
     LinearSolver solver_;
     bool output_to_file_;
     int verbose_;
