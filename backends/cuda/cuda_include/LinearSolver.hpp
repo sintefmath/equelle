@@ -54,8 +54,12 @@ namespace equelleCUDA {
 
 	  Since the cusp methods do not accept constant input, we need to do an
 	  internal copy inside this function.
+
+	  For no output to screen: verbose = 0
 	*/
-	CollOfScalar solve(const CudaMatrix& A, const CudaArray& b) const;
+	CollOfScalar solve(const CudaMatrix& A,
+			   const CudaArray& b,
+			   const int verbose ) const;
 	
     private:
 	EquelleSolver solver_;

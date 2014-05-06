@@ -86,7 +86,9 @@ LinearSolver::~LinearSolver() {
 
 
 // Solver:
-CollOfScalar LinearSolver::solve(const CudaMatrix& A_cpy, const CudaArray& b_cpy) const {
+CollOfScalar LinearSolver::solve(const CudaMatrix& A_cpy, 
+				 const CudaArray& b_cpy,
+				 const int verbose ) const {
     
     // Check square matrix, and that A.rows() = b.size()
     // Need also to check which method and preconditioner to use.
@@ -160,11 +162,13 @@ CollOfScalar LinearSolver::solve(const CudaMatrix& A_cpy, const CudaArray& b_cpy
 	OPM_THROW(std::runtime_error, "The given combination of solver and preconditioner is not implemented");
     }
 
-    // Print info
-    std::cout << "\n";
-    std::cout << "cusp iterations: " << monitor.iteration_count() << "\n";  
-    std::cout << "cusp residual norm: " << monitor.residual_norm() << "\n";
-    std::cout << "\n";
+    if (verbose > 0 ) {
+	// Print info
+	std::cout << "\n";
+	std::cout << "cusp iterations: " << monitor.iteration_count() << "\n";  
+	std::cout << "cusp residual norm: " << monitor.residual_norm() << "\n";
+	std::cout << "\n";
+    }
 
     return CollOfScalar(x);
 }

@@ -18,9 +18,6 @@
 #include <map>
 #include <array>
 
-#include <thrust/device_vector.h>
-
-
 
 // Including device code
 // This should be independent from the rest of the host code
@@ -34,8 +31,6 @@
 #include "DeviceHelperOps.hpp"
 #include "LinearSolver.hpp"
 
-// Forward declarations for the Device types
-//class CollOfScalar;
 
 
 namespace equelleCUDA {
@@ -162,12 +157,10 @@ public:
     CollOfScalar inputCollectionOfScalar(const String& name,
 					 const SomeCollection& coll);
     
-    // input havahol
     template <int codim>
     CollOfIndices<codim> inputDomainSubsetOf( const String& name,
 					      CollOfIndices<codim> superset);
     
-    // input havahol
     template <int codim>
     CollOfScalar inputCollectionOfScalar(const String& name,
 						      const CollOfIndices<codim>& coll);

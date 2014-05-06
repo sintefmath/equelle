@@ -30,9 +30,7 @@ CollOfScalar EquelleRuntimeCUDA::newtonSolve(const ResidualFunctor& rescomp,
         output("Initial u", u);
         output("    newtonSolve: norm (initial u)", twoNorm(u));
     }
-    std::cout << "-------------- START RESCOMP(U) --------------\n";
     CollOfScalar residual = rescomp(u);   
-    std::cout << "-------------- END RESCOMP(U) --------------\n";
     if (verbose_ > 2) {
         output("Initial residual", residual);
         output("    newtonSolve: norm (initial residual)", twoNorm(residual));
@@ -51,8 +49,9 @@ CollOfScalar EquelleRuntimeCUDA::newtonSolve(const ResidualFunctor& rescomp,
     while ( (twoNorm(residual) > abs_res_tol_) && (iter < max_iter_) ) {
 
         // Solve linear equations for du, apply update.
-        const CollOfScalar du = solver_.solve(residual.derivative(), residual.value());
-	std::cout << "Got in the while loop! Good work :) \n";
+        const CollOfScalar du = solver_.solve(residual.derivative(),
+					      residual.value(),
+					      verbose_);
 	
 	// du is a constant, hence, u is still a primary variable with an identity
 	// matrix as its derivative.
