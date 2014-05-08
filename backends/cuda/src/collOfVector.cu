@@ -166,7 +166,7 @@ __global__ void wrapCollOfVector::collOfVectorOperatorIndexKernel( double* out,
 								   const int dim)
 {
     // Index:
-    int i = myID();
+    const int i = myID();
     if ( i < size_out ) {
 	out[i] = vec[i*dim + index];
     }
@@ -181,7 +181,7 @@ __global__ void wrapCollOfVector::normKernel( double* out,
 					      const int numVectors,
 					      const int dim)
 {
-    int index = myID();
+    const int index = myID();
     if ( index < numVectors ){
 	double norm = 0;
 	for ( int i = 0; i < dim; i++) {
@@ -199,7 +199,7 @@ __global__ void wrapCollOfVector::dotKernel( double* out,
 					     const int numVectors,
 					     const int dim)
 {
-    int index = myID();
+    const int index = myID();
     if ( index < numVectors ) {
 	double dot = 0.0;
 	for ( int i = 0; i < dim; ++i ) {

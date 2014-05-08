@@ -782,7 +782,7 @@ __global__ void wrapCudaMatrix::initIdentityMatrix(double* csrVal,
 						   int* csrColInd,
 						   const int nnz)
 {
-    int i = myID();
+    const int i = myID();
     if ( i < nnz + 1) {
 	csrRowPtr[i] = i;
 	if (i < nnz) {
@@ -799,7 +799,7 @@ __global__ void wrapCudaMatrix::initDiagonalMatrix( double* csrVal,
 						    const double* scalars,
 						    const int nnz)
 {
-    int i = myID();
+    const int i = myID();
     if ( i < nnz + 1) {
 	csrRowPtr[i] = i;
 	if ( i < nnz) {
@@ -840,11 +840,11 @@ __global__ void wrapCudaMatrix::initBooleanDiagonal( double* csrVal,
     if ( i < rows + 1) {
 	csrRowPtr[i] = i;
 	if ( i < rows ) {
+	    csrColInd[i] = i;
 	    if (bool_ptr[i])
 		csrVal[i] = 1;
 	    else
 		csrVal[i] = 0;
-	    csrColInd[i] = i;
 	}
     }
 }

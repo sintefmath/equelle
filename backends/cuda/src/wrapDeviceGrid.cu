@@ -66,7 +66,7 @@ CollOfScalar wrapDeviceGrid::extendToSubset( const CollOfScalar& inData,
 __global__ void wrapDeviceGrid::extendToFullKernel_step1( double* outData,
 							  const int out_size)
 {
-    int outIndex = myID();
+    const int outIndex = myID();
     if ( outIndex < out_size ) {
 	outData[outIndex] = 0;
     }
@@ -93,7 +93,7 @@ __global__ void wrapDeviceGrid::extendToFullKernel_step2( double* outData,
     //	 Only way to sync between blocks is to call seperate kernels!
     //
 
-    int outIndex = myID();
+    const int outIndex = myID();
     if ( outIndex < from_size ) {
 	outData[from_set[outIndex]] = inData[outIndex];
     }
@@ -145,7 +145,7 @@ __global__ void wrapDeviceGrid::onFromFullKernel( double* outData,
 						  const int to_size,
 						  const double* inData)
 {
-    int toIndex = myID();
+    const int toIndex = myID();
     if ( toIndex < to_size ) {
 	outData[toIndex] = inData[to_set[toIndex]];
     }
@@ -197,7 +197,7 @@ __global__ void wrapDeviceGrid::onFromFullKernelIndices( int* outData,
 							 const int to_size,
 							 const int* inData)
 {
-    int toIndex = myID();
+    const int toIndex = myID();
     if ( toIndex < to_size ) {
 	outData[toIndex] = inData[to_set[toIndex]];
     }
@@ -233,7 +233,7 @@ thrust::device_vector<int> wrapDeviceGrid::extendToFullIndices( const thrust::de
 __global__ void wrapDeviceGrid::extendToFullKernelIndices_step1( int* outData,
 								 const int full_size)
 {
-    int outIndex = myID();
+    const int outIndex = myID();
     if ( outIndex < full_size) {
 	outData[outIndex] = 0;
     }
@@ -244,7 +244,7 @@ __global__ void wrapDeviceGrid::extendToFullKernelIndices_step2( int* outData,
 								 const int from_size,
 								 const int* inData)
 {
-    int outIndex = myID();
+    const int outIndex = myID();
     if ( outIndex < from_size ) {
 	outData[from_set[outIndex]] = inData[outIndex];
     }

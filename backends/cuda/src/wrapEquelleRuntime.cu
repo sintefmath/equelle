@@ -71,7 +71,7 @@ __global__ void wrapEquelleRuntimeCUDA::trinaryIfKernel( double* out,
 							 const double* iffalse,
 							 const int size) 
 {
-    int index = myID();
+    const int index = myID();
     if ( index < size) {
 	double temp;
 	if (predicate[index]) {
@@ -110,7 +110,7 @@ __global__ void wrapEquelleRuntimeCUDA::trinaryIfKernel( int* out,
 							 const int* iftrue,
 							 const int* iffalse,
 							 const int size) {
-    int index = myID();
+    const int index = myID();
     if ( index < size ) {
 	int temp;
 	if ( predicate[index] ) {
@@ -167,10 +167,10 @@ __global__ void wrapEquelleRuntimeCUDA::gradientKernel( double* grad,
 							const int size_out)
 {
     // Compute index in interior_faces:
-    int i = myID();
+    const int i = myID();
     if ( i < size_out ) {
 	// Compute face index:
-	int fi = int_faces[i];
+	const int fi = int_faces[i];
 	//grad[i] = second[int_face[i]] - first[int_face[i]]
 	grad[i] = cell_vals[face_cells[fi*2 + 1]] - cell_vals[face_cells[fi*2]];
     }
@@ -222,7 +222,7 @@ __global__ void wrapEquelleRuntimeCUDA::divergenceKernel( double* div,
 							  const int number_of_faces) 
 {
     // My index: cell
-    int cell = myID();
+    const int cell = myID();
     if ( cell < number_of_cells ) {
 	double div_temp = 0; // total divergence for this cell.
 	int factor, face;
@@ -258,7 +258,7 @@ CollOfScalar wrapEquelleRuntimeCUDA::sqrtWrapper( const CollOfScalar& x) {
 
 
 __global__ void wrapEquelleRuntimeCUDA::sqrtKernel(double* out, const int size) {
-    int index = myID();
+    const int index = myID();
     if ( index < size ) {
 	out[index] = sqrt(out[index]);
     }

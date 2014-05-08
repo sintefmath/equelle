@@ -405,7 +405,7 @@ CollOfBool equelleCUDA::operator!=(const Scalar lhs, const CudaArray& rhs) {
 
 
 __global__ void wrapCudaArray::minus_kernel(double* out, const double* rhs, const int size) {
-    int index = myID();
+    const int index = myID();
     if ( index < size ) {
 	out[index] = out[index] - rhs[index];
     }
@@ -413,21 +413,21 @@ __global__ void wrapCudaArray::minus_kernel(double* out, const double* rhs, cons
 
 
 __global__ void wrapCudaArray::plus_kernel(double* out, const double* rhs, const int size) {
-    int index = myID();
+    const int index = myID();
     if( index < size ) {
 	out[index] = out[index] + rhs[index];
     }
 }
 
 __global__ void wrapCudaArray::multiplication_kernel(double* out, const double* rhs, const int size) {
-    int index = myID();
+    const int index = myID();
     if ( index < size ) {
 	out[index] = out[index] * rhs[index];
     }
 }
 
 __global__ void wrapCudaArray::division_kernel(double* out, const double* rhs, const int size) {
-    int index = myID();
+    const int index = myID();
     if ( index < size ) {
 	out[index] = out[index] / rhs[index];
     }
@@ -435,7 +435,7 @@ __global__ void wrapCudaArray::division_kernel(double* out, const double* rhs, c
 
 __global__ void wrapCudaArray::scalMultColl_kernel(double* out, const double scal,
 						       const int size) {
-    int index = myID();
+    const int index = myID();
     if ( index < size ) {
 	out[index] = out[index]*scal;
     }
@@ -443,7 +443,7 @@ __global__ void wrapCudaArray::scalMultColl_kernel(double* out, const double sca
 
 __global__ void wrapCudaArray::scalDivColl_kernel(double* out, const double scal,
 						     const int size) {
-    int index = myID();
+    const int index = myID();
     if ( index < size ) {
 	out[index] = scal/out[index];
     }
@@ -454,7 +454,7 @@ __global__ void wrapCudaArray::comp_collGTcoll_kernel( bool* out,
 							  const double* rhs,
 							  const int size)
 {
-    int index = myID();
+    const int index = myID();
     if ( index < size ) {
 	out[index] = lhs[index] > rhs[index];
     }
@@ -465,7 +465,7 @@ __global__ void wrapCudaArray::comp_collGTscal_kernel( bool* out,
 							  const double rhs,
 							  const int size)
 {
-    int index = myID();
+    const int index = myID();
     if ( index < size ) {
 	out[index] = lhs[index] > rhs;
     }
@@ -476,7 +476,7 @@ __global__ void wrapCudaArray::comp_scalGTcoll_kernel( bool* out,
 							  const double* rhs,
 							  const int size)
 {
-    int index = myID();
+    const int index = myID();
     if ( index < size ) {
 	out[index] = lhs > rhs[index];
     }
@@ -487,7 +487,7 @@ __global__ void wrapCudaArray::comp_collGEcoll_kernel( bool* out,
 							  const double* rhs,
 							  const int size)
 {
-    int index = myID();
+    const int index = myID();
     if ( index < size ) {
 	out[index] = lhs[index] >= rhs[index];
     }
@@ -498,7 +498,7 @@ __global__ void wrapCudaArray::comp_collGEscal_kernel( bool* out,
 							  const double rhs,
 							  const int size)
 {
-    int index = myID();
+    const int index = myID();
     if ( index < size ) {
 	out[index] = lhs[index] >= rhs;
     }
@@ -509,7 +509,7 @@ __global__ void wrapCudaArray::comp_scalGEcoll_kernel( bool* out,
 							  const double* rhs,
 							  const int size) 
 {
-    int index = myID();
+    const int index = myID();
     if ( index < size ) {
 	out[index] = lhs >= rhs[index];
     }
@@ -521,7 +521,7 @@ __global__ void wrapCudaArray::comp_collEQcoll_kernel( bool* out,
 							  const double* rhs,
 							  const int size)
 {
-    int index = myID();
+    const int index = myID();
     if ( index < size ) {
 	out[index] = ( lhs[index] == rhs[index] );
     }
@@ -532,7 +532,7 @@ __global__ void wrapCudaArray::comp_collEQscal_kernel( bool* out,
 							  const double rhs,
 							  const int size)
 {
-    int index = myID();
+    const int index = myID();
     if ( index < size ) {
 	out[index] = ( lhs[index] == rhs );
     }
@@ -544,7 +544,7 @@ __global__ void wrapCudaArray::comp_collNEcoll_kernel( bool* out,
 							  const double* rhs,
 							  const int size)
 {
-    int index = myID();
+    const int index = myID();
     if ( index < size ) {
 	out[index] = ( lhs[index] != rhs[index] );
     }
@@ -555,7 +555,7 @@ __global__ void wrapCudaArray::comp_collNEscal_kernel( bool* out,
 							  const double rhs,
 							  const int size)
 {
-    int index = myID();
+    const int index = myID();
     if ( index < size ) {
 	out[index] = ( lhs[index] != rhs );
     }
