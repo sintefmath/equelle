@@ -288,7 +288,7 @@ int collOfScalarTest(EquelleRuntimeCUDA* er) {
 
 
 int vector_test(EquelleRuntimeCUDA* er) {
- 
+
     // Set up a vector with 42 (14*3) elements {0,1,2,...,41}
     std::vector<double> host_vec(0);
     for( int i = 0; i < 42; ++i) {
@@ -416,6 +416,7 @@ int compare(CollOfScalar scal, double sol[],
 	    int sol_size,
 	    std::string test) 
 { 
+    std::cout << "\nTesting " << test << "\n";
     // Test size:
     if ( scal.size() != sol_size ) {
 	std::cout << "Error in valsOnGrid.cpp - testing " << test << "\n";
@@ -496,6 +497,9 @@ int inputDomainTest(EquelleRuntimeCUDA* er) {
 
 
 int inputVectorComp(std::vector<int> host, int ans[], int ans_size, std::string test) {
+
+    std::cout << "\nTesting " << test << "\n";
+
     if ( host.size() != ans_size) {
 	std::cout << "Error in valsOnGrid.cpp - testing " << test << "\n";
 	std::cout << "\tThe collection is of wrong size!\n";

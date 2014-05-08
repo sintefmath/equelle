@@ -36,7 +36,8 @@ CudaMatrix::CudaMatrix()
       csrColInd_(0),
       sparseStatus_(CUSPARSE_STATUS_SUCCESS),
       cudaStatus_(cudaSuccess),
-      description_(0)
+      description_(0),
+      operation_(CUSPARSE_OPERATION_NON_TRANSPOSE)
 {
     createGeneralDescription_("CudaMatrix::CudaMatrix()");
 }
@@ -53,7 +54,8 @@ CudaMatrix::CudaMatrix( const double* val, const int* rowPtr, const int* colInd,
       csrColInd_(0),
       sparseStatus_(CUSPARSE_STATUS_SUCCESS),
       cudaStatus_(cudaSuccess),
-      description_(0)
+      description_(0),
+      operation_(CUSPARSE_OPERATION_NON_TRANSPOSE)
 {
     // Allocate memory
     allocateMemory("CudaMatrix host constructor");
@@ -85,7 +87,8 @@ CudaMatrix::CudaMatrix(const Eigen::SparseMatrix<Scalar>& eigen)
       csrColInd_(0),
       sparseStatus_(CUSPARSE_STATUS_SUCCESS),
       cudaStatus_(cudaSuccess),
-      description_(0)
+      description_(0),
+      operation_(CUSPARSE_OPERATION_NON_TRANSPOSE)
 {
     // Should have a check here to ensure that the matrix is stored 
     // in a row-major format.
@@ -122,7 +125,8 @@ CudaMatrix::CudaMatrix(const int size)
       csrColInd_(0),
       sparseStatus_(CUSPARSE_STATUS_SUCCESS),
       cudaStatus_(cudaSuccess),
-      description_(0)
+      description_(0),
+      operation_(CUSPARSE_OPERATION_NON_TRANSPOSE)
 {
     // Allocate memory:
     allocateMemory("CudaMatrix identity matrix constructor");
@@ -146,7 +150,8 @@ CudaMatrix::CudaMatrix(const CollOfScalar& coll)
       csrColInd_(0),
       sparseStatus_(CUSPARSE_STATUS_SUCCESS),
       cudaStatus_(cudaSuccess),
-      description_(0)
+      description_(0),
+      operation_(CUSPARSE_OPERATION_NON_TRANSPOSE)
 {
     // Allocate memory:
     allocateMemory("CudaMatrix diagonal matrix constructor");
@@ -169,7 +174,8 @@ CudaMatrix::CudaMatrix(const CudaArray& array)
       csrColInd_(0),
       sparseStatus_(CUSPARSE_STATUS_SUCCESS),
       cudaStatus_(cudaSuccess),
-      description_(0)
+      description_(0),
+      operation_(CUSPARSE_OPERATION_NON_TRANSPOSE)
 {
     // Allocate memory:
     allocateMemory("CudaMatrix::CudaMatrix(CudaArray)");
@@ -193,7 +199,8 @@ CudaMatrix::CudaMatrix(const CollOfBool& bools)
       csrColInd_(0),
       sparseStatus_(CUSPARSE_STATUS_SUCCESS),
       cudaStatus_(cudaSuccess),
-      description_(0)
+      description_(0),
+      operation_(CUSPARSE_OPERATION_NON_TRANSPOSE)
 { 
     allocateMemory("CudaMatrix::CudaMatrix(CollOfBool)");
     
@@ -216,7 +223,8 @@ CudaMatrix::CudaMatrix(const thrust::device_vector<int> set,
       csrColInd_(0),
       sparseStatus_(CUSPARSE_STATUS_SUCCESS),
       cudaStatus_(cudaSuccess),
-      description_(0)
+      description_(0),
+      operation_(CUSPARSE_OPERATION_NON_TRANSPOSE)
 {
     // Allocate memory:
     allocateMemory("CudaMatrix constructor for On from full set");
@@ -245,7 +253,8 @@ CudaMatrix::CudaMatrix(const CudaMatrix& mat)
       csrColInd_(0),
       sparseStatus_(CUSPARSE_STATUS_SUCCESS),
       cudaStatus_(cudaSuccess),
-      description_(0)
+      description_(0),
+      operation_(CUSPARSE_OPERATION_NON_TRANSPOSE)
 {
     // Copy arrays if they exist:
     if ( mat.csrVal_ != 0 ) {
@@ -355,6 +364,7 @@ CudaMatrix& CudaMatrix::operator= (const CudaMatrix& other) {
 	} // if other is empty
 	
 	// Do not have to care about description, as it is the same for all matrices!
+	operation_ = other.operation_;
 	
     } // if ( this != &other)
     
@@ -459,6 +469,13 @@ hostMat CudaMatrix::toHost() const {
 
 // TRANSPOSE
 CudaMatrix CudaMatrix::transpose() const {
+    CudaMatrix out = *this;
+    out.operation_ = CUSPARSE_OPERATION_TRANSPOSE;
+    return out;
+}
+
+// Private member, only used as a hack in CudaMatrix * CudaMatrix...
+CudaMatrix CudaMatrix::explicitTranspose() const {
     CudaMatrix out;
     out.rows_ = cols_;
     out.cols_ = rows_;
@@ -525,6 +542,41 @@ void CudaMatrix::allocateMemory(const std::string& caller) {
 }
 
 
+// ERROR CHECKING FOR "CudaMatrix * CudaMatrix"
+void CudaMatrix::confirmMultSize(const CudaMatrix& lhs, const CudaMatrix& rhs) {
+    
+    // We need to identify what are the true lhs sizes and rhs sizes wrt "transposity"
+
+    int leftCols = lhs.cols_;
+    int leftRows = lhs.rows_;
+    int rightCols = rhs.cols_;
+    int rightRows = rhs.rows_;
+    
+    if ( lhs.isTranspose() ) {
+	leftCols = lhs.rows_;
+	leftRows = lhs.cols_;
+    }
+    if ( rhs.isTranspose() ) {
+	rightCols = rhs.rows_;
+	rightRows = rhs.cols_;
+    }
+
+    // Check sizes
+    if ( leftCols != rightRows ) {
+	OPM_THROW(std::runtime_error, "Error in CudaMatrix * CudaMatrix size checking\n" << "\tMatrices of illegal sizes.\n" << "\tlhs.cols_ = " << leftCols << "\n\trhs.rows_ = " << rightRows);
+    }
+
+    // If test passed, assign this with correct rows and cols
+    this->rows_ = leftRows;
+    this->cols_ = rightCols;
+}
+
+
+bool CudaMatrix::isTranspose() const {
+    return ( operation_ == CUSPARSE_OPERATION_TRANSPOSE );
+}
+
+
 // --------------------- OVERLOADING OF OPERATORS -------------------------- //
 
 // Operator +
@@ -563,6 +615,11 @@ CudaMatrix equelleCUDA::cudaMatrixSum(const CudaMatrix& lhs,
 				      const CudaMatrix& rhs,
 				      const double beta) {
   
+    // We do not allow using transposed matrices in sums.
+    if (  lhs.isTranspose() || rhs.isTranspose()) {
+	OPM_THROW(std::runtime_error, "Error in CudaMatrix + CudaMatrix\n" << "\tOne of the matrices seems to be a transposed matrix. We do not allow this, as transposed matrices have limited use in this Equelle Back-End.");
+    }
+
     if ( lhs.isEmpty() || rhs.isEmpty() ) {
 	if ( lhs.isEmpty() ) 
 	    OPM_THROW(std::runtime_error, "Calling cudaMatrixSum with lhs empty");
@@ -573,6 +630,7 @@ CudaMatrix equelleCUDA::cudaMatrixSum(const CudaMatrix& lhs,
     if ( (lhs.rows_ != rhs.rows_) || (lhs.cols_ != rhs.cols_) ) {
     	OPM_THROW(std::runtime_error, "Error in CudaMatrix + CudaMatrix\n" << "\tMatrices of different size.\n" << "\tlhs: " << lhs.rows_ << " x " << lhs.cols_ << "\n" << "\trhs: " << rhs.rows_ << " x " << rhs.cols_ << ".");
     }
+
 
     // Create an empty matrix. Need to set rows, cols, nnz, and allocate arrays!
     CudaMatrix out;
@@ -645,6 +703,7 @@ CudaMatrix equelleCUDA::cudaMatrixSum(const CudaMatrix& lhs,
 
 CudaMatrix equelleCUDA::operator*(const CudaMatrix& lhs, const CudaMatrix& rhs) {
 
+    std::cout << "-------MATRIX * MATRIX " << lhs.isTranspose() << " " << rhs.isTranspose() << "---------\n";
     // If any of them are empty, we return an empty matrix.
     // An empty matrix is interpreted as a correctly sized matrix of zeros.
     // This lets us not worry about empty derivatives for autodiff.
@@ -652,14 +711,20 @@ CudaMatrix equelleCUDA::operator*(const CudaMatrix& lhs, const CudaMatrix& rhs) 
 	return CudaMatrix();
     }
     
-    if ( lhs.cols_ != rhs.rows_ ) {
-	OPM_THROW(std::runtime_error, "Error in CudaMatrix * CudaMatrix\n" << "\tMatrices of illegal sizes.\n" << "\tlhs.cols_ = " << lhs.cols_ << "\n\trhs.rows_ = " << rhs.rows_);
+    // There seems to be an error when multiplying with transposed matrix...
+    // This is a hack to make it work.
+    if ( lhs.isTranspose() ) {
+	return (lhs.explicitTranspose() * rhs);
     }
+    if ( rhs.isTranspose() ) {
+	return (lhs * rhs.explicitTranspose());
+    }
+    
 
     // Create an empty matrix. Need to set rows, cols, nnz, and allocate arrays!
     CudaMatrix out;
-    out.rows_ = lhs.rows_;
-    out.cols_ = rhs.cols_;
+    // Legal matrix sizes depend on whether the matrices are transposed or not!
+    out.confirmMultSize(lhs, rhs);
 
     // Addition in two steps
     //    1) Find nonzero pattern of output
@@ -677,8 +742,7 @@ CudaMatrix equelleCUDA::operator*(const CudaMatrix& lhs, const CudaMatrix& rhs) 
     out.sparseStatus_ = cusparseSetPointerMode(CUSPARSE, CUSPARSE_POINTER_MODE_HOST);
     out.checkError_("cusparseSetPointerMode() in CudaMatrix operator *");
     out.sparseStatus_ = cusparseXcsrgemmNnz( CUSPARSE, 
-					     CUSPARSE_OPERATION_NON_TRANSPOSE,
-					     CUSPARSE_OPERATION_NON_TRANSPOSE,
+					     lhs.operation_, rhs.operation_,
 					     out.rows_, out.cols_, lhs.cols_,
 					     lhs.description_, lhs.nnz_,
 					     lhs.csrRowPtr_, lhs.csrColInd_,
@@ -708,8 +772,7 @@ CudaMatrix equelleCUDA::operator*(const CudaMatrix& lhs, const CudaMatrix& rhs) 
     
     // 2) Multiply the matrices:
     out.sparseStatus_ = cusparseDcsrgemm(CUSPARSE,
-					 CUSPARSE_OPERATION_NON_TRANSPOSE,
-					 CUSPARSE_OPERATION_NON_TRANSPOSE,
+					 lhs.operation_, rhs.operation_,
 					 out.rows_, out.cols_, lhs.cols_,
 					 lhs.description_, lhs.nnz_,
 					 lhs.csrVal_, lhs.csrRowPtr_, lhs.csrColInd_,
@@ -725,19 +788,32 @@ CudaMatrix equelleCUDA::operator*(const CudaMatrix& lhs, const CudaMatrix& rhs) 
 
 // Matrix * vector
 CudaArray equelleCUDA::operator*(const CudaMatrix& mat, const CudaArray& vec) {
-    // Check that sizes match
-    if ( mat.cols_ != vec.size() ) {
-	OPM_THROW(std::runtime_error, "Error in matrix * vector operation as matrix is of size " << mat.rows_ << " by " << mat.cols_ << " and the vector of size " << vec.size());
+
+     // Check that sizes match - Depend on transpose matrix or not.
+    int resultingVectorSize;
+    if ( !mat.isTranspose() ) { // NOT transposed
+	if ( mat.cols_ != vec.size() ) {
+	    OPM_THROW(std::runtime_error, "Error in matrix * vector operation as matrix is of size " << mat.rows_ << " by " << mat.cols_ << " and the vector of size " << vec.size());
+	}
+	resultingVectorSize = mat.rows_;
+	//cols = mat.cols_;
     }
+    else { // matrix IS transposed
+	if ( mat.rows_ != vec.size() ) {
+	    OPM_THROW(std::runtime_error, "Error in transposed matrix * vector operation as matrix is of size " << mat.cols_ << " by " << mat.rows_ << " and the vector of size " << vec.size());
+	}
+	resultingVectorSize = mat.cols_;
+    }
+
     
     // Call cusparse matrix-vector operation:
     // y = alpha*op(A)*x + beta*y
     // with alpha=1, beta=0, op=non_transpose
-    CudaArray out(mat.rows());
+    CudaArray out(resultingVectorSize);
     const double alpha = 1.0;
     const double beta = 0.0;
     mat.sparseStatus_ = cusparseDcsrmv( CUSPARSE,
-					CUSPARSE_OPERATION_NON_TRANSPOSE,
+					mat.operation_,
 					mat.rows_, mat.cols_, mat.nnz_, 
 					&alpha, mat.description_,
 					mat.csrVal_, mat.csrRowPtr_, mat.csrColInd_,

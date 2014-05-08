@@ -225,12 +225,22 @@ namespace equelleCUDA {
 	mutable cudaError_t cudaStatus_;
 
 	cusparseMatDescr_t description_;
+	cusparseOperation_t operation_;
 
 	void checkError_(const std::string& msg) const;
 	void checkError_(const std::string& msg, const std::string& caller) const;
 	void createGeneralDescription_(const std::string& msg);
 
 	void allocateMemory(const std::string& caller);
+
+	// There is a bug in CudaMatrix * CudaMatrix, 
+	// temporary solved by calling csr2csc by this function
+	CudaMatrix explicitTranspose() const;
+	
+	// Check that lhs*rhs is legal, assign this with correct rows_ and cols_. 
+	void confirmMultSize(const CudaMatrix& lhs, const CudaMatrix& rhs);
+	// Check if the matrix is a transpose or not.
+	bool isTranspose() const;
 	
     }; // class CudaMatrix
     
