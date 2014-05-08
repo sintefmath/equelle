@@ -125,6 +125,8 @@ int arrayCompare( const std::vector<double>& host,
 		  const std::vector<double>&lf, 
 		  const std::string& msg ) {
     
+    cout << "Testing " << msg << "\n";
+
     if ( host.size() != lf.size()) {
 	cout << "Error in matrix.cpp - testing " <<  msg << endl; 
 	cout << "host.size() = " << host.size() << " but should be " << lf.size();
@@ -352,12 +354,15 @@ int main(int argc, char** argv) {
     }
 
     // Matrix transpose
-    vector<double> ft_v = {-1,4.5,3,-3,-1,8,-4,1,1,-6,6};
-    vector<int> ft_rp = {0,2,5,8,11};
-    vector<int> ft_ci = {0,2,0,2,3,0,2,3,1,2,3};
-    hostMat ft_lf = { ft_v, ft_rp, ft_ci, 11, 4, 4};
+    // Test by Matrix_transpose * Vector
+    //vector<double> ft_v = {-1,4.5,3,-3,-1,8,-4,1,1,-6,6};
+    //vector<int> ft_rp = {0,2,5,8,11};
+    //vector<int> ft_ci = {0,2,0,2,3,0,2,3,1,2,3};
+    //hostMat ft_lf = { ft_v, ft_rp, ft_ci, 11, 4, 4};
     CudaMatrix Ft = F.transpose();
-    if ( matrixCompare( Ft.toHost(), ft_lf, "F.transpose()") ) {
+    CudaArray FT_L = Ft * L_ca;
+    vector<double> ft_l_lf = {12, -16, -31, -2};
+    if ( arrayCompare( FT_L.copyToHost(), ft_l_lf, "F.transpose() * L_ca") ) {
 	return 1;
     }
 
