@@ -474,26 +474,6 @@ CudaMatrix CudaMatrix::transpose() const {
     return out;
 }
 
-// Private member, only used as a hack in CudaMatrix * CudaMatrix...
-CudaMatrix CudaMatrix::explicitTranspose() const {
-    CudaMatrix out;
-    out.rows_ = cols_;
-    out.cols_ = rows_;
-    out.nnz_ = nnz_;
-    out.allocateMemory("CudaMatrix::transpose()");
-    
-    // Use the csr -> csc function to get the transpose
-    sparseStatus_ = cusparseDcsr2csc( CUSPARSE,
-				     rows_, cols_, nnz_,
-				     csrVal_, csrRowPtr_, csrColInd_,
-				     out.csrVal_, out.csrColInd_, out.csrRowPtr_,
-				     CUSPARSE_ACTION_NUMERIC,
-				     CUSPARSE_INDEX_BASE_ZERO );
-    checkError_("cusparseDcsr2csc in CudaMatrix::transpose()");
-    
-    return out;
-}
-
 
 // Error checking:
 void CudaMatrix::checkError_(const std::string& msg) const {
@@ -543,7 +523,7 @@ void CudaMatrix::allocateMemory(const std::string& caller) {
 
 
 // ERROR CHECKING FOR "CudaMatrix * CudaMatrix"
-void CudaMatrix::confirmMultSize(const CudaMatrix& lhs, const CudaMatrix& rhs) {
+int CudaMatrix::confirmMultSize(const CudaMatrix& lhs, const CudaMatrix& rhs) {
     
     // We need to identify what are the true lhs sizes and rhs sizes wrt "transposity"
 
@@ -569,6 +549,9 @@ void CudaMatrix::confirmMultSize(const CudaMatrix& lhs, const CudaMatrix& rhs) {
     // If test passed, assign this with correct rows and cols
     this->rows_ = leftRows;
     this->cols_ = rightCols;
+
+    // Return inner size. 
+    return leftCols;
 }
 
 
@@ -711,20 +694,10 @@ CudaMatrix equelleCUDA::operator*(const CudaMatrix& lhs, const CudaMatrix& rhs) 
 	return CudaMatrix();
     }
     
-    // There seems to be an error when multiplying with transposed matrix...
-    // This is a hack to make it work.
-    if ( lhs.isTranspose() ) {
-	return (lhs.explicitTranspose() * rhs);
-    }
-    if ( rhs.isTranspose() ) {
-	return (lhs * rhs.explicitTranspose());
-    }
-    
-
     // Create an empty matrix. Need to set rows, cols, nnz, and allocate arrays!
     CudaMatrix out;
     // Legal matrix sizes depend on whether the matrices are transposed or not!
-    out.confirmMultSize(lhs, rhs);
+    int innerSize = out.confirmMultSize(lhs, rhs);
 
     // Addition in two steps
     //    1) Find nonzero pattern of output
@@ -743,7 +716,7 @@ CudaMatrix equelleCUDA::operator*(const CudaMatrix& lhs, const CudaMatrix& rhs) 
     out.checkError_("cusparseSetPointerMode() in CudaMatrix operator *");
     out.sparseStatus_ = cusparseXcsrgemmNnz( CUSPARSE, 
 					     lhs.operation_, rhs.operation_,
-					     out.rows_, out.cols_, lhs.cols_,
+					     out.rows_, out.cols_, innerSize,
 					     lhs.description_, lhs.nnz_,
 					     lhs.csrRowPtr_, lhs.csrColInd_,
 					     rhs.description_, rhs.nnz_,
@@ -773,7 +746,7 @@ CudaMatrix equelleCUDA::operator*(const CudaMatrix& lhs, const CudaMatrix& rhs) 
     // 2) Multiply the matrices:
     out.sparseStatus_ = cusparseDcsrgemm(CUSPARSE,
 					 lhs.operation_, rhs.operation_,
-					 out.rows_, out.cols_, lhs.cols_,
+					 out.rows_, out.cols_, innerSize,
 					 lhs.description_, lhs.nnz_,
 					 lhs.csrVal_, lhs.csrRowPtr_, lhs.csrColInd_,
 					 rhs.description_, rhs.nnz_,

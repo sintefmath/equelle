@@ -232,13 +232,10 @@ namespace equelleCUDA {
 	void createGeneralDescription_(const std::string& msg);
 
 	void allocateMemory(const std::string& caller);
-
-	// There is a bug in CudaMatrix * CudaMatrix, 
-	// temporary solved by calling csr2csc by this function
-	CudaMatrix explicitTranspose() const;
 	
 	// Check that lhs*rhs is legal, assign this with correct rows_ and cols_. 
-	void confirmMultSize(const CudaMatrix& lhs, const CudaMatrix& rhs);
+	// It returns the inner size of the matrix multiplication.
+	int confirmMultSize(const CudaMatrix& lhs, const CudaMatrix& rhs);
 	// Check if the matrix is a transpose or not.
 	bool isTranspose() const;
 	
