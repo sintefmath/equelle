@@ -761,6 +761,7 @@ CudaMatrix equelleCUDA::operator*(const CudaMatrix& lhs, const CudaMatrix& rhs) 
 
 // Matrix * vector
 CudaArray equelleCUDA::operator*(const CudaMatrix& mat, const CudaArray& vec) {
+    std::cout << "-------MATRIX * VECTOR ---------\n";
 
      // Check that sizes match - Depend on transpose matrix or not.
     int resultingVectorSize;

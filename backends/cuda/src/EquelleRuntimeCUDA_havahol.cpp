@@ -81,7 +81,7 @@ CollOfScalar EquelleRuntimeCUDA::trinaryIf( const CollOfBool& predicate,
 }
 
 
-CollOfScalar EquelleRuntimeCUDA::gradient_old( const CollOfScalar& cell_scalarfield ) const {
+CollOfScalar EquelleRuntimeCUDA::gradient( const CollOfScalar& cell_scalarfield ) const {
     // This function is at the moment kept in order to be able to compare efficiency
     // against the new implementation, where we use the matrix from devOps_.
 
@@ -96,21 +96,14 @@ CollOfScalar EquelleRuntimeCUDA::gradient_old( const CollOfScalar& cell_scalarfi
     			   devOps_.grad);
 }
 
-CollOfScalar EquelleRuntimeCUDA::gradient( const CollOfScalar& cell_scalarfield ) const {
+CollOfScalar EquelleRuntimeCUDA::gradient_matrix( const CollOfScalar& cell_scalarfield ) const {
     if ( cell_scalarfield.size() != dev_grid_.number_of_cells() ) {
 	OPM_THROW(std::runtime_error, "Gradient need input defined on AllCells()");
     }
-
-    //if ( cell_scalarfield.useAutoDiff() ) {
-    //	return CollOfScalar( devOps_.grad * cell_scalarfield.value(),
-    //			     devOps_.grad * cell_scalarfield.derivative() );
-    //}
-    // else: 
-    //return CollOfScalar( devOps_.grad * cell_scalarfield.value() );
     return devOps_.grad * cell_scalarfield;
 }
 
-CollOfScalar EquelleRuntimeCUDA::divergence_old(const CollOfScalar& face_fluxes) const {
+CollOfScalar EquelleRuntimeCUDA::divergence(const CollOfScalar& face_fluxes) const {
     
     // If the size is not the same as the number of faces, then the input is
     // given as interiorFaces. Then it has to be extended to AllFaces.
@@ -133,7 +126,7 @@ CollOfScalar EquelleRuntimeCUDA::divergence_old(const CollOfScalar& face_fluxes)
     }
 }
 
-CollOfScalar EquelleRuntimeCUDA::divergence(const CollOfScalar& face_fluxes) const {
+CollOfScalar EquelleRuntimeCUDA::divergence_matrix(const CollOfScalar& face_fluxes) const {
     
     // The input need to be defined on allFaces() or interiorFaces()
     if ( face_fluxes.size() != dev_grid_.number_of_faces() &&
@@ -142,23 +135,10 @@ CollOfScalar EquelleRuntimeCUDA::divergence(const CollOfScalar& face_fluxes) con
     }
     
     if ( face_fluxes.size() == dev_grid_.number_of_faces() ) {
-	//if ( face_fluxes.useAutoDiff() ) {
-	//   return CollOfScalar( devOps_.fulldiv * face_fluxes.value(),
-	//			 devOps_.fulldiv * face_fluxes.derivative() );
-	//}
-	//else {
-	//    return CollOfScalar( devOps_.fulldiv * face_fluxes.value() );
-	//}
+	// All faces
 	return devOps_.fulldiv * face_fluxes;
     }
     else { // on internal faces
-	//if ( face_fluxes.useAutoDiff() ) {
-	//    return CollOfScalar( devOps_.div * face_fluxes.value(),
-	//			 devOps_.div * face_fluxes.derivative() );
-	//}
-	//else {
-	//    return CollOfScalar( devOps_.div * face_fluxes.value() );
-	//}
 	return devOps_.div * face_fluxes;
     }
 }

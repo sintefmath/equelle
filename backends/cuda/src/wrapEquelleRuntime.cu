@@ -45,25 +45,42 @@ void wrapEquelleRuntimeCUDA::destroy_cusparse() {
 }
 
 
+// --------------  TRINARY IF -----------------------
+
 // Have already performed a check on sizes.
 CollOfScalar wrapEquelleRuntimeCUDA::trinaryIfWrapper( const CollOfBool& predicate,
 						       const CollOfScalar& iftrue,
 						       const CollOfScalar& iffalse) {
-    /*
-    CollOfScalar out(iftrue.size());
-    const bool* pred_ptr = thrust::raw_pointer_cast( &predicate[0] );
-    kernelSetup s = out.setup();
-    trinaryIfKernel<<<s.grid, s.block>>>(out.data(),
-					 pred_ptr,
-					 iftrue.data(),
-					 iffalse.data(),
-					 iftrue.size());
-    return out;
-    */
-    CudaMatrix diagBool(predicate);
-    return diagBool*iftrue + (CudaMatrix(predicate.size()) - diagBool)*iffalse;
+    if ( iftrue.useAutoDiff() || iffalse.useAutoDiff()) {
+	CudaArray val(iftrue.size());
+	const bool* pred_ptr = thrust::raw_pointer_cast( &predicate[0] );
+	kernelSetup s = val.setup();
+	trinaryIfKernel<<<s.grid, s.block>>>(val.data(),
+					     pred_ptr,
+					     iftrue.data(),
+					     iffalse.data(),
+					     iftrue.size());
+	// Using matrix-multiplication for derivatives
+	CudaMatrix diagBool(predicate);
+	CudaMatrix der = diagBool*iftrue.derivative() + (CudaMatrix(predicate.size()) - diagBool)*iffalse.derivative();
+	
+	return CollOfScalar(val, der);
+    }
+    else { // No AutoDiff
+	CollOfScalar out(iftrue.size());
+	const bool* pred_ptr = thrust::raw_pointer_cast( &predicate[0] );
+	kernelSetup s = out.setup();
+	trinaryIfKernel<<<s.grid, s.block>>>(out.data(),
+					     pred_ptr,
+					     iftrue.data(),
+					     iffalse.data(),
+					     iftrue.size());
+	return out;
+    }
 }
 
+
+// For indicis
 
 __global__ void wrapEquelleRuntimeCUDA::trinaryIfKernel( double* out,
 							 const bool* predicate,
@@ -123,6 +140,8 @@ __global__ void wrapEquelleRuntimeCUDA::trinaryIfKernel( int* out,
     }
 }
 
+
+// ----------------- GRADIENT ----------------------
 
 // Gradient implementation:
 CollOfScalar wrapEquelleRuntimeCUDA::gradientWrapper( const CollOfScalar& cell_scalarfield,

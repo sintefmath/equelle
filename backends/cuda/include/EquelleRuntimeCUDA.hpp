@@ -93,9 +93,9 @@ public:
     
     // Operators and math functions havahol
     CollOfScalar gradient(const CollOfScalar& cell_scalarfield) const;
-    CollOfScalar gradient_old(const CollOfScalar& cell_scalarfield) const;
+    CollOfScalar gradient_matrix(const CollOfScalar& cell_scalarfield) const;
     CollOfScalar divergence(const CollOfScalar& fluxes) const;  
-    CollOfScalar divergence_old(const CollOfScalar& fluxes) const;
+    CollOfScalar divergence_matrix(const CollOfScalar& fluxes) const;
     template<int codim>
     CollOfBool isEmpty(const CollOfIndices<codim>& set) const;
     

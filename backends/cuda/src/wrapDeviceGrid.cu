@@ -25,13 +25,13 @@ CollOfScalar wrapDeviceGrid::extendToFull( const CollOfScalar& in_data,
 					   const thrust::device_vector<int>& from_set,
 					   const int full_size) {
  
-    /*
+    
     // setup how many threads/blocks we need:
     kernelSetup s(full_size);
     
     // create a vector of size number_of_faces_:
     //thrust::device_vector<double> out(full_size);
-    CollOfScalar out(full_size);
+    CudaArray val(full_size);
     //double* out_ptr = thrust::raw_pointer_cast( &out[0] );
     const int* from_ptr = thrust::raw_pointer_cast( &from_set[0]);
     //wrapDeviceGrid::extendToFullKernel<<<grid,block>>>( out.data(),
@@ -39,19 +39,25 @@ CollOfScalar wrapDeviceGrid::extendToFull( const CollOfScalar& in_data,
     //							from_set.size(),
     //							in_data.data(),
     //							full_size);
-    wrapDeviceGrid::extendToFullKernel_step1<<<s.grid, s.block>>>( out.data(),
+    wrapDeviceGrid::extendToFullKernel_step1<<<s.grid, s.block>>>( val.data(),
 								   full_size );
-    wrapDeviceGrid::extendToFullKernel_step2<<<s.grid, s.block>>>( out.data(),
+    wrapDeviceGrid::extendToFullKernel_step2<<<s.grid, s.block>>>( val.data(),
 								   from_ptr,
 								   from_set.size(),
 								   in_data.data());
       
-    return out;
-    */
+    if (in_data.useAutoDiff() ) {
+	CudaMatrix extendMatrix = CudaMatrix(from_set, full_size).transpose();
+	return CollOfScalar(val, extendMatrix * in_data.derivative());
+    }
+    else { // no AutoDiff 
+	return CollOfScalar(val);
+    }
+    
     
     // Create the transpose of the restrict matrix
-    CudaMatrix extendMatrix = CudaMatrix(from_set, full_size).transpose();
-    return extendMatrix * in_data;
+    //CudaMatrix extendMatrix = CudaMatrix(from_set, full_size).transpose();
+    //return extendMatrix * in_data;
 }
 
 CollOfScalar wrapDeviceGrid::extendToSubset( const CollOfScalar& inData,
@@ -112,21 +118,26 @@ CollOfScalar wrapDeviceGrid::onFromFull( const CollOfScalar& inData,
     // out will be same size as to_set.
 
     // setup how many threads/blocks we need:
-    /*kernelSetup s(to_set.size());
+    kernelSetup s(to_set.size());
 
     // Create the output vector:
-    CollOfScalar out(to_set.size());
+    CudaArray val(to_set.size());
     const int* to_set_ptr = thrust::raw_pointer_cast( &to_set[0] );
-    wrapDeviceGrid::onFromFullKernel<<<s.grid, s.block>>>(out.data(),
+    wrapDeviceGrid::onFromFullKernel<<<s.grid, s.block>>>(val.data(),
 							  to_set_ptr,
 							  to_set.size(),
 							  inData.data());
-    return out;
-    */
+    if ( inData.useAutoDiff() ) {
+	CudaMatrix onMatrix(to_set, inData.size());
+	return CollOfScalar(val, onMatrix * inData.derivative());
+    }
+    else { // no AutoDiff
+	return CollOfScalar(val);
+    }    
 
     // Use the matrix and find the result from Matrix-vector multiplication
-    CudaMatrix onMatrix(to_set, inData.size());
-    return onMatrix * inData;
+    //CudaMatrix onMatrix(to_set, inData.size());
+    //return onMatrix * inData;
 }
 
 CollOfScalar wrapDeviceGrid::onFromSubset( const CollOfScalar& inData,
