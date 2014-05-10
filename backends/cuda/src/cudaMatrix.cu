@@ -37,7 +37,8 @@ CudaMatrix::CudaMatrix()
       sparseStatus_(CUSPARSE_STATUS_SUCCESS),
       cudaStatus_(cudaSuccess),
       description_(0),
-      operation_(CUSPARSE_OPERATION_NON_TRANSPOSE)
+      operation_(CUSPARSE_OPERATION_NON_TRANSPOSE),
+      diagonal_(false)
 {
     createGeneralDescription_("CudaMatrix::CudaMatrix()");
 }
@@ -55,7 +56,8 @@ CudaMatrix::CudaMatrix( const double* val, const int* rowPtr, const int* colInd,
       sparseStatus_(CUSPARSE_STATUS_SUCCESS),
       cudaStatus_(cudaSuccess),
       description_(0),
-      operation_(CUSPARSE_OPERATION_NON_TRANSPOSE)
+      operation_(CUSPARSE_OPERATION_NON_TRANSPOSE),
+      diagonal_(false)
 {
     // Allocate memory
     allocateMemory("CudaMatrix host constructor");
@@ -88,7 +90,8 @@ CudaMatrix::CudaMatrix(const Eigen::SparseMatrix<Scalar>& eigen)
       sparseStatus_(CUSPARSE_STATUS_SUCCESS),
       cudaStatus_(cudaSuccess),
       description_(0),
-      operation_(CUSPARSE_OPERATION_NON_TRANSPOSE)
+      operation_(CUSPARSE_OPERATION_NON_TRANSPOSE),
+      diagonal_(false)
 {
     // Should have a check here to ensure that the matrix is stored 
     // in a row-major format.
@@ -126,7 +129,8 @@ CudaMatrix::CudaMatrix(const int size)
       sparseStatus_(CUSPARSE_STATUS_SUCCESS),
       cudaStatus_(cudaSuccess),
       description_(0),
-      operation_(CUSPARSE_OPERATION_NON_TRANSPOSE)
+      operation_(CUSPARSE_OPERATION_NON_TRANSPOSE),
+      diagonal_(true)
 {
     // Allocate memory:
     allocateMemory("CudaMatrix identity matrix constructor");
@@ -151,7 +155,8 @@ CudaMatrix::CudaMatrix(const CollOfScalar& coll)
       sparseStatus_(CUSPARSE_STATUS_SUCCESS),
       cudaStatus_(cudaSuccess),
       description_(0),
-      operation_(CUSPARSE_OPERATION_NON_TRANSPOSE)
+      operation_(CUSPARSE_OPERATION_NON_TRANSPOSE),
+      diagonal_(true)
 {
     // Allocate memory:
     allocateMemory("CudaMatrix diagonal matrix constructor");
@@ -175,7 +180,8 @@ CudaMatrix::CudaMatrix(const CudaArray& array)
       sparseStatus_(CUSPARSE_STATUS_SUCCESS),
       cudaStatus_(cudaSuccess),
       description_(0),
-      operation_(CUSPARSE_OPERATION_NON_TRANSPOSE)
+      operation_(CUSPARSE_OPERATION_NON_TRANSPOSE),
+      diagonal_(true)
 {
     // Allocate memory:
     allocateMemory("CudaMatrix::CudaMatrix(CudaArray)");
@@ -200,7 +206,8 @@ CudaMatrix::CudaMatrix(const CollOfBool& bools)
       sparseStatus_(CUSPARSE_STATUS_SUCCESS),
       cudaStatus_(cudaSuccess),
       description_(0),
-      operation_(CUSPARSE_OPERATION_NON_TRANSPOSE)
+      operation_(CUSPARSE_OPERATION_NON_TRANSPOSE),
+      diagonal_(true)
 { 
     allocateMemory("CudaMatrix::CudaMatrix(CollOfBool)");
     
@@ -224,7 +231,8 @@ CudaMatrix::CudaMatrix(const thrust::device_vector<int> set,
       sparseStatus_(CUSPARSE_STATUS_SUCCESS),
       cudaStatus_(cudaSuccess),
       description_(0),
-      operation_(CUSPARSE_OPERATION_NON_TRANSPOSE)
+      operation_(CUSPARSE_OPERATION_NON_TRANSPOSE),
+      diagonal_(false)
 {
     // Allocate memory:
     allocateMemory("CudaMatrix constructor for On from full set");
@@ -254,7 +262,8 @@ CudaMatrix::CudaMatrix(const CudaMatrix& mat)
       sparseStatus_(CUSPARSE_STATUS_SUCCESS),
       cudaStatus_(cudaSuccess),
       description_(0),
-      operation_(CUSPARSE_OPERATION_NON_TRANSPOSE)
+      operation_(mat.operation_),
+      diagonal_(mat.diagonal_)
 {
     // Copy arrays if they exist:
     if ( mat.csrVal_ != 0 ) {
@@ -365,7 +374,8 @@ CudaMatrix& CudaMatrix::operator= (const CudaMatrix& other) {
 	
 	// Do not have to care about description, as it is the same for all matrices!
 	operation_ = other.operation_;
-	
+	diagonal_ = other.diagonal_;
+
     } // if ( this != &other)
     
     return *this;
@@ -693,6 +703,13 @@ CudaMatrix equelleCUDA::operator*(const CudaMatrix& lhs, const CudaMatrix& rhs) 
     if ( lhs.isEmpty() || rhs.isEmpty() ) {
 	return CudaMatrix();
     }
+
+    // Some functionality is implemented by multiplying with a diagonal matrix
+    // from the left. Since csrGemm is a hotspot, we handle these cases more efficient
+    // by this function:
+    if ( lhs.diagonal_ ) {
+	return lhs.diagonalMultiply(rhs);
+    }
     
     // Create an empty matrix. Need to set rows, cols, nnz, and allocate arrays!
     CudaMatrix out;
@@ -824,6 +841,23 @@ CudaMatrix equelleCUDA::operator-(const CudaMatrix& arg) {
 
 
 
+// Diagonal multiplyer:
+CudaMatrix CudaMatrix::diagonalMultiply(const CudaMatrix& rhs) const {
+    // Make sure we do not call this function if this is not diagonal
+    if ( !this->diagonal_ ) {
+	OPM_THROW(std::runtime_error, "Error in CudaMatrix::diagonalMultiply\n\tCaller matrix is not diagonal!");
+    }
+
+    CudaMatrix out = rhs;
+    // this is a square matrix
+    kernelSetup s(this->rows_);
+    wrapCudaMatrix::diagMult_kernel<<<s.grid, s.block>>>(out.csrVal_,
+							 out.csrRowPtr_,
+							 this->csrVal_,
+							 this->rows_);
+    return out;
+}
+
 // KERNELS -------------------------------------------------
 
 
@@ -898,3 +932,18 @@ __global__ void wrapCudaMatrix::initBooleanDiagonal( double* csrVal,
 	}
     }
 }
+
+
+__global__ void wrapCudaMatrix::diagMult_kernel( double* csrVal,
+						 const int* csrRowPtr,
+						 const double* diagVals,
+						 const int total_rows) 
+{
+    const int row = myID();
+    if ( row < total_rows ) {
+	for (int i = csrRowPtr[row]; i < csrRowPtr[row+1]; i++) {
+	    csrVal[i] = diagVals[row] * csrVal[i];
+	}
+    }
+}
+

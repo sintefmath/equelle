@@ -226,6 +226,7 @@ namespace equelleCUDA {
 
 	cusparseMatDescr_t description_;
 	cusparseOperation_t operation_;
+	bool diagonal_;
 
 	void checkError_(const std::string& msg) const;
 	void checkError_(const std::string& msg, const std::string& caller) const;
@@ -238,6 +239,8 @@ namespace equelleCUDA {
 	int confirmMultSize(const CudaMatrix& lhs, const CudaMatrix& rhs);
 	// Check if the matrix is a transpose or not.
 	bool isTranspose() const;
+
+	CudaMatrix diagonalMultiply(const CudaMatrix& rhs) const;
 	
     }; // class CudaMatrix
     
@@ -415,6 +418,13 @@ namespace equelleCUDA {
 					     const bool* bool_ptr,
 					     const int rows);
 	
+
+	__global__ void diagMult_kernel( double* csrVal,
+					 const int* csrRowPtr,
+					 const double* diagVals,
+					 const int total_rows);
+
+
 
     } // namespace wrapCudaMatrix
 
