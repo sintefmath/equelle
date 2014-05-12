@@ -54,7 +54,14 @@ DeviceGrid::DeviceGrid()
       face_areas_(0),
       face_cells_(0),
       face_normals_(0),
-      id_(0)
+      boundary_faces_(),
+      interior_faces_(),
+      boundary_cells_(),
+      interior_cells_(),
+      boundaryFacesEmpty_(true),
+      interiorFacesEmpty_(true),
+      boundaryCellsEmpty_(true),
+      interiorCellsEmpty_(true)
 {
     // intentionally left blank
 }
@@ -73,7 +80,14 @@ DeviceGrid::DeviceGrid( const UnstructuredGrid& grid)
       face_areas_(0),
       face_cells_(0),
       face_normals_(0),
-      id_(-1)
+      boundary_faces_(),
+      interior_faces_(),
+      boundary_cells_(),
+      interior_cells_(),
+      boundaryFacesEmpty_(true),
+      interiorFacesEmpty_(true),
+      boundaryCellsEmpty_(true),
+      interiorCellsEmpty_(true)
 {
     // Allocate memory for cell_centroids_:
     // type: double
@@ -180,7 +194,14 @@ DeviceGrid::DeviceGrid(const DeviceGrid& grid)
     face_areas_(0),
     face_cells_(0),
     face_normals_(0),
-    id_(0)
+    boundary_faces_(),
+    interior_faces_(),
+    boundary_cells_(),
+    interior_cells_(),
+    boundaryFacesEmpty_(true),
+    interiorFacesEmpty_(true),
+    boundaryCellsEmpty_(true),
+    interiorCellsEmpty_(true)
 {    
     // CELL_CENTROIDS_
     cudaStatus_ = cudaMalloc( (void**)&cell_centroids_,
@@ -305,7 +326,37 @@ CollOfFace DeviceGrid::allFaces() const {
     return CollOfFace(number_of_faces_);
 }
 
+
 CollOfFace DeviceGrid::boundaryFaces() const {
+    if ( boundaryFacesEmpty_ ) {
+	createBoundaryFaces_();
+    }
+    return boundary_faces_;
+}
+
+CollOfFace DeviceGrid::interiorFaces() const {
+    if ( interiorFacesEmpty_ ) {
+	createInteriorFaces_();
+    }
+    return interior_faces_;
+}
+
+CollOfCell DeviceGrid::boundaryCells() const {
+    if ( boundaryCellsEmpty_ ) {
+	createBoundaryCells_();
+    }
+    return boundary_cells_;
+}
+
+CollOfCell DeviceGrid::interiorCells() const {
+    if ( interiorCellsEmpty_ ) {
+	createInteriorCells_();
+    }
+    return interior_cells_;
+}
+
+
+void DeviceGrid::createBoundaryFaces_() const {
     // we use the face_cells_ array to check if both face_cells are cells
     // If face f is a boundary face, then 
     // face_cells_[2 * f] or face_cells_[2 * f + 1] contains -1.
@@ -335,11 +386,12 @@ CollOfFace DeviceGrid::boundaryFaces() const {
     
     // new_end points now to where the legal values end,
     // but the vector still has size equal to number_of_faces_
-    return CollOfFace(b_faces.begin(), new_end);
+    boundary_faces_ = CollOfFace(b_faces.begin(), new_end);
+    boundaryFacesEmpty_ = false;
 }
 
 
-CollOfFace DeviceGrid::interiorFaces() const {
+void DeviceGrid::createInteriorFaces_() const {
     // we use the face_cells_ array to check if both face_cells are cells
     // If face f is an interior face, then neither of
     // face_cells_[2 * f] nor face_cells_[2 * f + 1] contains -1.
@@ -368,12 +420,13 @@ CollOfFace DeviceGrid::interiorFaces() const {
     
     // new_end points now to where the legal values end,
     // but the vector still has size equal to number_of_faces_    
-    return CollOfFace(i_faces.begin(), new_end);
+    interior_faces_ = CollOfFace(i_faces.begin(), new_end);
+    interiorFacesEmpty_ = false;
 }
 
 
 // BOUNDARY CELLS
-CollOfCell DeviceGrid::boundaryCells() const {
+void DeviceGrid::createBoundaryCells_() const {
     // Returns a Collection of indices of boundary cells.
     // Algorithm:
     // for each cell c
@@ -402,12 +455,13 @@ CollOfCell DeviceGrid::boundaryCells() const {
 								     b_cells.begin(),
 								     b_cells.end(),
 								     unchanged(number_of_cells_));
-    return CollOfCell(b_cells.begin(), new_end);
+    boundary_cells_ = CollOfCell(b_cells.begin(), new_end);
+    boundaryCellsEmpty_ = false;
 }
 
 
 // INTERIOR CELLS
-CollOfCell DeviceGrid::interiorCells() const {
+void DeviceGrid::createInteriorCells_() const {
     // Same as boundaryCells, but the kernel is the other way around
     kernelSetup s(number_of_cells_);
     thrust::device_vector<int> i_cells(number_of_cells_);
@@ -424,10 +478,12 @@ CollOfCell DeviceGrid::interiorCells() const {
 								     i_cells.begin(),
 								     i_cells.end(),
 								     unchanged(number_of_cells_));
-    return CollOfCell(i_cells.begin(), new_end);
-
+    interior_cells_ = CollOfCell(i_cells.begin(), new_end);
+    interiorCellsEmpty_ = false;
 }
 
+
+// FIRST AND SECOND
 CollOfCell DeviceGrid::firstCell(CollOfFace coll) const {
     // The out collection will be of same size as the in collection
 

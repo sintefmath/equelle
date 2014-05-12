@@ -344,10 +344,23 @@ namespace equelleCUDA
 	double* face_areas_;
 	int* face_cells_;
 	double* face_normals_;
-	
+    
 
-	int id_;
-	
+	mutable CollOfFace boundary_faces_;
+	mutable CollOfFace interior_faces_;
+	mutable CollOfCell boundary_cells_;
+	mutable CollOfCell interior_cells_;
+
+	mutable bool boundaryFacesEmpty_;
+	mutable bool interiorFacesEmpty_;
+	mutable bool boundaryCellsEmpty_;
+	mutable bool interiorCellsEmpty_;
+
+	void createBoundaryFaces_() const;
+	void createInteriorFaces_() const;
+	void createBoundaryCells_() const;
+	void createInteriorCells_() const;
+
 	// Error handling:
 	mutable cudaError_t cudaStatus_;
 	void checkError_(const std::string& msg) const;
