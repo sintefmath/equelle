@@ -16,6 +16,7 @@
 //#include "equelleTypedefs.hpp"
 #include "EquelleRuntimeCUDA_havahol.hpp"
 #include "EquelleRuntimeCUDA.hpp"
+#include "DeviceHelperOps.hpp"
 
 #include <vector>
 

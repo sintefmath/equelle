@@ -77,6 +77,7 @@ if (Boost_FOUND)
 			${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
 			equelle_cuda_cpu
 			equelle_cuda_cu
+			equelle_cuda_cpu
 			equelle_rt
 			opmcore boost_filesystem-mt boost_system-mt 
 			tinyxml umfpack ${SUPERLU_LIB} dunecommon

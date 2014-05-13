@@ -3,6 +3,7 @@
 #include "CollOfIndices.hpp"
 #include "EquelleRuntimeCUDA_havahol.hpp"
 #include "wrapEquelleRuntime.hpp"
+#include "DeviceHelperOps.hpp"
 
 #include <string>
 #include <iostream>
@@ -93,14 +94,14 @@ CollOfScalar EquelleRuntimeCUDA::gradient( const CollOfScalar& cell_scalarfield 
     return gradientWrapper(cell_scalarfield,
     			   dev_grid_.interiorFaces(),
     			   dev_grid_.face_cells(),
-    			   devOps_.grad);
+    			   devOps_);
 }
 
 CollOfScalar EquelleRuntimeCUDA::gradient_matrix( const CollOfScalar& cell_scalarfield ) const {
     if ( cell_scalarfield.size() != dev_grid_.number_of_cells() ) {
 	OPM_THROW(std::runtime_error, "Gradient need input defined on AllCells()");
     }
-    return devOps_.grad * cell_scalarfield;
+    return devOps_.grad() * cell_scalarfield;
 }
 
 CollOfScalar EquelleRuntimeCUDA::divergence(const CollOfScalar& face_fluxes) const {
@@ -109,20 +110,20 @@ CollOfScalar EquelleRuntimeCUDA::divergence(const CollOfScalar& face_fluxes) con
     // given as interiorFaces. Then it has to be extended to AllFaces.
     if ( face_fluxes.size() != dev_grid_.number_of_faces() ) {
 	CollOfFace int_faces = interiorFaces();
-	if ( face_fluxes.size() != devOps_.num_int_faces ) { // Then something wierd has happend
-	    OPM_THROW(std::runtime_error, "Input for divergence has to be on AllFaces or on InteriorFaces.");
-	}
+	//if ( face_fluxes.size() != devOps_.num_int_faces() ) { // Then something wierd has happend
+	//OPM_THROW(std::runtime_error, "Input for divergence has to be on AllFaces or on InteriorFaces.");
+	//}
 	// Extend to AllFaces():
 	CollOfScalar allFluxes = operatorExtend(face_fluxes, int_faces, allFaces());
 	return divergenceWrapper(allFluxes,
 				 dev_grid_,
-				 devOps_.fulldiv);
+				 devOps_);
     }
     else {
 	// We are on allFaces already, so let's go!
 	return divergenceWrapper(face_fluxes,
 				 dev_grid_,
-				 devOps_.fulldiv); 
+				 devOps_); 
     }
 }
 
@@ -130,16 +131,16 @@ CollOfScalar EquelleRuntimeCUDA::divergence_matrix(const CollOfScalar& face_flux
     
     // The input need to be defined on allFaces() or interiorFaces()
     if ( face_fluxes.size() != dev_grid_.number_of_faces() &&
-	 face_fluxes.size() != devOps_.num_int_faces ) {
+	 face_fluxes.size() != devOps_.num_int_faces() ) {
 	OPM_THROW(std::runtime_error, "Input for divergence has to be on AllFaces or on InteriorFaces()");
     }
     
     if ( face_fluxes.size() == dev_grid_.number_of_faces() ) {
 	// All faces
-	return devOps_.fulldiv * face_fluxes;
+	return devOps_.fulldiv() * face_fluxes;
     }
     else { // on internal faces
-	return devOps_.div * face_fluxes;
+	return devOps_.div() * face_fluxes;
     }
 }
 
@@ -213,3 +214,5 @@ std::array<CollOfScalar, 4> equelleCUDA::makeArray( const CollOfScalar& t1,
 {
     return std::array<CollOfScalar, 4> {{t1, t2, t3, t4}};
 }
+
+

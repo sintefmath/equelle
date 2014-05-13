@@ -177,9 +177,9 @@ public:
     // Havahol - add a function to return grid in order to do testing here.
     UnstructuredGrid getGrid() const;
     
-    CudaMatrix getGradMatrix() const { return devOps_.grad;};
-    CudaMatrix getDivMatrix() const { return devOps_.div;};
-    CudaMatrix getFulldivMatrix() const {return devOps_.fulldiv;};
+    CudaMatrix getGradMatrix() const { return devOps_.grad();};
+    CudaMatrix getDivMatrix() const { return devOps_.div();};
+    CudaMatrix getFulldivMatrix() const {return devOps_.fulldiv();};
 
     Scalar twoNormTester(const CollOfScalar& val) const { return twoNorm(val); };
 
@@ -193,8 +193,7 @@ private:
     std::unique_ptr<Opm::GridManager> grid_manager_;
     const UnstructuredGrid& grid_;
     equelleCUDA::DeviceGrid dev_grid_;
-    Opm::HelperOps ops_;
-    const DeviceHelperOps devOps_;
+    mutable DeviceHelperOps devOps_;
     LinearSolver solver_;
     bool output_to_file_;
     int verbose_;
@@ -203,6 +202,8 @@ private:
     // For newtonSolve().
     int max_iter_;
     double abs_res_tol_;
+
+
 };
 
 } // namespace equelleCUDA

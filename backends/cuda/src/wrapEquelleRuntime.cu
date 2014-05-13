@@ -19,6 +19,7 @@
 #include "equelleTypedefs.hpp"
 #include "DeviceGrid.hpp"
 #include "device_functions.cuh"
+#include "DeviceHelperOps.hpp"
 
 using namespace equelleCUDA;
 using namespace wrapEquelleRuntimeCUDA;
@@ -147,7 +148,7 @@ __global__ void wrapEquelleRuntimeCUDA::trinaryIfKernel( int* out,
 CollOfScalar wrapEquelleRuntimeCUDA::gradientWrapper( const CollOfScalar& cell_scalarfield,
 						      const CollOfFace& int_faces,
 						      const int* face_cells,
-						      const CudaMatrix& grad) {
+						      DeviceHelperOps& ops) {
     // This function is at the moment kept in order to be able to compare efficiency
     // against the new implementation, where we use the matrix from devOps_.
 
@@ -161,7 +162,7 @@ CollOfScalar wrapEquelleRuntimeCUDA::gradientWrapper( const CollOfScalar& cell_s
 					     int_faces.raw_pointer(),
 					     face_cells,
 					     val.size());
-	CudaMatrix der = grad * cell_scalarfield.derivative();
+	CudaMatrix der = ops.grad() * cell_scalarfield.derivative();
 	return CollOfScalar(val, der);
     }
     else {
@@ -201,7 +202,7 @@ __global__ void wrapEquelleRuntimeCUDA::gradientKernel( double* grad,
 
 CollOfScalar wrapEquelleRuntimeCUDA::divergenceWrapper( const CollOfScalar& fluxes,
 							const DeviceGrid& dev_grid,
-							const CudaMatrix& fulldiv) {
+							DeviceHelperOps& ops) {
     if ( fluxes.useAutoDiff() ) {
 	CudaArray val(dev_grid.number_of_cells());
 	kernelSetup s = val.setup();
@@ -212,7 +213,7 @@ CollOfScalar wrapEquelleRuntimeCUDA::divergenceWrapper( const CollOfScalar& flux
 					       dev_grid.face_cells(),
 					       dev_grid.number_of_cells(),
 					       dev_grid.number_of_faces() );
-	CudaMatrix der = fulldiv * fluxes.derivative();
+	CudaMatrix der = ops.fulldiv() * fluxes.derivative();
 	return CollOfScalar(val, der);	
     }
 
