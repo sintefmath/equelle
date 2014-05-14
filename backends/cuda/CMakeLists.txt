@@ -58,6 +58,12 @@ endif( CMAKE_BUILD_TYPE MATCHES "Debug")
 # make non-cuda part of run-time library
 add_library( equelle_cuda_cpu ${cuda_src} ${cuda_inc} )
 
+set(optirun_command "")
+option(EQUELLE_CUDA_OPTIRUN "Run CUDA tests with optirun from Bumblebee" OFF)
+if ( EQUELLE_CUDA_OPTIRUN )
+  set(optirun_command "optirun" )
+endif( EQUELLE_CUDA_OPTIRUN )
+
 # make the unit-testing 
 if (Boost_FOUND)
 	enable_testing()
@@ -82,7 +88,7 @@ if (Boost_FOUND)
 			tinyxml umfpack ${SUPERLU_LIB} dunecommon
 		)
 		if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test/${test_name}.param")
-			add_test( ${test_name} optirun ./${test_name}
+			add_test( ${test_name} ${optirun_command} ./${test_name}
 			${CMAKE_CURRENT_SOURCE_DIR}/test/${test_name}.param)
 		else()
 			add_test( ${test_name} optirun ./${test_name})
