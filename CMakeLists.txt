@@ -44,7 +44,7 @@ endif()
 add_subdirectory(compiler)
 add_subdirectory(backends)
 add_subdirectory(tools)
-add_subdirectory(experimental/cartesian)
+#add_subdirectory(experimental/cartesian)
 
 
 
@@ -60,7 +60,7 @@ add_custom_target( Equelle_DEPS SOURCES ${EQUELLE_README} ${EQUELLE_EXAMPLE_SOUR
 # --- Generation of package file (that allows for using find_package Equelle in other projects).
 set(EQUELLE_TARGETS ec el equelle_rt)
 if(EQUELLE_BUILD_CUDA)
-  set(EQUELLE_TARGETS ${EQUELLE_TARGETS} equelle_cuda_cu equelle_cuda_cpu )
+  set(EQUELLE_TARGETS ${EQUELLE_TARGETS} equelle_cuda )
 endif()
 if(EQUELLE_BUILD_MPI)
   set(EQUELLE_TARGETS ${EQUELLE_TARGETS} equelle_mpi )
