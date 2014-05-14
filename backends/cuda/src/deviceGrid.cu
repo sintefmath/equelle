@@ -327,28 +327,28 @@ CollOfFace DeviceGrid::allFaces() const {
 }
 
 
-CollOfFace DeviceGrid::boundaryFaces() const {
+const CollOfFace& DeviceGrid::boundaryFaces() const {
     if ( boundaryFacesEmpty_ ) {
 	createBoundaryFaces_();
     }
     return boundary_faces_;
 }
 
-CollOfFace DeviceGrid::interiorFaces() const {
+const CollOfFace& DeviceGrid::interiorFaces() const {
     if ( interiorFacesEmpty_ ) {
 	createInteriorFaces_();
     }
     return interior_faces_;
 }
 
-CollOfCell DeviceGrid::boundaryCells() const {
+const CollOfCell& DeviceGrid::boundaryCells() const {
     if ( boundaryCellsEmpty_ ) {
 	createBoundaryCells_();
     }
     return boundary_cells_;
 }
 
-CollOfCell DeviceGrid::interiorCells() const {
+const CollOfCell& DeviceGrid::interiorCells() const {
     if ( interiorCellsEmpty_ ) {
 	createInteriorCells_();
     }

@@ -23,7 +23,7 @@ DeviceHelperOps::DeviceHelperOps( const UnstructuredGrid& grid_in )
 }
 
 
-CudaMatrix DeviceHelperOps::grad() {
+const CudaMatrix& DeviceHelperOps::grad() {
     if (grad_.isEmpty()) {
 	std::cout << "Creating grad matrix\n";
 	initGrad_();
@@ -31,7 +31,7 @@ CudaMatrix DeviceHelperOps::grad() {
     return grad_;
 }
 
-CudaMatrix DeviceHelperOps::div() {
+const CudaMatrix& DeviceHelperOps::div() {
     if ( div_.isEmpty() ) {
 	std::cout << "Creating div matrix\n";
 	initDiv_();
@@ -39,7 +39,7 @@ CudaMatrix DeviceHelperOps::div() {
     return div_;
 }
 
-CudaMatrix DeviceHelperOps::fulldiv() {
+const CudaMatrix& DeviceHelperOps::fulldiv() {
     if ( fulldiv_.isEmpty() ) {
 	std::cout << "Creating fulldiv matrix\n";
 	initFulldiv_();

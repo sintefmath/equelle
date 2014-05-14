@@ -42,17 +42,17 @@ namespace equelleCUDA {
 	/*! 
 	  Matrix size: rows = number of internal faces, cols = number of cells.
 	*/
-	CudaMatrix grad();
+	const CudaMatrix& grad();
 	//! Extract for each cell the sum of its adjacent interior faces' (signed) values.
 	/*! 
 	  Matrix size: rows = number of cells, cols = number of internal faces.
 	*/
-	CudaMatrix div();
+	const CudaMatrix& div();
 	//! Extract for each cell the sum of all its adjacent faces' (signed) values.
 	/*!
 	  Matrix size: rows = number of cells, cols = number of faces.
 	*/
-	CudaMatrix fulldiv();
+	const CudaMatrix& fulldiv();
 
 	//! Number of internal faces
 	/*!

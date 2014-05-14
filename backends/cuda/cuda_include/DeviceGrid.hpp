@@ -112,26 +112,26 @@ namespace equelleCUDA
 	  Creates a collection of the indices of the boundary faces of the grid.
 	  \return CollOfIndices of boundary faces
 	*/
-	CollOfFace boundaryFaces() const;
+	const CollOfFace& boundaryFaces() const;
 	//! Collection of all interior faces
 	/*!
 	  Creates a collection of the indices of the interior faces of the grid.
 	  \return CollOfIndices of interior faces
 	*/
-	CollOfFace interiorFaces() const;
+	const CollOfFace& interiorFaces() const;
 	
 	//! Collection of all interior cells.
 	/*!
 	  Creates a collection of the indices of the interior cells of the grid.
 	  \return CollOfIndices of interior cells.
 	*/
-	CollOfCell interiorCells() const;
+	const CollOfCell& interiorCells() const;
 	//! Collection of all boundary cells.
 	/*!
 	  Creates a collection of the indices of the boundary cells of the grid.
 	  \return CollOfIndices of boundary cells.
 	*/
-	CollOfCell boundaryCells() const;
+	const CollOfCell& boundaryCells() const;
 
 	//! Collection of first cell for a set of faces
 	/*!
