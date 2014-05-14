@@ -210,6 +210,5 @@ private:
 
 // Include the implementations of template members.
 #include "EquelleRuntimeCUDA_impl.hpp"
-#include "EquelleRuntimeCUDA_havahol.hpp"
 
 #endif // EQUELLERUNTIMECUDA_HEADER_INCLUDED
