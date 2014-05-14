@@ -40,23 +40,22 @@ endfunction()
 include_directories( "include" "cuda_include" "test"
 	${SERIAL_INCLUDE_DIRS}  )
 
-# make cuda part of run-time library
-set(CUDA_PROPAGATE_HOST_FLAGS OFF)
-set( CUDA_NVCC_FLAGS "-arch=sm_13 -Xcudafe=--diag_suppress=boolean_controlling_expr_is_constant -Xcudafe=--diag_suppress=unrecognized_gcc_pragma -Xcudafe=--diag_suppress=code_is_unreachable" CACHE STRING "nvcc flags" FORCE)
-cuda_add_library( equelle_cuda_cu ${cuda_cuda_src} ${cuda_cuda_inc} 
-				  ${cuda_cuda_cuh} )
-target_link_libraries ( equelle_cuda_cu
-  ${CUDA_LIBRARIES}
-  ${CUDA_cusparse_LIBRARY}
-)
-
 if( CMAKE_BUILD_TYPE MATCHES "Debug")
   set( CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -DEQUELLE_DEBUG")
 endif( CMAKE_BUILD_TYPE MATCHES "Debug")
 
+# make cuda part of run-time library
+# compile only, add to library later
+set(CUDA_PROPAGATE_HOST_FLAGS OFF)
+set( CUDA_NVCC_FLAGS "-arch=sm_13 -Xcudafe=--diag_suppress=boolean_controlling_expr_is_constant -Xcudafe=--diag_suppress=unrecognized_gcc_pragma -Xcudafe=--diag_suppress=code_is_unreachable" CACHE STRING "nvcc flags" FORCE)
+cuda_compile ( equelle_cuda_cu ${cuda_cuda_src} ${cuda_cuda_inc} ${cuda_cuda_cuh} )
 
-# make non-cuda part of run-time library
-add_library( equelle_cuda_cpu ${cuda_src} ${cuda_inc} )
+
+# Compile the non-cuda part of the library with the cuda compiled files
+add_library( equelle_cuda ${equelle_cuda_cu} ${cuda_src} ${cuda_inc} )
+
+# Link with the cuda libraries
+target_link_libraries ( equelle_cuda ${CUDA_LIBRARIES} ${CUDA_cusparse_LIBRARY} )
 
 set(optirun_command "")
 option(EQUELLE_CUDA_OPTIRUN "Run CUDA tests with optirun from Bumblebee" OFF)
@@ -81,8 +80,7 @@ if (Boost_FOUND)
 		target_link_libraries( ${test_name}  
 			${cuda_name}
 			${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
-			equelle_cuda_cpu
-			equelle_cuda_cu
+			equelle_cuda
 			equelle_rt
 			opmcore boost_filesystem-mt boost_system-mt 
 			tinyxml umfpack ${SUPERLU_LIB} dunecommon
@@ -96,14 +94,12 @@ if (Boost_FOUND)
 	endforeach()
 endif(Boost_FOUND)
 
-set_target_properties( equelle_cuda_cpu PROPERTIES
-	PUBLIC_HEADER "${cuda_inc}" )
+set_target_properties( equelle_cuda PROPERTIES
+  PUBLIC_HEADER "${cuda_cuda_inc} ${cuda_inc}")
 
-set_target_properties( equelle_cuda_cu PROPERTIES
-  PUBLIC_HEADER "${cuda_cuda_inc}" )
 
 set(EQUELLE_LIBS_FOR_CONFIG ${EQUELLE_LIBS_FOR_CONFIG}
-    equelle_cuda_cpu equelle_cuda_cu  opmautodiff opmcore dunecommon
+    equelle_cuda  opmautodiff opmcore dunecommon
     umfpack tinyxml boost_filesystem-mt	boost_system-mt ${SUPERLU_LIB}
     ${EQUELLE_EXTRA_LIBS} ${CUDA_LIBRARIES} ${CUDA_cusparse_LIBRARY} 
     ${CUDA_cublas_LIBRARY}
@@ -117,7 +113,7 @@ set(EQUELLE_INCLUDE_DIRS_FOR_CONFIG ${EQUELLE_INCLUDE_DIRS_FOR_CONFIG}
     ${SERIAL_INCLUDE_DIRS}
     PARENT_SCOPE )
 
-install(TARGETS equelle_cuda_cpu equelle_cuda_cu
+install(TARGETS equelle_cuda
 	EXPORT EquelleTargets
 	RUNTIME DESTINATION "${INSTALL_BIN_DIR}" COMPONENT bin
 	LIBRARY DESTINATION "${INSTALL_LIB_DIR}" COMPONENT lib

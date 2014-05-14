@@ -11,6 +11,7 @@
 #include "CollOfIndices.hpp"
 #include "DeviceGrid.hpp"
 #include "equelleTypedefs.hpp"
+#include "DeviceHelperOps.hpp"
 
 
 namespace equelleCUDA
@@ -144,7 +145,7 @@ namespace equelleCUDA
 	CollOfScalar gradientWrapper( const CollOfScalar& cell_scalarfield,
 				      const CollOfFace& int_faces,
 				      const int* face_cells,
-				      const CudaMatrix& grad);
+				      DeviceHelperOps& ops);
 	
 	//! Kernel for computing the Gradient
 	/*!
@@ -186,7 +187,7 @@ namespace equelleCUDA
 	*/
 	CollOfScalar divergenceWrapper( const CollOfScalar& fluxes,
 					const DeviceGrid& dev_grid,
-					const CudaMatrix& fulldiv);
+					DeviceHelperOps& ops);
 	
 	
 	//! Kernel for Divergence operator

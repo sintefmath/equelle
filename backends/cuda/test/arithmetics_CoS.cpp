@@ -13,6 +13,7 @@
 #include <stdlib.h>
 
 #include "EquelleRuntimeCUDA.hpp"
+#include "DeviceHelperOps.hpp"
 
 #include <vector>
 
