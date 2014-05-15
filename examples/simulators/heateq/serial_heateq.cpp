@@ -14,7 +14,9 @@
 #include <cmath>
 #include <array>
 
-#include "EquelleRuntimeCPU.hpp"
+#include "equelle/EquelleRuntimeCPU.hpp"
+
+using namespace equelle;
 
 void ensureRequirements(const EquelleRuntimeCPU& er);
 
@@ -32,7 +34,7 @@ int main(int argc, char** argv)
 
     const Scalar k = er.inputScalarWithDefault("k", double(0.3));
     const SeqOfScalar timesteps = er.inputSequenceOfScalar("timesteps");
-    const CollOfScalar u0 = er.inputCollectionOfScalar("u0", er.allCells());
+    const CollOfScalar u0 = er.inputCollectionOfScalar("u_initial", er.allCells());
     const CollOfFace dirichlet_boundary = er.inputDomainSubsetOf("dirichlet_boundary", er.boundaryFaces());
     const CollOfScalar dirichlet_val = er.inputCollectionOfScalar("dirichlet_val", dirichlet_boundary);
     const CollOfScalar vol = er.norm(er.allCells());
@@ -64,7 +66,8 @@ int main(int argc, char** argv)
             return residual;
         };
         expU = (expU - computeResidual(expU));
-        er.output("expU_serial", expU);
+        //er.output("expU_serial", expU);
+	er.output("maximum of u (serial)", er.maxReduce(expU));
     }
     er.output("expU_serial", expU);
 

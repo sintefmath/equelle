@@ -9,13 +9,15 @@
 
 format compact;
 
-nx = 70;
+nx = 100;
 ny = 111;
-nz = 42;
-timesteps = 20;
+nz = 50;
+timesteps = 20
+dt = 0.2
 
-t = ones(1,timesteps).*0.5;
+t = ones(1,timesteps).*dt;
 save('timesteps.mat', 't', '-ascii')
+
 
 indices = zeros(1,2*ny*nz);
 ind = 2;
@@ -25,7 +27,6 @@ for i=1:ny*nz - 1
     ind = ind + 2;
 end
 indices(2*ny*nz) = ny*nz*(nx + 1) -1;
-indices
 indices = indices';
 fid = fopen('dir_bnd.mat', 'w');
 for i=1:size(indices)
@@ -43,7 +44,7 @@ dir_vals = zeros(nz, ny);
 for y=1:ny
     dir_vals(:,y) = val_y(y);
 end
-dir_vals
+%dir_vals
 dirvalsList = zeros(1,2*ny*nz);
 for y=1:ny
     for z=1:nz  
@@ -53,7 +54,7 @@ for y=1:ny
         dirvalsList(2*((y-1)*nz + z)) = dir_vals(z, ny-y+1);
     end
 end
-dirvalsList
+%dirvalsList
 dirvalsList = dirvalsList';
 save('dir_val.mat', 'dirvalsList', '-ascii')
 
