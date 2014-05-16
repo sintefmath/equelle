@@ -14,6 +14,7 @@ using namespace equelleCUDA;
 typedef Opm::AutoDiffBlock<Scalar> ADB;
 
 typedef equelle::CollOfScalar SerialCollOfScalar;
+typedef equelle::CollOfCell SerialCollOfCell;
 //typedef equelle::EquelleRuntimeCPU
 
 
@@ -468,6 +469,23 @@ int main(int argc, char** argv) {
     
     if ( compareER(cuda_fulldiv, serial_fulldiv, "Divergence(AllFaces())",100) ) { return 1; }
 
+    // Want to test an evaluate On operation
+    // x_fulldiv is defined on all cells. 
+    // We will a variable defined on boundaryFaces holding the values of inner-cells.
+    CollOfCell cuda_inner_cells = er.trinaryIf( er.isEmpty(er.firstCell(er.boundaryFaces())), er.secondCell(er.boundaryFaces()), er.firstCell(er.boundaryFaces()) );
+    SerialCollOfCell serial_inner_cells = serialER.trinaryIf( serialER.isEmpty(serialER.firstCell(serialER.boundaryFaces())), serialER.secondCell(serialER.boundaryFaces()), serialER.firstCell(serialER.boundaryFaces()) );
+   
+    CollOfScalar cuda_inner_cells_vals = er.operatorOn( cuda_fulldiv, er.allCells(), cuda_inner_cells);
+    SerialCollOfScalar serial_inner_cells_vals = serialER.operatorOn( serial_fulldiv, serialER.allCells(), serial_inner_cells);
+    if ( compareER(cuda_inner_cells_vals, serial_inner_cells_vals, "Inner Cells Vals", 100) ) {return 1; }
+    
+    // Subset to subset On operator with overlap
+    CollOfScalar cuda_bnd_vals = er.operatorOn( cuda_fulldiv, er.allCells(), er.boundaryCells());
+    SerialCollOfScalar serial_bnd_vals = serialER.operatorOn( serial_fulldiv, serialER.allCells(), serialER.boundaryCells());
+    CollOfScalar cuda_sub2sub = er.operatorOn( cuda_bnd_vals, er.boundaryCells(), cuda_inner_cells);
+    SerialCollOfScalar serial_sub2sub = serialER.operatorOn( serial_bnd_vals, serialER.boundaryCells(), serial_inner_cells);
+    if ( compareER(cuda_sub2sub, serial_sub2sub, "Subset On subset", 100)) {return 1; }
+ 
     
     // SQRT
     CollOfScalar myColl4_squared = myColl4 * myColl4;
@@ -513,7 +531,9 @@ int main(int argc, char** argv) {
     }
     serial_norm = std::sqrt(serial_norm);
     if (compareScalars( cuda_norm, serial_norm, "twoNorm(myColl4)", 13) ) { return 1; }
-    
+
+
+       
     return 0;
 }
 

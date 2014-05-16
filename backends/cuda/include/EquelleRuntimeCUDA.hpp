@@ -57,9 +57,10 @@ std::array<CollOfScalar, 4> makeArray( const CollOfScalar& t1,
 
 
 
-/// The Equelle runtime class.
-/// Contains methods corresponding to Equelle built-ins to make
-/// it easy to generate C++ code for an Equelle program.
+// The Equelle runtime class.
+// Contains methods corresponding to Equelle built-ins to make
+// it easy to generate C++ code for an Equelle program.
+//! Equelle runtime class for the CUDA back-end
 class EquelleRuntimeCUDA
 {
 public:
