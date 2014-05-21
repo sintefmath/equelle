@@ -13,10 +13,10 @@ namespace equelleCUDA {
 
 
     //! Enumerator for specifying available linear solvers
-    enum EquelleSolver { CG, BiCGStab };
+    enum EquelleSolver { CG, BiCGStab, GMRes, CPU};
 
     //! Enumerator for specifying available preconditioners for linear solvers.
-    enum EquellePrecond { NONE, DIAG };
+    enum EquellePrecond { NONE, DIAG, Ainv};
 
 
     //! For finding implicit solutions
@@ -61,6 +61,8 @@ namespace equelleCUDA {
 			   const CudaArray& b,
 			   const int verbose ) const;
 	
+	EquelleSolver getSolver() const;
+
     private:
 	EquelleSolver solver_;
 	EquellePrecond precond_;

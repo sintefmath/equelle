@@ -12,8 +12,10 @@
 #include <cusp/array1d.h>
 #include <cusp/csr_matrix.h>
 #include <cusp/precond/diagonal.h>
+#include <cusp/precond/ainv.h>
 #include <cusp/krylov/bicgstab.h>
 #include <cusp/krylov/cg.h>
+#include <cusp/krylov/gmres.h>
 
 
 
@@ -35,6 +37,12 @@ LinearSolver::LinearSolver(std::string solver,
     else if ( solver == "CG" ) {
 	solver_ = CG;
     }
+    else if ( solver == "GMRes" ) {
+	solver_ = GMRes;
+    }
+    else if ( solver == "CPU" ) {
+	solver_ = CPU;
+    }
     else {
 	printLegalInput();
 	OPM_THROW(std::runtime_error, "Illegal input " << solver << " for solver.");
@@ -46,6 +54,9 @@ LinearSolver::LinearSolver(std::string solver,
     }
     else if ( precond == "none" ) {
 	precond_ = NONE;
+    }
+    else if ( precond == "Ainv" ) {
+	precond_ = Ainv;
     }
     else {
 	printLegalInput();
@@ -59,11 +70,14 @@ void LinearSolver::printLegalInput() const {
     std::cout << "\n\nThe following are legal input for solver:\n";
     std::cout << "\t - CG\n";
     std::cout << "\t - BiCGStab\n";
+    std::cout << "\t - GMRes\n";
+    std::cout << "\t - CPU (using a linear solver implemented for the CPU)\n";
     std::cout << "Example: solver=BiCGStab\n";
     std::cout << "\n";
     std::cout << "The following are legal input for preconditioner:\n";
     std::cout << "\t - none\n";
     std::cout << "\t - diagonal\n";
+    std::cout << "\t - Ainv\n";
     std::cout << "Example: preconditioner=diagonal\n";
     std::cout << "\n";
 }
@@ -78,6 +92,10 @@ void LinearSolver::printLegalCombos() const {
     std::cout << "Example use in parameter file:\n";
     std::cout << "\tsolver=CG\n";
     std::cout << "\tpreconditioner=diagonal\n";
+}
+
+EquelleSolver LinearSolver::getSolver() const {
+    return solver_;
 }
 
 LinearSolver::~LinearSolver() {
@@ -136,7 +154,8 @@ CollOfScalar LinearSolver::solve(const CudaMatrix& A_cpy,
     matrixView cusp_A( A.rows(), A.rows(), A.nnz(),
 		       cusp_A_csrRowPtr, cusp_A_csrColInd, cusp_A_csrVal );
 
-    
+    std::cout << "THIS SHOULD ABSOLUTLY NOT BE SHOWING!\n";
+
     // Create a monitor
     cusp::default_monitor<double> monitor(cusp_b, maxit_, tol_);
 
@@ -154,8 +173,19 @@ CollOfScalar LinearSolver::solve(const CudaMatrix& A_cpy,
     else if ( solver_ == BiCGStab && precond_ == NONE ) {
 	cusp::krylov::bicgstab(cusp_A, cusp_x, cusp_b, monitor);
     }
+    //else if ( solver_ == BiCGStab && precond_ == Ainv ) {
+    // // Including this option results in a significant slower grid assembly. 
+    // // I have no idea why this is so, as the grid construction should be 
+    // // unrelated to these lines.
+    //	cusp::precond::scaled_bridson_ainv<double, cusp::device_memory> M(cusp_A, 0, -1, true, 2);
+    //	cusp::krylov::bicgstab(cusp_A, cusp_x, cusp_b, monitor, M);
+    //}
     else if ( solver_ == CG && precond_ == NONE ) {
 	cusp::krylov::cg(cusp_A, cusp_x, cusp_b, monitor);
+    }
+    else if ( solver_ == GMRes && precond_ == NONE ) {
+    	int restart = 10;
+    	cusp::krylov::gmres(cusp_A, cusp_x, cusp_b, restart, monitor);
     }
     else {
 	printLegalCombos();
