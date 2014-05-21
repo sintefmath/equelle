@@ -696,7 +696,7 @@ CudaMatrix equelleCUDA::cudaMatrixSum(const CudaMatrix& lhs,
 
 CudaMatrix equelleCUDA::operator*(const CudaMatrix& lhs, const CudaMatrix& rhs) {
 
-    std::cout << "-------MATRIX * MATRIX " << lhs.isTranspose() << " " << rhs.isTranspose() << "---------\n";
+    //std::cout << "-------MATRIX * MATRIX " << lhs.isTranspose() << " " << rhs.isTranspose() << "---------\n";
     // If any of them are empty, we return an empty matrix.
     // An empty matrix is interpreted as a correctly sized matrix of zeros.
     // This lets us not worry about empty derivatives for autodiff.
@@ -778,7 +778,7 @@ CudaMatrix equelleCUDA::operator*(const CudaMatrix& lhs, const CudaMatrix& rhs) 
 
 // Matrix * vector
 CudaArray equelleCUDA::operator*(const CudaMatrix& mat, const CudaArray& vec) {
-    std::cout << "-------MATRIX * VECTOR ---------\n";
+    //std::cout << "-------MATRIX * VECTOR ---------\n";
 
      // Check that sizes match - Depend on transpose matrix or not.
     int resultingVectorSize;
