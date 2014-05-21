@@ -70,6 +70,7 @@ EquelleRuntimeCUDA::EquelleRuntimeCUDA(const Opm::parameter::ParameterGroup& par
 	      param.getDefault<std::string>("preconditioner", "diagonal"),
 	      param.getDefault("solver_max_iter", 1000),
 	      param.getDefault("solver_tol", 1e-10)),
+      serialSolver_(param),
       output_to_file_(param.getDefault("output_to_file", false)),
       verbose_(param.getDefault("verbose", 0)),
       param_(param),
@@ -345,6 +346,27 @@ Scalar EquelleRuntimeCUDA::prodReduce(const CollOfScalar& x) const {
 
 
 // -------------- END REDUCTIONS ----------------
+
+
+// Serial solver:
+CollOfScalar EquelleRuntimeCUDA::serialSolveForUpdate(const CollOfScalar& residual) const 
+{
+    // Want to solve A*x=b, where A is residual.der, b = residual.val
+
+    hostMat hostA = residual.derivative().toHost();
+    std::vector<double> hostb = residual.value().copyToHost();
+    std::vector<double> hostX(hostb.size(), 0.0);
+
+    Opm::LinearSolverInterface::LinearSolverReport rep
+	= serialSolver_.solve(hostA.rows, hostA.nnz,
+			      &hostA.rowPtr[0], &hostA.colInd[0], &hostA.vals[0],
+			      &hostb[0], &hostX[0]);
+    if (!rep.converged) {
+	OPM_THROW(std::runtime_error, "Serial linear solver failed to converge.");
+    }
+       
+    return CollOfScalar(hostX);
+}
 
 
 

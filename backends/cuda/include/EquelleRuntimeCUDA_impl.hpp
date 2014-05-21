@@ -244,14 +244,21 @@ CollOfScalar EquelleRuntimeCUDA::newtonSolve(const ResidualFunctor& rescomp,
                   << " (tol = " << abs_res_tol_ << ")" << std::endl;
     }
 
+    CollOfScalar du;
+
     // Execute newton loop until residual is small or we have used too many iterations.
     while ( (twoNorm(residual) > abs_res_tol_) && (iter < max_iter_) ) {
-
-        // Solve linear equations for du, apply update.
-        const CollOfScalar du = solver_.solve(residual.derivative(),
-					      residual.value(),
-					      verbose_);
 	
+	if ( solver_.getSolver() == CPU ) {
+	    du = serialSolveForUpdate(residual);
+	}
+	else {
+	    // Solve linear equations for du, apply update.
+	    du = solver_.solve(residual.derivative(),
+			       residual.value(),
+			       verbose_);
+	}
+
 	// du is a constant, hence, u is still a primary variable with an identity
 	// matrix as its derivative.
 	u = u - du;

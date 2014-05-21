@@ -8,6 +8,7 @@
 
 //#include <opm/autodiff/AutoDiffBlock.hpp>
 #include <opm/autodiff/AutoDiffHelpers.hpp>
+#include <opm/core/linalg/LinearSolverFactory.hpp>
 
 //#include <Eigen/Eigen>
 
@@ -196,6 +197,7 @@ private:
     equelleCUDA::DeviceGrid dev_grid_;
     mutable DeviceHelperOps devOps_;
     LinearSolver solver_;
+    Opm::LinearSolverFactory serialSolver_;
     bool output_to_file_;
     int verbose_;
     const Opm::parameter::ParameterGroup& param_;
@@ -203,6 +205,8 @@ private:
     // For newtonSolve().
     int max_iter_;
     double abs_res_tol_;
+
+    CollOfScalar serialSolveForUpdate(const CollOfScalar& residual) const;
 
 
 };
