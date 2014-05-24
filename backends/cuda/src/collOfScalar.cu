@@ -177,7 +177,7 @@ double CollOfScalar::reduce(const EquelleReduce reduce) const {
 				(double) 1.0, thrust::multiplies<double>());
     }
     else if ( reduce == MAX ) {
-	double init = std::numeric_limits<double>::min();
+	double init = -1.0*std::numeric_limits<double>::max();
 	result = thrust::reduce( vec.begin(), vec.end(), init, thrust::maximum<double>());
     }
     else if ( reduce == MIN ) {
