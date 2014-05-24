@@ -201,63 +201,68 @@ CollOfScalar equelleCUDA::operator+ (const CollOfScalar& lhs,
 				     const CollOfScalar& rhs)
 {
     //CudaArray val = lhs.val_ + rhs.val_;
-    CollOfScalar out;
-    out.val_ = lhs.val_ + rhs.val_;
+    CudaArray val = lhs.val_ + rhs.val_;
     if (lhs.autodiff_ || rhs.autodiff_) {
-	out.autodiff_ = true;
-	out.der_ = lhs.der_ + rhs.der_;
+	CudaMatrix der = lhs.der_ + rhs.der_;
+	return CollOfScalar(val, der);
     }
-    return out;
+    return CollOfScalar(val);
 }
 
 CollOfScalar equelleCUDA::operator-(const CollOfScalar& lhs, const CollOfScalar& rhs) {
-    CollOfScalar out;
-    out.val_ = lhs.val_ - rhs.val_;
+    CudaArray val = lhs.val_ - rhs.val_;
     if ( lhs.autodiff_ || rhs.autodiff_ ) {
-	out.autodiff_ = true;
-	out.der_ = lhs.der_ - rhs.der_;
+	CudaMatrix der = lhs.der_ - rhs.der_;
+	return CollOfScalar(val, der);
     }
-    return out;
+    return CollOfScalar(val);
 }
 
+//CollOfScalar equelleCUDA::operator-(const CollOfScalar& lhs, const CollOfScalar& rhs) {
+//    CollOfScalar out;
+//    out.val_ = lhs.val_ - rhs.val_;
+//    if ( lhs.autodiff_ || rhs.autodiff_ ) {
+//	out.autodiff_ = true;
+//	out.der_ = lhs.der_ - rhs.der_;
+//    }
+//    return out;
+//}
+
+
 CollOfScalar equelleCUDA::operator*(const CollOfScalar& lhs, const CollOfScalar& rhs) {
-    CollOfScalar out;
-    out.val_ = lhs.val_ * rhs.val_;
+    CudaArray val = lhs.val_ * rhs.val_;
     if ( lhs.autodiff_ || rhs.autodiff_ ) {
-	out.autodiff_ = true;
 	// (u*v)' = u'*v + v'*u = diag(v)*u' + diag(u)*v'
 	// where u = lhs and v = rhs
 	CudaMatrix diag_u(lhs.val_);
 	CudaMatrix diag_v(rhs.val_);
-	out.der_ = diag_v*lhs.der_ + diag_u*rhs.der_;
+	CudaMatrix der = diag_v*lhs.der_ + diag_u*rhs.der_;
+	return CollOfScalar(val, der);
     }
-    return out;
+    return CollOfScalar(val);
 }
 
 CollOfScalar equelleCUDA::operator/(const CollOfScalar& lhs, const CollOfScalar& rhs) {
-    // Need AD
-    CollOfScalar out;
-    out.val_ = lhs.val_ / rhs.val_;
+    CudaArray val = lhs.val_ / rhs.val_;
     if ( lhs.autodiff_ || rhs.autodiff_ ) {
-	out.autodiff_ = true;
 	// (u/v)' = (u'*v - v'*u)/(v^2)
 	// where u = lhs and v = rhs
 	CudaMatrix diag_u(lhs.val_); // D1 
 	CudaMatrix diag_v(rhs.val_); // D2
 	CudaMatrix inv_v_squared( 1.0/(rhs.val_ * rhs.val_));
-	out.der_ = inv_v_squared*( diag_v*lhs.der_ - diag_u*rhs.der_);
+	CudaMatrix der = inv_v_squared*( diag_v*lhs.der_ - diag_u*rhs.der_);
+	return CollOfScalar(val, der);
     }
-    return out;
+    return CollOfScalar(val);
 }
 
 CollOfScalar equelleCUDA::operator*(const Scalar lhs, const CollOfScalar& rhs) {
-    CollOfScalar out;
-    out.val_ = lhs * rhs.val_;
+    CudaArray val = lhs * rhs.val_;
     if ( rhs.autodiff_ ) {
-	out.autodiff_ = true;
-	out.der_ = lhs * rhs.der_;
+	CudaMatrix der = lhs * rhs.der_;
+	return CollOfScalar(val, der);
     }
-    return out; 
+    return CollOfScalar(val);
 }
 
 CollOfScalar equelleCUDA::operator*(const CollOfScalar& lhs, const Scalar rhs) {
@@ -269,17 +274,15 @@ CollOfScalar equelleCUDA::operator/(const CollOfScalar& lhs, const Scalar rhs) {
 }
 
 CollOfScalar equelleCUDA::operator/(const Scalar lhs, const CollOfScalar& rhs) {
-    // Need AD
-    CollOfScalar out;
-    out.val_ = lhs / rhs.val_;
+    CudaArray val = lhs / rhs.val_;
     if ( rhs.autodiff_ ) {
-	out.autodiff_ = true;
 	// (a/u)' = - (a/u^2)*u'
 	// where a = lhs and u = rhs
 	CudaMatrix diag_u_squared(lhs/(rhs.val_ * rhs.val_));
-	out.der_ = - diag_u_squared*rhs.der_;
+	CudaMatrix der = - diag_u_squared*rhs.der_;
+	return CollOfScalar(val, der);
     }
-    return out;
+    return CollOfScalar(val);
 }
 
 CollOfScalar equelleCUDA::operator-(const CollOfScalar& arg) {

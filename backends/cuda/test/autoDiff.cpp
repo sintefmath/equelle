@@ -1,14 +1,18 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <array>
 
 #include <opm/autodiff/AutoDiffHelpers.hpp>
 #include <opm/autodiff/AutoDiffBlock.hpp>
+#include <opm/core/utility/ErrorMacros.hpp>
 
 #include "EquelleRuntimeCUDA.hpp"
 #include "CudaArray.hpp"
 #include "CollOfScalar.hpp"
 #include "../../serial/include/equelle/EquelleRuntimeCPU.hpp"
+
+#define MY_THROW OPM_THROW(std::runtime_error,"see_above");
 
 using namespace equelleCUDA;
 typedef Opm::AutoDiffBlock<Scalar> ADB;
@@ -18,18 +22,18 @@ typedef equelle::CollOfCell SerialCollOfCell;
 //typedef equelle::EquelleRuntimeCPU
 
 
-int compare( CollOfScalar coll, ADB adb, std::string msg, double tol = 0.0);
+int compare( CollOfScalar coll, ADB adb, std::string msg, double tol = 0.0, bool noAD = false);
 int matrixCompare( hostMat mat, ADB::M m, std::string msg, double tol = 0.0);
 
-int compareER( CollOfScalar cuda, SerialCollOfScalar serial, std::string msg, double tol = 0.0) {
+int compareER( CollOfScalar cuda, SerialCollOfScalar serial, std::string msg, double tol = 0.0, bool noAD = false) {
     ADB adb = ADB::function(serial.value(), serial.derivative());
-    return compare(cuda, adb, msg, tol);
+    return compare(cuda, adb, msg, tol, noAD);
 }
 
 int compareScalars( double cuda, double serial, std::string msg, double tol = 0.0);
 
 // Comparison function:
-int compare( CollOfScalar coll, ADB adb, std::string msg, double tol) {
+int compare( CollOfScalar coll, ADB adb, std::string msg, double tol, bool noAD) {
 
     if (tol == 0.0) {
 	tol = 10;
@@ -75,9 +79,11 @@ int compare( CollOfScalar coll, ADB adb, std::string msg, double tol) {
 	}
     } // Use autodiff
     else {
-	std::cout << "Error in " << msg << "\n";
-	std::cout << "\tuseAutoDiff() gives false\n";
-	return 1;
+	if ( noAD == false ) {
+	    std::cout << "Error in " << msg << "\n";
+	    std::cout << "\tuseAutoDiff() gives false\n";
+	    return 1;
+	}
     }
     
     std::cout << "Test " << msg << " correct\n\n";
@@ -448,15 +454,15 @@ int main(int argc, char** argv) {
 
     // Gradient:
     CollOfScalar myGrad_cuda = er.gradient(myColl3);
-    ADB myGrad_adb = hops.grad * myADB3;
-    if ( compare( myGrad_cuda, myGrad_adb, "Gradient(myColl3)") ) { return 1; }
+    SerialCollOfScalar myGrad_serial = serialER.gradient(SerialCollOfScalar(myADB3));
+    if ( compareER( myGrad_cuda, myGrad_serial, "Gradient(myColl3)") ) { return 1; }
     // myColl9 creates difficulties...
 
     // Divergence:
     std::cout << "\nmyGrad_cuda.useAutoDiff() = " << myGrad_cuda.useAutoDiff() << "\n";
     CollOfScalar myDiv_cuda = er.divergence(myGrad_cuda);
-    ADB myDiv_adb = hops.div * myGrad_adb;
-    if ( compare( myDiv_cuda, myDiv_adb, "Divergence(myGrad)") ) { return 1; }
+    SerialCollOfScalar myDiv_serial = serialER.divergence(myGrad_serial);
+    if ( compareER( myDiv_cuda, myDiv_serial, "Divergence(myGrad)") ) { return 1; }
 
     // Full divergence:
     // Put 3.14 on the boundary
@@ -464,7 +470,7 @@ int main(int argc, char** argv) {
         CollOfScalar cuda_edge = er.operatorExtend(er.operatorExtend(3.14, er.boundaryFaces()), er.boundaryFaces(), er.allFaces()) + (er.operatorExtend(myGrad_cuda, er.interiorFaces(), er.allFaces()));
     CollOfScalar cuda_fulldiv = er.divergence(cuda_edge);
    
-    SerialCollOfScalar serial_edge = serialER.operatorExtend(serialER.operatorExtend(3.14, serialER.boundaryFaces()), serialER.boundaryFaces(), serialER.allFaces()) + (serialER.operatorExtend(SerialCollOfScalar(myGrad_adb), serialER.interiorFaces(), serialER.allFaces()));
+    SerialCollOfScalar serial_edge = serialER.operatorExtend(serialER.operatorExtend(3.14, serialER.boundaryFaces()), serialER.boundaryFaces(), serialER.allFaces()) + (serialER.operatorExtend(myGrad_serial, serialER.interiorFaces(), serialER.allFaces()));
     SerialCollOfScalar serial_fulldiv = serialER.divergence(serial_edge);
     
     if ( compareER(cuda_fulldiv, serial_fulldiv, "Divergence(AllFaces())",100) ) { return 1; }
@@ -486,13 +492,30 @@ int main(int argc, char** argv) {
     SerialCollOfScalar serial_sub2sub = serialER.operatorOn( serial_bnd_vals, serialER.boundaryCells(), serial_inner_cells);
     if ( compareER(cuda_sub2sub, serial_sub2sub, "Subset On subset", 100)) {return 1; }
  
-    
     // SQRT
     CollOfScalar myColl4_squared = myColl4 * myColl4;
     CollOfScalar myColl11 = er.sqrt(myColl4_squared);
     SerialCollOfScalar serial4_squared(myADB4*myADB4);
     SerialCollOfScalar serial11 = serialER.sqrt(serial4_squared);
     if ( compareER( myColl11, serial11, "Sqrt(myColl4*myColl4)") ) { return 1; }
+
+
+    // TRINARY IF
+    double midValue = er.minReduce(myColl11) + 2.0;
+    CollOfScalar myColl12 = er.trinaryIf( (myColl11 > midValue), myColl11, er.operatorExtend(double(1000), er.allCells()));
+    SerialCollOfScalar serial12 = serialER.trinaryIf( (serial11 > midValue), serial11, serialER.operatorExtend(double(1000), serialER.allCells()));
+    if ( compareER( myColl12, serial12, "myColl12 = myColl11 > midValue ? myColl11 : 1000 Extend AllCells()")) { return 1; }
+    std::cout << "Before trinary if max " << er.maxReduce(myColl11) << " and min " << er.minReduce(myColl11) << "\n";
+    std::cout << "After trinary if max " << er.maxReduce(myColl12) << " and min " << er.minReduce(myColl12) << "\n";
+
+    // myGrad_cuda, myGrad_serial is On InteriorFaces()
+    // Trinary If on interiorFaces
+    midValue = (er.minReduce(myGrad_cuda) + er.maxReduce(myGrad_cuda))/2.0;
+    CollOfScalar myColl13_intf = er.trinaryIf( (myGrad_cuda > 0.05), myGrad_cuda, er.operatorExtend(double(1000), er.interiorFaces()));
+    SerialCollOfScalar serial13_intf = serialER.trinaryIf( (myGrad_serial > 0.05), myGrad_serial, serialER.operatorExtend( double(1000), serialER.interiorFaces()));
+    if ( compareER( myColl13_intf, serial13_intf, "trinaryIf on InteriorFaces()")) { return 1;}
+	std::cout << "Before trinary if max " << er.maxReduce(myGrad_cuda) << " and min " << er.minReduce(myGrad_cuda) << "\n";
+    std::cout << "After trinary if max " << er.maxReduce(myColl13_intf) << " and min " << er.minReduce(myColl13_intf) << "\n";
 
 
     //printNonzeros(serial_fulldiv);
@@ -503,6 +526,7 @@ int main(int argc, char** argv) {
 							   2.4 * serial_fulldiv,
 							   -1.2 * serial_fulldiv);
     if ( compareER( myTri_cuda, myTri_serial, "TrinaryIf", 100) ) { return 1; }
+
 
     
 
@@ -533,7 +557,92 @@ int main(int argc, char** argv) {
     if (compareScalars( cuda_norm, serial_norm, "twoNorm(myColl4)", 13) ) { return 1; }
 
 
-       
+
+    // Lambda function test, with arrays of CollOfScalar
+    // 1) create set intCells()
+    // 2) create function (array CollOfScalar , array serialCollOfScalar) -> array CollOfScalar
+    // 2.1) Test input
+    // 2.2) Test access to intCells in function
+    // 2.3) Test steps in function
+    // 3) Create arrays
+    // 4) Call function
+    // 5) Test output against serial computed functionality outside of lambda.
+
+    // 1)
+    CollOfCell intCell = er.interiorCells();
+    // 2)
+    std::function<std::array<CollOfScalar, 3>(const std::array<CollOfScalar, 3>&, const std::array<SerialCollOfScalar, 3>&)> test_function = [&](const std::array<CollOfScalar, 3>& cudaArrayIn, const std::array<SerialCollOfScalar,3>& serialArrayIn) -> std::array<CollOfScalar, 3> {
+	bool ad = !cudaArrayIn[0].useAutoDiff();
+	
+	// 2.1)
+	if (compareER(cudaArrayIn[0], serialArrayIn[0], "cudaArrayIn[0]",0, ad)) {MY_THROW}
+	if (compareER(cudaArrayIn[1], serialArrayIn[1], "cudaArrayIn[1]",0, ad)) {MY_THROW}
+	if (compareER(cudaArrayIn[2], serialArrayIn[2], "cudaArrayIn[2]",0, ad)) {MY_THROW}
+
+	// 2.2)
+	CollOfScalar input1_intc = er.operatorOn(cudaArrayIn[0], er.allCells(), intCell);
+	SerialCollOfScalar sinput1_intc = serialER.operatorOn(serialArrayIn[0], serialER.allCells(), serialER.interiorCells());
+	if ( compareER(input1_intc, sinput1_intc, "On interiorCells in lambda",0, ad)){MY_THROW}
+	double unchanged_midVal = (er.minReduce(input1_intc) + er.maxReduce(input1_intc))/2;
+	CollOfScalar input2_intc = er.trinaryIf( (input1_intc > unchanged_midVal), input1_intc, er.operatorExtend(double(1000), intCell));
+	SerialCollOfScalar sinput2_intc = serialER.trinaryIf( (sinput1_intc > unchanged_midVal), sinput1_intc, serialER.operatorExtend(double(1000), serialER.interiorCells()));
+	if ( compareER(input2_intc, sinput2_intc, "trinary if in lambda",0, ad)) {MY_THROW}
+	
+	CollOfScalar to_output = er.operatorExtend(input2_intc, er.interiorCells(), er.allCells());
+	SerialCollOfScalar serial_to_output = serialER.operatorExtend(sinput2_intc, serialER.interiorCells(), serialER.allCells());
+	if ( compareER(to_output, serial_to_output, "Extend in lambda function",0, ad)){MY_THROW}
+
+	return makeArray(cudaArrayIn[0], to_output, cudaArrayIn[2]);
+    };
+    
+    // 3)
+    std::array<CollOfScalar, 3> cudaArray = makeArray(myColl11, myColl6, myColl7);
+    //if ( CollOfScalar(myColl11.value()).useAutoDiff() ) { MY_THROW}
+    std::array<SerialCollOfScalar, 3> serialArray = equelle::makeArray(serial11, SerialCollOfScalar(myADB6), SerialCollOfScalar(myADB7));
+    if (compareER(cudaArray[0], serialArray[0], "cudaArray[0]")) {MY_THROW}
+    if (compareER(cudaArray[1], serialArray[1], "cudaArray[1]")) {MY_THROW}
+    if (compareER(cudaArray[2], serialArray[2], "cudaArray[2]")) {MY_THROW}
+    // 4)
+    std::array<CollOfScalar, 3> myOutput = test_function(cudaArray, serialArray);
+    // 5)
+    if (compareER(myOutput[0], serialArray[0], "myOutput[0]")) {MY_THROW}
+    // this one is changed
+    // if (compareER(myOutput[1], serialArray[1], "myOutput[1]")) {MY_THROW}
+    if (compareER(myOutput[2], serialArray[2], "myOutput[2]")) {MY_THROW}
+    // Recomputation of myOutput[1] serially:
+    SerialCollOfScalar recomp_intc = serialER.operatorOn(serialArray[0], serialER.allCells(), serialER.interiorCells());
+    double unchanged_midVal = (serialER.minReduce(recomp_intc) + serialER.maxReduce(recomp_intc))/2;
+    SerialCollOfScalar recomp2_intc = serialER.trinaryIf( (recomp_intc > unchanged_midVal), recomp_intc, serialER.operatorExtend(double(1000), serialER.interiorCells()));
+    SerialCollOfScalar recomp_fin = serialER.operatorExtend(recomp2_intc, serialER.interiorCells(), serialER.allCells());
+    if (compareER(myOutput[1], recomp_fin, "myOutput[1]")) {MY_THROW}
+
+    
+    // Call test_function with non-autodiff CollOfScalars
+    // 3)
+    std::array<CollOfScalar, 3> cudaArrayS = makeArray(CollOfScalar(myColl11.value()), CollOfScalar(myColl6.value()), CollOfScalar(myColl7.value()));
+    if (compareER(cudaArrayS[0], serialArray[0], "cudaArray[0] noAD",0, true)) {MY_THROW}
+    if (compareER(cudaArrayS[1], serialArray[1], "cudaArray[1] noAD",0, true)) {MY_THROW}
+    if (compareER(cudaArrayS[2], serialArray[2], "cudaArray[2] noAD",0, true)) {MY_THROW}
+    // 4)
+    std::cout << "--------- TEST_FUNCTION without AD ---------\n";
+    std::array<CollOfScalar, 3> myOutputS = test_function(cudaArray, serialArray);
+    std::cout << "--------- TEST_FUNCTION without AD done ----\n";
+    // 5)
+    if (compareER(myOutputS[0], serialArray[0], "myOutput[0]")) {MY_THROW}
+    // this one is changed
+    // if (compareER(myOutput[1], serialArray[1], "myOutput[1]")) {MY_THROW}
+    if (compareER(myOutputS[2], serialArray[2], "myOutput[2] noAD")) {MY_THROW}
+    if (compareER(myOutputS[1], recomp_fin, "myOutput[1] noAD",0, true)) {MY_THROW}
+    
+
+    // Test what fails in the shallow water simulator:
+    // q = h + b
+    // raw = q - b # = h
+    // water1 = (raw > 0.05) ? raw : 1000 Extend AllCells() # fails
+    // water2 = (h > 0.05) ? h : 1000 Extend AllCells() # correct.
+
+
+    std::cout << "\nEnd of main\n";
     return 0;
 }
 
