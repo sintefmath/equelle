@@ -154,8 +154,6 @@ CollOfScalar LinearSolver::solve(const CudaMatrix& A_cpy,
     matrixView cusp_A( A.rows(), A.rows(), A.nnz(),
 		       cusp_A_csrRowPtr, cusp_A_csrColInd, cusp_A_csrVal );
 
-    std::cout << "THIS SHOULD ABSOLUTLY NOT BE SHOWING!\n";
-
     // Create a monitor
     cusp::default_monitor<double> monitor(cusp_b, maxit_, tol_);
 
