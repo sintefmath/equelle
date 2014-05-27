@@ -52,28 +52,19 @@ computeBoundaryFlux(u) = {
     -> dir_fluxes Extend BoundaryFaces()
 }
 
-
-
-# NewtonSolve takes a function (that should accept the primary variable as input) and the initial guess for the primary variable.
 expU : Mutable Collection Of Scalar On AllCells()
 expU = u0
 For dt In timesteps
 {
-    # Compute the residual for the heat equation.
-    computeResidual : Function(u : Collection Of Scalar On AllCells()) -> Collection Of Scalar On AllCells()
-    computeResidual(u) = {
-        ifluxes = computeInteriorFlux(u)
-        bfluxes = computeBoundaryFlux(u)
-        # Extend both ifluxes and bfluxes to AllFaces() and add to get all fluxes.
-        fluxes = (ifluxes Extend AllFaces()) + (bfluxes Extend AllFaces())
-        # Deduced type: Collection Of Scalar On AllCells()
-        residual = (dt / vol) * Divergence(fluxes)
-        -> residual
-    }
-    expU = expU - computeResidual(expU)
+    ifluxes = computeInteriorFlux(expU)
+    bfluxes = computeBoundaryFlux(expU)
+    # Extend both ifluxes and bfluxes to AllFaces() and add to get all fluxes.
+    fluxes = (ifluxes Extend AllFaces()) + (bfluxes Extend AllFaces())
+    # Deduced type: Collection Of Scalar On AllCells()
+    expU = expU - (dt / vol) * Divergence(fluxes)
     Output("expU", expU)
     Output("maximum of u", MaxReduce(expU))
 }
-
 Output("expU", expU)
+
 #Output("u", u)

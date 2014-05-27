@@ -9,11 +9,11 @@
 
 format compact;
 
-nx = 100;
-ny = 111;
-nz = 50;
-timesteps = 20
-dt = 0.2
+nx = 19;
+ny = 24;
+nz = 20;
+timesteps = 150
+dt = 0.5;
 
 t = ones(1,timesteps).*dt;
 save('timesteps.mat', 't', '-ascii')
@@ -58,11 +58,12 @@ end
 dirvalsList = dirvalsList';
 save('dir_val.mat', 'dirvalsList', '-ascii')
 
-disp('Num cells: ')
-nx*ny*nz
+%disp('Num cells: ')
+Num_cells = nx*ny*nz
 
-disp('Num faces:')
-numFaces = (nx+1)*ny*nz + nx*(ny+1)*nz + nx*ny*(nz+1)
+%disp('Num faces:')
+num_Faces = (nx+1)*ny*nz + nx*(ny+1)*nz + nx*ny*(nz+1)
 
 size_dirvals = size(dirvalsList)
 size_indices = size(indices)
+nx_ny_nz = [nx ny nz]

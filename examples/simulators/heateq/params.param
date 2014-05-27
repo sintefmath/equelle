@@ -1,10 +1,11 @@
 grid_dim=3
-nx=100
+nx=19
 dx=1
-ny=111
+ny=24
 dy=1
-nz=50
+nz=20
 dz=1
+k=0.3
 u_initial_from_file=false
 u_initial=500
 dirichlet_boundary_from_file=true
