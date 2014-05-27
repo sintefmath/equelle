@@ -69,7 +69,7 @@ EquelleRuntimeCUDA::EquelleRuntimeCUDA(const Opm::parameter::ParameterGroup& par
       solver_(param.getDefault<std::string>("solver", "BiCGStab"),
 	      param.getDefault<std::string>("preconditioner", "diagonal"),
 	      param.getDefault("solver_max_iter", 1000),
-	      param.getDefault("solver_tol", 1e-10)),
+	      param.getDefault("solver_tol", 1e-8)),
       serialSolver_(param),
       output_to_file_(param.getDefault("output_to_file", false)),
       verbose_(param.getDefault("verbose", 0)),
