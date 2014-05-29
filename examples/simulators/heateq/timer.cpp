@@ -11,6 +11,7 @@
 #include <cmath>
 #include <array>
 #include <ctime>
+#include <fstream>
 
 #include "EquelleRuntimeCUDA.hpp"
 
@@ -76,7 +77,7 @@ void equelleGeneratedCode(equelleCUDA::EquelleRuntimeCUDA& er) {
         const CollOfScalar fluxes = (er.operatorExtend(ifluxes, er.interiorFaces(), er.allFaces()) + er.operatorExtend(bfluxes, er.boundaryFaces(), er.allFaces()));
         expU = (expU - ((dt / vol) * er.divergence(fluxes)));
         //er.output("expU", expU);
-        er.output("maximum of u", er.maxReduce(expU));
+        //er.output("maximum of u", er.maxReduce(expU));
 	
 	iteration_count++;
 	if ( iteration_count == 110 ) {
@@ -84,7 +85,13 @@ void equelleGeneratedCode(equelleCUDA::EquelleRuntimeCUDA& er) {
 	}
     }
 
-    std::cout << "100 iterations took " << duration << " seconds\n";
+    std::ofstream outfile;
+    outfile.open("benchmark.txt", std::ios_base::app); 
+    double max =  er.maxReduce(expU);
+    outfile << "\nNumber of cells: " << er.getGrid().number_of_cells << "\n";
+    outfile << "Max value from heateq " << max << "\n";
+    outfile << "100 iterations took " << duration << " seconds\n";
+    outfile.close();
     //    er.output("expU", expU);
 
     // ============= Generated code ends here ================
