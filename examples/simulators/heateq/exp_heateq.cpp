@@ -10,6 +10,7 @@
 #include <iostream>
 #include <cmath>
 #include <array>
+#include <ctime>
 
 #include "EquelleRuntimeCUDA.hpp"
 
@@ -58,21 +59,22 @@ void equelleGeneratedCode(equelleCUDA::EquelleRuntimeCUDA& er) {
         const CollOfScalar dir_fluxes = ((er.operatorOn(btrans, er.boundaryFaces(), dirichlet_boundary) * dir_sign) * (u_dirbdycells - dirichlet_val));
         return er.operatorExtend(dir_fluxes, dirichlet_boundary, er.boundaryFaces());
     };
+    std::clock_t start;
+    double duration;
+    start = std::clock();
     CollOfScalar expU;
     expU = u0;
     for (const Scalar& dt : timesteps) {
-        std::function<CollOfScalar(const CollOfScalar&)> computeResidual = [&](const CollOfScalar& u) -> CollOfScalar {
-            const CollOfScalar ifluxes = computeInteriorFlux(u);
-            const CollOfScalar bfluxes = computeBoundaryFlux(u);
-            const CollOfScalar fluxes = (er.operatorExtend(ifluxes, er.interiorFaces(), er.allFaces()) + er.operatorExtend(bfluxes, er.boundaryFaces(), er.allFaces()));
-            const CollOfScalar residual = ((u - u0) + ((dt / vol) * er.divergence(fluxes)));
-            return residual;
-        };
-        expU = (expU - computeResidual(expU));
+        const CollOfScalar ifluxes = computeInteriorFlux(expU);
+        const CollOfScalar bfluxes = computeBoundaryFlux(expU);
+        const CollOfScalar fluxes = (er.operatorExtend(ifluxes, er.interiorFaces(), er.allFaces()) + er.operatorExtend(bfluxes, er.boundaryFaces(), er.allFaces()));
+        expU = (expU - ((dt / vol) * er.divergence(fluxes)));
         //er.output("expU", expU);
         er.output("maximum of u", er.maxReduce(expU));
     }
-    er.output("expU", expU);
+    duration = (std::clock() - start) / (double) CLOCKS_PER_SEC;
+    std::cout << "Computational phase: " << duration << " seconds\n";
+    //    er.output("expU", expU);
 
     // ============= Generated code ends here ================
 

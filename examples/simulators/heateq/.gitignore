@@ -8,6 +8,9 @@ cmake_install.cmake
 *.cbp
 
 *.output
+*.eps
+*.fig
+*.png
 
 *.mat
 

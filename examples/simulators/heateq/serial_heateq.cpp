@@ -16,18 +16,24 @@
 
 #include "equelle/EquelleRuntimeCPU.hpp"
 
-using namespace equelle;
+void ensureRequirements(const equelle::EquelleRuntimeCPU& er);
+void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er);
 
-void ensureRequirements(const EquelleRuntimeCPU& er);
-
+#ifndef EQUELLE_NO_MAIN
 int main(int argc, char** argv)
 {
     // Get user parameters.
     Opm::parameter::ParameterGroup param(argc, argv, false);
 
     // Create the Equelle runtime.
-    EquelleRuntimeCPU er(param);
+    equelle::EquelleRuntimeCPU er(param);
+    equelleGeneratedCode(er);
+    return 0;
+}
+#endif // EQUELLE_NO_MAIN
 
+void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er) {
+    using namespace equelle;
     ensureRequirements(er);
 
     // ============= Generated code starts here ================
@@ -62,21 +68,20 @@ int main(int argc, char** argv)
             const CollOfScalar ifluxes = computeInteriorFlux(u);
             const CollOfScalar bfluxes = computeBoundaryFlux(u);
             const CollOfScalar fluxes = (er.operatorExtend(ifluxes, er.interiorFaces(), er.allFaces()) + er.operatorExtend(bfluxes, er.boundaryFaces(), er.allFaces()));
-            const CollOfScalar residual = ((u - u0) + ((dt / vol) * er.divergence(fluxes)));
+            const CollOfScalar residual = ((dt / vol) * er.divergence(fluxes));
             return residual;
         };
         expU = (expU - computeResidual(expU));
-        //er.output("expU_serial", expU);
-	er.output("maximum of u (serial)", er.maxReduce(expU));
+        er.output("serial_expU", expU);
+        er.output("maximum of u", er.maxReduce(expU));
     }
-    er.output("expU_serial", expU);
+    er.output("serial_expU", expU);
 
     // ============= Generated code ends here ================
 
-    return 0;
 }
 
-void ensureRequirements(const EquelleRuntimeCPU& er)
+void ensureRequirements(const equelle::EquelleRuntimeCPU& er)
 {
     (void)er;
 }

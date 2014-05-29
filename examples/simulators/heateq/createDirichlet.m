@@ -9,10 +9,10 @@
 
 format compact;
 
-nx = 19;
-ny = 24;
-nz = 20;
-timesteps = 150
+nx = 100;
+ny = 111;
+nz = 50;
+timesteps = 20
 dt = 0.5;
 
 t = ones(1,timesteps).*dt;
