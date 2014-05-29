@@ -12,7 +12,7 @@ format compact;
 nx = 100;
 ny = 111;
 nz = 50;
-timesteps = 20
+timesteps = 120
 dt = 0.5;
 
 t = ones(1,timesteps).*dt;
