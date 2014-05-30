@@ -6,7 +6,7 @@
 #include <opm/core/grid.h>
 #include <iostream>
 
-int main(int argc, char** argv)
+int main(int /*argc*/, char** argv)
 {
     Opm::GridManager gm(argv[1]);
     const UnstructuredGrid& g = *(gm.c_grid());
