@@ -43,8 +43,8 @@ BOOST_AUTO_TEST_CASE( heatEquation ) {
     double t = 0.0;
 
     equelle::CartesianGrid::CellRange allCells = grid.allCells();
-    equelle::CartesianGrid::FaceRange allXFaces = grid.allXFaces();
-    equelle::CartesianGrid::FaceRange allYFaces = grid.allYFaces();
+    // equelle::CartesianGrid::FaceRange allXFaces = grid.allXFaces();
+    // equelle::CartesianGrid::FaceRange allYFaces = grid.allYFaces();
 
     equelle::CartesianGrid::CartesianCollectionOfScalar u0 = u;
 
@@ -81,12 +81,11 @@ BOOST_AUTO_TEST_CASE( heatEquation2ndOrder ) {
     equelle::CartesianGrid::CartesianCollectionOfScalar u = grid.inputCellScalarWithDefault( "u", 1.0 );
     equelle::CartesianGrid::CartesianCollectionOfScalar u_faces = grid.inputFaceScalarWithDefault( "u_faces", 0.0 );
 
-    const double k = 1.0; //Material specific heat diffusion constant
-    const double dx = 1.0;//5.0 / static_cast<double>(dim_x);
-    const double dy = 1.0;//5.0 / static_cast<double>(dim_y);
+    // const double k = 1.0; //Material specific heat diffusion constant
+    // const double dx = 1.0;//5.0 / static_cast<double>(dim_x);
+    // const double dy = 1.0;//5.0 / static_cast<double>(dim_y);
     const double dt = 1.0;
-
-    const float a = k * dt / (dx*dy);
+    // const float a = k * dt / (dx*dy);
 
     double t_end = 100.0;
     double t = 0.0;
