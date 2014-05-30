@@ -12,7 +12,6 @@ option(EQUELLE_BUILD_MPI "Build MPI backend and tools (requires MPI and Zoltan f
 
 link_directories(
   ${EQUELLE_LIB_DIRS}
-  ${EQUELLE_INCLUDE_DIRS}
   ${EXTRA_LIBDIRS_FOR_EQUELLE}
 )
 
