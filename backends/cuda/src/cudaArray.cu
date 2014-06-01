@@ -59,10 +59,11 @@ CudaArray::CudaArray(const int size, const double value)
 
     cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
     checkError_("cudaMalloc in CudaArray::CudaArray(int, double)");
-        
-    cudaStatus_ = cudaMemcpy(dev_values_, &host_vec[0], size_*sizeof(double),
-				    cudaMemcpyHostToDevice);
-    checkError_("cudaMemcpy in CudaArray::CudaArray(int, double)");
+     
+    setUniformDouble<<<setup_.grid, setup_.block>>>( dev_values_, value, size_);
+    //cudaStatus_ = cudaMemcpy(dev_values_, &host_vec[0], size_*sizeof(double),
+    //				    cudaMemcpyHostToDevice);
+    //checkError_("cudaMemcpy in CudaArray::CudaArray(int, double)");
 
 } 
 
@@ -402,6 +403,14 @@ CollOfBool equelleCUDA::operator!=(const Scalar lhs, const CudaArray& rhs) {
 /////////////////////////////////////////////////////////////////////////////////
 /// ----------------------- KERNEL IMPLEMENTATIONS: ---------------------------//
 /////////////////////////////////////////////////////////////////////////////////
+
+__global__ void wrapCudaArray::setUniformDouble(double* data, const double val, const int size)
+{
+    const int i = myID();
+    if ( i < size ) {
+	data[i] = val;
+    }
+}
 
 
 __global__ void wrapCudaArray::minus_kernel(double* out, const double* rhs, const int size) {

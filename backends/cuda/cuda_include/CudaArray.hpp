@@ -151,6 +151,17 @@ namespace equelleCUDA {
 	
 	// ---------------- CUDA KERNELS ------------------- //
 	
+
+	//! Kernel for initializing to uniform values
+	/*!
+	  cudaMemset can only be used on 4 bytes values, and we therefore have
+	  to use this kernel to initialize to uniform values.
+	  \param[out] data The data array we want to initialize
+	  \param[in] val The value all elements of data should get
+	  \param[in] size The size of data array
+	 */
+	__global__ void setUniformDouble( double* data, const double val, const int size);
+
 	//! CUDA kernel for the minus operator
 	/*!
 	  Performs elementwise operation for device arrays:
