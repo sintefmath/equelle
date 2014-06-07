@@ -55,9 +55,9 @@ LinearSolver::LinearSolver(std::string solver,
     else if ( precond == "none" ) {
 	precond_ = NONE;
     }
-    else if ( precond == "Ainv" ) {
-	precond_ = Ainv;
-    }
+    //else if ( precond == "Ainv" ) {
+    //	precond_ = Ainv;
+    //}
     else {
 	printLegalInput();
 	OPM_THROW(std::runtime_error, "Illegal input " << precond << " for preconditioner.");
@@ -77,7 +77,7 @@ void LinearSolver::printLegalInput() const {
     std::cout << "The following are legal input for preconditioner:\n";
     std::cout << "\t - none\n";
     std::cout << "\t - diagonal\n";
-    std::cout << "\t - Ainv\n";
+    //std::cout << "\t - Ainv\n";
     std::cout << "Example: preconditioner=diagonal\n";
     std::cout << "\n";
 }

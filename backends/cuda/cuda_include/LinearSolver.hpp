@@ -16,7 +16,7 @@ namespace equelleCUDA {
     enum EquelleSolver { CG, BiCGStab, GMRes, CPU};
 
     //! Enumerator for specifying available preconditioners for linear solvers.
-    enum EquellePrecond { NONE, DIAG, Ainv};
+    enum EquellePrecond { NONE, DIAG};
 
 
     //! For finding implicit solutions
