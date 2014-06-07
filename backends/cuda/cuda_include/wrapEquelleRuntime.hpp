@@ -136,9 +136,8 @@ namespace equelleCUDA
 	  \param int_faces Contains the indices of the Interior Faces.
 	  \param face_cells The array with indices telling us which cells are on each side
 	  of what face.
-	  \param grad Precomputed matrix which contains the neighbour relations in
-	  the grid with respect to the gradient operator, 
-	  such that grad*cell_scalarfield gives the resulting gradients. 
+	  \param ops The class containing the helper matrices required by the automatic
+	  differentiation functionality. 
 	  \return A Collection Of Scalars on all Interior Cells with the discrete gradient
 	  value computed from the value given in All Cells.
 	*/
@@ -173,16 +172,15 @@ namespace equelleCUDA
 	/*! 
 	  Set up the kernel for computing the divergence in every cell based on a 
 	  collection of fluxes on all faces. The divergence of a cell is a sum of the 
-	  fluxes on all its surrounding faces where the faces with outwards pointing normals
-	  are added and the faces with inwards pointing normals are subtracted.
+	  fluxes on all its surrounding faces where the faces with outwards pointing
+	  normals are added and the faces with inwards pointing normals are subtracted.
 	  
 	  \param fluxes A flux value for every face in the grid. Should be of size 
 	  number_of_cells_
 	  \param dev_grid A DeviceGrid referance since we need to a lot of its members
 	  in the kernel.
-	  \param fulldiv Precomputed matrix which contains the neighbour relations in
-	  the grid with respect to the divergence operator, 
-	  such that fulldiv*fluxes gives the resulting divergence. 
+	  \param ops The class containing the helper matrices required by the automatic
+	  differentiation functionality. 
 	  \return A Collection of Scalars on allCells with the resulting divergence.
 	*/
 	CollOfScalar divergenceWrapper( const CollOfScalar& fluxes,

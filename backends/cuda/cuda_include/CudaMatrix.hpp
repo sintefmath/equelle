@@ -418,7 +418,21 @@ namespace equelleCUDA {
 					     const bool* bool_ptr,
 					     const int rows);
 	
-
+	//! Kernel for computing diagonal matrix-matrix multiplication
+	/*
+	  Multiplication with a diagonal matrix from the right preserve non-zero 
+	  patterns, and we therefore treat this operation as a special case.
+	  We therefore make a copy of the rhs matrix to the result prior to
+	  calling this kernel.
+	  The operation corresponds to multiply each element in the diagonal matrix
+	  to every element in the other matrix's corresponding row.
+	  
+	  \param[in,out] csrVal Right-hand side matrix non-zero values,
+	  will be overwritten by the result.
+	  \param[in] csrRowPtr Points to where in csrVal each row starts.
+	  \param[in] diagVals Diagonal values from lhs diagonal matrix.
+	  \param[in] total_row Total number of rows in resulting matrix.
+	*/
 	__global__ void diagMult_kernel( double* csrVal,
 					 const int* csrRowPtr,
 					 const double* diagVals,

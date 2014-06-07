@@ -32,6 +32,22 @@ namespace equelleCUDA {
       In the future it would be fun to include a test function which helps the user
       find out which solver to use, and automatize this process.
 
+      For more flexibility, we also allow the CPU option for solver, and we then 
+      use the same solvers as in the Equelle CPU back-end.
+
+      \note
+      To the developer: In order to implement new solver/preconditioner combination:
+      - Edit enum options to EquelleSolver and EquellePrecond.
+      - Edit constructor to be able to accept the new method/precond
+      - Implement new solver in the solve function
+      - Edit printLegalInput() to print the new alternative
+      - Edit printLegalCombos() to print the new alternative
+      
+      \todo
+      Get rid of all if else options in function solve. Hide options in private 
+      member functions to avoid the potential huge amount of combinations. Should
+      check for preconditioner only once, then solver only once.
+
       \sa EquelleSolver, EquellePrecond
     */
     class LinearSolver
@@ -61,6 +77,7 @@ namespace equelleCUDA {
 			   const CudaArray& b,
 			   const int verbose ) const;
 	
+	//! Gives the solver enum value
 	EquelleSolver getSolver() const;
 
     private:
@@ -69,7 +86,18 @@ namespace equelleCUDA {
 	double tol_;
 	int maxit_;
 
+	//! Error messages
+	/*!
+	  In case the requested solver or preconditioner is not legal, this function
+	  will be called and prints to screen the legal alternatives.
+	*/
 	void printLegalInput() const ;
+	//! Error messages
+	/*! 
+	  If the requested combination of solver and preconditioner is not implemented
+	  this function will be called and prints to screen the legal options for
+	  solver-preconditioner combos.
+	*/
 	void printLegalCombos() const ;
 
     }; // class LinearSolver

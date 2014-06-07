@@ -176,7 +176,7 @@ public:
     
     // ------- FUNCTIONS ONLY FOR TESTING -----------------------
 
-    // Havahol - add a function to return grid in order to do testing here.
+    //
     UnstructuredGrid getGrid() const;
     
     CudaMatrix getGradMatrix() const { return devOps_.grad();};
