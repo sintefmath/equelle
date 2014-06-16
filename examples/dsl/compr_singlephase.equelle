@@ -1,12 +1,19 @@
-# Constants. Note that we are not allowed to use capital initial letter!
-rsp = 287.058               # Specific gas constant for dry air.
-temp = 290                  # Assume constant temperature
-perm = 0.00000000000098692  # = 1 Darcy (yes, we need scientific notation)
-lambda = 52500              # = 1/viscosity (approx correct for dry air at 290 K)
+# Constants. Note: only lowercase initial letters!
+# Specific gas constant for dry air.
+rsp = 287.058
+# Assume constant temperature
+temp = 290
+# perm = 1 Darcy (yes, we need scientific notation)
+perm = 0.00000000000098692
+# mobility = 1/viscosity (approx correct for dry air at 290 K)
+mobility = 52500
 
-# Input
-source = InputCollectionOfScalar("source", AllCells())
+# Input source terms and time steps.
+q = InputCollectionOfScalar("source", AllCells())
 timesteps = InputSequenceOfScalar("timesteps")
+
+# Initial pressure (3000000 Pa ~= 30 atm)
+p_initial = 3000000 Extend AllCells()
 
 # Useful shortcuts/aliases
 intf = InteriorFaces()
@@ -20,7 +27,7 @@ d1 = Centroid(f) - Centroid(intf)
 d2 = Centroid(s) - Centroid(intf)
 h1 = - area * perm * Dot(Normal(intf), d1) / Dot(d1, d1)
 h2 =   area * perm * Dot(Normal(intf), d2) / Dot(d2, d2)
-k = 1.0 / (1.0/h1 + 1.0/h2)
+trans = 1.0 / (1.0/h1 + 1.0/h2)
 
 # Function for computing density from pressure
 density : Function(p : Collection Of Scalar On AllCells()) ...
@@ -35,16 +42,13 @@ residual : Function(p  : Collection Of Scalar On AllCells(), ...
                     dt : Scalar) ...
                       -> Collection Of Scalar On AllCells()
 residual(p, p0, dt) = {
-    v = lambda * k * ((p On f) - (p On s))
+    v = mobility * trans * ((p On f) - (p On s))
     rho = density(p)
     rho0 = density(p0)
     rho_face = ((rho On f) + (rho On s)) / 2
-    res = (vol/dt) * (rho - rho0) + Divergence(v * rho_face) - source
+    res = (vol/dt) * (rho - rho0) + Divergence(v * rho_face) - q
     -> res
 }
-
-# Initial pressure (1000000 Pa ~= 10 atm)
-p_initial = 1000000 Extend AllCells()
 
 # Declare variable that will change in time loop. It must
 # be declared Mutable, to allow repeated assignment.
@@ -53,17 +57,17 @@ p0 = p_initial
 
 # Timestepping loop
 For dt In timesteps {
-    # Define local residual function that only takes the primary
-    # variable as argument.
-    localResidual : Function(p : Collection Of Scalar On AllCells()) ...
-                              -> Collection Of Scalar On AllCells()
-    localResidual(p) = {
+    # Define local residual function that only takes the
+    # primary variable as argument.
+    locRes : Function(p : Collection Of Scalar On AllCells()) ...
+                       -> Collection Of Scalar On AllCells()
+    locRes(p) = {
         -> residual(p, p0, dt)
     }
 
-    # Solve equation implicitly, with previous pressure as initial
-    # guess for Newton solver.
-    p = NewtonSolve(localResidual, p0)
+    # Solve equation implicitly, with previous pressure as
+    # initial guess for Newton solver.
+    p = NewtonSolve(locRes, p0)
 
     # Output 
     Output("pressure", p)
@@ -71,5 +75,3 @@ For dt In timesteps {
     # Update initial pressure for next timestep.
     p0 = p
 }
-
-

@@ -3,9 +3,11 @@ cmake_minimum_required( VERSION 2.8 )
 
 # The -Wno-sign-compare is because flex generates a scanner with
 # signed/unsigned comparison!
+# Similarly, -Wno-deprecated-register is used because the deprecated
+# 'register' storage class is used in the generated scanner.
 
 if(NOT MSVC)
-	set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra -Wno-sign-compare -Wno-unused-parameter" )
+	set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra -Wno-sign-compare -Wno-unused-parameter -Wno-deprecated-register -Wno-unneeded-internal-declaration" )
 endif()
 
 find_package( BISON REQUIRED )
