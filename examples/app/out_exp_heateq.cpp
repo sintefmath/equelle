@@ -68,7 +68,7 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er) {
             const CollOfScalar ifluxes = computeInteriorFlux(u);
             const CollOfScalar bfluxes = computeBoundaryFlux(u);
             const CollOfScalar fluxes = (er.operatorExtend(ifluxes, er.interiorFaces(), er.allFaces()) + er.operatorExtend(bfluxes, er.boundaryFaces(), er.allFaces()));
-            const CollOfScalar residual = ((u - u0) + ((dt / vol) * er.divergence(fluxes)));
+            const CollOfScalar residual = ((dt / vol) * er.divergence(fluxes));
             return residual;
         };
         expU = (expU - computeResidual(expU));
