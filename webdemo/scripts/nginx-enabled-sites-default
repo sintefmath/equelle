@@ -1,0 +1,15 @@
+server {
+  #listen 80; # Default
+  #listen [::]:80; # Not working, why??
+
+  server_name localhost;
+  charset utf-8;
+  sendfile off;
+
+  location / {
+    root /srv/files/;
+  }
+  location /compiler/ {
+    proxy_pass http://localhost:8880/;
+  }
+}

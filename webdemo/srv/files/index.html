@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Equelle Demo</title>
+    <!-- Libraries -->
+    <script src="/js/underscore-min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="/js/jquery-2.1.1.min.js" type="text/javascript" charset="utf-8"></script>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <script src="/js/bootstrap.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="/js/ace-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+    <!-- Code -->
+    <script src="/js/init.js" type="text/javascript" charset="utf-8"></script>
+  </head>
+<body>
+  <h2>Equelle code:</h2>
+  <div id="equelle" style="height:500px"></div>
+  <a href="" id="send-to-compiler">Send to compiler</a>
+  <h2>Cpp code:</h2>
+  <div id="compiler-error-msg" class="alert alert-danger hidden"><pre></pre></div>
+  <div id="cpp" style="height:500px"></div>
+  <h2>Input data:</h2>
+  <div id="required-inputs" class="alert alert-info hidden"></div>
+  <form id="required-input-files">
+    <input id="file-selector" type="file" multiple>
+  </form>
+  <h2>Run simulator:</h2>
+  <a href="" id="compile-simulator">Compile simulator</a>
+  <a href="" id="run-simulator">Run simulator</a>
+</body>
+</html> 
