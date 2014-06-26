@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # Add required repositories
+apt-get update
+apt-get install -y python-software-properties software-properties-common
 apt-add-repository ppa:opm/ppa
 apt-add-repository ppa:ubuntu-toolchain-r/test
 apt-get update
@@ -19,7 +21,6 @@ initctl reload-configuration
 start node-equelle-server
 
 # Install required libraries for Equelle
-apt-get install -y python-software-properties software-properties-common
 apt-get install -y git flex bison g++ make cmake libopm-autodiff libopm-core-dev libopm-autodiff-dev libeigen3-dev libboost1.48-all-dev openmpi-bin libopenmpi-dev gfortran
 apt-get -y install gcc-4.7 g++-4.7
 update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.6 60 --slave /usr/bin/g++ g++ /usr/bin/g++-4.6 
