@@ -9,7 +9,10 @@ server {
   location / {
     root /srv/files/;
   }
-  location /compiler/ {
+  location /equellecompiler/ {
     proxy_pass http://localhost:8880/;
+  }
+  location /cppcompiler/ {
+    proxy_pass http://localhost:8881/;
   }
 }

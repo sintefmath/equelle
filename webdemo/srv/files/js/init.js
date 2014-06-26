@@ -111,7 +111,9 @@ jQuery(document).ready(function($) {
 	$('a#send-to-compiler').click(function(e) {
 		e.preventDefault();
         var source = editor.getValue();
-		$.post('/compiler/', source, function(ret) {
+		$.post('/equellecompiler/', source, function(ret) {
+            console.log('Got equelle compiler result:');
+            console.log(ret);
             if (ret.err) {
                 ceditor.setValue('');
                 errorMsgText.text(ret.err);
@@ -157,4 +159,25 @@ jQuery(document).ready(function($) {
         }
         readFile(0);
     }).click(function() { this.value = null; });
+
+    /* Hook up compile-simulator link */
+	$('a#compile-simulator').click(function(e) {
+		e.preventDefault();
+        var cppSource = ceditor.getValue();
+		$.post('/cppcompiler/', cppSource, function(ret) {
+            // Split into three-part return values
+            var i = 0;
+            var output = {
+                status: ret.substring(0,(i = ret.indexOf(':'))),
+                sign: ret.substring(i+1, (i = ret.indexOf(':',i+1))),
+                executable: ret.substring(i+1)
+            };
+            if (output.status == 'success') {
+                console.log('Compiling was successfull, I have sent you a copy of the executable.');
+                localStorage.setItem('executable',output.executable);
+                localStorage.setItem('executable-signature',output.sign);
+            }
+            console.log(output);
+        });
+    });
 });
