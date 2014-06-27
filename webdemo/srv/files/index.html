@@ -1,20 +1,40 @@
 <!DOCTYPE html>
-<html>
+<html style="height:100%">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Equelle Demo</title>
     <!-- Libraries -->
+    <!-- Underscore -->
     <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js" type="text/javascript" charset="utf-8"></script>
+    <!-- JQuery -->
     <script src="//code.jquery.com/jquery-2.1.1.min.js" type="text/javascript" charset="utf-8"></script>
+    <!-- Bootstrap -->
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js" type="text/javascript" charset="utf-8"></script>
-    <script src="/js/ace-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
-    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.18/angular.min.js" type="text/javascript" charset="utf-8"></script>
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <!-- Ladda button spinner -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/ladda-bootstrap/0.1.0/spin.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/ladda-bootstrap/0.1.0/ladda.min.js" type="text/javascript" charset="utf-8"></script>
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/ladda-bootstrap/0.1.0/ladda-themeless.min.css">
+    <!-- Angular -->
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.18/angular.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.18/angular-route.min.js" type="text/javascript" charset="utf-8"></script>
     <!-- TODO: Move ace to CDN hosting as well? -->
-    <!-- Code -->
-    <script src="/js/init.js" type="text/javascript" charset="utf-8"></script>
+    <script src="/js/ace-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+    <!-- End libraries -->
+    <!-- Own code -->
+    <script src="/js/app.js" type="text/javascript" charset="utf-8"></script>
+    <!-- Styles -->
+    <link rel="stylesheet" href="/css/kitchen-sink.css">
+    <link rel="stylesheet" href="/css/page-start.css">
+    <link rel="stylesheet" href="/css/page-editor.css">
+    <!--<script src="/js/init.js" type="text/javascript" charset="utf-8"></script>-->
   </head>
-<body>
+<body style="height:100%">
+  <div style="height:100%" id="equelle-kitchen-sink" class="container" ng-app="equelleKitchenSink">
+    <div ng-view></div>
+  </div>
+
+  <!--
   <h2>Equelle code:</h2>
   <div id="equelle" style="height:500px"></div>
   <a href="" id="send-to-compiler">Send to compiler</a>
@@ -29,5 +49,6 @@
   <h2>Run simulator:</h2>
   <a href="" id="compile-simulator">Compile simulator</a>
   <a href="" id="run-simulator">Run simulator</a>
+  -->
 </body>
 </html> 
