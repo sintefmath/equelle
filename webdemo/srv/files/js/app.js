@@ -1,5 +1,5 @@
 (function(){
-    angular.module('equelleKitchenSink', ['ngRoute'])
+    angular.module('equelleKitchenSink', ['ngRoute','equelleKitchenSinkNavigation','equelleKitchenSinkEditor'])
     /* Multiple views routing */
     .config(function($routeProvider) {
         $routeProvider
@@ -10,10 +10,18 @@
             .when('/editor/', {
                  templateUrl: 'page-editor.html'
                 ,controller: 'editorController'
-            });
+            })
+            .when('/inputs/', {
+                 templateUrl: 'page-inputs.html'
+                ,controller: 'inputsController'
+            })
     })
     /* Page controllers */
     .controller('startController', function($scope) {
+        /* Header and navigation */
+        $scope.title = 'Select a project:';
+        $scope.navigation = {};
+        /* Projects */
         $scope.simulators = [
              { path: ':empty', name: 'Empty', text: 'Start with no code or data' }
             ,{ path: '/examples/heateq/', name: '2D Heat equation', text: 'Start with a simple planar heat equation example' }
@@ -43,40 +51,20 @@
         };
     })
     .controller('editorController', function($scope) {
-        // Set the data of the simulator the user clicked
-        $scope.source = localStorage.source;
+        /* Header and navigation */
+        $scope.title = 'Edit code:';
+        $scope.navigation = {
+            previous: { path: '/', text: 'Select project' },
+            next: { path: '/inputs/', text: 'Provide inputs', disabled:true }
+        };
     })
-    /* ACE editor directive */
-    .directive('eqksAceEditor', ['$timeout', function($timeout) { return {
-         restrict: 'A'
-        ,link: function(scope, elem, attrs) {
-            var editor = ace.edit(elem.context);
-            editor.setValue(scope.source);
-            editor.gotoLine(0,0);
-            // Hook to documente change events
-            var compileTimer;
-            editor.on('change', function() {
-                $timeout.cancel(compileTimer);
-                compileTimer = $timeout(function() {
-                    console.log('Compiling');
-                },3000);
-            });
-            // Cleanup when template is deleted from DOM
-            elem.on('$destroy', function() { editor.destroy() });
-        }
-    }}])
-    .directive('eqksEquelleCompilerButton', function() { return {
-         restrict: 'A'
-        ,link: function(scope, elem, attrs) {
-            // Create working spinner
-            var el = $(elem);
-            el.html($('<span class="ladda-label"></span>').append(el.html()));
-            var spinner = Ladda.create(elem);
-            el.click(function() {
-                spinner.toggle();
-            });
-        }
-    }})
+    .controller('inputsController', function($scope) {
+        /* Header and navigation */
+        $scope.title = 'Provide inputs:';
+        $scope.navigation = {
+            previous: { path: '/editor/', text: 'Edit code' },
+        };
+    })
 })();
 
 

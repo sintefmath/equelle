@@ -1,5 +1,7 @@
-<div class="clearfix">
-    <h2>Edit code:</h2>
-    <button type="button" class="btn btn-primary pull-right" data-style="expand-left" eqks-equelle-compiler-button>Compile</button>
+<div id="eqks-equelle-compiler" eqks-equelle-compiler>
+    <eqks-header-navigation>
+        <button type="button" class="btn btn-primary" data-style="expand-left" eqks-equelle-compiler-button>Compile to C++</button>
+    </eqks-header-navigation>
+    <div id="eqks-equelle-editor" eqks-equelle-editor></div>
+    <div class="alert alert-danger eqks-equelle-error" role="alert" eqks-equelle-compiler-error></div>
 </div>
-<div id="eqks-equelle-editor" eqks-ace-editor></div>
