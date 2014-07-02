@@ -1,3 +1,11 @@
 div#equelle-kitchen-sink > div {
     height: 100%;
 }
+/* Navigation bar */
+div.eqks-navigation-buttons > a.btn[disabled] {
+    background-color: #eee;
+}
+
+div.eqks-navigation-buttons > a.btn[disabled] span.ladda-spinner > div > div > div {
+    background-color: #000 !important;
+}

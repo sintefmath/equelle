@@ -14,19 +14,15 @@
                 var nav = scope.navigation.previous;
                 var link = $('<a href="#'+nav.path+'" class="btn btn-default" '+(nav.disabled?'disabled':'')+'><span class="glyphicon glyphicon-arrow-left"></span> '+nav.text+'</a>').appendTo(group);
                 navFuncs.enablePrevious = function() { link.removeAttr('disabled') };
-                navFuncs.disablePrevious = function() { link.attr('disabled') };
-            } else {
-                navFuncs.enablePrevious = function() { };
-                navFuncs.disablePrevious = function() { };
+                navFuncs.disablePrevious = function() { link.attr('disabled','') };
+                if (nav.ladda) navFuncs.laddaPrevious = Ladda.create(link.addClass('ladda-button').attr('data-style','expand-right')[0]);
             }
             if (scope.navigation.next) {
                 var nav = scope.navigation.next;
                 var link = $('<a href="#'+nav.path+'" class="btn btn-default" '+(nav.disabled?'disabled':'')+'>'+nav.text+' <span class="glyphicon glyphicon-arrow-right"></span></a>').appendTo(group);
                 navFuncs.enableNext = function() { link.removeAttr('disabled') };
-                navFuncs.disableNext = function() { link.attr('disabled') };
-            } else {
-                navFuncs.enableNext = function() { };
-                navFuncs.disableNext = function() { };
+                navFuncs.disableNext = function() { link.attr('disabled','') };
+                if (nav.ladda) navFuncs.laddaNext = Ladda.create(link.addClass('ladda-button').attr('data-style','expand-left')[0]);
             }
             /* Bind enable/disable functions to current scope */
             scope.navigation = navFuncs;

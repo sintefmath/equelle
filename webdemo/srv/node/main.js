@@ -1,163 +1,57 @@
-/* Includes */
+/* Libraries */
 var http = require('http'),
-    spawn = require('child_process').spawn,
-    exec = require('child_process').exec,
-    fs = require('fs'),
-    tmp = require('tmp'),
-    _ = require('underscore');
+    websocket = require('websocket').server;
+/* Own modules */
+var config = require('./config.js'),
+    helpers = require('./helpers.js'),
+    handleEquelleCompileConnection = require('./equelleCompiler.js'),
+    handleExecutableCompileConnection = require('./executableCompiler.js'),
+    handleExecutableRunConnection = require('./executableRun.js');
 
-/* Config */
-var equelle_dir = '/equelle/build',
-    equelle_compiler = equelle_dir+'/compiler/ec';
-var secret_key = 'equellesecret'; /* TODO: how to keep a key secret for use in production? */
-var compiler_skel_dir = '/scripts/cppcompilerskel';
-
-/* Helpers */
-var readAll = function(stream, endCB) {
-    var data = '';
-    stream.on('data', function(d) { data += d; });
-    stream.on('end', function() { endCB(data); });
-};
-
-var readStdOutErr = function(process, doneCB) {
-    var out = '', err = '';
-    var done = _.after(2, function() {
-        doneCB(out,err);
-    });
-    readAll(process.stdout, function(data) { out = data; done(); });
-    readAll(process.stderr, function(data) { err = data; done(); });
-};
-
-var signData = function(data, outCB) {
-    // Send data to OpenSSL
-    var signer = spawn('openssl', ['dgst','-sha512','-hmac','"'+secret_key+'"']);
-    signer.stdin.end(data);
-    // Retreive signature
-    readAll(signer.stdout, function(out) {
-        outCB(out.substring(9,out.length-1));
-    });
-};
-
-/* Equelle compiler server */
-var equelleSrv = http.createServer(function(req,res) {
-    if (req.method != 'POST') {
-        // Not allowed request
-        res.statusCode = 403;
-        res.end();
+/* The actual http websocket server */
+var httpServer = http.createServer(function(req,res) {
+    // Respond to all non-websocket requests with a 404
+    res.writeHead(404);
+    res.end();
+}).listen(8888, function() {
+    console.log((new Date())+': Socket HTTP server was started');
+});
+var socketServer = new websocket({
+    httpServer: httpServer,
+    autoAcceptConnections: false,
+    maxReceivedFrameSize: 10*1024*1024, //10MiB
+    maxReceivedMessageSize: 10*1024*1024 //10MiB
+});
+socketServer.on('request', function(req) {
+    console.log((new Date())+': Got a request with protocols: '+req.requestedProtocols);
+    if (false) {
+        //TODO: Check if origin of the request is allowed!!
+        req.reject();
     } else {
-        // Read source code from POST data
-        readAll(req, function(source) {
-            console.log('Got compiler request');
-            // Try to compile the source
-            var compiler = spawn(equelle_compiler, ['--input','-']);
-            compiler.stdin.write(source);
-            compiler.stdin.end('\n'); // Add extra newline to parse last line of equelle code correctly
-            // Read compiled cpp code or errors
-            readStdOutErr(compiler, function(out, err) {
-                console.log('Compiler out:');
-                console.log(out);
-                console.log('Compiler err:');
-                console.log(err);
-                var ret = { out: out, err: err };
-                if (!ret.err) {
-                    signData(out, function(sign) {
-                        ret.sign = sign;
-                        res.end(JSON.stringify(ret));
-                        console.log('Send compiler result:');
-                        console.log(ret);
-                    });
-                } else {
-                    res.end(JSON.stringify(ret));
-                }
-            });
-        });
+        // Accept connection to client, and add JSON sending method for convenience
+        var acceptConnection = function(request, protocol) {
+            var connection = request.accept(protocol, request.origin);
+            connection.sendJSON = function(obj) { connection.sendUTF(JSON.stringify(obj)) };
+            return connection;
+        };
+        // Connection to this client is allowed, where does it want to connect?
+        if (req.requestedProtocols.length != 1) req.reject();
+        else switch (req.requestedProtocols[0]) {
+            // Compile from Equelle to C++
+            case 'equelle-compile':
+            handleEquelleCompileConnection(acceptConnection(req,'equelle-compile'));
+            break;
+            // Compile an executable from C++
+            case 'executable-compile':
+            handleExecutableCompileConnection(acceptConnection(req,'executable-compile'));
+            break;
+            // Run executable simulator
+            case 'executable-run':
+            handleExecutableRunConnection(acceptConnection(req,'executable-run'));
+            break;
+            // Not a recognised protocol, drop connection
+            default:
+            req.reject();
+        }
     }
-}).listen(8880);
-
-/* CPP compiler server */
-var cppSrv = http.createServer(function(req,res) {
-    // TODO: Lots of signature verification and error-checking to do here!
-    if (req.method != 'POST') {
-        // Not allowed request
-        res.statusCode = 403;
-        res.end();
-    } else {
-        readAll(req, function(data) {
-            // Make a temporary folder for this compilation
-            tmp.dir({prefix: 'equelletmp'}, function(err, dir) {
-                console.log('Working in tmp-dir: '+dir);
-                // Copy make-skeleton
-                var cp = exec('cp -R '+compiler_skel_dir+'/* '+dir);
-                cp.on('exit', function(code) {
-                    console.log('Copied files with return code: '+code);
-                    if (code == 0) {
-                        // Write cpp source to folder
-                        fs.writeFile(dir+'/simulator.cpp', data, function(err) {
-                            var cmake = spawn('cmake', ['-DEquelle_DIR='+equelle_dir], {cwd: dir});
-                            readStdOutErr(cmake, function(out, err) {
-                                console.log('CMake out:');
-                                console.log(out);
-                                console.log('CMake err:');
-                                console.log(err);
-                                if (!err) {
-                                    var make = spawn('make', [], {cwd: dir});
-                                    readStdOutErr(make, function(out, err) {
-                                        console.log('Make out:');
-                                        console.log(out);
-                                        console.log('CMake err:');
-                                        console.log(err);
-                                        // Sign, compress and send executable
-                                        fs.readFile(dir+'/simulator', function(err, executable) {
-                                            var output = {};
-                                            var done = _.after(2, function() {
-                                                if (!output.err) {
-                                                    res.write('success:');
-                                                    res.write(output.sign);
-                                                    res.write(':');
-                                                    res.write(output.compressed);
-                                                }
-                                                res.end();
-                                            });
-                                            signData(executable, function(sign) {
-                                                output.sign = sign;
-                                                done();
-                                            });
-                                            var compress = spawn('gzip', ['-c', dir+'/simulator']);
-                                            readStdOutErr(compress, function(out, err) {
-                                                if (!err) {
-                                                    output.compressed = out;
-                                                    done();
-                                                }
-                                            });
-                                        });
-                                        var sign = sp
-                                    });
-                                }
-                            });
-                        });
-                    } else fs.rmdir(dir);
-                });
-            });
-
-            //console.log('Got cpp compiler request:');
-            //console.log(data);
-        });
-    }
-}).listen(8881);
-
-/* Simulator run server */
-var runSrv = http.createServer(function(req,res) {
-    if (req.method != 'POST') {
-        // Not allowed request
-        res.statusCode = 403;
-        res.end();
-    } else {
-        // This server receives a stream of file on the form [len_filename|filename, len_data|data]+
-        // Read all these files, and put them in a temporary directory
-        // TODO: Lots of error handling
-        tmp.dir({prefix: 'equelle_run_'}, function(err, dir) {
-        });
-    }
-}).listen(8882);
-
-console.log('Server started');
+});

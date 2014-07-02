@@ -4,6 +4,8 @@ apt-get update
 apt-get install -y python-software-properties software-properties-common
 apt-add-repository ppa:opm/ppa
 apt-add-repository ppa:ubuntu-toolchain-r/test
+apt-add-repository ppa:chris-lea/node.js 
+apt-add-repository ppa:nginx/stable
 apt-get update
 
 # Install web-server components

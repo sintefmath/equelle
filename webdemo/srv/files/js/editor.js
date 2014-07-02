@@ -1,60 +1,53 @@
 (function(){
     /* This module provides the editor and Equelle->C++ compilation routines */
-    angular.module('equelleKitchenSinkEditor', [])
+    angular.module('equelleKitchenSinkEditor', ['equelleKitchenSinkEquelleCompile'])
     /* The compilation routine */
-    .directive('eqksEquelleCompiler', function() { return {
+    .directive('eqksEquelleCompiler', ['equelleCompiler', function(equelleCompiler) { return {
          restrict: 'A'
         ,controller: function($scope) {
-            this.compile = function() {
-                localStorage.source = this.getSource();
-                localStorage.compiled = '';
-                localStorage.compiledSign = '';
-                this.setButtonWorking();
-                controller = this;
-                $.post('/equellecompiler/', localStorage.source, null, 'json').done(function(data) {
-                    console.log(data);
-                    if (data.err) {
-                        // Compiler error
-                        controller.showError('<b>Compiler error:</b><br><pre>'+data.err+'</pre');
-                        controller.setButtonError();
-                        $scope.navigation.disableNext();
-                    } else if (data.out) {
-                        // Completed, save result
-                        localStorage.compiled = data.out;
-                        localStorage.compiledSign = data.sign;
-                        controller.hideError();
-                        controller.setButtonComplete();
-                        $scope.navigation.enableNext();
-                    } else {
-                        controller.showError('An internal error occured during compilation to C++');
-                        controller.setButtonError();
-                        $scope.navigation.disableNext();
-                        // TODO: Log error
-                    }
-                }).fail(function() {
-                    controller.showError('An internal error occured during compilation to C++');
-                    controller.setButtonError();
-                    $scope.navigation.disableNext();
-                    // TODO: Log error
-                });
-            }
+            var controller = this;
+            var compiler = controller.compiler = new equelleCompiler.Compiler();
+            /* Compilation started */
+            compiler.on('started', function() {
+                controller.setButtonWorking();
+            });
+            /* Compilation failed from an internal error */
+            compiler.on('failed', function(err) {
+                console.log('Internal equelle compilation error:');
+                console.log(err);
+                // TODO: Log these errors somewhere?
+                controller.setButtonError();
+                $scope.navigation.disableNext();
+            });
+            /* Compilation failed due to a source-code error */
+            compiler.on('compileerror', function(err) {
+                controller.showError(err);
+                controller.setButtonError();
+                $scope.navigation.disableNext();
+            });
+            /* Compilation was successful */
+            compiler.on('completed', function() {
+                controller.hideError();
+                controller.setButtonComplete();
+                $scope.navigation.enableNext();
+            });
         }
         ,link: function(scope, elem, attrs, controller) {
             /* Check if the code has already been compiled */
-            if (localStorage.compiled && localStorage.compiledSign) {
+            if (equelleCompiler.hasCompiled()) {
                 controller.hideError(),
                 controller.setButtonComplete();
                 scope.navigation.enableNext();
             }
         }
-    }})
+    }}])
     /* Editor window */
     .directive('eqksEquelleEditor', ['$timeout', function($timeout) { return {
          restrict: 'A'
         ,require: '^eqksEquelleCompiler'
         ,link: function(scope, elem, attrs, controller) {
             var editor = ace.edit(elem.context);
-            editor.setValue(localStorage.source);
+            editor.setValue(localStorage.eqksSource);
             editor.gotoLine(0,0);
             editor.session.setNewLineMode('unix');
             // Bind editor to compile-controller
@@ -62,19 +55,20 @@
                 return editor.getValue();
             };
             // Hook to documente change events
-            var compileTimer;
+            controller.compileTimer = null;
             editor.on('change', function() {
-                $timeout.cancel(compileTimer);
-                compileTimer = $timeout(function() {
-                    controller.compile();
+                scope.navigation.disableNext();
+                $timeout.cancel(controller.compileTimer);
+                controller.compileTimer = $timeout(function() {
+                    controller.compiler.compile(controller.getSource());
                 },3000);
             });
             // Cleanup when template is deleted from DOM
-            elem.on('$destroy', function() { editor.destroy() });
+            elem.on('$destroy', function() { $timeout.cancel(controller.compileTimer); editor.destroy() });
         }
     }}])
     /* Compile button */
-    .directive('eqksEquelleCompilerButton', function() { return {
+    .directive('eqksEquelleCompilerButton', ['$timeout', function($timeout) { return {
          restrict: 'A'
         ,require: '^eqksEquelleCompiler'
         ,link: function(scope, elem, attrs, controller) {
@@ -86,10 +80,11 @@
             controller.setButtonError = function() { el.removeClass('btn-primary btn-success').addClass('btn-danger'); spinner.stop() };
             // Hook to click event
             el.click(function() {
-                controller.compile();
+                $timeout.cancel(controller.compileTimer);
+                controller.compiler.compile(controller.getSource());
             });
         }
-    }})
+    }}])
     /* Error window */
     .directive('eqksEquelleCompilerError', function() { return {
          restrict: 'A'
@@ -98,7 +93,7 @@
             var el = $(elem.context);
             // Bind window to compile-controller
             controller.showError = function(text) { el.html(text).removeClass('hide') };
-            controller.hideError = function() { el.addClass('hide') };
+            controller.hideError = function() { el.addClass('hide').html('') };
             // Initially hide window
             el.addClass('hide');
         }

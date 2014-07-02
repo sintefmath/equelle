@@ -1,4 +1,9 @@
-<eqks-header-navigation>
-    <!-- No extra actions here -->
-</eqks-header-navigation>
-<!-- List of available simulators -->
+<div eqks-inputs>
+    <eqks-header-navigation>
+        <button type="button" class="btn btn-primary" eqks-inputs-file-upload-button>Select input files</button>
+    </eqks-header-navigation>
+    <!-- List of input files that are required for this simulator-->
+    <div class="alert alert-danger eqks-equelle-error" role="alert" eqks-inputs-error></div>
+    <div eqks-inputs-scalars></div>
+    <div eqks-inputs-files></div>
+</div>

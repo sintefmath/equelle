@@ -1,5 +1,5 @@
 (function(){
-    angular.module('equelleKitchenSink', ['ngRoute','equelleKitchenSinkNavigation','equelleKitchenSinkEditor'])
+    angular.module('equelleKitchenSink', ['ngRoute','equelleKitchenSinkNavigation','equelleKitchenSinkEditor','equelleKitchenSinkInputs','equelleKitchenSinkRun','equelleKitchenSinkHelpers'])
     /* Multiple views routing */
     .config(function($routeProvider) {
         $routeProvider
@@ -15,9 +15,13 @@
                  templateUrl: 'page-inputs.html'
                 ,controller: 'inputsController'
             })
+            .when('/run/', {
+                 templateUrl: 'page-run.html'
+                ,controller: 'runController'
+            })
     })
     /* Page controllers */
-    .controller('startController', function($scope) {
+    .controller('startController', ['$scope', 'localStorageFile', function($scope, localStorageFile) {
         /* Header and navigation */
         $scope.title = 'Select a project:';
         $scope.navigation = {};
@@ -31,38 +35,48 @@
             if (path == ':resume') {} // Don't do anything, all previous data should be in localStorage
             else if (path == ':empty') {
                 // Clear all data from previous project from localStorage
-                localStorage.source = '';
-                localStorage.compiled = '';
-                localStorage.compiledSign = '';
-                localStorage.executable = '';
-                localStorage.executableSign = '';
+                localStorage.eqksSource = '';
+                localStorage.eqksCompiled = '';
+                localStorage.eqksCompiledSign = '';
+                localStorage.eqksExecutableSign = '';
+                localStorage.eqksExecutableCompiledSign = '';
+                localStorageFile.removeAll();
             } else {
                 // Load project data from example files
                 if (path == '/examples/heateq/') {
-                    localStorage.source = window.equellecode;
-                    localStorage.compiled = '';
-                    localStorage.compiledSign = '';
-                    localStorage.executable = '';
-                    localStorage.executableSign = '';
+                    localStorage.eqksSource = window.equellecode;
+                    localStorage.eqksCompiled = '';
+                    localStorage.eqksCompiledSign = '';
+                    localStorage.eqksExecutableSign = '';
+                    localStorage.eqksExecutableCompiledSign = '';
+                    localStorageFile.removeAll();
                 } else {
                     e.preventDefault();
                 }
             }
         };
-    })
+    }])
     .controller('editorController', function($scope) {
         /* Header and navigation */
         $scope.title = 'Edit code:';
         $scope.navigation = {
-            previous: { path: '/', text: 'Select project' },
-            next: { path: '/inputs/', text: 'Provide inputs', disabled:true }
+             previous: { path: '/', text: 'Select project' }
+            ,next: { path: '/inputs/', text: 'Provide inputs', disabled:true }
         };
     })
     .controller('inputsController', function($scope) {
         /* Header and navigation */
         $scope.title = 'Provide inputs:';
         $scope.navigation = {
-            previous: { path: '/editor/', text: 'Edit code' },
+             previous: { path: '/editor/', text: 'Edit code' }
+            ,next: { path: '/run/', text: 'Run simulation', disabled:true, ladda:true }
+        };
+    })
+    .controller('runController', function($scope) {
+        /* Header and navigation */
+        $scope.title = 'Run:';
+        $scope.navigation = {
+             previous: { path: '/inputs/', text: 'Provide inputs' }
         };
     })
 })();
