@@ -1,21 +1,36 @@
 (function(){
     /* This module provides the routines for setting input variables and uploading files */
-    angular.module('equelleKitchenSinkInputs', ['equelleKitchenSinkHelpers', 'equelleKitchenSinkEquelleCompile', 'equelleKitchenSinkExecutableCompile'])
+    angular.module('equelleKitchenSinkInputs', ['equelleKitchenSinkHelpers', 'equelleKitchenSinkEquelleCompile', 'equelleKitchenSinkEquelleInputs', 'equelleKitchenSinkExecutableCompile'])
     /* The source-scanning routine */
-    .directive('eqksInputs', ['$timeout', 'localStorageFile', 'equelleCompiler', 'executableCompiler', function($timeout, localStorageFile, equelleCompiler, executableCompiler) { return {
+    .directive('eqksInputs', ['$timeout', 'localStorageFile', 'equelleCompiler', 'equelleInputs', 'executableCompiler',
+        function($timeout, localStorageFile, equelleCompiler, equelleInputs, executableCompiler) { return {
          restrict: 'A'
         ,controller: function($scope) {
             /* Check the Equelle source has been compiled correctly */
-            if (!equelleCompiler.hasCompiled) {
-                this.error = 'No Equelle code has been compiled, please <a href="#/editor/">go back</a> and provide code.';
-            } else try {
-                equelleCompiler.parseInputs();
-            } catch (err) { this.error = err }
+            if (!equelleCompiler.hasCompiled()) {
+                $scope.error = 'No Equelle code has been compiled, please <a href="#/editor/">go back</a> and provide code.';
+            } else {
+                /* Initial parsing */
+                equelleInputs.parse();
+                /* Get the inputs for use in children */
+                $scope.singleScalars = equelleInputs.getSingleScalars();
+                $scope.files = equelleInputs.getFiles();
+            }
+            /* Configuration for the dropzones */
+            this.dropzoneConfig = {
+                 url: 'upload.php' // Dummy, we don't actually want to send the files anywhere
+                ,accept: function() { return false } // Stop the Dropzone.js from uploading files
+                ,createImageThumbnails: false // We don't want to do this
+                ,clickable: true
+                ,uploadMultiple: false // TODO: Why doesn't this work?
+            };
+            /* Update inputs if values are changed */
+            $scope.$on('inputsChanged', function() {
+                $scope.$apply($scope.singleScalars = equelleInputs.getSingleScalars());
+                $scope.$apply($scope.files = equelleInputs.getFiles());
+            });
         }
         ,link: function(scope, elem, attrs, controller) {
-            if (controller.error) controller.showError(controller.error);
-            /* Tie together upload button with file-input */
-            controller.fileUploadButton.click(controller.clickFileInput);
             /* Start compiling the executable file if the result of the C++ source code is not the same as the one we have */
             if (executableCompiler.hasCompiled()) {
                 scope.navigation.enableNext();
@@ -57,126 +72,148 @@
         }
  
     }}])
-    /* List of scalar inputs */
-    .directive('eqksInputsScalars', ['equelleCompiler', function(equelleCompiler) { return {
+    /* The file upload dropzone */
+    .directive('eqksInputsDropzone', ['eqksConfig','equelleInputs','localStorageFile', function(eqksConfig, equelleInputs,localStorageFile) { return {
          restrict: 'A'
         ,require: '^eqksInputs'
         ,link: function(scope, elem, attrs, controller) {
-            var floatregx = /^\d*(?:\.\d*)?$/;
-            /* Find single scalar values in simulator */
-            var singles = _.filter(equelleCompiler.getInputs(), function(input) { return (input.type=='scalar' && input.domain=='single')});
-            var usedTags = [];
-            if (singles.length) {
-                var el = $(elem.context).append('<h4>Optional scalar values</h4>');
-                var list = $('<form class="form-horizontal"></form>').appendTo(el);
-                _.each(singles, function(input) {
-                    /* Create input element with annotations */
-                    var group = $('<div class="form-group has-success"></div>').appendTo(list);
-                    group.append('<label for="eqks-inputs-'+input.tag+'" class="control-label col-sm-1">'+input.tag+'</label>');
-                    var ingp = $('<div class="col-sm-2 input-group"></div>').appendTo(group);
-                    var inel = $('<input type="text" class="form-control" id="'+input.tag+'" placeholder="Default">').appendTo(ingp);
-                    ingp.append('<span class="input-group-addon">'+input.default+'</span>');
-                    /* Check if default value is set */
-                    var localName = 'eqksInputsSingle-'+input.tag;
-                    usedTags.push(localName);
-                    if (localStorage.hasOwnProperty(localName)) inel.val(localStorage.getItem(localName));
-                    /* Bind to input element changes */
-                    inel.on('blur keyup', function() {
-                        if (floatregx.test(inel.val())) {
-                            group.removeClass('has-error').addClass('has-success');
-                            /* Save variable for sending to executing server later */
-                            if (this.value) localStorage.setItem(localName, parseFloat(this.value));
-                            else localStorage.removeItem(localName);
-                        } else {
-                            group.removeClass('has-success').addClass('has-error');
-                            localStorage.removeItem(localName);
-                        }
-                    });
+            /* Create a new file Dropzone for this input */
+            var dropzone = new Dropzone(elem.context, controller.dropzoneConfig);
+            /* For some reason, the click events does not bubble up to the dropzone div element, so we bind it ourself */
+            var el = $(elem.context);
+            el.find('b').click(function() { el.click() });
+            /* Handle file uploads */
+            dropzone.on('addedfile', function(file) {
+                /* Stop the Dropzone.js from doing anything else */
+                this.removeFile(file);
+                /* Now we can save the file to localStorage ourself */
+                var name = eqksConfig.localStorageTags.inputFile+scope.input.tag;
+                localStorageFile.write(name, file, function(err) {
+                    /* Let the inputs-class know we have got the file */
+                    if (err) equelleInputs.setValue(scope.input.tag,undefined);
+                    else equelleInputs.setValue(scope.input.tag,file.name);
+                    scope.$emit('inputsChanged');
                 });
-            }
-            /* Cleanup of old scalar values that are not used in this simulator */
-            _.each(_.keys(localStorage),function(key) {
-                if (_.str.startsWith(key,'eqksInputsSingle-') && !_.contains(usedTags, key)) {
-                    localStorage.removeItem(key);
-                }
             });
         }
     }}])
-    /* List of input files */
-    .directive('eqksInputsFiles', ['localStorageFile', 'equelleCompiler', function(localStorageFile, equelleCompiler) { return {
+    /* Single scalar value inputs */
+    .directive('eqksInputsSingleScalar', ['eqksConfig','equelleInputs', function(eqksConfig, equelleInputs) { return {
          restrict: 'A'
         ,require: '^eqksInputs'
         ,link: function(scope, elem, attrs, controller) {
-            /* Find file input values used in simulator */
-            var usedTags = [];
-            var listItems = {};
-            var files = _.reject(equelleCompiler.getInputs(), function(input) { return (input.type=='scalar' && input.domain=='single')});
-            if (files.length) {
-                /* Create list element with annotations */
-                // TODO: A nicer list
-                var el = $(elem.context).append('<h4>Required input files</h4>');
-                var list = $('<ul class="list-group col-sm-4"></ul>').appendTo(el);
-                _.each(files, function(input) {
-                    var item = $('<li class="list-group-item list-group-item-danger">'+input.tag+'</li>').appendTo(list);
-                    /* Check if file is uploaded*/
-                    var localName = 'eqksInputsFile-'+input.tag;
-                    usedTags.push(localName);
-                    listItems[localName] = item;
-                    if (localStorage.hasOwnProperty(localName)) item.removeClass('list-group-item-danger').addClass('list-group-item-success');
-                });
-                /* Create file-input for reading files */
-                var input = $('<input type="file" multiple>').appendTo($('<form class="hide"></form>').appendTo(el));
-                input.change(function() {
-                    for (var i = 0; i < this.files.length; i++) {
-                        var name = this.files[i].name;
-                        name = 'eqksInputsFile-'+name.substring(0, name.lastIndexOf('.'));
-                        if (_.contains(usedTags, name)) {
-                            /* If this file is required, save it to the localStorage */
-                            localStorageFile.remove(name);
-                            localStorageFile.write(name, this.files[i], function(err) {
-                                // TODO: Nicer way of showing the error
-                                if (err != null) {
-                                    alert('Error reading file "'+this.files[i].name+'"');
-                                    listItems[name].removeClass('list-group-item-success').addClass('list-group-item-danger');
-                                } else {
-                                    listItems[name].removeClass('list-group-item-danger').addClass('list-group-item-success');
-                                    // TODO: Some sort of notification when file is re-uploaded
-                                }
-                           });
-                        }
-                    }
-                });
-                /* Bind to controller button */
-                controller.clickFileInput = function() { input[0].value = null; input.click() };
-            }
-            /* Cleanup of old files that are not used in this simulator */
-            _.each(localStorageFile.getFileList(),function(key) {
-                if (_.str.startsWith(key,'eqksInputsFile-') && !_.contains(usedTags, key)) {
-                    localStorageFile.remove(key);
-                }
+            elem.on('change', function() {
+                equelleInputs.setValue(scope.input.tag, !!this.value ? this.value : undefined);
+                scope.$emit('inputsChanged');
             });
         }
     }}])
-    /* File upload button in nav-bar */
-    .directive('eqksInputsFileUploadButton', function() { return {
+    /* Simulation grid specification */
+    .directive('eqksInputsGrid', ['eqksConfig','equelleInputs', function(eqksConfig, equelleInputs) { return {
          restrict: 'A'
         ,require: '^eqksInputs'
-        ,link: function(scope, elem, attrs, controller) {
-            /* Bind button to scope to communicate with file-input in form */
-            controller.fileUploadButton = $(elem.context);
+        ,controller: function($scope) {
+            /* Get and set grid options from localStorage here */
+            $scope.maxSize = eqksConfig.grid.maxSize;
+            $scope.defaults = eqksConfig.grid.defaults;
+            $scope.grid = equelleInputs.getGrid();
+            $scope.$watch('grid', function() {
+                /* The grid-setting values has changed, save to localStorage */
+                equelleInputs.setGrid($scope.grid);
+            }, true);
+        }
+    }}])
+    /* Positive integers input element */
+    .directive('eqksInputsPositiveInteger', function() { return {
+         restrict: 'A'
+        ,link: function(scope, elem, attrs) {
+            var max = parseFloat(attrs.max);
+            if (isNaN(max)) max = Infinity;
+            // TODO: Need support for more browsers and OSX here?
+            var prevValue;
+            elem.on('keypress', function(event) {
+                prevValue = this.value;
+                var ch = String.fromCharCode(event.which);
+                /* Allow copy/cut/paste */
+                if (event.ctrlKey) return;
+                /* Only allow numbers in this box */
+                else if (!/[0-9]/.test(ch)) event.preventDefault();
+            }).on('input', function() {
+                /* Stop value over maximum */
+                if (parseInt(this.value) > max) {
+                    this.value = prevValue;
+                    elem.trigger('change');
+                }
+            }).on('paste', function(event) {
+                var text = (event.originalEvent || event).clipboardData.getData('text/plain');
+                var i = parseInt(text);
+                /* Only allow pasting if it is a positive integer */
+                if (isNaN(i) || i < 1 || i > max) event.preventDefault();
+            });
         }
     }})
-    /* Error window */
-    .directive('eqksInputsError', function() { return {
+    /* Float input element */
+    .directive('eqksInputsFloat', function() { return {
+         restrict: 'A'
+        ,link: function(scope, elem, attrs) {
+            var max = parseFloat(attrs.max), min = parseFloat(attrs.min);
+            if (isNaN(max)) max = Infinity;
+            if (isNaN(min)) min = -Infinity;
+            // TODO: Need support for more browsers and OSX here?
+            var prevValue;
+            elem.on('keypress', function(event) {
+                var ch = String.fromCharCode(event.which);
+                /* Allow copy/cut/paste */
+                if (event.ctrlKey) return;
+                /* Only allow numbers in this box */
+                else if (!/[\-0-9.]/.test(ch)) event.preventDefault();
+                /* Only allow one . */
+                else if (ch == '.' && _.str.contains(this.value,'.')) event.preventDefault();
+                /* Only allow one - at the very beginning */
+                else if (ch == '-' && this.selectionStart != 0) event.preventDefault();
+            }).on('input', function() {
+                /* Stop value over maximum and under minimum */
+                var f = parseFloat(this.value);
+                if (f > max || f < min) {
+                    this.value = prevValue;
+                    elem.trigger('change');
+                }
+            }).on('paste', function(event) {
+                var text = (event.originalEvent || event).clipboardData.getData('text/plain');
+                /* Only allow pasting if it is a float */
+                if (isNaN(parseFloat(text))) event.preventDefault();
+            });
+        }
+    }})
+    /* Single scalar value inputs */
+    .directive('eqksInputsPositiveFloat', function() { return {
          restrict: 'A'
         ,require: '^eqksInputs'
         ,link: function(scope, elem, attrs, controller) {
-            var el = $(elem.context);
-            // Bind window to inputs-controller
-            controller.showError = function(text) { el.html(text).removeClass('hide') };
-            controller.hideError = function() { el.addClass('hide') };
-            // Initially hide window
-            el.addClass('hide');
+            var max = parseFloat(attrs.max);
+            if (isNaN(max)) max = Infinity;
+            // TODO: Need support for more browsers and OSX here?
+            var prevValue;
+            elem.on('keypress', function(event) {
+                var ch = String.fromCharCode(event.which);
+                /* Allow copy/cut/paste */
+                if (event.ctrlKey) return;
+                /* Only allow numbers and . */
+                else if (!/[0-9.]/.test(ch)) event.preventDefault();
+                /* Only allow one . */
+                else if (ch == '.' && _.str.contains(this.value,'.')) event.preventDefault();
+            }).on('input', function() {
+                /* Stop value over maximum */
+                if (parseFloat(this.value) > max) {
+                    this.value = prevValue;
+                    elem.trigger('change');
+                }
+            }).on('paste', function(event) {
+                var text = (event.originalEvent || event).clipboardData.getData('text/plain');
+                var f = parseFloat(text);
+                /* Only allow pasting if it is a positive float */
+                if (isNaN(f) || f <= 0) event.preventDefault();
+            });
         }
     }})
 })();

@@ -1,5 +1,5 @@
 (function(){
-    angular.module('equelleKitchenSink', ['ngRoute','equelleKitchenSinkNavigation','equelleKitchenSinkEditor','equelleKitchenSinkInputs','equelleKitchenSinkRun','equelleKitchenSinkHelpers'])
+    angular.module('equelleKitchenSink', ['ngRoute','equelleKitchenSinkConfiguration','equelleKitchenSinkNavigation','equelleKitchenSinkEditor','equelleKitchenSinkInputs','equelleKitchenSinkRun','equelleKitchenSinkHelpers'])
     /* Multiple views routing */
     .config(function($routeProvider) {
         $routeProvider
@@ -21,7 +21,7 @@
             })
     })
     /* Page controllers */
-    .controller('startController', ['$scope', 'localStorageFile', function($scope, localStorageFile) {
+    .controller('startController', ['$scope','localStorageFile','eqksConfig', function($scope, localStorageFile, eqksConfig) {
         /* Header and navigation */
         $scope.title = 'Select a project:';
         $scope.navigation = {};
@@ -31,25 +31,23 @@
             ,{ path: '/examples/heateq/', name: '2D Heat equation', text: 'Start with a simple planar heat equation example' }
             ,{ path: ':resume', name: 'Resume previous', text: 'Resume with the previous simulator you were working on' }
         ];
+        /* Function for clearing all localStorage data set by this app */
+        var clearLocalStorage = function() {
+            _.each(_.keys(localStorage), function(key) {
+                if (_.str.startsWith(key, eqksConfig.localStorageTags.prefix)) localStorage.removeItem(key);
+            });
+        };
+        /* Set localStorage data according to selected project */
         $scope.setSimulator = function(e,path) {
             if (path == ':resume') {} // Don't do anything, all previous data should be in localStorage
             else if (path == ':empty') {
-                // Clear all data from previous project from localStorage
+                clearLocalStorage();
                 localStorage.eqksSource = '';
-                localStorage.eqksCompiled = '';
-                localStorage.eqksCompiledSign = '';
-                localStorage.eqksExecutableSign = '';
-                localStorage.eqksExecutableCompiledSign = '';
-                localStorageFile.removeAll();
             } else {
+                clearLocalStorage();
                 // Load project data from example files
                 if (path == '/examples/heateq/') {
                     localStorage.eqksSource = window.equellecode;
-                    localStorage.eqksCompiled = '';
-                    localStorage.eqksCompiledSign = '';
-                    localStorage.eqksExecutableSign = '';
-                    localStorage.eqksExecutableCompiledSign = '';
-                    localStorageFile.removeAll();
                 } else {
                     e.preventDefault();
                 }

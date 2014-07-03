@@ -5,7 +5,6 @@
         var write = function(key, blob, doneCB) {
             if (blob instanceof ArrayBuffer) blob = new Blob([blob]);
             var length = blob.size;
-            console.log('Got size: '+length);
             /* If length is odd number of bytes, we need to pad with a byte at the end so that we don't loose the last one */
             if (length%2) blob = new Blob([blob,new ArrayBuffer(1)]);
             /* Read the bytes into a 16-bit encoded string */
@@ -15,7 +14,6 @@
                 localStorage.setItem(key+'-length', length);
                 doneCB(fr.error);
             };
-            console.log(blob);
             fr.readAsText(blob,'utf-16');
         };
         var read = function(key) {

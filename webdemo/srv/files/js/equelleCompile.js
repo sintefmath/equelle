@@ -32,7 +32,6 @@
                         break;
                         /* Compilation was successful, c++ code and signature is attached */
                         case 'success':
-                        console.log(data);
                         localStorage.eqksCompiled = data.source;
                         localStorage.eqksCompiledSign = data.sign;
                         sock.close();
@@ -60,59 +59,9 @@
             };
         };
 
-        /* The function that parses the Equelle code and saves required (and optional) inputs to the localStorage */
-        var parseInputsFromSource = function() {
-            /* Scan the source for input values */
-            var inputs = [], match;
-            //var funcregx = /^\s*([a-z]\w*)\s*=\s*Input([^\(\s]*)\(\s*"(\w*)"(,\s*(.*))?\)/gm;
-            // TODO: Document this!
-            var funcregx = /^\s*([a-z]\w*)\s*(?:\:[^\=\n]*\s*)?=\s*Input([^\(\s]*)\(\s*"(\w*)"(?:,\s*(.*))?\)/gm;
-            if (localStorage.eqksSource) while (match = funcregx.exec(localStorage.eqksSource)) {
-                funcregx.lastIndex = match.index+match[0].length;
-                /* Parse matched Regular Expression */
-                var input = {
-                    name: match[1],
-                    tag: match[3]
-                };
-                /* Determine type of input */
-                switch (match[2]) {
-                    case 'ScalarWithDefault': input.type = 'scalar'; input.domain = 'single'; input.default = match[4]; break;
-                    case 'CollectionOfScalar': input.type = 'scalar'; break;
-                    case 'DomainSubsetOf': input.type = 'indices'; break;
-                    case 'SequenceOfScalar': input.type = 'scalarsequence'; input.domain = 'single'; break;
-                    default: throw 'Cannot determine type of input with tag: "'+input.tag+'"';
-                }
-                /* Determine domain of input */
-                if (!input.domain) switch (match[4]) {
-                    case 'InteriorCells()': input.domain = 'cells'; input.subset = 'interior'; break;
-                    case 'BoundaryCells()': input.domain = 'cells'; input.subset = 'boundary'; break;
-                    case 'AllCells()': input.domain = 'cells'; input.subset = 'all'; break;
-                    case 'InteriorFaces()': input.domain = 'faces'; input.subset = 'interior'; break;
-                    case 'BoundaryFaces()': input.domain = 'faces'; input.subset = 'boundary'; break;
-                    case 'AllFaces()': input.domain = 'faces'; input.subset = 'all'; break;
-                    case 'InteriorEdges()': input.domain = 'edges'; input.subset = 'interior'; break;
-                    case 'BoundaryEdges()': input.domain = 'edges'; input.subset = 'boundary'; break;
-                    case 'AllEdges()': input.domain = 'edges'; input.subset = 'all'; break;
-                    case 'InteriorVertices()': input.domain = 'vertices'; input.subset = 'interior'; break;
-                    case 'BoundaryVertices()': input.domain = 'vertices'; input.subset = 'boundary'; break;
-                    case 'AllVertices()': input.domain = 'vertices'; input.subset = 'all'; break;
-                    default:
-                    var found;
-                    if (found = _.find(inputs, function(input) { return input.name == match[4]; })) {
-                        input.domain = found.domain;
-                        input.subset = 'var:'+found.name;
-                    } else throw 'Cannot determine domain of input with tag: "'+input.tag+'"';
-                }
-                inputs.push(input);
-            }
-            localStorage.eqksInputs = JSON.stringify(inputs);
-        };
-
         /* Expose class to outside */
         return {
              Compiler: Compiler
             ,hasCompiled: function() { return (localStorage.eqksCompiled && localStorage.eqksCompiledSign); }
-            ,parseInputs: parseInputsFromSource
-            ,getInputs: function() { if (localStorage.eqksInputs) return JSON.parse(localStorage.eqksInputs); else return []; }
     }}]);
 })();

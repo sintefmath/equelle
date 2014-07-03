@@ -1,9 +1,84 @@
-<div eqks-inputs>
+<div eqks-inputs id="eqks-inputs">
     <eqks-header-navigation>
+        <!--
         <button type="button" class="btn btn-primary" eqks-inputs-file-upload-button>Select input files</button>
+        -->
     </eqks-header-navigation>
-    <!-- List of input files that are required for this simulator-->
-    <div class="alert alert-danger eqks-equelle-error" role="alert" eqks-inputs-error></div>
-    <div eqks-inputs-scalars></div>
-    <div eqks-inputs-files></div>
+    <div ng-if="error" class="alert alert-danger eqks-equelle-error" role="alert">{{error}}</div>
+    <div ng-if="!error" class="row">
+        <div class="col-sm-5">
+            <!-- Optional scalar values with defaults -->
+            <form ng-if="singleScalars" class="form-horizontal" role="form">
+                <h4>Optional scalar values</h4>
+                <div ng-repeat="input in singleScalars" class="form-group">
+                    <label for="input-{{input.tag}}" class="col-sm-4 control-label">{{input.tag}}</label>
+                    <div class="col-sm-8 input-group">
+                        <input type="text" class="form-control" id="input-{{input.tag}}" placeholder="Default" eqks-inputs-single-scalar eqks-inputs-float value="{{input.value ? input.value : ''}}">
+                        <span class="input-group-addon">{{input.default}}</span>
+                    </div>
+                </div>
+            </form>
+            <!-- Required file inputs -->
+            <div ng-if="files">
+                <h4>Required input files</h4>
+                <div ng-repeat="input in files" class="row eqks-input-file" eqks-inputs-dropzone>
+                    <div class="col-sm-4 eqks-input-file-status-icon">
+                        <span class="glyphicon {{input.value ? 'glyphicon-ok' : 'glyphicon-remove'}}"></span>
+                    </div>
+                    <div class="col-sm-8">
+                        <b>{{input.tag}}</b> <span ng-if="input.value">({{input.value}})</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-offset-1 col-sm-6" eqks-inputs-grid>
+            <h4>Simulation grid</h4>
+            <form class="form-horizontal" role="form">
+                <div class="form-group">
+                    <label class="col-sm-4 control-label">Grid dimensions:</label>
+                    <div class="col-sm-8">
+                        <label class="radio-inline"><input type="radio" ng-model="grid.dimensions" ng-value="1"> 1</label>
+                        <label class="radio-inline"><input type="radio" ng-model="grid.dimensions" ng-value="2"> 2</label>
+                        <label class="radio-inline"><input type="radio" ng-model="grid.dimensions" ng-value="3"> 3</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-4 control-label">Grid size</label>
+                    <div class="col-sm-2">
+                        <input type="text" class="form-control" ng-model="grid.size[0]" placeholder="{{defaults.size[0]}}" eqks-inputs-positive-integer max="{{maxSize}}">
+                    </div>
+                    <div ng-if="grid.dimensions >= 2">
+                        <div class="col-sm-1 eqks-input-grid-dimension-size-separator">&times;</div>
+                        <div class="col-sm-2">
+                            <input type="text" class="form-control" ng-model="grid.size[1]" placeholder="{{defaults.size[1]}}" eqks-inputs-positive-integer max="{{maxSize}}">
+                        </div>
+                        <div ng-if="grid.dimensions == 3">
+                            <div class="col-sm-1 eqks-input-grid-dimension-size-separator">&times;</div>
+                            <div class="col-sm-2">
+                                <input type="text" class="form-control" ng-model="grid.size[2]" placeholder="{{defaults.size[2]}}" eqks-inputs-positive-integer max="{{maxSize}}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-4 control-label">Cell size</label>
+                    <div class="col-sm-2">
+                        <input type="text" class="form-control" ng-model="grid.cellSize[0]" placeholder="{{defaults.cellSize[0]}}" eqks-inputs-positive-float>
+                    </div>
+                    <div ng-if="grid.dimensions >= 2">
+                        <div class="col-sm-1 eqks-input-grid-dimension-size-separator">&times;</div>
+                        <div class="col-sm-2">
+                            <input type="text" class="form-control" ng-model="grid.cellSize[1]" placeholder="{{defaults.cellSize[1]}}" eqks-inputs-positive-float>
+                        </div>
+                        <div ng-if="grid.dimensions == 3">
+                            <div class="col-sm-1 eqks-input-grid-dimension-size-separator">&times;</div>
+                            <div class="col-sm-2">
+                                <input type="text" class="form-control" ng-model="grid.cellSize[2]" placeholder="{{defaults.cellSize[2]}}" eqks-inputs-positive-float>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
