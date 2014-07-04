@@ -44,6 +44,18 @@
             var keys = _.keys(localStorage);
             return (_.contains(keys, key+'-contents') && _.contains(keys, key+'-length'));
         };
+        /* TODO: Remove this debug function */
+        window.eqksDownloadFile = function(key) {
+            if (hasFile(key)) {
+                var blob = read(key);
+                var fr = new FileReader();
+                fr.onloadend = function() {
+                    window.open(fr.result,'_blank');
+                };
+                fr.readAsDataURL(blob);
+            }
+        };
+
         /* Expose functions to outside */
         return {
              write: write

@@ -8,6 +8,7 @@
         // TODO: Document what all these settings do!
         return {
              compileHost: window.location.host
+            ,runHost: window.location.host
             ,paramFileName: 'eqksparams.param'
             ,executableName: 'simulator'
             ,localStorageTags: {

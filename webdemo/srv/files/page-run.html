@@ -1,5 +1,11 @@
 <div eqks-run>
     <eqks-header-navigation>
     </eqks-header-navigation>
-    <pre eqks-run-output></pre>
+    <!-- Show that something is beeing done -->
+    <div class="progress">
+        <div class="progress-bar progress-bar-success" role="progressbar" style="width:{{progress}}%"></div>
+        <div ng-if="working" class="progress-bar progress-bar-striped active" role="progressbar" style="width:{{100-progress}}%;background-color:#ccc"></div>
+    </div>
+    <h4>Output</h4>
+    <pre>{{output}}</pre>
 </div>

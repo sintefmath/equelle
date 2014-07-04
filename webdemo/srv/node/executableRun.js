@@ -8,100 +8,116 @@ var spawn = require('child_process').spawn,
 /* Own modules */
 var config = require('./config.js'),
     helpers = require('./helpers.js');
+ 
+// TODO: More thurough checkin that we are ready for each step
+
+/* Execution function */
+var handleExecute = function(conn, dir, errorCleanup) {
+    var config, filesList, readyToRun = false;
+    /* Function to run after we have received all files */
+    var filesDone = function() {
+        /* Verify the executable signature */
+        helpers.signFile(dir+'/'+config.name, function(err,sign) {
+            if (sign != config.signature) errorCleanup('The signatures did not match');
+            else {
+                var chmod = exec('chmod u+x '+dir+'/'+config.name, function(err, stdout, stderr) {
+                    if (err) errorCleanup(stderr);
+                    /* All the files are saved, the executable is verified and made runnable */
+                    else {
+                        readyToRun = true;
+                        conn.sendJSON({ status: 'readyToRun' });
+                    }
+                });
+            }
+        });
+    };
+    /* Wait for all data to be read from streams in addition to exit */
+    var allDone = _.after(3, function() {
+        conn.sendJSON({ status: 'complete' });
+        conn.close();
+    });
+    /* On receive data from client */
+    conn.on('message', function(msg) {
+        if (msg.type == 'utf8') {
+            /* Command message */
+            var data = JSON.parse(msg.utf8Data);
+            switch (data.command) {
+                /* This configuration tells us how the files are beeing sent, the signature of the executable, and some imporant filenames */
+                case 'config':
+                config = data.config;
+                filesList = config.files.slice().reverse(); // Make a copy and reverse it, so we can use as stack later
+                filesDone = _.after(filesList.length, filesDone);
+                /* The client can now start to send the files */
+                conn.sendJSON({ status: 'readyForFiles' });
+                break;
+                case 'run':
+                if (!readyToRun) errorCleanup('Not ready to run yet');
+                else {
+                    conn.sendJSON({ status: 'running', progress: 0 });
+                    /* Execute the simulator */
+                    var process = spawn(dir+'/'+config.name, [config.paramFileName], { cwd: dir });
+                    process.stdout.on('data', function(data) {
+                        conn.sendJSON({ status: 'running', progress: 0, stdout: data.toString() });
+                    });
+                    process.stdout.on('end', allDone);
+                    process.stderr.on('data', function(data) {
+                        conn.sendJSON({ status: 'running', progress: 0, stderr: data.toString() });
+                    });
+                    process.stderr.on('end', allDone);
+                    process.on('exit', function(code) {
+                        conn.sendJSON({ status: 'running', progress: 100 });
+                        allDone();
+                    });
+
+                } break;
+                default: errorCleanup('Unexpected command: '+data.command);
+            }
+        } else {
+            /* A file was sent */
+            if (!filesList) errorCleanup('Not ready to receive files');
+            else {
+                var file;
+                /* Get the next expected file */
+                if (file = filesList.pop()) {
+                    var path = dir+'/'+file.name;
+                    if (file.compressed) {
+                        /* Run through gzip uncompress */
+                        helpers.decompressToFile(path, msg.binaryData, function(err) {
+                            if (err) errorCleanup(err);
+                            else filesDone();
+                        });
+                    } else {
+                        /* Write directly to folder */
+                        fs.writeFile(path, msg.binaryData, function(err) {
+                            if (err) errorCleanup(err);
+                            else filesDone();
+                        });
+                    }
+                } else errorCleanup('Did not expect any more files');
+            }
+        }
+    });
+    /* Ready to start */
+    conn.sendJSON({ status: 'readyForConfig' });
+};
 
 /* The handleExecutableRunConnection(connection) function */
 module.exports = function(conn) {
+    /* Error handling */
     var errorCleanup = function(err, dir) {
         console.log((new Date())+': Error during execution:');
         console.log(err);
-        // Send error to client
+        /* Send error to client */
         conn.sendJSON({ status: 'failed', err: err.toString()});
-        // TODO: Delete temporary directory
+        conn.close();
+        /* Remove the temporary directory and all contents */
+        if (dir) fs.remove(dir);
     };
     /* Create a temporary directory for storing the executable files */
     tmp.dir({prefix: 'equelleRunTmp'}, function(err, dir) {
         if (err) errorCleanup(err);
         else {
-            console.log('Running executable in folder: '+dir);
-            /* Ready to receive files from client */
-            conn.sendJSON({ status: 'readyForConfig' });
-            /* On receive compilation data from client */
-            var uploadConfig;
-            var uploadFiles;
-            var filesDone;
-            conn.on('message', function(mess) {
-                if (mess.type == 'utf8') {
-                    /* Command message */
-                    var data = JSON.parse(mess.utf8Data);
-                    switch (data.command) {
-                        case 'config':
-                        /* This tells us how the rest of the message will be sent */
-                        uploadConfig = data.config;
-                        uploadFiles = uploadConfig.fileList.slice().reverse(); // Reverse so we can pop off later
-                        filesDone = _.after(uploadFiles.length, function() {
-                            // When all files are uploaded, verify the simulator executable
-                            helpers.signFile(dir+'/simulator', function(err,sign) {
-                                if (sign != uploadConfig.sign) errorCleanup('The signatures did not match');
-                                else {
-                                    console.log('Marking exec as executable');
-                                    var chmod = spawn('chmod', ['u+x', dir+'/simulator']);
-                                    chmod.on('exit', function(code) {
-                                        if (code != 0) errorCleanup('Could not chmod file');
-                                        else conn.sendJSON({ status: 'readyToRun' })
-                                    });
-                                }
-                            });
-                        });
-                        console.log('Got configuration:'); console.log(uploadConfig);
-                        conn.sendJSON({ status: 'readyForFiles' });
-                        break;
-                        case 'run':
-                        /* Start the running of the provided program */
-                        console.log('RUNNING EXECUTABLE');
-                        var process = spawn(dir+'/simulator', ['params.param'], { cwd: dir });
-                        helpers.readStdOutErr(process, function(out,err) {
-                            console.log('Out: '); console.log(out);
-                            console.log('Err: '); console.log(err);
-                        });
-                        break;
-                        case 'abort':
-                        /* Abort the running program somehow */
-                        // TODO: Implement this
-                        break;
-                        default: errorCleanup('Unexpected command: '+data.command);
-                    }
-                } else {
-                    var file;
-                    if (file = uploadFiles.pop()) {
-                        var path = dir+'/'+file.name;
-                        if (file.compressed) {
-                            /* Run through gzip uncompress */
-                            console.log((new Date())+': Got executable bytes from client');
-                            console.log('Compressed length: '+mess.binaryData.length);
-                            //console.log('First 10 : '+mess.binaryData.slice(0,10));
-                            //console.log('Last 10  : '+mess.binaryData.slice(-10));
-                            console.log('First 10 : '); console.log(mess.binaryData.slice(0,10));
-                            console.log('last  10 : '); console.log(mess.binaryData.slice(-10));
-                            helpers.decompressToFile(path, mess.binaryData, function(err) {
-                                //if (err) errorCleanup('Could not decompress file: "'+path+'"');
-                                if (err) errorCleanup(err);
-                                else filesDone();
-                            });
-                        } else {
-                            /* Write directly to folder */
-                            console.log('Got binary file data:');
-                            console.log(mess.binaryData.length);
-                            fs.writeFile(path, mess.binaryData, function(err) {
-                                //if (err) errorCleanup('Could not write file: "'+path+'"');
-                                if (err) errorCleanup(err);
-                                else filesDone();
-                            });
-                        }
-                    } else errorCleanup('Did not expect any more files');
-                }
-            });
+            handleExecute(conn, dir, function(err) { errorCleanup(err,dir) });
         }
     });
-    conn.on('close', function(code) { console.log('Connection closed: '+code); });
-    conn.on('error', function(err) { console.log('Connection error: '+err); });
 }

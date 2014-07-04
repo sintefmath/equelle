@@ -105,6 +105,7 @@ module.exports = function(conn) {
         /* Remove the temporary directory and all contents */
         if (dir) fs.remove(dir);
     };
+    //TODO: handle aborts
     /* On receive compilation data from client */
     conn.on('message', function(mess) {
         console.log((new Date())+': Received executable compilation data from client');

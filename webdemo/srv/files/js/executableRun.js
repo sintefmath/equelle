@@ -42,7 +42,6 @@
             paramAdd('output_to_file=false');
             /* Save the file blob */
             this._paramsBlob = new Blob(paramArr);
-            console.log(paramArr);
         };
         /* A function that builds the list of files we will send to the server */
         Executer.prototype.makeFileList = function() {
@@ -57,19 +56,65 @@
         };
         /* The function that does the actual running of the simulator */
         Executer.prototype.run = function() {
+            self = this;
+            var triggerEvent = function() { self.trigger.apply(self, arguments) };
+            /* Make configuration for this simulation */
             this.buildParams();
             this.makeFileList();
-            /* Make configuration for this simulation */
             var config = {};
             config.signature = localStorage.getItem(eqksConfig.localStorageTags.executableSignature);
             config.name = eqksConfig.executableName;
             config.paramFileName = eqksConfig.paramFileName;
             config.files = _.map(this._fileList, function(file) { return { name: file.name, compressed: file.compressed } });
-            /* Send to server and go! */
-            console.log(this._paramsBlob);
-            console.log(this._requiredInputFiles);
-            console.log(this._fileList);
-            console.log(config);
+            /* Indicate work beeing done to user */
+            triggerEvent('started');
+            /* Open connection to server */
+            var sock = new WebSocket('ws://'+eqksConfig.compileHost+'/socket/', 'executable-run');
+            /* Handle socket errors */
+            sock.onerror = function(err) { triggerEvent('failed', err) };
+            /* Message protocol */
+            var executer = this;
+            sock.onmessage = function(msg) {
+                if (msg.data instanceof Blob || msg.data instanceof ArrayBuffer) {
+                    // TODO: How do we handle output files?
+                } else {
+                    try {
+                        var data = JSON.parse(msg.data);
+                        switch (data.status) {
+                            /* Ready for us to send the run-configuration */
+                            case 'readyForConfig':
+                            sock.send(JSON.stringify({ command: 'config', config: config }));
+                            break;
+                            /* Ready for us to send the files in the list we sent */
+                            case 'readyForFiles':
+                            _.each(executer._fileList, function(file) {
+                                sock.send(file.blob);
+                            });
+                            break;
+                            /* Ready to run */
+                            case 'readyToRun':
+                            sock.send(JSON.stringify({ command: 'run' }));
+                            break;
+                            /* Running */
+                            case 'running':
+                            if (data.stdout) triggerEvent('stdout', data.stdout);
+                            if (data.stderr) triggerEvent('stderr', data.stderr);
+                            if (data.progress != undefined) triggerEvent('progress', data.progress);
+                            break;
+                            /* Done */
+                            case 'complete':
+                            triggerEvent('complete');
+                            sock.close();
+                            break;
+                            case 'failed': throw data.err; break;
+                            default: throw ('Unrecognized server status: '+data.status);
+                        }
+                    } catch (e) { triggerEvent('failed', e); errorTriggered = true; sock.close() }
+                }
+            };
+            /* Socket is closed */
+            sock.onclose = function() { };
+            // TODO: Error handling here?
         };
 
         /* Expose classes to outside */

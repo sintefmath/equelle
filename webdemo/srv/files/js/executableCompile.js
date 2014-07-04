@@ -17,7 +17,7 @@
             /* Indicate work beeing done to user */
             triggerEvent('started');
             /* Open connection to server */
-            var sock = new WebSocket('ws://'+eqksConfig.compileHost+'/socket/', 'executable-compile');
+            var sock = new WebSocket('ws://'+eqksConfig.runHost+'/socket/', 'executable-compile');
             /* Handle socket errors */
             sock.onerror = function(err) { triggerEvent('failed', err) };
             /* Wait for both socket to close, and executable file to be written to localStorage before we check the output */
