@@ -25,6 +25,7 @@
                     scope.progress = 100;
                     working = false;
                 });
+                console.log(stderr);
             });
 
             executer.on('stdout', function(data) {

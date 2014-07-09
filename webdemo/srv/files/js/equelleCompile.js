@@ -11,9 +11,9 @@
             self = this;
             var triggerEvent = function() { self.trigger.apply(self, arguments) };
             /* Clear data in browser from old compilations */
-            localStorage.eqksSource = source;
-            localStorage.eqksCompiled = '';
-            localStorage.eqksCompiledSign = '';
+            localStorage.setItem(eqksConfig.localStorageTags.equelleSource, source);
+            localStorage.setItem(eqksConfig.localStorageTags.cppSource, '');
+            localStorage.setItem(eqksConfig.localStorageTags.cppSourceSign, '');
             /* Indicate that we have started the process */
             triggerEvent('started');
             /* Open connection to server */
@@ -32,8 +32,9 @@
                         break;
                         /* Compilation was successful, c++ code and signature is attached */
                         case 'success':
-                        localStorage.eqksCompiled = data.source;
-                        localStorage.eqksCompiledSign = data.sign;
+                        console.log('Compile success');
+                        localStorage.setItem(eqksConfig.localStorageTags.cppSource, data.source);
+                        localStorage.setItem(eqksConfig.localStorageTags.cppSourceSign, data.sign);
                         sock.close();
                         break;
                         /* A compiler error, this is different from a failure, and errors are shown to user */
@@ -50,7 +51,7 @@
             /* Once socket is closed, check that everything went smoothly */
             sock.onclose = function() {
                 if (!errorTriggered) {
-                    if (!localStorage.eqksCompiled || !localStorage.eqksCompiledSign) {
+                    if (!localStorage.getItem(eqksConfig.localStorageTags.cppSource) || !localStorage.getItem(eqksConfig.localStorageTags.cppSourceSign)) {
                         triggerEvent('failed', 'Not all expected results were found in localStorage');
                     } else {
                         triggerEvent('completed');

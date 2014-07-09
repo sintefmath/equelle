@@ -4,6 +4,9 @@ div#eqks-equelle-compiler {
 div#eqks-equelle-editor {
     height: 100%;
 }
+div#eqks-equelle-editor div.CodeMirror {
+    height: 100%;
+}
 div.eqks-equelle-error {
     margin-top: 1em;
 }

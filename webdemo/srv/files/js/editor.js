@@ -1,6 +1,6 @@
 (function(){
     /* This module provides the editor and Equelle->C++ compilation routines */
-    angular.module('equelleKitchenSinkEditor', ['equelleKitchenSinkEquelleCompile'])
+    angular.module('equelleKitchenSinkEditor', ['equelleKitchenSinkEquelleCompile','equelleKitchenSinkConfiguration'])
     /* The compilation routine */
     .directive('eqksEquelleCompiler', ['equelleCompiler', function(equelleCompiler) { return {
          restrict: 'A'
@@ -42,19 +42,21 @@
         }
     }}])
     /* Editor window */
-    .directive('eqksEquelleEditor', ['$timeout', function($timeout) { return {
+    .directive('eqksEquelleEditor', ['$timeout','eqksConfig', function($timeout, eqksConfig) { return {
          restrict: 'A'
         ,require: '^eqksEquelleCompiler'
         ,link: function(scope, elem, attrs, controller) {
-            var editor = ace.edit(elem.context);
-            editor.setValue(localStorage.eqksSource);
-            editor.gotoLine(0,0);
-            editor.session.setNewLineMode('unix');
-            // Bind editor to compile-controller
+            /* Create an editor */
+            var editor = CodeMirror(elem.context, {
+                 value: localStorage.getItem(eqksConfig.localStorageTags.equelleSource)
+                ,mode: 'equelle'
+                ,lineNumbers: true
+            });
+            /* Bind editor to compile-controller */
             controller.getSource = function() {
                 return editor.getValue();
             };
-            // Hook to documente change events
+            /* Hook to documente change events */
             controller.compileTimer = null;
             editor.on('change', function() {
                 scope.navigation.disableNext();
@@ -63,8 +65,8 @@
                     controller.compiler.compile(controller.getSource());
                 },3000);
             });
-            // Cleanup when template is deleted from DOM
-            elem.on('$destroy', function() { $timeout.cancel(controller.compileTimer); editor.destroy() });
+            /* Cleanup when template is deleted from DOM */
+            elem.on('$destroy', function() { $timeout.cancel(controller.compileTimer) });
         }
     }}])
     /* Compile button */
