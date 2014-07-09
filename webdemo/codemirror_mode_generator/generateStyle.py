@@ -53,7 +53,7 @@ for line in skel:
             # Output all tokens that correspond to same style
             for token in tokens:
                 sys.stdout.write(indent)
-                sys.stdout.write('case: "')
+                sys.stdout.write('case "')
                 sys.stdout.write(token)
                 sys.stdout.write('":\n')
             # Return the style of these tokens
