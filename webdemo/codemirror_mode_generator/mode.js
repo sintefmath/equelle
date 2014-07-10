@@ -8,17 +8,58 @@
 })(function(CodeMirror) {
     'use strict';
 
-    /* ----- START AUTO GENERATED LEXER ----- */
-    ##lexer##
-    /* ----- END AUTO GENERATED LEXER ----- */
+    /* The lexer */
+    var lexer = ( function() {
+        var r = [
+            ##lexer_regexes##
+        ];
+        var a = [
+            ##lexer_actions##
+        ];
+        /* The actual lexing function */
+        return function(stream, lineno) {
+            /* Find all matches */
+            var matches = [], lengths = [];
+            for (var i = 0; i < r.length; i++) {
+                var m = stream.match(r[i],false);
+                if (m) {
+                    matches.push(i);
+                    lengths.push(m[0].length);
+                }
+            }
+            /* Select the first longest match */
+            var max = -1, maxI;
+            for (var i = 0; i < matches.length; i++) {
+                if (lengths[i] > max) {
+                    max = lengths[i];
+                    maxI = matches[i];
+                }
+            }
+            /* If match found, use that */
+            if (maxI !== undefined) {
+                var m = stream.match(r[maxI]);
+                return (a[maxI])(m[0],lineno);
+            }
+            /* None found, return nothing, this shouldn't really happen */
+            return undefined;
+        };
+    })();
 
-    /* ----- START AUTO GENERATED PARSER ----- */
-    ##parser##
-    /* ----- END AUTO GENERATED PARSER ----- */
+    /* The parser, keeps track of indenations */
+    var parser = ( function() {
+        /* The actual parsing function */
+        return function(token, state) {
+        };
+    })();
 
-    /* ----- START AUTO GENERATED TOKEN STYLER ----- */
-    ##styler##
-    /* ----- END AUTO GENERATED TOKEN STYLER ----- */
+    /* The style function, which gives a token a css-class based on its name */
+    var tokenStyle = function(token) {
+        if (token && token.name) switch(token.name) {
+            ##style_cases##
+            default: return token.name;
+        }
+        else return null;
+    };
 
     /* Some configuration is needed if the Equelle language is changed */
     var  LINECONT_STRING = '...'
