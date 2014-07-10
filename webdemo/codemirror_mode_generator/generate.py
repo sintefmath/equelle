@@ -173,7 +173,7 @@ for line in skel:
             sys.stdout.write(' }\n')
             separator = ','
     # Insert cases, with indentation, so it looks nice
-    if (isc >= 0):
+    elif (isc >= 0):
         indent = ' '*isc
         for style, tokens in cases.iteritems():
             # Output all tokens that correspond to same style

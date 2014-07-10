@@ -17,3 +17,11 @@ div.eqks-equelle-error > pre {
     padding: 0;
     margin: 0;
 }
+
+.equelle-gutter-error {
+    width: 20px;
+}
+span.equelle-gutter-error-sign {
+    margin-left: 4px;
+    font-size: 14px;
+}

@@ -6,14 +6,18 @@
         Compiler = function() { };
         /* Extend with event emitter */
         _.extend(Compiler.prototype, Backbone.Events);
+        /* Wrapper function for saving the source into localStorage */
+        Compiler.prototype.save = function(source) {
+            localStorage.setItem(eqksConfig.localStorageTags.equelleSource, source);
+        };
         /* The function that does the actual compilation of the Equelle code */
-        Compiler.prototype.compile = function(source) {
+        Compiler.prototype.compile = function() {
             self = this;
             var triggerEvent = function() { self.trigger.apply(self, arguments) };
             /* Clear data in browser from old compilations */
-            localStorage.setItem(eqksConfig.localStorageTags.equelleSource, source);
+            source = localStorage.getItem(eqksConfig.localStorageTags.equelleSource);
             localStorage.setItem(eqksConfig.localStorageTags.cppSource, '');
-            localStorage.setItem(eqksConfig.localStorageTags.cppSourceSign, '');
+            localStorage.setItem(eqksConfig.localStorageTags.cppSourceSignature, '');
             /* Indicate that we have started the process */
             triggerEvent('started');
             /* Open connection to server */
@@ -34,7 +38,7 @@
                         case 'success':
                         console.log('Compile success');
                         localStorage.setItem(eqksConfig.localStorageTags.cppSource, data.source);
-                        localStorage.setItem(eqksConfig.localStorageTags.cppSourceSign, data.sign);
+                        localStorage.setItem(eqksConfig.localStorageTags.cppSourceSignature, data.sign);
                         sock.close();
                         break;
                         /* A compiler error, this is different from a failure, and errors are shown to user */
@@ -51,7 +55,7 @@
             /* Once socket is closed, check that everything went smoothly */
             sock.onclose = function() {
                 if (!errorTriggered) {
-                    if (!localStorage.getItem(eqksConfig.localStorageTags.cppSource) || !localStorage.getItem(eqksConfig.localStorageTags.cppSourceSign)) {
+                    if (!localStorage.getItem(eqksConfig.localStorageTags.cppSource) || !localStorage.getItem(eqksConfig.localStorageTags.cppSourceSignature)) {
                         triggerEvent('failed', 'Not all expected results were found in localStorage');
                     } else {
                         triggerEvent('completed');
