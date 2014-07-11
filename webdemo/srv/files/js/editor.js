@@ -1,6 +1,6 @@
 (function(){
     /* This module provides the editor and Equelle->C++ compilation routines */
-    angular.module('equelleKitchenSinkEditor', ['equelleKitchenSinkEquelleCompile','equelleKitchenSinkConfiguration'])
+    angular.module('equelleKitchenSinkEditor', ['equelleKitchenSinkEquelleCompile','equelleKitchenSinkConfiguration','equelleKitchenSinkEditorHints'])
     /* The compilation routine */
     .directive('eqksEquelleCompiler', ['equelleCompiler', function(equelleCompiler) { return {
          restrict: 'A'
@@ -42,7 +42,7 @@
         }
     }}])
     /* Editor window */
-    .directive('eqksEquelleEditor', ['$timeout','eqksConfig', function($timeout, eqksConfig) { return {
+    .directive('eqksEquelleEditor', ['$timeout','eqksConfig','equelleHints', function($timeout, eqksConfig, equelleHints) { return {
          restrict: 'A'
         ,require: '^eqksEquelleCompiler'
         ,link: function(scope, elem, attrs, controller) {
@@ -56,6 +56,10 @@
                 ,autoCloseBrackets: { pairs: '()[]{}""||', explode: '{}' }
                 ,tabSize: 4
                 ,indentUnit: 4
+                ,hintOptions: {
+                    hint: equelleHints.hint
+                }
+                ,extraKeys: { 'Ctrl-Space': 'autocomplete' }
             });
             /* Bind editor to compile-controller */
             controller.getSource = function() {

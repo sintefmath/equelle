@@ -56,17 +56,33 @@
             /* Keep track of whether a line contained a block starting token */
             /* ... or if it is a continued line */
             /* ... and where the last Function token was, if we continue a line after this token, we probably want to indent to the column after it */
-            if (state.EOL) { state.EOL = false; state.lineContainedBlockStart = false }
+            if (state.EOL) { state.EOL = false; state.lineContainedBlockStart = false; state.lineTokens = []; state.continuedLineNo = 0 }
             if (token.name == '{') { state.lineContainedBlockStart = true }
-            if (token.name == 'LINECONT') { state.continuedLine = true }
+            if (token.name == 'LINECONT') { state.continuedLine = true; state.continuedLineNo += 1 }
             if (token.name == 'FUNCTION') { state.functionTokenPos = (stream.column() - stream.indentation() + 8) }
+
+            /* Also keep track of all tokens on current line and their indentation for the code-completion */
+            if (token.name != EOL_TOKEN) {
+                state.lineTokens.push({
+                     name: token.name
+                    ,line: state.continuedLineNo
+                    ,ch: stream.column()
+                });
+            }
 
             /* At the end-of-line, or after a line continuation token, update indentation of current block so that if user indents self, it will keep going with that indent */
             /* ... unless it is a continued line, where we want to keep the indent of the parent line */
-            /* ... or the line containd a block starting token, which means we are actually inside the new block */
-            if (((token.name == EOL_TOKEN && !state.continuedLine) || token.name == 'LINECONT') && !state.lineContainedBlockStart) {
-                state.blockIndent[state.blockLevel] = stream.indentation();
+            /* ... also skip the EOL's we put in at empty lines */
+            if (((token.name == EOL_TOKEN && !state.continuedLine) || token.name == 'LINECONT') && stream !== undefined) {
+                if (state.lineContainedBlockStart) {
+                    /* If the line contained a block starting token, we are inside a new block indent, so we should set the previous block indent level */
+                    state.blockIndent[state.blockLevel-1] = stream.indentation();
+                } else {
+                    /* .. else, set current level */
+                    state.blockIndent[state.blockLevel] = stream.indentation();
+                }
             }
+            /* ... or the line containd a block starting token, which means we are actually inside the new block */
 
             /* Reset the above keeping-track variables when we reach the enf of a line */
             if (token.name == EOL_TOKEN) { state.EOL = true; state.continuedLine = false; state.functionTokenPos = 0 }
@@ -103,7 +119,9 @@
                 ,lineContainedBlockStart: false
                 ,EOL: false
                 ,continuedLine: false
+                ,continuedLineNo: 0
                 ,functionTokenPos: 0
+                ,lineTokens: []
             }}
             ,token: function token(s, state) {
                 /* Run the lexer, this will return a token, and advance the stream */
@@ -122,7 +140,13 @@
                 if (s.eol() && lex && lex.name != EOL_TOKEN && lex.name != 'LINECONT') token(s,state);
 
                 /* We are now ready to return the style of the last token we read */
-                return tokenStyle(lex);
+                var style = tokenStyle(lex);
+                if (lex && lex.name) { style += ' EQUELLE-TOKEN-'+lex.name }
+                return style;
+            }
+            ,blankLine: function(state) {
+                /* Send the parser a EOL on blank lines to reset the tokens correctly */
+                parser(undefined, state, config, { name: EOL_TOKEN });
             }
             ,indent: function(state, after) {
                 if (_.str.startsWith(after,'}')) {

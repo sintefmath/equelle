@@ -33,7 +33,7 @@ def handleRule(line):
     # Add this rule to the list
     rules.append((substituted, action))
 
-# Read the equelle_lexer.y and parse
+# Read the equelle_lexer.l and parse
 flexfile = open('../../compiler/equelle_lexer.l')
 section = 'definitions'
 comment = False
@@ -142,7 +142,7 @@ for line in stylefile:
 ## ---------- STYLE GENERATION END   ---------- ##
 
 ## ---------- COMPLETE MODE GENERATION START --------##
-# Read the skeleton from modeSkel.js
+# Read the skeleton from mode.js
 skel = open('mode.js','r')
 for line in skel:
     ilr = line.find('##lexer_regexes##');
