@@ -1,5 +1,5 @@
-CodeMirror Equelle language suport
-==================================
+CodeMirror Equelle language support
+===================================
 The scripts in this folder is used to create a CodeMirror mode for syntax highlighting of, and code-completion for the Equelle language in the CodeMirror Editor.
 
 Mode generation script
