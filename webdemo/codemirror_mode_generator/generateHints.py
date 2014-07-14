@@ -5,17 +5,6 @@ import fileinput
 import sys
 import shlex
 
-## TODO: Do we need to read the tokens? Wouldn't they all be?
-# Bison declaration lines
-tokens = []
-tokenRegx = r'%token(\s*<([^>]*)>)*\s+([^\s]*)\s*'
-def handleDeclaration(line):
-    # We are only interested in the token definitions
-    if (line.startswith('%token')):
-        # Find the actual token
-        m = re.match(tokenRegx, line)
-        tokens.append(m.group(3))
-
 # Bison grammar rules
 nodes = {}
 currentNode = None
@@ -59,9 +48,7 @@ for line in bisonfile:
         line = line.replace('\n','').strip()
         if (len(line)):
             # Parse the non-empty lines
-            if (section == 'bison declarations'):
-                handleDeclaration(line)
-            elif (section == 'rules'):
+            if (section == 'rules'):
                 handleRule(line)
 
 
@@ -109,8 +96,6 @@ start = 'statement' # This is our root-node
 nodes['block'] = [ "'{' EOL EOL '}'" ] # This is what we will insert when a block is requested
 # ... and expressions can be so general that we need to suggest just a few of them*/
 nodes['expr'] = [ "ID", "number", "STRING_LITERAL", "function_call" ]
-# Also, the hint generator doesn't handle recursive definitions very well, so we have to define some limits
-recursion = { 'f_decl_args': 5, 'f_call_args': 5, 'type_expression': 1, 'default': 0 }
 
 supportedNodes = {}
 def addNode(name):
@@ -135,6 +120,97 @@ def addNode(name):
 #Start with our root-node
 addNode(start)
 
+# Write out node-function
+def writeStatementTokens(tokens, indent):
+    if (len(tokens)>0):
+        toki = range(len(tokens))
+        tokns = ','.join(['t'+str(i+1) for i in toki])
+        # Predeclare tokens
+        sys.stdout.write(indent)
+        sys.stdout.write('var '+tokns+';\n')
+        # Write actual tokens
+        for i in toki:
+            # Find next return
+            next = 'end'
+            if (i+1 < len(tokens)):
+                next = 't'+str(i+2)
+            # Write token
+            sys.stdout.write(indent)
+            sys.stdout.write('t'+str(i+1)+' = ')
+            if (tokens[i]['type'] == 'node'):
+                sys.stdout.write('_.partial(nodefun_'+tokens[i]['name']+', function() { return '+next+'() })')
+            else: #type == 'token'
+                sys.stdout.write('function() { return {\''+tokens[i]['name']+'\': '+next+'} }')
+            sys.stdout.write(';\n')
+        # Return first token
+        sys.stdout.write(indent)
+        sys.stdout.write('return t1();\n')
+    else:
+        # This token just returns parent
+        sys.stdout.write(indent)
+        sys.stdout.write('return end();\n')
+
+def writeNodeFunction(node, indent):
+    subindent = indent+(' '*4)
+    subsubindent = subindent+(' '*4)
+    # Separat simple statements from repeated ones (where a node calls itself recursively as first token)
+    simple = {}
+    repeat = {}
+    for statement in supportedNodes[node]:
+        if (len(statement) > 0 and statement[0]['type'] == 'node' and statement[0]['name'] == node):
+            statement.pop(0)
+            repeat['r'+str(len(repeat)+1)] = statement
+        else:
+            simple['s'+str(len(simple)+1)] = statement
+    #-- Write start of node-function --
+    sys.stdout.write(indent)
+    sys.stdout.write('nodefun_'+node)
+    sys.stdout.write(' = function(p) {\n')
+    #- Predeclare the end return -
+    sys.stdout.write(subindent)
+    sys.stdout.write('var end;\n')
+    #- Write optional repeated statements first -
+    if (len(repeat) > 0):
+        repeats = ','.join(repeat.keys())
+        # Predeclare variables
+        sys.stdout.write(subindent)
+        sys.stdout.write('var '+repeats+';\n')
+        # Write the statements
+        for n, toks in repeat.iteritems():
+            sys.stdout.write(subindent)
+            sys.stdout.write('var '+n+' = function() {\n')
+            writeStatementTokens(toks, subsubindent)
+            sys.stdout.write(subindent)
+            sys.stdout.write('};\n')
+            sys.stdout.write(subindent)
+            sys.stdout.write('end = _.partial(combine, ['+repeats+',p]);\n')
+    else:
+        # The only end statemt is to go back to parent
+        sys.stdout.write(subindent)
+        sys.stdout.write('end = p;\n')
+    #- Write normal simple statments -
+    simples = ','.join(simple.keys())
+    # Predeclare variables
+    sys.stdout.write(subindent)
+    sys.stdout.write('var '+simples+';\n')
+    for n, toks in simple.iteritems():
+        sys.stdout.write(subindent)
+        sys.stdout.write('var '+n+' = function() {\n')
+        writeStatementTokens(toks, subsubindent)
+        sys.stdout.write(subindent)
+        sys.stdout.write('};\n')
+    #- Return combination of all statements, or just the one -
+    sys.stdout.write(subindent)
+    sys.stdout.write('return ')
+    if (len(simple) > 1):
+        sys.stdout.write('combine(['+simples+'])')
+    else:
+        sys.stdout.write(simples+'()')
+    sys.stdout.write(';\n')
+    #-- Write end of node-function --
+    sys.stdout.write(indent)
+    sys.stdout.write('};\n')
+
 
 ## ---------- HINTING FUNCTION GENERATION START --------##
 # Read the skeleton from hint.js
@@ -142,73 +218,25 @@ skel = open('hint.js','r')
 for line in skel:
     ihs = line.find('##hint_start##');
     ihn = line.find('##hint_nodes##');
-    ihr = line.find('##hint_recursion_levels##');
     iht = line.find('##hint_token_replacements##');
     # Insert the starting node, with indentation, so that it looks nice
     if (ihs >= 0):
         indent = ' '*ihs
         sys.stdout.write(indent)
-        sys.stdout.write('var nstart = \'')
+        sys.stdout.write('var nstart = nodefun_')
         sys.stdout.write(start)
-        sys.stdout.write('\';\n')
+        sys.stdout.write(';\n')
     # Insert the hinting nodes into the skeleton
     elif (ihn >= 0):
-        separator = ' '
         indent = ' '*ihn
-        subindent = ' '*(ihn+4)
+        # Predeclare node functions
+        nodefuns = ', '.join(['nodefun_'+node for node in supportedNodes.keys()])
         sys.stdout.write(indent)
-        sys.stdout.write('var ns = {\n')
-        # Write all nodes
-        for name,expects in supportedNodes.iteritems():
-            subseparator = ''
-            sys.stdout.write(subindent)
-            sys.stdout.write(separator)
-            sys.stdout.write(name)
-            sys.stdout.write(': [')
-            # Write all expected children
-            ## TODO: Do we care about literals?
-            for expect in expects:
-                subsubseparator = ''
-                sys.stdout.write(subseparator)
-                sys.stdout.write('[')
-                for token in expect:
-                    sys.stdout.write(subsubseparator)
-                    sys.stdout.write('{type:\'')
-                    sys.stdout.write(token['type'])
-                    sys.stdout.write('\',')
-                    if (token['type'] == 'literal'):
-                        sys.stdout.write('text:\'')
-                        sys.stdout.write(token['text'])
-                    else:
-                        sys.stdout.write('name:\'')
-                        sys.stdout.write(token['name'])
-                    sys.stdout.write('\'}')
-                    subsubseparator = ','
-                sys.stdout.write(']')
-                subseparator = ','
-            sys.stdout.write(']\n')
-            separator = ','
-        sys.stdout.write(indent)
-        sys.stdout.write('};\n')
-    # Insert recursion levels
-    elif (ihr >= 0):
-        separator = ' '
-        indent = ' '*ihr
-        subindent = ' '*(ihr+4)
-        sys.stdout.write(indent)
-        sys.stdout.write('var nrl = {\n')
-        # Write all the levels
-        for name, level in recursion.iteritems():
-            sys.stdout.write(subindent)
-            sys.stdout.write(separator)
-            sys.stdout.write(name)
-            sys.stdout.write(': ')
-            sys.stdout.write(str(level))
-            sys.stdout.write('\n')
-            separator = ','
-        sys.stdout.write(indent)
-        sys.stdout.write('};\n')
-    # Insert recursion levels
+        sys.stdout.write('var '+nodefuns+';\n')
+        # Write all the node functions
+        for node in supportedNodes.keys():
+            writeNodeFunction(node, indent)
+    # Insert token replacements
     elif (iht >= 0):
         separator = ' '
         indent = ' '*iht
