@@ -18,6 +18,9 @@ To generate the code, run the "generateHints.py" script the same way as the mode
     ./generateHints.py > ../srv/files/js/equelleHints.js
 
 
+NOTE: This script uses the Equelle compiler to generate a list of built-in functions, so the compiler must be built to the folder "../../../equelle-build/compiler/"
+
+
 Token styling
 -------------
 To modify the styling of the different tokens, see the styles.txt file. Each line of tokens will be given the css-class defined by the preceeding {{style}} directive, or "keyword" as default.
