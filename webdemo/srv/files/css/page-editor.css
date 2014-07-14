@@ -25,3 +25,10 @@ span.equelle-gutter-error-sign {
     margin-left: 4px;
     font-size: 14px;
 }
+
+.CodeMirror-hint {
+    max-width: 2000px;
+}
+.CodeMirror-hints {
+    overflow-y: scroll;
+}

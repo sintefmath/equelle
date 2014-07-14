@@ -8,7 +8,7 @@ import shlex
 # Bison grammar rules
 nodes = {}
 currentNode = None
-nodeStartRegx = r'([^:]*):\s*((\'{|[^{])*)'
+nodeStartRegx = r'([^:]*):\s*((\'{|[^%{])*)'
 nodeOrRegx = r'\|((\'{|[^{])*)'
 def handleRule(line):
     global currentNode
@@ -95,7 +95,7 @@ for line in flexfile:
 start = 'statement' # This is our root-node
 nodes['block'] = [ "'{' EOL EOL '}'" ] # This is what we will insert when a block is requested
 # ... and expressions can be so general that we need to suggest just a few of them*/
-nodes['expr'] = [ "ID", "number", "STRING_LITERAL", "function_call" ]
+#nodes['expr'] = [ "ID", "number", "STRING_LITERAL", "function_call" ]
 
 supportedNodes = {}
 def addNode(name):
@@ -211,6 +211,37 @@ def writeNodeFunction(node, indent):
     sys.stdout.write(indent)
     sys.stdout.write('};\n')
 
+## ---------- Generate list of BUILTIN functions --------##
+builtins = []
+argRegx =r'([^:]*):([^,]*),?'
+def parseBuiltinFunction(match):
+    name = match[0]
+    if (name == 'Main' or name.startswith('Stencil')):
+        pass # Ignore these functions
+    else:
+        # Parse input arguments
+        argsm = re.findall(argRegx, match[1])
+        args = []
+        for arg in argsm:
+            args.append((arg[0].strip(), arg[1].strip()))
+        # Parse return type
+        out = match[2].strip()
+        if (out == 'Void'):
+            out = ''
+        # Add function to list of builtins
+        builtins.append((name, args, out))
+
+from subprocess import Popen, PIPE
+# Run an empty program through the Equelle compiler to get the builtin functions
+ec = Popen(['../../../equelle-build/compiler/ec','--input','-','--dump','symboltable'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+(ec_out,ec_err) = ec.communicate(input='')
+if (len(ec_err)):
+    exit('Equelle compiler error: '+ec_err)
+else:
+    funcRegx = r'-{18} Dump of function: ([^\s]+) -{18}\nFunction\(([^\)]*)\) -> ([^\n]*)'
+    matches = re.findall(funcRegx, ec_out)
+    for match in matches:
+        parseBuiltinFunction(match)
 
 ## ---------- HINTING FUNCTION GENERATION START --------##
 # Read the skeleton from hint.js
@@ -219,6 +250,7 @@ for line in skel:
     ihs = line.find('##hint_start##');
     ihn = line.find('##hint_nodes##');
     iht = line.find('##hint_token_replacements##');
+    ihb = line.find('##hint_builtin_functions##');
     # Insert the starting node, with indentation, so that it looks nice
     if (ihs >= 0):
         indent = ' '*ihs
@@ -251,6 +283,43 @@ for line in skel:
             sys.stdout.write(': \'')
             sys.stdout.write(replacement)
             sys.stdout.write('\'\n')
+            separator = ','
+        sys.stdout.write(indent)
+        sys.stdout.write('};\n')
+    # Insert builtin functions
+    elif (ihb >= 0):
+        separator = ' '
+        indent = ' '*ihb
+        subindent = ' '*(ihb+4)
+        sys.stdout.write(indent)
+        sys.stdout.write('var builtins = {\n')
+        for fun in builtins:
+            subseparator = ''
+            sys.stdout.write(subindent)
+            sys.stdout.write(separator)
+            # Function name
+            sys.stdout.write('\''+fun[0]+'\': {')
+            if len(fun[1])>0:
+                subseparator = ','
+                subsubseparator = ''
+                # Function arguments
+                sys.stdout.write(' args: [')
+                for arg in fun[1]:
+                    sys.stdout.write(subsubseparator)
+                    sys.stdout.write('{ name: \'')
+                    sys.stdout.write(arg[0])
+                    sys.stdout.write('\', type: \'')
+                    sys.stdout.write(arg[1])
+                    sys.stdout.write('\'}')
+                    subsubseparator = ','
+                sys.stdout.write(']')
+            if len(fun[2])>0:
+                # Function output
+                sys.stdout.write(subseparator)
+                sys.stdout.write(' out: \'')
+                sys.stdout.write(fun[2])
+                sys.stdout.write('\' ')
+            sys.stdout.write('}\n')
             separator = ','
         sys.stdout.write(indent)
         sys.stdout.write('};\n')

@@ -65,6 +65,7 @@
             if (token.name != EOL_TOKEN) {
                 state.lineTokens.push({
                      name: token.name
+                    ,text: token.match
                     ,line: state.continuedLineNo
                     ,ch: stream.column()
                 });
@@ -87,15 +88,42 @@
             /* Reset the above keeping-track variables when we reach the enf of a line */
             if (token.name == EOL_TOKEN) { state.EOL = true; state.continuedLine = false; state.functionTokenPos = 0 }
 
+            /* At the end-of-line, check if we have defined a new variable in this block */
+            if (token.name == EOL_TOKEN) {
+                var firstToken = _.first(state.lineTokens);
+                var eqToken = _.find(state.lineTokens, function(token) { return (token.name == '=') });
+                if (firstToken && firstToken.name == 'ID' && eqToken) {
+                    var level = state.blockLevel;
+                    if (state.lineContainedBlockStart) level -= 1;
+                    /* Check if we can find ( and ) tokens, if so, this is a function definition */
+                    var defStart = _.indexOf(state.lineTokens, _.find(state.lineTokens, function(token) { return (token.name == '(') }));
+                    var defEnd = _.indexOf(state.lineTokens, _.find(state.lineTokens, function(token) { return (token.name == ')') }));
+                    var defEq = _.indexOf(state.lineTokens, eqToken);
+                    if (defStart > 0 && defEnd > defStart && defEnd < defEq) {
+                        /* Extract the arguments */
+                        var args = _.map(_.filter(state.lineTokens, function(token, i) { return (i > defStart && i < defEnd && token.name == 'ID') }), function(token) { return token.text });
+                        state.blockFunctions[level].push({name: firstToken.text, args: args});
+                    } else {
+                        state.blockVariables[level].push(firstToken.text);
+                    }
+                }
+            }
+
             /* Add and remove block level indentations */
             if (token.name == '{') {
                 /* Inside a new block, add a level of indentation from this lines */
                 state.blockIndent.push(stream.indentation()+config.indentUnit);
                 state.blockLevel += 1;
+                /* Add a block-variable list */
+                state.blockVariables.push([]);
+                state.blockFunctions.push([]);
             } else if (token.name == '}') {
                 /* Left a block, remove a level of indentation */
                 state.blockIndent.pop();
                 state.blockLevel -= 1;
+                /* Remove a block-variable list */
+                state.blockVariables.pop();
+                state.blockFunctions.pop();
             }
         };
     })();
@@ -113,15 +141,29 @@
     /* The actual mode logic */
     CodeMirror.defineMode('equelle', function(config) {
         return {
-            startState: function() { return {
+             startState: function() { return {
                  blockLevel: 0
                 ,blockIndent: [0]
+                ,blockVariables: [[]]
+                ,blockFunctions: [[]]
                 ,lineContainedBlockStart: false
                 ,EOL: false
                 ,continuedLine: false
                 ,continuedLineNo: 0
                 ,functionTokenPos: 0
                 ,lineTokens: []
+            }}
+            ,copyState: function(old) { return {
+                 blockLevel: old.blockLevel
+                ,blockIndent: _.clone(old.blockIndent)
+                ,blockVariables: _.map(old.blockVariables, function(bv) { return _.clone(bv) })
+                ,blockFunctions: _.map(old.blockFunctions, function(bf) { return _.clone(bf) })
+                ,lineContainedBlockStart: old.lineContainedBlockStart
+                ,EOL: old.EOL
+                ,continuedLine: old.continuedLine
+                ,continuedLineNo: old.continuedLineNo
+                ,functionTokenPos: old.functionTokenPos
+                ,lineTokens: _.clone(old.lineTokens)
             }}
             ,token: function token(s, state) {
                 /* Run the lexer, this will return a token, and advance the stream */
