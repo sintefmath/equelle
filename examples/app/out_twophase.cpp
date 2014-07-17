@@ -39,9 +39,11 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er) {
     // ============= Generated code starts here ================
 
     const CollOfScalar perm = er.inputCollectionOfScalar("perm", er.allCells());
-    const CollOfScalar poro = er.inputCollectionOfScalar("poro", er.allCells());
+    const CollOfScalar poro_in = er.inputCollectionOfScalar("poro", er.allCells());
     const Scalar watervisc = er.inputScalarWithDefault("watervisc", double(0.0005));
     const Scalar oilvisc = er.inputScalarWithDefault("oilvisc", double(0.005));
+    const CollOfScalar min_poro = er.operatorExtend(er.inputScalarWithDefault("min_poro", double(0.0001)), er.allCells());
+    const CollOfScalar poro = er.trinaryIf((poro_in < min_poro), min_poro, poro_in);
     const CollOfScalar pv = (poro * er.norm(er.allCells()));
     std::function<CollOfScalar(const CollOfScalar&)> computeTransmissibilities = [&](const CollOfScalar& permeability) -> CollOfScalar {
         const CollOfFace interior_faces = er.interiorFaces();
