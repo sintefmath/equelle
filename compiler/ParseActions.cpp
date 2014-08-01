@@ -604,6 +604,15 @@ RandomAccessNode* handleRandomAccess(Node* expr, const int index)
 StencilAccessNode *handleStencilAccess(const std::string grid_variable,
                                        FuncArgsNode* expr_list)
 {
+	auto argtypes = expr_list->argumentTypes();
+	for (int i=0; i<argtypes.size(); ++i) {
+		if (!isStencilType(argtypes[i].basicType())) {
+			yyerror("cannot access a stencil with a non-stencil index");
+		}
+		else if (argtypes[i].basicType() != StencilI + i) {
+			yyerror("stencil index used for wrong dimension");
+		}
+	}
     return new StencilAccessNode( grid_variable, expr_list );
 }
 

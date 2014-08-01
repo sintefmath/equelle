@@ -541,7 +541,8 @@ void PrintCPUBackendASTVisitor::visit(StencilStatementNode &node)
 	//FIXME: This will not work if node.name() is already defined elsewhere...
 	//std::cout << indent() << "equelle::CartesianGrid::CartesianCollectionOfScalar " << node.name()
 	//		<< " = grid.inputCellScalarWithDefault( \"" << node.name() << "\", 0.0 );" << std::endl;
-    std::cout << indent() << "//Start of stencil-lambda" << std::endl;
+    std::cout << indent() << "{ //Start of stencil-lambda \"" << node.name() << "\"" << std::endl;
+    indent_++;
     std::cout << indent() << "auto cell_stencil = [&]( int i, int j ) {" << std::endl;
     indent_++;
     std::cout << indent();
@@ -552,15 +553,17 @@ void PrintCPUBackendASTVisitor::midVisit(StencilStatementNode &node)
     std::cout << " = " << std::endl;
     indent_++;
     std::cout << indent();
+    indent_--;
 }
 
 void PrintCPUBackendASTVisitor::postVisit(StencilStatementNode &node)
 {
     indent_--;
-    indent_--;
     std::cout << ";" << std::endl;
-    std::cout << indent() << "} // End of stencil-lambda\n";
-    std::cout << indent() << "grid.allCells().execute( cell_stencil );\n";
+    std::cout << indent() << "}" << std::endl;
+    std::cout << indent() << "grid.allCells().execute( cell_stencil );" << std::endl;
+    indent_--;
+    std::cout << indent() << "} // End of stencil-lambda \"" << node.name() << "\"" << std::endl;
 
 }
 
