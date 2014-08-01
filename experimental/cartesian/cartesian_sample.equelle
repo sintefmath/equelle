@@ -1,28 +1,27 @@
-explicitHeat : Function( u_0: Collection Of Scalar On AllCells() ) -> ...
+explicitHeat : Function( u_0: Collection Of Scalar On AllCells(), ...
+						 a: Scalar ) -> ...
                          Collection Of Scalar On AllCells()
-explicitHeat(u_0) = {
+explicitHeat(u_0, a) = {
     i = StencilI()
     j = StencilJ()
-
-	u[[i, j]] = 1/2 * u_0[[i, j+3]]
-	
-	q[[i, j]] = 1/4 * ( 2 * u_0[[i,j-1]] + u_0[[i,j]] + u_0[[i,j+1]] )
-
-	#u(i, j) = 1/2 * u_0(i, j+1)
-	#u£i, j€ = 1/2 * u_0£i, j+1€
-	# Angrepsmåte: Implementer i handleFuncCall slik at hvis funksjonen ikke finnes, 
-	# men parameterne er alle stencil-access
-
-    #u@i,j@ = 1/8 * ( ...
-   # 	  4*u_0@i,j@ ...
-   # 	  + u_0@i+1,j@ ...
-   # 	  + u_0@i-1,j@ ...
-   # 	  + u_0@i,j+1@ ...
-   # 	  + u_0@i,j-1@ ... 
-   # 	) ...
     
-#    	|
-#    	= 1/4 ( 2 * u_0@i,j-1@ + u_0@i,j@ + u_0@i,j+1@ )
+    #FIXME: This should be automatically deduced by stencil operator below
+	u : Mutable Collection Of Scalar On AllCells()
+	u = u_0
+
+	u[[i, j]] = a * 1/8 * ( ...
+    	  4*u_0[[i,j]] ...
+    	  + u_0[[i+1,j]] ...
+    	  + u_0[[i-1,j]] ...
+    	  + u_0[[i,j+1]] ...
+    	  + u_0[[i,j-1]] ... 
+    	) ...
+	
+	#ERROR: q not defined: q[[i, j]] = 1/4 * ( 2 * u_0[[i,j-1]] + u_0[[i,j]] + u_0[[i,j+1]] )
+	#ERROR: Wrong indices used: u[[j, i]] = 1/8 
+
+	# Alt. angrepsmåte: Implementer i handleFuncCall slik at hvis funksjonen ikke finnes, 
+	# men parameterne er alle stencil-access
     
     # Trenger dedusere bredden på stensil for å kunne generere riktig antall ghostceller
     
@@ -34,8 +33,30 @@ explicitHeat(u_0) = {
     # For internal boundaries (gracefull loss of order): Trenger stensilens form for å sjekke 
     # hvilke stensiler fungerer hvor
     
-    #fikse navn for auto cell_stencil = [&](int i......) for å ha unike navn per stensil.
+    #TODO: fikse navn for auto cell_stencil = [&](int i......) for å ha unike navn per stensil.
+    #Done: laget scope for hver auto: 
 
     -> u
 }
 
+
+
+k : Scalar = InputScalarWithDefault("k", 1.0) #Material specific heat diffusion constant
+dx : Scalar = InputScalarWithDefault("dx", 1.0) #Size of each cell along x axis
+dy : Scalar = InputScalarWithDefault("dy", 1.0) #Size of each cell along y axis
+
+timesteps : Sequence Of Scalar
+timesteps = InputSequenceOfScalar("timesteps")
+
+u_initial : Collection Of Scalar On AllCells()
+u_initial = InputCollectionOfScalar("u_initial", AllCells())
+u0 : Mutable Collection Of Scalar On AllCells()
+u0 = u_initial
+
+
+For dt In timesteps {
+	a = k * dt /(dx*dy)
+	u = explicitHeat(u0, a)
+    Output("u", u)
+	u0 = u
+}

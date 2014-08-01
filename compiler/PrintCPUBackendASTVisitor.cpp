@@ -538,9 +538,6 @@ void PrintCPUBackendASTVisitor::postVisit(StencilAccessNode &node)
 
 void PrintCPUBackendASTVisitor::visit(StencilStatementNode &node)
 {
-	//FIXME: This will not work if node.name() is already defined elsewhere...
-	//std::cout << indent() << "equelle::CartesianGrid::CartesianCollectionOfScalar " << node.name()
-	//		<< " = grid.inputCellScalarWithDefault( \"" << node.name() << "\", 0.0 );" << std::endl;
     std::cout << indent() << "{ //Start of stencil-lambda \"" << node.name() << "\"" << std::endl;
     indent_++;
     std::cout << indent() << "auto cell_stencil = [&]( int i, int j ) {" << std::endl;

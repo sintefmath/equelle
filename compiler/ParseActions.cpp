@@ -604,33 +604,38 @@ RandomAccessNode* handleRandomAccess(Node* expr, const int index)
 StencilAccessNode *handleStencilAccess(const std::string grid_variable,
                                        FuncArgsNode* expr_list)
 {
+	if (!SymbolTable::isVariableDeclared(grid_variable)) {
+		std::string err_msg = "Could not find the variable " + grid_variable;
+		yyerror(err_msg.c_str());
+	}
+
 	auto argtypes = expr_list->argumentTypes();
 	for (int i=0; i<argtypes.size(); ++i) {
 		if (!isStencilType(argtypes[i].basicType())) {
-			yyerror("cannot access a stencil with a non-stencil index");
+			std::stringstream err_msg;
+			err_msg << "Cannot access a stencil with a non-stencil index in variable \""
+					<< grid_variable << "\"" << std::endl;
+			yyerror(err_msg.str().c_str());
 		}
 		else if (argtypes[i].basicType() != StencilI + i) {
-			yyerror("stencil index used for wrong dimension");
+			std::stringstream err_msg;
+			err_msg << "Got index " << basicTypeString(argtypes[i].basicType())
+					<< " but expected " << basicTypeString(BasicType(StencilI + i))
+					<< " for variable \"" << grid_variable << "\"" << std::endl;
+			yyerror(err_msg.str().c_str());
+			yyerror(err_msg.str().c_str());
 		}
 	}
     return new StencilAccessNode( grid_variable, expr_list );
 }
 
 
-SequenceNode *handleStencilStatement( StencilAccessNode *lhsStencilAccess,
+StencilStatementNode *handleStencilStatement( StencilAccessNode *lhsStencilAccess,
                                               Node *expr)
 {
-    SequenceNode* seq = new SequenceNode;
-    TypeNode* type = new TypeNode(EquelleType(Scalar));
-    /**FIXME: Need stencilDeclnode here.........
-    Right now it ends up with
-    const Scalar u = auto cell_stencil = [&] (int i, int j) { ...
-    instead of the more sensible
-    equelle::CartesianGrid::CartesianCollectionOfScalar u = grid.inputCellScalarWithDefault( "u", 1.0 );
-    auto cell_stencil = [&] (int i, int j) { ...
-    */
-    StencilStatementNode* stencil = new StencilStatementNode( lhsStencilAccess, expr );
-    seq->pushNode(handleDeclaration(lhsStencilAccess->name(), type));
-    seq->pushNode(handleAssignment(lhsStencilAccess->name(), stencil));
-    return seq;
+	if (!SymbolTable::isVariableDeclared(lhsStencilAccess->name())) {
+		std::string err_msg = "Could not find the variable " + lhsStencilAccess->name();
+		yyerror(err_msg.c_str());
+	}
+	return new StencilStatementNode( lhsStencilAccess, expr );
 }
