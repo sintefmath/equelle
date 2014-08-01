@@ -23,7 +23,7 @@ namespace equelleCUDA {
       also talk about number of elements (numElements()) which returns the number of 
       Vectors times the dimension.
 
-      The vector elements are stored in a private member variable of type CollOfScalar
+      The vector elements are stored in a private member variable of type CudaArray
       packed so that each vector is contiguous in memory, hence a CollOfVector with
       N vectors of 3 dimensions is stored  {1_x, 1_y, 1_z, 2_x, 2_y, 2_x,...,N_x, 
       N_y, N_z}, and the access to the raw data (data()) gives a pointer to this
@@ -90,14 +90,20 @@ namespace equelleCUDA {
 	*/
 	CollOfScalar norm() const;
 
+	//! Dot product with another vector
+	/*!
+	  Returns a collection of scalars equal to the dot product of this and the
+	  input vector.
+	*/
+	CollOfScalar dot(const CollOfVector& rhs) const;
+	
+
+
 	//! Pointer to the device memory block with all elements
 	const double* data() const;
 	//! Pointer to the device memory block with all elements
 	double* data();
 
-
-	// Temporary function to make everything work again
-	int size() const;
 
 	//! Dimension of vectors in the collection
 	int dim() const;
@@ -107,7 +113,7 @@ namespace equelleCUDA {
 	  This function returns the number of vectors in the collection.
 	  Not to be confused with size() which returns total number of 
 	  elements in the collection.
-	  size() = numVectors()*dim()
+	  numElements() = numVectors()*dim()
 	*/
 	int numVectors() const;
 
@@ -118,7 +124,17 @@ namespace equelleCUDA {
 	*/
 	int numElements() const;
 
+
+	//! Gives grid and block sizes for one thread per vector.
+	/*!
+	  \sa kernelSetup
+	*/
 	kernelSetup vector_setup() const;
+
+	//! Gives grid and block sizes for one thread per element.
+	/*!
+	  \sa kernelSetup
+	*/
 	kernelSetup element_setup() const;
 	
 
@@ -134,11 +150,15 @@ namespace equelleCUDA {
 	// to implement them.
 	//CollOfScalar& col(const int c);
 	//const CollOfScalar& col(const int c) const;
+	//! Get only one vector component.
+	/*!
+	  Returns a CollOfScalar with the index element of every vector.
+	 */
 	CollOfScalar col(const int index) const;
 	// The one implemented here makes a copy though...
 
     private:
-	CollOfScalar elements_;
+	CudaArray elements_;
 	const int dim_;
 	//kernelSetup element_setup_; // Find this one as elements_.getKernelSetup()
 	kernelSetup vector_setup_;
@@ -147,37 +167,60 @@ namespace equelleCUDA {
 	// block() and grid() will therefore be evaluated as one thread per double
     };
 
-    //! Kernel for getting the index element of all vectors in a collection.
-    /*!
-      \param[out] out Collection Of Scalar where out[i] is the index element of
-      vector number i in the collection of Vectors
-      \param[in] vec Collection of Vectors as a double array of size size_out*dim
-      \param[in] size_out Number of vectors in the collection and also the number 
-      of elements in the output collection of scalars.
-      \param[in] index The index we want to read from each vector
-      \param[in] dim The dimension of the vectors in the collection.
-    */
-    __global__ void collOfVectorOperatorIndexKernel( double* out,
-						     const double* vec,
-						     const int size_out,
-						     const int index,
-						     const int dim);
-	
-    //! Kernel for computing the norm of vectors
-    /*!
-      Uses one thread for each vector to compute the given vectors norm.
-      
-      \param[out] out The output with the norm of each vector
-      \param[in] vectors Array with vector elements so that each vector is 
-      continously in memory. The size of this array is numVectors*dim.
-      \param[in] numVectors Number of vectors given in input
-      \param[in] dim Dimension of each vector.
-    */
-    __global__ void normKernel( double* out,
-				const double* vectors,
-				const int numVectors,
-				const int dim);
     
+    //! Functions closely related to the CollOfVector class
+    namespace wrapCollOfVector {
+	
+	//! Kernel for getting the index element of all vectors in a collection.
+	/*!
+	  \param[out] out Collection Of Scalar where out[i] is the index element of
+	  vector number i in the collection of Vectors
+	  \param[in] vec Collection of Vectors as a double array of size size_out*dim
+	  \param[in] size_out Number of vectors in the collection and also the number 
+	  of elements in the output collection of scalars.
+	  \param[in] index The index we want to read from each vector
+	  \param[in] dim The dimension of the vectors in the collection.
+	*/
+	__global__ void collOfVectorOperatorIndexKernel( double* out,
+							 const double* vec,
+							 const int size_out,
+							 const int index,
+							 const int dim);
+	
+	//! Kernel for computing the norm of vectors
+	/*!
+	  Uses one thread for each vector to compute the given vectors norm.
+	  
+	  \param[out] out The output with the norm of each vector
+	  \param[in] vectors Array with vector elements so that each vector is 
+	  continously in memory. The size of this array is numVectors*dim.
+	  \param[in] numVectors Number of vectors given in input
+	  \param[in] dim Dimension of each vector.
+	*/
+	__global__ void normKernel( double* out,
+				    const double* vectors,
+				    const int numVectors,
+				    const int dim);
+	
+	//! Kernel for computing the dot product of lhs and rhs vectors.
+	/*!
+	  This kernel compute a collection of scalars of dot products from 
+	  two collections of vectors. \n
+	  Requires the number of vectors amount of threads.
+	  \param[out] result The dot products
+	  \param[in] lhs First collection of vectors
+	  \param[in] rhs Second collection of vectors
+	  \param[in] numVectors Number of vectors and size of result.
+	  \param[in] dim Dimension of all vectors.
+	*/
+	__global__ void dotKernel( double* result, 
+				   const double* lhs,
+				   const double* rhs,
+				   const int numVectors,
+				   const int dim);
+	
+
+    } // namespace wrapCollOfVector
 
 
     // --------------------- OPERATOR OVERLOADING -------------------------
@@ -197,6 +240,87 @@ namespace equelleCUDA {
       Works as a wrapper for the CUDA kernel which subtract collection of scalars.
     */
     CollOfVector operator-(const CollOfVector& lhs, const CollOfVector& rhs);
+
+    /*!
+      Overloaded operator unary minus for Collection of Vectors. Elementwise negation
+      of all values stored in the collection.
+
+      Works as a wrapper for the CUDA kernel which negate collection of scalars.
+    */
+    CollOfVector operator-(const CollOfVector& arg);
+    
+
+    /*!
+      Overloaded operator * for Scalar * CollOfVector. Elementwise multiplication
+      of all values stored in the collection with the single scalar value.
+      
+      Works as a wrapper for the CUDA kernel used for same operation on CollOfScalar.
+    */
+    CollOfVector operator*(const Scalar lhs, const CollOfVector& rhs);
+
+    /*!
+      Overloaded operator * for CollOfVector * Scalar. Elementwise multiplication
+      of all values stored in the collection with the single scalar value.
+    */
+    CollOfVector operator*(const CollOfVector& lhs, const Scalar rhs);
+
+    /*!
+      Overloaded operator * for CollOfVector * CollOfScalar. Elementwise multiplication
+      of each vector with corresponding scalar.
+    */
+    CollOfVector operator*(const CollOfVector& vec, const CollOfScalar& scal);
+
+    /*!
+      Overloaded operator * for CollOfScalar * CollOfVector. Elementwise multiplication
+      of each vector with corresponding scalar.
+    */
+    CollOfVector operator*(const CollOfScalar& scal, const CollOfVector& vec);
+
+    /*!
+      Overloaded operator / for CollOfVector / CollOfScalar. Elementwise division of 
+      each vector with corresponding scalar.'
+    */
+    CollOfVector operator/(const CollOfVector& vec, const CollOfScalar& scal);
+
+    /*!
+      Overloaded operator / for CollOfVector / Scalar. Elementwise division with the 
+      given scalar.
+    */
+    CollOfVector operator/(const CollOfVector& vec, const Scalar scal);
+
+    
+
+    namespace wrapCollOfVector{
+	//! CUDA kernel for computing CollOfVector * CollOfScalar.
+	/*! 
+	  Requires one thread per vector.
+	  \param[in,out] vector CollOfVector data. Input overwritten to output
+	  \param[in] scal CollOfScalar data.
+	  \param[in] numVectors number of vectors
+	  \param[in] dim Dimensions of the vectors
+	*/
+	__global__ void collvecMultCollscal_kernel( double* vector,
+						    const double* scal,
+						    const int numVectors, 
+						    const int dim);
+
+
+	//! CUDA kernel for computing CollOfVector / CollOfScalar.
+	/*!
+	  Requires one thread per vector.
+	  \param[in,out] vector CollOfVector data. Input overwritten to output.
+	  \param[in] scal CollOfScalar data.
+	  \param[in] numVectors number of vectors
+	  \param[in] dim Dimensions of the vectors.
+	*/
+	__global__ void collvecDivCollscal_kernel( double* vector,
+						   const double* scal,
+						   const int numVectors,
+						   const int dim);
+
+
+    }
+
 
 } // namespace equelleCUDA
 

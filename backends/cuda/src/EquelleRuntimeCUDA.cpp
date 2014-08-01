@@ -4,11 +4,12 @@
 
 
 #include "EquelleRuntimeCUDA.hpp"
-#include "EquelleRuntimeCUDA_havahol.hpp"
 #include "CollOfScalar.hpp"
 #include "DeviceGrid.hpp"
 #include "CollOfIndices.hpp"
 #include "CollOfVector.hpp"
+#include "wrapEquelleRuntime.hpp"
+#include "LinearSolver.hpp"
 
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/core/utility/StopWatch.hpp>
@@ -19,6 +20,7 @@
 #include <set>
 
 using namespace equelleCUDA;
+using namespace wrapEquelleRuntimeCUDA;
 
 
 namespace
@@ -62,15 +64,26 @@ namespace
 EquelleRuntimeCUDA::EquelleRuntimeCUDA(const Opm::parameter::ParameterGroup& param)
     : grid_manager_(createGridManager(param)),
       grid_(*(grid_manager_->c_grid())),
-      dev_grid_(UnstructuredGrid(*(grid_manager_->c_grid()))),
-      //ops_(grid_),
-      linsolver_(param),
+      dev_grid_(grid_),
+      devOps_(grid_),
+      solver_(param.getDefault<std::string>("solver", "BiCGStab"),
+	      param.getDefault<std::string>("preconditioner", "diagonal"),
+	      param.getDefault("solver_max_iter", 1000),
+	      param.getDefault("solver_tol", 1e-8)),
+      serialSolver_(param),
       output_to_file_(param.getDefault("output_to_file", false)),
       verbose_(param.getDefault("verbose", 0)),
       param_(param),
       max_iter_(param.getDefault("max_iter", 10)),
       abs_res_tol_(param.getDefault("abs_res_tol", 1e-6))
 {
+    wrapEquelleRuntimeCUDA::init_cusparse();
+}
+
+// Destructor:
+EquelleRuntimeCUDA::~EquelleRuntimeCUDA() 
+{
+    wrapEquelleRuntimeCUDA::destroy_cusparse();
 }
 
 
@@ -125,7 +138,16 @@ CollOfVector EquelleRuntimeCUDA::normal(const CollOfFace& faces) const
     return dev_grid_.normal(faces);
 }
 
+CollOfScalar EquelleRuntimeCUDA::dot( const CollOfVector& v1,
+				      const CollOfVector& v2 ) const 
+{
+    return v1.dot(v2);
+}
 
+Scalar EquelleRuntimeCUDA::twoNorm(const CollOfScalar& vals) const {
+    return std::sqrt( sumReduce(vals*vals) );
+    // This should be implemented without having to multiply matrices.
+}
 
 
 
@@ -134,54 +156,6 @@ void EquelleRuntimeCUDA::output(const String& tag, const double val) const
     std::cout << tag << " = " << val << std::endl;
 }
 
-
-
-CollOfFaceCPU EquelleRuntimeCUDA::inputDomainSubsetOf(const String& name,
-                                                  const CollOfFaceCPU& face_superset)
-{
-    const String filename = param_.get<String>(name + "_filename");
-    std::ifstream is(filename.c_str());
-    if (!is) {
-        OPM_THROW(std::runtime_error, "Could not find file " << filename);
-    }
-    std::istream_iterator<int> beg(is);
-    std::istream_iterator<int> end;
-    CollOfFaceCPU data;
-    for (auto it = beg; it != end; ++it) {
-        data.push_back(Face(*it));
-    }
-    if (!is_sorted(data.begin(), data.end())) {
-        OPM_THROW(std::runtime_error, "Input set of faces was not sorted in ascending order.");
-    }
-    if (!includes(face_superset.begin(), face_superset.end(), data.begin(), data.end())) {
-        OPM_THROW(std::runtime_error, "Given faces are not in the assumed subset.");
-    }
-    return data;
-}
-
-
-CollOfCellCPU EquelleRuntimeCUDA::inputDomainSubsetOf(const String& name,
-                                                  const CollOfCellCPU& cell_superset)
-{
-    const String filename = param_.get<String>(name + "_filename");
-    std::ifstream is(filename.c_str());
-    if (!is) {
-        OPM_THROW(std::runtime_error, "Could not find file " << filename);
-    }
-    std::istream_iterator<int> beg(is);
-    std::istream_iterator<int> end;
-    CollOfCellCPU data;
-    for (auto it = beg; it != end; ++it) {
-        data.push_back(Cell(*it));
-    }
-    if (!is_sorted(data.begin(), data.end())) {
-        OPM_THROW(std::runtime_error, "Input set of cells was not sorted in ascending order.");
-    }
-    if (!includes(cell_superset.begin(), cell_superset.end(), data.begin(), data.end())) {
-        OPM_THROW(std::runtime_error, "Given cells are not in the assumed subset.");
-    }
-    return data;
-}
 
 
 SeqOfScalar EquelleRuntimeCUDA::inputSequenceOfScalar(const String& name)
@@ -215,3 +189,211 @@ UnstructuredGrid EquelleRuntimeCUDA::getGrid() const {
 }
 
 
+
+
+void EquelleRuntimeCUDA::output(const String& tag, const CollOfScalar& coll)
+{
+    // Get data back to host
+    std::vector<double> host = coll.copyToHost();
+    
+    if (output_to_file_) {
+	// std::map<std::string, int> outputcount_;
+	// set file name to tag-0000X.output
+	int count = -1;
+	auto it = outputcount_.find(tag);
+	if ( it == outputcount_.end()) {
+	    count = 0;
+	    outputcount_[tag] = 1; // should contain the count to be used next time for same tag.
+	} else {
+	    count = outputcount_[tag];
+	    ++outputcount_[tag];
+	}
+	std::ostringstream fname;
+	fname << tag << "-" << std::setw(5) << std::setfill('0') << count << ".output";
+	std::ofstream file(fname.str().c_str());
+	if( !file ) {
+	    OPM_THROW(std::runtime_error, "Failed to open " << fname.str());
+	}
+	file.precision(16);
+	std::copy(host.data(), host.data() + host.size(),
+		  std::ostream_iterator<double>(file, "\n"));
+    } else {
+	std::cout << "\n";
+	std::cout << "Values in " << tag << std::endl;
+	for(int i = 0; i < coll.size(); ++i) {
+	    std::cout << host[i] << "  ";
+	}
+	std::cout << std::endl;
+    }
+}
+
+
+Scalar EquelleRuntimeCUDA::inputScalarWithDefault(const String& name,
+						  const Scalar default_value) {
+    return param_.getDefault(name, default_value);
+}
+
+
+
+CollOfScalar EquelleRuntimeCUDA::trinaryIf( const CollOfBool& predicate,
+					    const CollOfScalar& iftrue,
+					    const CollOfScalar& iffalse) const {
+    // First, we need same size of all input
+    if (iftrue.size() != iffalse.size() || iftrue.size() != predicate.size()) {
+	OPM_THROW(std::runtime_error, "Collections are not of the same size");
+    }
+    // Call a wrapper which calls a kernel
+    return trinaryIfWrapper(predicate, iftrue, iffalse);
+}
+
+
+CollOfScalar EquelleRuntimeCUDA::gradient( const CollOfScalar& cell_scalarfield ) const {
+    // This function is at the moment kept in order to be able to compare efficiency
+    // against the new implementation, where we use the matrix from devOps_.
+
+    // First, need cell_scalarfield to be defined on all cells:
+    if ( cell_scalarfield.size() != dev_grid_.number_of_cells() ) {
+	OPM_THROW(std::runtime_error, "Gradient need input defined on AllCells()");
+    }
+    
+    return gradientWrapper(cell_scalarfield,
+    			   dev_grid_.interiorFaces(),
+    			   dev_grid_.face_cells(),
+    			   devOps_);
+}
+
+CollOfScalar EquelleRuntimeCUDA::gradient_matrix( const CollOfScalar& cell_scalarfield ) const {
+    if ( cell_scalarfield.size() != dev_grid_.number_of_cells() ) {
+	OPM_THROW(std::runtime_error, "Gradient need input defined on AllCells()");
+    }
+    return devOps_.grad() * cell_scalarfield;
+}
+
+CollOfScalar EquelleRuntimeCUDA::divergence(const CollOfScalar& face_fluxes) const {
+    
+    // If the size is not the same as the number of faces, then the input is
+    // given as interiorFaces. Then it has to be extended to AllFaces.
+    if ( face_fluxes.size() != dev_grid_.number_of_faces() ) {
+	CollOfFace int_faces = interiorFaces();
+	// Extend to AllFaces():
+	CollOfScalar allFluxes = operatorExtend(face_fluxes, int_faces, allFaces());
+	return divergenceWrapper(allFluxes,
+				 dev_grid_,
+				 devOps_);
+    }
+    else {
+	// We are on allFaces already, so let's go!
+	return divergenceWrapper(face_fluxes,
+				 dev_grid_,
+				 devOps_); 
+    }
+}
+
+CollOfScalar EquelleRuntimeCUDA::divergence_matrix(const CollOfScalar& face_fluxes) const {
+    
+    // The input need to be defined on allFaces() or interiorFaces()
+    if ( face_fluxes.size() != dev_grid_.number_of_faces() &&
+	 face_fluxes.size() != devOps_.num_int_faces() ) {
+	OPM_THROW(std::runtime_error, "Input for divergence has to be on AllFaces or on InteriorFaces()");
+    }
+    
+    if ( face_fluxes.size() == dev_grid_.number_of_faces() ) {
+	// All faces
+	return devOps_.fulldiv() * face_fluxes;
+    }
+    else { // on internal faces
+	return devOps_.div() * face_fluxes;
+    }
+}
+
+
+CollOfScalar EquelleRuntimeCUDA::negGradient(const CollOfScalar& cell_scalarField) const
+{
+    OPM_THROW(std::runtime_error, "Not yet implemented, as it is not generated by Equelle front-end...");
+}
+
+CollOfScalar EquelleRuntimeCUDA::interiorDivergence(const CollOfScalar& face_fluxes) const
+{
+    OPM_THROW(std::runtime_error, "Not yet implemented, as it is not generated by Equelle front-end...");
+}
+
+
+
+// SQRT
+CollOfScalar EquelleRuntimeCUDA::sqrt(const CollOfScalar& x) const {
+
+    return sqrtWrapper(x);
+}
+
+
+// ------------- REDUCTIONS --------------
+
+Scalar EquelleRuntimeCUDA::minReduce(const CollOfScalar& x) const {
+    return x.reduce(MIN);
+}
+
+Scalar EquelleRuntimeCUDA::maxReduce(const CollOfScalar& x) const {
+    return x.reduce(MAX);
+}
+
+Scalar EquelleRuntimeCUDA::sumReduce(const CollOfScalar& x) const {
+    return x.reduce(SUM);
+}
+
+Scalar EquelleRuntimeCUDA::prodReduce(const CollOfScalar& x) const {
+    return x.reduce(PRODUCT);
+}
+
+
+// -------------- END REDUCTIONS ----------------
+
+
+// Serial solver:
+CollOfScalar EquelleRuntimeCUDA::serialSolveForUpdate(const CollOfScalar& residual) const 
+{
+    // Want to solve A*x=b, where A is residual.der, b = residual.val
+
+    hostMat hostA = residual.derivative().toHost();
+    std::vector<double> hostb = residual.value().copyToHost();
+    std::vector<double> hostX(hostb.size(), 0.0);
+
+    Opm::LinearSolverInterface::LinearSolverReport rep
+	= serialSolver_.solve(hostA.rows, hostA.nnz,
+			      &hostA.rowPtr[0], &hostA.colInd[0], &hostA.vals[0],
+			      &hostb[0], &hostX[0]);
+    if (!rep.converged) {
+	OPM_THROW(std::runtime_error, "Serial linear solver failed to converge.");
+    }
+       
+    return CollOfScalar(hostX);
+}
+
+
+
+
+// Array Of {X} Collection Of Scalar
+std::array<CollOfScalar, 1> equelleCUDA::makeArray( const CollOfScalar& t ) 
+{
+    return std::array<CollOfScalar, 1> {{t}};
+}
+
+std::array<CollOfScalar, 2> equelleCUDA::makeArray( const CollOfScalar& t1, 
+						    const CollOfScalar& t2 )
+{
+    return std::array<CollOfScalar, 2> {{t1, t2}};
+}
+
+std::array<CollOfScalar, 3> equelleCUDA::makeArray( const CollOfScalar& t1,
+						    const CollOfScalar& t2,
+						    const CollOfScalar& t3 )
+{
+    return std::array<CollOfScalar, 3> {{t1, t2, t3}};
+}
+
+std::array<CollOfScalar, 4> equelleCUDA::makeArray( const CollOfScalar& t1,
+						    const CollOfScalar& t2,
+						    const CollOfScalar& t3,
+						    const CollOfScalar& t4 )
+{
+    return std::array<CollOfScalar, 4> {{t1, t2, t3, t4}};
+}

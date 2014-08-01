@@ -67,7 +67,12 @@ EquelleRuntimeCPU::EquelleRuntimeCPU(const Opm::parameter::ParameterGroup& param
 EquelleRuntimeCPU::EquelleRuntimeCPU(const UnstructuredGrid *grid, const Opm::parameter::ParameterGroup &param)
     : grid_( *grid ),
       ops_(grid_),
-      param_( param )
+      linsolver_(param),
+      output_to_file_(param.getDefault("output_to_file", false)),
+      verbose_(param.getDefault("verbose", 0)),
+      param_(param),
+      max_iter_(param.getDefault("max_iter", 10)),
+      abs_res_tol_(param.getDefault("abs_res_tol", 1e-6))
 {
 
 }
@@ -90,7 +95,7 @@ bool EquelleRuntimeCPU::boundaryCell(const int cell_index) const
 {
     for (int hface = grid_.cell_facepos[cell_index]; hface < grid_.cell_facepos[cell_index + 1]; ++hface) {
         const int face = grid_.cell_faces[hface];
-        if (grid_.face_cells[2*face] < 0 || grid_.face_cells[2*face + 1] < 0) {
+        if (grid_.face_cells[2*face] == Boundary::outer || grid_.face_cells[2*face + 1] == Boundary::outer ) {
             return true;
         }
     }

@@ -1,40 +1,95 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
+#include <cusparse_v2.h>
 
 #include <thrust/detail/raw_pointer_cast.h>
+#include <thrust/reduce.h>
+#include <thrust/device_ptr.h>
+
+
 #include <math.h>
+#include <iostream>
+#include <limits>
+
+#include <opm/core/utility/ErrorMacros.hpp>
 
 #include "wrapEquelleRuntime.hpp"
 #include "CollOfScalar.hpp"
 #include "CollOfIndices.hpp"
 #include "equelleTypedefs.hpp"
 #include "DeviceGrid.hpp"
+#include "device_functions.cuh"
+#include "DeviceHelperOps.hpp"
 
 using namespace equelleCUDA;
+using namespace wrapEquelleRuntimeCUDA;
 
-// Have already performed a check on sizes.
-CollOfScalar equelleCUDA::trinaryIfWrapper( const CollOfBool& predicate,
-					    const CollOfScalar& iftrue,
-					    const CollOfScalar& iffalse) {
-    CollOfScalar out(iftrue.size());
-    const bool* pred_ptr = thrust::raw_pointer_cast( &predicate[0] );
-    kernelSetup s = out.setup();
-    trinaryIfKernel<<<s.grid, s.block>>>(out.data(),
-					 pred_ptr,
-					 iftrue.data(),
-					 iffalse.data(),
-					 iftrue.size());
-    return out;
+
+
+// Declaring the cuSparse handle!
+cusparseHandle_t equelleCUDA::CUSPARSE;
+
+void wrapEquelleRuntimeCUDA::init_cusparse() {
+    cusparseStatus_t status;
+    status = cusparseCreate(&CUSPARSE);
+    if (status != CUSPARSE_STATUS_SUCCESS ) {
+	OPM_THROW(std::runtime_error, "Cannot create cusparse handle.");
+    }
+}
+
+void wrapEquelleRuntimeCUDA::destroy_cusparse() {
+    cusparseStatus_t status;
+    status = cusparseDestroy(CUSPARSE);
+    if (status != CUSPARSE_STATUS_SUCCESS ) {
+	OPM_THROW(std::runtime_error, "Cannot destroy cusparse handle.");
+    }
 }
 
 
-__global__ void equelleCUDA::trinaryIfKernel( double* out,
-					      const bool* predicate,
-					      const double* iftrue,
-					      const double* iffalse,
-					      const int size) 
+// --------------  TRINARY IF -----------------------
+
+// Have already performed a check on sizes.
+CollOfScalar wrapEquelleRuntimeCUDA::trinaryIfWrapper( const CollOfBool& predicate,
+						       const CollOfScalar& iftrue,
+						       const CollOfScalar& iffalse) {
+    if ( iftrue.useAutoDiff() || iffalse.useAutoDiff()) {
+	CudaArray val(iftrue.size());
+	const bool* pred_ptr = thrust::raw_pointer_cast( &predicate[0] );
+	kernelSetup s = val.setup();
+	trinaryIfKernel<<<s.grid, s.block>>>(val.data(),
+					     pred_ptr,
+					     iftrue.data(),
+					     iffalse.data(),
+					     iftrue.size());
+	// Using matrix-multiplication for derivatives
+	CudaMatrix diagBool(predicate);
+	CudaMatrix der = diagBool*iftrue.derivative() + (CudaMatrix(predicate.size()) - diagBool)*iffalse.derivative();
+	
+	return CollOfScalar(val, der);
+    }
+    else { // No AutoDiff
+	CollOfScalar out(iftrue.size());
+	const bool* pred_ptr = thrust::raw_pointer_cast( &predicate[0] );
+	kernelSetup s = out.setup();
+	trinaryIfKernel<<<s.grid, s.block>>>(out.data(),
+					     pred_ptr,
+					     iftrue.data(),
+					     iffalse.data(),
+					     iftrue.size());
+	return out;
+    }
+}
+
+
+// For indicis
+
+__global__ void wrapEquelleRuntimeCUDA::trinaryIfKernel( double* out,
+							 const bool* predicate,
+							 const double* iftrue,
+							 const double* iffalse,
+							 const int size) 
 {
-    int index = threadIdx.x + blockIdx.x * blockDim.x;
+    const int index = myID();
     if ( index < size) {
 	double temp;
 	if (predicate[index]) {
@@ -47,9 +102,11 @@ __global__ void equelleCUDA::trinaryIfKernel( double* out,
     }
 }
 
-thrust::device_vector<int> equelleCUDA::trinaryIfWrapper(const CollOfBool& predicate,
-							 const thrust::device_vector<int>& iftrue,
-							 const thrust::device_vector<int>& iffalse) {
+
+thrust::device_vector<int> 
+wrapEquelleRuntimeCUDA::trinaryIfWrapper(const CollOfBool& predicate,
+					 const thrust::device_vector<int>& iftrue,
+					 const thrust::device_vector<int>& iffalse) {
     thrust::device_vector<int> out(predicate.size());
     int* out_ptr = thrust::raw_pointer_cast( &out[0] );
     const bool* pred_ptr = thrust::raw_pointer_cast( &predicate[0] );
@@ -66,12 +123,12 @@ thrust::device_vector<int> equelleCUDA::trinaryIfWrapper(const CollOfBool& predi
 
 
 
-__global__ void equelleCUDA::trinaryIfKernel( int* out,
-					      const bool* predicate,
-					      const int* iftrue,
-					      const int* iffalse,
-					      const int size) {
-    int index = threadIdx.x + blockIdx.x*blockDim.x;
+__global__ void wrapEquelleRuntimeCUDA::trinaryIfKernel( int* out,
+							 const bool* predicate,
+							 const int* iftrue,
+							 const int* iffalse,
+							 const int size) {
+    const int index = myID();
     if ( index < size ) {
 	int temp;
 	if ( predicate[index] ) {
@@ -85,36 +142,55 @@ __global__ void equelleCUDA::trinaryIfKernel( int* out,
 }
 
 
-// Gradient implementation:
-CollOfScalar equelleCUDA::gradientWrapper( const CollOfScalar& cell_scalarfield,
-					   const CollOfFace& int_faces,
-					   const int* face_cells) {
+// ----------------- GRADIENT ----------------------
 
-    // Output will be a collection on interiorFaces:
-    CollOfScalar out(int_faces.size());
-    // out now have info of how big kernel we need as well.
-    kernelSetup s = out.setup();
-    gradientKernel<<<s.grid, s.block>>>( out.data(),
-					 cell_scalarfield.data(),
-					 int_faces.raw_pointer(),
-					 face_cells,
-					 out.size());
-    return out;
+// Gradient implementation:
+CollOfScalar wrapEquelleRuntimeCUDA::gradientWrapper( const CollOfScalar& cell_scalarfield,
+						      const CollOfFace& int_faces,
+						      const int* face_cells,
+						      DeviceHelperOps& ops) {
+    // This function is at the moment kept in order to be able to compare efficiency
+    // against the new implementation, where we use the matrix from devOps_.
+
+    if ( cell_scalarfield.useAutoDiff() ) {
+	// Output will be a collection on interiorFaces:
+	CudaArray val(int_faces.size());
+	// out now have info of how big kernel we need as well.
+	kernelSetup s = val.setup();
+	gradientKernel<<<s.grid, s.block>>>( val.data(),
+					     cell_scalarfield.data(),
+					     int_faces.raw_pointer(),
+					     face_cells,
+					     val.size());
+	CudaMatrix der = ops.grad() * cell_scalarfield.derivative();
+	return CollOfScalar(val, der);
+    }
+    else {
+	CollOfScalar out(int_faces.size());
+	kernelSetup s = out.setup();
+	gradientKernel<<<s.grid, s.block>>>( out.data(),
+					     cell_scalarfield.data(),
+					     int_faces.raw_pointer(),
+					     face_cells,
+					     out.size());
+	
+	return out;
+    }
 }
 
 
 
-__global__ void equelleCUDA::gradientKernel( double* grad,
-					     const double* cell_vals,
-					     const int* int_faces,
-					     const int* face_cells,
-					     const int size_out)
+__global__ void wrapEquelleRuntimeCUDA::gradientKernel( double* grad,
+							const double* cell_vals,
+							const int* int_faces,
+							const int* face_cells,
+							const int size_out)
 {
     // Compute index in interior_faces:
-    int i = threadIdx.x + blockIdx.x*blockDim.x;
+    const int i = myID();
     if ( i < size_out ) {
 	// Compute face index:
-	int fi = int_faces[i];
+	const int fi = int_faces[i];
 	//grad[i] = second[int_face[i]] - first[int_face[i]]
 	grad[i] = cell_vals[face_cells[fi*2 + 1]] - cell_vals[face_cells[fi*2]];
     }
@@ -124,8 +200,22 @@ __global__ void equelleCUDA::gradientKernel( double* grad,
 
 // ------------- DIVERGENCE --------------- //
 
-CollOfScalar equelleCUDA::divergenceWrapper( const CollOfScalar& fluxes,
-					     const DeviceGrid& dev_grid) {
+CollOfScalar wrapEquelleRuntimeCUDA::divergenceWrapper( const CollOfScalar& fluxes,
+							const DeviceGrid& dev_grid,
+							DeviceHelperOps& ops) {
+    if ( fluxes.useAutoDiff() ) {
+	CudaArray val(dev_grid.number_of_cells());
+	kernelSetup s = val.setup();
+	divergenceKernel<<<s.grid, s.block>>>( val.data(),
+					       fluxes.data(),
+					       dev_grid.cell_facepos(),
+					       dev_grid.cell_faces(),
+					       dev_grid.face_cells(),
+					       dev_grid.number_of_cells(),
+					       dev_grid.number_of_faces() );
+	CudaMatrix der = ops.fulldiv() * fluxes.derivative();
+	return CollOfScalar(val, der);	
+    }
 
     // output is of size number_of_cells:
     CollOfScalar out(dev_grid.number_of_cells());
@@ -143,16 +233,16 @@ CollOfScalar equelleCUDA::divergenceWrapper( const CollOfScalar& fluxes,
 }
 
 
-__global__ void equelleCUDA::divergenceKernel( double* div,
-					       const double* flux,
-					       const int* cell_facepos,
-					       const int* cell_faces,
-					       const int* face_cells,
-					       const int number_of_cells,
-					       const int number_of_faces) 
+__global__ void wrapEquelleRuntimeCUDA::divergenceKernel( double* div,
+							  const double* flux,
+							  const int* cell_facepos,
+							  const int* cell_faces,
+							  const int* face_cells,
+							  const int number_of_cells,
+							  const int number_of_faces) 
 {
     // My index: cell
-    int cell = threadIdx.x + blockIdx.x*blockDim.x;
+    const int cell = myID();
     if ( cell < number_of_cells ) {
 	double div_temp = 0; // total divergence for this cell.
 	int factor, face;
@@ -172,18 +262,27 @@ __global__ void equelleCUDA::divergenceKernel( double* div,
 
 
 // --------- SQRT ----------------
-CollOfScalar equelleCUDA::sqrtWrapper( const CollOfScalar& x) {
+CollOfScalar wrapEquelleRuntimeCUDA::sqrtWrapper( const CollOfScalar& x) {
     
-    CollOfScalar out = x;
-    kernelSetup s = out.setup();
-    sqrtKernel<<<s.grid, s.block>>> (out.data(), out.size());
-    return out;
+    CudaArray val = x.value();
+    kernelSetup s = val.setup();
+    sqrtKernel<<<s.grid, s.block>>> (val.data(), val.size());
+    if ( x.useAutoDiff() ) {
+	// sqrt(x)' = 1/(2*sqrt(x)) * x'
+	CudaMatrix diag(1/(2*val));
+	CudaMatrix der = diag * x.derivative();
+	return CollOfScalar(val, der);
+    }
+    return CollOfScalar(val);
 }
 
 
-__global__ void equelleCUDA::sqrtKernel(double* out, const int size) {
-    int index = threadIdx.x + blockIdx.x * blockDim.x;
+__global__ void wrapEquelleRuntimeCUDA::sqrtKernel(double* out, const int size) {
+    const int index = myID();
     if ( index < size ) {
 	out[index] = sqrt(out[index]);
     }
 }
+
+
+

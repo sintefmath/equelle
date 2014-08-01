@@ -1,0 +1,7 @@
+grid_dim=3
+nx=14
+dx=1
+ny=22
+dy=1
+nz=9
+dz=1

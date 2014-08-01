@@ -8,23 +8,18 @@ Language:
 ---------
 Syntax for Tuples. Are they any different from statically-sized arrays?
 Literals for Vector (and eventually tuples)?
+Mechanism for including application libs/constrained interfaces: Require?
 Figure out how to do "Require Implicit", "Require 2D", "Require
 Cartesian", "Require Twophase", "Require PorousMedia" or similar things.
 Allow assigning functions to variables? Should be allowed.
 Functions as first-order objects?
-Use Restrict and Prolong for On in 'a On b' expressions?
-Add reductions such as 'Sum : Function(Collection Of Scalar) -> Scalar'.
-Mechanism for including application libs/constrained interfaces: Require?
-What happens with On and sets containing an entity multiple times?
--> accept for restriction only and not for prolongation?
--> what does Subset Of mean?
-Separate On into Restrict and Prolong? Make strict and precise definition!
 Function templates and instantiation:
 -> instantiation means: fixing types of a template
 -> codegen typically emits function at instantiation
 -> a function (instantiated, typed) is a type that can be passed etc.
 -> a function template cannot be passed as an argument (but consider
 ok for other templates).
+-> is this sufficiently strong and simple for easy use with NewtonSolve()
 Let |.| be absolute value for Scalar.
 
 Lexer/Grammar:
@@ -41,14 +36,12 @@ Make all parse actions $$ = handleSomething().
 Make all such handleSomething() functions do type checking.
 Make Node::type() pure virtual?
 Add ExpressionNode class, move type() there, add to %union?
-Type checking of function args at call site.
+Type checking of function args at call site? Relate to instantiation?
 Type check return statements.
 Ensure single return statement, at the end of each function.
-Make the "subset of" part of all entity collection types?
-Add all created (named or not?) entity sets to symbol table?
 Function types vs. variable types?
 Check that variables used have been assigned.
-AST nodes do not clean up properly, destructors etc. must be added.
+Can we use smart pointers in the AST nodes?
 
 
 Code generation, processing of AST:
@@ -56,7 +49,8 @@ Code generation, processing of AST:
 Consider tracing AD requirement through program instead of
 making all functions take AD types as currently done.
 How to support explicit and implicit methods in single program, which
-would require both AD and non-AD types for functions?
+would require both AD and non-AD types for functions? Current approach
+is that all is AD, workable?
 
 Backend:
 --------

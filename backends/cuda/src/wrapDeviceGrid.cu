@@ -13,6 +13,7 @@
 #include "CollOfScalar.hpp"
 #include "CollOfIndices.hpp"
 #include "equelleTypedefs.hpp"
+#include "device_functions.cuh"
 
 using namespace equelleCUDA;
 
@@ -23,12 +24,14 @@ using namespace equelleCUDA;
 CollOfScalar wrapDeviceGrid::extendToFull( const CollOfScalar& in_data,
 					   const thrust::device_vector<int>& from_set,
 					   const int full_size) {
+ 
+    
     // setup how many threads/blocks we need:
     kernelSetup s(full_size);
     
     // create a vector of size number_of_faces_:
     //thrust::device_vector<double> out(full_size);
-    CollOfScalar out(full_size);
+    CudaArray val(full_size);
     //double* out_ptr = thrust::raw_pointer_cast( &out[0] );
     const int* from_ptr = thrust::raw_pointer_cast( &from_set[0]);
     //wrapDeviceGrid::extendToFullKernel<<<grid,block>>>( out.data(),
@@ -36,14 +39,25 @@ CollOfScalar wrapDeviceGrid::extendToFull( const CollOfScalar& in_data,
     //							from_set.size(),
     //							in_data.data(),
     //							full_size);
-    wrapDeviceGrid::extendToFullKernel_step1<<<s.grid, s.block>>>( out.data(),
+    wrapDeviceGrid::extendToFullKernel_step1<<<s.grid, s.block>>>( val.data(),
 								   full_size );
-    wrapDeviceGrid::extendToFullKernel_step2<<<s.grid, s.block>>>( out.data(),
+    wrapDeviceGrid::extendToFullKernel_step2<<<s.grid, s.block>>>( val.data(),
 								   from_ptr,
 								   from_set.size(),
 								   in_data.data());
       
-    return out;
+    if (in_data.useAutoDiff() ) {
+	CudaMatrix extendMatrix = CudaMatrix(from_set, full_size).transpose();
+	return CollOfScalar(val, extendMatrix * in_data.derivative());
+    }
+    else { // no AutoDiff 
+	return CollOfScalar(val);
+    }
+    
+    
+    // Create the transpose of the restrict matrix
+    //CudaMatrix extendMatrix = CudaMatrix(from_set, full_size).transpose();
+    //return extendMatrix * in_data;
 }
 
 CollOfScalar wrapDeviceGrid::extendToSubset( const CollOfScalar& inData,
@@ -58,7 +72,7 @@ CollOfScalar wrapDeviceGrid::extendToSubset( const CollOfScalar& inData,
 __global__ void wrapDeviceGrid::extendToFullKernel_step1( double* outData,
 							  const int out_size)
 {
-    int outIndex = threadIdx.x + blockIdx.x*blockDim.x;
+    const int outIndex = myID();
     if ( outIndex < out_size ) {
 	outData[outIndex] = 0;
     }
@@ -85,7 +99,7 @@ __global__ void wrapDeviceGrid::extendToFullKernel_step2( double* outData,
     //	 Only way to sync between blocks is to call seperate kernels!
     //
 
-    int outIndex = threadIdx.x + blockIdx.x*blockDim.x;
+    const int outIndex = myID();
     if ( outIndex < from_size ) {
 	outData[from_set[outIndex]] = inData[outIndex];
     }
@@ -107,13 +121,23 @@ CollOfScalar wrapDeviceGrid::onFromFull( const CollOfScalar& inData,
     kernelSetup s(to_set.size());
 
     // Create the output vector:
-    CollOfScalar out(to_set.size());
+    CudaArray val(to_set.size());
     const int* to_set_ptr = thrust::raw_pointer_cast( &to_set[0] );
-    wrapDeviceGrid::onFromFullKernel<<<s.grid, s.block>>>(out.data(),
+    wrapDeviceGrid::onFromFullKernel<<<s.grid, s.block>>>(val.data(),
 							  to_set_ptr,
 							  to_set.size(),
 							  inData.data());
-    return out;
+    if ( inData.useAutoDiff() ) {
+	CudaMatrix onMatrix(to_set, inData.size());
+	return CollOfScalar(val, onMatrix * inData.derivative());
+    }
+    else { // no AutoDiff
+	return CollOfScalar(val);
+    }    
+
+    // Use the matrix and find the result from Matrix-vector multiplication
+    //CudaMatrix onMatrix(to_set, inData.size());
+    //return onMatrix * inData;
 }
 
 CollOfScalar wrapDeviceGrid::onFromSubset( const CollOfScalar& inData,
@@ -132,7 +156,7 @@ __global__ void wrapDeviceGrid::onFromFullKernel( double* outData,
 						  const int to_size,
 						  const double* inData)
 {
-    int toIndex = threadIdx.x + blockIdx.x*blockDim.x;
+    const int toIndex = myID();
     if ( toIndex < to_size ) {
 	outData[toIndex] = inData[to_set[toIndex]];
     }
@@ -184,7 +208,7 @@ __global__ void wrapDeviceGrid::onFromFullKernelIndices( int* outData,
 							 const int to_size,
 							 const int* inData)
 {
-    int toIndex = threadIdx.x + blockIdx.x*blockDim.x;
+    const int toIndex = myID();
     if ( toIndex < to_size ) {
 	outData[toIndex] = inData[to_set[toIndex]];
     }
@@ -220,7 +244,7 @@ thrust::device_vector<int> wrapDeviceGrid::extendToFullIndices( const thrust::de
 __global__ void wrapDeviceGrid::extendToFullKernelIndices_step1( int* outData,
 								 const int full_size)
 {
-    int outIndex = threadIdx.x + blockIdx.x*blockDim.x;
+    const int outIndex = myID();
     if ( outIndex < full_size) {
 	outData[outIndex] = 0;
     }
@@ -231,7 +255,7 @@ __global__ void wrapDeviceGrid::extendToFullKernelIndices_step2( int* outData,
 								 const int from_size,
 								 const int* inData)
 {
-    int outIndex = threadIdx.x + blockIdx.x*blockDim.x;
+    const int outIndex = myID();
     if ( outIndex < from_size ) {
 	outData[from_set[outIndex]] = inData[outIndex];
     }

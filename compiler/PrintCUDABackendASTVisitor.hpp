@@ -78,6 +78,9 @@ public:
     void visit( StencilStatementNode& node );
     void midVisit( StencilStatementNode& node );
     void postVisit( StencilStatementNode& node );
+    // These are overriden by subclasses who only need to alter the surroundings of the generated code.
+    virtual const char* cppStartString() const;
+    virtual const char* cppEndString() const;
 
 private:
     bool suppressed_;

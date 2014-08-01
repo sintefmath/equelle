@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <fstream>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <opm/core/grid/GridManager.hpp>
 #include <opm/core/grid.h>
@@ -37,6 +38,15 @@ public:
 
     ///@{ Topology and geometry related.
     CollOfCell allCells() const;
+    CollOfFace allFaces() const;
+
+    /**
+     * @brief boundaryCells
+     * @return Return indices of the cells (in the node-local enumeration)
+     *         that are on the boundary of the global-domain.
+     */
+    CollOfCell boundaryCells() const;
+    CollOfFace boundaryFaces() const;
     ///@}
 
     /// Return the number of cells in collection. Will do MPI-transfer.
@@ -48,6 +58,15 @@ public:
 
     CollOfScalar inputCollectionOfScalar(const String& name,
                                          const CollOfCell& coll);
+
+    CollOfFace inputDomainSubsetOf(const String& name,
+                                   const CollOfFace& superset);
+
+    CollOfCell inputDomainSubsetOf(const String& name,
+                                   const CollOfCell& superset);
+
+    Scalar inputScalarWithDefault(const String& name,
+                                  const Scalar default_value);
     ///@}
 
     void output(const String& tag, const CollOfScalar& vals);
@@ -63,15 +82,22 @@ public:
     CollOfScalar allGather( const CollOfScalar& coll );
 
     ///@}
+
+    /**
+     *  @brief logstream is used for writing logging information to.
+     *
+     *  Logstream is useful in an MPI setting, in order to do debugging and
+     *  profiling on a per-node basis. Currently it is tied to a fstream
+     *  with the name runtimempi-<rank>.log. This fstream is set up in the constructor.
+     */
+    std::ofstream logstream;
 private:
     std::unique_ptr<Zoltan> zoltan;
     std::unique_ptr<equelle::EquelleRuntimeCPU> runtime;
     Opm::parameter::ParameterGroup param_;
 
-
     void initializeZoltan();
     void initializeGrid();
-
 };
 
 } // namespace equelle

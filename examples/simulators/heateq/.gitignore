@@ -8,8 +8,16 @@ cmake_install.cmake
 *.cbp
 
 *.output
+*.eps
+*.fig
+*.png
 
 *.mat
 
+benchmark*
+
 exp_heateq
 serial_heateq
+exp_heateq_fast
+exp_heateq_slow
+timer

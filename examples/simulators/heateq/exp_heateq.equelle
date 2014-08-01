@@ -1,0 +1,70 @@
+# Heat conduction with no boundary conditions or source terms.
+
+# Physics that requires specification
+k : Scalar = InputScalarWithDefault("k", 0.3) # Heat diffusion constant.
+
+# @afr: time step strategy assumed given outside.
+#dt : Scalar = InputScalarWithDefault("dt", 0.5) # Time step length.
+timesteps : Sequence Of Scalar
+timesteps = InputSequenceOfScalar("timesteps")
+
+
+# u0 should be given initial values (in user input)
+u0 : Collection Of Scalar On AllCells()
+u0 = InputCollectionOfScalar("u_initial", AllCells())
+
+# Trying to add support for Dirichlet boundaries
+dirichlet_boundary : Collection Of Face Subset Of (BoundaryFaces())
+dirichlet_boundary = InputDomainSubsetOf("dirichlet_boundary", BoundaryFaces())
+dirichlet_val : Collection Of Scalar On dirichlet_boundary
+dirichlet_val = InputCollectionOfScalar("dirichlet_val", dirichlet_boundary)
+
+# Compute interior transmissibilities.
+vol = |AllCells()|                                         # Deduced type:  Collection Of Scalar On AllCells()
+interior_faces = InteriorFaces()                           # Deduced type:  Collection Of Face
+first = FirstCell(interior_faces)                          # Deduced type:  Collection Of Cell On interior_faces
+							   # Equivalent to: Collection Of Cell On InteriorFaces()
+second = SecondCell(interior_faces)                        # Deduced type:  Same as for 'first'.
+itrans : Collection Of Scalar On interior_faces = k * |interior_faces| / |Centroid(first) - Centroid(second)| 
+
+# Compute boundary transmissibilities.
+bf = BoundaryFaces()
+bf_cells = IsEmpty(FirstCell(bf)) ? SecondCell(bf) : FirstCell(bf)
+bf_sign = IsEmpty(FirstCell(bf)) ? (-1 Extend bf) : (1 Extend bf)
+btrans = k * |bf| / |Centroid(bf) - Centroid(bf_cells)|
+
+# Compute quantities needed for boundary conditions.
+dir_sign = bf_sign On dirichlet_boundary
+
+# Compute flux for interior faces.
+computeInteriorFlux : Function(u : Collection Of Scalar On AllCells()) -> Collection Of Scalar On InteriorFaces()
+computeInteriorFlux(u) = {
+    -> -itrans * Gradient(u)
+}
+
+# Compute flux for boundary faces.
+computeBoundaryFlux : Function(u : Collection Of Scalar On AllCells()) -> Collection Of Scalar On BoundaryFaces()
+computeBoundaryFlux(u) = {
+    # Compute flux at Dirichlet boundaries.
+    u_dirbdycells = u On (bf_cells On dirichlet_boundary)
+    dir_fluxes = (btrans On dirichlet_boundary) * dir_sign * (u_dirbdycells - dirichlet_val)
+    # Extending with zero away from Dirichlet boundaries (i.e. assuming no-flow elsewhere).
+    -> dir_fluxes Extend BoundaryFaces()
+}
+
+expU : Mutable Collection Of Scalar On AllCells()
+expU = u0
+For dt In timesteps
+{
+    ifluxes = computeInteriorFlux(expU)
+    bfluxes = computeBoundaryFlux(expU)
+    # Extend both ifluxes and bfluxes to AllFaces() and add to get all fluxes.
+    fluxes = (ifluxes Extend AllFaces()) + (bfluxes Extend AllFaces())
+    # Deduced type: Collection Of Scalar On AllCells()
+    expU = expU - (dt / vol) * Divergence(fluxes)
+    Output("expU", expU)
+    Output("maximum of u", MaxReduce(expU))
+}
+Output("expU", expU)
+
+#Output("u", u)

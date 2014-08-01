@@ -20,7 +20,6 @@
 #include "equelle/mpiutils.hpp"
 #include "equelle/RuntimeMPI.hpp"
 #include "equelle/ZoltanGrid.hpp"
-#include "equelle/ZoltanGridMigrator.hpp"
 
 
 using equelle::MPIInitializer;
@@ -137,24 +136,14 @@ BOOST_AUTO_TEST_CASE( RuntimeMPI_6x2grid ) {
     }
 }
 
-BOOST_AUTO_TEST_CASE( ZoltanGridMigratorCallBackSignatures ) {
-    // This test really passes when the test compiles.
-    std::unique_ptr<Zoltan> zoltan( new Zoltan( MPI_COMM_WORLD ) );
-    using equelle::ZoltanGridMigrator;
-
-    ZOLTAN_SAFE_CALL( zoltan->Set_Obj_Size_Fn( ZoltanGridMigrator::cellSize, NULL ) );
-    ZOLTAN_SAFE_CALL( zoltan->Set_Pack_Obj_Fn( ZoltanGridMigrator::packCell, NULL ) );
-    ZOLTAN_SAFE_CALL( zoltan->Set_Unpack_Obj_Fn( ZoltanGridMigrator::unpackCell, NULL ) );
-}
-
 BOOST_AUTO_TEST_CASE( decompose ) {
     equelle::RuntimeMPI runtime;
     runtime.globalGrid.reset( new Opm::GridManager( 6, 2, 5 ) );
 
     runtime.decompose();
 
-    BOOST_CHECK( runtime.subGrid.global_cell.size() > 0 );
-    int numOwnedCells = runtime.subGrid.global_cell.size() - runtime.subGrid.number_of_ghost_cells;
+    BOOST_CHECK( runtime.subGrid.cell_local_to_global.size() > 0 );
+    int numOwnedCells = runtime.subGrid.cell_local_to_global.size() - runtime.subGrid.number_of_ghost_cells;
 
     int totalCells = 0;
     MPI_Reduce( &numOwnedCells, &totalCells, 1, MPI_INTEGER, MPI_SUM, 0, MPI_COMM_WORLD );

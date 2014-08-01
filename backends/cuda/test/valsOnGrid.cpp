@@ -1,4 +1,32 @@
 
+/* This file implements test for the following in given order:
+   
+   Since this file has become so large, here is a list of its content:
+// - main
+// - collOfScalarTest(&er): 
+        - Read input from file
+	- Extend test
+	- On
+	- Extend (subset -> subset)
+	- On (subset -> subset)
+	- Extend (from scalar)
+	- Volume / area
+	- Trinary if
+	- Gradient and Divergence
+	- Array of collections
+	- mutable (copy assignment)
+// - vector_test(&er):
+	- centroid
+	- sqrt(collOfScalar)
+	- Normals
+// - scalar_test(&er):
+        - inputScalarWithDefault
+// - inputDomainTest(&er):
+        - inputDomainSubsetOf
+	- On for CollOfIndices
+	- 
+*/
+
 #include <iostream>
 
 #include <vector>
@@ -258,7 +286,7 @@ int collOfScalarTest(EquelleRuntimeCUDA* er) {
 }
 
 
-// --------- TESTING COLL_OF_VECTOR ----------------
+
 int vector_test(EquelleRuntimeCUDA* er) {
 
     // Set up a vector with 42 (14*3) elements {0,1,2,...,41}
@@ -281,35 +309,6 @@ int vector_test(EquelleRuntimeCUDA* er) {
 	return 1;
     }
     if ( compare( vec2, sol2, 14, "myVec[2]") ) {
-	return 1;
-    }
-
-    CollOfVector addedVec = myVec + myVec;
-    CollOfScalar added1 = addedVec[1];
-    double added1_sol[] = {2,8,14,20,26,32,38,44,50,56,62,68,74,80};
-    if ( compare( added1, added1_sol, 14, "(myVec + myVec)[1]") ) {
-	return 1;
-    }
-
-    CollOfVector subVec = myVec - addedVec;
-    CollOfScalar sub2 = subVec[2];
-    double sub2_sol[] = {-2,-5,-8,-11,-14,-17,-20,-23,-26,-29,-32,-35,-38,-41};
-    if ( compare( sub2, sub2_sol, 14, "(myVec - addedVec)[2]") ) {
-	return 1;
-    }
-    
-    // Testing copy assignment operator
-    subVec = myVec;
-    if( compare( subVec[1], sol1, 14, "(subVec = myVec)[1] - copy assignment op.") ) {
-	return 1;
-    }
-
-    CollOfScalar norm = myVec.norm();
-    double norm_sol[14];
-    for (int i = 0; i < 14; ++i) {
-	norm_sol[i] = compNorm(sol0[i], sol1[i], sol2[i]);
-    }
-    if ( compare( norm, norm_sol, 14, "myVec.norm()") ) {
 	return 1;
     }
 
@@ -388,7 +387,7 @@ int vector_test(EquelleRuntimeCUDA* er) {
     }
 
     return 0;
-}
+} // Testing vectors
 
 double compNorm(double a, double b, double c) {
     return sqrt( a*a + b*b + c*c);
@@ -417,6 +416,7 @@ int compare(CollOfScalar scal, double sol[],
 	    int sol_size,
 	    std::string test) 
 { 
+    std::cout << "\nTesting " << test << "\n";
     // Test size:
     if ( scal.size() != sol_size ) {
 	std::cout << "Error in valsOnGrid.cpp - testing " << test << "\n";
@@ -433,7 +433,7 @@ int compare(CollOfScalar scal, double sol[],
 	std::cout << host[i] << " ";
 	if (i < sol_size) {
 	    //if (host[i] != sol[i]) {
-	    if ( fabs(host[i] - sol[i]) > 10*std::numeric_limits<double>::epsilon() ) {
+	    if ( fabs(host[i] - sol[i]) > 1000*std::numeric_limits<double>::epsilon() ) {
 		std::cout << "(<- " << sol[i] << ") ";
 		correct = false;
 	    }
@@ -497,6 +497,9 @@ int inputDomainTest(EquelleRuntimeCUDA* er) {
 
 
 int inputVectorComp(std::vector<int> host, int ans[], int ans_size, std::string test) {
+
+    std::cout << "\nTesting " << test << "\n";
+
     if ( host.size() != ans_size) {
 	std::cout << "Error in valsOnGrid.cpp - testing " << test << "\n";
 	std::cout << "\tThe collection is of wrong size!\n";

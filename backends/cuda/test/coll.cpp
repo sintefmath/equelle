@@ -1,6 +1,8 @@
 // 
 // coll.cpp
 //
+// Tests initialization of CollOfIndices.
+
 
 
 #include <coll.h>

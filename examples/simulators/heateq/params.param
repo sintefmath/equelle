@@ -1,12 +1,13 @@
 grid_dim=3
-nx=70
+nx=100
 dx=1
 ny=111
 dy=1
-nz=42
+nz=50
 dz=1
-u0_from_file=false
-u0=500
+k=0.3
+u_initial_from_file=false
+u_initial=500
 dirichlet_boundary_from_file=true
 dirichlet_boundary_filename=/home/havahol/sintefEquelle/equelle/examples/simulators/heateq/dir_bnd.mat
 dirichlet_val_from_file=true

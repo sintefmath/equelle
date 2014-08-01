@@ -112,26 +112,26 @@ namespace equelleCUDA
 	  Creates a collection of the indices of the boundary faces of the grid.
 	  \return CollOfIndices of boundary faces
 	*/
-	CollOfFace boundaryFaces() const;
+	const CollOfFace& boundaryFaces() const;
 	//! Collection of all interior faces
 	/*!
 	  Creates a collection of the indices of the interior faces of the grid.
 	  \return CollOfIndices of interior faces
 	*/
-	CollOfFace interiorFaces() const;
+	const CollOfFace& interiorFaces() const;
 	
 	//! Collection of all interior cells.
 	/*!
 	  Creates a collection of the indices of the interior cells of the grid.
 	  \return CollOfIndices of interior cells.
 	*/
-	CollOfCell interiorCells() const;
+	const CollOfCell& interiorCells() const;
 	//! Collection of all boundary cells.
 	/*!
 	  Creates a collection of the indices of the boundary cells of the grid.
 	  \return CollOfIndices of boundary cells.
 	*/
-	CollOfCell boundaryCells() const;
+	const CollOfCell& boundaryCells() const;
 
 	//! Collection of first cell for a set of faces
 	/*!
@@ -344,10 +344,23 @@ namespace equelleCUDA
 	double* face_areas_;
 	int* face_cells_;
 	double* face_normals_;
-	
+    
 
-	int id_;
-	
+	mutable CollOfFace boundary_faces_;
+	mutable CollOfFace interior_faces_;
+	mutable CollOfCell boundary_cells_;
+	mutable CollOfCell interior_cells_;
+
+	mutable bool boundaryFacesEmpty_;
+	mutable bool interiorFacesEmpty_;
+	mutable bool boundaryCellsEmpty_;
+	mutable bool interiorCellsEmpty_;
+
+	void createBoundaryFaces_() const;
+	void createInteriorFaces_() const;
+	void createBoundaryCells_() const;
+	void createInteriorCells_() const;
+
 	// Error handling:
 	mutable cudaError_t cudaStatus_;
 	void checkError_(const std::string& msg) const;
@@ -357,9 +370,9 @@ namespace equelleCUDA
 
     // ------------- END OF CLASS ------------------------------------------
 
-
-
-
+    namespace wrapDeviceGrid {
+	
+	
     //! Functor checking if an input is equal to its stored value.
     /*! 
       This functor is used together with iterators for evaluating a function to all
@@ -600,6 +613,9 @@ namespace equelleCUDA
 				       const double* all_face_normals,
 				       const int num_vectors,
 				       const int dimensions);
+
+
+    } // namespace wrapDeviceGrid
 
 
 } // namespace equelleCUDA

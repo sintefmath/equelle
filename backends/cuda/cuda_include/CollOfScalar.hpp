@@ -2,35 +2,15 @@
 #ifndef EQUELLE_COLLOFSCALAR_HEADER_INCLUDED
 #define EQUELLE_COLLOFSCALAR_HEADER_INCLUDED
 
-//#include <thrust/device_ptr.h>
-//#include <thrust/host_vector.h>
-#include <thrust/device_vector.h>
-
-//#include <cublas_v2.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
 
-
-#include <string>
-#include <fstream>
-#include <iterator>
-
 #include "equelleTypedefs.hpp"
-
-//#include "DeviceGrid.hpp"
-//#include "CollOfIndices.hpp"
-
-
-// This is the header file for cuda!
-
-//#include "EquelleRuntimeCUDA.hpp"
+#include "CudaArray.hpp"
+#include "CudaMatrix.hpp"
 
 
-// Kernel declarations:
-//! CUDA kernels for arithmetic operations on CollOfScalars
 namespace equelleCUDA {
-    
-
 
     //! Class for the Equelle CUDA Back-end
     /*!
@@ -45,19 +25,43 @@ namespace equelleCUDA {
 	
 	//! Allocating constructor
 	/*! 
-	  Allocates device memory for the collection. Does not initialize the collection. 
+	  Creates an uninitialized CudaArray, by calling its allocation constructor
 	  \param size number of scalars in the collection.
 	*/
 	explicit CollOfScalar(const int size);
 	
 	//! Constructor for uniform value
 	/*!
-	  Allocates device memory and initialize all elements to the same value.
+	  Create a CudaArray of given size with uniform value.
 	  \param size Collection size
 	  \param value Value assigned to each of the elements in the collection.
 	*/
 	explicit CollOfScalar(const int size, const double value);
 	
+	//! Constructor from CudaArray
+	/*!
+	  Copy the given CudaArray.
+	  \param val The CudaArray we want to create a CollOfScalar from.
+	*/
+	explicit CollOfScalar(const CudaArray& val);
+
+	//! Constructor for creating a primary variable
+	/*!
+	  Input should be a non-autodiff CollOfScalar, and will be copied to
+	  this new CollOfScalar. In addition, we create an identity matrix 
+	  for the derivative and all operations based on this variable will
+	  be using Automatic Differentiation.
+	*/
+	explicit CollOfScalar(const CollOfScalar& val, const bool primaryVariable);
+
+	//! Constructor from CudaArray and CudaMatrix.
+	/*!
+	  Copy the given CudaArray and CudaMatrix into a CollOfScalar, as is 
+	  required when we return CollOfScalars from arithmetic expressions or
+	  other operations.
+	*/
+	explicit CollOfScalar(const CudaArray& val, const CudaMatrix& der);
+
 	//! Constructor from std::vector
 	/*! 
 	  Used for initialize CollOfScalar when using unit tests.
@@ -69,7 +73,7 @@ namespace equelleCUDA {
 	//! Copy constructor
 	/*!
 	  Allocates new device memory block, and makes a copy of the collection values.
-	  \param coll Collection of Scalar to copy from.
+	  \param coll CollOfScalar to copy from.
 	*/
 	CollOfScalar(const CollOfScalar& coll);  
 	
@@ -83,7 +87,7 @@ namespace equelleCUDA {
 	  a = b;
 	  \endcode
 	  Copy the array from other to this.
-	 */
+	*/
 	CollOfScalar& operator= (const CollOfScalar& other);
 
 
@@ -108,298 +112,295 @@ namespace equelleCUDA {
 	
 	/*! \return A host vector containing the values of the collection */
 	std::vector<double> copyToHost() const;
+	/*! \return A hostMat struct of the derivative stored on host */
+	hostMat matrixToHost() const;
 	
+	/*! \return True if the derivative matrix is non-empty */
+	bool useAutoDiff() const;
 	
 	//! For CUDA kernel calls.
 	/*!
 	  Returns a struct with the block and grid size needed to launch a
-	  kernel such that we get one thread for each element in the CollOfScalar.
+	  kernel such that we get one thread for each element in the CudaArray.
 	  
 	  Assumes 1D setup of grids and blocks.
 	*/
 	kernelSetup setup() const;
 
-#ifdef EQUELLE_DEBUG
-	//! Debug function copying the collOfScalar to host debug_vec_ member
-	void debug() const;
-#endif // EQUELLE_DEBUG	
+	//! Returns a copy of the derivative matrix
+	/*!
+	  If the CollOfScalar do not use AutoDiff, then it returns an empty matrix. 
+	*/
+	CudaMatrix derivative() const;
+
+	//! Returns a copy of the values of the CudaArray.
+	CudaArray value() const;
+	
+	//! Reduction function
+	/*!
+	  This function takes care of all reduction operations in Equelle, and which 
+	  operation to do is given by the reduce parameter.
+	  
+	  It is implemented by using thrust algorithms that relays on thrust iterators.
+	  We therefore do a suboptimal copy of the data over to a 
+	  thrust::device_vector.
+	*/
+	double reduce(const EquelleReduce reduce) const;
+
+	// Get a referance to the CudaArray with the actual values:
+	// const CudaArray& val() const;
+
+	
+	// ------------ Arithmetic operations as friends -----------------
+
+	// Overloading of operator -
+	/*!
+	  Wrapper for the CUDA kernel which performs the operation.
+	  \param lhs Left hand side operand
+	  \param rhs Right hand side operand
+	  \return lhs - rhs 
+	  \sa minus_kernel.
+	*/
+	friend CollOfScalar operator-(const CollOfScalar& lhs, const CollOfScalar& rhs);
+	
+	// Overloading of operator +
+	/*!
+	  Wrapper for the CUDA kernel which performs the operation.
+	  \param lhs Left hand side operand
+	  \param rhs Right hand side operand
+	  \return lhs + rhs 
+	  \sa plus_kernel.
+	*/
+	friend CollOfScalar operator+(const CollOfScalar& lhs, const CollOfScalar& rhs);
+    
+	// Overloading of operator *
+	/*!
+	  Wrapper for the CUDA kernel which performs the operation.
+	  \param lhs Left hand side operand
+	  \param rhs Right hand side operand
+	  \return lhs * rhs 
+	  \sa multiplication_kernel.
+	*/
+	friend CollOfScalar operator*(const CollOfScalar& lhs, const CollOfScalar& rhs);
+
+	// Overloading of operator /
+	/*!
+	  Wrapper for the CUDA kernel which performs the operation.
+	  \param lhs Left hand side operand
+	  \param rhs Right hand side operand
+	  \return lhs / rhs 
+	  \sa division_kernel.
+	*/
+	friend CollOfScalar operator/(const CollOfScalar& lhs, const CollOfScalar& rhs);
+	
+	
+	// Multiplication:  Scalar * Collection Of Scalars
+	/*!
+	  Wrapper for the CUDA kernel which performs the operation
+	  \param lhs Left hand side Scalar
+	  \param rhs Right hand side Collection of Scalars
+	  \return lhs * rhs
+	  \sa scalMultColl_kernel
+	*/
+	friend CollOfScalar operator*(const Scalar lhs, const CollOfScalar& rhs);
+	
+	/*! 
+	  Since multiplication is commutative, this implementation simply return
+	  rhs *  lhs
+	  \param lhs Left hand side Collection of Scalar
+	  \param rhs Right han side Scalar
+	  \return lhs * rhs
+	*/
+	friend CollOfScalar operator*(const CollOfScalar& lhs, const Scalar rhs);
+
+	/*!
+	  Implemented as (1/rhs)*lhs in order to reuse kernel
+	  \param lhs Left hand side Collection of Scalar
+	  \param rhs Right hand side Scalar
+	  \return lhs / rhs
+	*/
+	friend CollOfScalar operator/(const CollOfScalar& lhs, const Scalar rhs);
+	
+	/*!
+	  For Scalar / CollOfScalar. Elementwise division of the elements in 
+	  the collection.
+	  \param lhs Scalar 
+	  \param rhs Collection of Scalars
+	  \return out[i] = lhs / rhs[i]
+	*/
+	friend CollOfScalar operator/(const Scalar lhs, const CollOfScalar& rhs);
+	
+	
+	/*!
+	  Unary minus
+	  \return A collection with the negative values of the inpur collection.
+	*/
+	friend CollOfScalar operator-(const CollOfScalar& arg);
+	
+
+	// ----------- Arithmetic operations as friends end ---------------
+
+	// ----------- Boolean operations as friends --- ---------------
+
+	/*!
+	  Greater than operator
+	  \return Collection of Booleans consisting of
+	  \code out[i] = lhs[i] > rhs[i] \endcode
+	*/
+	friend CollOfBool operator>(const CollOfScalar& lhs, const CollOfScalar& rhs);
+	
+	/*!
+	  Greater than operator comparing collection to scalar
+	  \return Collection of Booleans consisting of
+	  \code out[i] = lhs[i] > rhs \endcode
+	*/
+	friend CollOfBool operator>(const CollOfScalar& lhs, const Scalar rhs);
+	
+	/*!
+	  Greater than operator comparing scalar to collection.
+	  \return Collection of Booleans consisting of
+	  \code out[i] = lhs > rhs[i] \endcode
+	*/
+	friend CollOfBool operator>(const Scalar lhs, const CollOfScalar& rhs);
+	
+	/*! 
+	  Less than operator
+	  \return Collection of Booleans consisting of
+	  \code out[i] = lhs[i] < rhs[i] \endcode
+	*/
+	friend CollOfBool operator<(const CollOfScalar& lhs, const CollOfScalar& rhs);
+	
+	/*!
+	  Less than operator comparing with a scalar
+	  \return Collection of Booleans consisting of
+	  \code out[i] = lhs[i] < rhs \endcode
+	*/
+	friend CollOfBool operator<(const CollOfScalar& lhs, const Scalar rhs);
+	
+	/*!
+	  Less than operator comparing scalar with collection
+	  \return Collection of Booleans consisting of
+	  \code out[i] = lhs < rhs[i] \endcode
+	*/
+	friend CollOfBool operator<(const Scalar lhs, const CollOfScalar& rhs);
+	
+	
+	/*!
+	  Greater than or equal operator
+	  \return Collection of Booleans consisting of
+	  \code out[i] = lhs[i] >= rhs[i] \endcode
+	*/
+	friend CollOfBool operator>=(const CollOfScalar& lhs, const CollOfScalar& rhs);
+	
+	/*!
+	  Greater than or equal operator comparing collection to scalar
+	  \return Collection of Booleans consisting of
+	  \code out[i] = lhs[i] >= rhs \endcode
+	*/
+	friend CollOfBool operator>=(const CollOfScalar& lhs, const Scalar rhs);
+	
+	/*!
+	  Greater than or equal operator comparing scalar to collection.
+	  \return Collection of Booleans consisting of
+	  \code out[i] = lhs >= rhs[i] \endcode
+	*/
+	friend CollOfBool operator>=(const Scalar lhs, const CollOfScalar& rhs);
+	
+	
+	/*!
+	  Less than or equal operator
+	  \return Collection of Booleans consisting of
+	  \code out[i] = lhs[i] <= rhs[i] \endcode
+	*/
+	friend CollOfBool operator<=(const CollOfScalar& lhs, const CollOfScalar& rhs);
+	
+	/*!
+	  Less than or equal operator comparing collection to scalar
+	  \return Collection of Booleans consisting of
+	  \code out[i] = lhs[i] <= rhs \endcode
+	*/
+	friend CollOfBool operator<=(const CollOfScalar& lhs, const Scalar rhs);
+	
+	/*!
+	  Less than or equal operator comparing scalar to collection.
+	  \return Collection of Booleans consisting of
+	  \code out[i] = lhs <= rhs[i] \endcode
+	*/
+	friend CollOfBool operator<=(const Scalar lhs, const CollOfScalar& rhs);
+	
+	
+	// OPERATOR == 
+	/*!
+	  Equal operator comparing two collections
+	  \return Collection of Booleans consisting of
+	  \code out[i] = lhs[i] == rhs[i] \endcode
+	*/
+	friend CollOfBool operator==(const CollOfScalar& lhs, const CollOfScalar& rhs);
+	
+	/*!
+	  Equal operator comparing collection with scalar
+	  \return Collection of Booleans consisting of
+	  \code out[i] = lhs[i] == rhs \endcode
+	*/
+	friend CollOfBool operator==(const CollOfScalar& lhs, const Scalar rhs);
+	
+	/*!
+	  Equal operator comparing scalar with collection
+	  \return Collection of Booleans consisting of
+	  \code out[i] = lhs == rhs[i] \endcode
+	*/
+	friend CollOfBool operator==(const Scalar lhs, const CollOfScalar& rhs);
+	
+	
+	// OPERATOR !=
+	/*!
+	  Inequal operator comparing two collections
+	  \return Collection of Booleans consisting of
+	  \code out[i] = lhs[i] != rhs[i] \endcode
+	*/
+	friend CollOfBool operator!=(const CollOfScalar& lhs, const CollOfScalar& rhs);
+	
+	/*!
+	  Inequal operator comparing collection with scalar
+	  \return Collection of Booleans consisting of
+	  \code out[i] = lhs[i] != rhs \endcode
+	*/
+	friend CollOfBool operator!=(const CollOfScalar& lhs, const Scalar rhs);
+	
+	/*!
+	  Inequal operator comparing scalar with collection
+	  \return Collection of Booleans consisting of
+	  \code out[i] = lhs != rhs[i] \endcode
+	*/
+	friend CollOfBool operator!=(const Scalar lhs, const CollOfScalar& rhs);
 
 
+
+	// ----------- Boolean operations as friends end ---------------
+	
     private:
-	int size_;
-	double* dev_values_;
+	CudaArray val_;
+	CudaMatrix der_;
+	bool autodiff_;
 	
-	// Use 1D kernel grids for arithmetic operations
-	int block_x_;
-	int grid_x_;
-	kernelSetup setup_;
-	
-	
-	
-	// Error handling
-	//! check_Error throws an OPM exception if cudaStatus_ != cudaSuccess
-	mutable cudaError_t cudaStatus_;
-	void checkError_(const std::string& msg) const;
-	
-#ifdef EQUELLE_DEBUG
-	// This variable is only given a value in the copy constructors.
-	// The purpose of the variable is to follow values in a debugger,
-	// by running a program compiled from Equelle.
-	// All variables will therefore be const CollOfScalar var = something
-	// and assigned by the copy constructor.
-	mutable std::vector<double> debug_vec_;
-	mutable double last_val;
-#endif // EQUELLE_DEBUG
-    };
+    }; // class CollOfScalar
 
-       
-    // ---------------- CUDA KERNELS ------------------- //
-    
-    //! CUDA kernel for the minus operator
-    /*!
-      Performs elementwise operation for device arrays:
-      \code{.cpp} out[i] = out[i] - rhs[i] \endcode
-      \param[in,out] out Input is left hand side operand and is overwritten by the result.
-      \param[in] rhs right hand side operand.
-      \param[in] size number of elements.
-    */
-    __global__ void minus_kernel(double* out, const double* rhs, const int size);
 
-    //! CUDA kernel for the plus operator
+
+    //! Matrix * CollOfScalar operator
     /*! 
-      Performs elementwise operation for device arrays: 
-      \code out[i] = out[i] + rhs[i] \endcode
-      \param[in,out] out Input is left hand side operand and is overwritten by the result.
-      \param[in] rhs Right hand side operand.
-      \param[in] size Number of elements.
-    */
-    __global__ void plus_kernel(double* out, const double* rhs, const int size);
+      Many Equelle operations are used by multiplying with a matrix, and by overloading
+      the operator to operate on a CollOfScalar we avoid checking if we have to 
+      use AutoDiff in several functions.
 
-    //! CUDA kernel for the multiplication operator
-    /*! 
-      Performs elementwise operation for device arrays: 
-      \code out[i] = out[i] * rhs[i] \endcode
-      \param[in,out] out Input is left hand side operand and is overwritten by the result.
-      \param[in] rhs Right hand side operand.
-      \param[in] size Number of elements.
+      This makes it easier to implement new functionality without having to 
+      think about the derivatives.
     */
-    __global__ void multiplication_kernel(double* out, const double* rhs, const int size);
+    CollOfScalar operator*(const CudaMatrix& mat, const CollOfScalar& coll);
     
-    //! CUDA kernel for the division operator
-    /*! 
-      Performs elementwise operation for device arrays: 
-      \code out[i] = out[i] / rhs[i] \endcode
-      \param[in,out] out Input is left hand side operand and is overwritten by the result.
-      \param[in] rhs Right hand side operand.
-      \param[in] size Number of elements.
-    */
-    __global__ void division_kernel(double* out, const double* rhs, const int size);
-
-    //! CUDA kernel for multiplication with scalar and collection
-    /*!
-      Multiply each element in out with the value scal.
-      \code out[i] = out[i] * scal \endcode
-      \param[in,out] out Input is the collection operand and is overwritten by the result.
-      \param[in] scal Scalar value operand.
-      \param[in] size Number of elements.
-    */
-    __global__ void multScalCollection_kernel(double* out, 
-					      const double scal, 
-					      const int size);
-
-    //! CUDA kernel for division as Scalar/CollOfScalar
-    /*!
-      Set each element in out as 
-      \code out[i] = scal/out[i] \endcode
-      \param[in,out] out Input is the denominator and is overwritten by the result.
-      \param[in] scal Scalar value numerator.
-      \param[in] size Number of elements.
-    */
-    __global__ void divScalCollection_kernel( double* out,
-					      const double scal,
-					      const int size);
-
-    //! CUDA kernel for greater than operation
-    /*!
-      Compare elements in lhs with elements in rhs and return a Collection of Booleans.
-      \code out[i] = lhs[i] > rhs[i] \endcode
-      \param[in,out] out The resulting collection of booleans
-      \param[in] lhs Left hand side values
-      \param[in] rhs Right hand side values
-      \param[in] size Size of the arrays.
-    */
-    __global__ void comp_collGTcoll_kernel( bool* out,
-					    const double* lhs,
-					    const double* rhs,
-					    const int size);
-
-    //! CUDA kernel for greater than scalar operation
-    /*!
-      Compare elements in lhs with a single scalar rhs and return a Collection of Booleans.
-      \code out[i] = lhs[i] > rhs \endcode
-      \param[out] out The resulting collection of booleans
-      \param[in] lhs Left hand side collection of scalars
-      \param[in] rhs Right hand side scalar
-      \param[in] size Size of the lhs array.
-     */
-    __global__ void comp_collGTscal_kernel( bool* out,
-					    const double* lhs,
-					    const double rhs,
-					    const int size);
-
-    //! CUDA kernel for less than operation
-    /*!
-      Compare elements in lhs with elements in rhs and return a Collection Of Booleans.
-      \code out[i] = lhs[i] < rhs[i] \endcode
-      \param[out] out The resulting collection of booleans
-      \param[in] lhs Left hand side values
-      \param[in] rhs Right hand side values
-      \param[in] size Size of the arrays
-    */
-    __global__ void comp_collLTcoll_kernel( bool* out,
-					    const double* lhs,
-					    const double* rhs,
-					    const int size);
-
-    //! CUDA kernel for less than scalar operation
-    /*!
-      Compare elements in lhs with a single scalar rhs and return a Collection of Booleans.
-      \code out[i] = lhs[i] < rhs \endcode
-      \param[out] The resulting collection of booleans
-      \param[in] lhs Left hand side collection of scalars
-      \param[in] rhs Right hand side scalar.
-      \param[in] size Size of the lhs array.
-     */
-    __global__ void comp_collLTscal_kernel( bool* out,
-					   const double* lhs,
-					   const double rhs,
-					   const int size);
-
-    // -------------- Operation overloading ------------------- //
     
-    // Overloading of operator -
-    /*!
-      Wrapper for the CUDA kernel which performs the operation.
-      \param lhs Left hand side operand
-      \param rhs Right hand side operand
-      \return lhs - rhs 
-      \sa minus_kernel.
-    */
-    CollOfScalar operator-(const CollOfScalar& lhs, const CollOfScalar& rhs);
-
-    // Overloading of operator +
-    /*!
-      Wrapper for the CUDA kernel which performs the operation.
-      \param lhs Left hand side operand
-      \param rhs Right hand side operand
-      \return lhs + rhs 
-      \sa plus_kernel.
-    */
-    CollOfScalar operator+(const CollOfScalar& lhs, const CollOfScalar& rhs);
-    
-    // Overloading of operator *
-    /*!
-      Wrapper for the CUDA kernel which performs the operation.
-      \param lhs Left hand side operand
-      \param rhs Right hand side operand
-      \return lhs * rhs 
-      \sa multiplication_kernel.
-    */
-    CollOfScalar operator*(const CollOfScalar& lhs, const CollOfScalar& rhs);
-
-    // Overloading of operator /
-    /*!
-      Wrapper for the CUDA kernel which performs the operation.
-      \param lhs Left hand side operand
-      \param rhs Right hand side operand
-      \return lhs / rhs 
-      \sa division_kernel.
-    */
-    CollOfScalar operator/(const CollOfScalar& lhs, const CollOfScalar& rhs);
-    
-
-    // Multiplication:  Scalar * Collection Of Scalars
-    /*!
-      Wrapper for the CUDA kernel which performs the operation
-      \param lhs Left hand side Scalar
-      \param rhs Right hand side Collection of Scalars
-      \return lhs * rhs
-      \sa multScalCollection_kernel
-    */
-    CollOfScalar operator*(const Scalar lhs, const CollOfScalar& rhs);
-
-    /*! 
-      Since multiplication is commutative, this implementation simply return
-      rhs *  lhs
-      \param lhs Left hand side Collection of Scalar
-      \param rhs Right han side Scalar
-      \return lhs * rhs
-    */
-    CollOfScalar operator*(const CollOfScalar& lhs, const Scalar rhs);
-
-    /*!
-      Implemented as (1/rhs)*lhs in order to reuse kernel
-      \param lhs Left hand side Collection of Scalar
-      \param rhs Right hand side Scalar
-      \return lhs / rhs
-     */
-    CollOfScalar operator/(const CollOfScalar& lhs, const Scalar rhs);
-
-    /*!
-      For Scalar / CollOfScalar. Elementwise division of the elements in 
-      the collection.
-      \param lhs Scalar 
-      \param rhs Collection of Scalars
-      \return out[i] = lhs / rhs[i]
-     */
-    CollOfScalar operator/(const Scalar lhs, const CollOfScalar& rhs);
-
-    
-    /*!
-      Unary minus
-      \return A collection with the negative values of the inpur collection.
-    */
-    CollOfScalar operator-(const CollOfScalar& arg);
-
-    /*!
-      Greater than operator
-      \return Collection of Booleans consisting of
-      \code out[i] = lhs[i] > rhs[i] \endcode
-    */
-    CollOfBool operator>(const CollOfScalar& lhs, const CollOfScalar& rhs);
-
-    /*!
-      Greater than operator comparing with a scalar
-      \return Collection of Booleans consisting of
-      \code out[i] = lhs[i] > rhs \endcode
-    */
-    CollOfBool operator>(const CollOfScalar& lhs, const Scalar rhs);
-
-    /*! 
-      Less than operator
-      \return Collection of Booleans consisting of
-      \coded out[i] = lhs[i] < rhs[i] \endcode
-    */
-    CollOfBool operator<(const CollOfScalar& lhs, const CollOfScalar& rhs);
-
-    /*!
-      Less than operator comparing with a scalar
-      \return Collection of Booleans consisting of
-      \code out[i] = lhs[i] < rhs \endcode
-    */
-    CollOfBool operator<(const CollOfScalar& lhs, const Scalar rhs);
-
-
-    //! CollOfBool -> std::vector<bool>
-    /*!
-      Function for transforming a CollOfBool to a std::vector<bool>
-    */
-    std::vector<bool> cob_to_std(const CollOfBool& cob);
-
-
 
 
 } // namespace equelleCUDA
 
-
-#endif // EQUELLE_COLLOFSCALAR_CUDA_HEADER_INCLUDED
+#endif // EQUELLE_COLLOFSCALAR_HEADER_INCLUDED

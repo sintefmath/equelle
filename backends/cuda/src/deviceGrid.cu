@@ -28,10 +28,11 @@
 #include "CollOfIndices.hpp"
 #include "CollOfVector.hpp"
 #include "equelleTypedefs.hpp"
-
+#include "device_functions.cuh"
 
 
 using namespace equelleCUDA;
+using namespace wrapDeviceGrid;
 
 
 // --------------------------------------------------- //
@@ -53,7 +54,14 @@ DeviceGrid::DeviceGrid()
       face_areas_(0),
       face_cells_(0),
       face_normals_(0),
-      id_(0)
+      boundary_faces_(),
+      interior_faces_(),
+      boundary_cells_(),
+      interior_cells_(),
+      boundaryFacesEmpty_(true),
+      interiorFacesEmpty_(true),
+      boundaryCellsEmpty_(true),
+      interiorCellsEmpty_(true)
 {
     // intentionally left blank
 }
@@ -72,7 +80,14 @@ DeviceGrid::DeviceGrid( const UnstructuredGrid& grid)
       face_areas_(0),
       face_cells_(0),
       face_normals_(0),
-      id_(-1)
+      boundary_faces_(),
+      interior_faces_(),
+      boundary_cells_(),
+      interior_cells_(),
+      boundaryFacesEmpty_(true),
+      interiorFacesEmpty_(true),
+      boundaryCellsEmpty_(true),
+      interiorCellsEmpty_(true)
 {
     // Allocate memory for cell_centroids_:
     // type: double
@@ -179,7 +194,14 @@ DeviceGrid::DeviceGrid(const DeviceGrid& grid)
     face_areas_(0),
     face_cells_(0),
     face_normals_(0),
-    id_(0)
+    boundary_faces_(),
+    interior_faces_(),
+    boundary_cells_(),
+    interior_cells_(),
+    boundaryFacesEmpty_(true),
+    interiorFacesEmpty_(true),
+    boundaryCellsEmpty_(true),
+    interiorCellsEmpty_(true)
 {    
     // CELL_CENTROIDS_
     cudaStatus_ = cudaMalloc( (void**)&cell_centroids_,
@@ -304,7 +326,37 @@ CollOfFace DeviceGrid::allFaces() const {
     return CollOfFace(number_of_faces_);
 }
 
-CollOfFace DeviceGrid::boundaryFaces() const {
+
+const CollOfFace& DeviceGrid::boundaryFaces() const {
+    if ( boundaryFacesEmpty_ ) {
+	createBoundaryFaces_();
+    }
+    return boundary_faces_;
+}
+
+const CollOfFace& DeviceGrid::interiorFaces() const {
+    if ( interiorFacesEmpty_ ) {
+	createInteriorFaces_();
+    }
+    return interior_faces_;
+}
+
+const CollOfCell& DeviceGrid::boundaryCells() const {
+    if ( boundaryCellsEmpty_ ) {
+	createBoundaryCells_();
+    }
+    return boundary_cells_;
+}
+
+const CollOfCell& DeviceGrid::interiorCells() const {
+    if ( interiorCellsEmpty_ ) {
+	createInteriorCells_();
+    }
+    return interior_cells_;
+}
+
+
+void DeviceGrid::createBoundaryFaces_() const {
     // we use the face_cells_ array to check if both face_cells are cells
     // If face f is a boundary face, then 
     // face_cells_[2 * f] or face_cells_[2 * f + 1] contains -1.
@@ -334,11 +386,12 @@ CollOfFace DeviceGrid::boundaryFaces() const {
     
     // new_end points now to where the legal values end,
     // but the vector still has size equal to number_of_faces_
-    return CollOfFace(b_faces.begin(), new_end);
+    boundary_faces_ = CollOfFace(b_faces.begin(), new_end);
+    boundaryFacesEmpty_ = false;
 }
 
 
-CollOfFace DeviceGrid::interiorFaces() const {
+void DeviceGrid::createInteriorFaces_() const {
     // we use the face_cells_ array to check if both face_cells are cells
     // If face f is an interior face, then neither of
     // face_cells_[2 * f] nor face_cells_[2 * f + 1] contains -1.
@@ -367,12 +420,13 @@ CollOfFace DeviceGrid::interiorFaces() const {
     
     // new_end points now to where the legal values end,
     // but the vector still has size equal to number_of_faces_    
-    return CollOfFace(i_faces.begin(), new_end);
+    interior_faces_ = CollOfFace(i_faces.begin(), new_end);
+    interiorFacesEmpty_ = false;
 }
 
 
 // BOUNDARY CELLS
-CollOfCell DeviceGrid::boundaryCells() const {
+void DeviceGrid::createBoundaryCells_() const {
     // Returns a Collection of indices of boundary cells.
     // Algorithm:
     // for each cell c
@@ -401,12 +455,13 @@ CollOfCell DeviceGrid::boundaryCells() const {
 								     b_cells.begin(),
 								     b_cells.end(),
 								     unchanged(number_of_cells_));
-    return CollOfCell(b_cells.begin(), new_end);
+    boundary_cells_ = CollOfCell(b_cells.begin(), new_end);
+    boundaryCellsEmpty_ = false;
 }
 
 
 // INTERIOR CELLS
-CollOfCell DeviceGrid::interiorCells() const {
+void DeviceGrid::createInteriorCells_() const {
     // Same as boundaryCells, but the kernel is the other way around
     kernelSetup s(number_of_cells_);
     thrust::device_vector<int> i_cells(number_of_cells_);
@@ -423,10 +478,12 @@ CollOfCell DeviceGrid::interiorCells() const {
 								     i_cells.begin(),
 								     i_cells.end(),
 								     unchanged(number_of_cells_));
-    return CollOfCell(i_cells.begin(), new_end);
-
+    interior_cells_ = CollOfCell(i_cells.begin(), new_end);
+    interiorCellsEmpty_ = false;
 }
 
+
+// FIRST AND SECOND
 CollOfCell DeviceGrid::firstCell(CollOfFace coll) const {
     // The out collection will be of same size as the in collection
 
@@ -476,7 +533,7 @@ CollOfCell DeviceGrid::secondCell(CollOfFace coll) const {
 CollOfScalar DeviceGrid::norm_of_cells(const thrust::device_vector<int>& cells,
 				       const bool full) const {
     if (full) {
-	CollOfScalar out(number_of_cells_,0);
+	CollOfScalar out(number_of_cells_);
 	cudaStatus_ = cudaMemcpy( out.data(), cell_volumes_, 
 				  sizeof(double)*number_of_cells_,
 				  cudaMemcpyDeviceToDevice);
@@ -484,7 +541,7 @@ CollOfScalar DeviceGrid::norm_of_cells(const thrust::device_vector<int>& cells,
 	return out;
     }
     else {
-	CollOfScalar out(cells.size(),0);
+	CollOfScalar out(cells.size());
 	kernelSetup s = out.setup();
 	const int* cells_ptr = thrust::raw_pointer_cast( &cells[0] );
 	normKernel<<<s.grid, s.block>>>( out.data(), cells_ptr, cells.size(),
@@ -496,7 +553,7 @@ CollOfScalar DeviceGrid::norm_of_cells(const thrust::device_vector<int>& cells,
 CollOfScalar DeviceGrid::norm_of_faces(const thrust::device_vector<int>& faces,
 				       const bool full) const {
     if (full) {
-	CollOfScalar out(number_of_faces_,0);
+	CollOfScalar out(number_of_faces_);
 	cudaStatus_ = cudaMemcpy(out.data(), face_areas_, 
 				 sizeof(double)*number_of_faces_,
 				 cudaMemcpyDeviceToDevice);
@@ -504,7 +561,7 @@ CollOfScalar DeviceGrid::norm_of_faces(const thrust::device_vector<int>& faces,
 	return out;
     }
     else {
-	CollOfScalar out(faces.size(),0);
+	CollOfScalar out(faces.size());
 	kernelSetup s = out.setup();
 	const int* faces_ptr = thrust::raw_pointer_cast( &faces[0] );
 	normKernel<<<s.grid, s.block>>>( out.data(), faces_ptr, faces.size(),
@@ -551,11 +608,11 @@ CollOfVector DeviceGrid::centroid(const thrust::device_vector<int>& indices,
 	if ( codim == 1) {
 	    all_centroids = face_centroids_;
 	}
-	equelleCUDA::centroidKernel<<<s.grid, s.block>>>( out.data(),
-							  indices_ptr,
-							  all_centroids,
-							  out.numVectors(),
-							  dimensions_);
+	centroidKernel<<<s.grid, s.block>>>( out.data(),
+					     indices_ptr,
+					     all_centroids,
+					     out.numVectors(),
+					     dimensions_);
 	return out;
     }
 }
@@ -578,11 +635,11 @@ CollOfVector DeviceGrid::normal( const CollOfFace& faces) const {
 	// CollOfVector::block() and grid() assumes one thread per double value
 	// Our kernel use one thread per vector, so we overshoot a bit.
 	kernelSetup s = out.element_setup();
-	equelleCUDA::faceNormalsKernel<<<s.grid, s.block>>>(out.data(),
-							    faces.raw_pointer(),
-							    face_normals_,
-							    out.numVectors(),
-							    dimensions_);
+	faceNormalsKernel<<<s.grid, s.block>>>(out.data(),
+					       faces.raw_pointer(),
+					       face_normals_,
+					       out.numVectors(),
+					       dimensions_);
     }
     return out;
 }
@@ -625,13 +682,15 @@ void DeviceGrid::checkError_(const std::string& msg) const {
 }
 
 
+
+
 // ----------- GRID KERNELS -------------------------
 
-__global__ void equelleCUDA::boundaryFacesKernel( int* b_faces,
-						  const int* face_cells,
-						  const int number_of_faces) 
+__global__ void wrapDeviceGrid::boundaryFacesKernel( int* b_faces,
+						     const int* face_cells,
+						     const int number_of_faces) 
 {
-    int face = threadIdx.x + blockIdx.x*blockDim.x;
+    const int face = myID();
     if (face < number_of_faces) {
 	if ( (face_cells[2*face] == -1) || (face_cells[2*face + 1] == -1) ) {
 	    b_faces[face] = face;
@@ -640,11 +699,11 @@ __global__ void equelleCUDA::boundaryFacesKernel( int* b_faces,
 }
 
 
-__global__ void equelleCUDA::interiorFacesKernel( int* i_faces,
-						  const int* face_cells,
-						  const int number_of_faces)
+__global__ void wrapDeviceGrid::interiorFacesKernel( int* i_faces,
+						     const int* face_cells,
+						     const int number_of_faces)
 {
-    int face = threadIdx.x + blockIdx.x*blockDim.x;
+    const int face = myID();
     if ( face < number_of_faces) {
 	if ( (face_cells[2*face] != -1) && (face_cells[2*face + 1] != -1) ) {
 	    i_faces[face] = face;
@@ -653,13 +712,13 @@ __global__ void equelleCUDA::interiorFacesKernel( int* i_faces,
 }
 
 
-__global__ void equelleCUDA::boundaryCellsKernel(int* b_cells,
-						 const int number_of_cells,
-						 const int* cell_facepos,
-						 const int* cell_faces,
-						 const int* face_cells)
+__global__ void wrapDeviceGrid::boundaryCellsKernel(int* b_cells,
+						    const int number_of_cells,
+						    const int* cell_facepos,
+						    const int* cell_faces,
+						    const int* face_cells)
 {
-    int cell = threadIdx.x + blockIdx.x*blockDim.x;
+    const int cell = myID();
     if ( cell < number_of_cells) {
 	bool boundary = false;
 	int face;
@@ -676,13 +735,13 @@ __global__ void equelleCUDA::boundaryCellsKernel(int* b_cells,
 }
 
 
-__global__ void equelleCUDA::interiorCellsKernel( int* i_cells,
-						  const int number_of_cells,
-						  const int* cell_facepos,
-						  const int* cell_faces,
-						  const int* face_cells)
+__global__ void wrapDeviceGrid::interiorCellsKernel( int* i_cells,
+						     const int number_of_cells,
+						     const int* cell_facepos,
+						     const int* cell_faces,
+						     const int* face_cells)
 {
-    int cell = threadIdx.x + blockIdx.x*blockDim.x;
+    const int cell = myID();
     if ( cell < number_of_cells) {
 	bool interior = true;
 	int face;
@@ -700,51 +759,51 @@ __global__ void equelleCUDA::interiorCellsKernel( int* i_cells,
 }
 
 
-__global__ void equelleCUDA::firstCellKernel( int* first,
-					      const int number_of_faces,
-					      const int* face_cells)
+__global__ void wrapDeviceGrid::firstCellKernel( int* first,
+						 const int number_of_faces,
+						 const int* face_cells)
 {
     // For face f:
     //     first(f) = face_cells[2*f]
-    int face = threadIdx.x + blockIdx.x*blockDim.x;
+    const int face = myID();
     if ( face < number_of_faces ) {
 	first[face] = face_cells[2*face];
     }
 }
 
-__global__ void equelleCUDA::firstCellSubsetKernel( int* first,
-						    const int number_of_faces,
-						    const int* face_index,
-						    const int* face_cells)
+__global__ void wrapDeviceGrid::firstCellSubsetKernel( int* first,
+						       const int number_of_faces,
+						       const int* face_index,
+						       const int* face_cells)
 {
     // For thread i:
     //      first(i) = face_cells[2*face_index[i]]
-    int index = threadIdx.x + blockIdx.x*blockDim.x;
+    const int index = myID();
     if ( index < number_of_faces ) {
 	first[index] = face_cells[2*face_index[index]];
     }
 }
 
-__global__ void equelleCUDA::secondCellKernel( int* second,
-					       const int number_of_faces,
-					       const int* face_cells)
+__global__ void wrapDeviceGrid::secondCellKernel( int* second,
+						  const int number_of_faces,
+						  const int* face_cells)
 {
     // For face f:
     //     second(f) = face_cells[2*f + 1]
-    int face = threadIdx.x + blockIdx.x*blockDim.x;
+    const int face = myID();
     if ( face < number_of_faces ) {
 	second[face] = face_cells[2*face + 1];
     }
  }
 
-__global__ void equelleCUDA::secondCellSubsetKernel( int* second,
-						     const int number_of_faces,
-						     const int* face_index,
-						     const int* face_cells)
+__global__ void wrapDeviceGrid::secondCellSubsetKernel( int* second,
+							const int number_of_faces,
+							const int* face_index,
+							const int* face_cells)
 {
     // for thread i
     //     second[i] = face_cells[2*face_index[i] + 1]
-    int index = threadIdx.x + blockIdx.x*blockDim.x;
+    const int index = myID();
     if ( index < number_of_faces ) {
 	second[index] = face_cells[2*face_index[index] + 1];
     }
@@ -754,12 +813,12 @@ __global__ void equelleCUDA::secondCellSubsetKernel( int* second,
 // NORM KERNEL
 
 
-__global__ void equelleCUDA::normKernel( double* out,
-					 const int* indices,
-					 const int out_size,
-					 const double* norm_values) 
+__global__ void wrapDeviceGrid::normKernel( double* out,
+					    const int* indices,
+					    const int out_size,
+					    const double* norm_values) 
 {
-    int index = threadIdx.x + blockIdx.x*blockDim.x;
+    const int index = myID();
     if ( index < out_size ) {
 	out[index] = norm_values[indices[index]];
     }
@@ -767,17 +826,17 @@ __global__ void equelleCUDA::normKernel( double* out,
 
 // CENTROID KERNEL
 
-__global__ void equelleCUDA::centroidKernel( double* out,
-					     const int* subset_indices,
-					     const double* all_centroids,
-					     const int num_vectors,
-					     const int dimensions)
+__global__ void wrapDeviceGrid::centroidKernel( double* out,
+						const int* subset_indices,
+						const double* all_centroids,
+						const int num_vectors,
+						const int dimensions)
 {
     // EASY IMPLEMENTATION:
     // One thread for each vector
-    int vec_id = threadIdx.x + blockIdx.x*blockDim.x;
+    const int vec_id = myID();
     if ( vec_id < num_vectors ) {
-	int cell_index = subset_indices[vec_id];
+	const int cell_index = subset_indices[vec_id];
 	// Iterating over the element in the vector we create
 	for (int i = 0; i < dimensions; i++) {
 	    out[vec_id*dimensions + i] = all_centroids[cell_index * dimensions + i];
@@ -788,17 +847,17 @@ __global__ void equelleCUDA::centroidKernel( double* out,
 
 
 // FACE NORMALS
-__global__ void equelleCUDA::faceNormalsKernel( double* out,
-						const int* faces,
-						const double* all_face_normals,
-						const int num_vectors,
-						const int dimensions)
+__global__ void wrapDeviceGrid::faceNormalsKernel( double* out,
+						   const int* faces,
+						   const double* all_face_normals,
+						   const int num_vectors,
+						   const int dimensions)
 {
     // EASY IMPLEMENTATION
     // One thread for each vector
-    int vec_id = threadIdx.x + blockIdx.x*blockDim.x;
+    const int vec_id = myID();
     if ( vec_id < num_vectors ) {
-	int face_id = faces[vec_id];
+	const int face_id = faces[vec_id];
 	for( int i = 0; i < dimensions; i++) {
 	    out[vec_id*dimensions + i] = all_face_normals[face_id*dimensions + i];
 	}

@@ -917,7 +917,9 @@ private:
 };
 
 
-struct StencilAccessNode : public Node {
+class StencilAccessNode : public Node
+{
+public:
     StencilAccessNode( const std::string grid_variable,
                        FuncArgsNode* expr_list )
         : grid_variable( grid_variable),
@@ -948,12 +950,13 @@ struct StencilAccessNode : public Node {
 		}
 		return et;
 	}
-
     std::string grid_variable;
     FuncArgsNode* expr_list;
 };
 
-struct StencilStatementNode : public Node {
+class StencilStatementNode : public Node
+{
+public:
     StencilStatementNode( StencilAccessNode* lhs, Node* node ) : lhs(lhs), expr( node ) {
     }
 

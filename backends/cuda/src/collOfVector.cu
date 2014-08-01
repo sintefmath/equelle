@@ -12,9 +12,10 @@
 #include "CollOfVector.hpp"
 #include "CollOfScalar.hpp"
 #include "equelleTypedefs.hpp"
+#include "device_functions.cuh"
 
 using namespace equelleCUDA;
-
+using namespace wrapCollOfVector;
 
 CollOfVector::CollOfVector() 
     : elements_(),
@@ -84,17 +85,26 @@ CollOfScalar CollOfVector::norm() const {
 }
 
 
+// ------ DOT ------
+CollOfScalar CollOfVector::dot(const CollOfVector& rhs) const {
+    CollOfScalar out(numVectors());
+    // One thread for each vector:
+    kernelSetup s = vector_setup();
+    dotKernel<<< s.grid, s.block >>>( out.data(),
+				      this->data(),
+				      rhs.data(),
+				      out.size(),
+				      this->dim());
+    return out;
+}
+
+
 const double* CollOfVector::data() const {
     return elements_.data();
 }
 
 double* CollOfVector::data() {
     return elements_.data();
-}
-
-
-int CollOfVector::size() const {
-    return elements_.size();
 }
 
 
@@ -106,7 +116,7 @@ int CollOfVector::numVectors() const {
     if ( dim_ == 0 ) {
 	OPM_THROW(std::runtime_error, "Calling numVectors() on a CollOfVector of dimension 0\n --> Dividing by zero!");
     }
-    return size()/dim_;
+    return elements_.size()/dim_;
 }
 
 int CollOfVector::numElements() const {
@@ -149,14 +159,14 @@ CollOfScalar CollOfVector::col(const int index) const {
     return out;
 }
 
-__global__ void equelleCUDA::collOfVectorOperatorIndexKernel( double* out,
-							      const double* vec,
-							      const int size_out,
-							      const int index,
-							      const int dim)
+__global__ void wrapCollOfVector::collOfVectorOperatorIndexKernel( double* out,
+								   const double* vec,
+								   const int size_out,
+								   const int index,
+								   const int dim)
 {
     // Index:
-    int i = threadIdx.x + blockIdx.x*blockDim.x;
+    const int i = myID();
     if ( i < size_out ) {
 	out[i] = vec[i*dim + index];
     }
@@ -166,12 +176,12 @@ __global__ void equelleCUDA::collOfVectorOperatorIndexKernel( double* out,
 
 // --------- NORM KERNEL ---------------------
 
-__global__ void equelleCUDA::normKernel( double* out,
-					 const double* vectors,
-					 const int numVectors,
-					 const int dim)
+__global__ void wrapCollOfVector::normKernel( double* out,
+					      const double* vectors,
+					      const int numVectors,
+					      const int dim)
 {
-    int index = threadIdx.x + blockIdx.x*blockDim.x;
+    const int index = myID();
     if ( index < numVectors ){
 	double norm = 0;
 	for ( int i = 0; i < dim; i++) {
@@ -181,7 +191,23 @@ __global__ void equelleCUDA::normKernel( double* out,
     }
 }
 
+// --------- DOT KERNEL ---------------------------
 
+__global__ void wrapCollOfVector::dotKernel( double* out,
+					     const double* lhs,
+					     const double* rhs,
+					     const int numVectors,
+					     const int dim)
+{
+    const int index = myID();
+    if ( index < numVectors ) {
+	double dot = 0.0;
+	for ( int i = 0; i < dim; ++i ) {
+	    dot += lhs[index*dim + i] * rhs[index*dim + i];
+	}
+	out[index] = dot;
+    }
+}
 
 // ------------- OPERATOR OVERLOADING --------------------
 
@@ -189,7 +215,7 @@ CollOfVector equelleCUDA::operator+(const CollOfVector& lhs, const CollOfVector&
 
     CollOfVector out = lhs;
     kernelSetup s = out.element_setup();
-    plus_kernel<<<s.grid, s.block>>>(out.data(), rhs.data(), out.size());
+    wrapCudaArray::plus_kernel<<<s.grid, s.block>>>(out.data(), rhs.data(), out.numElements());
     return out;
 }
 
@@ -197,6 +223,85 @@ CollOfVector equelleCUDA::operator+(const CollOfVector& lhs, const CollOfVector&
 CollOfVector equelleCUDA::operator-(const CollOfVector& lhs, const CollOfVector& rhs) {
     CollOfVector out = lhs;
     kernelSetup s = out.element_setup();
-    minus_kernel<<<s.grid, s.block>>>(out.data(), rhs.data(), out.size());
+    wrapCudaArray::minus_kernel<<<s.grid, s.block>>>(out.data(), rhs.data(), out.numElements());
     return out;
+}
+
+CollOfVector equelleCUDA::operator-(const CollOfVector& arg) {
+    return (-1.0)*arg;
+}
+
+CollOfVector equelleCUDA::operator*(const Scalar lhs, const CollOfVector& rhs) {
+    CollOfVector out = rhs;
+    kernelSetup s = out.element_setup();
+    wrapCudaArray::scalMultColl_kernel<<<s.grid, s.block>>>(out.data(), lhs, out.numElements());
+    return out;
+}
+
+CollOfVector equelleCUDA::operator*(const CollOfVector& lhs, const Scalar rhs) {
+    return rhs*lhs;
+}
+
+CollOfVector equelleCUDA::operator*(const CollOfVector& vec, const CollOfScalar& scal) {
+    CollOfVector out = vec;
+    kernelSetup s = out.vector_setup();
+    collvecMultCollscal_kernel<<<s.grid, s.block>>>( out.data(),
+						     scal.data(),
+						     out.numVectors(),
+						     out.dim());
+    return out;
+}
+
+CollOfVector equelleCUDA::operator*(const CollOfScalar& scal, const CollOfVector& vec) {
+    CollOfVector out = vec;
+    kernelSetup s = out.vector_setup();
+    collvecMultCollscal_kernel<<<s.grid, s.block>>>( out.data(),
+						     scal.data(),
+						     out.numVectors(),
+						     out.dim());
+    return out;
+}
+
+CollOfVector equelleCUDA::operator/(const CollOfVector& vec, const CollOfScalar& scal) {
+    CollOfVector out = vec;
+    kernelSetup s = out.vector_setup();
+    collvecDivCollscal_kernel<<<s.grid, s.block>>>( out.data(),
+						    scal.data(),
+						    out.numVectors(),
+						    out.dim());
+    return out;
+}
+
+CollOfVector equelleCUDA::operator/(const CollOfVector& vec, const Scalar scal) {
+    return (1.0/scal)*vec;
+}
+
+
+
+// KERNELS
+__global__ void wrapCollOfVector::collvecMultCollscal_kernel( double* vector,
+							      const double* scal,
+							      const int numVectors,
+							      const int dim)
+{
+    int vec = myID();
+    if ( vec < numVectors ) {
+	for ( int i = 0; i < dim; ++i ) {
+	    vector[vec*dim + i] *= scal[vec];
+	}
+    }
+}
+
+__global__ void wrapCollOfVector::collvecDivCollscal_kernel( double* vector,
+							     const double* scal,
+							     const int numVectors,
+							     const int dim)
+{
+    int vec = myID();
+    if ( vec < numVectors ) {
+	for ( int i = 0; i < dim; i++ ) {
+	    vector[vec*dim + i] = vector[vec*dim + i] / scal[vec];
+	}
+    }
+
 }

@@ -15,7 +15,6 @@
 #include "wrapCollOfIndices.hpp"
 #include "equelleTypedefs.hpp"
 
-
 using namespace equelleCUDA;
 
 

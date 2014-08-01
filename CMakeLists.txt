@@ -1,8 +1,6 @@
 project(equelle)
 cmake_minimum_required(VERSION 2.8)
 
-#find_package( "CUDA" REQUIRED )
-
 # For running "make test"
 enable_testing()
 
@@ -49,9 +47,20 @@ add_subdirectory(tools)
 add_subdirectory(experimental/cartesian)
 
 
+
+# --- Stuff for making non-source code show up in IDEs
+
+file( GLOB_RECURSE EQUELLE_README "README.*" )
+file( GLOB_RECURSE EQUELLE_EXAMPLE_SOURCES "*.equelle" )
+file( GLOB EQUELLE_VAGRANT "vagrant/*" )
+source_group( "Assets" FILES ${EQUELLE_README} ${EQUELLE_EXAMPLE_SOURCES} ${EQUELLE_VAGRANT} )
+add_custom_target( Equelle_DEPS SOURCES ${EQUELLE_README} ${EQUELLE_EXAMPLE_SOURCES} ${EQUELLE_VAGRANT} )
+
+
+# --- Generation of package file (that allows for using find_package Equelle in other projects).
 set(EQUELLE_TARGETS ec el equelle_rt)
 if(EQUELLE_BUILD_CUDA)
-  set(EQUELLE_TARGETS ${EQUELLE_TARGETS} equelle_cuda_cu equelle_cuda_cpu )
+  set(EQUELLE_TARGETS ${EQUELLE_TARGETS} equelle_cuda )
 endif()
 if(EQUELLE_BUILD_MPI)
   set(EQUELLE_TARGETS ${EQUELLE_TARGETS} equelle_mpi )

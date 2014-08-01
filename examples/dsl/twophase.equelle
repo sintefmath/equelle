@@ -1,12 +1,14 @@
 # Two-phase flow with no-flow boundary and simple source terms.
 
 # Physics that requires specification
-perm : Collection Of Scalar On AllCells()
 perm = InputCollectionOfScalar("perm", AllCells())
-poro : Collection Of Scalar On AllCells()
-poro = InputCollectionOfScalar("poro", AllCells())
+poro_in = InputCollectionOfScalar("poro", AllCells())
 watervisc = InputScalarWithDefault("watervisc", 0.0005)
 oilvisc = InputScalarWithDefault("oilvisc", 0.005)
+
+# Need non-zero porosity.
+min_poro = InputScalarWithDefault("min_poro", 0.0001) Extend AllCells()
+poro = (poro_in < min_poro) ? min_poro : poro_in
 
 # Constants
 pv = poro * |AllCells()|

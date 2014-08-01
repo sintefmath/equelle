@@ -1,5 +1,6 @@
 #include "equelle/RuntimeMPI.hpp"
 #include <iostream>
+#include <fstream>
 
 #include <mpi.h>
 
@@ -9,13 +10,18 @@
 
 #include <opm/core/grid/GridManager.hpp>
 #include <boost/iterator/counting_iterator.hpp>
-
 #include "equelle/EquelleRuntimeCPU.hpp"
 #include "equelle/mpiutils.hpp"
 #include "equelle/SubGridBuilder.hpp"
 
 
 namespace equelle {
+
+std::string logfilename() {
+    std::stringstream ss;
+    ss << "runtimempi-" << equelle::getMPIRank() << ".log";
+    return ss.str();
+}
 
 void RuntimeMPI::initializeZoltan()
 {
@@ -43,6 +49,7 @@ void RuntimeMPI::initializeGrid()
 }
 
 RuntimeMPI::RuntimeMPI()
+    : logstream( logfilename() )
 {     
     param_.disableOutput();
     initializeZoltan();
@@ -50,11 +57,15 @@ RuntimeMPI::RuntimeMPI()
 }
 
 RuntimeMPI::RuntimeMPI(const Opm::parameter::ParameterGroup &param)
-    : param_( param )
+    : logstream( logfilename() ),
+      param_( param )
+
 {
     param_.disableOutput();
     initializeZoltan();
     globalGrid.reset( equelle::createGridManager( param_ ) );
+
+    logstream << "Hello from rank " << equelle::getMPIRank() << std::endl;
 }
 
 RuntimeMPI::~RuntimeMPI()
@@ -65,6 +76,8 @@ RuntimeMPI::~RuntimeMPI()
 
 void RuntimeMPI::decompose()
 {
+    auto startTime = MPI_Wtime();
+
     auto zr = computePartition();
     std::vector<int> localCells;
 
@@ -80,6 +93,12 @@ void RuntimeMPI::decompose()
     subGrid = SubGridBuilder::build( globalGrid->c_grid(), localCells );
 
     runtime.reset( new EquelleRuntimeCPU( subGrid.c_grid, param_ ) );
+
+    auto endTime = MPI_Wtime();
+
+    logstream << "Decomposing took " << endTime-startTime << " seconds\n";
+    logstream << "subGrid.number_of_ghost_cells: " << subGrid.number_of_ghost_cells << std::endl;
+    logstream << "subGrid.global_cell.size(): " << subGrid.cell_local_to_global.size() << std::endl;
 }
 
 zoltanReturns RuntimeMPI::computePartition()
@@ -123,7 +142,31 @@ CollOfCell RuntimeMPI::allCells() const
     return runtime->allCells();
 }
 
-CollOfScalar RuntimeMPI::inputCollectionOfScalar(const String &name, const CollOfFace &coll)
+CollOfFace RuntimeMPI::allFaces() const
+{
+    return runtime->allFaces();
+}
+
+CollOfCell RuntimeMPI::boundaryCells() const
+{
+    CollOfCell cells;
+    return runtime->boundaryCells();
+}
+
+CollOfFace RuntimeMPI::boundaryFaces() const
+{
+    CollOfFace boundary;
+
+    for( int i = 0; i < subGrid.c_grid->number_of_faces; ++i ) {
+        if (subGrid.c_grid->face_cells[2*i] == Boundary::outer || subGrid.c_grid->face_cells[(2*i)+1] == Boundary::outer ) {
+            boundary.emplace_back( i );
+        }
+    }
+
+    return boundary;
+}
+
+CollOfScalar RuntimeMPI::inputCollectionOfScalar(const String& /* name */, const CollOfFace & /* coll */ )
 {
     throw std::runtime_error("Not implemented");
 }
@@ -146,7 +189,7 @@ CollOfScalar RuntimeMPI::inputCollectionOfScalar(const String &name, const CollO
 
         // Map into local cell enumeration
         for( int i = 0; i < coll.size(); ++i ) {
-            auto glob = subGrid.global_cell[i];
+            auto glob = subGrid.cell_local_to_global[i];
 
             localData[i] = data[glob];
         }
@@ -157,6 +200,80 @@ CollOfScalar RuntimeMPI::inputCollectionOfScalar(const String &name, const CollO
         return CollOfScalar(CollOfScalar::V::Constant(size, param_.get<double>(name)));
     }
 
+}
+
+CollOfFace RuntimeMPI::inputDomainSubsetOf(const String &name, const CollOfFace &superset)
+{
+    // This implementation is based on a copy of EquelleRuntimeCPU::inputDomainSubsetOf
+    // but we rewrite the indices into our local index-space.
+    const String filename = param_.get<String>(name + "_filename");
+    std::ifstream is(filename.c_str());
+    if (!is) {
+        OPM_THROW(std::runtime_error, "Could not find file " << filename);
+    }
+    std::istream_iterator<int> beg(is);
+    std::istream_iterator<int> end;
+
+    CollOfFace data;
+    for (auto it = beg; it != end; ++it) {
+        logstream << "Read " << *it << std::endl;
+        auto jt = subGrid.face_global_to_local.find( *it );
+        if ( jt != subGrid.face_global_to_local.end() ) { // This face is part of our domain
+            data.emplace_back( jt->second );
+
+            logstream << "Adding " << *it << " -> " << jt->second << std::endl;
+        } // else the face is not part of our domain
+    }
+
+    // Needed to allow for std::includes to give valid results.
+    std::sort( data.begin(), data.end() );
+
+    if (!includes(superset.begin(), superset.end(), data.begin(), data.end())) {
+        logstream << "Rank: " << equelle::getMPIRank() << " is throwing." << std::endl;
+        OPM_THROW(std::runtime_error, "Given faces are not in the assumed subset.");
+    }
+
+    return data;
+}
+
+CollOfCell RuntimeMPI::inputDomainSubsetOf(const String &name, const CollOfCell &superset)
+{
+    // This implementation is based on a copy of EquelleRuntimeCPU::inputDomainSubsetOf
+    // but we rewrite the indices into our local index-space.
+    const String filename = param_.get<String>(name + "_filename");
+    std::ifstream is(filename.c_str());
+    if (!is) {
+        OPM_THROW(std::runtime_error, "Could not find file " << filename);
+    }
+    std::istream_iterator<int> beg(is);
+    std::istream_iterator<int> end;
+
+    CollOfCell data;
+    for (auto it = beg; it != end; ++it) {
+        logstream << "Read " << *it << std::endl;
+        auto jt = subGrid.cell_global_to_local.find( *it );
+        if ( jt != subGrid.cell_global_to_local.end() ) { // This cell is part of our domain
+            data.emplace_back( jt->second );
+
+            logstream << "Adding " << *it << " -> " << jt->second << std::endl;
+        } // else the cell is not part of our domain
+    }
+
+    // Needed to allow for std::includes to give valid results.
+    std::sort( data.begin(), data.end() );
+
+    if (!includes(superset.begin(), superset.end(), data.begin(), data.end())) {
+        logstream << "Rank: " << equelle::getMPIRank() << " is throwing." << std::endl;
+        OPM_THROW(std::runtime_error, "Given cells are not in the assumed subset.");
+    }
+
+    return data;
+}
+
+
+Scalar RuntimeMPI::inputScalarWithDefault(const String &name, const Scalar default_value)
+{
+    return runtime->inputScalarWithDefault( name, default_value );
 }
 
 void RuntimeMPI::output(const String &tag, const CollOfScalar &vals)
@@ -203,7 +320,7 @@ equelle::CollOfScalar equelle::RuntimeMPI::allGather( const equelle::CollOfScala
     // We do not need to copy the local data into the global structure.
     // That is handeled by MPI_Allgatherv
     MPI_SAFE_CALL(
-        MPI_Allgatherv( subGrid.global_cell.data(), subGrid.global_cell.size(), MPI_INT,
+        MPI_Allgatherv( subGrid.cell_local_to_global.data(), subGrid.cell_local_to_global.size(), MPI_INT,
                         global_id_mapping.data(), recvcounts.data(), displacements.data(),
                         MPI_INT, MPI_COMM_WORLD ) );
 
@@ -227,6 +344,5 @@ equelle::CollOfScalar equelle::RuntimeMPI::allGather( const equelle::CollOfScala
 
     return CollOfScalar( v_new );
 }
-
 
 } // namespace equlle
