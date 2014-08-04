@@ -1,0 +1,18 @@
+{
+    "name": "3D Oil well",
+    "source": "flow.equelle",
+    "description": "Simulation of pressure and saturation of a three dimensional oil well",
+    "inputfiles": [
+        { "file": "timesteps", "tag": "timesteps", "compressed": false },
+        { "file": "perm.compressed", "tag": "perm", "compressed": true},
+        { "file": "poro.compressed", "tag": "poro", "compressed": true},
+        { "file": "swinit.compressed", "tag": "sw_initial", "compressed": true },
+        { "file": "source_cells", "tag": "source_cells", "compressed": false },
+        { "file": "source_values", "tag": "source_values", "compressed": false }
+    ],
+    "grid": {
+        "dimensions": 3,
+        "size": [60,22,10],
+        "cellSize": [6.096,3.048,0.6096]
+    }
+}
