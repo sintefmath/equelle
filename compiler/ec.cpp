@@ -12,6 +12,7 @@ extern int yyparse();
 #include "PrintMRSTBackendASTVisitor.hpp"
 #include "PrintCUDABackendASTVisitor.hpp"
 #include "PrintMPIBackendASTVisitor.hpp"
+#include "PrintIOVisitor.hpp"
 #include "ASTNodes.hpp"
 #include "CommandLineOptions.hpp"
 
@@ -86,7 +87,8 @@ int main(int argc, char** argv)
 
     // Dump program inputs and outputs
     else if (dump == "io") {
-        std::cout << "Dumping io" << std::endl;
+        PrintIOVisitor v;
+        SymbolTable::program()->accept(v);
     }
 
     //Write output
