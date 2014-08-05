@@ -143,7 +143,7 @@ FuncCallLikeNode* handleFuncAssignmentStart(const std::string& name, FuncArgsNod
 	    return new FuncStartNode(name, args);
 	}
 	else {
-		return new StencilNode(name, args);
+		return handleStencilAccess(name, args);
 	}
 }
 
@@ -644,14 +644,11 @@ RandomAccessNode* handleRandomAccess(Node* expr, const int index)
 
 StencilAssignmentNode* handleStencilAssignment(FuncCallLikeNode* lhs, Node* rhs)
 {
-	std::cout << typeid(lhs).name() << std::endl;
-	StencilNode& stencil = dynamic_cast<StencilNode&>((*lhs));
-	/*
+	StencilNode* stencil = dynamic_cast<StencilNode*>(lhs);
 	if (stencil == nullptr) {
 		std::string err_msg = "Internal error: The stencil \"" + lhs->name() + "\" does not appear to be properly defined";
 		yyerror(err_msg.c_str());
 	}
-	*/
-	return new StencilAssignmentNode(&stencil, rhs);
+	return new StencilAssignmentNode(stencil, rhs);
 }
 

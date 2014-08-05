@@ -16,7 +16,7 @@ explicitHeat(u_0, a) = {
     	  + u_0(i,j-1) ... 
     	)
 	
-	#ERROR: q not defined: q[[i, j]] = 1/4 * ( 2 * u_0[[i,j-1]] + u_0[[i,j]] + u_0[[i,j+1]] )
+	#ERROR: q not defined: q(i, j) = 1/4 * ( 2 * u_0(i,j-1) + u_0(i,j) + u_0(i,j+1) )
 	#ERROR: Wrong indices used: u(j, i) = 1/8 
 
 	# Alt. angrepsmåte: Implementer i handleFuncCall slik at hvis funksjonen ikke finnes, 
