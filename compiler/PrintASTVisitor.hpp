@@ -73,6 +73,8 @@ public:
     void visit(StencilAssignmentNode& node);
     void midVisit(StencilAssignmentNode& node);
     void postVisit(StencilAssignmentNode& node);
+    void visit(StencilNode& node);
+    void postVisit(StencilNode& node);
 
 private:
     int indent_;

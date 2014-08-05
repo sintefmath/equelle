@@ -556,6 +556,16 @@ void PrintCPUBackendASTVisitor::postVisit(StencilAssignmentNode &node)
 
 }
 
+void PrintCPUBackendASTVisitor::visit(StencilNode& node)
+{
+    std::cout << node.name() << "(";
+}
+
+void PrintCPUBackendASTVisitor::postVisit(StencilNode& node)
+{
+    std::cout << ")";
+}
+
 
 namespace
 {

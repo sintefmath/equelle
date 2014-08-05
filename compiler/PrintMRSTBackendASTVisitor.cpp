@@ -410,6 +410,16 @@ void PrintMRSTBackendASTVisitor::postVisit(StencilAssignmentNode& node)
     throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
 }
 
+void PrintMRSTBackendASTVisitor::visit(StencilNode& node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintMRSTBackendASTVisitor::postVisit(StencilNode& node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
 void PrintMRSTBackendASTVisitor::endl() const
 {
     std::cout << '\n';

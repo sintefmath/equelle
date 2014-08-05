@@ -482,6 +482,16 @@ void PrintCUDABackendASTVisitor::postVisit(StencilAssignmentNode& node)
     throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
 }
 
+void PrintCUDABackendASTVisitor::visit(StencilNode& node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintCUDABackendASTVisitor::postVisit(StencilNode& node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
 const char *PrintCUDABackendASTVisitor::cppStartString() const
 {
     return ::impl_cppStartString();

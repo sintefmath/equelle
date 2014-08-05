@@ -34,6 +34,7 @@ class LoopNode;
 class ArrayNode;
 class RandomAccessNode;
 class StencilAssignmentNode;
+class StencilNode;
 
 
 class ASTVisitorInterface
@@ -97,6 +98,8 @@ public:
     virtual void visit(StencilAssignmentNode& node) = 0;
     virtual void midVisit(StencilAssignmentNode& node) = 0;
     virtual void postVisit(StencilAssignmentNode& node) = 0;
+    virtual void visit(StencilNode& node) = 0;
+    virtual void postVisit(StencilNode& node) = 0;
 
 
     virtual ~ASTVisitorInterface()

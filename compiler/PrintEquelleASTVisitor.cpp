@@ -359,6 +359,16 @@ void PrintEquelleASTVisitor::postVisit(StencilAssignmentNode& node)
     throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
 }
 
+void PrintEquelleASTVisitor::visit(StencilNode& node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintEquelleASTVisitor::postVisit(StencilNode& node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
 void PrintEquelleASTVisitor::endl() const
 {
     std::cout << '\n';

@@ -377,6 +377,16 @@ void PrintASTVisitor::postVisit(StencilAssignmentNode& node)
     throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
 }
 
+void PrintASTVisitor::visit(StencilNode& node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintASTVisitor::postVisit(StencilNode& node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
 
 std::string PrintASTVisitor::indent() const
 {

@@ -134,14 +134,17 @@ void handleFuncStartType()
 }
 
 
-FuncStartNode* handleFuncAssignmentStart(const std::string& name, FuncArgsNode* args)
+FuncCallLikeNode* handleFuncAssignmentStart(const std::string& name, FuncArgsNode* args)
 {
 	if (SymbolTable::isFunctionDeclared(name)) {
 		//Set the scope name for the following block (the function itself)
 		//Will be "undone" in handleFuncAssignment
 		SymbolTable::setCurrentFunction(name);
+	    return new FuncStartNode(name, args);
 	}
-    return new FuncStartNode(name, args);
+	else {
+		return new StencilNode(name, args);
+	}
 }
 
 
@@ -275,17 +278,14 @@ FuncCallLikeNode* handleFuncCallLike(const std::string& name, FuncArgsNode* args
 	else {
 		std::string err_msg = "Could not find the stencil variable or function " + name;
 		yyerror(err_msg.c_str());
-		return NULL;
+		return nullptr;
 	}
 }
 
 FuncCallStatementNode* handleFuncCallStatement(FuncCallLikeNode* fcall_like)
 {
-	FuncCallNode* fcall = NULL;
-	try {
-		fcall = dynamic_cast<FuncCallNode*>(fcall_like);
-	}
-	catch(const std::bad_cast& e) {
+	FuncCallNode* fcall = dynamic_cast<FuncCallNode*>(fcall_like);
+	if (fcall == nullptr) {
 		std::string err_msg = "Internal error: The function \"" + fcall_like->name() + "\" does not appear to be properly defined";
 		yyerror(err_msg.c_str());
 	}
@@ -644,14 +644,14 @@ RandomAccessNode* handleRandomAccess(Node* expr, const int index)
 
 StencilAssignmentNode* handleStencilAssignment(FuncCallLikeNode* lhs, Node* rhs)
 {
-	StencilNode* stencil = NULL;
-	try {
-		stencil = dynamic_cast<StencilNode*>(lhs);
-	}
-	catch(const std::bad_cast& e) {
+	std::cout << typeid(lhs).name() << std::endl;
+	StencilNode& stencil = dynamic_cast<StencilNode&>((*lhs));
+	/*
+	if (stencil == nullptr) {
 		std::string err_msg = "Internal error: The stencil \"" + lhs->name() + "\" does not appear to be properly defined";
 		yyerror(err_msg.c_str());
 	}
-	return new StencilAssignmentNode(stencil, rhs);
+	*/
+	return new StencilAssignmentNode(&stencil, rhs);
 }
 

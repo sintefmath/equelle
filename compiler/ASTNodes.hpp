@@ -783,11 +783,9 @@ public:
 
     virtual void accept(ASTVisitorInterface& visitor)
     {
-    	/*FIXME:!
         visitor.visit(*this);
         args_->accept(visitor);
         visitor.postVisit(*this);
-        */
     }
 
 private:
@@ -833,11 +831,9 @@ public:
 
     virtual void accept(ASTVisitorInterface& visitor)
     {
-    	/**FIXME!
         visitor.visit(*this);
         funcargs_->accept(visitor);
         visitor.postVisit(*this);
-        */
     }
 
 private:
@@ -1023,14 +1019,11 @@ public:
 
     virtual void accept(ASTVisitorInterface& visitor)
     {
-    	//FIXME!
-    	/*
     	visitor.visit(*this);
-    	lhs->accept(visitor);
-    	visitor.midvisit(*this);
-    	rhs->accept(visitor);
-    	visitor.postvisit(*this);
-    	*/
+    	lhs_->accept(visitor);
+    	visitor.midVisit(*this);
+    	rhs_->accept(visitor);
+    	visitor.postVisit(*this);
     }
 private:
     StencilNode* lhs_;

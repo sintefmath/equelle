@@ -74,6 +74,8 @@ public:
     void visit(StencilAssignmentNode& node);
     void midVisit(StencilAssignmentNode& node);
     void postVisit(StencilAssignmentNode& node);
+    void visit(StencilNode& node);
+    void postVisit(StencilNode& node);
 
     // These are overriden by subclasses who only need to alter the surroundings of the generated code.
     virtual const char* cppStartString() const;
