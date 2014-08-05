@@ -379,7 +379,7 @@ void PrintCUDABackendASTVisitor::postVisit(ReturnStatementNode&)
     endl();
 }
 
-void PrintCUDABackendASTVisitor::visit(FuncCallNode& node)
+void PrintCUDABackendASTVisitor::visit(FuncCallLikeNode& node)
 {
     const std::string fname = node.name();
     const char first = fname[0];
@@ -399,7 +399,7 @@ void PrintCUDABackendASTVisitor::visit(FuncCallNode& node)
     std::cout << cppname << '(';
 }
 
-void PrintCUDABackendASTVisitor::postVisit(FuncCallNode&)
+void PrintCUDABackendASTVisitor::postVisit(FuncCallLikeNode&)
 {
     std::cout << ')';
 }
@@ -467,6 +467,21 @@ void PrintCUDABackendASTVisitor::postVisit(RandomAccessNode& node)
     }
 }
 
+void PrintCUDABackendASTVisitor::visit(StencilAssignmentNode& node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintCUDABackendASTVisitor::midVisit(StencilAssignmentNode& node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
+void PrintCUDABackendASTVisitor::postVisit(StencilAssignmentNode& node)
+{
+    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
+}
+
 const char *PrintCUDABackendASTVisitor::cppStartString() const
 {
     return ::impl_cppStartString();
@@ -513,36 +528,6 @@ std::string PrintCUDABackendASTVisitor::cppTypeString(const EquelleType& et) con
         cppstring += ", " + std::to_string(et.arraySize()) + ">";
     }
     return cppstring;
-}
-
-void PrintCUDABackendASTVisitor::visit(StencilAccessNode &node)
-{
-    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
-}
-
-void PrintCUDABackendASTVisitor::midVisit(StencilAccessNode &node)
-{
-    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
-}
-
-void PrintCUDABackendASTVisitor::postVisit(StencilAccessNode &node)
-{
-    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
-}
-
-void PrintCUDABackendASTVisitor::visit(StencilStatementNode &node)
-{
-    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
-}
-
-void PrintCUDABackendASTVisitor::midVisit(StencilStatementNode &node)
-{
-    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
-}
-
-void PrintCUDABackendASTVisitor::postVisit(StencilStatementNode &node)
-{
-    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
 }
 
 void PrintCUDABackendASTVisitor::addRequirementString(const std::string& req)

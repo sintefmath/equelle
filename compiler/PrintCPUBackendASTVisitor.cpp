@@ -379,27 +379,32 @@ void PrintCPUBackendASTVisitor::postVisit(ReturnStatementNode&)
     endl();
 }
 
-void PrintCPUBackendASTVisitor::visit(FuncCallNode& node)
+void PrintCPUBackendASTVisitor::visit(FuncCallLikeNode& node)
 {
-    const std::string fname = node.name();
-    const char first = fname[0];
-    std::string cppname;
-    if (std::isupper(first)) {
-        cppname += std::string("er.") + char(std::tolower(first)) + fname.substr(1);
-    } else {
-        cppname += fname;
-    }
-    // Special treatment for the NewtonSolveSystem() function, since it is unable to
-    // deduce its template parameter <int Num>.
-    if (fname == "NewtonSolveSystem") {
-        std::ostringstream extra;
-        extra << "<" << node.type().arraySize() << ">";
-        cppname += extra.str();
-    }
-    std::cout << cppname << '(';
+	if (SymbolTable::isFunctionDeclared(node.name())) {
+		const std::string fname = node.name();
+		const char first = fname[0];
+		std::string cppname;
+		if (std::isupper(first)) {
+			cppname += std::string("er.") + char(std::tolower(first)) + fname.substr(1);
+		} else {
+			cppname += fname;
+		}
+		// Special treatment for the NewtonSolveSystem() function, since it is unable to
+		// deduce its template parameter <int Num>.
+		if (fname == "NewtonSolveSystem") {
+			std::ostringstream extra;
+			extra << "<" << node.type().arraySize() << ">";
+			cppname += extra.str();
+		}
+		std::cout << cppname << '(';
+	}
+	else {
+	    std::cout << "grid.cellAt( " << node.name() << ", ";
+	}
 }
 
-void PrintCPUBackendASTVisitor::postVisit(FuncCallNode&)
+void PrintCPUBackendASTVisitor::postVisit(FuncCallLikeNode&)
 {
     std::cout << ')';
 }
@@ -521,31 +526,18 @@ void PrintCPUBackendASTVisitor::addRequirementString(const std::string& req)
     requirement_strings_.insert(req);
 }
 
-void PrintCPUBackendASTVisitor::visit(StencilAccessNode &node)
-{
-    std::cout << "grid.cellAt( ";
-}
 
-void PrintCPUBackendASTVisitor::midVisit(StencilAccessNode &node)
+void PrintCPUBackendASTVisitor::visit(StencilAssignmentNode &node)
 {
-    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
-}
-
-void PrintCPUBackendASTVisitor::postVisit(StencilAccessNode &node)
-{
-    std::cout <<  ", "  << node.grid_variable << " )";
-}
-
-void PrintCPUBackendASTVisitor::visit(StencilStatementNode &node)
-{
-    std::cout << indent() << "{ //Start of stencil-lambda \"" << node.name() << "\"" << std::endl;
+    std::cout << indent() << "{ //Start of stencil-lambda" << std::endl;
     indent_++;
+    //FIXME: Make dimension independent
     std::cout << indent() << "auto cell_stencil = [&]( int i, int j ) {" << std::endl;
     indent_++;
     std::cout << indent();
 }
 
-void PrintCPUBackendASTVisitor::midVisit(StencilStatementNode &node)
+void PrintCPUBackendASTVisitor::midVisit(StencilAssignmentNode &node)
 {
     std::cout << " = " << std::endl;
     indent_++;
@@ -553,14 +545,14 @@ void PrintCPUBackendASTVisitor::midVisit(StencilStatementNode &node)
     indent_--;
 }
 
-void PrintCPUBackendASTVisitor::postVisit(StencilStatementNode &node)
+void PrintCPUBackendASTVisitor::postVisit(StencilAssignmentNode &node)
 {
     indent_--;
     std::cout << ";" << std::endl;
     std::cout << indent() << "}" << std::endl;
     std::cout << indent() << "grid.allCells().execute( cell_stencil );" << std::endl;
     indent_--;
-    std::cout << indent() << "} // End of stencil-lambda \"" << node.name() << "\"" << std::endl;
+    std::cout << indent() << "} // End of stencil-lambda" << std::endl;
 
 }
 

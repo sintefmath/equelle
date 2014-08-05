@@ -59,8 +59,8 @@ public:
     void postVisit(FuncArgsNode& node);
     void visit(ReturnStatementNode& node);
     void postVisit(ReturnStatementNode& node);
-    void visit(FuncCallNode& node);
-    void postVisit(FuncCallNode& node);
+    void visit(FuncCallLikeNode& node);
+    void postVisit(FuncCallLikeNode& node);
     void visit(FuncCallStatementNode& node);
     void postVisit(FuncCallStatementNode& node);
     void visit(LoopNode& node);
@@ -69,13 +69,9 @@ public:
     void postVisit(ArrayNode& node);
     void visit(RandomAccessNode& node);
     void postVisit(RandomAccessNode& node);
-
-    void visit( StencilAccessNode& node );
-    void midVisit( StencilAccessNode& node );
-    void postVisit( StencilAccessNode& node );
-    void visit( StencilStatementNode& node );
-    void midVisit( StencilStatementNode& node );
-    void postVisit( StencilStatementNode& node );
+    void visit(StencilAssignmentNode& node);
+    void midVisit(StencilAssignmentNode& node);
+    void postVisit(StencilAssignmentNode& node);
 
 private:
     int indent_;

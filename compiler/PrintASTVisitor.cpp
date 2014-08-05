@@ -194,7 +194,7 @@ void PrintASTVisitor::visit(ReturnStatementNode&)
     ++indent_;
 }
 
-void PrintASTVisitor::visit(FuncCallNode& node)
+void PrintASTVisitor::visit(FuncCallLikeNode& node)
 {
     std::cout << indent() << "FuncCallNode: " << node.name() << '\n';
     ++indent_;
@@ -337,7 +337,7 @@ void PrintASTVisitor::postVisit(ReturnStatementNode&)
     --indent_;
 }
 
-void PrintASTVisitor::postVisit(FuncCallNode&)
+void PrintASTVisitor::postVisit(FuncCallLikeNode&)
 {
     --indent_;
 }
@@ -362,36 +362,20 @@ void PrintASTVisitor::postVisit(RandomAccessNode&)
     --indent_;
 }
 
-void PrintASTVisitor::visit(StencilAccessNode &node)
+void PrintASTVisitor::visit(StencilAssignmentNode& node)
 {
     throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
 }
 
-void PrintASTVisitor::midVisit(StencilAccessNode &node)
+void PrintASTVisitor::midVisit(StencilAssignmentNode& node)
 {
     throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
 }
 
-void PrintASTVisitor::postVisit(StencilAccessNode &node)
+void PrintASTVisitor::postVisit(StencilAssignmentNode& node)
 {
     throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
 }
-
-void PrintASTVisitor::visit(StencilStatementNode &node)
-{
-    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
-}
-
-void PrintASTVisitor::midVisit(StencilStatementNode &node)
-{
-    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
-}
-
-void PrintASTVisitor::postVisit(StencilStatementNode &node)
-{
-    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
-}
-
 
 
 std::string PrintASTVisitor::indent() const

@@ -28,13 +28,12 @@ class FuncStartNode;
 class FuncAssignNode;
 class FuncArgsNode;
 class ReturnStatementNode;
-class FuncCallNode;
+class FuncCallLikeNode;
 class FuncCallStatementNode;
 class LoopNode;
 class ArrayNode;
 class RandomAccessNode;
-class StencilAccessNode;
-class StencilStatementNode;
+class StencilAssignmentNode;
 
 
 class ASTVisitorInterface
@@ -85,8 +84,8 @@ public:
     virtual void postVisit(FuncArgsNode& node) = 0;
     virtual void visit(ReturnStatementNode& node) = 0;
     virtual void postVisit(ReturnStatementNode& node) = 0;
-    virtual void visit(FuncCallNode& node) = 0;
-    virtual void postVisit(FuncCallNode& node) = 0;
+    virtual void visit(FuncCallLikeNode& node) = 0;
+    virtual void postVisit(FuncCallLikeNode& node) = 0;
     virtual void visit(FuncCallStatementNode& node) = 0;
     virtual void postVisit(FuncCallStatementNode& node) = 0;
     virtual void visit(LoopNode& node) = 0;
@@ -95,13 +94,9 @@ public:
     virtual void postVisit(ArrayNode& node) = 0;
     virtual void visit(RandomAccessNode& node) = 0;
     virtual void postVisit(RandomAccessNode& node) = 0;
-
-    virtual void visit( StencilAccessNode& node ) = 0;
-    virtual void midVisit( StencilAccessNode& node ) = 0;
-    virtual void postVisit( StencilAccessNode& node ) = 0;
-    virtual void visit( StencilStatementNode& node ) = 0;
-    virtual void midVisit( StencilStatementNode& node ) = 0;
-    virtual void postVisit( StencilStatementNode& node ) = 0;
+    virtual void visit(StencilAssignmentNode& node) = 0;
+    virtual void midVisit(StencilAssignmentNode& node) = 0;
+    virtual void postVisit(StencilAssignmentNode& node) = 0;
 
 
     virtual ~ASTVisitorInterface()

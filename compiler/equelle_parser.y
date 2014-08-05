@@ -60,13 +60,10 @@
 %type <fargdecl> f_decl_args
 %type <node> number
 %type <node> array
-%type <fcall> function_call
+%type <fcalllike> f_call_like
 %type <farg> f_call_args
 %type <seq> block
-%type <node> f_startdef
 %type <loop> loop_start
-%type <stencilAccess> stencil_access
-%type <stencilStmnt> stencil_statement
 
 %start program
 %error-verbose
@@ -96,17 +93,15 @@
 
 %union{
     Node* node;
-    TypeNode*               type;
-    VarDeclNode*            vardecl;
-    FuncTypeNode*           ftype;
-    FuncArgsNode*           farg;
-    FuncArgsDeclNode*       fargdecl;
-    FuncCallNode*           fcall;
-    SequenceNode*           seq;
-    LoopNode*               loop;
-    StencilStatementNode*   stencilStmnt;
-    StencilAccessNode*      stencilAccess;
-    std::string*            str;
+    TypeNode*                      type;
+    VarDeclNode*                   vardecl;
+    FuncTypeNode*                  ftype;
+    FuncArgsNode*                  farg;
+    FuncArgsDeclNode*              fargdecl;
+    FuncCallLikeNode*              fcalllike;
+    SequenceNode*                  seq;
+    LoopNode*                      loop;
+    std::string*                   str;
 }
 
 
@@ -131,30 +126,24 @@ statement: declaration          { $$ = $1; }
          | f_declaration        { $$ = $1; }
          | assignment           { $$ = $1; }
          | comb_decl_assign     { $$ = $1; }
-         | function_call        { $$ = handleFuncCallStatement($1); }
+         | f_call_like        { $$ = handleFuncCallStatement($1); }
          | RET expr             { $$ = handleReturnStatement($2); }
          | loop_start block     { $$ = handleLoopStatement($1, $2); }
-         | stencil_statement    { $$ = $1; }
          ;
 
 declaration: ID ':' type_expr  { $$ = handleDeclaration(*($1), $3); delete $1; }
 
 f_declaration: ID ':' f_type_expr  { $$ = handleFuncDeclaration(*($1), $3); delete $1; }
-
+			
 assignment: ID '=' expr       { $$ = handleAssignment(*($1), $3); delete $1; }
-          | f_startdef block  { $$ = handleFuncAssignment($1, $2); }
+          | f_call_like '=' expr { /*$$ = handleStencilAssignment(*($1), $3, $6); delete $1;*/ }
+          | f_call_like '=' block  { /*$$ = handleFuncAssignment(handleFuncStart(*($1), $3), $6); delete $1;*/ }
           ;
-
-stencil_statement: stencil_access '=' expr { $$ = handleStencilStatement($1, $3); };
-
-stencil_access: ID  DOUBLELB f_call_args DOUBLERB { $$ = handleStencilAccess( *($1), $3 ); delete $1; };
-
-f_startdef: ID '(' f_call_args ')' '='       { $$ = handleFuncStart(*($1), $3); delete $1; }
 
 comb_decl_assign: ID ':' type_expr '=' expr  { $$ = handleDeclarationAssign(*($1), $3, $5); delete $1; }
 
 expr: number              { $$ = $1; }
-    | function_call       { $$ = $1; }
+    | f_call_like       { $$ = $1; }
     | expr '[' INT ']'    { $$ = handleRandomAccess($1, intFromString(*($3))); delete $3; }
     | '(' expr ')'        { $$ = $2; }
     | '|' expr '|'        { $$ = handleNorm($2); }
@@ -173,8 +162,7 @@ expr: number              { $$ = $1; }
     | expr ON expr        { $$ = handleOn($1, $3); }
     | expr EXTEND expr    { $$ = handleExtend($1, $3); }
     | ID                  { $$ = handleIdentifier(*($1)); delete $1; }
-    | STRING_LITERAL      { $$ = handleString(*($1)); delete $1; }      
-    | stencil_access      { $$ = $1; }
+    | STRING_LITERAL      { $$ = handleString(*($1)); delete $1; }
     | array               { $$ = $1; }
     ;
 
@@ -211,13 +199,9 @@ number: INT                     { $$ = handleNumber(numFromString(*($1))); delet
 
 array: '[' f_call_args ']'      { $$ = handleArray($2); }
 
-function_call: BUILTIN '(' f_call_args ')'  { $$ = handleFuncCall(*($1), $3); delete $1; }
-             | ID '(' f_call_args ')'       { $$ = handleFuncCall(*($1), $3); delete $1; }
+f_call_like: BUILTIN '(' f_call_args ')'  { $$ = handleFunctionCallLike(*($1), $3); delete $1; }
+             | ID '(' f_call_args ')'       { $$ = handleFunctionCallLike(*($1), $3); delete $1; }
              ;
-
-
-
-
 
 f_call_args: f_call_args ',' expr     { $$ = $1; $$->addArg($3); }
            | expr                     { $$ = new FuncArgsNode($1); }

@@ -726,43 +726,96 @@ private:
 };
 
 
-
-class FuncCallNode : public Node
+/**
+ * This class handles all types of statements that look like function calls.
+ * Right now, this might be
+ * a stencil access: u(i, j),
+ * or a function call: computeResidual(u)
+ * In addition, it might be a function definition, or stencil assignment:
+ * u(i, j) = 5.0
+ * computeResidual(u) = { ... }
+ */
+class FuncCallLikeNode : public Node
 {
 public:
-    FuncCallNode(const std::string& funcname,
-                 FuncArgsNode* funcargs,
-                 const int dynamic_subset_return = NotApplicable)
-        : funcname_(funcname), funcargs_(funcargs), dsr_(dynamic_subset_return)
-    {}
-    virtual ~FuncCallNode()
+	static FuncCallLikeNode* createFuncCall(const std::string& funcname,
+            FuncArgsNode* funcargs,
+            const int dynamic_subset_return = NotApplicable)
+	{
+		return new FuncCallLikeNode(funcname, funcargs, dynamic_subset_return);
+	}
+
+	static FuncCallLikeNode* createStencilAccess(const std::string& varname,
+            FuncArgsNode* args)
+	{
+		return new FuncCallLikeNode(varname, args);
+	}
+
+    virtual ~FuncCallLikeNode()
     {
         delete funcargs_;
     }
+
     EquelleType type() const
     {
-        EquelleType t = SymbolTable::getFunction(funcname_).returnType(funcargs_->argumentTypes());
-        if (dsr_ != NotApplicable) {
-            assert(t.isEntityCollection());
-            return EquelleType(t.basicType(), Collection, dsr_, t.subsetOf(), t.isMutable(), t.isDomain());
-        } else {
-            return t;
-        }
+    	if (SymbolTable::isFunctionDeclared(funcname_)) {
+			EquelleType t = SymbolTable::getFunction(funcname_).returnType(funcargs_->argumentTypes());
+			if (dsr_ != NotApplicable) {
+				assert(t.isEntityCollection());
+				return EquelleType(t.basicType(), Collection, dsr_, t.subsetOf(), t.isMutable(), t.isDomain());
+			} else {
+				return t;
+			}
+    	}
+    	else {
+    		// All stencils are at this time scalars
+    		// We do not want mutability of a variable to be passed on to
+    		// expressions involving that variable.
+    		EquelleType et = SymbolTable::variableType(funcname_);
+    		if (et.isMutable()) {
+    			et.setMutable(false);
+    		}
+    		return et;
+    	}
     }
+
     const std::string& name() const
     {
         return funcname_;
     }
+
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
         funcargs_->accept(visitor);
         visitor.postVisit(*this);
     }
+
 private:
+    /**
+     * Constructor for functions
+     */
+    FuncCallLikeNode(const std::string& funcname,
+                 FuncArgsNode* funcargs,
+                 const int dynamic_subset_return)
+        : funcname_(funcname), funcargs_(funcargs),
+          dsr_(dynamic_subset_return), is_function_(true)
+    {}
+
+	/**
+	 * Constructor for stencil access
+	 */
+    FuncCallLikeNode(const std::string& varname,
+            FuncArgsNode* args)
+        : funcname_(varname), funcargs_(args),
+          dsr_(NotApplicable), is_function_(false)
+    {}
+
+
     std::string funcname_;
     FuncArgsNode* funcargs_;
     int dsr_;
+    bool is_function_;
 };
 
 
@@ -770,7 +823,7 @@ private:
 class FuncCallStatementNode : public Node
 {
 public:
-    FuncCallStatementNode(FuncCallNode* fcall)
+    FuncCallStatementNode(FuncCallLikeNode* fcall)
     : fcall_(fcall)
     {}
     virtual ~FuncCallStatementNode()
@@ -784,7 +837,7 @@ public:
         visitor.postVisit(*this);
     }
 private:
-    FuncCallNode* fcall_;
+    FuncCallLikeNode* fcall_;
 };
 
 
@@ -916,84 +969,28 @@ private:
     int index_;
 };
 
-
-class StencilAccessNode : public Node
+class StencilAssignmentNode : public Node
 {
 public:
-    StencilAccessNode( const std::string grid_variable,
-                       FuncArgsNode* expr_list )
-        : grid_variable( grid_variable),
-          expr_list( expr_list )
-    {
+	StencilAssignmentNode(const std::string& name, FuncArgsNode* args, Node* expr)
+	{
+		lhs = FuncCallLikeNode::createStencilAccess(name, args);
+		rhs = expr;
+	}
 
-    }
-
-    const std::string& name() const
+    EquelleType type() const
     {
-        return grid_variable;
+    	return rhs->type();
     }
 
     virtual void accept(ASTVisitorInterface& visitor)
     {
-        visitor.visit(*this);
-        expr_list->accept( visitor );
-        visitor.postVisit( *this );
+    	visitor.visit(*this);
+    	visitor.visit(*this);
     }
-	// All stencils are at this time scalars
-	EquelleType type() const
-	{
-		// We do not want mutability of a variable to be passed on to
-		// expressions involving that variable.
-		EquelleType et = SymbolTable::variableType(grid_variable);
-		if (et.isMutable()) {
-			et.setMutable(false);
-		}
-		return et;
-	}
-    std::string grid_variable;
-    FuncArgsNode* expr_list;
-};
-
-class StencilStatementNode : public Node
-{
-public:
-    StencilStatementNode( StencilAccessNode* lhs, Node* node ) : lhs(lhs), expr( node ) {
-    }
-
-    const std::string& name() const
-    {
-        return lhs->name();
-    }
-
-	// All stencils are at this time scalars
-	EquelleType type() const
-	{
-		// We do not want mutability of a variable to be passed on to
-		// expressions involving that variable.
-		EquelleType et = SymbolTable::variableType(name());
-		if (et.isMutable()) {
-			et.setMutable(false);
-		}
-		return et;
-	}
-
-    virtual void accept(ASTVisitorInterface& visitor)
-    {
-        visitor.visit(*this);
-        lhs->accept( visitor );
-        visitor.midVisit( *this );
-        expr->accept(visitor);
-        visitor.postVisit(*this);
-    }
-
-    virtual ~StencilStatementNode() {
-        delete lhs;
-        delete expr;
-    }
-
 private:
-    StencilAccessNode* lhs;
-    Node* expr;
+    FuncCallLikeNode* lhs;
+	Node* rhs;
 };
 
 

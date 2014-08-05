@@ -75,8 +75,6 @@ Mutable          { TOK(MUTABLE); }
 "=="             { TOK(EQ); }
 "!="             { TOK(NEQ); }
 "->"             { TOK(RET); }
-"[["             { TOK(DOUBLELB); }
-"]]"             { TOK(DOUBLERB); }
 {SINGLES}        { TOKS(yytext[0]); }
 \n               { TOK(EOL); }
 {LINECONT}

@@ -128,8 +128,8 @@ Node* handleFuncDeclaration(const std::string& name, FuncTypeNode* ftype)
 
 Node* handleFuncStart(const std::string& name, Node* funcargs)
 {
-    SymbolTable::setCurrentFunction(name);
-    return new FuncStartNode(name, funcargs);
+	SymbolTable::setCurrentFunction(name);
+	return new FuncStartNode(name, funcargs);
 }
 
 
@@ -217,34 +217,60 @@ FuncTypeNode* handleFuncType(FuncArgsDeclNode* argtypes, TypeNode* rtype)
 
 
 
-FuncCallNode* handleFuncCall(const std::string& name, FuncArgsNode* args)
+FuncCallLikeNode* handleFunctionCallLike(const std::string& name, FuncArgsNode* args)
 {
-    const Function& f = SymbolTable::getFunction(name);
-    // Check function call arguments.
-    const auto argtypes = args->argumentTypes();
-    if (argtypes.size() != f.functionType().arguments().size()) {
-        std::string err_msg = "wrong number of arguments when calling function ";
-        err_msg += name;
-        yyerror(err_msg.c_str());
-    }
-    // At the moment, we do not check function argument types.
-    // If the function returns a new dynamically created domain,
-    // we must declare it (anonymously for now).
-    const EquelleType rtype = f.returnType(argtypes);
-    if (rtype.isDomain()) {
-        const int dynsubret = f.functionType().dynamicSubsetReturn(argtypes);
-        if (dynsubret != NotApplicable) {
-            // Create a new domain.
-            const int gm = SymbolTable::declareNewEntitySet("AnonymousEntitySet", dynsubret);
-            return new FuncCallNode(name, args, gm);
-        }
-    }
-    return new FuncCallNode(name, args);
+	if (SymbolTable::isFunctionDeclared(name)) {
+		const Function& f = SymbolTable::getFunction(name);
+		// Check function call arguments.
+		const auto argtypes = args->argumentTypes();
+		if (argtypes.size() != f.functionType().arguments().size()) {
+			std::string err_msg = "wrong number of arguments when calling function ";
+			err_msg += name;
+			yyerror(err_msg.c_str());
+		}
+		// At the moment, we do not check function argument types.
+		// If the function returns a new dynamically created domain,
+		// we must declare it (anonymously for now).
+		const EquelleType rtype = f.returnType(argtypes);
+		if (rtype.isDomain()) {
+			const int dynsubret = f.functionType().dynamicSubsetReturn(argtypes);
+			if (dynsubret != NotApplicable) {
+				// Create a new domain.
+				const int gm = SymbolTable::declareNewEntitySet("AnonymousEntitySet", dynsubret);
+				return FuncCallLikeNode::createFuncCall(name, args, gm);
+			}
+		}
+		return FuncCallLikeNode::createFuncCall(name, args);
+	}
+	else {
+		if (!SymbolTable::isVariableDeclared(name)) {
+			std::string err_msg = "Could not find the stencil variable " + name;
+			yyerror(err_msg.c_str());
+		}
+
+		auto argtypes = args->argumentTypes();
+		for (int i=0; i<argtypes.size(); ++i) {
+			if (!isStencilType(argtypes[i].basicType())) {
+				std::stringstream err_msg;
+				err_msg << "Cannot access a stencil with a non-stencil index in variable \""
+						<< name << "\"" << std::endl;
+				yyerror(err_msg.str().c_str());
+			}
+			else if (argtypes[i].basicType() != StencilI + i) {
+				std::stringstream err_msg;
+				err_msg << "Got index " << basicTypeString(argtypes[i].basicType())
+						<< " but expected " << basicTypeString(BasicType(StencilI + i))
+						<< " for variable \"" << name << "\"" << std::endl;
+				yyerror(err_msg.str().c_str());
+			}
+		}
+		return FuncCallLikeNode::createStencilAccess(name, args);
+	}
 }
 
 
 
-FuncCallStatementNode* handleFuncCallStatement(FuncCallNode* fcall)
+FuncCallStatementNode* handleFuncCallStatement(FuncCallLikeNode* fcall)
 {
     return new FuncCallStatementNode(fcall);
 }
@@ -599,43 +625,8 @@ RandomAccessNode* handleRandomAccess(Node* expr, const int index)
     return new RandomAccessNode(expr, index);
 }
 
-
-
-StencilAccessNode *handleStencilAccess(const std::string grid_variable,
-                                       FuncArgsNode* expr_list)
+StencilAssignmentNode* handleStencilAssignment(const std::string& name, FuncArgsNode* funcargs, Node* expr)
 {
-	if (!SymbolTable::isVariableDeclared(grid_variable)) {
-		std::string err_msg = "Could not find the variable " + grid_variable;
-		yyerror(err_msg.c_str());
-	}
-
-	auto argtypes = expr_list->argumentTypes();
-	for (int i=0; i<argtypes.size(); ++i) {
-		if (!isStencilType(argtypes[i].basicType())) {
-			std::stringstream err_msg;
-			err_msg << "Cannot access a stencil with a non-stencil index in variable \""
-					<< grid_variable << "\"" << std::endl;
-			yyerror(err_msg.str().c_str());
-		}
-		else if (argtypes[i].basicType() != StencilI + i) {
-			std::stringstream err_msg;
-			err_msg << "Got index " << basicTypeString(argtypes[i].basicType())
-					<< " but expected " << basicTypeString(BasicType(StencilI + i))
-					<< " for variable \"" << grid_variable << "\"" << std::endl;
-			yyerror(err_msg.str().c_str());
-			yyerror(err_msg.str().c_str());
-		}
-	}
-    return new StencilAccessNode( grid_variable, expr_list );
+	return new StencilAssignmentNode(name, funcargs, expr);
 }
 
-
-StencilStatementNode *handleStencilStatement( StencilAccessNode *lhsStencilAccess,
-                                              Node *expr)
-{
-	if (!SymbolTable::isVariableDeclared(lhsStencilAccess->name())) {
-		std::string err_msg = "Could not find the variable " + lhsStencilAccess->name();
-		yyerror(err_msg.c_str());
-	}
-	return new StencilStatementNode( lhsStencilAccess, expr );
-}
