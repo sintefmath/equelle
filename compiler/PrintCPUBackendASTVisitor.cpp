@@ -379,7 +379,7 @@ void PrintCPUBackendASTVisitor::postVisit(ReturnStatementNode&)
     endl();
 }
 
-void PrintCPUBackendASTVisitor::visit(FuncCallLikeNode& node)
+void PrintCPUBackendASTVisitor::visit(FuncCallNode& node)
 {
 	if (SymbolTable::isFunctionDeclared(node.name())) {
 		const std::string fname = node.name();
@@ -404,7 +404,7 @@ void PrintCPUBackendASTVisitor::visit(FuncCallLikeNode& node)
 	}
 }
 
-void PrintCPUBackendASTVisitor::postVisit(FuncCallLikeNode&)
+void PrintCPUBackendASTVisitor::postVisit(FuncCallNode&)
 {
     std::cout << ')';
 }

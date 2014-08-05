@@ -60,6 +60,7 @@
 %type <fargdecl> f_decl_args
 %type <node> number
 %type <node> array
+%type <fcalllike> f_assign_start
 %type <fcalllike> f_call_like
 %type <farg> f_call_args
 %type <seq> block
@@ -119,14 +120,14 @@ line: statement EOL             { $$ = $1; }
     | EOL                       { $$ = nullptr; }
     ;
 
-block: '{' EOL lineblock '}'     { $$ = handleBlock($3); }
-     | EOL '{' EOL lineblock '}' { $$ = handleBlock($4); }
+block: '{' EOL lineblock '}'     { $$ = $3; }
+     | EOL '{' EOL lineblock '}' { $$ = $4; }
 
 statement: declaration          { $$ = $1; }
          | f_declaration        { $$ = $1; }
          | assignment           { $$ = $1; }
          | comb_decl_assign     { $$ = $1; }
-         | f_call_like        { $$ = handleFuncCallStatement($1); }
+         | f_call_like          { $$ = handleFuncCallStatement($1); }
          | RET expr             { $$ = handleReturnStatement($2); }
          | loop_start block     { $$ = handleLoopStatement($1, $2); }
          ;
@@ -136,14 +137,14 @@ declaration: ID ':' type_expr  { $$ = handleDeclaration(*($1), $3); delete $1; }
 f_declaration: ID ':' f_type_expr  { $$ = handleFuncDeclaration(*($1), $3); delete $1; }
 			
 assignment: ID '=' expr       { $$ = handleAssignment(*($1), $3); delete $1; }
-          | f_call_like '=' expr { /*$$ = handleStencilAssignment(*($1), $3, $6); delete $1;*/ }
-          | f_call_like '=' block  { /*$$ = handleFuncAssignment(handleFuncStart(*($1), $3), $6); delete $1;*/ }
+          | f_assign_start expr { $$ = handleStencilAssignment($1, $2); }
+          | f_assign_start block  { $$ = handleFuncAssignment($1, $2); }
           ;
 
 comb_decl_assign: ID ':' type_expr '=' expr  { $$ = handleDeclarationAssign(*($1), $3, $5); delete $1; }
 
 expr: number              { $$ = $1; }
-    | f_call_like       { $$ = $1; }
+    | f_call_like         { $$ = $1; }
     | expr '[' INT ']'    { $$ = handleRandomAccess($1, intFromString(*($3))); delete $3; }
     | '(' expr ')'        { $$ = $2; }
     | '|' expr '|'        { $$ = handleNorm($2); }
@@ -199,8 +200,10 @@ number: INT                     { $$ = handleNumber(numFromString(*($1))); delet
 
 array: '[' f_call_args ']'      { $$ = handleArray($2); }
 
-f_call_like: BUILTIN '(' f_call_args ')'  { $$ = handleFunctionCallLike(*($1), $3); delete $1; }
-             | ID '(' f_call_args ')'       { $$ = handleFunctionCallLike(*($1), $3); delete $1; }
+f_assign_start: ID '(' f_call_args ')' '='    { $$ = handleFuncAssignmentStart(*($1), $3); delete $1; }
+
+f_call_like: BUILTIN '(' f_call_args ')'  { $$ = handleFuncCallLike(*($1), $3); delete $1; }
+             | ID '(' f_call_args ')'     { $$ = handleFuncCallLike(*($1), $3); delete $1; }
              ;
 
 f_call_args: f_call_args ',' expr     { $$ = $1; $$->addArg($3); }

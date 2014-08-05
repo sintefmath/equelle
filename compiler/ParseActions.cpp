@@ -9,6 +9,7 @@
 #include "ParseActions.hpp"
 #include <sstream>
 #include <iostream>
+#include <typeinfo>
 
 
 
@@ -126,14 +127,6 @@ Node* handleFuncDeclaration(const std::string& name, FuncTypeNode* ftype)
 
 
 
-Node* handleFuncStart(const std::string& name, Node* funcargs)
-{
-	SymbolTable::setCurrentFunction(name);
-	return new FuncStartNode(name, funcargs);
-}
-
-
-
 void handleFuncStartType()
 {
     SymbolTable::declareFunction("TemporaryFunction");
@@ -141,19 +134,23 @@ void handleFuncStartType()
 }
 
 
-
-SequenceNode* handleBlock(SequenceNode* block)
+FuncStartNode* handleFuncAssignmentStart(const std::string& name, FuncArgsNode* args)
 {
-    // This is called after the block AST has been constructed,
-    // so we should switch back to Main scope.
-    SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
-    return block;
+	if (SymbolTable::isFunctionDeclared(name)) {
+		//Set the scope name for the following block (the function itself)
+		//Will be "undone" in handleFuncAssignment
+		SymbolTable::setCurrentFunction(name);
+	}
+    return new FuncStartNode(name, args);
 }
-
 
 
 FuncAssignNode* handleFuncAssignment(Node* funcstart, SequenceNode* fbody)
 {
+    // This is called after the block AST has been constructed,
+    // so we should switch back to Main scope.
+	// See also handleFuncAssignmentStart
+    SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
     return new FuncAssignNode(funcstart, fbody);
 }
 
@@ -217,61 +214,81 @@ FuncTypeNode* handleFuncType(FuncArgsDeclNode* argtypes, TypeNode* rtype)
 
 
 
-FuncCallLikeNode* handleFunctionCallLike(const std::string& name, FuncArgsNode* args)
+StencilNode* handleStencilAccess(const std::string& name, FuncArgsNode* args) {
+	if (!SymbolTable::isVariableDeclared(name)) {
+		std::string err_msg = "Could not find the stencil variable " + name;
+		yyerror(err_msg.c_str());
+	}
+
+	auto argtypes = args->argumentTypes();
+	for (int i=0; i<argtypes.size(); ++i) {
+		if (!isStencilType(argtypes[i].basicType())) {
+			std::stringstream err_msg;
+			err_msg << "Cannot access a stencil with a non-stencil index in variable \""
+					<< name << "\"" << std::endl;
+			yyerror(err_msg.str().c_str());
+		}
+		else if (argtypes[i].basicType() != StencilI + i) {
+			std::stringstream err_msg;
+			err_msg << "Got index " << basicTypeString(argtypes[i].basicType())
+					<< " but expected " << basicTypeString(BasicType(StencilI + i))
+					<< " for variable \"" << name << "\"" << std::endl;
+			yyerror(err_msg.str().c_str());
+		}
+	}
+
+	return new StencilNode(name, args);
+}
+
+FuncCallNode* handleFuncCall(const std::string& name, FuncArgsNode* args) {
+	const Function& f = SymbolTable::getFunction(name);
+	// Check function call arguments.
+	const auto argtypes = args->argumentTypes();
+	if (argtypes.size() != f.functionType().arguments().size()) {
+		std::string err_msg = "wrong number of arguments when calling function ";
+		err_msg += name;
+		yyerror(err_msg.c_str());
+	}
+	// At the moment, we do not check function argument types.
+	// If the function returns a new dynamically created domain,
+	// we must declare it (anonymously for now).
+	const EquelleType rtype = f.returnType(argtypes);
+	if (rtype.isDomain()) {
+		const int dynsubret = f.functionType().dynamicSubsetReturn(argtypes);
+		if (dynsubret != NotApplicable) {
+			// Create a new domain.
+			const int gm = SymbolTable::declareNewEntitySet("AnonymousEntitySet", dynsubret);
+			return new FuncCallNode(name, args, gm);
+		}
+	}
+	return new FuncCallNode(name, args);
+}
+
+FuncCallLikeNode* handleFuncCallLike(const std::string& name, FuncArgsNode* args)
 {
 	if (SymbolTable::isFunctionDeclared(name)) {
-		const Function& f = SymbolTable::getFunction(name);
-		// Check function call arguments.
-		const auto argtypes = args->argumentTypes();
-		if (argtypes.size() != f.functionType().arguments().size()) {
-			std::string err_msg = "wrong number of arguments when calling function ";
-			err_msg += name;
-			yyerror(err_msg.c_str());
-		}
-		// At the moment, we do not check function argument types.
-		// If the function returns a new dynamically created domain,
-		// we must declare it (anonymously for now).
-		const EquelleType rtype = f.returnType(argtypes);
-		if (rtype.isDomain()) {
-			const int dynsubret = f.functionType().dynamicSubsetReturn(argtypes);
-			if (dynsubret != NotApplicable) {
-				// Create a new domain.
-				const int gm = SymbolTable::declareNewEntitySet("AnonymousEntitySet", dynsubret);
-				return FuncCallLikeNode::createFuncCall(name, args, gm);
-			}
-		}
-		return FuncCallLikeNode::createFuncCall(name, args);
+		return handleFuncCall(name, args);
+	}
+	else if (SymbolTable::isVariableDeclared(name)) {
+		return handleStencilAccess(name, args);
 	}
 	else {
-		if (!SymbolTable::isVariableDeclared(name)) {
-			std::string err_msg = "Could not find the stencil variable " + name;
-			yyerror(err_msg.c_str());
-		}
-
-		auto argtypes = args->argumentTypes();
-		for (int i=0; i<argtypes.size(); ++i) {
-			if (!isStencilType(argtypes[i].basicType())) {
-				std::stringstream err_msg;
-				err_msg << "Cannot access a stencil with a non-stencil index in variable \""
-						<< name << "\"" << std::endl;
-				yyerror(err_msg.str().c_str());
-			}
-			else if (argtypes[i].basicType() != StencilI + i) {
-				std::stringstream err_msg;
-				err_msg << "Got index " << basicTypeString(argtypes[i].basicType())
-						<< " but expected " << basicTypeString(BasicType(StencilI + i))
-						<< " for variable \"" << name << "\"" << std::endl;
-				yyerror(err_msg.str().c_str());
-			}
-		}
-		return FuncCallLikeNode::createStencilAccess(name, args);
+		std::string err_msg = "Could not find the stencil variable or function " + name;
+		yyerror(err_msg.c_str());
+		return NULL;
 	}
 }
 
-
-
-FuncCallStatementNode* handleFuncCallStatement(FuncCallLikeNode* fcall)
+FuncCallStatementNode* handleFuncCallStatement(FuncCallLikeNode* fcall_like)
 {
+	FuncCallNode* fcall = NULL;
+	try {
+		fcall = dynamic_cast<FuncCallNode*>(fcall_like);
+	}
+	catch(const std::bad_cast& e) {
+		std::string err_msg = "Internal error: The function \"" + fcall_like->name() + "\" does not appear to be properly defined";
+		yyerror(err_msg.c_str());
+	}
     return new FuncCallStatementNode(fcall);
 }
 
@@ -625,8 +642,16 @@ RandomAccessNode* handleRandomAccess(Node* expr, const int index)
     return new RandomAccessNode(expr, index);
 }
 
-StencilAssignmentNode* handleStencilAssignment(const std::string& name, FuncArgsNode* funcargs, Node* expr)
+StencilAssignmentNode* handleStencilAssignment(FuncCallLikeNode* lhs, Node* rhs)
 {
-	return new StencilAssignmentNode(name, funcargs, expr);
+	StencilNode* stencil = NULL;
+	try {
+		stencil = dynamic_cast<StencilNode*>(lhs);
+	}
+	catch(const std::bad_cast& e) {
+		std::string err_msg = "Internal error: The stencil \"" + lhs->name() + "\" does not appear to be properly defined";
+		yyerror(err_msg.c_str());
+	}
+	return new StencilAssignmentNode(stencil, rhs);
 }
 

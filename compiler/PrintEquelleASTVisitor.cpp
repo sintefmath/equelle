@@ -291,12 +291,12 @@ void PrintEquelleASTVisitor::postVisit(ReturnStatementNode&)
     endl();
 }
 
-void PrintEquelleASTVisitor::visit(FuncCallLikeNode& node)
+void PrintEquelleASTVisitor::visit(FuncCallNode& node)
 {
     std::cout << node.name() << '(';
 }
 
-void PrintEquelleASTVisitor::postVisit(FuncCallLikeNode&)
+void PrintEquelleASTVisitor::postVisit(FuncCallNode&)
 {
     std::cout << ')';
 }

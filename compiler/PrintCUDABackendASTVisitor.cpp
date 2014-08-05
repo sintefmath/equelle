@@ -379,7 +379,7 @@ void PrintCUDABackendASTVisitor::postVisit(ReturnStatementNode&)
     endl();
 }
 
-void PrintCUDABackendASTVisitor::visit(FuncCallLikeNode& node)
+void PrintCUDABackendASTVisitor::visit(FuncCallNode& node)
 {
     const std::string fname = node.name();
     const char first = fname[0];
@@ -399,7 +399,7 @@ void PrintCUDABackendASTVisitor::visit(FuncCallLikeNode& node)
     std::cout << cppname << '(';
 }
 
-void PrintCUDABackendASTVisitor::postVisit(FuncCallLikeNode&)
+void PrintCUDABackendASTVisitor::postVisit(FuncCallNode&)
 {
     std::cout << ')';
 }

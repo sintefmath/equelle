@@ -332,7 +332,7 @@ void PrintMRSTBackendASTVisitor::postVisit(ReturnStatementNode&)
     endl();
 }
 
-void PrintMRSTBackendASTVisitor::visit(FuncCallLikeNode& node)
+void PrintMRSTBackendASTVisitor::visit(FuncCallNode& node)
 {
     const std::string fname = node.name();
     const char first = fname[0];
@@ -345,7 +345,7 @@ void PrintMRSTBackendASTVisitor::visit(FuncCallLikeNode& node)
     std::cout << mname;
 }
 
-void PrintMRSTBackendASTVisitor::postVisit(FuncCallLikeNode&)
+void PrintMRSTBackendASTVisitor::postVisit(FuncCallNode&)
 {
 }
 

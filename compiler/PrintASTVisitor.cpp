@@ -194,7 +194,7 @@ void PrintASTVisitor::visit(ReturnStatementNode&)
     ++indent_;
 }
 
-void PrintASTVisitor::visit(FuncCallLikeNode& node)
+void PrintASTVisitor::visit(FuncCallNode& node)
 {
     std::cout << indent() << "FuncCallNode: " << node.name() << '\n';
     ++indent_;
@@ -337,7 +337,7 @@ void PrintASTVisitor::postVisit(ReturnStatementNode&)
     --indent_;
 }
 
-void PrintASTVisitor::postVisit(FuncCallLikeNode&)
+void PrintASTVisitor::postVisit(FuncCallNode&)
 {
     --indent_;
 }

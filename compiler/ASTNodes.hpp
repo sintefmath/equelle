@@ -593,34 +593,6 @@ private:
 
 
 
-class FuncStartNode : public Node
-{
-public:
-    FuncStartNode(std::string funcname, Node* funcargs)
-        : funcname_(funcname), funcargs_(funcargs)
-    {
-    }
-    virtual ~FuncStartNode()
-    {
-        delete funcargs_;
-    }
-    const std::string& name() const
-    {
-        return funcname_;
-    }
-    virtual void accept(ASTVisitorInterface& visitor)
-    {
-        SymbolTable::setCurrentFunction(funcname_);
-        visitor.visit(*this);
-        funcargs_->accept(visitor);
-        visitor.postVisit(*this);
-    }
-private:
-    std::string funcname_;
-    Node* funcargs_;
-};
-
-
 
 class FuncAssignNode : public Node
 {
@@ -738,106 +710,169 @@ private:
 class FuncCallLikeNode : public Node
 {
 public:
-	static FuncCallLikeNode* createFuncCall(const std::string& funcname,
+	virtual const std::string& name() const = 0;
+	virtual const FuncArgsNode* args() const = 0;
+};
+
+class FuncStartNode : public FuncCallLikeNode
+{
+public:
+    FuncStartNode(std::string funcname, FuncArgsNode* funcargs)
+        : funcname_(funcname), funcargs_(funcargs)
+    {
+    }
+    virtual ~FuncStartNode()
+    {
+        delete funcargs_;
+    }
+    const std::string& name() const
+    {
+        return funcname_;
+    }
+    virtual const FuncArgsNode* args() const
+    {
+    	return funcargs_;
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        SymbolTable::setCurrentFunction(funcname_);
+        visitor.visit(*this);
+        funcargs_->accept(visitor);
+        visitor.postVisit(*this);
+    }
+private:
+    std::string funcname_;
+    FuncArgsNode* funcargs_;
+};
+
+
+class StencilNode : public FuncCallLikeNode
+{
+public:
+	StencilNode(const std::string& varname,
+            FuncArgsNode* args)
+        : varname_(varname), args_(args)
+    {}
+
+    virtual ~StencilNode()
+    {
+        delete args_;
+    }
+
+    EquelleType type() const
+    {
+		// All stencils are at this time scalars
+		// We do not want mutability of a variable to be passed on to
+		// expressions involving that variable.
+		EquelleType et = SymbolTable::variableType(varname_);
+		if (et.isMutable()) {
+			et.setMutable(false);
+		}
+		return et;
+    }
+
+    virtual const std::string& name() const
+    {
+        return varname_;
+    }
+
+    virtual const FuncArgsNode* args() const
+    {
+    	return args_;
+    }
+
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+    	/*FIXME:!
+        visitor.visit(*this);
+        args_->accept(visitor);
+        visitor.postVisit(*this);
+        */
+    }
+
+private:
+    std::string varname_;
+    FuncArgsNode* args_;
+};
+
+class FuncCallNode : public FuncCallLikeNode
+{
+public:
+	FuncCallNode(const std::string& funcname,
             FuncArgsNode* funcargs,
             const int dynamic_subset_return = NotApplicable)
-	{
-		return new FuncCallLikeNode(funcname, funcargs, dynamic_subset_return);
-	}
+    	: funcname_(funcname), funcargs_(funcargs),
+          dsr_(dynamic_subset_return)
+    {}
 
-	static FuncCallLikeNode* createStencilAccess(const std::string& varname,
-            FuncArgsNode* args)
-	{
-		return new FuncCallLikeNode(varname, args);
-	}
-
-    virtual ~FuncCallLikeNode()
+    virtual ~FuncCallNode()
     {
         delete funcargs_;
     }
 
     EquelleType type() const
     {
-    	if (SymbolTable::isFunctionDeclared(funcname_)) {
-			EquelleType t = SymbolTable::getFunction(funcname_).returnType(funcargs_->argumentTypes());
-			if (dsr_ != NotApplicable) {
-				assert(t.isEntityCollection());
-				return EquelleType(t.basicType(), Collection, dsr_, t.subsetOf(), t.isMutable(), t.isDomain());
-			} else {
-				return t;
-			}
-    	}
-    	else {
-    		// All stencils are at this time scalars
-    		// We do not want mutability of a variable to be passed on to
-    		// expressions involving that variable.
-    		EquelleType et = SymbolTable::variableType(funcname_);
-    		if (et.isMutable()) {
-    			et.setMutable(false);
-    		}
-    		return et;
-    	}
+		EquelleType t = SymbolTable::getFunction(funcname_).returnType(funcargs_->argumentTypes());
+		if (dsr_ != NotApplicable) {
+			assert(t.isEntityCollection());
+			return EquelleType(t.basicType(), Collection, dsr_, t.subsetOf(), t.isMutable(), t.isDomain());
+		} else {
+			return t;
+		}
     }
 
     const std::string& name() const
     {
-        return funcname_;
+    	return funcname_;
+    }
+
+    virtual const FuncArgsNode* args() const
+    {
+    	return funcargs_;
     }
 
     virtual void accept(ASTVisitorInterface& visitor)
     {
+    	/**FIXME!
         visitor.visit(*this);
         funcargs_->accept(visitor);
         visitor.postVisit(*this);
+        */
     }
 
 private:
-    /**
-     * Constructor for functions
-     */
-    FuncCallLikeNode(const std::string& funcname,
-                 FuncArgsNode* funcargs,
-                 const int dynamic_subset_return)
-        : funcname_(funcname), funcargs_(funcargs),
-          dsr_(dynamic_subset_return), is_function_(true)
-    {}
-
-	/**
-	 * Constructor for stencil access
-	 */
-    FuncCallLikeNode(const std::string& varname,
-            FuncArgsNode* args)
-        : funcname_(varname), funcargs_(args),
-          dsr_(NotApplicable), is_function_(false)
-    {}
-
-
     std::string funcname_;
     FuncArgsNode* funcargs_;
     int dsr_;
-    bool is_function_;
 };
-
 
 
 class FuncCallStatementNode : public Node
 {
 public:
-    FuncCallStatementNode(FuncCallLikeNode* fcall)
-    : fcall_(fcall)
+    FuncCallStatementNode(FuncCallNode* func_call)
+    	: func_call_(func_call)
     {}
+
     virtual ~FuncCallStatementNode()
     {
-        delete fcall_;
+        delete func_call_;
     }
+
+    EquelleType type() const
+    {
+    	return func_call_->type();
+    }
+
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
-        fcall_->accept(visitor);
+        func_call_->accept(visitor);
         visitor.postVisit(*this);
     }
+
 private:
-    FuncCallLikeNode* fcall_;
+    FuncCallNode* func_call_;
 };
 
 
@@ -972,25 +1007,34 @@ private:
 class StencilAssignmentNode : public Node
 {
 public:
-	StencilAssignmentNode(const std::string& name, FuncArgsNode* args, Node* expr)
-	{
-		lhs = FuncCallLikeNode::createStencilAccess(name, args);
-		rhs = expr;
+	StencilAssignmentNode(StencilNode* lhs, Node* rhs)
+		: lhs_(lhs), rhs_(rhs)
+	{}
+
+	virtual ~StencilAssignmentNode() {
+		delete lhs_;
+		delete rhs_;
 	}
 
     EquelleType type() const
     {
-    	return rhs->type();
+    	return rhs_->type();
     }
 
     virtual void accept(ASTVisitorInterface& visitor)
     {
+    	//FIXME!
+    	/*
     	visitor.visit(*this);
-    	visitor.visit(*this);
+    	lhs->accept(visitor);
+    	visitor.midvisit(*this);
+    	rhs->accept(visitor);
+    	visitor.postvisit(*this);
+    	*/
     }
 private:
-    FuncCallLikeNode* lhs;
-	Node* rhs;
+    StencilNode* lhs_;
+	Node* rhs_;
 };
 
 

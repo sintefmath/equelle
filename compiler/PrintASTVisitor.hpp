@@ -60,8 +60,8 @@ public:
     void postVisit(FuncArgsNode& node);
     void visit(ReturnStatementNode& node);
     void postVisit(ReturnStatementNode& node);
-    void visit(FuncCallLikeNode& node);
-    void postVisit(FuncCallLikeNode& node);
+    void visit(FuncCallNode& node);
+    void postVisit(FuncCallNode& node);
     void visit(FuncCallStatementNode& node);
     void postVisit(FuncCallStatementNode& node);
     void visit(LoopNode& node);

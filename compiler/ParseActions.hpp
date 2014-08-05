@@ -24,11 +24,9 @@ VarAssignNode* handleAssignment(const std::string& name, Node* expr);
 
 Node* handleFuncDeclaration(const std::string& name, FuncTypeNode* ftype);
 
-Node* handleFuncStart(const std::string& name, Node* funcargs);
-
 void handleFuncStartType();
 
-SequenceNode* handleBlock(SequenceNode* fbody);
+FuncStartNode* handleFuncAssignmentStart(const std::string& name, FuncArgsNode* args);
 
 FuncAssignNode* handleFuncAssignment(Node* funcstart, SequenceNode* fbody);
 
@@ -40,7 +38,7 @@ TypeNode* handleCollection(TypeNode* btype, Node* gridmapping, Node* subsetof);
 
 FuncTypeNode* handleFuncType(FuncArgsDeclNode* argtypes, TypeNode* rtype);
 
-FuncCallLikeNode* handleFunctionCallLike(const std::string& name, FuncArgsNode* args);
+FuncCallLikeNode* handleFuncCallLike(const std::string& name, FuncArgsNode* args);
 
 FuncCallStatementNode* handleFuncCallStatement(FuncCallLikeNode* fcall);
 
@@ -74,7 +72,7 @@ LoopNode* handleLoopStatement(LoopNode* loop_start, SequenceNode* loop_block);
 
 RandomAccessNode* handleRandomAccess(Node* expr, const int index);
 
-StencilAssignmentNode* handleStencilAssignment(const std::string& name, FuncArgsNode* funcargs, Node* expr);
+StencilAssignmentNode* handleStencilAssignment(FuncCallLikeNode* lhs, Node* rhs);
 
 
 

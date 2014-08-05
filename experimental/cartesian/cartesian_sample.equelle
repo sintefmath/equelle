@@ -7,7 +7,6 @@ explicitHeat(u_0, a) = {
     
     #FIXME: This should be automatically deduced by stencil operator below
 	u : Mutable Collection Of Scalar On AllCells()
-#	u_0 : Collection Of Scalar On AllCells()
 	u(i, j) = u_0(i, j)
 
 	#u(i, j) = a * 1/8 * ( ...
