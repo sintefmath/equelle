@@ -9,115 +9,251 @@ var spawn = require('child_process').spawn,
 var config = require('./config.js'),
     helpers = require('./helpers.js');
  
-// TODO: More thurough checkin that we are ready for each step
 
-/* Execution function */
-var handleExecute = function(conn, dir, errorCleanup) {
-    var config, filesList, readyToRun = false;
-    /* Function to run after we have received all files */
-    var filesDone = function() {
-        /* Verify the executable signature */
-        helpers.signFile(dir+'/'+config.name, function(err,sign) {
-            if (sign != config.signature) errorCleanup('The signatures did not match');
-            else {
-                var chmod = exec('chmod u+x '+dir+'/'+config.name, function(err, stdout, stderr) {
-                    if (err) errorCleanup(stderr);
-                    /* All the files are saved, the executable is verified and made runnable */
-                    else {
-                        readyToRun = true;
-                        conn.sendJSON({ status: 'readyToRun' });
-                    }
-                });
-            }
-        });
+/* Returns a function that can be called periodically to look for any new files since last call, and send them to the specified connection */
+var createFileChecker = function(state, conn, tryAsync) {
+    // Keep track of already sent files
+    var sentFiles = [];
+    return function() {
+        // Do a read of the directory's contents
+        tryAsync(false, fs.readdir, state.outDir)
+        .complete(function(files) {
+            // Find new files
+            _.each(files, function(file) {
+                if (!_.contains(sentFiles, file)) {
+                    sentFiles.push(file);
+                    // Found a new file, send it
+                    tryAsync(false, fs.readFile, state.outDir+'/'+file, { encoding: 'utf8' })
+                    .complete(function(data) {
+                        var dataBuffer = helpers.packageSimulatorOutput(file, data);
+                        conn.sendBytes(dataBuffer);
+                    })
+                    .run();
+                }
+            });
+        })
+        .run();
     };
-    /* Wait for all data to be read from streams in addition to exit */
-    var allDone = _.after(3, function() {
+};
+
+var progressRegx = /^progress =\s*(\S*)\s*\n/;
+var convergeRegx = /^Newton solver converged/;
+/* Execution function */
+var handleExecute = function(state, conn, quit) {
+    var tryAsync = helpers.tryAsync('Simulation run', quit);
+    var expectCommand = helpers.expectCommand(conn, quit);
+
+    var getConfig, getFiles, verifySignature, chmodExecutable, waitForRun, runComplete;
+
+    /* We first expect a config command, with configuration data */
+    var execConfig, filesList;
+    getConfig = function() {
+        expectCommand('config', function(data) {
+            execConfig = data.config;
+            // Make a copy of the list of files that will be sent, and reverse it, so we can us it as a stack later
+            filesList = execConfig.files.slice().reverse();
+            
+            getFiles();
+        });
+
+        conn.sendJSON({ status: 'readyForConfig' });
+    };
+
+    /* Next, we expect to receive the binary data of all files indicated */
+    getFiles = function() {
+        var receiveFile;
+        var done = _.after(filesList.length, function() {
+            conn.removeListener('message', receiveFile);
+            verifySignature();
+        });
+
+        receiveFile = function(msg) {
+            if (msg.type != 'binary') {
+                quit('Waiting for a binary message, but got text');
+            } else {
+                // We got one of the files, should be the next of the stack
+                var file = filesList.pop();
+                var path = state.dir+'/'+file.name;
+                // Write the file to temporary directory
+                if (file.compressed) {
+                    // The file is compressed, run through gzip
+                    tryAsync(helpers.decompressToFile, path, msg.binaryData)
+                    .always(done)
+                    .run();
+                } else {
+                    // The file is not compressed, write directly to disk
+                    tryAsync(fs.writeFile, path, msg.binaryData)
+                    .always(done)
+                    .run();
+                }
+            }
+        };
+
+        conn.on('message', receiveFile);
+
+        /* The client can now start to send the files */
+        conn.sendJSON({ status: 'readyForFiles' });
+    };
+
+    /* Verify the signature of the executable file with our secret key, so that we don't run anything that is not created by this server */
+    verifySignature = function() {
+        tryAsync(helpers.signFile, state.dir+'/'+execConfig.name)
+        .complete(function(sign) {
+            if (!sign || !execConfig.signature || sign !== execConfig.signature) {
+                quit('The signatures did not match');
+            } else {
+                chmodExecutable();
+            }
+        })
+        .run();
+    };
+
+    /* chmod the simluator file so that we can execute it */
+    chmodExecutable = function() {
+        tryAsync(false, exec, 'chmod u+x '+state.dir+'/'+execConfig.name)
+        .complete(function() {
+            waitForRun();
+        })
+        .error(function(err, stdout, stderr) {
+            quit(stderr);
+        })
+        .run();
+    };
+
+    /* Now, we are ready to run the executable, wait for the client to initiate */
+    var watcherPromise, watcher;
+    var checkFiles = createFileChecker(state, conn, tryAsync);
+    waitForRun = function() {
+        expectCommand('run', function(data) {
+            conn.sendJSON({ status: 'running', progress: 0 });
+
+            /* Setup the listener which checks for new files periodically */
+            watcher = fs.watch(state.outDir, { persistent: false }, function(event) {
+                // persistent: false, means we don't care about changes after node is killed
+                // TODO: This function is documented as not beeing reliable, is there any way around it?
+                // To prohibit reading files in the middle of a write, we wait for a little time after each file-event in the output directory
+                clearTimeout(watcherPromise);
+                watcherPromise = setTimeout(checkFiles, 500);
+            });
+
+            /* Execute the simulator */
+            var process = state.simulatorProcess = spawn(state.dir+'/'+execConfig.name, ['../'+execConfig.paramFileName], { cwd: state.outDir });
+            var stdout = '', line = '';
+            var lastConverge = Date.now(); //TODO: Use this as an indicator for a stalled simulator
+
+            /* Upon execution, we wait for process to exit, and for both stdout and stderr to drain, before we send completed event */
+            var done = _.after(3, runComplete);
+
+            /* Read data on stdout */
+            process.stdout.on('data', function(data) {
+                stdout += data.toString();
+                // Extract lines from stdout
+                var i;
+                while ((i = stdout.indexOf('\n')) > 0) {
+                    line = stdout.substr(0,i+1);
+                    stdout = stdout.substr(i+1);
+                    /* Parse line */
+                    // Look for a progress indication
+                    var pm = line.match(progressRegx);
+                    if (pm) try {
+                        var progress = parseInt(pm[1]);
+                        // Make sure we are in the 0-100 range
+                        progress = Math.max(0,Math.min(100,progress));
+                        conn.sendJSON({ status: 'running', progress: progress });
+                    } catch (e) {}
+                    // Send all other lines to client
+                    else {
+                        // If line contains solver convergence, use it to keep track of stalling processes
+                        var cm = line.match(convergeRegx);
+                        if (cm) lastConverge = Date.now();
+
+                        // Send stdout
+                        conn.sendJSON({ status: 'running', stdout: line });
+                    }
+                }
+            });
+            
+            /* Read data on stderr */
+            process.stderr.on('data', function(data) {
+                conn.sendJSON({ status: 'running', stderr: data.toString() });
+            });
+
+            /* Wait for process to exit */
+            process.stdout.on('end', done);
+            process.stderr.on('end', done);
+            process.on('exit', function(code) {
+                conn.sendJSON({ status: 'running', progress: 100 });
+                done();
+            });
+        });
+
+        conn.sendJSON({ status: 'readyToRun' });
+    };
+
+    /* The simulator has run to completion, possibly with errors. All stdout/err data has been sent to client, do cleanup */
+    runComplete = function() {
+        /* Stop the file watcher and the promise to check for files later, check for new files immediately, then delete folder */
+        watcher.close();
+        clearTimeout(watcherPromise); 
+        checkFiles();
+        fs.remove(state.dir);
+
+        /* Send completed event to client, and close connection */
         conn.sendJSON({ status: 'complete' });
         conn.close();
-    });
-    /* On receive data from client */
-    conn.on('message', function(msg) {
-        if (msg.type == 'utf8') {
-            /* Command message */
-            var data = JSON.parse(msg.utf8Data);
-            switch (data.command) {
-                /* This configuration tells us how the files are beeing sent, the signature of the executable, and some imporant filenames */
-                case 'config':
-                config = data.config;
-                filesList = config.files.slice().reverse(); // Make a copy and reverse it, so we can use as stack later
-                filesDone = _.after(filesList.length, filesDone);
-                /* The client can now start to send the files */
-                conn.sendJSON({ status: 'readyForFiles' });
-                break;
-                case 'run':
-                if (!readyToRun) errorCleanup('Not ready to run yet');
-                else {
-                    conn.sendJSON({ status: 'running', progress: 0 });
-                    /* Execute the simulator */
-                    var process = spawn(dir+'/'+config.name, [config.paramFileName], { cwd: dir });
-                    process.stdout.on('data', function(data) {
-                        conn.sendJSON({ status: 'running', progress: 0, stdout: data.toString() });
-                    });
-                    process.stdout.on('end', allDone);
-                    process.stderr.on('data', function(data) {
-                        conn.sendJSON({ status: 'running', progress: 0, stderr: data.toString() });
-                    });
-                    process.stderr.on('end', allDone);
-                    process.on('exit', function(code) {
-                        conn.sendJSON({ status: 'running', progress: 100 });
-                        allDone();
-                    });
+    };
 
-                } break;
-                default: errorCleanup('Unexpected command: '+data.command);
-            }
-        } else {
-            /* A file was sent */
-            if (!filesList) errorCleanup('Not ready to receive files');
-            else {
-                var file;
-                /* Get the next expected file */
-                if (file = filesList.pop()) {
-                    var path = dir+'/'+file.name;
-                    if (file.compressed) {
-                        /* Run through gzip uncompress */
-                        helpers.decompressToFile(path, msg.binaryData, function(err) {
-                            if (err) errorCleanup(err);
-                            else filesDone();
-                        });
-                    } else {
-                        /* Write directly to folder */
-                        fs.writeFile(path, msg.binaryData, function(err) {
-                            if (err) errorCleanup(err);
-                            else filesDone();
-                        });
-                    }
-                } else errorCleanup('Did not expect any more files');
-            }
-        }
-    });
-    /* Ready to start */
-    conn.sendJSON({ status: 'readyForConfig' });
+    // Start function
+    getConfig();
 };
+
 
 /* The handleExecutableRunConnection(connection) function */
 module.exports = function(conn) {
-    /* Error handling */
-    var errorCleanup = function(err, dir) {
-        console.log((new Date())+': Error during execution:');
-        console.log(err);
-        /* Send error to client */
-        conn.sendJSON({ status: 'failed', err: err.toString()});
+    var state = {};
+    var quit = function(error) { 
+        // Send error to client
+        conn.sendJSON({ status: 'failed', err: error.toString()});
         conn.close();
-        /* Remove the temporary directory and all contents */
-        if (dir) fs.remove(dir);
+        // Remove the temporary directory and all contents
+        if (state.dir) fs.remove(state.dir);
     };
-    /* Create a temporary directory for storing the executable files */
-    tmp.dir({prefix: 'equelleRunTmp'}, function(err, dir) {
-        if (err) errorCleanup(err);
-        else {
-            handleExecute(conn, dir, function(err) { errorCleanup(err,dir) });
-        }
+    var tryAsync = helpers.tryAsync('Simulation run', quit);
+
+    /* Handle abortions of current simulation process */
+    conn.on('message', function(msg) {
+        if (msg.type == 'utf') try {
+            var data = JSON.parse(msg.utf8Data);
+            if (data.command && data.command == 'abort') {
+                // We got an abort message from the client
+                // Set the abort flag
+                state.abort = true;
+                // If the simulator was started, try to stop it
+                if (state.simulatorProcess) try {
+                    state.simulatorProcess.kill();
+                } catch (error) {}
+
+                // Close connection
+                quit('Simulator aborted');
+            }
+        } catch (error) {}
     });
+
+
+    /* Create a temporary directory for storing the executable files */
+    tryAsync(tmp.dir, { prefix: 'equelleRunTmp' })
+    .complete(function(dir) {
+        state.dir = dir;
+        /* Create output directory */
+        var outDir = dir+'/outputs';
+        tryAsync(fs.mkdir, outDir)
+        .complete(function() {
+            state.outDir = outDir;
+            // We are ready to handle execution commands from the client
+            handleExecute(state, conn, quit);
+        })
+        .run();
+    })
+    .run();
 }
+
