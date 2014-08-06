@@ -7,6 +7,8 @@
 #include <map>
 #include <functional>
 
+#include "equelle/equelleTypes.hpp"
+
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 
 namespace equelle {
@@ -17,6 +19,29 @@ enum Dimension {
     z = 2
 };
 
+class CartesianCollOfCell;
+
+class CartesianEquelleRuntime {
+public:
+    /**
+     * @brief CartesianGrid constructor for a parameter object.
+     * @param param Is a parameter object where the following keys are used for grid initialization.
+     *              - grid_dim Dimension of grid. (default 2)
+     *              - nx Number of interior cells in x-direction. (default 3)
+     *              - ny Number of interior cells in y-direction. (default 2)
+     *              - ghost_width width of ghost boundary. (default 1)
+     *              In addition how to read initial and boundary conditions can be specified.
+     */
+	CartesianEquelleRuntime( const Opm::parameter::ParameterGroup& param );
+
+	CartesianCollOfCell inputCellCollectionOfScalar( std::string name );
+	//CartesianCollOfFace inputFaceCollectionOfScalar( std::string name );
+
+	CartesianCollOfCell inputCellScalarWithDefault( std::string name, double d );
+	//CartesianCollOfFace inputFaceScalarWithDefault( std::string name, double d );
+private:
+    const Opm::parameter::ParameterGroup param_;
+};
 
 /**
  * @brief The CartesianGrid class models Opm::UnstructuredGrid in spirit, but is tailored for cartesian dense grids.
@@ -37,20 +62,9 @@ public:
     };
 
     typedef std::array<int, 2> strideArray;
-    typedef std::vector<double> CartesianCollectionOfScalar;
 
     CartesianGrid();
-
-    /**
-     * @brief CartesianGrid constructor for a parameter object.
-     * @param param Is a parameter object where the following keys are used for grid initialization.
-     *              - grid_dim Dimension of grid. (default 2)
-     *              - nx Number of interior cells in x-direction. (default 3)
-     *              - ny Number of interior cells in y-direction. (default 2)
-     *              - ghost_width width of ghost boundary. (default 1)
-     *              In addition how to read initial and boundary conditions can be specified.
-     */
-    CartesianGrid( const Opm::parameter::ParameterGroup& param );
+    ~CartesianGrid();
 
     /**
      * @brief CartesianGrid constructor for 2D-grids.
@@ -59,7 +73,6 @@ public:
      */
     explicit CartesianGrid(std::tuple<int, int> dims, int ghostWidth );
 
-    ~CartesianGrid();
 
     std::array<int, 2> cartdims{{-1,-1}}; //!< Number of interior cells in each dimension.
     strideArray cellStrides;
@@ -72,11 +85,6 @@ public:
     int ghost_width;           //!< Width of ghost cell boundary. Assumed to be the same for all directions and on every side of the domain.
     int number_of_cells_and_ghost_cells; //!< Total number of cells and ghost cells in grid.
 
-    CartesianCollectionOfScalar inputCellCollectionOfScalar( std::string name );
-    CartesianCollectionOfScalar inputFaceCollectionOfScalar( std::string name );
-
-    CartesianCollectionOfScalar inputCellScalarWithDefault( std::string name, double d );
-    CartesianCollectionOfScalar inputFaceScalarWithDefault( std::string name, double d );
 
     /**
      * @brief cellAt Return a reference to an element of cell(i,j)
@@ -85,8 +93,8 @@ public:
      * @param coll  A scalar collection representing face values in the grid.
      * @return The value of the collection at the given edge.
      */
-    double& cellAt( int i, int j, CartesianCollectionOfScalar& coll ) const;
-    const double& cellAt( int i, int j, const CartesianCollectionOfScalar& coll ) const ;
+    double& cellAt( int i, int j, CartesianCollOfCell& coll ) const;
+    const double& cellAt( int i, int j, const CartesianCollOfCell& coll ) const ;
 
     /**
      * @brief faceAt Return a reference to an element of a face adjacent to cell (i,j).
@@ -97,17 +105,18 @@ public:
      * @param face Id of which adjacent face one is referring to.
      * @param coll A scalar collection representing face values in the grid.
      * @return The value of the collection at the given face.
-     */
-    double& faceAt( int i, int j, Face face, CartesianCollectionOfScalar& coll ) const;
-    const double& faceAt( int i, int j, Face face, const CartesianCollectionOfScalar& coll ) const;
+     * /
+    double& faceAt( int i, int j, Face face, CartesianCollOfFace& coll ) const;
+    const double& faceAt( int i, int j, Face face, const CartesianCollOfFace& coll ) const;
+    */
 
     /**
      * @brief dumpGrid a grid to a stream or file.
      * @param grid
      * @param stream
      */
-    void dumpGridCells( const CartesianCollectionOfScalar& grid, std::ostream& stream );
-    void dumpGridFaces( /*const*/ CartesianCollectionOfScalar& grid, Face, std::ostream& stream );
+    void dumpGridCells( const CartesianCollOfCell& grid, std::ostream& stream );
+    //void dumpGridFaces( /*const*/ CartesianCollectionOfScalar& grid, Face, std::ostream& stream );
 
     /**
      * Returns an object that can execute a stencil on all cells/faces within a given range
@@ -117,7 +126,6 @@ public:
     FaceRange allYFaces();
 
 private:
-    const Opm::parameter::ParameterGroup param_;
     void init2D( std::tuple<int, int> dims, int ghostWidth );
     int cellOrigin;
 };
@@ -184,6 +192,21 @@ private:
     int j_end;
 };
 
+
+//FIXME Need also CartesianCollOfFace
+class CartesianCollOfCell {
+public:
+	CartesianCollOfCell(std::tuple<int, int> dims, int ghostWidth, double default_value=0.0f)
+    	: grid(dims, ghostWidth)
+    {
+    	data.resize(grid.number_of_cells_and_ghost_cells, default_value);
+	}
+
+    std::vector<double> data;
+    CartesianGrid grid;
+
+private:
+};
 
 
 } // namespace equelle
