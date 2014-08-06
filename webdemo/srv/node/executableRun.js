@@ -209,7 +209,7 @@ var handleExecute = function(state, conn, quit) {
 
 
 /* The handleExecutableRunConnection(connection) function */
-module.exports = function(conn) {
+module.exports = function(handlerName, domain, conn) {
     var state = {};
     var quit = function(error) { 
         // Send error to client

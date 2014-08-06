@@ -32,7 +32,7 @@ var compileEquelle = function(source, conn, quit) {
 }
 
 /* The handleEquelleCompilerConnection(connection) function */
-module.exports = function(conn) {
+module.exports = function(handlerName, domain, conn) {
     var quit = function(error) { 
         // Send error to client
         conn.sendJSON({ status: 'failed', err: err.toString()});

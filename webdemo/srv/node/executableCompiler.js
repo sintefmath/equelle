@@ -171,7 +171,7 @@ var compileExecutable = function(state, source, signature, conn, quit) {
 };
 
 /* The handleExecutableCompileConnection(connection) function */
-module.exports = function(conn) {
+module.exports = function(handlerName, domain, conn) {
     var state = {};
     var quit = function(error) { 
         // Send error to client

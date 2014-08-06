@@ -54,7 +54,10 @@ var config = require('./config.js');
         decompress.stdin.end(data);
     };
 
-    /* Error logger */
+    /* Logging helpers */
+    module.logInfo = function(serverName, info) {
+        console.log((new Date())+': '+serverName+': '+info);
+    };
     module.logError = function(serverName, error) {
         console.log((new Date())+': '+serverName+' error: '+error);
     };
