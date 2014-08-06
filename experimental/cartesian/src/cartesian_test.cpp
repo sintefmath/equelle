@@ -26,12 +26,20 @@ namespace {
         std::ofstream f(filename);
         std::copy( begin, end, std::ostream_iterator<typename T::value_type>( f, " " ) );
     }
-
 }
 
-/**
- * Test construction of grid
- */
+
+BOOST_AUTO_TEST_CASE( cartesianRuntimeTest ) {
+	Opm::parameter::ParameterGroup param;
+
+	param.insertParameter("nx", "30");
+	param.insertParameter("ny", "50");
+	param.insertParameter("ghost_width", "1");
+
+	equelle::CartesianEquelleRuntime er_cart(param);
+	//What to test her actually?
+}
+
 BOOST_AUTO_TEST_CASE( cartesianGridTest ) {
     int dim_x = 3;
     int dim_y = 5;
@@ -51,51 +59,61 @@ BOOST_AUTO_TEST_CASE( cartesianGridTest ) {
     BOOST_REQUIRE_EQUAL( grid.cellStrides[1], dim_x + 2*ghostWidth );
 }
 
-#if 0
-BOOST_AUTO_TEST_CASE( cartesianCollectionOfScalarTest ) {
-    int dim_x = 30;
-    int dim_y = 50;
-    int ghostWidth = 1;
 
-    equelle::CartesianGrid grid( std::make_tuple( dim_x, dim_y),  ghostWidth );
-    equelle::CartesianCollectionOfScalar u = grid.inputCellScalarWithDefault( "u", 1.0 );
+BOOST_AUTO_TEST_CASE( cartesianCollOfScalarTest ) {
+	Opm::parameter::ParameterGroup param;
 
-    BOOST_REQUIRE_EQUAL( u.size(), grid.number_of_cells_and_ghost_cells );
+	param.insertParameter("nx", "30");
+	param.insertParameter("ny", "50");
+	param.insertParameter("ghost_width", "1");
+
+	equelle::CartesianEquelleRuntime er_cart(param);
+
+    equelle::CartesianCollOfCell u = er_cart.inputCellScalarWithDefault( "u", 1.0 );
+
+    BOOST_REQUIRE_EQUAL( u.data.size(), u.grid.number_of_cells_and_ghost_cells );
+    BOOST_REQUIRE_EQUAL( std::get<0>(u.grid.cartdims), 30 );
+    BOOST_REQUIRE_EQUAL( std::get<1>(u.grid.cartdims), 50 );
+    BOOST_REQUIRE_EQUAL( u.grid.ghost_width, 1 );
 }
 
-/**
- * Test that cellAt gives the correct data.
- */
 BOOST_AUTO_TEST_CASE( cellAtTest ) {
-    int dim_x = 3;
-    int dim_y = 5;
-    int ghostWidth = 1;
+	Opm::parameter::ParameterGroup param;
 
-    equelle::CartesianGrid grid( std::make_tuple( dim_x, dim_y),  ghostWidth );
+	param.insertParameter("nx", "3");
+	param.insertParameter("ny", "5");
+	param.insertParameter("ghost_width", "1");
+
+	const int nx = 3;
+	const int ny = 5;
+	const int ghost_width = 1;
+
+	equelle::CartesianEquelleRuntime er_cart(param);
 
     // Collection of scalar with number of elements = (dim_x + 2*ghost) * (dim_y + 2*ghost)
-    equelle::CartesianCollectionOfScalar u = grid.inputCellScalarWithDefault( "waveheights", 1.0 );
+    equelle::CartesianCollOfCell u = er_cart.inputCellScalarWithDefault( "waveheights", 1.0 );
 
-    BOOST_REQUIRE_EQUAL( u.size(), grid.number_of_cells_and_ghost_cells );
+    BOOST_REQUIRE_EQUAL( u.data.size(), u.grid.number_of_cells_and_ghost_cells );
 
-    for( int j = -ghostWidth; j < dim_y+ghostWidth; ++j ) {
-        for( int i = -ghostWidth; i < dim_x+ghostWidth; ++i ) {
+    for( int j = -ghost_width; j < ny+ghost_width; ++j ) {
+        for( int i = -ghost_width; i < nx+ghost_width; ++i ) {
             //Outside domain
             if (i < 0 || j < 0) {
-                BOOST_CHECK_EQUAL( grid.cellAt( i, j, u ), 0.0 );
+                BOOST_CHECK_EQUAL( u.grid.cellAt( i, j, u ), 0.0 );
             }
             //Outside domain
-            else if (i >= dim_x || j >= dim_y) {
-                BOOST_CHECK_EQUAL( grid.cellAt( i, j, u ), 0.0 );
+            else if (i >= nx || j >= ny) {
+                BOOST_CHECK_EQUAL( u.grid.cellAt( i, j, u ), 0.0 );
             }
             //Inside domain
             else {
-                BOOST_CHECK_EQUAL( grid.cellAt( i, j, u ), 1.0 );
+                BOOST_CHECK_EQUAL( u.grid.cellAt( i, j, u ), 1.0 );
             }
         }
     }
 }
 
+#if 0
 /**
  * Test that faceAt gives the correct data
  */

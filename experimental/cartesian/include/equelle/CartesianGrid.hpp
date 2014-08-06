@@ -199,7 +199,14 @@ public:
 	CartesianCollOfCell(std::tuple<int, int> dims, int ghostWidth, double default_value=0.0f)
     	: grid(dims, ghostWidth)
     {
-    	data.resize(grid.number_of_cells_and_ghost_cells, default_value);
+    	data.resize(grid.number_of_cells_and_ghost_cells, 0.0f);
+    	if (default_value != 0.0f) {
+    		for (int j=0; j<std::get<1>(dims); ++j) {
+    			double* begin = &data[(j+ghostWidth)*(std::get<0>(dims) + 2*ghostWidth) + ghostWidth];
+    			double* end = begin + std::get<0>(dims);
+				std::fill(begin, end, default_value);
+    		}
+    	}
 	}
 
     std::vector<double> data;
