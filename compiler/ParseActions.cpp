@@ -136,13 +136,21 @@ void handleFuncStartType()
 
 FuncCallLikeNode* handleFuncAssignmentStart(const std::string& name, FuncArgsNode* args)
 {
+	//We are dealing with a function
 	if (SymbolTable::isFunctionDeclared(name)) {
 		//Set the scope name for the following block (the function itself)
 		//Will be "undone" in handleFuncAssignment
 		SymbolTable::setCurrentFunction(name);
 	    return new FuncStartNode(name, args);
 	}
+	//We are dealing with a defined stencil variable
+	else if (SymbolTable::isVariableDeclared(name)) {
+		return handleStencilAccess(name, args);
+	}
+	//We are dealing with an undefined stencil variable
 	else {
+		EquelleType type(Invalid, Collection);
+        SymbolTable::declareVariable(name, type);
 		return handleStencilAccess(name, args);
 	}
 }
@@ -642,13 +650,28 @@ RandomAccessNode* handleRandomAccess(Node* expr, const int index)
     return new RandomAccessNode(expr, index);
 }
 
-StencilAssignmentNode* handleStencilAssignment(FuncCallLikeNode* lhs, Node* rhs)
+SequenceNode* handleStencilAssignment(FuncCallLikeNode* lhs, Node* rhs)
 {
+	SequenceNode* retval = new SequenceNode();
+
 	StencilNode* stencil = dynamic_cast<StencilNode*>(lhs);
 	if (stencil == nullptr) {
 		std::string err_msg = "Internal error: The stencil \"" + lhs->name() + "\" does not appear to be properly defined";
 		yyerror(err_msg.c_str());
 	}
-	return new StencilAssignmentNode(stencil, rhs);
+
+	//If the type is a collection of invalids (no pun intended)
+	//we can safely set it to the type of the rhs
+	EquelleType lhs_et = SymbolTable::variableType(stencil->name());
+	if (lhs_et.basicType() == Invalid && lhs_et.compositeType() == Collection) {
+		EquelleType lhs_et = rhs->type();
+		lhs_et.setMutable(true);
+		SymbolTable::setVariableType(stencil->name(), lhs_et);
+		TypeNode* lhs_type = new TypeNode(lhs_et);
+		retval->pushNode(new VarDeclNode(stencil->name(), lhs_type));
+	}
+
+	retval->pushNode(new StencilAssignmentNode(stencil, rhs));
+	return retval;
 }
 

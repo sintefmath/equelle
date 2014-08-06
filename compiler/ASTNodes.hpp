@@ -45,6 +45,9 @@ public:
         }
         visitor.postVisit(*this);
     }
+    const std::vector<Node*>& nodes() {
+    	return nodes_;
+    }
 private:
     std::vector<Node*> nodes_;
 };

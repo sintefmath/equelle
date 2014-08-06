@@ -250,8 +250,8 @@ void PrintCPUBackendASTVisitor::visit(VarAssignNode& node)
     std::cout << indent();
     if (!SymbolTable::variableType(node.name()).isMutable()) {
     	if (node.type() == StencilI || node.type() == StencilJ || node.type() == StencilK) {
-    		//This goes into the stencil-lambda definition. Let's keep the comment for now
-    		std::cout << "// Not necessary: " << cppTypeString(node.type()) << " ";
+    		//This goes into the stencil-lambda definition, and is only used during parsing.
+    		//std::cout << "// Note: " << cppTypeString(node.type()) << " ";
     	}
     	else {
     		std::cout << "const " << cppTypeString(node.type()) << " ";
@@ -558,7 +558,8 @@ void PrintCPUBackendASTVisitor::postVisit(StencilAssignmentNode &node)
 
 void PrintCPUBackendASTVisitor::visit(StencilNode& node)
 {
-    std::cout << node.name() << "(";
+	//FIXME If using half indices, should then use faceAt, not cellAt
+    std::cout << "grid.cellAt(" << node.name() << ", ";
 }
 
 void PrintCPUBackendASTVisitor::postVisit(StencilNode& node)

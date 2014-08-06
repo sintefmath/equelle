@@ -72,7 +72,7 @@ LoopNode* handleLoopStatement(LoopNode* loop_start, SequenceNode* loop_block);
 
 RandomAccessNode* handleRandomAccess(Node* expr, const int index);
 
-StencilAssignmentNode* handleStencilAssignment(FuncCallLikeNode* lhs, Node* rhs);
+SequenceNode* handleStencilAssignment(FuncCallLikeNode* lhs, Node* rhs);
 
 StencilNode* handleStencilAccess(const std::string& name, FuncArgsNode* args);
 
