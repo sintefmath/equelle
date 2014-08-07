@@ -86,6 +86,7 @@ VarAssignNode* handleAssignment(const std::string& name, Node* expr)
             if (lhs_type.gridMapping() == PostponedDefinition
                 && lhs_type.basicType() == rhs_type.basicType()
                 && lhs_type.isCollection() && rhs_type.isCollection()
+                && lhs_type.isStencil() == rhs_type.isStencil()
                 && rhs_type.isDomain()
                 && SymbolTable::isSubset(rhs_type.gridMapping(), lhs_type.subsetOf())) {
                 // OK, should make postponed definition of the variable.
@@ -150,6 +151,7 @@ FuncCallLikeNode* handleFuncAssignmentStart(const std::string& name, FuncArgsNod
 	//We are dealing with an undefined stencil variable
 	else {
 		EquelleType type(Invalid, Collection);
+		type.setStencil(true);
         SymbolTable::declareVariable(name, type);
 		return handleStencilAccess(name, args);
 	}
@@ -216,6 +218,14 @@ TypeNode* handleCollection(TypeNode* btype, Node* gridmapping, Node* subsetof)
     return new TypeNode(EquelleType(bt.basicType(), Collection, gm, subset));
 }
 
+TypeNode* handleStencilCollection(TypeNode* type_expr)
+{
+    EquelleType et = type_expr->type();
+    et.setStencil(true);
+    TypeNode* tn = new TypeNode(et);
+    delete type_expr;
+    return tn;
+}
 
 
 FuncTypeNode* handleFuncType(FuncArgsDeclNode* argtypes, TypeNode* rtype)
@@ -330,6 +340,10 @@ BinaryOpNode* handleBinaryOp(BinaryOp op, Node* left, Node* right)
         	else if (lt.basicType() == Scalar &&
         			(rt.basicType() == StencilI || rt.basicType() == StencilJ || rt.basicType() == StencilK)) {
         		//n OP i,j,k is OK
+        	}
+        	else if (lt.isStencil() && rt.basicType() == Scalar
+        			|| rt.isStencil() && lt.basicType() == Scalar) {
+        		//n OP u(i, j)  and  u(i, j) OP n is OK
         	}
         	else {
         		yyerror("addition and subtraction only allowed between identical types.");
@@ -663,7 +677,9 @@ SequenceNode* handleStencilAssignment(FuncCallLikeNode* lhs, Node* rhs)
 	//If the type is a collection of invalids (no pun intended)
 	//we can safely set it to the type of the rhs
 	EquelleType lhs_et = SymbolTable::variableType(stencil->name());
-	if (lhs_et.basicType() == Invalid && lhs_et.compositeType() == Collection) {
+	if (lhs_et.basicType() == Invalid
+			&& lhs_et.compositeType() == Collection
+			&& lhs_et.isStencil()) {
 		EquelleType lhs_et = rhs->type();
 		lhs_et.setMutable(true);
 		SymbolTable::setVariableType(stencil->name(), lhs_et);

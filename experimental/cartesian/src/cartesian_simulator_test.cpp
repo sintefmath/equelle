@@ -44,11 +44,8 @@ BOOST_AUTO_TEST_CASE( heatEquation ) {
     double t = 0.0;
 
     equelle::CartesianGrid::CellRange allCells = u.grid.allCells();
-    // equelle::CartesianGrid::FaceRange allXFaces = grid.allXFaces();
-    // equelle::CartesianGrid::FaceRange allYFaces = grid.allYFaces();
 
     equelle::CartesianCollOfCell u0 = u;
-
 
     while (t < t_end) {
         //Our stencil for cells

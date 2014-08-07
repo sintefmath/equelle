@@ -36,6 +36,8 @@ Node* handleDeclarationAssign(const std::string& name, TypeNode* type, Node* exp
 
 TypeNode* handleCollection(TypeNode* btype, Node* gridmapping, Node* subsetof);
 
+TypeNode* handleStencilCollection(TypeNode* type);
+
 FuncTypeNode* handleFuncType(FuncArgsDeclNode* argtypes, TypeNode* rtype);
 
 FuncCallLikeNode* handleFuncCallLike(const std::string& name, FuncArgsNode* args);

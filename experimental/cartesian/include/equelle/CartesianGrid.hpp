@@ -200,6 +200,8 @@ public:
     	: grid(dims, ghostWidth)
     {
     	data.resize(grid.number_of_cells_and_ghost_cells, 0.0f);
+
+    	//Set internal domain if non-zero.
     	if (default_value != 0.0f) {
     		for (int j=0; j<std::get<1>(dims); ++j) {
     			double* begin = &data[(j+ghostWidth)*(std::get<0>(dims) + 2*ghostWidth) + ghostWidth];

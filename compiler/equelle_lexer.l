@@ -40,43 +40,44 @@ LINECONT {ELLIPSIS}[\t ]*\n
 
 %%
 
-{STRING}         { STORE; TOK(STRING_LITERAL); }
-Collection       { TOK(COLLECTION); }
-Sequence         { TOK(SEQUENCE); }
-Array            { TOK(ARRAY); }
-Of               { TOK(OF); }
-On               { TOK(ON); }
-Extend           { TOK(EXTEND); }
-Subset           { TOK(SUBSET); }
-Scalar           { TOK(SCALAR); }
-Vector           { TOK(VECTOR); }
-Bool             { TOK(BOOL); }
-Cell             { TOK(CELL); }
-Face             { TOK(FACE); }
-Edge             { TOK(EDGE); }
-Vertex           { TOK(VERTEX); }
-Function         { TOK(FUNCTION); }
-And              { TOK(AND); }
-Or               { TOK(OR); }
-Not              { TOK(NOT); }
-Xor              { TOK(XOR); }
-True             { TOK(TRUE); }
-False            { TOK(FALSE); }
-For              { TOK(FOR); }
-In               { TOK(IN); }
-Mutable          { TOK(MUTABLE); }
-{BUILTIN}        { STORE; TOK(BUILTIN); }
-{ID}             { STORE; TOK(ID); }
-{INT}            { STORE; TOK(INT); }
-{FLOAT}          { STORE; TOK(FLOAT); }
-{COMMENT}        { STORE; TOK(COMMENT); }
-"<="             { TOK(LEQ); }
-">="             { TOK(GEQ); }
-"=="             { TOK(EQ); }
-"!="             { TOK(NEQ); }
-"->"             { TOK(RET); }
-{SINGLES}        { TOKS(yytext[0]); }
-\n               { TOK(EOL); }
+{STRING}          { STORE; TOK(STRING_LITERAL); }
+Collection        { TOK(COLLECTION); }
+Stencil           { TOK(STENCIL); }
+Sequence          { TOK(SEQUENCE); }
+Array             { TOK(ARRAY); }
+Of                { TOK(OF); }
+On                { TOK(ON); }
+Extend            { TOK(EXTEND); }
+Subset            { TOK(SUBSET); }
+Scalar            { TOK(SCALAR); }
+Vector            { TOK(VECTOR); }
+Bool              { TOK(BOOL); }
+Cell              { TOK(CELL); }
+Face              { TOK(FACE); }
+Edge              { TOK(EDGE); }
+Vertex            { TOK(VERTEX); }
+Function          { TOK(FUNCTION); }
+And               { TOK(AND); }
+Or                { TOK(OR); }
+Not               { TOK(NOT); }
+Xor               { TOK(XOR); }
+True              { TOK(TRUE); }
+False             { TOK(FALSE); }
+For               { TOK(FOR); }
+In                { TOK(IN); }
+Mutable           { TOK(MUTABLE); }
+{BUILTIN}         { STORE; TOK(BUILTIN); }
+{ID}              { STORE; TOK(ID); }
+{INT}             { STORE; TOK(INT); }
+{FLOAT}           { STORE; TOK(FLOAT); }
+{COMMENT}         { STORE; TOK(COMMENT); }
+"<="              { TOK(LEQ); }
+">="              { TOK(GEQ); }
+"=="              { TOK(EQ); }
+"!="              { TOK(NEQ); }
+"->"              { TOK(RET); }
+{SINGLES}         { TOKS(yytext[0]); }
+\n                { TOK(EOL); }
 {LINECONT}
 {BLANKS}
 {INT}{IDCHAR}+   { std::cerr << "Lexer error on line " << yylineno << ": this is not a number \'" << yytext << "\'" << std::endl; }

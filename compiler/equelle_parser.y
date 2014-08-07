@@ -6,6 +6,7 @@
 
 %glr-parser
 
+%token STENCIL
 %token COLLECTION
 %token SEQUENCE
 %token ARRAY
@@ -55,6 +56,7 @@
 %type <node> comb_decl_assign
 %type <node> expr
 %type <type> type_expr
+%type <type> collection_of
 %type <ftype> f_type_expr
 %type <type> basic_type
 %type <fargdecl> f_decl_args
@@ -70,6 +72,7 @@
 %error-verbose
 
 %nonassoc MUTABLE
+%nonassoc STENCIL
 %nonassoc '?'
 %nonassoc ON
 %nonassoc EXTEND
@@ -168,13 +171,16 @@ expr: number              { $$ = $1; }
     ;
 
 type_expr: basic_type                                  { $$ = $1; }
-         | COLLECTION OF basic_type                    { $$ = handleCollection($3, nullptr,  nullptr); }
-         | COLLECTION OF basic_type ON expr            { $$ = handleCollection($3,      $5,  nullptr); }
-         | COLLECTION OF basic_type SUBSET OF expr     { $$ = handleCollection($3, nullptr,       $6); }
+		 | collection_of                               { $$ = $1; }
+		 | STENCIL collection_of                       { $$ = handleStencilCollection($2); }
          | SEQUENCE OF basic_type                      { $$ = handleSequence($3); }
          | ARRAY OF INT type_expr                      { $$ = handleArrayType(intFromString(*($3)), $4); delete $3; }
          | MUTABLE type_expr                           { $$ = handleMutableType($2); }
          ;
+         
+collection_of: COLLECTION OF basic_type                    { $$ = handleCollection($3, nullptr,  nullptr); }
+             | COLLECTION OF basic_type ON expr            { $$ = handleCollection($3,      $5,  nullptr); }
+             | COLLECTION OF basic_type SUBSET OF expr     { $$ = handleCollection($3, nullptr,       $6); }
 
 f_type_expr: f_starttype '(' f_decl_args ')' RET type_expr      { $$ = handleFuncType($3, $6); }
 

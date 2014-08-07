@@ -16,11 +16,11 @@ dy : Scalar = InputScalarWithDefault("dy", 1.0) #Size of each cell along y axis
 timesteps : Sequence Of Scalar
 timesteps = InputSequenceOfScalar("timesteps")
 
-u_initial : Collection Of Scalar On AllCells()
-u_initial = InputCollectionOfScalar("u_initial", AllCells())
-u0 : Mutable Collection Of Scalar On AllCells()
+u_initial : Stencil Collection Of Scalar On AllCells()
+u_initial = InputStencilCollectionOfScalar("u_initial", AllCells())
+u0 : Mutable Stencil Collection Of Scalar On AllCells()
 u0 = u_initial
-u : Mutable Collection Of Scalar On AllCells() #Declare here for increased speed
+u : Mutable Stencil Collection Of Scalar On AllCells() #Declare here for increased speed
 
 i = StencilI()
 j = StencilJ()

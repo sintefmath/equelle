@@ -509,6 +509,9 @@ std::string PrintCPUBackendASTVisitor::cppTypeString(const EquelleType& et) cons
     if (et.isArray()) {
         cppstring += "std::array<";
     }
+    if (et.isStencil()) {
+    	cppstring += "Stencil";
+    }
     if (et.isCollection()) {
         cppstring += "CollOf";
     } else if (et.isSequence()) {
