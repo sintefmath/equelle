@@ -550,13 +550,14 @@ void PrintCPUBackendASTVisitor::midVisit(StencilAssignmentNode &node)
 
 void PrintCPUBackendASTVisitor::postVisit(StencilAssignmentNode &node)
 {
+	std::string gridMapping = SymbolTable::entitySetName(node.type().gridMapping());
+	gridMapping[0] = tolower(gridMapping[0]);
     indent_--;
     std::cout << ";" << std::endl;
     std::cout << indent() << "}" << std::endl;
-    std::cout << indent() << "grid.allCells().execute( cell_stencil );" << std::endl;
+    std::cout << indent() << node.name() << ".grid." << gridMapping << ".execute( cell_stencil );" << std::endl;
     indent_--;
     std::cout << indent() << "} // End of stencil-lambda" << std::endl;
-
 }
 
 void PrintCPUBackendASTVisitor::visit(StencilNode& node)

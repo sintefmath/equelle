@@ -1028,6 +1028,10 @@ public:
     	rhs_->accept(visitor);
     	visitor.postVisit(*this);
     }
+
+    const std::string& name() const {
+    	return lhs_->name();
+    }
 private:
     StencilNode* lhs_;
 	Node* rhs_;
