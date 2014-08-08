@@ -282,6 +282,7 @@ FuncCallNode* handleFuncCall(const std::string& name, FuncArgsNode* args) {
 			return new FuncCallNode(name, args, gm);
 		}
 	}
+
 	return new FuncCallNode(name, args);
 }
 

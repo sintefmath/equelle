@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE( cartesianCollOfScalarTest ) {
 
 	equelle::CartesianEquelleRuntime er_cart(param);
 
-    equelle::CartesianCollOfCell u = er_cart.inputCellScalarWithDefault( "u", 1.0 );
+    equelle::StencilCollOfScalar u = er_cart.inputCellScalarWithDefault( "u", 1.0 );
 
     BOOST_REQUIRE_EQUAL( u.data.size(), u.grid.number_of_cells_and_ghost_cells );
     BOOST_REQUIRE_EQUAL( std::get<0>(u.grid.cartdims), 30 );
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE( cellAtTest ) {
 	equelle::CartesianEquelleRuntime er_cart(param);
 
     // Collection of scalar with number of elements = (dim_x + 2*ghost) * (dim_y + 2*ghost)
-    equelle::CartesianCollOfCell u = er_cart.inputCellScalarWithDefault( "waveheights", 1.0 );
+    equelle::StencilCollOfScalar u = er_cart.inputCellScalarWithDefault( "waveheights", 1.0 );
 
     BOOST_REQUIRE_EQUAL( u.data.size(), u.grid.number_of_cells_and_ghost_cells );
 
@@ -99,15 +99,15 @@ BOOST_AUTO_TEST_CASE( cellAtTest ) {
         for( int i = -ghost_width; i < nx+ghost_width; ++i ) {
             //Outside domain
             if (i < 0 || j < 0) {
-                BOOST_CHECK_EQUAL( u.grid.cellAt( i, j, u ), 0.0 );
+                BOOST_CHECK_EQUAL( u.grid.cellAt( u, i, j ), 0.0 );
             }
             //Outside domain
             else if (i >= nx || j >= ny) {
-                BOOST_CHECK_EQUAL( u.grid.cellAt( i, j, u ), 0.0 );
+                BOOST_CHECK_EQUAL( u.grid.cellAt( u, i, j ), 0.0 );
             }
             //Inside domain
             else {
-                BOOST_CHECK_EQUAL( u.grid.cellAt( i, j, u ), 1.0 );
+                BOOST_CHECK_EQUAL( u.grid.cellAt( u, i, j ), 1.0 );
             }
         }
     }

@@ -21,6 +21,7 @@ u_initial = InputStencilCollectionOfScalar("u_initial", AllCells())
 u0 : Mutable Stencil Collection Of Scalar On AllCells()
 u0 = u_initial
 u : Mutable Stencil Collection Of Scalar On AllCells() #Declare here for increased speed
+u = u_initial
 
 i = StencilI()
 j = StencilJ()

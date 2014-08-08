@@ -559,7 +559,7 @@ SymbolTable::SymbolTable()
                                          { InvalidIndex, 1, InvalidIndex}));
     functions_.emplace_back("InputStencilCollectionOfScalar",
                             FunctionType({ Variable("name", EquelleType(String)),
-                                           Variable("entities", EquelleType()) },
+                                           Variable("entities", EquelleType(Invalid, None, NotApplicable, NotApplicable, false, false, NotAnArray, true)) },
                                          EquelleType(Scalar, Collection, NotApplicable, NotApplicable, false, false, NotAnArray, true),
                                          { InvalidIndex, 1, InvalidIndex}));
     functions_.emplace_back("InputDomainSubsetOf",

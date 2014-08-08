@@ -27,14 +27,14 @@ equelle::CartesianEquelleRuntime::CartesianEquelleRuntime(const Opm::parameter::
     }
 }
 
-equelle::CartesianCollOfCell equelle::CartesianEquelleRuntime::inputCellCollectionOfScalar(std::string name)
+equelle::StencilCollOfScalar equelle::CartesianEquelleRuntime::inputCellCollectionOfScalar(std::string name)
 {
     std::tuple<int, int> dims;
     param_.get( "nx", std::get<0>(dims) );
     param_.get( "ny", std::get<1>(dims) );
     int ghostWidth = param_.getDefault( "ghost_width", 1 );
 
-    CartesianCollOfCell v(dims, ghostWidth);
+    StencilCollOfScalar v(dims, ghostWidth);
 
     const bool from_file = param_.getDefault(name + "_from_file", false);
     if ( from_file ) {
@@ -51,7 +51,7 @@ equelle::CartesianCollOfCell equelle::CartesianEquelleRuntime::inputCellCollecti
                 if ( beg == end ) {
                     OPM_THROW(std::runtime_error, "Unexpected size of input data for " << name << " in file " << filename);
                 }
-                v.grid.cellAt( i, j, v ) = *beg;
+                v.grid.cellAt( v, i, j ) = *beg;
                 beg++;
             }
         }
@@ -115,14 +115,14 @@ equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inpu
 }
 */
 
-equelle::CartesianCollOfCell equelle::CartesianEquelleRuntime::inputCellScalarWithDefault(std::string /*name*/, double d)
+equelle::StencilCollOfScalar equelle::CartesianEquelleRuntime::inputCellScalarWithDefault(std::string /*name*/, double d)
 {    
     std::tuple<int, int> dims;
     param_.get( "nx", std::get<0>(dims) );
     param_.get( "ny", std::get<1>(dims) );
     int ghostWidth = param_.getDefault( "ghost_width", 1 );
 
-    return CartesianCollOfCell(dims, ghostWidth, d);
+    return StencilCollOfScalar(dims, ghostWidth, d);
 }
 
 /*
@@ -151,8 +151,15 @@ equelle::CartesianGrid::CartesianCollectionOfScalar equelle::CartesianGrid::inpu
 
 
 
+equelle::StencilCollOfScalar equelle::CartesianEquelleRuntime::inputStencilCollectionOfScalar( std::string name, CollOfCell) {
+		return inputCellCollectionOfScalar(name);
+}
 
-
+void equelle::CartesianEquelleRuntime::output(std::string var_name_, const equelle::StencilCollOfScalar& var_) {
+	std::cout << var_name_ << " = [" << std::endl;
+	var_.grid.dumpGridCells(var_, std::cout);
+	std::cout << "]" << std::endl;
+}
 
 
 
@@ -199,14 +206,13 @@ equelle::CartesianGrid::~CartesianGrid()
 
 
 
-
-double& equelle::CartesianGrid::cellAt( const int i, const int j, equelle::CartesianCollOfCell &coll ) const
+double& equelle::CartesianGrid::cellAt( equelle::StencilCollOfScalar &coll,  const int i, const int j ) const
 {
     const int index = cellOrigin + j*cellStrides[1] + i*cellStrides[0];
     return coll.data[ index ];
 }
 
-const double &equelle::CartesianGrid::cellAt( const int i, const int j, const equelle::CartesianCollOfCell &coll) const
+const double &equelle::CartesianGrid::cellAt( const equelle::StencilCollOfScalar &coll,  const int i, const int j) const
 {
     const int index = cellOrigin + j*cellStrides[1] + i*cellStrides[0];
     return coll.data[ index ];
@@ -294,7 +300,7 @@ const double &equelle::CartesianGrid::faceAt(int i, int j, equelle::CartesianGri
 }
 */
 
-void equelle::CartesianGrid::dumpGridCells(const equelle::CartesianCollOfCell &cells, std::ostream &stream)
+void equelle::CartesianGrid::dumpGridCells(const equelle::StencilCollOfScalar &cells, std::ostream &stream) const
 {
     int num_columns = cartdims[0] + 2*ghost_width;
     for( int j = 0; j < cartdims[1] + 2*ghost_width; ++j ) {

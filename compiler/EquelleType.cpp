@@ -30,11 +30,11 @@ std::string basicTypeString(const BasicType bt)
     case Void:
         return "Void";
     case StencilI:
-        return "StencilI";
+        return "I";
     case StencilJ:
-        return "StencilJ";
+        return "J";
     case StencilK:
-        return "StencilK";
+        return "K";
     default:
         return "basicTypeString() error";
     }
@@ -263,7 +263,7 @@ void EquelleType::setMutable(const bool is_mutable)
 
 bool EquelleType::isStencil() const
 {
-    return stencil_;
+    return stencil_ || isStencilType(basic_type_);
 }
 
 void EquelleType::setStencil(const bool is_stencil)

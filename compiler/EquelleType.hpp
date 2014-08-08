@@ -50,7 +50,7 @@ public:
                 const bool is_mutable = false,
                 const bool is_domain = false,
                 const int array_size = NotAnArray,
-                const bool is_stencil=false);
+                const bool is_stencil = false);
 
     bool isBasic() const;
 

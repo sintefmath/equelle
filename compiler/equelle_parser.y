@@ -45,6 +45,7 @@
 %token NEQ
 %token RET
 %token EOL
+%token LINECONT
 
 %type <seq> program
 %type <seq> lineblock

@@ -16,6 +16,17 @@
 #include "equelle/CartesianGrid.hpp"
 
 
+namespace {
+    template<class T>
+    void injectMockData( Opm::parameter::ParameterGroup& param, std::string key, T begin, T end ) {
+        std::string filename = key + ".mockdata";
+        param.insertParameter( key + "_from_file", "true" );
+        param.insertParameter( key + "_filename", filename );
+
+        std::ofstream f(filename);
+        std::copy( begin, end, std::ostream_iterator<typename T::value_type>( f, " " ) );
+    }
+}
 
 
 
@@ -23,15 +34,56 @@
  * Test that we can solve the heat equation
  */
 BOOST_AUTO_TEST_CASE( heatEquation ) {
+	using namespace equelle;
+
 	Opm::parameter::ParameterGroup param;
 
-	param.insertParameter("nx", "30");
-	param.insertParameter("ny", "50");
+	param.insertParameter("nx", "3");
+	param.insertParameter("ny", "5");
 	param.insertParameter("ghost_width", "1");
 
-	equelle::CartesianEquelleRuntime er_cart(param);
+    std::vector<double> init_timesteps = {{1,2,3,4}};
+    injectMockData( param, "timesteps", init_timesteps.begin(), init_timesteps.end() );
 
-    equelle::CartesianCollOfCell u = er_cart.inputCellScalarWithDefault( "u", 1.0 );
+    std::vector<double> init_u_initial =
+    {{
+    		1, 1, 1,
+    		1, 2, 1,
+    		1, 2, 1,
+    		1, 2, 1,
+    		1, 1, 1,
+    }};
+    injectMockData( param, "u_initial", init_u_initial.begin(), init_u_initial.end() );
+
+	equelle::CartesianEquelleRuntime er_cart(param);
+    equelle::EquelleRuntimeCPU er(param);
+
+    const Scalar k = er.inputScalarWithDefault("k", double(1));
+    const Scalar dx = er.inputScalarWithDefault("dx", double(1));
+    const Scalar dy = er.inputScalarWithDefault("dy", double(1));
+    const SeqOfScalar timesteps = er.inputSequenceOfScalar("timesteps");
+    const StencilCollOfScalar u_initial = er_cart.inputStencilCollectionOfScalar("u_initial", er.allCells());
+    StencilCollOfScalar u0;
+    u0 = u_initial;
+    StencilCollOfScalar u;
+    u = u_initial;
+    // Note: const StencilI i = er_cart.stencilI();
+    // Note: const StencilJ j = er_cart.stencilJ();
+    for (const Scalar& dt : timesteps) {
+        const Scalar a = (k * (dt / (dx * dy)));
+        { //Start of stencil-lambda
+            auto cell_stencil = [&]( int i, int j ) {
+                u.grid.cellAt(u, i, j) =
+                    ((a * (double(1) / double(8))) * (((((double(4) * u0.grid.cellAt(u0, i, j)) + u0.grid.cellAt(u0, (i + double(1)), j)) + u0.grid.cellAt(u0, (i - double(1)), j)) + u0.grid.cellAt(u0, i, (j + double(1)))) + u0.grid.cellAt(u0, i, (j - double(1)))));
+            };
+            u.grid.allCells().execute( cell_stencil );
+        } // End of stencil-lambda
+        er_cart.output("u", u);
+        u0 = u;
+    }
+
+	/*
+    const StencilCollOfScalar u_initial = er.stencil.inputStencilCollectionOfScalar("u_initial", er.allCells());
 
     const double k = 1.0; //Material specific heat diffusion constant
     const double dx = 1.0;//5.0 / static_cast<double>(dim_x);
@@ -62,6 +114,7 @@ BOOST_AUTO_TEST_CASE( heatEquation ) {
         t = t + dt;
         u0 = u;
     }
+    */
 }
 
 #if 0

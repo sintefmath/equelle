@@ -19,7 +19,7 @@ enum Dimension {
     z = 2
 };
 
-class CartesianCollOfCell;
+class StencilCollOfScalar;
 
 class CartesianEquelleRuntime {
 public:
@@ -34,11 +34,16 @@ public:
      */
 	CartesianEquelleRuntime( const Opm::parameter::ParameterGroup& param );
 
-	CartesianCollOfCell inputCellCollectionOfScalar( std::string name );
+	StencilCollOfScalar inputCellCollectionOfScalar( std::string name );
 	//CartesianCollOfFace inputFaceCollectionOfScalar( std::string name );
 
-	CartesianCollOfCell inputCellScalarWithDefault( std::string name, double d );
+	StencilCollOfScalar inputCellScalarWithDefault( std::string name, double d );
 	//CartesianCollOfFace inputFaceScalarWithDefault( std::string name, double d );
+
+	StencilCollOfScalar inputStencilCollectionOfScalar( std::string name, CollOfCell c);
+
+    void output(std::string var_name_, const StencilCollOfScalar& var_);
+
 private:
     const Opm::parameter::ParameterGroup param_;
 };
@@ -93,8 +98,8 @@ public:
      * @param coll  A scalar collection representing face values in the grid.
      * @return The value of the collection at the given edge.
      */
-    double& cellAt( int i, int j, CartesianCollOfCell& coll ) const;
-    const double& cellAt( int i, int j, const CartesianCollOfCell& coll ) const ;
+    double& cellAt( StencilCollOfScalar& coll, int i, int j ) const;
+    const double& cellAt( const StencilCollOfScalar& coll, int i, int j ) const;
 
     /**
      * @brief faceAt Return a reference to an element of a face adjacent to cell (i,j).
@@ -115,7 +120,7 @@ public:
      * @param grid
      * @param stream
      */
-    void dumpGridCells( const CartesianCollOfCell& grid, std::ostream& stream );
+    void dumpGridCells( const StencilCollOfScalar& grid, std::ostream& stream ) const;
     //void dumpGridFaces( /*const*/ CartesianCollectionOfScalar& grid, Face, std::ostream& stream );
 
     /**
@@ -193,10 +198,10 @@ private:
 };
 
 
-//FIXME Need also CartesianCollOfFace
-class CartesianCollOfCell {
+class StencilCollOfScalar {
 public:
-	CartesianCollOfCell(std::tuple<int, int> dims, int ghostWidth, double default_value=0.0f)
+	StencilCollOfScalar() {}
+	StencilCollOfScalar(std::tuple<int, int> dims, int ghostWidth, double default_value=0.0f)
     	: grid(dims, ghostWidth)
     {
     	data.resize(grid.number_of_cells_and_ghost_cells, 0.0f);

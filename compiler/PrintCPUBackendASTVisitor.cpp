@@ -248,14 +248,12 @@ void PrintCPUBackendASTVisitor::postVisit(VarDeclNode&)
 void PrintCPUBackendASTVisitor::visit(VarAssignNode& node)
 {
     std::cout << indent();
+	if (node.type() == StencilI || node.type() == StencilJ || node.type() == StencilK) {
+		//This goes into the stencil-lambda definition, and is only used during parsing.
+		std::cout << "// Note: ";
+	}
     if (!SymbolTable::variableType(node.name()).isMutable()) {
-    	if (node.type() == StencilI || node.type() == StencilJ || node.type() == StencilK) {
-    		//This goes into the stencil-lambda definition, and is only used during parsing.
-    		//std::cout << "// Note: " << cppTypeString(node.type()) << " ";
-    	}
-    	else {
-    		std::cout << "const " << cppTypeString(node.type()) << " ";
-    	}
+    	std::cout << "const " << cppTypeString(node.type()) << " ";
     }
     std::cout << node.name() << " = ";
 }
@@ -386,7 +384,23 @@ void PrintCPUBackendASTVisitor::visit(FuncCallNode& node)
 		const char first = fname[0];
 		std::string cppname;
 		if (std::isupper(first)) {
-			cppname += std::string("er.") + char(std::tolower(first)) + fname.substr(1);
+			bool is_stencil = false;
+
+			is_stencil = is_stencil | node.type().isStencil();
+
+			const std::vector<EquelleType>& types = node.args()->argumentTypes();
+
+			for (int i=0; i<types.size(); ++i) {
+				is_stencil = is_stencil | types[i].isStencil();
+			}
+
+			if (is_stencil) {
+				cppname += std::string("er_cart.");
+			}
+			else {
+				cppname += std::string("er.");
+			}
+			cppname += char(std::tolower(first)) + fname.substr(1);
 		} else {
 			cppname += fname;
 		}
@@ -399,8 +413,11 @@ void PrintCPUBackendASTVisitor::visit(FuncCallNode& node)
 		}
 		std::cout << cppname << '(';
 	}
-	else {
+	else if (SymbolTable::isVariableDeclared(node.name()) && node.type().isStencil()) {
 	    std::cout << "grid.cellAt( " << node.name() << ", ";
+	}
+	else {
+		//Error here?
 	}
 }
 
@@ -554,7 +571,7 @@ void PrintCPUBackendASTVisitor::postVisit(StencilAssignmentNode &node)
 	gridMapping[0] = tolower(gridMapping[0]);
     indent_--;
     std::cout << ";" << std::endl;
-    std::cout << indent() << "}" << std::endl;
+    std::cout << indent() << "};" << std::endl;
     std::cout << indent() << node.name() << ".grid." << gridMapping << ".execute( cell_stencil );" << std::endl;
     indent_--;
     std::cout << indent() << "} // End of stencil-lambda" << std::endl;
@@ -563,7 +580,7 @@ void PrintCPUBackendASTVisitor::postVisit(StencilAssignmentNode &node)
 void PrintCPUBackendASTVisitor::visit(StencilNode& node)
 {
 	//FIXME If using half indices, should then use faceAt, not cellAt
-    std::cout << "grid.cellAt(" << node.name() << ", ";
+    std::cout << node.name() << ".grid.cellAt(" << node.name() << ", ";
 }
 
 void PrintCPUBackendASTVisitor::postVisit(StencilNode& node)
@@ -594,6 +611,7 @@ namespace
 "#include <array>\n"
 "\n"
 "#include \"equelle/EquelleRuntimeCPU.hpp\"\n"
+"#include \"equelle/CartesianGrid.hpp\"//Should be renamed EquelleCartesianRuntimeCPU\n"
 "\n"
 "void ensureRequirements(const equelle::EquelleRuntimeCPU& er);\n"
 "void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er);\n"
@@ -605,13 +623,15 @@ namespace
 "    Opm::parameter::ParameterGroup param(argc, argv, false);\n"
 "\n"
 "    // Create the Equelle runtime.\n"
+"    equelle::CartesianEquelleRuntime er_cart(param);\n"
 "    equelle::EquelleRuntimeCPU er(param);\n"
 "    equelleGeneratedCode(er);\n"
 "    return 0;\n"
 "}\n"
 "#endif // EQUELLE_NO_MAIN\n"
 "\n"
-"void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er) {\n"
+"void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,\n"
+"                          equelle::CartesianEquelleRuntime& er_cart) {\n"
 "    using namespace equelle;\n"
 "    ensureRequirements(er);\n"
 "\n"
