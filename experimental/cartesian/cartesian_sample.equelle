@@ -7,8 +7,6 @@
 
 # TODO: støtte for fler-komponents-likninger ( [h, hu, hv]: array/tuple/vector? )
 
-#equelle::CartesianGrid::CartesianCollectionOfScalar u = grid.inputCellScalarWithDefault( "u", 1.0 );
-
 k : Scalar = InputScalarWithDefault("k", 1.0) #Material specific heat diffusion constant
 dx : Scalar = InputScalarWithDefault("dx", 1.0) #Size of each cell along x axis
 dy : Scalar = InputScalarWithDefault("dy", 1.0) #Size of each cell along y axis
@@ -26,21 +24,27 @@ u = u_initial
 i = StencilI()
 j = StencilJ()
 
+t : Mutable Scalar
+t = 0
+
 For dt In timesteps {
 	a = k * dt /(dx*dy)
 	
-	u(i, j) = a * 1/8 * ( ...
+	u(i, j) = u0(i, j) - a * 1/8 * ( ...
     	  4*u0(i,j) ...
-    	  + u0(i+1,j) ...
-    	  + u0(i-1,j) ...
-    	  + u0(i,j+1) ...
-    	  + u0(i,j-1) ... 
+    	  - u0(i+1,j) ...
+    	  - u0(i-1,j) ...
+    	  - u0(i,j+1) ...
+    	  - u0(i,j-1) ... 
     	)
     	
 	
 	#Should generate error (q not defined): q(i, j) = 1/4 * ( 2 * u_0(i,j-1) + u_0(i,j) + u_0(i,j+1) )
 	#Should generate error (Wrong indices used): u(j, i) = 1/8 
     	
+    t = t+dt
+    
+    Output("t", t)
     Output("u", u)
 	u0 = u
 }

@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE( heatEquation ) {
 	param.insertParameter("ny", "5");
 	param.insertParameter("ghost_width", "1");
 
-    std::vector<double> init_timesteps = {{1,2,3,4}};
+    std::vector<double> init_timesteps = {{0.5, 0.5, 0.5, 0.5}};
     injectMockData( param, "timesteps", init_timesteps.begin(), init_timesteps.end() );
 
     std::vector<double> init_u_initial =
@@ -69,52 +69,22 @@ BOOST_AUTO_TEST_CASE( heatEquation ) {
     u = u_initial;
     // Note: const StencilI i = er_cart.stencilI();
     // Note: const StencilJ j = er_cart.stencilJ();
+    Scalar t;
+    t = double(0);
     for (const Scalar& dt : timesteps) {
         const Scalar a = (k * (dt / (dx * dy)));
         { //Start of stencil-lambda
             auto cell_stencil = [&]( int i, int j ) {
                 u.grid.cellAt(u, i, j) =
-                    ((a * (double(1) / double(8))) * (((((double(4) * u0.grid.cellAt(u0, i, j)) + u0.grid.cellAt(u0, (i + double(1)), j)) + u0.grid.cellAt(u0, (i - double(1)), j)) + u0.grid.cellAt(u0, i, (j + double(1)))) + u0.grid.cellAt(u0, i, (j - double(1)))));
+                    (u0.grid.cellAt(u0, i, j) - ((a * (double(1) / double(8))) * (((((double(4) * u0.grid.cellAt(u0, i, j)) - u0.grid.cellAt(u0, (i + double(1)), j)) - u0.grid.cellAt(u0, (i - double(1)), j)) - u0.grid.cellAt(u0, i, (j + double(1)))) - u0.grid.cellAt(u0, i, (j - double(1))))));
             };
             u.grid.allCells().execute( cell_stencil );
         } // End of stencil-lambda
+        t = (t + dt);
+        er.output("t", t);
         er_cart.output("u", u);
         u0 = u;
     }
-
-	/*
-    const StencilCollOfScalar u_initial = er.stencil.inputStencilCollectionOfScalar("u_initial", er.allCells());
-
-    const double k = 1.0; //Material specific heat diffusion constant
-    const double dx = 1.0;//5.0 / static_cast<double>(dim_x);
-    const double dy = 1.0;//5.0 / static_cast<double>(dim_y);
-    const double dt = 1.0;
-
-    const float a = k * dt / (dx*dy);
-
-    double t_end = 100.0;
-    double t = 0.0;
-
-    equelle::CartesianGrid::CellRange allCells = u.grid.allCells();
-
-    equelle::CartesianCollOfCell u0 = u;
-
-    while (t < t_end) {
-        //Our stencil for cells
-        auto cell_stencil = [&] (int i, int j) {
-            u.grid.cellAt( i, j, u ) = u0.grid.cellAt( i, j, u0 ) +
-                      a* 1.0/8.0 * ( u0.grid.cellAt(i+1, j, u0) +
-                    		         u0.grid.cellAt(i-1, j, u0) +
-                    		         u0.grid.cellAt(i, j+1, u0) +
-                    		         u0.grid.cellAt(i, j-1, u0) -
-                                     4*u0.grid.cellAt(i, j, u0) );
-        };
-        allCells.execute(cell_stencil);
-
-        t = t + dt;
-        u0 = u;
-    }
-    */
 }
 
 #if 0
