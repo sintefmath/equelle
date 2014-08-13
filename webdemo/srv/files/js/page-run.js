@@ -1,13 +1,20 @@
 (function(){
     angular.module('eqksPageRun', [ 'eqksUi',
                                     'eqksServer',
+                                    'eqksConfiguration',
                                     'eqksXtk'
     ])
-    .controller('runController', ['$scope','eqksExecutableRun','$timeout', function($scope,runner,$timeout) {
+    .controller('runController', ['$scope','eqksExecutableRun','$timeout','eqksConfig', function($scope,runner,$timeout,config) {
         /* Header and navigation */
         $scope.title = 'Run:';
         $scope.navigation = {
              previous: { path: '/inputs/', text: 'Provide inputs' }
+        };
+
+        /* Toogle package button */
+        $scope.togglePackage = function() {
+            $scope.simulatorState.output.packageOnComplete = !$scope.simulatorState.output.packageOnComplete;
+            runner.setPackageOutput($scope.simulatorState.output.packageOnComplete);
         };
 
         /* Run button */
@@ -31,9 +38,6 @@
         });
 
         /* Bind to runner events */
-        runner.on('started', function() {
-            console.log('Simluator run STARTED');
-        });
         runner.on('failed', function(error) {
             if (error) {
                 // Add errors to normal stderr
@@ -43,9 +47,6 @@
                     });
                 },0);
             }
-        });
-        runner.on('completed', function() {
-            console.log('Simluator run COMPLETED');
         });
 
         /* Rendering options */
@@ -115,6 +116,13 @@
         /* Global scaling option */
         $scope.$watch('renderingOptions.globalThreshold', function() {
             setVisualizationData();
+        });
+
+        /* Download output packages from server */
+        runner.on('outputPackage', function(name) {
+            var url = '//'+config.runHost+'/outputpackage/'+name;
+            console.log('Got output package:', url);
+            window.location.assign(url);
         });
     }])
 })();

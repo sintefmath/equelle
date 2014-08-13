@@ -15,7 +15,8 @@
                 stdout: '',
                 stderr: '',
                 data: {},
-                progress: 0
+                progress: 0,
+                packageOnComplete: false
             },
             running: false,
             progressClass: 'success'
@@ -116,6 +117,9 @@
                 if (msg.progress !== undefined) state.output.progress = msg.progress;
                 state.progressClass = 'success';
                 runner.trigger('stateUpdate');
+            } else if (msg.status == 'sendingPackage') {
+                // The server will be sending the output package next, handle this instead of output files
+                runner.trigger('outputPackage', msg.name);
             } else if (msg.status == 'complete') {
                 runner._done();
                 state.running = false;
@@ -172,6 +176,7 @@
                 // Make parameters file and file list, then make run configuration
                 var fileList = makeParametersAndFile(state.data);
                 var configuration = makeConfiguration(state.data, fileList);
+                configuration.packageOutput = state.output.packageOnComplete;
 
                 runner._sendExpect({ command: 'config', config: configuration }, 'readyForFiles', function() {
                     // Server is now ready for all the files, send them IN ORDER!
@@ -191,6 +196,10 @@
 
         runner.abort = function() {
             runner._send({ command: 'abort' });
+        };
+
+        runner.setPackageOutput = function(pack) {
+            runner._send({ command: 'setPackageOutput', pack: pack });
         };
 
         runner.getState = function() {

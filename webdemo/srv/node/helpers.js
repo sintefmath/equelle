@@ -2,8 +2,7 @@
 var _ = require('underscore'),
     spawn = require('child_process').spawn,
     exec = require('child_process').exec,
-    fs = require('fs-extra'),
-    psTree = require('ps-tree');
+    fs = require('fs-extra');
 /* Own modules */
 var config = require('./config.js');
 
@@ -38,6 +37,21 @@ var config = require('./config.js');
             else {
                 // Read the compressed file into a buffer, and call waiting function
                 fs.readFile(file+'.compressed', function(err, compressed) {
+                    if (err) outCB(err);
+                    else outCB(null, compressed);
+                });
+            }
+        });
+    };
+
+    /* Makes a compressed file of all files in the directory using tar+gzip, then calls waiting function with the file data as a buffer */
+    module.compressDirectory = function(dir, outCB) {
+        // Spawn tar which reads and writes files itself, and sends output to compresseddirectory.tar.gz
+        var compress = exec('tar -czf compresseddirectory.tar.gz *', { cwd: dir }, function(err, stdout, stderr) {
+            if (err) outCB(stderr);
+            else {
+                // Read the compressed file into a buffer, and call waiting function
+                fs.readFile(dir+'/compresseddirectory.tar.gz', function(err, compressed) {
                     if (err) outCB(err);
                     else outCB(null, compressed);
                 });

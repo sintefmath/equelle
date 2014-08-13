@@ -1,6 +1,10 @@
 <eqks-header-navigation>
+    <!--<div class="checkbox" style="font-size:14px"><label><input type="checkbox" ng-model="simulatorState.output.packageOnComplete"> Download output package</label></div>-->
     <button ng-if="!simulatorState.running" bind-to="runButton" on-click="onRunClick(e)">Run simulator</button>
     <button ng-if="simulatorState.running" bind-to="runButton" on-click="onRunClick(e)">Abort simulator</button>
+    <a class="btn btn-default" ng-if="simulatorState.running" ng-click="togglePackage()">
+        <input type="checkbox" style="margin:0;position:relative;top:2px" ng-model="simulatorState.output.packageOnComplete"> Download output package
+    </a>
 </eqks-header-navigation>
 <!-- Show that something is beeing done -->
 <div class="progress">

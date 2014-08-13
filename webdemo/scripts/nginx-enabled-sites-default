@@ -9,11 +9,11 @@ server {
   location / {
     root /srv/files/;
   }
-  location /equellecompiler/ {
-    proxy_pass http://localhost:8880/;
+  location /examples/ {
+    proxy_pass http://localhost:8887/;
   }
-  location /cppcompiler/ {
-    proxy_pass http://localhost:8881/;
+  location /outputpackage/ {
+    proxy_pass http://localhost:8887/outputpackage/;
   }
   location /socket/ {
     proxy_pass http://localhost:8888/;
@@ -22,5 +22,10 @@ server {
     proxy_set_header Connection "upgrade";
     #proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     #proxy_set_header Host $host;
+  }
+
+  location /X/ {
+      # TODO: REMOVE THIS, FOR TESTING ONLY!
+      root /srv/XTK-fork/;
   }
 }

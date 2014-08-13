@@ -39,17 +39,17 @@ var createFileChecker = function(state, conn, tryAsync) {
 var progressRegx = /^progress =\s*(\S*)\s*\n/;
 var convergeRegx = /^Newton solver converged/;
 /* Execution function */
-var handleExecute = function(state, conn, quit) {
+var handleExecute = function(state, conn, quit, handleAnother) {
     var tryAsync = helpers.tryAsync('Simulation run', quit);
     var expectCommand = helpers.expectCommand(conn, quit);
 
-    var getConfig, getFiles, verifySignature, chmodExecutable, waitForRun, runComplete;
+    var getConfig, getFiles, verifySignature, chmodExecutable, waitForRun, runComplete, sendOutputPackage, close;
 
     /* We first expect a config command, with configuration data */
     var execConfig, filesList;
     getConfig = function() {
         expectCommand('config', function(data) {
-            execConfig = data.config;
+            state.config = execConfig = data.config;
             // Make a copy of the list of files that will be sent, and reverse it, so we can us it as a stack later
             filesList = execConfig.files.slice().reverse();
             
@@ -190,18 +190,61 @@ var handleExecute = function(state, conn, quit) {
         conn.sendJSON({ status: 'readyToRun' });
     };
 
-    /* The simulator has run to completion, possibly with errors. All stdout/err data has been sent to client, do cleanup */
+    /* The simulator has run to completion, possibly with errors. All stdout/err data has been sent to client */
     runComplete = function() {
-        /* Stop the file watcher and the promise to check for files later, check for new files immediately, then delete folder */
+        /* Stop the file watcher and the promise to check for files later, check for new files immediately */
         watcher.close();
         clearTimeout(watcherPromise); 
         checkFiles();
+
+
+        /* Check wether we want to package the output on completion */
+        if (state.config.packageOutput) {
+            sendOutputPackage();
+        } else {
+            close();
+        }
+
+    };
+
+    /* The client wants a package of all the data */
+    sendOutputPackage = function() {
+        tryAsync(helpers.compressDirectory, state.outDir)
+        .complete(function(compressed) {
+            // Create a temporary file to write to
+            tryAsync(tmp.file, { prefix: 'equelleOutputPackage' })
+            .complete(function(path, fd) {
+                // Write to temporary file so we can download later
+                tryAsync(fs.write, fd, compressed, 0, compressed.length, 0)
+                .complete(function() {
+                    // Close file
+                    tryAsync(fs.close, fd)
+                    .complete(function() {
+                        var name = path.substr(path.lastIndexOf('equelleOutputPackage')+20);
+                        conn.sendJSON({ status: 'sendingPackage', name: name });
+                    })
+                    .always(close)
+                    .run();
+                })
+                .error(close)
+                .run();
+            })
+            .error(close)
+            .run();
+        })
+        .error(close)
+        .run();
+    };
+
+    /* Everything is done, do cleanup */
+    close = function() {
         fs.remove(state.dir);
 
         /* Send completed event to client, and close connection */
         conn.sendJSON({ status: 'complete' });
-        conn.close();
-    };
+
+        handleAnother()
+    }
 
     // Start function
     getConfig();
@@ -238,6 +281,9 @@ module.exports = function(handlerName, domain, conn, handleAnother) {
             if (data.command && data.command == 'abort') {
                 // We got an abort message from the client
                 abort('Client abort');
+            } else if (data.command && data.command == 'setPackageOutput') {
+                // Set the flag to send output package on completion
+                if (state.config) state.config.packageOutput = !!data.pack;
             }
         } catch (error) {}
     });
@@ -253,7 +299,7 @@ module.exports = function(handlerName, domain, conn, handleAnother) {
         .complete(function() {
             state.outDir = outDir;
             // We are ready to handle execution commands from the client
-            handleExecute(state, conn, quit);
+            handleExecute(state, conn, quit, handleAnother);
         })
         .run();
     })

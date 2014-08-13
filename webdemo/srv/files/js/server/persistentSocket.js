@@ -22,7 +22,6 @@
                     } else {
                         state.timeout = true;
                         if (state.socket && !(state.socket.readyState === WebSocket.CLOSING || state.socket.readyState === WebSocket.CLOSED)) {
-                            console.log('Killing socket');
                             state.socket.close();
                         }
                     }
@@ -74,7 +73,6 @@
                 state.timeout = false;
 
                 // Create a new socket connection to the server
-                console.log('Connecting to server...');
                 state.socket = new WebSocket(url, protocol);
 
                 // Bind to socket events
@@ -92,7 +90,6 @@
                 };
 
                 state.socket.onclose = function(event) {
-                    console.log('Socket closing, state:', state);
                     state.lastStatus = 'closed';
                     if (!state.timeout && this == state.socket) {
                         if (!state.done) {
@@ -180,7 +177,6 @@
             object._done = function() {
                 state.done = true;
                 state.lastStatus = 'done';
-                console.log('SOCKET marked as done');
             };
         }
     }}])
