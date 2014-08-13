@@ -32,7 +32,7 @@ update-alternatives --set gcc /usr/bin/gcc-4.7
 # Clone Equelle git repository, and build
 mkdir -p /equelle/src /equelle/build
 chown vagrant:users /equelle/src /equelle/build
-sudo -u vagrant git clone https://github.com/sintefmath/equelle.git /equelle/src
+sudo -u vagrant git clone https://github.com/jakhog/equelle.git /equelle/src
 cd /equelle/build
 sudo -u vagrant cmake /equelle/src
 sudo -u vagrant make
