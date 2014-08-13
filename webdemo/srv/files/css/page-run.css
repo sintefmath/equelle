@@ -1,0 +1,12 @@
+div#eqks-run {
+    height: 100%;
+}
+
+div#eqks-run div#eqks-visualization-options {
+    height: 100%;
+}
+
+div#eqks-run div#eqks-visualization-options div.slider {
+    width: 100%;
+    margin-top: 10px;
+}

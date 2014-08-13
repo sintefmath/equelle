@@ -1,7 +1,7 @@
 (function(){
-    angular.module('equelleKitchenSinkEditorHints', [])
+    angular.module('eqksEquelleHints', [])
     /* Functions for the code-completion hints in the CodeMirror editor */
-    .factory('equelleHints', function() { 
+    .factory('equelleCodemirrorHints', function() { 
         /* Node-functions helpers */
         var combine = function(statements) {
             var ret = {};

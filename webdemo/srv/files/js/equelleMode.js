@@ -135,15 +135,10 @@
     var parser = ( function() {
         /* The actual parsing function */
         return function(stream, state, config, token) {
-            /* Keep track of whether a line contained a block starting token */
-            /* ... or if it is a continued line */
-            /* ... and where the last Function token was, if we continue a line after this token, we probably want to indent to the column after it */
+            /* Reset state at the end-of-line */
             if (state.EOL) { state.EOL = false; state.lineContainedBlockStart = false; state.lineTokens = []; state.continuedLineNo = 0 }
-            if (token.name == '{') { state.lineContainedBlockStart = true }
-            if (token.name == 'LINECONT') { state.continuedLine = true; state.continuedLineNo += 1 }
-            if (token.name == 'FUNCTION') { state.functionTokenPos = (stream.column() - stream.indentation() + 8) }
 
-            /* Also keep track of all tokens on current line and their indentation for the code-completion */
+            /* Keep track of all tokens on current line and their indentation for the code-completion */
             if (token.name != EOL_TOKEN) {
                 state.lineTokens.push({
                      name: token.name
@@ -152,6 +147,13 @@
                     ,ch: stream.column()
                 });
             }
+
+            /* Keep track of whether a line contained a block starting token */
+            /* ... or if it is a continued line */
+            /* ... and where the last Function token was, if we continue a line after this token, we probably want to indent to the column after it */
+            if (token.name == '{') { state.lineContainedBlockStart = true }
+            if (token.name == 'LINECONT') { state.continuedLine = true; state.continuedLineNo += 1 }
+            if (token.name == 'FUNCTION') { state.functionTokenPos = (stream.column() - stream.indentation() + 8) }
 
             /* At the end-of-line, or after a line continuation token, update indentation of current block so that if user indents self, it will keep going with that indent */
             /* ... unless it is a continued line, where we want to keep the indent of the parent line */

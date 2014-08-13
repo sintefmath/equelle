@@ -1,10 +1,7 @@
-div#eqks-equelle-compiler {
-    height: 80%;
-}
-div#eqks-equelle-editor {
+div.eqks-codemirror-container {
     height: 100%;
 }
-div#eqks-equelle-editor div.CodeMirror {
+div.eqks-codemirror-container div.CodeMirror {
     height: 100%;
 }
 div.eqks-equelle-error {

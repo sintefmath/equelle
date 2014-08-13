@@ -1,5 +1,5 @@
 (function(){
-    angular.module('equelleKitchenSinkConfiguration', [])
+    angular.module('eqksConfiguration', [])
     .factory('eqksConfig', function() {
         /* This module contains all runtime variables used throughout the application*/
         var localStorageTagPrefix = 'eqks';
@@ -22,9 +22,10 @@
                 ,executable: lsPrefixTag('Executable')
                 ,executableSignature: lsPrefixTag('ExecutableSign')
                 ,executableSourceSignature: lsPrefixTag('ExecutableSourceSign')
+                ,previousThumbnail: lsPrefixTag('Thumbnail')
             }
             ,grid: {
-                 maxSize: 30
+                 maxSize: 300
                 ,defaults: {
                      dimensions: 2
                     ,size: [10, 10, 10]
