@@ -9,7 +9,7 @@ var config = require('./config.js'),
 
 
 /* Compilaction procedure */
-var compileExecutable = function(state, source, signature, conn, quit) {
+var compileExecutable = function(state, source, signature, conn, quit, handleAnother) {
     var tryAsync = helpers.tryAsync('C++ compiler', quit);
     var sendProgress = function(p) { conn.sendJSON({ status: 'compiling', progress: p}) };
 
@@ -49,14 +49,13 @@ var compileExecutable = function(state, source, signature, conn, quit) {
 
         state.currentExec = tryAsync(false, exec, 'cp -R '+config.compiler_skel_dir+'/* '+state.dir)
         .complete(function() {
+            state.currentExec = null;
             sendProgress(15);
             writeCPP();
         })
         .error(function(err, stdout, stderr) {
-            quit(stderr);
-        })
-        .always(function() {
             state.currentExec = null;
+            quit(stderr);
         })
         .run();
     };
@@ -79,14 +78,13 @@ var compileExecutable = function(state, source, signature, conn, quit) {
 
         state.currentExec = tryAsync(false, exec, 'cmake -DCMAKE_BUILD_TYPE=Release -DEquelle_DIR='+config.equelle_dir, { cwd: state.dir })
         .complete(function() {
+            state.currentExec = null;
             sendProgress(40);
             make();
         })
         .error(function(err, stdout, stderr) {
-            quit(stderr);
-        })
-        .always(function() {
             state.currentExec = null;
+            quit(stderr);
         })
         .run();
     };
@@ -97,14 +95,13 @@ var compileExecutable = function(state, source, signature, conn, quit) {
 
         state.currentExec = tryAsync(false, exec, 'make', { cwd: state.dir })
         .complete(function() {
+            state.currentExec = null;
             sendProgress(90);
             signCompress();
         })
         .error(function(err, stdout, stderr) {
-            quit(stderr);
-        })
-        .always(function() {
             state.currentExec = null;
+            quit(stderr);
         })
         .run();
     }
@@ -160,6 +157,9 @@ var compileExecutable = function(state, source, signature, conn, quit) {
             conn.sendJSON({ status: 'success', execSign: results.execSign, sourceSign: results.sourceSign });
             // Lastly, cleanup the temporary directory
             fs.remove(state.dir);
+
+            // Re-use socket for another compilation
+            handleAnother();
         } else {
             helpers.logError('C++ compiler', 'Not all expected results were attached');
             quit('An error occured during compilation');
@@ -171,11 +171,11 @@ var compileExecutable = function(state, source, signature, conn, quit) {
 };
 
 /* The handleExecutableCompileConnection(connection) function */
-module.exports = function(handlerName, domain, conn) {
+module.exports = function(handlerName, domain, conn, handleAnother) {
     var state = {};
     var quit = function(error) { 
         // Send error to client
-        conn.sendJSON({ status: 'failed', err: err.toString()});
+        conn.sendJSON({ status: 'failed', err: error.toString()});
         conn.close();
         // Remove the temporary directory and all contents
         if (state.dir) fs.remove(state.dir);
@@ -188,7 +188,7 @@ module.exports = function(handlerName, domain, conn) {
 
         // If a long-running exec is currently doing something, try to stop it
         if (state.currentExec) try {
-            state.currentExec.kill();
+            helpers.killAll(state.currentExec);
         } catch (e) {}
 
         // Close connection
@@ -212,7 +212,7 @@ module.exports = function(handlerName, domain, conn) {
                         if (!data.sign) throw('No signature received');
                         // We should have all we need, start the executable compilation process
                         conn.sendJSON({ status: 'compiling', progress: 0});
-                        compileExecutable(state, data.source, data.sign, conn, quit);
+                        compileExecutable(state, data.source, data.sign, conn, quit, handleAnother);
                     }
                 break;
                 case 'abort':
@@ -228,4 +228,7 @@ module.exports = function(handlerName, domain, conn) {
 
     /* Let the client know we are ready to do something */
     conn.sendJSON({ status: 'ready' });
+
+    /* Return the abortion function */
+    return abort;
 }

@@ -56,7 +56,7 @@ var handleExecute = function(state, conn, quit) {
             getFiles();
         });
 
-        conn.sendJSON({ status: 'readyForConfig' });
+        conn.sendJSON({ status: 'ready' });
     };
 
     /* Next, we expect to receive the binary data of all files indicated */
@@ -209,7 +209,7 @@ var handleExecute = function(state, conn, quit) {
 
 
 /* The handleExecutableRunConnection(connection) function */
-module.exports = function(handlerName, domain, conn) {
+module.exports = function(handlerName, domain, conn, handleAnother) {
     var state = {};
     var quit = function(error) { 
         // Send error to client
@@ -221,20 +221,23 @@ module.exports = function(handlerName, domain, conn) {
     var tryAsync = helpers.tryAsync('Simulation run', quit);
 
     /* Handle abortions of current simulation process */
+    var abort = function(reason) {
+        // Set the abort flag
+        state.abort = true;
+        // If the simulator was started, try to stop it
+        if (state.simulatorProcess) try {
+            helpers.killAll(state.simulatorProcess);
+        } catch (error) {}
+
+        // Close connection
+        quit('Simulator aborted');
+    };
     conn.on('message', function(msg) {
-        if (msg.type == 'utf') try {
+        if (msg.type == 'utf8') try {
             var data = JSON.parse(msg.utf8Data);
             if (data.command && data.command == 'abort') {
                 // We got an abort message from the client
-                // Set the abort flag
-                state.abort = true;
-                // If the simulator was started, try to stop it
-                if (state.simulatorProcess) try {
-                    state.simulatorProcess.kill();
-                } catch (error) {}
-
-                // Close connection
-                quit('Simulator aborted');
+                abort('Client abort');
             }
         } catch (error) {}
     });
@@ -255,5 +258,8 @@ module.exports = function(handlerName, domain, conn) {
         .run();
     })
     .run();
+
+    /* Return the abortion function */
+    return abort;
 }
 

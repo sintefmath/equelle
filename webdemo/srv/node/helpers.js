@@ -2,7 +2,8 @@
 var _ = require('underscore'),
     spawn = require('child_process').spawn,
     exec = require('child_process').exec,
-    fs = require('fs-extra');
+    fs = require('fs-extra'),
+    psTree = require('ps-tree');
 /* Own modules */
 var config = require('./config.js');
 
@@ -175,6 +176,32 @@ var config = require('./config.js');
         }
 
         return buf;
+    };
+
+    /* Kill a process and all of its child processes */
+    module.killAll = function(process) {
+        // Find all children of this process
+        exec('ps -A -o pid,ppid', function(err, stdout, stderr) {
+            if (!err) {
+                var pids = {};
+                _.each(stdout.split('\n'), function(line) {
+                    var m = line.match(/^\s*(\d+)\s*(\d+)\s*$/);
+                    if (m) {
+                        pids[m[2]] = m[1];
+                    }
+                });
+                // Make list of all children to kill
+                var p = process.pid.toString();
+                var children = [p];
+                while (p = pids[p]) {
+                    children.push(p);
+                }
+                // Try to kill all children
+                spawn('kill', ['-9'].concat(children));
+            } else {
+                process.kill('SIGKILL');
+            }
+        });
     };
 
 })(module.exports);

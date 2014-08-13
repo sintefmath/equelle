@@ -14,23 +14,25 @@ var helpers = require('./helpers.js'),
 /* To take advantage of multi-core systems, we want to set up Node instances on half of the cores
    , so that the other long-running tasks have som room on the rest of them */
 if (cluster.isMaster) {
+    // If a worker is about to shut down, start a new one right away
+    var shutdownWorkers = [];
+    var handleWorkerMessage = function(msg) {
+        if (msg.cmd == 'worker_shutdown') {
+            console.log('Master got shutdown-message from pid:', msg.pid);
+            shutdownWorkers.push(msg.pid);
+            cluster.fork();
+        }
+    };
+
     // Fork worker instances
     var numWorkers = Math.max(Math.ceil(numCPUs/2),1);
     _.times(numWorkers, function() {
-        cluster.fork();
+        var worker = cluster.fork();
+        worker.on('message', handleWorkerMessage);
     });
 
     cluster.on('online', function(worker) {
         helpers.logInfo('Master', 'Worker '+worker.process.pid+' started');
-    });
-
-    // If a worker is about to shut down, start a new one right away
-    var shutdownWorkers = [];
-    process.on('message', function(msg) {
-        if (msg.command == 'worker_shutdown') {
-            shutdownWorkers.push(msg.pid);
-            cluster.fork();
-        }
     });
 
     // If a worker dies, log it, and start a new one
@@ -43,7 +45,8 @@ if (cluster.isMaster) {
             shutdownWorkers = _.without(shutdownWorkers, pid);
         } else {
             // Unexpected failure, star new worker
-            cluster.fork();
+            var worker = cluster.fork();
+            worker.on('message', handleWorkerMessage);
         }
     });
 
@@ -56,6 +59,7 @@ if (cluster.isMaster) {
 
     /* Create the websocket server */
     var sockDomain = domain.create();
+    var openSockets = [];
     sockDomain.run(function() {
         var handlerName = workerName+' Socket HTTP Server';
 
@@ -88,28 +92,46 @@ if (cluster.isMaster) {
                     // Add a sendJSON method for later use
                     connection.sendJSON = function(obj) { connection.sendUTF(JSON.stringify(obj)) };
 
+                    // Add to open connections
+                    openSockets.push(connection);
+                    connection.on('close', function() { openSockets = _.without(openSockets, connection) });
+
                     // Setup a new error-handling domain for this connection
                     var d = domain.create();
                     d.add(req);
                     d.add(connection);
 
+                    var abort;
+
                     d.on('error', function(error) {
-                        helpers.logError(handlerName, 'Error in handling connection to :"'+protocol+'" : '+error);
+                        var msg = 'Error in handling connection to :"'+protocol+'" : '+error;
+                        helpers.logError(handlerName, msg);
 
                         // Drop current connection
                         connection.drop();
 
+                        // Abort process
+                        if (abort) abort(msg);
+
                         // Shut down worker
-                        socketDomain.emit('error', new Error('Error in request-handling'));
+                        sockDomain.emit('error', new Error('Error in request-handling'));
                     });
 
-                    // Handle this connectoin
+                    // Handle this connection
                     d.run(function() {
                         try {
-                            handler(handlerName, d, connection);
+                            var doHandle = function() {
+                                abort = handler(handlerName, d, connection, doHandle);
+                            };
+                            doHandle();
                         } catch (e) {
                             d.emit('error', e);
                         }
+                    });
+
+                    // If the connection is closed, abort the process
+                    connection.on('close', function() {
+                        if (abort) abort('Connection closed');
                     });
                 } else {
                     req.reject();
@@ -122,6 +144,7 @@ if (cluster.isMaster) {
 
     /* Create the httpserver */
     var httpDomain = domain.create();
+    var openRequests = [];
     httpDomain.run(function() {
         var handlerName = workerName+' Socket HTTP Server';
 
@@ -131,6 +154,10 @@ if (cluster.isMaster) {
             var d = domain.create();
             d.add(req);
             d.add(res);
+
+            // Add to open connections
+            openRequests.push(req);
+            res.on('finish', function() { openRequests = _.without(openRequests, req) });
 
             d.on('error', function(error) {
                 helpers.logError(handlerName, 'Error in handling request to :"'+req.url+'" : '+error);
@@ -164,10 +191,19 @@ if (cluster.isMaster) {
         workerSocketServer.close();
         workerHttpServer.close();
 
-        // Kill this process if it does not shut down by itself within 30 seconds
+        // Kill this process when all current requests are done
+        var killcheck = setInterval(function() {
+            if (openRequests.length == 0 && openSockets.length == 0) {
+                process.exit(1);
+            }
+        }, 1000);
+        // But don't keep the process open just for that!
+        killcheck.unref();
+
+        // Kill this process if it does not shut down by itself within 30 minutes
         var killtimer = setTimeout(function() {
             process.exit(1);
-        }, 30000);
+        }, 30*1000*60);
         // But don't keep the process open just for that!
         killtimer.unref();
 
