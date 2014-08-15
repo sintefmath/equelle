@@ -15,7 +15,8 @@
             };
 
             // Create the CodeMirror editor
-            var editor = CodeMirror(elem.children('div')[0], {
+            var container = elem.children('div')[0];
+            var editor = CodeMirror(container, {
                  value: $scope.property.source
                 ,mode: 'equelle'
                 ,lineNumbers: true
@@ -29,6 +30,14 @@
                 }
                 ,extraKeys: { 'Ctrl-Space': 'autocomplete' }
             });
+
+            // Resize container to fit page
+            var setHeight = function() {
+                var height = $(container).parents('div.container').height();
+                $(container).height(height*0.8);
+            };
+            $(window).resize(function(event) { setHeight() });
+            setHeight();
 
             // Watch for changes in the source from outside
             var triggerChanged = true, triggerWatch = true;
@@ -76,8 +85,7 @@
                     // Mark all relevant lines with background
                     var state, line = error.line;
                     do {
-                        editor.addLineClass(line, 'background', 'bg-danger');
-                        errorLines.push(line);
+                        errorLines.push(editor.addLineClass(line, 'background', 'bg-danger'));
                         state = editor.getStateAfter(line, true);
                         line--;
                     } while (line > 0 && (state.lineTokens.length == 0 || _.last(state.lineTokens).line > 0));

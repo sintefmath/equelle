@@ -7,7 +7,7 @@ server {
   sendfile off;
 
   location / {
-    root /srv/files/;
+    root /srv/client/;
   }
   location /examples/ {
     proxy_pass http://localhost:8887/;
@@ -25,7 +25,6 @@ server {
   }
 
   location /X/ {
-      # TODO: REMOVE THIS, FOR TESTING ONLY!
-      root /srv/XTK-fork/;
+      alias /srv/XTK/;
   }
 }

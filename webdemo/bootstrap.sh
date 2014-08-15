@@ -17,6 +17,13 @@ update-rc.d nginx defaults
 service nginx start
 service nginx reload 
 
+# Generate a random secret key for node to use when signing responses
+if [ -s /srv/server/secretkey ]; then
+    echo "Secret key already generated"
+else
+    openssl rand -out /srv/server/secretkey -hex 64
+fi
+
 # Start node server (compiler) on boot
 ln -snf /scripts/node-equelle-server.conf /etc/init/node-equelle-server.conf
 initctl reload-configuration
@@ -30,9 +37,23 @@ update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.7 40 --slave /usr/
 update-alternatives --set gcc /usr/bin/gcc-4.7
 
 # Clone Equelle git repository, and build
+# TODO: Change to sintefmath repo!
 mkdir -p /equelle/src /equelle/build
 chown vagrant:users /equelle/src /equelle/build
 sudo -u vagrant git clone https://github.com/jakhog/equelle.git /equelle/src
 cd /equelle/build
 sudo -u vagrant cmake /equelle/src
 sudo -u vagrant make
+
+# Generate Equelle syntax highlighting and code-completion scripts
+cd /scripts/codemirror_mode_generator
+sudo -u vagrant ./generate.py > /srv/client/js/equelleMode.js
+sudo -u vagrant ./generateHints.py > /srv/client/js/equelleHints.js
+
+# Initialize XTK forked repository
+cd /srv/XTK/utils
+./deps.py
+
+# Print complete messages
+echo "The Equelle kitchen sink is started. Visit: http://localhost:8080/ to try it out."
+echo "To view log files, ssh into the server using 'vagrant ssh', then view the file '/var/log/upstart/node-equelle-server.log'"

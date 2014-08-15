@@ -15,10 +15,92 @@
     /* The lexer */
     var lexer = ( function() {
         var r = [
-            ##lexer_regexes##
+             /^\"(\\.|[^\\"])*\"/
+            ,/^Collection/
+            ,/^Sequence/
+            ,/^Array/
+            ,/^Of/
+            ,/^On/
+            ,/^Extend/
+            ,/^Subset/
+            ,/^Scalar/
+            ,/^Vector/
+            ,/^Bool/
+            ,/^Cell/
+            ,/^Face/
+            ,/^Edge/
+            ,/^Vertex/
+            ,/^Function/
+            ,/^And/
+            ,/^Or/
+            ,/^Not/
+            ,/^Xor/
+            ,/^True/
+            ,/^False/
+            ,/^For/
+            ,/^In/
+            ,/^Mutable/
+            ,/^[A-Z][0-9a-zA-Z_]*/
+            ,/^[a-z][0-9a-zA-Z_]*/
+            ,/^[0-9]+/
+            ,/^[0-9]+[.][0-9]+/
+            ,/^#.*/
+            ,/^<=/
+            ,/^>=/
+            ,/^==/
+            ,/^!=/
+            ,/^->/
+            ,/^[$@:=()+\-*/^<>{},|?\[\]]/
+            ,/^$/
+            ,/^[.][.][.][\t ]*$/
+            ,/^[\t ]+/
+            ,/^[0-9]+[0-9a-zA-Z_]+/
+            ,/^[0-9]+[.][0-9]+[0-9a-zA-Z_]+/
+            ,/^./
         ];
         var a = [
-            ##lexer_actions##
+             function(yytext,yylineno) { var r = {}; r.match = yytext; r.text = yytext; r.name = 'STRING_LITERAL'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'COLLECTION'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'SEQUENCE'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'ARRAY'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'OF'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'ON'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'EXTEND'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'SUBSET'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'SCALAR'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'VECTOR'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'BOOL'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'CELL'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'FACE'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'EDGE'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'VERTEX'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'FUNCTION'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'AND'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'OR'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'NOT'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'XOR'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'TRUE'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'FALSE'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'FOR'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'IN'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'MUTABLE'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.text = yytext; r.name = 'BUILTIN'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.text = yytext; r.name = 'ID'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.text = yytext; r.name = 'INT'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.text = yytext; r.name = 'FLOAT'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.text = yytext; r.name = 'COMMENT'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'LEQ'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'GEQ'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'EQ'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'NEQ'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'RET'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = yytext[0]; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; r.name = 'EOL'; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; throw ("Lexer error on line " + yylineno + ": this is not a number \'" + yytext + "\'"); return undefined; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; throw ("Lexer error on line " + yylineno + ": this is not a number \'" + yytext + "\'"); return undefined; return r; }
+            ,function(yytext,yylineno) { var r = {}; r.match = yytext; throw ("Lexer error on line " + yylineno + ": unexpected character \'" + yytext + "\'"); return undefined; return r; }
         ];
         /* The actual lexing function */
         return function(stream, lineno) {
@@ -105,6 +187,8 @@
                         /* Extract the arguments */
                         var args = _.map(_.filter(state.lineTokens, function(token, i) { return (i > defStart && i < defEnd && token.name == 'ID') }), function(token) { return token.text });
                         state.blockFunctions[level].push({name: firstToken.text, args: args});
+                        /* Queue arguments to be added to next block */
+                        _.each(args, function(arg) { state.argsToAdd.push(arg) });
                     } else {
                         state.blockVariables[level].push(firstToken.text);
                     }
@@ -116,9 +200,11 @@
                 /* Inside a new block, add a level of indentation from this lines */
                 state.blockIndent.push(stream.indentation()+config.indentUnit);
                 state.blockLevel += 1;
-                /* Add a block-variable list */
-                state.blockVariables.push([]);
+                /* Add a block-variable list, adding any pending function arguments to current block variables */
+                state.blockVariables.push(state.argsToAdd);
                 state.blockFunctions.push([]);
+                /* Clear arguments after adding them to current block*/
+                state.argsToAdd = [];
             } else if (token.name == '}') {
                 /* Left a block, remove a level of indentation */
                 state.blockIndent.pop();
@@ -133,7 +219,78 @@
     /* The style function, which gives a token a css-class based on its name */
     var tokenStyle = function(token) {
         if (token && token.name) switch(token.name) {
-            ##style_cases##
+            case "COMMENT":
+            return "comment";
+
+            case "STRING_LITERAL":
+            return "string";
+
+            case "OF":
+            case "ON":
+            case "EXTEND":
+            case "SUBSET":
+            case "MUTABLE":
+            case "AND":
+            case "OR":
+            case "NOT":
+            case "XOR":
+            case "FOR":
+            case "IN":
+            case "$":
+            case "@":
+            return "keyword";
+
+            case "INT":
+            case "FLOAT":
+            return "number";
+
+            case "LEQ":
+            case "GEQ":
+            case "EQ":
+            case "NEQ":
+            case ":":
+            case "=":
+            case "+":
+            case "-":
+            case "/":
+            case "^":
+            case "<":
+            case ">":
+            case "?":
+            return "operator";
+
+            case "BUILTIN":
+            case "FUNCTION":
+            return "builtin";
+
+            case "(":
+            case ")":
+            case "[":
+            case "]":
+            case "{":
+            case "}":
+            case "|":
+            return "bracket";
+
+            case "TRUE":
+            case "FALSE":
+            return "atom";
+
+            case "ID":
+            return "variable";
+
+            case "COLLECTION":
+            case "SEQUENCE":
+            case "ARRAY":
+            case "SCALAR":
+            case "VECTOR":
+            case "BOOL":
+            case "CELL":
+            case "FACE":
+            case "EDGE":
+            case "VERTEX":
+            return "type";
+
             default: return token.name;
         }
         else return null;
@@ -154,6 +311,7 @@
                 ,continuedLineNo: 0
                 ,functionTokenPos: 0
                 ,lineTokens: []
+                ,argsToAdd: []
             }}
             ,copyState: function(old) { return {
                  blockLevel: old.blockLevel
@@ -166,6 +324,7 @@
                 ,continuedLineNo: old.continuedLineNo
                 ,functionTokenPos: old.functionTokenPos
                 ,lineTokens: _.clone(old.lineTokens)
+                ,argsToAdd: _.clone(old.argsToAdd)
             }}
             ,token: function token(s, state) {
                 /* Run the lexer, this will return a token, and advance the stream */

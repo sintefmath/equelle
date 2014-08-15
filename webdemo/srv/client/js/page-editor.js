@@ -23,9 +23,14 @@
             text: ''
         };
 
-        /* Save changes of the source code */
+        /* Save changes of the source code, and auto-compile after a break */
+        var compileTimer;
         $scope.$watch('editor.source', function() {
             compiler.save($scope.editor.source);
+            $timeout.cancel(compileTimer);
+            $timeout(function() {
+                compiler.compile();
+            }, 2000);
         });
 
         /* Bind to compiler events */

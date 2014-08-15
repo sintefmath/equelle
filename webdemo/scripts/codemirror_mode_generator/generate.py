@@ -34,7 +34,7 @@ def handleRule(line):
     rules.append((substituted, action))
 
 # Read the equelle_lexer.l and parse
-flexfile = open('../../compiler/equelle_lexer.l')
+flexfile = open('/equelle/src/compiler/equelle_lexer.l')
 section = 'definitions'
 comment = False
 for line in flexfile:

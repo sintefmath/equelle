@@ -28,7 +28,7 @@ def handleRule(line):
 
 
 # Read the equelle_parser.y and parse
-bisonfile = open('../../compiler/equelle_parser.y')
+bisonfile = open('/equelle/src/compiler/equelle_parser.y')
 section = 'bison declarations'
 comment = False
 for line in bisonfile:
@@ -66,7 +66,7 @@ def handleFlex(line):
             tokenReplacements[m.group(1)] = replacement
 
 # Read the equelle_lexer.l and parse
-flexfile = open('../../compiler/equelle_lexer.l')
+flexfile = open('/equelle/src/compiler/equelle_lexer.l')
 section = 'definitions'
 comment = False
 for line in flexfile:
@@ -233,7 +233,7 @@ def parseBuiltinFunction(match):
 
 from subprocess import Popen, PIPE
 # Run an empty program through the Equelle compiler to get the builtin functions
-ec = Popen(['../../../equelle-build/compiler/ec','--input','-','--dump','symboltable'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+ec = Popen(['/equelle/build/compiler/ec','--input','-','--dump','symboltable'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
 (ec_out,ec_err) = ec.communicate(input='')
 if (len(ec_err)):
     exit('Equelle compiler error: '+ec_err)

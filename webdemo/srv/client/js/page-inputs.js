@@ -5,7 +5,7 @@
                                        'eqksConfiguration'
     ])
     /* The Inputs-page controller */
-    .controller('inputsController', ['$scope','eqksInputs','eqksGrid','eqksCppToExecutable', function($scope, inputs, grid, compiler) {
+    .controller('inputsController', ['$scope','$timeout','eqksInputs','eqksGrid','eqksCppToExecutable', function($scope, $timeout, inputs, grid, compiler) {
         /* Header and navigation */
         $scope.title = 'Provide inputs:';
         $scope.navigation = {
@@ -20,8 +20,10 @@
         };
         // Update inputs if values are changed
         $scope.$on('inputsChanged', function() {
-            $scope.inputs.singleScalars = inputs.getSingleScalars();
-            $scope.inputs.files = inputs.getFiles();
+            $timeout(function() {
+                $scope.inputs.singleScalars = inputs.getSingleScalars();
+                $scope.inputs.files = inputs.getFiles();
+            });
         });
         // Write values when changed in inputs
         $scope.setInput = function(tag, value) {
@@ -73,9 +75,9 @@
                 var name = config.localStorageTags.inputFile+$scope.input.tag;
                 lsFile.write(name, file, false, function(err) {
                     // Let the inputs-class know we have got the file
-                    if (err) inputs.setValue($scope.input.tag, undefined);
+                    if (err) $scope.$parent.setInput($scope.input.tag, undefined);
                     else inputs.setValue($scope.input.tag, file.name);
-                    //$scope.$apply(function() { $scope.$emit('inputsChanged') });
+                    $scope.$emit('inputsChanged');
                 });
             });
         }

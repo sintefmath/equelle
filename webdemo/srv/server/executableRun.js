@@ -209,6 +209,8 @@ var handleExecute = function(state, conn, quit, handleAnother) {
 
     /* The client wants a package of all the data */
     sendOutputPackage = function() {
+        // TODO: Make this work without storing tmp-file and issuing a new request
+        // because this may be a problem if multiple servers are running on the same address
         tryAsync(helpers.compressDirectory, state.outDir)
         .complete(function(compressed) {
             // Create a temporary file to write to

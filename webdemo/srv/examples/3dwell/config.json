@@ -2,6 +2,7 @@
     "name": "3D Oil well",
     "source": "flow.equelle",
     "description": "Simulation of pressure and saturation of a three dimensional oil well",
+    "image": "reservoir.png",
     "inputfiles": [
         { "file": "timesteps", "tag": "timesteps", "compressed": false },
         { "file": "perm.compressed", "tag": "perm", "compressed": true},
