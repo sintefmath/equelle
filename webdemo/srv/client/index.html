@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html style="height:100%">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Equelle Demo</title>
+        <!-- Libraries -->
+            <!-- Underscore -->
+                <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js" type="text/javascript" charset="utf-8"></script>
+                <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.string/2.3.3/underscore.string.min.js" type="text/javascript" charset="utf-8"></script>
+            <!-- Backbone -->
+                <script src="//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.2/backbone-min.js" type="text/javascript" charset="utf-8"></script>
+            <!-- JQuery -->
+                <script src="//code.jquery.com/jquery-2.1.1.min.js" type="text/javascript" charset="utf-8"></script>
+            <!-- Bootstrap -->
+                <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js" type="text/javascript" charset="utf-8"></script>
+                <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+            <!-- Bootstrap-slider -->
+                <script src="/js/lib/bootstrap-slider.min.js" type="text/javascript" charset="utf-8"></script>
+                <link rel="stylesheet" href="/css/lib/bootstrap-slider.css">
+            <!-- Ladda button spinner -->
+                <script src="/js/lib/spin.min.js" type="text/javascript" charset="utf-8"></script>
+                <script src="/js/lib/ladda.min.js" type="text/javascript" charset="utf-8"></script>
+                <link rel="stylesheet" href="/css/lib/ladda-themeless.min.css">
+            <!-- TODO: CDN not working? -->
+            <!--- Dropzone -->
+                <script src="//cdnjs.cloudflare.com/ajax/libs/dropzone/3.8.4/dropzone.min.js" type="text/javascript" charset="utf-8"></script>
+            <!-- Angular -->
+                <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.18/angular.min.js" type="text/javascript" charset="utf-8"></script>
+                <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.18/angular-route.min.js" type="text/javascript" charset="utf-8"></script>
+                <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.18/angular-sanitize.min.js" type="text/javascript" charset="utf-8"></script>
+            <!-- CodeMirror -->
+                <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.3.0/codemirror.js" type="text/javascript" charset="utf-8"></script>
+                <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.3.0/addon/edit/matchbrackets.min.js" type="text/javascript" charset="utf-8"></script>
+                <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.3.0/addon/edit/closebrackets.min.js" type="text/javascript" charset="utf-8"></script>
+                <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.3.0/addon/hint/show-hint.js" type="text/javascript" charset="utf-8"></script>
+                <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.3.0/addon/hint/show-hint.min.css">
+                <script src="/js/equelleMode.js" type="text/javascript" charset="utf-8"></script>
+                <link rel="stylesheet" href="/css/codemirror.css">
+            <!-- Html2Canvas -->
+                <script src="//cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js" type="text/javascript" charset="utf-8"></script>
+            <!-- GZip -->
+                <script type="text/javascript" src="/js/lib/gzip.min.js"></script>
+            <!-- XTK -->
+                <!--<script type="text/javascript" src="http://get.goXTK.com/xtk_edge.js"></script>-->
+                <!-- <script type="text/javascript" src="/js/lib/xtk.min.js"></script> -->
+                <script type="text/javascript" src="/X/lib/google-closure-library/closure/goog/base.js"></script>
+                <script type="text/javascript" src="/X/xtk-deps.js"></script>
+                <script type="text/javascript" src="/js/xtk.dev.js"></script>
+        <!-- End libraries -->
+        <!-- Own code -->
+            <script src="/examples/list.json" type="text/javascript" charset="utf-8"></script>
+
+            <script src="/js/app.js" type="text/javascript" charset="utf-8"></script>
+
+            <!-- TODO: Restructure here! -->
+            <script src="/js/configuration.js" type="text/javascript" charset="utf-8"></script>
+            <script src="/js/equelleHints.js" type="text/javascript" charset="utf-8"></script>
+            <!-- END TODO -->
+
+            <script src="/js/page-start.js" type="text/javascript" charset="utf-8"></script>
+            <script src="/js/page-editor.js" type="text/javascript" charset="utf-8"></script>
+            <script src="/js/page-inputs.js" type="text/javascript" charset="utf-8"></script>
+            <script src="/js/page-run.js" type="text/javascript" charset="utf-8"></script>
+
+            <script src="/js/server/server.js" type="text/javascript" charset="utf-8"></script>
+            <script src="/js/server/persistentSocket.js" type="text/javascript" charset="utf-8"></script>
+            <script src="/js/server/equelleToCpp.js" type="text/javascript" charset="utf-8"></script>
+            <script src="/js/server/cppToExecutable.js" type="text/javascript" charset="utf-8"></script>
+            <script src="/js/server/executableRun.js" type="text/javascript" charset="utf-8"></script>
+
+            <script src="/js/ui/ui.js" type="text/javascript" charset="utf-8"></script>
+            <script src="/js/ui/button.js" type="text/javascript" charset="utf-8"></script>
+            <script src="/js/ui/slider.js" type="text/javascript" charset="utf-8"></script>
+            <script src="/js/ui/errorBox.js" type="text/javascript" charset="utf-8"></script>
+            <script src="/js/ui/navigation.js" type="text/javascript" charset="utf-8"></script>
+            <script src="/js/ui/codemirror.js" type="text/javascript" charset="utf-8"></script>
+            <script src="/js/ui/inputs.js" type="text/javascript" charset="utf-8"></script>
+            <script src="/js/ui/tabbing.js" type="text/javascript" charset="utf-8"></script>
+
+            <script src="/js/inputs.js" type="text/javascript" charset="utf-8"></script>
+            <script src="/js/xtk.js" type="text/javascript" charset="utf-8"></script>
+            <script src="/js/fileHelpers.js" type="text/javascript" charset="utf-8"></script>
+        <!-- Styles -->
+            <link rel="stylesheet" href="/css/kitchen-sink.css">
+            <link rel="stylesheet" href="/css/page-start.css">
+            <link rel="stylesheet" href="/css/page-editor.css">
+            <link rel="stylesheet" href="/css/page-inputs.css">
+            <link rel="stylesheet" href="/css/page-run.css">
+    </head>
+    <body style="height:100%">
+        <div style="height:100%" id="equelle-kitchen-sink" class="container" ng-app="equelleKitchenSink">
+            <div ng-view></div>
+        </div>
+    </body>
+</html> 

@@ -1,3 +1,6 @@
 [submodule "experimental/cartesian/ipython/JSAnimation"]
 	path = experimental/cartesian/ipython/JSAnimation
 	url = https://github.com/jakevdp/JSAnimation.git
+[submodule "webdemo/srv/XTK"]
+	path = webdemo/srv/XTK
+	url = https://github.com/jakhog/X.git

@@ -1,0 +1,12 @@
+<eqks-header-navigation>
+    <button bind-to="compileButton" expand="left" on-click="onCompileClick(e)">Compile to C++</button>
+</eqks-header-navigation>
+<div>
+    <eqks-codemirror editor="editor"></eqks-codemirror>
+</div>
+<eqks-ui-error-box bind-to="error"></eqks-ui-error-box>
+<div>
+    <h4>Tips:</h4>
+    <p>This editor supports all the normal text-editor commands, such as cut, copy, paste and undo, redo. Press <kbd>ctrl + space</kbd> for code-completion hints.</p>
+    <p>The code has to be compiled to C++ code before you can proceed to the next step; providing simulator inputs</p>
+</div>

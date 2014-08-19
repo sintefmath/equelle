@@ -1,0 +1,31 @@
+div.eqks-codemirror-container {
+    height: 100%;
+}
+div.eqks-codemirror-container div.CodeMirror {
+    height: 100%;
+}
+div.eqks-equelle-error {
+    margin-top: 1em;
+}
+div.eqks-equelle-error > pre {
+    color: inherit;
+    background: inherit;
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+.equelle-gutter-error {
+    width: 20px;
+}
+span.equelle-gutter-error-sign {
+    margin-left: 4px;
+    font-size: 14px;
+}
+
+.CodeMirror-hint {
+    max-width: 2000px;
+}
+.CodeMirror-hints {
+    overflow-y: scroll;
+}

@@ -1,0 +1,36 @@
+div.eqks-simulator-thumbnail {
+    display: inline-block;
+    position: relative;
+    width: 100%;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+div.eqks-simulator-thumbnail::before {
+    margin-top: 90%;
+    content: ' ';
+    font-size: 0;
+    display: inline-block;
+}
+div.eqks-simulator-thumbnail > a {
+    display: block;
+    position: absolute;
+    top: 0; right: 0; bottom: 0; left: 0;
+    font: 0/0 a;
+}
+div.eqks-simulator-thumbnail > a::before {
+    display: inline-block;
+    height: 100%;
+    content: ' ';
+    vertical-align:middle
+}
+div.eqks-simulator-thumbnail > a > img {
+    display: inline-block;
+    max-width: 100%;
+    max-height: 100%;
+    vertical-align: middle;
+}
+span.eqks-simulator-description {
+    font-size: 0.9em;
+    color: #666;
+}

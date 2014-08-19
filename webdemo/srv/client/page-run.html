@@ -1,0 +1,70 @@
+<eqks-header-navigation>
+    <!--<div class="checkbox" style="font-size:14px"><label><input type="checkbox" ng-model="simulatorState.output.packageOnComplete"> Download output package</label></div>-->
+    <button ng-if="!simulatorState.running" bind-to="runButton" on-click="onRunClick(e)">Run simulator</button>
+    <button ng-if="simulatorState.running" bind-to="runButton" on-click="onRunClick(e)">Abort simulator</button>
+    <a class="btn btn-default" ng-if="simulatorState.running" ng-click="togglePackage()">
+        <input type="checkbox" style="margin:0;position:relative;top:2px" ng-model="simulatorState.output.packageOnComplete"> Download output package
+    </a>
+</eqks-header-navigation>
+<!-- Show that something is beeing done -->
+<div class="progress">
+    <div class="progress-bar progress-bar-{{simulatorState.progressClass}}" role="progressbar" style="width:{{simulatorState.output.progress}}%"></div>
+    <div ng-if="simulatorState.running" class="progress-bar progress-bar-striped active" role="progressbar" style="width:{{100-simulatorState.output.progress}}%;background-color:#ccc"></div>
+</div>
+<!-- Different tabs -->
+<ul class="nav nav-tabs" role="tablist" eqks-tabbing>
+    <li class="active"><a href="#visualize">Visualize</a></li>
+    <li class="pull-right" ng-class="{disabled: !simulatorState.output.stderr}"><a href="#errors" ng-class="{'text-danger': !!simulatorState.output.stderr}"><strong ng-if="!!simulatorState.output.stderr">Errors</strong><span ng-if="!simulatorState.output.stderr">Errors</span></a></li>
+    <li class="pull-right" ng-class="{disabled: !simulatorState.output.stdout}"><a href="#output">Output</a></li>
+</ul>
+<div class="tab-content" style="height:80%">
+    <div class="tab-pane active" id="visualize" style="height:100%">
+        <div style="height:2em" class="row">
+            <div class="col-sm-1" style="height:100%;position:relative"><span style="position:absolute;bottom:0"><strong>Tags:</strong></span></div>
+            <div class="col-sm-11" style="height:100%">
+               <form class="form-inline" role="form" style="position:absolute;bottom:0">
+                    <label class="radio-inline" ng-repeat="tag in dataTags"><input type="radio" ng-model="$parent.selectedTag" ng-value="$parent.simulatorState.output.data[tag]">{{tag}}</label>
+                </form>
+            </div>
+        </div>
+        <div style="height:80%" class="row">
+            <div style="height:100%" class="col-sm-9">
+                <!-- XTK render container -->
+                <div style="height:100%;padding:14px">
+                    <div ng-if="simulatorState.data.grid" style="height:100%">
+                        <div eqks-xtk grid="simulatorState.data.grid" bind-data="selectedData" slice-x="sliceX" slice-y="sliceY" slice-z="sliceZ" rendering-options="renderingOptions" style="height:100%"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="eqks-visualization-options" class="col-sm-3">
+                <!-- Visualization parameters pane -->
+                <div ng-if="simulatorState.data.grid.dimensions > 2">
+                    <h4>Volume rendering</h4>
+                    <div class="checkbox"><label><input type="checkbox" ng-model="renderingOptions.volumeRendering"> Enable volume rendering</label></div>
+                    <h4>Slice planes</h4>
+                    <eqks-ui-slider bind-to="sliceX" update-on-slide="true" show-tooltip="false"></eqks-ui-slider>
+                    <eqks-ui-slider bind-to="sliceY" update-on-slide="true" show-tooltip="false"></eqks-ui-slider>
+                    <eqks-ui-slider bind-to="sliceZ" update-on-slide="true" show-tooltip="false"></eqks-ui-slider>
+                    <h4>Value thresholds</h4>
+                    <div class="checkbox"><label><input type="checkbox" ng-model="renderingOptions.globalThreshold"> Global timestep scaling</label></div>
+                    <eqks-ui-slider bind-to="renderingOptions.lowerThreshold" update-on-slide="true" show-tooltip="false"></eqks-ui-slider>
+                    <eqks-ui-slider bind-to="renderingOptions.upperThreshold" update-on-slide="true" show-tooltip="false"></eqks-ui-slider>
+                </div>
+            </div>
+        </div>
+        <div style="height:10%" class="row" ng-class="{hidden: !selectedTag}">
+            <div class="col-sm-1"><strong>Sequence:</strong></div>
+            <div class="col-sm-1 text-right">{{timestep.min}}</div>
+            <div class="col-sm-9"><eqks-ui-slider bind-to="timestep" update-on-slide="false" show-tooltip="true" style="width:100%"></eqks-ui-slider></div>
+            <div class="col-sm-1">{{timestep.max}}</div>
+        </div>
+    </div>
+    <div class="tab-pane" id="output">
+        <br>
+        <pre>{{simulatorState.output.stdout}}</pre>
+    </div>
+    <div class="tab-pane" id="errors">
+        <br>
+        <pre class="bg-danger">{{simulatorState.output.stderr}}</pre>
+    </div>
+</div>

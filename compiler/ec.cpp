@@ -12,6 +12,7 @@ extern int yyparse();
 #include "PrintMRSTBackendASTVisitor.hpp"
 #include "PrintCUDABackendASTVisitor.hpp"
 #include "PrintMPIBackendASTVisitor.hpp"
+#include "PrintIOVisitor.hpp"
 #include "ASTNodes.hpp"
 #include "CommandLineOptions.hpp"
 
@@ -73,33 +74,52 @@ int main(int argc, char** argv)
 	//Parse equelle program
     yyparse();
 
+    //Dump compiler internals
+    std::string dump = "none";
+    if (cli_vars.count("dump")) {
+        dump = cli_vars["dump"].as<std::string>();
+    }
+
+    // Dump the SymbolTable
+    if (dump == "symboltable") {
+        SymbolTable::dump();
+    }
+
+    // Dump program inputs and outputs
+    else if (dump == "io") {
+        PrintIOVisitor v;
+        SymbolTable::program()->accept(v);
+    }
+
     //Write output
-    std::string backend = cli_vars["backend"].as<std::string>();
-    if (backend == "ast") {
-        PrintASTVisitor v;
-        SymbolTable::program()->accept(v);
-    }
-    else if (backend == "equelle_ast") {
-        PrintEquelleASTVisitor v;
-        SymbolTable::program()->accept(v);
-    }
-    else if (backend == "cpu") {
-        PrintCPUBackendASTVisitor v;
-        SymbolTable::program()->accept(v);
-    }
-    else if (backend == "cuda") {
-        PrintCUDABackendASTVisitor v;
-        SymbolTable::program()->accept(v);
-    }
-    else if (backend == "mrst") {
-        PrintMRSTBackendASTVisitor v;
-        SymbolTable::program()->accept(v);
-    } else if(backend == "MPI") {
-        PrintMPIBackendASTVisitor v;
-        SymbolTable::program()->accept(v);
-    }
     else {
-        std::cerr << "Unknown back-end choice: " << backend << '\n';
+        std::string backend = cli_vars["backend"].as<std::string>();
+        if (backend == "ast") {
+            PrintASTVisitor v;
+            SymbolTable::program()->accept(v);
+        }
+        else if (backend == "equelle_ast") {
+            PrintEquelleASTVisitor v;
+            SymbolTable::program()->accept(v);
+        }
+        else if (backend == "cpu") {
+            PrintCPUBackendASTVisitor v;
+            SymbolTable::program()->accept(v);
+        }
+        else if (backend == "cuda") {
+            PrintCUDABackendASTVisitor v;
+            SymbolTable::program()->accept(v);
+        }
+        else if (backend == "mrst") {
+            PrintMRSTBackendASTVisitor v;
+            SymbolTable::program()->accept(v);
+        } else if(backend == "MPI") {
+            PrintMPIBackendASTVisitor v;
+            SymbolTable::program()->accept(v);
+        }
+        else {
+            std::cerr << "Unknown back-end choice: " << backend << '\n';
+        }
     }
 
     return 0;

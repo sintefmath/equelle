@@ -25,7 +25,8 @@ public:
 			("verbose", "Verbose output")
 			("config,c", boost::program_options::value<std::string>(), "Configuration filename (specify command line parameters in file)")
 			("input,i", boost::program_options::value<std::string>()->required(), "Input Equelle file to compile")
-            ("backend", boost::program_options::value<std::string>()->default_value("cpu"), "Backend of compiler to use (ast, ast_equelle, cpu, cuda, mrst)");
+            ("backend", boost::program_options::value<std::string>()->default_value("cpu"), "Backend of compiler to use (ast, ast_equelle, cpu, cuda, mrst)")
+            ("dump", boost::program_options::value<std::string>()->default_value("none"), "Dump compiler internals (symboltable, io)");
 	}
 
 	void printOptions() {
