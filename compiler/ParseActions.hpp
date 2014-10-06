@@ -14,7 +14,15 @@
 
 SequenceNode* handleProgram(SequenceNode* lineblocknode);
 
-Node* handleNumber(const double num);
+NumberNode* handleNumber(const double num);
+
+QuantityNode* handleQuantity(NumberNode* number, UnitNode* unit);
+
+UnitNode* handleUnit(const std::string& name);
+
+UnitNode* handleUnitOp(BinaryOp op, UnitNode* left, UnitNode* right);
+
+UnitNode* handleUnitPower(UnitNode* unit, const double num);
 
 Node* handleIdentifier(const std::string& name);
 

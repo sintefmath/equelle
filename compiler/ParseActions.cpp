@@ -7,9 +7,11 @@
 #include "SymbolTable.hpp"
 #include "ASTNodes.hpp"
 #include "ParseActions.hpp"
+#include "Dimension.hpp"
 #include <sstream>
 #include <iostream>
 #include <typeinfo>
+#include <cmath>
 
 
 
@@ -24,9 +26,60 @@ SequenceNode* handleProgram(SequenceNode* lineblocknode)
 
 
 
-Node* handleNumber(const double num)
+NumberNode* handleNumber(const double num)
 {
     return new NumberNode(num);
+}
+
+
+
+QuantityNode* handleQuantity(NumberNode* number, UnitNode* unit)
+{
+    return new QuantityNode(number, unit);
+}
+
+
+
+UnitNode* handleUnit(const std::string& name)
+{
+    return new UnitNode(name);
+}
+
+
+
+UnitNode* handleUnitOp(BinaryOp op, UnitNode* left, UnitNode* right)
+{
+    Dimension d = left->dimension();
+    double c = left->conversionFactorSI();
+    switch (op) {
+    case Multiply:
+        d = d + right->dimension();
+        c = c * right->conversionFactorSI();
+        break;
+    case Divide:
+        d = d - right->dimension();
+        c = c / right->conversionFactorSI();
+        break;
+    default:
+        yyerror("Units can only be manipulated with '*', '/' or '^'.");
+    }
+    delete left;
+    delete right;
+    return new UnitNode(d, c);
+}
+
+
+
+UnitNode* handleUnitPower(UnitNode* unit, const double num)
+{
+    const int n = static_cast<int>(num);
+    if (n != num) {
+        yyerror("Powers of units (to the right of '^') can only be integers.");
+    }
+    const Dimension d = unit->dimension() * n;
+    const double c = std::pow(unit->conversionFactorSI(), n);
+    delete unit;
+    return new UnitNode(d, c);
 }
 
 
