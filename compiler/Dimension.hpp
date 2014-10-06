@@ -20,6 +20,11 @@ enum BaseDimension {
 class Dimension
 {
 public:
+    Dimension()
+        : dim_{{ 0, 0, 0, 0, 0, 0, 0 }}
+    {
+    }
+
     // Accept implicit conversion from array.
     Dimension(const std::array<int,7>& dim)
         : dim_(dim)

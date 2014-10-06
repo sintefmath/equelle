@@ -11,6 +11,7 @@
 #include "SymbolTable.hpp"
 #include "ASTVisitorInterface.hpp"
 #include "Dimension.hpp"
+#include "EquelleUnits.hpp"
 
 #include <vector>
 #include <cassert>
@@ -1045,10 +1046,15 @@ class UnitNode : public Node
 {
 public:
     UnitNode(const std::string& name)
-        : dimension_(std::array<int,7>({{0,0,0,0,0,0,0}})),
-          conv_factor_(1.0)
+        : conv_factor_(-1e100)
     {
-        throw std::logic_error("Not yet implemented");
+        UnitData ud = unitFromString(name);
+        if (ud.valid) {
+            dimension_ = ud.dimension;
+            conv_factor_ = ud.conv_factor;
+        } else {
+            yyerror("Unit name not recognised.");
+        }
     }
 
     UnitNode(const Dimension dimension_arg,
