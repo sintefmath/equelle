@@ -10,6 +10,7 @@
 #include "EquelleType.hpp"
 #include "SymbolTable.hpp"
 #include "ASTVisitorInterface.hpp"
+#include "Dimension.hpp"
 
 #include <vector>
 #include <cassert>
@@ -1040,6 +1041,90 @@ private:
 	Node* rhs_;
 };
 
+class UnitNode : public Node
+{
+public:
+    UnitNode(const std::string& name)
+        : dimension_(std::array<int,7>({{0,0,0,0,0,0,0}})),
+          conv_factor_(1.0)
+    {
+        throw std::logic_error("Not yet implemented");
+    }
+
+    UnitNode(const Dimension dimension_arg,
+             const double conversion_factor_SI)
+        : dimension_(dimension_arg),
+          conv_factor_(conversion_factor_SI)
+    {
+    }
+
+    Dimension dimension() const
+    {
+        return dimension_;
+    }
+
+    // The number you must multiply a quantity given in the
+    // current unit with to obtain an SI quantity.
+    // For example for Inch, the factor ie 0.0254.
+    double conversionFactorSI() const
+    {
+        return conv_factor_;
+    }
+
+    EquelleType type() const
+    {
+        return EquelleType();
+    }
+
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+    }
+
+private:
+    Dimension dimension_;
+    double conv_factor_;
+};
+
+class QuantityNode : public Node
+{
+public:
+    QuantityNode(NumberNode* number_arg, UnitNode* unit_arg)
+        : number_(number_arg),
+          unit_(unit_arg)
+    {
+    }
+
+    ~QuantityNode()
+    {
+        delete number_;
+        delete unit_;
+    }
+
+    EquelleType type() const
+    {
+        return EquelleType(Scalar);
+    }
+
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+    }
+
+    Dimension dimension() const
+    {
+        return unit_->dimension();
+    }
+
+    double number() const
+    {
+        return number_->number();
+    }
+
+private:
+    NumberNode* number_;
+    UnitNode* unit_;
+};
 
 
 #endif // ASTNODES_HEADER_INCLUDED
