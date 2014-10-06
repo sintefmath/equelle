@@ -1,0 +1,10 @@
+<h2 class="clearfix">
+    {{title}}
+    <div class="btn-toolbar pull-right" role="toolbar">
+        <div class="btn-group" ng-transclude></div>
+        <div class="btn-group">
+            <a ng-if="navigation.previous" href="#{{navigation.previous.path}}" class="btn btn-default" ng-disabled="navigation.previous.disabled"><span class="glyphicon glyphicon-arrow-left"></span> {{navigation.previous.text}}</a>
+            <a ng-if="navigation.next" href="#{{navigation.next.path}}" class="btn btn-default" ng-disabled="navigation.next.disabled">{{navigation.next.text}} <span class="glyphicon glyphicon-arrow-right"></span></a>
+        </div>
+    </div>
+</h2>

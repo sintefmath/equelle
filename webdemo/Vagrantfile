@@ -1,0 +1,18 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  # OS setup
+  config.vm.box = "chef/ubuntu-12.04"
+  config.vm.box_url = "http://opscode-vm-bento.s3.amazonaws.com/vagrant/virtualbox/opscode_ubuntu-12.04_chef-provisionerless.box"
+
+  # Configuration setup
+  config.vm.provision :shell, :path => "bootstrap.sh"
+  # config.vm.synced_folder "scripts", "/scripts"
+
+  # Server files
+  # config.vm.synced_folder "srv", "/srv"
+  config.vm.network :forwarded_port, host: 8080, guest: 80
+end

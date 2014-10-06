@@ -831,7 +831,10 @@ public:
     {
     	return funcargs_;
     }
-
+    FuncArgsNode& argumentsNode() const
+    {
+        return *funcargs_;
+    }
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);

@@ -1,0 +1,14 @@
+{
+    "name": "2D Heat Equation",
+    "source": "heateq.equelle",
+    "description": "A simple two-dimensional heat equation",
+    "image": "thumb.png",
+    "inputfiles": [
+        { "file": "timesteps.mat", "tag": "timesteps", "compressed": false }
+    ],
+    "grid": {
+        "dimensions": 2,
+        "size": [10,10],
+        "cellSize": [0.1,0.1]
+    }
+}

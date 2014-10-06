@@ -1,0 +1,13 @@
+<eqks-header-navigation>
+</eqks-header-navigation>
+<!-- List of available simulators -->
+<div class="row">
+    <div class="col-sm-3" ng-repeat="simulator in simulators">
+        <div class="eqks-simulator-thumbnail"><a href="#/editor/" ng-click="setSimulator($event,simulator.id)" class="img-thumbnail">
+        <img ng-if="simulator.imgSrc" ng-src="{{simulator.imgSrc}}">
+        </a></div>
+        <h4>{{simulator.name}}</h4>
+        <span class="eqks-simulator-description">{{simulator.text}}</span>
+    </div>
+</div>
+<eqks-ui-error-box bind-to="error"></eqks-ui-error-box>
