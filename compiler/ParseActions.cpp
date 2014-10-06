@@ -697,6 +697,7 @@ LoopNode* handleLoopStart(const std::string& loop_variable, const std::string& l
 LoopNode* handleLoopStatement(LoopNode* loop_start, SequenceNode* loop_block)
 {
     loop_start->setBlock(loop_block);
+    SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
     return loop_start;
 }
 
