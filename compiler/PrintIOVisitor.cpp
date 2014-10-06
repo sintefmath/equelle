@@ -118,9 +118,8 @@ void PrintIOVisitor::postVisit(FuncCallStatementNode&) {}
 void PrintIOVisitor::postVisit(LoopNode&) {}
 void PrintIOVisitor::postVisit(ArrayNode&) {}
 void PrintIOVisitor::postVisit(RandomAccessNode&) {}
-void PrintIOVisitor::visit(StencilAccessNode &node) {}
-void PrintIOVisitor::midVisit(StencilAccessNode &node) {}
-void PrintIOVisitor::postVisit(StencilAccessNode &node) {}
-void PrintIOVisitor::visit(StencilStatementNode &node) {}
-void PrintIOVisitor::midVisit(StencilStatementNode &node) {}
-void PrintIOVisitor::postVisit(StencilStatementNode &node) {}
+void PrintIOVisitor::visit(StencilAssignmentNode& node) {}
+void PrintIOVisitor::midVisit(StencilAssignmentNode& node) {}
+void PrintIOVisitor::postVisit(StencilAssignmentNode& node) {}
+void PrintIOVisitor::visit(StencilNode& node) {}
+void PrintIOVisitor::postVisit(StencilNode& node) {}

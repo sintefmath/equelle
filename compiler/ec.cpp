@@ -58,6 +58,10 @@ int main(int argc, char** argv)
 		}
 	}
 	catch (const std::exception& e) {
+		std::cerr << "Usage: ./eq <options>" << std::endl;
+		std::cerr << "The following options are supported:" << std::endl;
+		options.printOptions();
+		std::cerr << std::endl;
         std::cerr << "Error parsing options: ";
         std::cerr << e.what() << std::endl;
 		return -1;

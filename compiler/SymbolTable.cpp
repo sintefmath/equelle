@@ -134,7 +134,7 @@ EquelleType FunctionType::returnType(const std::vector<EquelleType>& argtypes) c
         const int subset = dynamicSubsetReturn(argtypes);
         const int array_size = dynamic_.arg_index_for_array_size == InvalidIndex ?
             return_type_.arraySize() : argtypes[dynamic_.arg_index_for_array_size].arraySize();
-        return EquelleType(bt, return_type_.compositeType(), gridmapping, subset, false, return_type_.isDomain(), array_size);
+        return EquelleType(bt, return_type_.compositeType(), gridmapping, subset, false, return_type_.isDomain(), array_size, return_type_.isStencil());
     } else {
         return return_type_;
     }
@@ -556,6 +556,11 @@ SymbolTable::SymbolTable()
                             FunctionType({ Variable("name", EquelleType(String)),
                                            Variable("entities", EquelleType()) },
                                          EquelleType(Scalar, Collection),
+                                         { InvalidIndex, 1, InvalidIndex}));
+    functions_.emplace_back("InputStencilCollectionOfScalar",
+                            FunctionType({ Variable("name", EquelleType(String)),
+                                           Variable("entities", EquelleType(Invalid, None, NotApplicable, NotApplicable, false, false, NotAnArray, true)) },
+                                         EquelleType(Scalar, Collection, NotApplicable, NotApplicable, false, false, NotAnArray, true),
                                          { InvalidIndex, 1, InvalidIndex}));
     functions_.emplace_back("InputDomainSubsetOf",
                             FunctionType({ Variable("name", EquelleType(String)),

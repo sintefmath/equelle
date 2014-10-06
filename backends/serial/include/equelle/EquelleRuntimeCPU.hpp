@@ -17,6 +17,8 @@
 
 namespace equelle {
 
+class StencilCollOfScalar;
+
 /// The Equelle runtime class.
 /// Contains methods corresponding to Equelle built-ins to make
 /// it easy to generate C++ code for an Equelle program.

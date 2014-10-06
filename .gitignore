@@ -37,3 +37,4 @@ compiler/equelle_parser.output
 *.synctex.gz
 *.toc
 doc/EquelleReference.pdf
+/build

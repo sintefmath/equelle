@@ -49,9 +49,11 @@ public:
                 const int subset_of = NotApplicable,
                 const bool is_mutable = false,
                 const bool is_domain = false,
-                const int array_size = NotAnArray);
+                const int array_size = NotAnArray,
+                const bool is_stencil = false);
 
     bool isBasic() const;
+
 
     bool isEntityCollection() const;
 
@@ -81,6 +83,10 @@ public:
 
     void setMutable(const bool is_mutable);
 
+    bool isStencil() const;
+
+    void setStencil(const bool is_stencil);
+
     bool operator==(const EquelleType& et) const;
 
     bool operator!=(const EquelleType& et) const;
@@ -93,6 +99,7 @@ private:
     bool mutable_;
     bool is_domain_;
     int array_size_;
+    bool stencil_;
 };
 
 

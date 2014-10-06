@@ -344,37 +344,30 @@ void PrintEquelleASTVisitor::postVisit(RandomAccessNode& node)
     std::cout << "[" << node.index() << "]";
 }
 
-
-void PrintEquelleASTVisitor::visit(StencilAccessNode &node)
+void PrintEquelleASTVisitor::visit(StencilAssignmentNode& node)
 {
     throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
 }
 
-void PrintEquelleASTVisitor::midVisit(StencilAccessNode &node)
+void PrintEquelleASTVisitor::midVisit(StencilAssignmentNode& node)
 {
     throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
 }
 
-void PrintEquelleASTVisitor::postVisit(StencilAccessNode &node)
+void PrintEquelleASTVisitor::postVisit(StencilAssignmentNode& node)
 {
     throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
 }
 
-void PrintEquelleASTVisitor::visit(StencilStatementNode &node)
+void PrintEquelleASTVisitor::visit(StencilNode& node)
 {
     throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
 }
 
-void PrintEquelleASTVisitor::midVisit(StencilStatementNode &node)
+void PrintEquelleASTVisitor::postVisit(StencilNode& node)
 {
     throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
 }
-
-void PrintEquelleASTVisitor::postVisit(StencilStatementNode &node)
-{
-    throw std::runtime_error( std::string(__PRETTY_FUNCTION__) + "is not implemented yet" );
-}
-
 
 void PrintEquelleASTVisitor::endl() const
 {

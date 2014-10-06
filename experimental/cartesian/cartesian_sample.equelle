@@ -1,18 +1,50 @@
-fourPoint : Function( u_0: Collection Of Scalar On AllCells() ) -> ...
-                         Collection Of Scalar On InteriorCells()
-fourPoint(u) = {
-    i = StencilI()
-    j = StencilJ()
+#RequireCartesian()
 
-    $ u@i,j@ = 1/8 * ( ...
-    	  4*u_0@i,j@ ...
-    	  + u_0@i+1,j@ ...
-    	  + u_0@i-1,j@ ...
-    	  + u_0@i,j+1@ ...
-    	  + u_0@i,j-1@ ... 
-    	) ...
-    $
+# TODO: Trenger dedusere bredden på stensil for å kunne generere riktig antall ghostceller
 
-    -> u
+# TODO: ApplyCartesianBoundaryConditions(posX, posY, negX, negY) (periodic, reflective, ....)
+# -> Hva med negering av komponenter? (e.g., hu, hv)
+
+# TODO: støtte for fler-komponents-likninger ( [h, hu, hv]: array/tuple/vector? )
+
+k : Scalar = InputScalarWithDefault("k", 1.0) #Material specific heat diffusion constant
+dx : Scalar = InputScalarWithDefault("dx", 1.0) #Size of each cell along x axis
+dy : Scalar = InputScalarWithDefault("dy", 1.0) #Size of each cell along y axis
+
+timesteps : Sequence Of Scalar
+timesteps = InputSequenceOfScalar("timesteps")
+
+u_initial : Stencil Collection Of Scalar On AllCells()
+u_initial = InputStencilCollectionOfScalar("u_initial", AllCells())
+u0 : Mutable Stencil Collection Of Scalar On AllCells()
+u0 = u_initial
+u : Mutable Stencil Collection Of Scalar On AllCells() #Declare here for increased speed
+u = u_initial
+
+i = StencilI()
+j = StencilJ()
+
+t : Mutable Scalar
+t = 0
+
+For dt In timesteps {
+	a = k * dt /(dx*dy)
+	
+	u(i, j) = u0(i, j) - a * 1/8 * ( ...
+    	  4*u0(i,j) ...
+    	  - u0(i+1,j) ...
+    	  - u0(i-1,j) ...
+    	  - u0(i,j+1) ...
+    	  - u0(i,j-1) ... 
+    	)
+    	
+	
+	#Should generate error (q not defined): q(i, j) = 1/4 * ( 2 * u_0(i,j-1) + u_0(i,j) + u_0(i,j+1) )
+	#Should generate error (Wrong indices used): u(j, i) = 1/8 
+    	
+    t = t+dt
+    
+    Output("t", t)
+    Output("u", u)
+	u0 = u
 }
-

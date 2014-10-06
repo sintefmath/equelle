@@ -30,11 +30,11 @@ std::string basicTypeString(const BasicType bt)
     case Void:
         return "Void";
     case StencilI:
-        return "StencilI";
+        return "I";
     case StencilJ:
-        return "StencilJ";
+        return "J";
     case StencilK:
-        return "StencilK";
+        return "K";
     default:
         return "basicTypeString() error";
     }
@@ -169,14 +169,16 @@ EquelleType::EquelleType(const BasicType bt,
                          const int subset_of,
                          const bool is_mutable,
                          const bool is_domain,
-                         const int array_size)
+                         const int array_size,
+                         const bool is_stencil)
     : basic_type_(bt),
       composite_(composite),
       gridmapping_(gridmapping),
       subset_of_(subset_of),
       mutable_(is_mutable),
       is_domain_(is_domain),
-      array_size_(array_size)
+      array_size_(array_size),
+      stencil_(is_stencil)
 {
 }
 
@@ -184,7 +186,8 @@ bool EquelleType::isBasic() const
 {
     return (basic_type_ != Invalid)
         && (composite_ == None)
-        && (gridmapping_ == NotApplicable);
+        && (gridmapping_ == NotApplicable)
+        && (stencil_ == false);
 }
 
 bool EquelleType::isEntityCollection() const
@@ -257,6 +260,17 @@ void EquelleType::setMutable(const bool is_mutable)
     mutable_ = is_mutable;
 }
 
+
+bool EquelleType::isStencil() const
+{
+    return stencil_ || isStencilType(basic_type_);
+}
+
+void EquelleType::setStencil(const bool is_stencil)
+{
+    stencil_ = is_stencil;
+}
+
 bool EquelleType::operator==(const EquelleType& et) const
 {
     // Note that we explicitly keep mutable_ out
@@ -267,7 +281,8 @@ bool EquelleType::operator==(const EquelleType& et) const
         && gridmapping_ == et.gridmapping_
         && subset_of_ == et.subset_of_
         && is_domain_ == et.is_domain_
-        && array_size_ == et.array_size_;
+        && array_size_ == et.array_size_
+        && stencil_ == et.stencil_;
 }
 
 bool EquelleType::operator!=(const EquelleType& et) const

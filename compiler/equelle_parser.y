@@ -6,6 +6,7 @@
 
 %glr-parser
 
+%token STENCIL
 %token COLLECTION
 %token SEQUENCE
 %token ARRAY
@@ -30,6 +31,8 @@
 %token FOR
 %token IN
 %token MUTABLE
+%token DOUBLELB
+%token DOUBLERB
 %token <str> BUILTIN
 %token <str> ID
 %token <str> INT
@@ -42,6 +45,7 @@
 %token NEQ
 %token RET
 %token EOL
+%token LINECONT
 
 %type <seq> program
 %type <seq> lineblock
@@ -53,23 +57,23 @@
 %type <node> comb_decl_assign
 %type <node> expr
 %type <type> type_expr
+%type <type> collection_of
 %type <ftype> f_type_expr
 %type <type> basic_type
 %type <fargdecl> f_decl_args
 %type <node> number
 %type <node> array
-%type <fcall> function_call
+%type <fcalllike> f_assign_start
+%type <fcalllike> f_call_like
 %type <farg> f_call_args
 %type <seq> block
-%type <node> f_startdef
 %type <loop> loop_start
-%type <stencilAccess> stencil_access
-%type <seq> stencil_statement
 
 %start program
 %error-verbose
 
 %nonassoc MUTABLE
+%nonassoc STENCIL
 %nonassoc '?'
 %nonassoc ON
 %nonassoc EXTEND
@@ -94,17 +98,15 @@
 
 %union{
     Node* node;
-    TypeNode*               type;
-    VarDeclNode*            vardecl;
-    FuncTypeNode*           ftype;
-    FuncArgsNode*           farg;
-    FuncArgsDeclNode*       fargdecl;
-    FuncCallNode*           fcall;
-    SequenceNode*           seq;
-    LoopNode*               loop;
-    StencilStatementNode*   stencilStmnt;
-    StencilAccessNode*      stencilAccess;
-    std::string*            str;
+    TypeNode*                      type;
+    VarDeclNode*                   vardecl;
+    FuncTypeNode*                  ftype;
+    FuncArgsNode*                  farg;
+    FuncArgsDeclNode*              fargdecl;
+    FuncCallLikeNode*              fcalllike;
+    SequenceNode*                  seq;
+    LoopNode*                      loop;
+    std::string*                   str;
 }
 
 
@@ -122,37 +124,31 @@ line: statement EOL             { $$ = $1; }
     | EOL                       { $$ = nullptr; }
     ;
 
-block: '{' EOL lineblock '}'     { $$ = handleBlock($3); }
-     | EOL '{' EOL lineblock '}' { $$ = handleBlock($4); }
+block: '{' EOL lineblock '}'     { $$ = $3; }
+     | EOL '{' EOL lineblock '}' { $$ = $4; }
 
 statement: declaration          { $$ = $1; }
          | f_declaration        { $$ = $1; }
          | assignment           { $$ = $1; }
          | comb_decl_assign     { $$ = $1; }
-         | function_call        { $$ = handleFuncCallStatement($1); }
+         | f_call_like          { $$ = handleFuncCallStatement($1); }
          | RET expr             { $$ = handleReturnStatement($2); }
          | loop_start block     { $$ = handleLoopStatement($1, $2); }
-         | stencil_statement    { $$ = $1; }
          ;
 
 declaration: ID ':' type_expr  { $$ = handleDeclaration(*($1), $3); delete $1; }
 
 f_declaration: ID ':' f_type_expr  { $$ = handleFuncDeclaration(*($1), $3); delete $1; }
-
+			
 assignment: ID '=' expr       { $$ = handleAssignment(*($1), $3); delete $1; }
-          | f_startdef block  { $$ = handleFuncAssignment($1, $2); }
+          | f_assign_start expr { $$ = handleStencilAssignment($1, $2); }
+          | f_assign_start block  { $$ = handleFuncAssignment($1, $2); }
           ;
-
-stencil_statement: '$' stencil_access '=' expr '$' { $$ = handleStencilStatement($2, $4); };
-
-stencil_access: ID  '@' f_call_args '@' { $$ = handleStencilAccess( *($1), $3 ); delete $1; };
-
-f_startdef: ID '(' f_call_args ')' '='       { $$ = handleFuncStart(*($1), $3); delete $1; }
 
 comb_decl_assign: ID ':' type_expr '=' expr  { $$ = handleDeclarationAssign(*($1), $3, $5); delete $1; }
 
 expr: number              { $$ = $1; }
-    | function_call       { $$ = $1; }
+    | f_call_like         { $$ = $1; }
     | expr '[' INT ']'    { $$ = handleRandomAccess($1, intFromString(*($3))); delete $3; }
     | '(' expr ')'        { $$ = $2; }
     | '|' expr '|'        { $$ = handleNorm($2); }
@@ -171,19 +167,21 @@ expr: number              { $$ = $1; }
     | expr ON expr        { $$ = handleOn($1, $3); }
     | expr EXTEND expr    { $$ = handleExtend($1, $3); }
     | ID                  { $$ = handleIdentifier(*($1)); delete $1; }
-    | STRING_LITERAL      { $$ = handleString(*($1)); delete $1; }      
-    | stencil_access      { $$ = $1; }
+    | STRING_LITERAL      { $$ = handleString(*($1)); delete $1; }
     | array               { $$ = $1; }
     ;
 
 type_expr: basic_type                                  { $$ = $1; }
-         | COLLECTION OF basic_type                    { $$ = handleCollection($3, nullptr,  nullptr); }
-         | COLLECTION OF basic_type ON expr            { $$ = handleCollection($3,      $5,  nullptr); }
-         | COLLECTION OF basic_type SUBSET OF expr     { $$ = handleCollection($3, nullptr,       $6); }
+		 | collection_of                               { $$ = $1; }
+		 | STENCIL collection_of                       { $$ = handleStencilCollection($2); }
          | SEQUENCE OF basic_type                      { $$ = handleSequence($3); }
          | ARRAY OF INT type_expr                      { $$ = handleArrayType(intFromString(*($3)), $4); delete $3; }
          | MUTABLE type_expr                           { $$ = handleMutableType($2); }
          ;
+         
+collection_of: COLLECTION OF basic_type                    { $$ = handleCollection($3, nullptr,  nullptr); }
+             | COLLECTION OF basic_type ON expr            { $$ = handleCollection($3,      $5,  nullptr); }
+             | COLLECTION OF basic_type SUBSET OF expr     { $$ = handleCollection($3, nullptr,       $6); }
 
 f_type_expr: f_starttype '(' f_decl_args ')' RET type_expr      { $$ = handleFuncType($3, $6); }
 
@@ -209,13 +207,11 @@ number: INT                     { $$ = handleNumber(numFromString(*($1))); delet
 
 array: '[' f_call_args ']'      { $$ = handleArray($2); }
 
-function_call: BUILTIN '(' f_call_args ')'  { $$ = handleFuncCall(*($1), $3); delete $1; }
-             | ID '(' f_call_args ')'       { $$ = handleFuncCall(*($1), $3); delete $1; }
+f_assign_start: ID '(' f_call_args ')' '='    { $$ = handleFuncAssignmentStart(*($1), $3); delete $1; }
+
+f_call_like: BUILTIN '(' f_call_args ')'  { $$ = handleFuncCallLike(*($1), $3); delete $1; }
+             | ID '(' f_call_args ')'     { $$ = handleFuncCallLike(*($1), $3); delete $1; }
              ;
-
-
-
-
 
 f_call_args: f_call_args ',' expr     { $$ = $1; $$->addArg($3); }
            | expr                     { $$ = new FuncArgsNode($1); }
