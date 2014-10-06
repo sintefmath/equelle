@@ -395,8 +395,8 @@ BinaryOpNode* handleBinaryOp(BinaryOp op, Node* left, Node* right)
         			(rt.basicType() == StencilI || rt.basicType() == StencilJ || rt.basicType() == StencilK)) {
         		//n OP i,j,k is OK
         	}
-        	else if (lt.isStencil() && rt.basicType() == Scalar
-        			|| rt.isStencil() && lt.basicType() == Scalar) {
+                else if ((lt.isStencil() && rt.basicType() == Scalar)
+                         || (rt.isStencil() && lt.basicType() == Scalar)) {
         		//n OP u(i, j)  and  u(i, j) OP n is OK
         	}
         	else {
