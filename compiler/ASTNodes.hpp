@@ -1109,6 +1109,10 @@ public:
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
+        number_->accept(visitor);
+        if (unit_) {
+            unit_->accept(visitor);
+        }
     }
 
     Dimension dimension() const
