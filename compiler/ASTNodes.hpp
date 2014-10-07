@@ -1237,6 +1237,11 @@ public:
         return unit_ ? unit_->dimension() : Dimension();
     }
 
+    double conversionFactorSI() const
+    {
+        return unit_ ? unit_->conversionFactorSI() : 1.0;
+    }
+
     double number() const
     {
         return number_->number();
