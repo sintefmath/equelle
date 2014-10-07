@@ -27,6 +27,10 @@ class ExpressionNode : public Node
 {
 public:
     virtual EquelleType type() const = 0;
+    virtual Dimension dimension() const
+    {
+        return Dimension();
+    }
 };
 
 
