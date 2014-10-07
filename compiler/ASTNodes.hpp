@@ -1230,6 +1230,7 @@ public:
         if (unit_) {
             unit_->accept(visitor);
         }
+        visitor.postVisit(*this);
     }
 
     Dimension dimension() const
