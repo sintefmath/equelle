@@ -17,10 +17,6 @@ public:
     {}
     virtual ~Node()
     {}
-    virtual EquelleType type() const
-    {
-        return EquelleType();
-    }
     virtual void accept(ASTVisitorInterface&)
     {
         // Do nothing.

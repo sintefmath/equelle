@@ -84,7 +84,7 @@ UnitNode* handleUnitPower(UnitNode* unit, const double num)
 
 
 
-Node* handleIdentifier(const std::string& name)
+ExpressionNode* handleIdentifier(const std::string& name)
 {
     if (SymbolTable::isVariableDeclared(name)) {
         return new VarNode(name);
@@ -116,7 +116,7 @@ VarDeclNode* handleDeclaration(const std::string& name, TypeNode* type)
 
 
 
-VarAssignNode* handleAssignment(const std::string& name, Node* expr)
+VarAssignNode* handleAssignment(const std::string& name, ExpressionNode* expr)
 {
     // If already declared...
     if (SymbolTable::isVariableDeclared(name)) {
@@ -222,14 +222,14 @@ FuncAssignNode* handleFuncAssignment(Node* funcstart, SequenceNode* fbody)
 
 
 
-ReturnStatementNode* handleReturnStatement(Node* expr)
+ReturnStatementNode* handleReturnStatement(ExpressionNode* expr)
 {
     return new ReturnStatementNode(expr);
 }
 
 
 
-Node* handleDeclarationAssign(const std::string& name, TypeNode* type, Node* expr)
+Node* handleDeclarationAssign(const std::string& name, TypeNode* type, ExpressionNode* expr)
 {
     SequenceNode* seq = new SequenceNode;
     seq->pushNode(handleDeclaration(name, type));
@@ -239,7 +239,7 @@ Node* handleDeclarationAssign(const std::string& name, TypeNode* type, Node* exp
 
 
 
-TypeNode* handleCollection(TypeNode* btype, Node* gridmapping, Node* subsetof)
+TypeNode* handleCollection(TypeNode* btype, ExpressionNode* gridmapping, ExpressionNode* subsetof)
 {
     assert(gridmapping == nullptr || subsetof == nullptr);
     EquelleType bt = btype->type();
@@ -366,7 +366,7 @@ FuncCallStatementNode* handleFuncCallStatement(FuncCallLikeNode* fcall_like)
 
 
 
-BinaryOpNode* handleBinaryOp(BinaryOp op, Node* left, Node* right)
+BinaryOpNode* handleBinaryOp(BinaryOp op, ExpressionNode* left, ExpressionNode* right)
 {
     EquelleType lt = left->type();
     EquelleType rt = right->type();
@@ -422,7 +422,7 @@ BinaryOpNode* handleBinaryOp(BinaryOp op, Node* left, Node* right)
 
 
 
-ComparisonOpNode* handleComparison(ComparisonOp op, Node* left, Node* right)
+ComparisonOpNode* handleComparison(ComparisonOp op, ExpressionNode* left, ExpressionNode* right)
 {
     EquelleType lt = left->type();
     EquelleType rt = right->type();
@@ -443,7 +443,7 @@ ComparisonOpNode* handleComparison(ComparisonOp op, Node* left, Node* right)
 
 
 
-NormNode* handleNorm(Node* expr_to_norm)
+NormNode* handleNorm(ExpressionNode* expr_to_norm)
 {
     if (expr_to_norm->type().isArray()) {
         yyerror("cannot take norm of an Array.");
@@ -459,7 +459,7 @@ NormNode* handleNorm(Node* expr_to_norm)
 
 
 
-UnaryNegationNode* handleUnaryNegation(Node* expr_to_negate)
+UnaryNegationNode* handleUnaryNegation(ExpressionNode* expr_to_negate)
 {
     if (!isNumericType(expr_to_negate->type().basicType())) {
         yyerror("unary minus can only be applied to numeric types.");
@@ -472,7 +472,7 @@ UnaryNegationNode* handleUnaryNegation(Node* expr_to_negate)
 
 
 
-TrinaryIfNode* handleTrinaryIf(Node* predicate, Node* iftrue, Node* iffalse)
+TrinaryIfNode* handleTrinaryIf(ExpressionNode* predicate, ExpressionNode* iftrue, ExpressionNode* iffalse)
 {
     const EquelleType pt = predicate->type();
     const EquelleType tt = iftrue->type();
@@ -498,7 +498,7 @@ TrinaryIfNode* handleTrinaryIf(Node* predicate, Node* iftrue, Node* iffalse)
 
 
 
-OnNode* handleOn(Node* left, Node* right)
+OnNode* handleOn(ExpressionNode* left, ExpressionNode* right)
 {
     const EquelleType lt = left->type();
     const EquelleType rt = right->type();
@@ -551,7 +551,7 @@ OnNode* handleOn(Node* left, Node* right)
 
 
 
-OnNode* handleExtend(Node* left, Node* right)
+OnNode* handleExtend(ExpressionNode* left, ExpressionNode* right)
 {
     const EquelleType lt = left->type();
     const EquelleType rt = right->type();
@@ -703,7 +703,7 @@ LoopNode* handleLoopStatement(LoopNode* loop_start, SequenceNode* loop_block)
 
 
 
-RandomAccessNode* handleRandomAccess(Node* expr, const int index)
+RandomAccessNode* handleRandomAccess(ExpressionNode* expr, const int index)
 {
     if (expr->type().isArray()) {
         if (index < 0 || index >= expr->type().arraySize()) {
@@ -719,7 +719,7 @@ RandomAccessNode* handleRandomAccess(Node* expr, const int index)
     return new RandomAccessNode(expr, index);
 }
 
-SequenceNode* handleStencilAssignment(FuncCallLikeNode* lhs, Node* rhs)
+SequenceNode* handleStencilAssignment(FuncCallLikeNode* lhs, ExpressionNode* rhs)
 {
 	SequenceNode* retval = new SequenceNode();
 

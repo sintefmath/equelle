@@ -16,7 +16,19 @@
 #include <vector>
 #include <cassert>
 
+
+
 // ------ Abstract syntax tree classes ------
+
+
+
+/// Base class for expression nodes.
+class ExpressionNode : public Node
+{
+public:
+    virtual EquelleType type() const = 0;
+};
+
 
 
 class SequenceNode : public Node
@@ -80,7 +92,7 @@ private:
 
 
 
-class StringNode : public Node
+class StringNode : public ExpressionNode
 {
 public:
     StringNode(const std::string& content) : content_(content) {}
@@ -144,10 +156,10 @@ private:
 enum BinaryOp { Add, Subtract, Multiply, Divide };
 
 
-class BinaryOpNode : public Node
+class BinaryOpNode : public ExpressionNode
 {
 public:
-    BinaryOpNode(BinaryOp op, Node* left, Node* right)
+    BinaryOpNode(BinaryOp op, ExpressionNode* left, ExpressionNode* right)
         : op_(op), left_(left), right_(right)
     {
     }
@@ -201,8 +213,8 @@ public:
     }
 private:
     BinaryOp op_;
-    Node* left_;
-    Node* right_;
+    ExpressionNode* left_;
+    ExpressionNode* right_;
 };
 
 
@@ -211,10 +223,10 @@ private:
 enum ComparisonOp { Less, Greater, LessEqual, GreaterEqual, Equal, NotEqual };
 
 
-class ComparisonOpNode : public Node
+class ComparisonOpNode : public ExpressionNode
 {
 public:
-    ComparisonOpNode(ComparisonOp op, Node* left, Node* right)
+    ComparisonOpNode(ComparisonOp op, ExpressionNode* left, ExpressionNode* right)
         : op_(op), left_(left), right_(right)
     {
     }
@@ -242,17 +254,17 @@ public:
     }
 private:
     ComparisonOp op_;
-    Node* left_;
-    Node* right_;
+    ExpressionNode* left_;
+    ExpressionNode* right_;
 };
 
 
 
 
-class NormNode : public Node
+class NormNode : public ExpressionNode
 {
 public:
-    NormNode(Node* expr_to_norm) : expr_to_norm_(expr_to_norm){}
+    NormNode(ExpressionNode* expr_to_norm) : expr_to_norm_(expr_to_norm){}
     virtual ~NormNode()
     {
         delete expr_to_norm_;
@@ -270,16 +282,16 @@ public:
         visitor.postVisit(*this);
     }
 private:
-    Node* expr_to_norm_;
+    ExpressionNode* expr_to_norm_;
 };
 
 
 
 
-class UnaryNegationNode : public Node
+class UnaryNegationNode : public ExpressionNode
 {
 public:
-    UnaryNegationNode(Node* expr_to_negate) : expr_to_negate_(expr_to_negate) {}
+    UnaryNegationNode(ExpressionNode* expr_to_negate) : expr_to_negate_(expr_to_negate) {}
     virtual ~UnaryNegationNode()
     {
         delete expr_to_negate_;
@@ -295,16 +307,16 @@ public:
         visitor.postVisit(*this);
     }
 private:
-    Node* expr_to_negate_;
+    ExpressionNode* expr_to_negate_;
 };
 
 
 
 
-class OnNode : public Node
+class OnNode : public ExpressionNode
 {
 public:
-    OnNode(Node* left, Node* right, bool is_extend)
+    OnNode(ExpressionNode* left, ExpressionNode* right, bool is_extend)
         : left_(left), right_(right), is_extend_(is_extend)
     {
     }
@@ -334,18 +346,18 @@ public:
         visitor.postVisit(*this);
     }
 private:
-    Node* left_;
-    Node* right_;
+    ExpressionNode* left_;
+    ExpressionNode* right_;
     bool is_extend_;
 };
 
 
 
 
-class TrinaryIfNode : public Node
+class TrinaryIfNode : public ExpressionNode
 {
 public:
-    TrinaryIfNode(Node* predicate, Node* iftrue, Node* iffalse)
+    TrinaryIfNode(ExpressionNode* predicate, ExpressionNode* iftrue, ExpressionNode* iffalse)
         : predicate_(predicate), iftrue_(iftrue), iffalse_(iffalse)
     {}
     virtual ~TrinaryIfNode()
@@ -369,9 +381,9 @@ public:
         visitor.postVisit(*this);
     }
 private:
-    Node* predicate_;
-    Node* iftrue_;
-    Node* iffalse_;
+    ExpressionNode* predicate_;
+    ExpressionNode* iftrue_;
+    ExpressionNode* iffalse_;
 };
 
 
@@ -413,7 +425,7 @@ private:
 class VarAssignNode : public Node
 {
 public:
-    VarAssignNode(std::string varname, Node* expr) : varname_(varname), expr_(expr)
+    VarAssignNode(std::string varname, ExpressionNode* expr) : varname_(varname), expr_(expr)
     {
     }
     virtual ~VarAssignNode()
@@ -436,13 +448,13 @@ public:
     }
 private:
     std::string varname_;
-    Node* expr_;
+    ExpressionNode* expr_;
 };
 
 
 
 
-class VarNode : public Node
+class VarNode : public ExpressionNode
 {
 public:
     VarNode(const std::string& varname) : varname_(varname)
@@ -473,7 +485,7 @@ private:
 
 
 
-class FuncRefNode : public Node
+class FuncRefNode : public ExpressionNode
 {
 public:
     FuncRefNode(const std::string& funcname) : funcname_(funcname)
@@ -499,11 +511,15 @@ private:
 
 
 
-class JustAnIdentifierNode : public Node
+class JustAnIdentifierNode : public ExpressionNode
 {
 public:
     JustAnIdentifierNode(const std::string& id) : id_(id)
     {
+    }
+    EquelleType type() const
+    {
+        return EquelleType();
     }
     const std::string& name() const
     {
@@ -630,7 +646,7 @@ private:
 class FuncArgsNode : public Node
 {
 public:
-    FuncArgsNode(Node* expr = 0)
+    FuncArgsNode(ExpressionNode* expr = 0)
     {
         if (expr) {
             args_.push_back(expr);
@@ -642,11 +658,11 @@ public:
             delete arg;
         }
     }
-    void addArg(Node* expr)
+    void addArg(ExpressionNode* expr)
     {
         args_.push_back(expr);
     }
-    const std::vector<Node*>& arguments() const
+    const std::vector<ExpressionNode*>& arguments() const
     {
         return args_;
     }
@@ -672,7 +688,7 @@ public:
         visitor.postVisit(*this);
     }
 private:
-    std::vector<Node*> args_;
+    std::vector<ExpressionNode*> args_;
 };
 
 
@@ -681,7 +697,7 @@ private:
 class ReturnStatementNode : public Node
 {
 public:
-    ReturnStatementNode(Node* expr)
+    ReturnStatementNode(ExpressionNode* expr)
         : expr_(expr)
     {}
     virtual ~ReturnStatementNode()
@@ -699,7 +715,7 @@ public:
         visitor.postVisit(*this);
     }
 private:
-    Node* expr_;
+    ExpressionNode* expr_;
 };
 
 
@@ -712,7 +728,7 @@ private:
  * u(i, j) = 5.0
  * computeResidual(u) = { ... }
  */
-class FuncCallLikeNode : public Node
+class FuncCallLikeNode : public ExpressionNode
 {
 public:
 	virtual const std::string& name() const = 0;
@@ -737,6 +753,10 @@ public:
     virtual const FuncArgsNode* args() const
     {
     	return funcargs_;
+    }
+    EquelleType type() const
+    {
+        return EquelleType();
     }
     virtual void accept(ASTVisitorInterface& visitor)
     {
@@ -933,7 +953,7 @@ private:
 
 
 
-class ArrayNode : public Node
+class ArrayNode : public ExpressionNode
 {
 public:
     ArrayNode(FuncArgsNode* expr_list)
@@ -963,10 +983,10 @@ private:
 
 
 
-class RandomAccessNode : public Node
+class RandomAccessNode : public ExpressionNode
 {
 public:
-    RandomAccessNode(Node* expr, const int index)
+    RandomAccessNode(ExpressionNode* expr, const int index)
         : expr_(expr), index_(index)
     {
     }
@@ -1004,14 +1024,14 @@ public:
         visitor.postVisit(*this);
     }
 private:
-    Node* expr_;
+    ExpressionNode* expr_;
     int index_;
 };
 
 class StencilAssignmentNode : public Node
 {
 public:
-	StencilAssignmentNode(StencilNode* lhs, Node* rhs)
+	StencilAssignmentNode(StencilNode* lhs, ExpressionNode* rhs)
 		: lhs_(lhs), rhs_(rhs)
 	{}
 
@@ -1039,7 +1059,7 @@ public:
     }
 private:
     StencilNode* lhs_;
-	Node* rhs_;
+	ExpressionNode* rhs_;
 };
 
 class UnitNode : public Node
@@ -1092,7 +1112,7 @@ private:
     double conv_factor_;
 };
 
-class QuantityNode : public Node
+class QuantityNode : public ExpressionNode
 {
 public:
     QuantityNode(NumberNode* number_arg, UnitNode* unit_arg)

@@ -55,16 +55,16 @@
 %type <node> f_declaration
 %type <node> assignment
 %type <node> comb_decl_assign
-%type <node> expr
+%type <enode> expr
 %type <type> type_expr
 %type <type> collection_of
 %type <ftype> f_type_expr
 %type <type> basic_type
 %type <fargdecl> f_decl_args
 %type <numnode> number
-%type <node> quantity
+%type <enode> quantity
 %type <unitnode> unit_expr
-%type <node> array
+%type <enode> array
 %type <fcalllike> f_assign_start
 %type <fcalllike> f_call_like
 %type <farg> f_call_args
@@ -101,7 +101,8 @@
 }
 
 %union{
-    Node* node;
+    Node*                          node;
+    ExpressionNode*                enode;
     TypeNode*                      type;
     VarDeclNode*                   vardecl;
     FuncTypeNode*                  ftype;
