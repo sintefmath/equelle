@@ -37,6 +37,56 @@ void PrintASTVisitor::visit(NumberNode& node)
     std::cout << indent() << "NumberNode: " << node.number() << '\n';
 }
 
+void PrintASTVisitor::visit(QuantityNode& node)
+{
+    std::cout << indent() << "QuantityNode" << '\n';
+    ++indent_;
+}
+
+// Needed for visit(UnitNode&).
+std::string dimString(BaseDimension bd)
+{
+    switch (bd) {
+    case Length:
+        return "Length";
+    case Time:
+        return "Time";
+    case Mass:
+        return "Mass";
+    case Temperature:
+        return "Temperature";
+    case ElectricCurrent:
+        return "ElectricCurrent";
+    case QuantityOfSubstance:
+        return "QuantityOfSubstance";
+    case LuminousIntensity:
+        return "LuminousIntensity";
+    default:
+        throw std::logic_error("Error in dimString() -- unknown enum value.");
+    }
+}
+
+// Needed for visit(UnitNode&).
+std::ostream& operator<<(std::ostream& os, const Dimension& dim)
+{
+    for (int i = 0; i < 7; ++i) {
+        BaseDimension bd = static_cast<BaseDimension>(i);
+        const int coef = dim.coefficient(bd);
+        if (coef == 1) {
+            os << "[" << dimString(bd) << "] ";
+        } else if (coef != 0) {
+            os << "[" << dimString(bd) << "]^" << coef << " ";
+        }
+    }
+    return os;
+}
+
+void PrintASTVisitor::visit(UnitNode& node)
+{
+    std::cout.precision(15);
+    std::cout << indent() << "UnitNode: (factor = " << node.conversionFactorSI() << "), (dimension = " << node.dimension() << ")\n";
+}
+
 void PrintASTVisitor::visit(StringNode& node)
 {
     std::cout << indent() << "StringNode: " << node.content() << '\n';
@@ -235,6 +285,11 @@ void PrintASTVisitor::midVisit(SequenceNode&)
 }
 
 void PrintASTVisitor::postVisit(SequenceNode&)
+{
+    --indent_;
+}
+
+void PrintASTVisitor::postVisit(QuantityNode&)
 {
     --indent_;
 }
