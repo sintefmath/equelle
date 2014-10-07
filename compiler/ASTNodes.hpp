@@ -29,7 +29,10 @@ public:
     virtual EquelleType type() const = 0;
     virtual Dimension dimension() const
     {
-        return Dimension();
+        Dimension d;
+        // To make errors stand out.
+        d.setCoefficient(LuminousIntensity, -999);
+        return d;
     }
 };
 
@@ -203,6 +206,22 @@ public:
             return EquelleType();
         }
     }
+    Dimension dimension() const
+    {
+        switch (op_) {
+        case Add:
+            return left_->dimension(); // Should be identical to right->dimension().
+        case Subtract:
+            return left_->dimension(); // Should be identical to right->dimension().
+        case Multiply:
+            return left_->dimension() + right_->dimension();
+        case Divide:
+            return left_->dimension() - right_->dimension();
+        default:
+            yyerror("internal compiler error in BinaryOpNode::type().");
+            return Dimension();
+        }
+    }
     BinaryOp op() const
     {
         return op_;
@@ -279,6 +298,37 @@ public:
                            expr_to_norm_->type().compositeType(),
                            expr_to_norm_->type().gridMapping());
     }
+    Dimension dimension() const
+    {
+        EquelleType t = expr_to_norm_->type();
+        if (isNumericType(t.basicType())) {
+            // The norm of a Scalar or Vector has the same dimension
+            // as the Scalar or Vector itself.
+            return expr_to_norm_->dimension();
+        } else {
+            // Taking the norm of a grid entity.
+            // Note: for now we always assume 3d for the
+            // purpose of dimensions of these types.
+            Dimension d;
+            switch (t.basicType()) {
+            case Vertex:
+                // 0-dimensional.
+                break;
+            case Edge:
+                d.setCoefficient(Length, 1);
+                break;
+            case Face:
+                d.setCoefficient(Length, 2);
+                break;
+            case Cell:
+                d.setCoefficient(Length, 3);
+                break;
+            default:
+                yyerror("internal compiler error in NormNode::dimension().");
+            }
+            return d;
+        }
+    }
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
@@ -303,6 +353,10 @@ public:
     EquelleType type() const
     {
         return expr_to_negate_->type();
+    }
+    Dimension dimension() const
+    {
+        return expr_to_negate_->dimension();
     }
     virtual void accept(ASTVisitorInterface& visitor)
     {
@@ -341,6 +395,10 @@ public:
     {
         return is_extend_;
     }
+    Dimension dimension() const
+    {
+        return left_->dimension();
+    }
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
@@ -373,6 +431,10 @@ public:
     EquelleType type() const
     {
         return iftrue_->type();
+    }
+    Dimension dimension() const
+    {
+        return iftrue_->dimension(); // Should be identical to iffalse_->dimension().
     }
     virtual void accept(ASTVisitorInterface& visitor)
     {
@@ -473,6 +535,10 @@ public:
             et.setMutable(false);
         }
         return et;
+    }
+    Dimension dimension() const
+    {
+        return SymbolTable::variableDimension(varname_);
     }
     const std::string& name() const
     {
@@ -848,6 +914,12 @@ public:
         }
     }
 
+    Dimension dimension() const
+    {
+        yyerror("FuncCallNode()::dimension() not implemented");
+        return ExpressionNode::dimension();
+    }
+
     const std::string& name() const
     {
         return funcname_;
@@ -974,6 +1046,11 @@ public:
     {
         return type_;
     }
+    Dimension dimension() const
+    {
+        yyerror("ArrayNode()::dimension() not implemented");
+        return ExpressionNode::dimension();
+    }
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
@@ -1020,6 +1097,11 @@ public:
             t.setBasicType(Scalar);
             return t;
         }
+    }
+    Dimension dimension() const
+    {
+        yyerror("RandomAccessNode()::dimension() not implemented");
+        return ExpressionNode::dimension();
     }
     virtual void accept(ASTVisitorInterface& visitor)
     {
@@ -1147,7 +1229,7 @@ public:
 
     Dimension dimension() const
     {
-        return unit_->dimension();
+        return unit_ ? unit_->dimension() : Dimension();
     }
 
     double number() const

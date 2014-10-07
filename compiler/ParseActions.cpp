@@ -144,6 +144,7 @@ VarAssignNode* handleAssignment(const std::string& name, ExpressionNode* expr)
                 && SymbolTable::isSubset(rhs_type.gridMapping(), lhs_type.subsetOf())) {
                 // OK, should make postponed definition of the variable.
                 SymbolTable::setVariableType(name, rhs_type);
+                SymbolTable::setVariableDimension(name, expr->dimension());
                 SymbolTable::setEntitySetName(rhs_type.gridMapping(), name);
             } else {
                 std::string err_msg = "mismatch between type in assignment and declaration for ";
@@ -160,6 +161,7 @@ VarAssignNode* handleAssignment(const std::string& name, ExpressionNode* expr)
             SymbolTable::setEntitySetName(gm, name);
         }
         SymbolTable::declareVariable(name, expr->type());
+        SymbolTable::setVariableDimension(name, expr->dimension());
     }
 
     // Set variable to assigned (unless mutable) and return.
@@ -402,6 +404,9 @@ BinaryOpNode* handleBinaryOp(BinaryOp op, ExpressionNode* left, ExpressionNode* 
                 yyerror("addition and subtraction only allowed between identical types.");
             }
         }
+        if (left->dimension() != right->dimension()) {
+            yyerror("addition and subtraction only allowed when both sides have same dimension.");
+        }
         break;
     case Multiply:
         if (lt.basicType() == Vector && rt.basicType() == Vector) {
@@ -436,6 +441,9 @@ ComparisonOpNode* handleComparison(ComparisonOp op, ExpressionNode* left, Expres
             yyerror("comparison operators on Collections only acceptable "
                     "if both sides are On the same set.");
         }
+    }
+    if (left->dimension() != right->dimension()) {
+        yyerror("comparison operators only allowed when both sides have same dimension.");
     }
     return new ComparisonOpNode(op, left, right);
 }
@@ -491,6 +499,10 @@ TrinaryIfNode* handleTrinaryIf(ExpressionNode* predicate, ExpressionNode* iftrue
         (pt.gridMapping() != tt.gridMapping())) {
         yyerror("in trinary if '<predicate> ? <iftrue> : <iffalse>' "
                 "all three expressions must be 'On' the same set.");
+    }
+    if (iftrue->dimension() != iffalse->dimension()) {
+        yyerror("in trinary if '<predicate> ? <iftrue> : <iffalse>' "
+                "<iftrue> and <iffalse> must have the same dimension.");
     }
     return new TrinaryIfNode(predicate, iftrue, iffalse);
 }
@@ -737,6 +749,7 @@ SequenceNode* handleStencilAssignment(FuncCallLikeNode* lhs, ExpressionNode* rhs
         EquelleType lhs_et = rhs->type();
         lhs_et.setMutable(true);
         SymbolTable::setVariableType(stencil->name(), lhs_et);
+        // TODO: set dimensions correctly here
         TypeNode* lhs_type = new TypeNode(lhs_et);
         retval->pushNode(new VarDeclNode(stencil->name(), lhs_type));
     }

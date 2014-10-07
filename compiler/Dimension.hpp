@@ -31,6 +31,16 @@ public:
     {
     }
 
+    void setCoefficient(BaseDimension index, int coeff)
+    {
+        dim_[index] = coeff;
+    }
+
+    int coefficient(BaseDimension index)
+    {
+        return dim_[index];
+    }
+
     Dimension operator+ (const Dimension& other)
     {
         Dimension result(*this);
