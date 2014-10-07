@@ -70,6 +70,26 @@ void PrintCPUBackendASTVisitor::visit(NumberNode& node)
     std::cout << "double(" << node.number() << ")";
 }
 
+void PrintCPUBackendASTVisitor::visit(QuantityNode& node)
+{
+    const double cf = node.conversionFactorSI();
+    if (cf != 1.0) {
+        std::cout.precision(16);
+        std::cout << "(" << cf << "*";
+    }
+}
+
+void PrintCPUBackendASTVisitor::postVisit(QuantityNode& node)
+{
+    if (node.conversionFactorSI() != 1.0) {
+        std::cout << ")";
+    }
+}
+
+void PrintCPUBackendASTVisitor::visit(UnitNode& node)
+{
+}
+
 void PrintCPUBackendASTVisitor::visit(StringNode& node)
 {
     std::cout << node.content();
