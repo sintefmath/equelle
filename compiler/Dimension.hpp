@@ -36,7 +36,7 @@ public:
         dim_[index] = coeff;
     }
 
-    int coefficient(BaseDimension index)
+    int coefficient(BaseDimension index) const
     {
         return dim_[index];
     }
