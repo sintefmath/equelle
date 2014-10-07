@@ -1053,8 +1053,10 @@ public:
     }
     Dimension dimension() const
     {
-        yyerror("ArrayNode()::dimension() not implemented");
-        return ExpressionNode::dimension();
+        // yyerror("ArrayNode()::dimension() not implemented");
+        // return ExpressionNode::dimension();
+        // TODO: array creation ([x,y,...]) is dimensionless for now, fix.
+        return Dimension();
     }
     virtual void accept(ASTVisitorInterface& visitor)
     {
@@ -1105,8 +1107,10 @@ public:
     }
     Dimension dimension() const
     {
-        yyerror("RandomAccessNode()::dimension() not implemented");
-        return ExpressionNode::dimension();
+        // yyerror("RandomAccessNode()::dimension() not implemented");
+        // return ExpressionNode::dimension();
+        // TODO: array access (a[n]) is dimensionless for now, fix.
+        return Dimension();
     }
     virtual void accept(ASTVisitorInterface& visitor)
     {
