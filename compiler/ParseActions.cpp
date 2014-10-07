@@ -190,24 +190,24 @@ void handleFuncStartType()
 
 FuncCallLikeNode* handleFuncAssignmentStart(const std::string& name, FuncArgsNode* args)
 {
-	//We are dealing with a function
-	if (SymbolTable::isFunctionDeclared(name)) {
-		//Set the scope name for the following block (the function itself)
-		//Will be "undone" in handleFuncAssignment
-		SymbolTable::setCurrentFunction(name);
-	    return new FuncStartNode(name, args);
-	}
-	//We are dealing with a defined stencil variable
-	else if (SymbolTable::isVariableDeclared(name)) {
-		return handleStencilAccess(name, args);
-	}
-	//We are dealing with an undefined stencil variable
-	else {
-		EquelleType type(Invalid, Collection);
-		type.setStencil(true);
+    // We are dealing with a function
+    if (SymbolTable::isFunctionDeclared(name)) {
+        // Set the scope name for the following block (the function itself)
+        // Will be "undone" in handleFuncAssignment
+        SymbolTable::setCurrentFunction(name);
+        return new FuncStartNode(name, args);
+    }
+    // We are dealing with a defined stencil variable
+    else if (SymbolTable::isVariableDeclared(name)) {
+        return handleStencilAccess(name, args);
+    }
+    // We are dealing with an undefined stencil variable
+    else {
+        EquelleType type(Invalid, Collection);
+        type.setStencil(true);
         SymbolTable::declareVariable(name, type);
-		return handleStencilAccess(name, args);
-	}
+        return handleStencilAccess(name, args);
+    }
 }
 
 
@@ -215,7 +215,7 @@ FuncAssignNode* handleFuncAssignment(Node* funcstart, SequenceNode* fbody)
 {
     // This is called after the block AST has been constructed,
     // so we should switch back to Main scope.
-	// See also handleFuncAssignmentStart
+    // See also handleFuncAssignmentStart
     SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
     return new FuncAssignNode(funcstart, fbody);
 }
@@ -289,78 +289,77 @@ FuncTypeNode* handleFuncType(FuncArgsDeclNode* argtypes, TypeNode* rtype)
 
 
 StencilNode* handleStencilAccess(const std::string& name, FuncArgsNode* args) {
-	if (!SymbolTable::isVariableDeclared(name)) {
-		std::string err_msg = "Could not find the stencil variable " + name;
-		yyerror(err_msg.c_str());
-	}
+    if (!SymbolTable::isVariableDeclared(name)) {
+        std::string err_msg = "Could not find the stencil variable " + name;
+        yyerror(err_msg.c_str());
+    }
 
-	auto argtypes = args->argumentTypes();
-	for (int i=0; i<argtypes.size(); ++i) {
-		if (!isStencilType(argtypes[i].basicType())) {
-			std::stringstream err_msg;
-			err_msg << "Cannot access a stencil with a non-stencil index in variable \""
-					<< name << "\"" << std::endl;
-			yyerror(err_msg.str().c_str());
-		}
-		else if (argtypes[i].basicType() != StencilI + i) {
-			std::stringstream err_msg;
-			err_msg << "Got index " << basicTypeString(argtypes[i].basicType())
-					<< " but expected " << basicTypeString(BasicType(StencilI + i))
-					<< " for variable \"" << name << "\"" << std::endl;
-			yyerror(err_msg.str().c_str());
-		}
-	}
-
-	return new StencilNode(name, args);
+    auto argtypes = args->argumentTypes();
+    for (int i=0; i<argtypes.size(); ++i) {
+        if (!isStencilType(argtypes[i].basicType())) {
+            std::stringstream err_msg;
+            err_msg << "Cannot access a stencil with a non-stencil index in variable \""
+                    << name << "\"" << std::endl;
+            yyerror(err_msg.str().c_str());
+        }
+        else if (argtypes[i].basicType() != StencilI + i) {
+            std::stringstream err_msg;
+            err_msg << "Got index " << basicTypeString(argtypes[i].basicType())
+                    << " but expected " << basicTypeString(BasicType(StencilI + i))
+                    << " for variable \"" << name << "\"" << std::endl;
+            yyerror(err_msg.str().c_str());
+        }
+    }
+    return new StencilNode(name, args);
 }
 
 FuncCallNode* handleFuncCall(const std::string& name, FuncArgsNode* args) {
-	const Function& f = SymbolTable::getFunction(name);
-	// Check function call arguments.
-	const auto argtypes = args->argumentTypes();
-	if (argtypes.size() != f.functionType().arguments().size()) {
-		std::string err_msg = "wrong number of arguments when calling function ";
-		err_msg += name;
-		yyerror(err_msg.c_str());
-	}
-	// At the moment, we do not check function argument types.
-	// If the function returns a new dynamically created domain,
-	// we must declare it (anonymously for now).
-	const EquelleType rtype = f.returnType(argtypes);
-	if (rtype.isDomain()) {
-		const int dynsubret = f.functionType().dynamicSubsetReturn(argtypes);
-		if (dynsubret != NotApplicable) {
-			// Create a new domain.
-			const int gm = SymbolTable::declareNewEntitySet("AnonymousEntitySet", dynsubret);
-			return new FuncCallNode(name, args, gm);
-		}
-	}
+    const Function& f = SymbolTable::getFunction(name);
+    // Check function call arguments.
+    const auto argtypes = args->argumentTypes();
+    if (argtypes.size() != f.functionType().arguments().size()) {
+        std::string err_msg = "wrong number of arguments when calling function ";
+        err_msg += name;
+        yyerror(err_msg.c_str());
+    }
+    // At the moment, we do not check function argument types.
+    // If the function returns a new dynamically created domain,
+    // we must declare it (anonymously for now).
+    const EquelleType rtype = f.returnType(argtypes);
+    if (rtype.isDomain()) {
+        const int dynsubret = f.functionType().dynamicSubsetReturn(argtypes);
+        if (dynsubret != NotApplicable) {
+            // Create a new domain.
+            const int gm = SymbolTable::declareNewEntitySet("AnonymousEntitySet", dynsubret);
+            return new FuncCallNode(name, args, gm);
+        }
+    }
 
-	return new FuncCallNode(name, args);
+    return new FuncCallNode(name, args);
 }
 
 FuncCallLikeNode* handleFuncCallLike(const std::string& name, FuncArgsNode* args)
 {
-	if (SymbolTable::isFunctionDeclared(name)) {
-		return handleFuncCall(name, args);
-	}
-	else if (SymbolTable::isVariableDeclared(name)) {
-		return handleStencilAccess(name, args);
-	}
-	else {
-		std::string err_msg = "Could not find the stencil variable or function " + name;
-		yyerror(err_msg.c_str());
-		return nullptr;
-	}
+    if (SymbolTable::isFunctionDeclared(name)) {
+        return handleFuncCall(name, args);
+    }
+    else if (SymbolTable::isVariableDeclared(name)) {
+        return handleStencilAccess(name, args);
+    }
+    else {
+        std::string err_msg = "Could not find the stencil variable or function " + name;
+        yyerror(err_msg.c_str());
+        return nullptr;
+    }
 }
 
 FuncCallStatementNode* handleFuncCallStatement(FuncCallLikeNode* fcall_like)
 {
-	FuncCallNode* fcall = dynamic_cast<FuncCallNode*>(fcall_like);
-	if (fcall == nullptr) {
-		std::string err_msg = "Internal error: The function \"" + fcall_like->name() + "\" does not appear to be properly defined";
-		yyerror(err_msg.c_str());
-	}
+    FuncCallNode* fcall = dynamic_cast<FuncCallNode*>(fcall_like);
+    if (fcall == nullptr) {
+        std::string err_msg = "Internal error: The function \"" + fcall_like->name() + "\" does not appear to be properly defined";
+        yyerror(err_msg.c_str());
+    }
     return new FuncCallStatementNode(fcall);
 }
 
@@ -387,21 +386,21 @@ BinaryOpNode* handleBinaryOp(BinaryOp op, ExpressionNode* left, ExpressionNode* 
         // Intentional fall-through.
     case Subtract:
         if (lt != rt) {
-        	if ((lt.basicType() == StencilI || lt.basicType() == StencilJ || lt.basicType() == StencilK)
-        			&& rt.basicType() == Scalar) {
-        		//i,j,k OP n is OK
-        	}
-        	else if (lt.basicType() == Scalar &&
-        			(rt.basicType() == StencilI || rt.basicType() == StencilJ || rt.basicType() == StencilK)) {
-        		//n OP i,j,k is OK
-        	}
-                else if ((lt.isStencil() && rt.basicType() == Scalar)
-                         || (rt.isStencil() && lt.basicType() == Scalar)) {
-        		//n OP u(i, j)  and  u(i, j) OP n is OK
-        	}
-        	else {
-        		yyerror("addition and subtraction only allowed between identical types.");
-        	}
+            if ((lt.basicType() == StencilI || lt.basicType() == StencilJ || lt.basicType() == StencilK)
+                && rt.basicType() == Scalar) {
+                //i,j,k OP n is OK
+            }
+            else if (lt.basicType() == Scalar &&
+                     (rt.basicType() == StencilI || rt.basicType() == StencilJ || rt.basicType() == StencilK)) {
+                //n OP i,j,k is OK
+            }
+            else if ((lt.isStencil() && rt.basicType() == Scalar)
+                     || (rt.isStencil() && lt.basicType() == Scalar)) {
+                //n OP u(i, j)  and  u(i, j) OP n is OK
+            }
+            else {
+                yyerror("addition and subtraction only allowed between identical types.");
+            }
         }
         break;
     case Multiply:
@@ -721,28 +720,28 @@ RandomAccessNode* handleRandomAccess(ExpressionNode* expr, const int index)
 
 SequenceNode* handleStencilAssignment(FuncCallLikeNode* lhs, ExpressionNode* rhs)
 {
-	SequenceNode* retval = new SequenceNode();
+    SequenceNode* retval = new SequenceNode();
 
-	StencilNode* stencil = dynamic_cast<StencilNode*>(lhs);
-	if (stencil == nullptr) {
-		std::string err_msg = "Internal error: The stencil \"" + lhs->name() + "\" does not appear to be properly defined";
-		yyerror(err_msg.c_str());
-	}
+    StencilNode* stencil = dynamic_cast<StencilNode*>(lhs);
+    if (stencil == nullptr) {
+        std::string err_msg = "Internal error: The stencil \"" + lhs->name() + "\" does not appear to be properly defined";
+        yyerror(err_msg.c_str());
+    }
 
-	//If the type is a collection of invalids (no pun intended)
-	//we can safely set it to the type of the rhs
-	EquelleType lhs_et = SymbolTable::variableType(stencil->name());
-	if (lhs_et.basicType() == Invalid
-			&& lhs_et.compositeType() == Collection
-			&& lhs_et.isStencil()) {
-		EquelleType lhs_et = rhs->type();
-		lhs_et.setMutable(true);
-		SymbolTable::setVariableType(stencil->name(), lhs_et);
-		TypeNode* lhs_type = new TypeNode(lhs_et);
-		retval->pushNode(new VarDeclNode(stencil->name(), lhs_type));
-	}
+    // If the type is a collection of invalids (no pun intended)
+    // we can safely set it to the type of the rhs
+    EquelleType lhs_et = SymbolTable::variableType(stencil->name());
+    if (lhs_et.basicType() == Invalid
+        && lhs_et.compositeType() == Collection
+        && lhs_et.isStencil()) {
+        EquelleType lhs_et = rhs->type();
+        lhs_et.setMutable(true);
+        SymbolTable::setVariableType(stencil->name(), lhs_et);
+        TypeNode* lhs_type = new TypeNode(lhs_et);
+        retval->pushNode(new VarDeclNode(stencil->name(), lhs_type));
+    }
 
-	retval->pushNode(new StencilAssignmentNode(stencil, rhs));
-	return retval;
+    retval->pushNode(new StencilAssignmentNode(stencil, rhs));
+    return retval;
 }
 

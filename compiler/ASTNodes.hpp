@@ -64,7 +64,7 @@ public:
         visitor.postVisit(*this);
     }
     const std::vector<Node*>& nodes() {
-    	return nodes_;
+        return nodes_;
     }
 private:
     std::vector<Node*> nodes_;
@@ -186,7 +186,7 @@ public:
         case Subtract:
             return lt; // should be identical to rt.
         case Multiply: {
-            const bool isvec = lt.basicType() == Vector || rt.basicType() == Vector; 
+            const bool isvec = lt.basicType() == Vector || rt.basicType() == Vector;
             const BasicType bt = isvec ? Vector : Scalar;
             const bool coll = lt.isCollection() || rt.isCollection();
             const int gm = lt.isCollection() ? lt.gridMapping() : rt.gridMapping();
@@ -329,7 +329,7 @@ public:
         delete left_;
         delete right_;
     }
-   EquelleType type() const
+    EquelleType type() const
     {
         return EquelleType(left_->type().basicType(), Collection, right_->type().gridMapping(), left_->type().subsetOf());
     }
@@ -702,7 +702,7 @@ class ReturnStatementNode : public Node
 {
 public:
     ReturnStatementNode(ExpressionNode* expr)
-        : expr_(expr)
+    : expr_(expr)
     {}
     virtual ~ReturnStatementNode()
     {
@@ -735,8 +735,8 @@ private:
 class FuncCallLikeNode : public ExpressionNode
 {
 public:
-	virtual const std::string& name() const = 0;
-	virtual const FuncArgsNode* args() const = 0;
+    virtual const std::string& name() const = 0;
+    virtual const FuncArgsNode* args() const = 0;
 };
 
 class FuncStartNode : public FuncCallLikeNode
@@ -756,7 +756,7 @@ public:
     }
     virtual const FuncArgsNode* args() const
     {
-    	return funcargs_;
+        return funcargs_;
     }
     EquelleType type() const
     {
@@ -778,8 +778,8 @@ private:
 class StencilNode : public FuncCallLikeNode
 {
 public:
-	StencilNode(const std::string& varname,
-            FuncArgsNode* args)
+    StencilNode(const std::string& varname,
+                FuncArgsNode* args)
         : varname_(varname), args_(args)
     {}
 
@@ -790,14 +790,14 @@ public:
 
     EquelleType type() const
     {
-		// All stencils are at this time scalars
-		// We do not want mutability of a variable to be passed on to
-		// expressions involving that variable.
-		EquelleType et = SymbolTable::variableType(varname_);
-		if (et.isMutable()) {
-			et.setMutable(false);
-		}
-		return et;
+        // All stencils are at this time scalars
+        // We do not want mutability of a variable to be passed on to
+        // expressions involving that variable.
+        EquelleType et = SymbolTable::variableType(varname_);
+        if (et.isMutable()) {
+            et.setMutable(false);
+        }
+        return et;
     }
 
     virtual const std::string& name() const
@@ -807,7 +807,7 @@ public:
 
     virtual const FuncArgsNode* args() const
     {
-    	return args_;
+        return args_;
     }
 
     virtual void accept(ASTVisitorInterface& visitor)
@@ -825,10 +825,10 @@ private:
 class FuncCallNode : public FuncCallLikeNode
 {
 public:
-	FuncCallNode(const std::string& funcname,
-            FuncArgsNode* funcargs,
-            const int dynamic_subset_return = NotApplicable)
-    	: funcname_(funcname), funcargs_(funcargs),
+    FuncCallNode(const std::string& funcname,
+                 FuncArgsNode* funcargs,
+                 const int dynamic_subset_return = NotApplicable)
+        : funcname_(funcname), funcargs_(funcargs),
           dsr_(dynamic_subset_return)
     {}
 
@@ -839,23 +839,23 @@ public:
 
     EquelleType type() const
     {
-		EquelleType t = SymbolTable::getFunction(funcname_).returnType(funcargs_->argumentTypes());
-		if (dsr_ != NotApplicable) {
-			assert(t.isEntityCollection());
-			return EquelleType(t.basicType(), Collection, dsr_, t.subsetOf(), t.isMutable(), t.isDomain());
-		} else {
-			return t;
-		}
+        EquelleType t = SymbolTable::getFunction(funcname_).returnType(funcargs_->argumentTypes());
+        if (dsr_ != NotApplicable) {
+            assert(t.isEntityCollection());
+            return EquelleType(t.basicType(), Collection, dsr_, t.subsetOf(), t.isMutable(), t.isDomain());
+        } else {
+            return t;
+        }
     }
 
     const std::string& name() const
     {
-    	return funcname_;
+        return funcname_;
     }
 
     virtual const FuncArgsNode* args() const
     {
-    	return funcargs_;
+        return funcargs_;
     }
     FuncArgsNode& argumentsNode() const
     {
@@ -879,7 +879,7 @@ class FuncCallStatementNode : public Node
 {
 public:
     FuncCallStatementNode(FuncCallNode* func_call)
-    	: func_call_(func_call)
+    : func_call_(func_call)
     {}
 
     virtual ~FuncCallStatementNode()
@@ -889,7 +889,7 @@ public:
 
     EquelleType type() const
     {
-    	return func_call_->type();
+        return func_call_->type();
     }
 
     virtual void accept(ASTVisitorInterface& visitor)
@@ -961,7 +961,7 @@ class ArrayNode : public ExpressionNode
 {
 public:
     ArrayNode(FuncArgsNode* expr_list)
-        : expr_list_(expr_list)
+    : expr_list_(expr_list)
     {
         type_ = expr_list->arguments().front()->type();
         type_.setArraySize(expr_list->arguments().size());
@@ -1035,35 +1035,35 @@ private:
 class StencilAssignmentNode : public Node
 {
 public:
-	StencilAssignmentNode(StencilNode* lhs, ExpressionNode* rhs)
-		: lhs_(lhs), rhs_(rhs)
-	{}
+    StencilAssignmentNode(StencilNode* lhs, ExpressionNode* rhs)
+        : lhs_(lhs), rhs_(rhs)
+    {}
 
-	virtual ~StencilAssignmentNode() {
-		delete lhs_;
-		delete rhs_;
-	}
+    virtual ~StencilAssignmentNode() {
+        delete lhs_;
+        delete rhs_;
+    }
 
     EquelleType type() const
     {
-    	return rhs_->type();
+        return rhs_->type();
     }
 
     virtual void accept(ASTVisitorInterface& visitor)
     {
-    	visitor.visit(*this);
-    	lhs_->accept(visitor);
-    	visitor.midVisit(*this);
-    	rhs_->accept(visitor);
-    	visitor.postVisit(*this);
+        visitor.visit(*this);
+        lhs_->accept(visitor);
+        visitor.midVisit(*this);
+        rhs_->accept(visitor);
+        visitor.postVisit(*this);
     }
 
     const std::string& name() const {
-    	return lhs_->name();
+        return lhs_->name();
     }
 private:
     StencilNode* lhs_;
-	ExpressionNode* rhs_;
+    ExpressionNode* rhs_;
 };
 
 class UnitNode : public Node
