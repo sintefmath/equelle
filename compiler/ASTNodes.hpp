@@ -326,6 +326,9 @@ public:
             default:
                 yyerror("internal compiler error in NormNode::dimension().");
             }
+            // TODO: we use a dimensionless value here now, until
+            // dimension of function calls has been implemented.
+            d = Dimension();
             return d;
         }
     }
@@ -916,8 +919,10 @@ public:
 
     Dimension dimension() const
     {
-        yyerror("FuncCallNode()::dimension() not implemented");
-        return ExpressionNode::dimension();
+        // yyerror("FuncCallNode()::dimension() not implemented");
+        // return ExpressionNode::dimension();
+        // TODO: function calls are dimensionless for now, fix.
+        return Dimension();
     }
 
     const std::string& name() const
