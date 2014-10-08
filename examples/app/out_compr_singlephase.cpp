@@ -59,10 +59,10 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
     const CollOfScalar h1 = ((-area * perm) * (er.dot(er.normal(intf), d1) / er.dot(d1, d1)));
     const CollOfScalar h2 = ((area * perm) * (er.dot(er.normal(intf), d2) / er.dot(d2, d2)));
     const CollOfScalar trans = (double(1) / ((double(1) / h1) + (double(1) / h2)));
-    std::function<CollOfScalar(const CollOfScalar&)> density = [&](const CollOfScalar& p) -> CollOfScalar {
+    auto density = [&](const auto& p) {
         return (p / (rsp * temp));
     };
-    std::function<CollOfScalar(const CollOfScalar&, const CollOfScalar&, const Scalar&)> residual = [&](const CollOfScalar& p, const CollOfScalar& p0, const Scalar& dt) -> CollOfScalar {
+    auto residual = [&](const auto& p, const auto& p0, const auto& dt) {
         const CollOfScalar v = ((mobility * trans) * (er.operatorOn(p, er.allCells(), f) - er.operatorOn(p, er.allCells(), s)));
         const CollOfScalar rho = density(p);
         const CollOfScalar rho0 = density(p0);
@@ -70,10 +70,9 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
         const CollOfScalar res = ((((vol / dt) * (rho - rho0)) + er.divergence((v * rho_face))) - q);
         return res;
     };
-    CollOfScalar p0;
-    p0 = p_initial;
+    CollOfScalar p0 = p_initial;
     for (const Scalar& dt : timesteps) {
-        std::function<CollOfScalar(const CollOfScalar&)> locRes = [&](const CollOfScalar& p) -> CollOfScalar {
+        auto locRes = [&](const auto& p) {
             return residual(p, p0, dt);
         };
         const CollOfScalar p = er.newtonSolve(locRes, p0);

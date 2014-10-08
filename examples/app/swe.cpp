@@ -15,19 +15,30 @@
 #include <array>
 
 #include "equelle/EquelleRuntimeCPU.hpp"
+#include "equelle/CartesianGrid.hpp"//Should be renamed EquelleCartesianRuntimeCPU
 
-using namespace equelle;
-void ensureRequirements(const EquelleRuntimeCPU& er);
+void ensureRequirements(const equelle::EquelleRuntimeCPU& er);
+void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er, equelle::CartesianEquelleRuntime& er_cart);
 
+#ifndef EQUELLE_NO_MAIN
 int main(int argc, char** argv)
 {
     // Get user parameters.
     Opm::parameter::ParameterGroup param(argc, argv, false);
 
     // Create the Equelle runtime.
-    EquelleRuntimeCPU er(param);
+    equelle::CartesianEquelleRuntime er_cart(param);
+    equelle::EquelleRuntimeCPU er(param);
+    equelleGeneratedCode(er, er_cart);
+    return 0;
+}
+#endif // EQUELLE_NO_MAIN
 
+void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
+                          equelle::CartesianEquelleRuntime& er_cart) {
+    using namespace equelle;
     ensureRequirements(er);
+    (void)er_cart; // To suppress compile warnings if not used below.
 
     // ============= Generated code starts here ================
 
@@ -48,128 +59,128 @@ int main(int argc, char** argv)
     const CollOfScalar vol = er.norm(er.allCells());
     const CollOfScalar area = er.norm(er.allFaces());
     const Scalar gravity = double(9.81);
-    std::function<std::array<CollOfScalar, 3>(const std::array<CollOfScalar, 3>&, const CollOfScalar&)> f = [&](const std::array<CollOfScalar, 3>& q, const CollOfScalar& b) -> std::array<CollOfScalar, 3> {
-        const CollOfScalar rawWaterHeight = (q[0] - b);
+    auto f = [&](const auto& q, const auto& b) {
+        const CollOfScalar rawWaterHeight = (std::get<0>(q) - b);
         const CollOfScalar waterHeight = er.trinaryIf((rawWaterHeight > double(0.05)), rawWaterHeight, er.operatorExtend(double(1000), int_faces));
-        const CollOfScalar f0temp = q[1];
-        const CollOfScalar f1temp = ((q[1] * (q[1] / waterHeight)) + (((double(0.5) * gravity) * waterHeight) * waterHeight));
-        const CollOfScalar f2temp = ((q[1] * q[2]) / waterHeight);
+        const CollOfScalar f0temp = std::get<1>(q);
+        const CollOfScalar f1temp = ((std::get<1>(q) * (std::get<1>(q) / waterHeight)) + (((double(0.5) * gravity) * waterHeight) * waterHeight));
+        const CollOfScalar f2temp = ((std::get<1>(q) * std::get<2>(q)) / waterHeight);
         const CollOfScalar f0 = er.trinaryIf((rawWaterHeight > double(0.05)), f0temp, er.operatorExtend(double(0), int_faces));
         const CollOfScalar f1 = er.trinaryIf((rawWaterHeight > double(0.05)), f1temp, er.operatorExtend(double(0), int_faces));
         const CollOfScalar f2 = er.trinaryIf((rawWaterHeight > double(0.05)), f2temp, er.operatorExtend(double(0), int_faces));
         return makeArray(f0, f1, f2);
     };
-    std::function<std::array<CollOfScalar, 3>(const std::array<CollOfScalar, 3>&, const CollOfScalar&)> g = [&](const std::array<CollOfScalar, 3>& q, const CollOfScalar& b) -> std::array<CollOfScalar, 3> {
-        const CollOfScalar rawWaterHeight = (q[0] - b);
+    auto g = [&](const auto& q, const auto& b) {
+        const CollOfScalar rawWaterHeight = (std::get<0>(q) - b);
         const CollOfScalar waterHeight = er.trinaryIf((rawWaterHeight > double(0.05)), rawWaterHeight, er.operatorExtend(double(1000), int_faces));
-        const CollOfScalar g0temp = q[2];
-        const CollOfScalar g1temp = (q[1] * (q[2] / waterHeight));
-        const CollOfScalar g2temp = ((q[2] * (q[2] / waterHeight)) + (((double(0.5) * gravity) * waterHeight) * waterHeight));
+        const CollOfScalar g0temp = std::get<2>(q);
+        const CollOfScalar g1temp = (std::get<1>(q) * (std::get<2>(q) / waterHeight));
+        const CollOfScalar g2temp = ((std::get<2>(q) * (std::get<2>(q) / waterHeight)) + (((double(0.5) * gravity) * waterHeight) * waterHeight));
         const CollOfScalar g0 = er.trinaryIf((rawWaterHeight > double(0.05)), g0temp, er.operatorExtend(double(0), int_faces));
         const CollOfScalar g1 = er.trinaryIf((rawWaterHeight > double(0.05)), g1temp, er.operatorExtend(double(0), int_faces));
         const CollOfScalar g2 = er.trinaryIf((rawWaterHeight > double(0.05)), g2temp, er.operatorExtend(double(0), int_faces));
         return makeArray(g0, g1, g2);
     };
-    std::function<std::array<CollOfScalar, 2>(const std::array<CollOfScalar, 3>&, const CollOfScalar&)> eigenvalueF = [&](const std::array<CollOfScalar, 3>& q, const CollOfScalar& b) -> std::array<CollOfScalar, 2> {
-        const CollOfScalar rawWaterHeight = (q[0] - b);
+    auto eigenvalueF = [&](const auto& q, const auto& b) {
+        const CollOfScalar rawWaterHeight = (std::get<0>(q) - b);
         const CollOfScalar waterHeight = er.trinaryIf((rawWaterHeight > double(0.05)), rawWaterHeight, er.operatorExtend(double(1000), int_faces));
-        const CollOfScalar eigF0temp = ((q[1] / waterHeight) - er.sqrt((gravity * waterHeight)));
-        const CollOfScalar eigF1temp = ((q[1] / waterHeight) + er.sqrt((gravity * waterHeight)));
+        const CollOfScalar eigF0temp = ((std::get<1>(q) / waterHeight) - er.sqrt((gravity * waterHeight)));
+        const CollOfScalar eigF1temp = ((std::get<1>(q) / waterHeight) + er.sqrt((gravity * waterHeight)));
         const CollOfScalar eigF0 = er.trinaryIf((rawWaterHeight > double(0.05)), eigF0temp, er.operatorExtend(double(0), int_faces));
         const CollOfScalar eigF1 = er.trinaryIf((rawWaterHeight > double(0.05)), eigF1temp, er.operatorExtend(double(0), int_faces));
         return makeArray(eigF0, eigF1);
     };
-    std::function<std::array<CollOfScalar, 2>(const std::array<CollOfScalar, 3>&, const CollOfScalar&)> eigenvalueG = [&](const std::array<CollOfScalar, 3>& q, const CollOfScalar& b) -> std::array<CollOfScalar, 2> {
-        const CollOfScalar rawWaterHeight = (q[0] - b);
+    auto eigenvalueG = [&](const auto& q, const auto& b) {
+        const CollOfScalar rawWaterHeight = (std::get<0>(q) - b);
         const CollOfScalar waterHeight = er.trinaryIf((rawWaterHeight > double(0.05)), rawWaterHeight, er.operatorExtend(double(1000), int_faces));
-        const CollOfScalar eigG0temp = ((q[2] / waterHeight) - er.sqrt((gravity * waterHeight)));
-        const CollOfScalar eigG1temp = ((q[2] / waterHeight) + er.sqrt((gravity * waterHeight)));
+        const CollOfScalar eigG0temp = ((std::get<2>(q) / waterHeight) - er.sqrt((gravity * waterHeight)));
+        const CollOfScalar eigG1temp = ((std::get<2>(q) / waterHeight) + er.sqrt((gravity * waterHeight)));
         const CollOfScalar eigG0 = er.trinaryIf((rawWaterHeight > double(0.05)), eigG0temp, er.operatorExtend(double(0), int_faces));
         const CollOfScalar eigG1 = er.trinaryIf((rawWaterHeight > double(0.05)), eigG1temp, er.operatorExtend(double(0), int_faces));
         return makeArray(eigG0, eigG1);
     };
-    std::function<std::array<CollOfScalar, 2>(const std::array<CollOfScalar, 3>&)> a_eval = [&](const std::array<CollOfScalar, 3>& q) -> std::array<CollOfScalar, 2> {
-        const std::array<CollOfScalar, 3> qFirst = makeArray(er.operatorOn(q[0], er.allCells(), er.firstCell(int_faces)), er.operatorOn(q[1], er.allCells(), er.firstCell(int_faces)), er.operatorOn(q[2], er.allCells(), er.firstCell(int_faces)));
-        const std::array<CollOfScalar, 3> qSecond = makeArray(er.operatorOn(q[0], er.allCells(), er.secondCell(int_faces)), er.operatorOn(q[1], er.allCells(), er.secondCell(int_faces)), er.operatorOn(q[2], er.allCells(), er.secondCell(int_faces)));
+    auto a_eval = [&](const auto& q) {
+        const auto qFirst = makeArray(er.operatorOn(std::get<0>(q), er.allCells(), er.firstCell(int_faces)), er.operatorOn(std::get<1>(q), er.allCells(), er.firstCell(int_faces)), er.operatorOn(std::get<2>(q), er.allCells(), er.firstCell(int_faces)));
+        const auto qSecond = makeArray(er.operatorOn(std::get<0>(q), er.allCells(), er.secondCell(int_faces)), er.operatorOn(std::get<1>(q), er.allCells(), er.secondCell(int_faces)), er.operatorOn(std::get<2>(q), er.allCells(), er.secondCell(int_faces)));
         const CollOfScalar bFirst = er.operatorOn(b_mid, er.allCells(), er.firstCell(int_faces));
         const CollOfScalar bSecond = er.operatorOn(b_mid, er.allCells(), er.secondCell(int_faces));
-        const std::array<CollOfScalar, 2> eigsFirst = eigenvalueF(qFirst, bFirst);
-        const std::array<CollOfScalar, 2> eigsSecond = eigenvalueF(qSecond, bSecond);
-        const CollOfScalar smallest = er.trinaryIf((eigsFirst[0] < eigsSecond[0]), eigsFirst[0], eigsSecond[0]);
+        const auto eigsFirst = eigenvalueF(qFirst, bFirst);
+        const auto eigsSecond = eigenvalueF(qSecond, bSecond);
+        const CollOfScalar smallest = er.trinaryIf((std::get<0>(eigsFirst) < std::get<0>(eigsSecond)), std::get<0>(eigsFirst), std::get<0>(eigsSecond));
         const CollOfScalar aminus = er.trinaryIf((smallest < double(0)), smallest, er.operatorExtend(double(0), int_faces));
-        const CollOfScalar largest = er.trinaryIf((eigsFirst[1] > eigsSecond[1]), eigsFirst[1], eigsSecond[1]);
+        const CollOfScalar largest = er.trinaryIf((std::get<1>(eigsFirst) > std::get<1>(eigsSecond)), std::get<1>(eigsFirst), std::get<1>(eigsSecond));
         const CollOfScalar aplus = er.trinaryIf((largest > double(0)), largest, er.operatorExtend(double(0), int_faces));
         return makeArray(aminus, aplus);
     };
-    std::function<std::array<CollOfScalar, 2>(const std::array<CollOfScalar, 3>&)> b_eval = [&](const std::array<CollOfScalar, 3>& q) -> std::array<CollOfScalar, 2> {
-        const std::array<CollOfScalar, 3> qFirst = makeArray(er.operatorOn(q[0], er.allCells(), er.firstCell(int_faces)), er.operatorOn(q[1], er.allCells(), er.firstCell(int_faces)), er.operatorOn(q[2], er.allCells(), er.firstCell(int_faces)));
-        const std::array<CollOfScalar, 3> qSecond = makeArray(er.operatorOn(q[0], er.allCells(), er.secondCell(int_faces)), er.operatorOn(q[1], er.allCells(), er.secondCell(int_faces)), er.operatorOn(q[2], er.allCells(), er.secondCell(int_faces)));
+    auto b_eval = [&](const auto& q) {
+        const auto qFirst = makeArray(er.operatorOn(std::get<0>(q), er.allCells(), er.firstCell(int_faces)), er.operatorOn(std::get<1>(q), er.allCells(), er.firstCell(int_faces)), er.operatorOn(std::get<2>(q), er.allCells(), er.firstCell(int_faces)));
+        const auto qSecond = makeArray(er.operatorOn(std::get<0>(q), er.allCells(), er.secondCell(int_faces)), er.operatorOn(std::get<1>(q), er.allCells(), er.secondCell(int_faces)), er.operatorOn(std::get<2>(q), er.allCells(), er.secondCell(int_faces)));
         const CollOfScalar bFirst = er.operatorOn(b_mid, er.allCells(), er.firstCell(int_faces));
         const CollOfScalar bSecond = er.operatorOn(b_mid, er.allCells(), er.secondCell(int_faces));
-        const std::array<CollOfScalar, 2> eigsFirst = eigenvalueG(qFirst, bFirst);
-        const std::array<CollOfScalar, 2> eigsSecond = eigenvalueG(qSecond, bSecond);
-        const CollOfScalar smallest = er.trinaryIf((eigsFirst[0] < eigsSecond[0]), eigsFirst[0], eigsSecond[0]);
+        const auto eigsFirst = eigenvalueG(qFirst, bFirst);
+        const auto eigsSecond = eigenvalueG(qSecond, bSecond);
+        const CollOfScalar smallest = er.trinaryIf((std::get<0>(eigsFirst) < std::get<0>(eigsSecond)), std::get<0>(eigsFirst), std::get<0>(eigsSecond));
         const CollOfScalar bminus = er.trinaryIf((smallest < double(0)), smallest, er.operatorExtend(double(0), int_faces));
-        const CollOfScalar largest = er.trinaryIf((eigsFirst[1] > eigsSecond[1]), eigsFirst[1], eigsSecond[1]);
+        const CollOfScalar largest = er.trinaryIf((std::get<1>(eigsFirst) > std::get<1>(eigsSecond)), std::get<1>(eigsFirst), std::get<1>(eigsSecond));
         const CollOfScalar bplus = er.trinaryIf((largest > double(0)), largest, er.operatorExtend(double(0), int_faces));
         return makeArray(bminus, bplus);
     };
-    std::function<std::array<CollOfScalar, 3>(const std::array<CollOfScalar, 3>&)> numF = [&](const std::array<CollOfScalar, 3>& q) -> std::array<CollOfScalar, 3> {
-        const std::array<CollOfScalar, 3> qFirst = makeArray(er.operatorOn(q[0], er.allCells(), er.firstCell(int_faces)), er.operatorOn(q[1], er.allCells(), er.firstCell(int_faces)), er.operatorOn(q[2], er.allCells(), er.firstCell(int_faces)));
-        const std::array<CollOfScalar, 3> qSecond = makeArray(er.operatorOn(q[0], er.allCells(), er.secondCell(int_faces)), er.operatorOn(q[1], er.allCells(), er.secondCell(int_faces)), er.operatorOn(q[2], er.allCells(), er.secondCell(int_faces)));
+    auto numF = [&](const auto& q) {
+        const auto qFirst = makeArray(er.operatorOn(std::get<0>(q), er.allCells(), er.firstCell(int_faces)), er.operatorOn(std::get<1>(q), er.allCells(), er.firstCell(int_faces)), er.operatorOn(std::get<2>(q), er.allCells(), er.firstCell(int_faces)));
+        const auto qSecond = makeArray(er.operatorOn(std::get<0>(q), er.allCells(), er.secondCell(int_faces)), er.operatorOn(std::get<1>(q), er.allCells(), er.secondCell(int_faces)), er.operatorOn(std::get<2>(q), er.allCells(), er.secondCell(int_faces)));
         const CollOfScalar bFirst = er.operatorOn(b_mid, er.allCells(), er.firstCell(int_faces));
         const CollOfScalar bSecond = er.operatorOn(b_mid, er.allCells(), er.secondCell(int_faces));
-        const std::array<CollOfScalar, 2> a = a_eval(q);
-        const CollOfScalar adiffRaw = (a[1] - a[0]);
+        const auto a = a_eval(q);
+        const CollOfScalar adiffRaw = (std::get<1>(a) - std::get<0>(a));
         const CollOfScalar adiff = er.trinaryIf(((adiffRaw * adiffRaw) > (double(0.05) * double(0.05))), adiffRaw, er.operatorExtend(double(1000), int_faces));
-        const std::array<CollOfScalar, 3> fFirst = f(qFirst, bFirst);
-        const std::array<CollOfScalar, 3> fSecond = f(qSecond, bSecond);
-        const CollOfScalar aFactor = ((a[1] * a[0]) / adiff);
-        const CollOfScalar firstPart0 = (((a[1] * fFirst[0]) - (a[0] * fSecond[0])) / adiff);
-        const CollOfScalar firstPart1 = (((a[1] * fFirst[1]) - (a[0] * fSecond[1])) / adiff);
-        const CollOfScalar firstPart2 = (((a[1] * fFirst[2]) - (a[0] * fSecond[2])) / adiff);
-        const CollOfScalar intFluxF0temp = (firstPart0 + (aFactor * (qSecond[0] - qFirst[0])));
-        const CollOfScalar intFluxF1temp = (firstPart1 + (aFactor * (qSecond[1] - qFirst[1])));
-        const CollOfScalar intFluxF2temp = (firstPart2 + (aFactor * (qSecond[2] - qFirst[2])));
+        const auto fFirst = f(qFirst, bFirst);
+        const auto fSecond = f(qSecond, bSecond);
+        const CollOfScalar aFactor = ((std::get<1>(a) * std::get<0>(a)) / adiff);
+        const CollOfScalar firstPart0 = (((std::get<1>(a) * std::get<0>(fFirst)) - (std::get<0>(a) * std::get<0>(fSecond))) / adiff);
+        const CollOfScalar firstPart1 = (((std::get<1>(a) * std::get<1>(fFirst)) - (std::get<0>(a) * std::get<1>(fSecond))) / adiff);
+        const CollOfScalar firstPart2 = (((std::get<1>(a) * std::get<2>(fFirst)) - (std::get<0>(a) * std::get<2>(fSecond))) / adiff);
+        const CollOfScalar intFluxF0temp = (firstPart0 + (aFactor * (std::get<0>(qSecond) - std::get<0>(qFirst))));
+        const CollOfScalar intFluxF1temp = (firstPart1 + (aFactor * (std::get<1>(qSecond) - std::get<1>(qFirst))));
+        const CollOfScalar intFluxF2temp = (firstPart2 + (aFactor * (std::get<2>(qSecond) - std::get<2>(qFirst))));
         const CollOfScalar intFluxF0 = er.trinaryIf(((adiffRaw * adiffRaw) > (double(0.05) * double(0.05))), intFluxF0temp, er.operatorExtend(double(0), int_faces));
         const CollOfScalar intFluxF1 = er.trinaryIf(((adiffRaw * adiffRaw) > (double(0.05) * double(0.05))), intFluxF1temp, er.operatorExtend(double(0), int_faces));
         const CollOfScalar intFluxF2 = er.trinaryIf(((adiffRaw * adiffRaw) > (double(0.05) * double(0.05))), intFluxF2temp, er.operatorExtend(double(0), int_faces));
         return makeArray(intFluxF0, intFluxF1, intFluxF2);
     };
-    std::function<std::array<CollOfScalar, 3>(const std::array<CollOfScalar, 3>&)> numG = [&](const std::array<CollOfScalar, 3>& q) -> std::array<CollOfScalar, 3> {
-        const std::array<CollOfScalar, 3> qFirst = makeArray(er.operatorOn(q[0], er.allCells(), er.firstCell(int_faces)), er.operatorOn(q[1], er.allCells(), er.firstCell(int_faces)), er.operatorOn(q[2], er.allCells(), er.firstCell(int_faces)));
-        const std::array<CollOfScalar, 3> qSecond = makeArray(er.operatorOn(q[0], er.allCells(), er.secondCell(int_faces)), er.operatorOn(q[1], er.allCells(), er.secondCell(int_faces)), er.operatorOn(q[2], er.allCells(), er.secondCell(int_faces)));
+    auto numG = [&](const auto& q) {
+        const auto qFirst = makeArray(er.operatorOn(std::get<0>(q), er.allCells(), er.firstCell(int_faces)), er.operatorOn(std::get<1>(q), er.allCells(), er.firstCell(int_faces)), er.operatorOn(std::get<2>(q), er.allCells(), er.firstCell(int_faces)));
+        const auto qSecond = makeArray(er.operatorOn(std::get<0>(q), er.allCells(), er.secondCell(int_faces)), er.operatorOn(std::get<1>(q), er.allCells(), er.secondCell(int_faces)), er.operatorOn(std::get<2>(q), er.allCells(), er.secondCell(int_faces)));
         const CollOfScalar bFirst = er.operatorOn(b_mid, er.allCells(), er.firstCell(int_faces));
         const CollOfScalar bSecond = er.operatorOn(b_mid, er.allCells(), er.secondCell(int_faces));
-        const std::array<CollOfScalar, 2> b = b_eval(q);
-        const CollOfScalar bdiffRaw = (b[1] - b[0]);
+        const auto b = b_eval(q);
+        const CollOfScalar bdiffRaw = (std::get<1>(b) - std::get<0>(b));
         const CollOfScalar bdiff = er.trinaryIf(((bdiffRaw * bdiffRaw) > (double(0.05) * double(0.05))), bdiffRaw, er.operatorExtend(double(1000), int_faces));
-        const std::array<CollOfScalar, 3> gFirst = g(qFirst, bFirst);
-        const std::array<CollOfScalar, 3> gSecond = g(qSecond, bSecond);
-        const CollOfScalar bFactor = ((b[1] * b[0]) / bdiff);
-        const CollOfScalar firstPart0 = (((b[1] * gFirst[0]) - (b[0] * gSecond[0])) / bdiff);
-        const CollOfScalar firstPart1 = (((b[1] * gFirst[1]) - (b[0] * gSecond[1])) / bdiff);
-        const CollOfScalar firstPart2 = (((b[1] * gFirst[2]) - (b[0] * gSecond[2])) / bdiff);
-        const CollOfScalar intFluxG0temp = (firstPart0 + (bFactor * (qSecond[0] - qFirst[0])));
-        const CollOfScalar intFluxG1temp = (firstPart1 + (bFactor * (qSecond[1] - qFirst[1])));
-        const CollOfScalar intFluxG2temp = (firstPart2 + (bFactor * (qSecond[2] - qFirst[2])));
+        const auto gFirst = g(qFirst, bFirst);
+        const auto gSecond = g(qSecond, bSecond);
+        const CollOfScalar bFactor = ((std::get<1>(b) * std::get<0>(b)) / bdiff);
+        const CollOfScalar firstPart0 = (((std::get<1>(b) * std::get<0>(gFirst)) - (std::get<0>(b) * std::get<0>(gSecond))) / bdiff);
+        const CollOfScalar firstPart1 = (((std::get<1>(b) * std::get<1>(gFirst)) - (std::get<0>(b) * std::get<1>(gSecond))) / bdiff);
+        const CollOfScalar firstPart2 = (((std::get<1>(b) * std::get<2>(gFirst)) - (std::get<0>(b) * std::get<2>(gSecond))) / bdiff);
+        const CollOfScalar intFluxG0temp = (firstPart0 + (bFactor * (std::get<0>(qSecond) - std::get<0>(qFirst))));
+        const CollOfScalar intFluxG1temp = (firstPart1 + (bFactor * (std::get<1>(qSecond) - std::get<1>(qFirst))));
+        const CollOfScalar intFluxG2temp = (firstPart2 + (bFactor * (std::get<2>(qSecond) - std::get<2>(qFirst))));
         const CollOfScalar intFluxG0 = er.trinaryIf(((bdiffRaw * bdiffRaw) > (double(0.05) * double(0.05))), intFluxG0temp, er.operatorExtend(double(0), int_faces));
         const CollOfScalar intFluxG1 = er.trinaryIf(((bdiffRaw * bdiffRaw) > (double(0.05) * double(0.05))), intFluxG1temp, er.operatorExtend(double(0), int_faces));
         const CollOfScalar intFluxG2 = er.trinaryIf(((bdiffRaw * bdiffRaw) > (double(0.05) * double(0.05))), intFluxG2temp, er.operatorExtend(double(0), int_faces));
         return makeArray(intFluxG0, intFluxG1, intFluxG2);
     };
-    std::function<std::array<CollOfScalar, 3>(const std::array<CollOfScalar, 3>&)> get_flux = [&](const std::array<CollOfScalar, 3>& q) -> std::array<CollOfScalar, 3> {
+    auto get_flux = [&](const auto& q) {
         const CollOfVector int_orientation = er.normal(int_faces);
-        const std::array<CollOfScalar, 2> pos_normal = makeArray(er.sqrt((CollOfScalar(int_orientation.col(0)) * CollOfScalar(int_orientation.col(0)))), er.sqrt((CollOfScalar(int_orientation.col(1)) * CollOfScalar(int_orientation.col(1)))));
-        const std::array<CollOfScalar, 3> int_numF = numF(q);
-        const std::array<CollOfScalar, 3> int_numG = numG(q);
-        const CollOfScalar int_fluxes0 = ((pos_normal[0] * int_numF[0]) + (pos_normal[1] * int_numG[0]));
-        const CollOfScalar int_fluxes1 = ((pos_normal[0] * int_numF[1]) + (pos_normal[1] * int_numG[1]));
-        const CollOfScalar int_fluxes2 = ((pos_normal[0] * int_numF[2]) + (pos_normal[1] * int_numG[2]));
-        const std::array<CollOfScalar, 3> intFlux = makeArray(int_fluxes0, int_fluxes1, int_fluxes2);
+        const auto pos_normal = makeArray(er.sqrt((CollOfScalar(int_orientation.col(0)) * CollOfScalar(int_orientation.col(0)))), er.sqrt((CollOfScalar(int_orientation.col(1)) * CollOfScalar(int_orientation.col(1)))));
+        const auto int_numF = numF(q);
+        const auto int_numG = numG(q);
+        const CollOfScalar int_fluxes0 = ((std::get<0>(pos_normal) * std::get<0>(int_numF)) + (std::get<1>(pos_normal) * std::get<0>(int_numG)));
+        const CollOfScalar int_fluxes1 = ((std::get<0>(pos_normal) * std::get<1>(int_numF)) + (std::get<1>(pos_normal) * std::get<1>(int_numG)));
+        const CollOfScalar int_fluxes2 = ((std::get<0>(pos_normal) * std::get<2>(int_numF)) + (std::get<1>(pos_normal) * std::get<2>(int_numG)));
+        const auto intFlux = makeArray(int_fluxes0, int_fluxes1, int_fluxes2);
         const CollOfVector bound_orientation = er.normal(bound);
         const CollOfCell bound_cells = er.trinaryIf(er.isEmpty(er.firstCell(bound)), er.secondCell(bound), er.firstCell(bound));
-        const CollOfScalar bound_q0 = er.operatorOn(q[0], er.allCells(), bound_cells);
+        const CollOfScalar bound_q0 = er.operatorOn(std::get<0>(q), er.allCells(), bound_cells);
         const CollOfScalar bound_b = er.operatorOn(b_mid, er.allCells(), bound_cells);
         const CollOfScalar bound_height = (bound_q0 - bound_b);
         const CollOfScalar bound_signX = er.trinaryIf((CollOfScalar(bound_orientation.col(0)) > double(0)), er.operatorExtend(double(1), bound), er.operatorExtend(-double(1), bound));
@@ -179,50 +190,48 @@ int main(int argc, char** argv)
         const CollOfScalar boundFlux0 = er.operatorExtend(double(0), bound);
         const CollOfScalar boundFlux1 = ((er.sqrt((CollOfScalar(bound_orientation.col(0)) * CollOfScalar(bound_orientation.col(0)))) * b_flux) * bound_signX);
         const CollOfScalar boundFlux2 = ((er.sqrt((CollOfScalar(bound_orientation.col(1)) * CollOfScalar(bound_orientation.col(1)))) * b_flux) * bound_signY);
-        const std::array<CollOfScalar, 3> boundFlux = makeArray(boundFlux0, boundFlux1, boundFlux2);
-        const std::array<CollOfScalar, 3> allFluxes = makeArray(((er.operatorExtend(double(0), er.allFaces()) + er.operatorExtend(boundFlux[0], er.boundaryFaces(), er.allFaces())) + er.operatorExtend(intFlux[0], er.interiorFaces(), er.allFaces())), ((er.operatorExtend(double(0), er.allFaces()) + er.operatorExtend(boundFlux[1], er.boundaryFaces(), er.allFaces())) + er.operatorExtend(intFlux[1], er.interiorFaces(), er.allFaces())), ((er.operatorExtend(double(0), er.allFaces()) + er.operatorExtend(boundFlux[2], er.boundaryFaces(), er.allFaces())) + er.operatorExtend(intFlux[2], er.interiorFaces(), er.allFaces())));
+        const auto boundFlux = makeArray(boundFlux0, boundFlux1, boundFlux2);
+        const auto allFluxes = makeArray(((er.operatorExtend(double(0), er.allFaces()) + er.operatorExtend(std::get<0>(boundFlux), er.boundaryFaces(), er.allFaces())) + er.operatorExtend(std::get<0>(intFlux), er.interiorFaces(), er.allFaces())), ((er.operatorExtend(double(0), er.allFaces()) + er.operatorExtend(std::get<1>(boundFlux), er.boundaryFaces(), er.allFaces())) + er.operatorExtend(std::get<1>(intFlux), er.interiorFaces(), er.allFaces())), ((er.operatorExtend(double(0), er.allFaces()) + er.operatorExtend(std::get<2>(boundFlux), er.boundaryFaces(), er.allFaces())) + er.operatorExtend(std::get<2>(intFlux), er.interiorFaces(), er.allFaces())));
         return allFluxes;
     };
-    std::function<std::array<CollOfScalar, 3>(const std::array<CollOfScalar, 3>&)> evalSourceTerm = [&](const std::array<CollOfScalar, 3>& q) -> std::array<CollOfScalar, 3> {
+    auto evalSourceTerm = [&](const auto& q) {
         const CollOfScalar bx = ((b_east - b_west) / dx);
         const CollOfScalar by = ((b_north - b_south) / dy);
-        const CollOfScalar secondTerm_x = (((q[0] - b_east) + (q[0] - b_west)) / double(2));
-        const CollOfScalar secondTerm_y = (((q[0] - b_north) + (q[0] - b_south)) / double(2));
-        const CollOfScalar dryTerm = er.trinaryIf(((q[0] - b_mid) > double(0.05)), er.operatorExtend(double(1), er.allCells()), er.operatorExtend(double(0), er.allCells()));
+        const CollOfScalar secondTerm_x = (((std::get<0>(q) - b_east) + (std::get<0>(q) - b_west)) / double(2));
+        const CollOfScalar secondTerm_y = (((std::get<0>(q) - b_north) + (std::get<0>(q) - b_south)) / double(2));
+        const CollOfScalar dryTerm = er.trinaryIf(((std::get<0>(q) - b_mid) > double(0.05)), er.operatorExtend(double(1), er.allCells()), er.operatorExtend(double(0), er.allCells()));
         return makeArray(er.operatorExtend(double(0), er.allCells()), (((-gravity * bx) * secondTerm_x) * dryTerm), (((-gravity * by) * secondTerm_y) * dryTerm));
     };
-    std::function<std::array<CollOfScalar, 3>(const std::array<CollOfScalar, 3>&, const Scalar&)> rungeKutta = [&](const std::array<CollOfScalar, 3>& q, const Scalar& dt) -> std::array<CollOfScalar, 3> {
-        const std::array<CollOfScalar, 3> flux = get_flux(q);
-        const std::array<CollOfScalar, 3> source = evalSourceTerm(q);
-        const CollOfScalar q_star0 = (q[0] + ((dt / vol) * (-er.divergence(flux[0]) + (vol * source[0]))));
-        const CollOfScalar q_star1 = (q[1] + ((dt / vol) * (-er.divergence(flux[1]) + (vol * source[1]))));
-        const CollOfScalar q_star2 = (q[2] + ((dt / vol) * (-er.divergence(flux[2]) + (vol * source[2]))));
-        const std::array<CollOfScalar, 3> flux_star = get_flux(makeArray(q_star0, q_star1, q_star2));
-        const std::array<CollOfScalar, 3> source_star = evalSourceTerm(makeArray(q_star0, q_star1, q_star2));
-        const CollOfScalar newQ0 = ((double(0.5) * q[0]) + (double(0.5) * (q_star0 + ((dt / vol) * (-er.divergence(flux_star[0]) + (vol * source_star[0]))))));
-        const CollOfScalar newQ1 = ((double(0.5) * q[1]) + (double(0.5) * (q_star1 + ((dt / vol) * (-er.divergence(flux_star[1]) + (vol * source_star[1]))))));
-        const CollOfScalar newQ2 = ((double(0.5) * q[2]) + (double(0.5) * (q_star2 + ((dt / vol) * (-er.divergence(flux_star[2]) + (vol * source_star[2]))))));
+    auto rungeKutta = [&](const auto& q, const auto& dt) {
+        const auto flux = get_flux(q);
+        const auto source = evalSourceTerm(q);
+        const CollOfScalar q_star0 = (std::get<0>(q) + ((dt / vol) * (-er.divergence(std::get<0>(flux)) + (vol * std::get<0>(source)))));
+        const CollOfScalar q_star1 = (std::get<1>(q) + ((dt / vol) * (-er.divergence(std::get<1>(flux)) + (vol * std::get<1>(source)))));
+        const CollOfScalar q_star2 = (std::get<2>(q) + ((dt / vol) * (-er.divergence(std::get<2>(flux)) + (vol * std::get<2>(source)))));
+        const auto flux_star = get_flux(makeArray(q_star0, q_star1, q_star2));
+        const auto source_star = evalSourceTerm(makeArray(q_star0, q_star1, q_star2));
+        const CollOfScalar newQ0 = ((double(0.5) * std::get<0>(q)) + (double(0.5) * (q_star0 + ((dt / vol) * (-er.divergence(std::get<0>(flux_star)) + (vol * std::get<0>(source_star)))))));
+        const CollOfScalar newQ1 = ((double(0.5) * std::get<1>(q)) + (double(0.5) * (q_star1 + ((dt / vol) * (-er.divergence(std::get<1>(flux_star)) + (vol * std::get<1>(source_star)))))));
+        const CollOfScalar newQ2 = ((double(0.5) * std::get<2>(q)) + (double(0.5) * (q_star2 + ((dt / vol) * (-er.divergence(std::get<2>(flux_star)) + (vol * std::get<2>(source_star)))))));
         return makeArray(newQ0, newQ1, newQ2);
     };
-    std::array<CollOfScalar, 3> q0;
-    q0 = makeArray((h_init + b_mid), (h_init * u_init), (h_init * v_init));
-    er.output("q1", q0[0]);
-    er.output("q2", q0[1]);
-    er.output("q3", q0[2]);
+    auto q0 = makeArray((h_init + b_mid), (h_init * u_init), (h_init * v_init));
+    er.output("q1", std::get<0>(q0));
+    er.output("q2", std::get<1>(q0));
+    er.output("q3", std::get<2>(q0));
     for (const Scalar& dt : timesteps) {
-        const std::array<CollOfScalar, 3> q = rungeKutta(q0, dt);
-        er.output("q1", q[0]);
-        er.output("q2", q[1]);
-        er.output("q3", q[2]);
+        const auto q = rungeKutta(q0, dt);
+        er.output("q1", std::get<0>(q));
+        er.output("q2", std::get<1>(q));
+        er.output("q3", std::get<2>(q));
         q0 = q;
     }
 
     // ============= Generated code ends here ================
 
-    return 0;
 }
 
-void ensureRequirements(const EquelleRuntimeCPU& er)
+void ensureRequirements(const equelle::EquelleRuntimeCPU& er)
 {
     er.ensureGridDimensionMin(1);
     er.ensureGridDimensionMin(2);

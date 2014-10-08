@@ -52,7 +52,7 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
     const CollOfScalar pv = (poro * er.norm(er.allCells()));
     const CollOfScalar cell_depths = CollOfScalar(er.centroid(er.allCells()).col(1));
     const CollOfScalar zdiff = er.gradient(cell_depths);
-    std::function<CollOfScalar(const CollOfScalar&)> computeTransmissibilities = [&](const CollOfScalar& permeability) -> CollOfScalar {
+    auto computeTransmissibilities = [&](const auto& permeability) {
         const CollOfFace interior_faces = er.interiorFaces();
         const CollOfCell first = er.firstCell(interior_faces);
         const CollOfCell second = er.secondCell(interior_faces);
@@ -67,20 +67,20 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
         return trans;
     };
     const CollOfScalar trans = computeTransmissibilities(perm);
-    std::function<CollOfScalar(const CollOfScalar&, const CollOfScalar&)> upwind = [&](const CollOfScalar& flux, const CollOfScalar& x) -> CollOfScalar {
+    auto upwind = [&](const auto& flux, const auto& x) {
         const CollOfScalar x1 = er.operatorOn(x, er.allCells(), er.firstCell(er.interiorFaces()));
         const CollOfScalar x2 = er.operatorOn(x, er.allCells(), er.secondCell(er.interiorFaces()));
         return er.trinaryIf((flux >= double(0)), x1, x2);
     };
-    std::function<CollOfScalar(const CollOfScalar&)> computeWaterMob = [&](const CollOfScalar& sw) -> CollOfScalar {
+    auto computeWaterMob = [&](const auto& sw) {
         const CollOfScalar krw = sw;
         return (krw / watervisc);
     };
-    std::function<CollOfScalar(const CollOfScalar&)> computeOilMob = [&](const CollOfScalar& sw) -> CollOfScalar {
+    auto computeOilMob = [&](const auto& sw) {
         const CollOfScalar kro = (er.operatorExtend(double(1), er.allCells()) - sw);
         return (kro / oilvisc);
     };
-    std::function<CollOfScalar(const CollOfScalar&, const CollOfScalar&)> fluxWithGrav = [&](const CollOfScalar& pressure, const CollOfScalar& sw) -> CollOfScalar {
+    auto fluxWithGrav = [&](const auto& pressure, const auto& sw) {
         const CollOfScalar ngradp = -er.gradient(pressure);
         er.output("ngradp", ngradp);
         const CollOfScalar flux_w = (ngradp + ((gravity * waterdensity) * zdiff));
@@ -95,12 +95,12 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
         const CollOfScalar omega = (((face_mob_w * waterdensity) + (face_mob_o * oildensity)) / face_total_mobility);
         return ((trans * face_total_mobility) * (ngradp + ((gravity * omega) * zdiff)));
     };
-    std::function<CollOfScalar(const CollOfScalar&, const CollOfScalar&, const CollOfScalar&)> computePressureResidual = [&](const CollOfScalar& pressure, const CollOfScalar& sw, const CollOfScalar& source) -> CollOfScalar {
+    auto computePressureResidual = [&](const auto& pressure, const auto& sw, const auto& source) {
         const CollOfScalar flux = fluxWithGrav(pressure, sw);
         er.output("fluxinres", flux);
         return (er.divergence(flux) - source);
     };
-    std::function<CollOfScalar(const CollOfScalar&, const CollOfScalar&, const CollOfScalar&, const CollOfScalar&, const CollOfScalar&, const Scalar&)> computeTransportResidual = [&](const CollOfScalar& sw, const CollOfScalar& sw0, const CollOfScalar& flux, const CollOfScalar& source, const CollOfScalar& insource_sw, const Scalar& dt) -> CollOfScalar {
+    auto computeTransportResidual = [&](const auto& sw, const auto& sw0, const auto& flux, const auto& source, const auto& insource_sw, const auto& dt) {
         const CollOfScalar insource = er.trinaryIf((source > double(0)), source, er.operatorExtend(double(0), er.allCells()));
         const CollOfScalar outsource = er.trinaryIf((source < double(0)), source, er.operatorExtend(double(0), er.allCells()));
         const CollOfScalar mw = computeWaterMob(sw);
@@ -117,19 +117,17 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
     const CollOfScalar source_values = er.inputCollectionOfScalar("source_values", source_cells);
     const CollOfScalar source = er.operatorExtend(source_values, source_cells, er.allCells());
     const CollOfScalar insource_sw = er.operatorExtend(double(1), er.allCells());
-    CollOfScalar sw0;
-    sw0 = sw_initial;
-    CollOfScalar p0;
-    p0 = er.operatorExtend(double(0), er.allCells());
+    CollOfScalar sw0 = sw_initial;
+    CollOfScalar p0 = er.operatorExtend(double(0), er.allCells());
     er.output("pressure", p0);
     er.output("saturation", sw0);
     for (const Scalar& dt : timesteps) {
-        std::function<CollOfScalar(const CollOfScalar&)> pressureResLocal = [&](const CollOfScalar& pressure) -> CollOfScalar {
+        auto pressureResLocal = [&](const auto& pressure) {
             return computePressureResidual(pressure, sw0, source);
         };
         const CollOfScalar p = er.newtonSolve(pressureResLocal, p0);
         const CollOfScalar flux = fluxWithGrav(p, sw0);
-        std::function<CollOfScalar(const CollOfScalar&)> transportResLocal = [&](const CollOfScalar& sw) -> CollOfScalar {
+        auto transportResLocal = [&](const auto& sw) {
             return computeTransportResidual(sw, sw0, flux, source, insource_sw, dt);
         };
         const CollOfScalar sw = er.newtonSolve(transportResLocal, er.operatorExtend(double(0.5), er.allCells()));

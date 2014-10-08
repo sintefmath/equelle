@@ -57,18 +57,17 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
     const CollOfScalar bf_sign = er.trinaryIf(er.isEmpty(er.firstCell(bf)), er.operatorExtend(-double(1), bf), er.operatorExtend(double(1), bf));
     const CollOfScalar btrans = (k * (er.norm(bf) / er.norm((er.centroid(bf) - er.centroid(bf_cells)))));
     const CollOfScalar dir_sign = er.operatorOn(bf_sign, er.boundaryFaces(), dirichlet_boundary);
-    std::function<CollOfScalar(const CollOfScalar&)> computeInteriorFlux = [&](const CollOfScalar& u) -> CollOfScalar {
+    auto computeInteriorFlux = [&](const auto& u) {
         return (-itrans * er.gradient(u));
     };
-    std::function<CollOfScalar(const CollOfScalar&)> computeBoundaryFlux = [&](const CollOfScalar& u) -> CollOfScalar {
+    auto computeBoundaryFlux = [&](const auto& u) {
         const CollOfScalar u_dirbdycells = er.operatorOn(u, er.allCells(), er.operatorOn(bf_cells, er.boundaryFaces(), dirichlet_boundary));
         const CollOfScalar dir_fluxes = ((er.operatorOn(btrans, er.boundaryFaces(), dirichlet_boundary) * dir_sign) * (u_dirbdycells - dirichlet_val));
         return er.operatorExtend(dir_fluxes, dirichlet_boundary, er.boundaryFaces());
     };
-    CollOfScalar expU;
-    expU = u0;
+    CollOfScalar expU = u0;
     for (const Scalar& dt : timesteps) {
-        std::function<CollOfScalar(const CollOfScalar&)> computeResidual = [&](const CollOfScalar& u) -> CollOfScalar {
+        auto computeResidual = [&](const auto& u) {
             const CollOfScalar ifluxes = computeInteriorFlux(u);
             const CollOfScalar bfluxes = computeBoundaryFlux(u);
             const CollOfScalar fluxes = (er.operatorExtend(ifluxes, er.interiorFaces(), er.allFaces()) + er.operatorExtend(bfluxes, er.boundaryFaces(), er.allFaces()));
