@@ -654,6 +654,7 @@ namespace
 "                          equelle::CartesianEquelleRuntime& er_cart) {\n"
 "    using namespace equelle;\n"
 "    ensureRequirements(er);\n"
+"    (void)er_cart; // To suppress compile warnings if not used below.\n"
 "\n"
 "    // ============= Generated code starts here ================\n";
     }
