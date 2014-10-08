@@ -264,25 +264,50 @@ struct CollType<Opm::AutoDiffBlock<double>> { typedef CollOfScalar Type; };
 
 
 /// Simplify support of array literals.
+// template <typename T>
+// std::array<typename CollType<T>::Type, 1> makeArray(const T& t)
+// {
+//     return std::array<typename CollType<T>::Type,1>{{t}};
+// }
 template <typename T>
-std::array<typename CollType<T>::Type, 1> makeArray(const T& t)
+std::tuple<typename CollType<T>::Type> makeArray(const T& t)
 {
-    return std::array<typename CollType<T>::Type,1>{{t}};
+    return std::tuple<typename CollType<T>::Type>{t};
 }
+// template <typename T1, typename T2>
+// std::array<typename CollType<T1>::Type, 2> makeArray(const T1& t1, const T2& t2)
+// {
+//     return std::array<typename CollType<T1>::Type,2>{{t1, t2}};
+// }
 template <typename T1, typename T2>
-std::array<typename CollType<T1>::Type, 2> makeArray(const T1& t1, const T2& t2)
+std::tuple<typename CollType<T1>::Type, typename CollType<T2>::Type> makeArray(const T1& t1, const T2& t2)
 {
-    return std::array<typename CollType<T1>::Type,2>{{t1, t2}};
+    return std::tuple<typename CollType<T1>::Type, typename CollType<T2>::Type>{t1, t2};
 }
+// template <typename T1, typename T2, typename T3>
+// std::array<typename CollType<T1>::Type, 3> makeArray(const T1& t1, const T2& t2, const T3& t3)
+// {
+//     return std::array<typename CollType<T1>::Type,3>{{t1, t2, t3}};
+// }
 template <typename T1, typename T2, typename T3>
-std::array<typename CollType<T1>::Type, 3> makeArray(const T1& t1, const T2& t2, const T3& t3)
+std::tuple<typename CollType<T1>::Type, typename CollType<T2>::Type, typename CollType<T3>::Type>
+makeArray(const T1& t1, const T2& t2, const T3& t3)
 {
-    return std::array<typename CollType<T1>::Type,3>{{t1, t2, t3}};
+    return std::tuple<typename CollType<T1>::Type, typename CollType<T2>::Type, typename CollType<T3>::Type>
+        {t1, t2, t3};
 }
+// template <typename T1, typename T2, typename T3, typename T4>
+// std::array<typename CollType<T1>::Type, 4> makeArray(const T1& t1, const T2& t2, const T3& t3, const T4& t4)
+// {
+//     return std::array<typename CollType<T1>::Type,4>{{t1, t2, t3, t4}};
+// }
 template <typename T1, typename T2, typename T3, typename T4>
-std::array<typename CollType<T1>::Type, 4> makeArray(const T1& t1, const T2& t2, const T3& t3, const T4& t4)
+std::tuple<typename CollType<T1>::Type, typename CollType<T2>::Type, typename CollType<T3>::Type, typename CollType<T4>::Type>
+makeArray(const T1& t1, const T2& t2, const T3& t3, const T4& t4)
 {
-    return std::array<typename CollType<T1>::Type,4>{{t1, t2, t3, t4}};
+    return std::tuple<typename CollType<T1>::Type, typename CollType<T2>::Type, typename CollType<T3>::Type, typename CollType<T4>::Type>
+
+        {t1, t2, t3, t4};
 }
 
 /// A helper type for newtonSolveSystem

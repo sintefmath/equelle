@@ -92,9 +92,10 @@ public:
     CollOfScalar newtonSolve(const ResidualFunctor& rescomp,
                              const CollOfScalar& u_initialguess);
 
-    template <int Num>
-    std::array<CollOfScalar, Num> newtonSolveSystem(const std::array<typename ResCompType<Num>::type, Num>& rescomp,
-                                                    const std::array<CollOfScalar, Num>& u_initialguess);
+
+    template <class ... ResFuncs, class ... Colls>
+    std::tuple<Colls...> newtonSolveSystem(const std::tuple<ResFuncs...>& rescomp,
+                                           const std::tuple<Colls...>& u_initialguess);
     ///@}
 
     /// @name Output

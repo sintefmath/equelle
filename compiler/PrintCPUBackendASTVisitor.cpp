@@ -253,16 +253,10 @@ void PrintCPUBackendASTVisitor::postVisit(TrinaryIfNode&)
 
 void PrintCPUBackendASTVisitor::visit(VarDeclNode& node)
 {
-    if (node.type().isMutable()) {
-        std::cout << indent() << cppTypeString(node.type()) << " " << node.name() << ';';
-        endl();
-    }
-    // suppress();
 }
 
 void PrintCPUBackendASTVisitor::postVisit(VarDeclNode&)
 {
-    // unsuppress();
 }
 
 void PrintCPUBackendASTVisitor::visit(VarAssignNode& node)
@@ -274,6 +268,9 @@ void PrintCPUBackendASTVisitor::visit(VarAssignNode& node)
     }
     if (!SymbolTable::variableType(node.name()).isMutable()) {
         std::cout << "const " << cppTypeString(node.type()) << " ";
+    } else if (defined_mutables_.count(node.name()) == 0) {
+        std::cout << cppTypeString(node.type()) << " ";
+        defined_mutables_.insert(node.name());
     }
     std::cout << node.name() << " = ";
 }
@@ -327,19 +324,9 @@ void PrintCPUBackendASTVisitor::postVisit(FuncDeclNode&)
 
 void PrintCPUBackendASTVisitor::visit(FuncStartNode& node)
 {
-    // std::cout << indent() << "auto " << node.name() << " = [&](";
     const FunctionType& ft = SymbolTable::getFunction(node.name()).functionType();
     const size_t n = ft.arguments().size();
-    std::cout << indent() << "std::function<" << cppTypeString(ft.returnType()) << '(';
-    for (int i = 0; i < n; ++i) {
-        std::cout << "const "
-                  << cppTypeString(ft.arguments()[i].type())
-                  << "&";
-        if (i < n - 1) {
-            std::cout << ", ";
-        }
-    }
-    std::cout << ")> " << node.name() << " = [&](";
+    std::cout << indent() << "auto " << node.name() << " = [&](";
     for (int i = 0; i < n; ++i) {
         std::cout << "const "
                   << cppTypeString(ft.arguments()[i].type())
@@ -424,13 +411,6 @@ void PrintCPUBackendASTVisitor::visit(FuncCallNode& node)
         } else {
             cppname += fname;
         }
-        // Special treatment for the NewtonSolveSystem() function, since it is unable to
-        // deduce its template parameter <int Num>.
-        if (fname == "NewtonSolveSystem") {
-            std::ostringstream extra;
-            extra << "<" << node.type().arraySize() << ">";
-            cppname += extra.str();
-        }
         std::cout << cppname << '(';
     }
     else if (SymbolTable::isVariableDeclared(node.name()) && node.type().isStencil()) {
@@ -487,7 +467,10 @@ void PrintCPUBackendASTVisitor::postVisit(ArrayNode&)
 
 void PrintCPUBackendASTVisitor::visit(RandomAccessNode& node)
 {
-    if (!node.arrayAccess()) {
+    if (node.arrayAccess()) {
+        // This is Array access.
+        std::cout << "std::get<" << node.index() << ">(";
+    } else {
         // This is Vector access.
         std::cout << "CollOfScalar(";
     }
@@ -497,7 +480,7 @@ void PrintCPUBackendASTVisitor::postVisit(RandomAccessNode& node)
 {
     if (node.arrayAccess()) {
         // This is Array access.
-        std::cout << "[" << node.index() << "]";
+        std::cout << ")";
     } else {
         // This is Vector access.
         // Add a grid dimension requirement.
@@ -544,7 +527,7 @@ std::string PrintCPUBackendASTVisitor::cppTypeString(const EquelleType& et) cons
 {
     std::string cppstring;
     if (et.isArray()) {
-        cppstring += "std::array<";
+        return "auto";
     }
     if (et.isStencil()) {
         cppstring += "Stencil";
@@ -555,9 +538,6 @@ std::string PrintCPUBackendASTVisitor::cppTypeString(const EquelleType& et) cons
         cppstring += "SeqOf";
     }
     cppstring += basicTypeString(et.basicType());
-    if (et.isArray()) {
-        cppstring += ", " + std::to_string(et.arraySize()) + ">";
-    }
     return cppstring;
 }
 

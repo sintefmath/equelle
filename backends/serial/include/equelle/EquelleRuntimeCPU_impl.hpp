@@ -278,10 +278,17 @@ CollOfScalar EquelleRuntimeCPU::newtonSolve(const ResidualFunctor& rescomp,
 }
 
 
-template <int Num>
-std::array<CollOfScalar, Num> EquelleRuntimeCPU::newtonSolveSystem(const std::array<typename ResCompType<Num>::type, Num>& rescomp,
-                                                                   const std::array<CollOfScalar, Num>& u_initialguess)
+template <class ... ResFuncs, class ... Colls>
+std::tuple<Colls...> EquelleRuntimeCPU::newtonSolveSystem(const std::tuple<ResFuncs...>& rescomp_arg,
+                                                          const std::tuple<Colls...>& u_initialguess_arg)
 {
+    static_assert(sizeof...(ResFuncs) == sizeof...(Colls), "Size of residual function and initial guess arrays must be identical.");
+    enum { Num = sizeof ... (ResFuncs) };
+
+    typedef std::function<CollOfScalar(const CollOfScalar&, const CollOfScalar&)> SingleResFunc;
+    std::array<SingleResFunc, 2> rescomp{{std::get<0>(rescomp_arg), std::get<1>(rescomp_arg)}};
+    std::array<CollOfScalar, 2> u_initialguess{{std::get<0>(u_initialguess_arg), std::get<1>(u_initialguess_arg)}};
+
     // Set up ranges object.
     std::array<ESpan, Num> ranges{{ ESpan(0), ESpan(0) }}; // Dummy spans that will be overwritten.
     int start = 0;
@@ -293,6 +300,7 @@ std::array<CollOfScalar, Num> EquelleRuntimeCPU::newtonSolveSystem(const std::ar
     const int total_size = start;
     std::array<CollOfScalar, Num> temp;
     std::array<CollOfScalar, Num> tempres;
+
     // Build combined functor.
     auto combined_rescomp = [&](const CollOfScalar& u) -> CollOfScalar {
         // Split into components.
@@ -311,6 +319,7 @@ std::array<CollOfScalar, Num> EquelleRuntimeCPU::newtonSolveSystem(const std::ar
         }
         return result;
     };
+
     // Build combined initial guess.
     CollOfScalar combined_u_initialguess = superset(u_initialguess[0], ranges[0], total_size);
     for (int i = 1; i < Num; ++i) {
@@ -320,6 +329,8 @@ std::array<CollOfScalar, Num> EquelleRuntimeCPU::newtonSolveSystem(const std::ar
 
     // Call regular Newton solver with combined objects.
     CollOfScalar combined_u = newtonSolve(combined_rescomp, combined_u_initialguess);
+
+    // Extract subparts and return.
     for (int i = 0; i < Num; ++i) {
         temp[i] = subset(combined_u, ranges[i]);
     }
