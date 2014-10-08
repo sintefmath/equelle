@@ -328,9 +328,7 @@ void PrintCPUBackendASTVisitor::visit(FuncStartNode& node)
     const size_t n = ft.arguments().size();
     std::cout << indent() << "auto " << node.name() << " = [&](";
     for (int i = 0; i < n; ++i) {
-        std::cout << "const "
-                  << cppTypeString(ft.arguments()[i].type())
-                  << "& " << ft.arguments()[i].name();
+        std::cout << "const auto & " << ft.arguments()[i].name();
         if (i < n - 1) {
             std::cout << ", ";
         }
@@ -342,8 +340,7 @@ void PrintCPUBackendASTVisitor::visit(FuncStartNode& node)
 void PrintCPUBackendASTVisitor::postVisit(FuncStartNode& node)
 {
     unsuppress();
-    const FunctionType& ft = SymbolTable::getFunction(node.name()).functionType();
-    std::cout << ") -> " << cppTypeString(ft.returnType()) << " {";
+    std::cout << ") {";
     endl();
 }
 
