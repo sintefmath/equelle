@@ -38,6 +38,7 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
                           equelle::CartesianEquelleRuntime& er_cart) {
     using namespace equelle;
     ensureRequirements(er);
+    (void)er_cart; // To suppress compile warnings if not used below.
 
     // ============= Generated code starts here ================
 
