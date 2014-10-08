@@ -328,7 +328,7 @@ void PrintCPUBackendASTVisitor::visit(FuncStartNode& node)
     const size_t n = ft.arguments().size();
     std::cout << indent() << "auto " << node.name() << " = [&](";
     for (int i = 0; i < n; ++i) {
-        std::cout << "const auto & " << ft.arguments()[i].name();
+        std::cout << "const auto& " << ft.arguments()[i].name();
         if (i < n - 1) {
             std::cout << ", ";
         }
