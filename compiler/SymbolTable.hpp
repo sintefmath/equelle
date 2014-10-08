@@ -8,6 +8,7 @@
 
 #include "Common.hpp"
 #include "EquelleType.hpp"
+#include "Dimension.hpp"
 
 #include <set>
 #include <vector>
@@ -50,10 +51,13 @@ public:
     void setType(const EquelleType& type);
     bool assigned() const;
     void setAssigned(const bool assigned);
+    const Dimension& dimension() const;
+    void setDimension(const Dimension& dimension);
     bool operator<(const Variable& v) const;
 private:
     std::string name_;
     EquelleType type_;
+    Dimension dimension_;
     bool assigned_;
 };
 
@@ -139,6 +143,8 @@ public:
 
     EquelleType variableType(const std::string name) const;
 
+    Dimension variableDimension(const std::string name) const;
+
     bool isVariableDeclared(const std::string& name) const;
 
     bool isVariableAssigned(const std::string& name) const;
@@ -146,6 +152,8 @@ public:
     void setVariableAssigned(const std::string& name, const bool assigned);
 
     void setVariableType(const std::string& name, const EquelleType& type);
+
+    void setVariableDimension(const std::string& name, const Dimension& type);
 
     const std::string& name() const;
 
@@ -195,6 +203,10 @@ public:
     static EquelleType variableType(const std::string& name);
 
     static void setVariableType(const std::string& name, const EquelleType& type);
+
+    static Dimension variableDimension(const std::string& name);
+
+    static void setVariableDimension(const std::string& name, const Dimension& dimension);
 
     static bool isFunctionDeclared(const std::string& name);
 

@@ -28,12 +28,12 @@ void PrintIOVisitor::visit(FuncCallNode& node)
             auto arg = argumentExpressions[i];
             if (name == "name" && arg->type() == EquelleType(String)) {
                 // This is the tag argument, and it is a simple string
-                auto tag = static_cast<StringNode*>(arg);
-                std::cout << "Tag: " << tag->content() << '\n';
+                auto& tag = dynamic_cast<StringNode&>(*arg);
+                std::cout << "Tag: " << tag.content() << '\n';
             } else if (name == "default" && arg->type() == EquelleType(Scalar)) {
                 // This is the default argument, and it is a simple scalar
-                auto val = static_cast<NumberNode*>(arg);
-                std::cout << "Default: " << val->number() << '\n';
+                auto& val = dynamic_cast<QuantityNode&>(*arg);
+                std::cout << "Default: " << val.number() << '\n';
             }
         }
         // Print the expected type of the input (ie. what should be in the provided file)
@@ -51,8 +51,8 @@ void PrintIOVisitor::visit(FuncCallNode& node)
             auto arg = argumentExpressions[i];
             if (name == "tag" && arg->type() == EquelleType(String)) {
                 // This is the tag argument, and it is a simple string
-                auto tag = static_cast<StringNode*>(arg);
-                std::cout << "Tag: " << tag->content() << '\n';
+                auto& tag = dynamic_cast<StringNode&>(*arg);
+                std::cout << "Tag: " << tag.content() << '\n';
             } else if (name == "data") {
                 std::cout << "Type: " << SymbolTable::equelleString(arg->type()) << '\n';
             }

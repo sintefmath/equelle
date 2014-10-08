@@ -14,13 +14,21 @@
 
 SequenceNode* handleProgram(SequenceNode* lineblocknode);
 
-Node* handleNumber(const double num);
+NumberNode* handleNumber(const double num);
 
-Node* handleIdentifier(const std::string& name);
+QuantityNode* handleQuantity(NumberNode* number, UnitNode* unit);
+
+UnitNode* handleUnit(const std::string& name);
+
+UnitNode* handleUnitOp(BinaryOp op, UnitNode* left, UnitNode* right);
+
+UnitNode* handleUnitPower(UnitNode* unit, const double num);
+
+ExpressionNode* handleIdentifier(const std::string& name);
 
 VarDeclNode* handleDeclaration(const std::string& name, TypeNode* type);
 
-VarAssignNode* handleAssignment(const std::string& name, Node* expr);
+VarAssignNode* handleAssignment(const std::string& name, ExpressionNode* expr);
 
 Node* handleFuncDeclaration(const std::string& name, FuncTypeNode* ftype);
 
@@ -30,11 +38,11 @@ FuncCallLikeNode* handleFuncAssignmentStart(const std::string& name, FuncArgsNod
 
 FuncAssignNode* handleFuncAssignment(Node* funcstart, SequenceNode* fbody);
 
-ReturnStatementNode* handleReturnStatement(Node* expr);
+ReturnStatementNode* handleReturnStatement(ExpressionNode* expr);
 
-Node* handleDeclarationAssign(const std::string& name, TypeNode* type, Node* expr);
+Node* handleDeclarationAssign(const std::string& name, TypeNode* type, ExpressionNode* expr);
 
-TypeNode* handleCollection(TypeNode* btype, Node* gridmapping, Node* subsetof);
+TypeNode* handleCollection(TypeNode* btype, ExpressionNode* gridmapping, ExpressionNode* subsetof);
 
 TypeNode* handleStencilCollection(TypeNode* type);
 
@@ -44,19 +52,19 @@ FuncCallLikeNode* handleFuncCallLike(const std::string& name, FuncArgsNode* args
 
 FuncCallStatementNode* handleFuncCallStatement(FuncCallLikeNode* fcall);
 
-BinaryOpNode* handleBinaryOp(BinaryOp op, Node* left, Node* right);
+BinaryOpNode* handleBinaryOp(BinaryOp op, ExpressionNode* left, ExpressionNode* right);
 
-ComparisonOpNode* handleComparison(ComparisonOp op, Node* left, Node* right);
+ComparisonOpNode* handleComparison(ComparisonOp op, ExpressionNode* left, ExpressionNode* right);
 
-NormNode* handleNorm(Node* expr_to_norm);
+NormNode* handleNorm(ExpressionNode* expr_to_norm);
 
-UnaryNegationNode* handleUnaryNegation(Node* expr_to_negate);
+UnaryNegationNode* handleUnaryNegation(ExpressionNode* expr_to_negate);
 
-TrinaryIfNode* handleTrinaryIf(Node* predicate, Node* iftrue, Node* iffalse);
+TrinaryIfNode* handleTrinaryIf(ExpressionNode* predicate, ExpressionNode* iftrue, ExpressionNode* iffalse);
 
-OnNode* handleOn(Node* left, Node* right);
+OnNode* handleOn(ExpressionNode* left, ExpressionNode* right);
 
-OnNode* handleExtend(Node* left, Node* right);
+OnNode* handleExtend(ExpressionNode* left, ExpressionNode* right);
 
 StringNode* handleString(const std::string& content);
 
@@ -72,9 +80,9 @@ LoopNode* handleLoopStart(const std::string& loop_variable, const std::string& l
 
 LoopNode* handleLoopStatement(LoopNode* loop_start, SequenceNode* loop_block);
 
-RandomAccessNode* handleRandomAccess(Node* expr, const int index);
+RandomAccessNode* handleRandomAccess(ExpressionNode* expr, const int index);
 
-SequenceNode* handleStencilAssignment(FuncCallLikeNode* lhs, Node* rhs);
+SequenceNode* handleStencilAssignment(FuncCallLikeNode* lhs, ExpressionNode* rhs);
 
 StencilNode* handleStencilAccess(const std::string& name, FuncArgsNode* args);
 

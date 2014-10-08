@@ -67,6 +67,16 @@ void Variable::setType(const EquelleType& type)
     type_ = type;
 }
 
+const Dimension& Variable::dimension() const
+{
+    return dimension_;
+}
+
+void Variable::setDimension(const Dimension& dimension)
+{
+    dimension_ = dimension;
+}
+
 bool Variable::assigned() const
 {
     return assigned_;
@@ -228,6 +238,28 @@ EquelleType Function::variableType(const std::string name) const
     }
 }
 
+Dimension Function::variableDimension(const std::string name) const
+{
+
+    auto lit = local_variables_.find(Variable(name));
+    if (lit != local_variables_.end()) {
+        return lit->dimension();
+    } else {
+        auto ait = std::find_if(type_.arguments().begin(), type_.arguments().end(),
+                                [&](const Variable& a) { return a.name() == name; });
+        if (ait != type_.arguments().end()) {
+            return ait->dimension();
+        } else {
+            if (parent_scope_) {
+                return parent_scope_->variableDimension(name);
+            } else {
+                yyerror("internal compiler error in Function::variableDimension()");
+                return Dimension();
+            }
+        }
+    }
+}
+
 bool Function::isVariableDeclared(const std::string& name) const
 {
     auto it = declared(name);
@@ -288,6 +320,21 @@ void Function::setVariableType(const std::string& name, const EquelleType& type)
         local_variables_.insert(copy);
     } else {
         yyerror("internal compiler error in Function::setVariableType()");
+    }
+}
+
+void Function::setVariableDimension(const std::string& name, const Dimension& dimension)
+{
+    auto lit = local_variables_.find(Variable(name));
+    if (lit != local_variables_.end()) {
+        // Set members are immutable, must
+        // copy, erase and reinsert.
+        Variable copy = *lit;
+        copy.setDimension(dimension);
+        local_variables_.erase(lit);
+        local_variables_.insert(copy);
+    } else {
+        yyerror("internal compiler error in Function::setVariableDimension()");
     }
 }
 
@@ -407,6 +454,16 @@ EquelleType SymbolTable::variableType(const std::string& name)
 void SymbolTable::setVariableType(const std::string& name, const EquelleType& type)
 {
     instance().current_function_->setVariableType(name, type);
+}
+
+Dimension SymbolTable::variableDimension(const std::string& name)
+{
+    return instance().current_function_->variableDimension(name);
+}
+
+void SymbolTable::setVariableDimension(const std::string& name, const Dimension& type)
+{
+    instance().current_function_->setVariableDimension(name, type);
 }
 
 bool SymbolTable::isFunctionDeclared(const std::string& name)

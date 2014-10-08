@@ -55,14 +55,16 @@
 %type <node> f_declaration
 %type <node> assignment
 %type <node> comb_decl_assign
-%type <node> expr
+%type <enode> expr
 %type <type> type_expr
 %type <type> collection_of
 %type <ftype> f_type_expr
 %type <type> basic_type
 %type <fargdecl> f_decl_args
-%type <node> number
-%type <node> array
+%type <numnode> number
+%type <enode> quantity
+%type <unitnode> unit_expr
+%type <enode> array
 %type <fcalllike> f_assign_start
 %type <fcalllike> f_call_like
 %type <farg> f_call_args
@@ -72,6 +74,7 @@
 %start program
 %error-verbose
 
+%nonassoc LOWEST
 %nonassoc MUTABLE
 %nonassoc STENCIL
 %nonassoc '?'
@@ -88,6 +91,7 @@
 %nonassoc '^'
 %nonassoc NOT UMINUS
 %left '['
+%nonassoc UNIT
 
 
 
@@ -97,7 +101,8 @@
 }
 
 %union{
-    Node* node;
+    Node*                          node;
+    ExpressionNode*                enode;
     TypeNode*                      type;
     VarDeclNode*                   vardecl;
     FuncTypeNode*                  ftype;
@@ -105,6 +110,8 @@
     FuncArgsDeclNode*              fargdecl;
     FuncCallLikeNode*              fcalllike;
     SequenceNode*                  seq;
+    NumberNode*                    numnode;
+    UnitNode*                      unitnode;
     LoopNode*                      loop;
     std::string*                   str;
 }
@@ -147,7 +154,7 @@ assignment: ID '=' expr       { $$ = handleAssignment(*($1), $3); delete $1; }
 
 comb_decl_assign: ID ':' type_expr '=' expr  { $$ = handleDeclarationAssign(*($1), $3, $5); delete $1; }
 
-expr: number              { $$ = $1; }
+expr: quantity            { $$ = $1; }
     | f_call_like         { $$ = $1; }
     | expr '[' INT ']'    { $$ = handleRandomAccess($1, intFromString(*($3))); delete $3; }
     | '(' expr ')'        { $$ = $2; }
@@ -201,9 +208,20 @@ f_decl_args: f_decl_args ',' declaration { $$ = $1; $$->addArg($3); }
            |                             { $$ = new FuncArgsDeclNode(); }
            ;
 
+quantity: number                   %prec LOWEST { $$ = handleQuantity($1, 0); }
+        | number '[' unit_expr ']' %prec UNIT   { $$ = handleQuantity($1, $3); }
+        ;
+
 number: INT                     { $$ = handleNumber(numFromString(*($1))); delete $1; }
       | FLOAT                   { $$ = handleNumber(numFromString(*($1))); delete $1; }
       ;
+
+unit_expr: BUILTIN                  { $$ = handleUnit(*($1)); }
+         | '(' unit_expr ')'        { $$ = $2; }
+         | unit_expr '/' unit_expr  { $$ = handleUnitOp(Divide, $1, $3); }
+         | unit_expr '*' unit_expr  { $$ = handleUnitOp(Multiply, $1, $3); }
+         | unit_expr '^' INT        { $$ = handleUnitPower($1, numFromString(*($3))); }
+         ;
 
 array: '[' f_call_args ']'      { $$ = handleArray($2); }
 

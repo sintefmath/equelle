@@ -8,6 +8,8 @@
 
 class SequenceNode;
 class NumberNode;
+class QuantityNode;
+class UnitNode;
 class StringNode;
 class TypeNode;
 class FuncTypeNode;
@@ -44,6 +46,9 @@ public:
     virtual void midVisit(SequenceNode& node) = 0;
     virtual void postVisit(SequenceNode& node) = 0;
     virtual void visit(NumberNode& node) = 0;
+    virtual void visit(QuantityNode& node) {}
+    virtual void postVisit(QuantityNode& node) {}
+    virtual void visit(UnitNode& node) {}
     virtual void visit(StringNode& node) = 0;
     virtual void visit(TypeNode& node) = 0;
     virtual void visit(FuncTypeNode& node) = 0;

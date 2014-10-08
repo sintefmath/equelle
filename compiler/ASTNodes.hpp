@@ -10,11 +10,32 @@
 #include "EquelleType.hpp"
 #include "SymbolTable.hpp"
 #include "ASTVisitorInterface.hpp"
+#include "Dimension.hpp"
+#include "EquelleUnits.hpp"
 
 #include <vector>
 #include <cassert>
 
+
+
 // ------ Abstract syntax tree classes ------
+
+
+
+/// Base class for expression nodes.
+class ExpressionNode : public Node
+{
+public:
+    virtual EquelleType type() const = 0;
+    virtual Dimension dimension() const
+    {
+        Dimension d;
+        // To make errors stand out.
+        d.setCoefficient(LuminousIntensity, -999);
+        return d;
+    }
+};
+
 
 
 class SequenceNode : public Node
@@ -46,7 +67,7 @@ public:
         visitor.postVisit(*this);
     }
     const std::vector<Node*>& nodes() {
-    	return nodes_;
+        return nodes_;
     }
 private:
     std::vector<Node*> nodes_;
@@ -78,7 +99,7 @@ private:
 
 
 
-class StringNode : public Node
+class StringNode : public ExpressionNode
 {
 public:
     StringNode(const std::string& content) : content_(content) {}
@@ -142,10 +163,10 @@ private:
 enum BinaryOp { Add, Subtract, Multiply, Divide };
 
 
-class BinaryOpNode : public Node
+class BinaryOpNode : public ExpressionNode
 {
 public:
-    BinaryOpNode(BinaryOp op, Node* left, Node* right)
+    BinaryOpNode(BinaryOp op, ExpressionNode* left, ExpressionNode* right)
         : op_(op), left_(left), right_(right)
     {
     }
@@ -168,7 +189,7 @@ public:
         case Subtract:
             return lt; // should be identical to rt.
         case Multiply: {
-            const bool isvec = lt.basicType() == Vector || rt.basicType() == Vector; 
+            const bool isvec = lt.basicType() == Vector || rt.basicType() == Vector;
             const BasicType bt = isvec ? Vector : Scalar;
             const bool coll = lt.isCollection() || rt.isCollection();
             const int gm = lt.isCollection() ? lt.gridMapping() : rt.gridMapping();
@@ -185,6 +206,22 @@ public:
             return EquelleType();
         }
     }
+    Dimension dimension() const
+    {
+        switch (op_) {
+        case Add:
+            return left_->dimension(); // Should be identical to right->dimension().
+        case Subtract:
+            return left_->dimension(); // Should be identical to right->dimension().
+        case Multiply:
+            return left_->dimension() + right_->dimension();
+        case Divide:
+            return left_->dimension() - right_->dimension();
+        default:
+            yyerror("internal compiler error in BinaryOpNode::type().");
+            return Dimension();
+        }
+    }
     BinaryOp op() const
     {
         return op_;
@@ -199,8 +236,8 @@ public:
     }
 private:
     BinaryOp op_;
-    Node* left_;
-    Node* right_;
+    ExpressionNode* left_;
+    ExpressionNode* right_;
 };
 
 
@@ -209,10 +246,10 @@ private:
 enum ComparisonOp { Less, Greater, LessEqual, GreaterEqual, Equal, NotEqual };
 
 
-class ComparisonOpNode : public Node
+class ComparisonOpNode : public ExpressionNode
 {
 public:
-    ComparisonOpNode(ComparisonOp op, Node* left, Node* right)
+    ComparisonOpNode(ComparisonOp op, ExpressionNode* left, ExpressionNode* right)
         : op_(op), left_(left), right_(right)
     {
     }
@@ -240,17 +277,17 @@ public:
     }
 private:
     ComparisonOp op_;
-    Node* left_;
-    Node* right_;
+    ExpressionNode* left_;
+    ExpressionNode* right_;
 };
 
 
 
 
-class NormNode : public Node
+class NormNode : public ExpressionNode
 {
 public:
-    NormNode(Node* expr_to_norm) : expr_to_norm_(expr_to_norm){}
+    NormNode(ExpressionNode* expr_to_norm) : expr_to_norm_(expr_to_norm){}
     virtual ~NormNode()
     {
         delete expr_to_norm_;
@@ -261,6 +298,40 @@ public:
                            expr_to_norm_->type().compositeType(),
                            expr_to_norm_->type().gridMapping());
     }
+    Dimension dimension() const
+    {
+        EquelleType t = expr_to_norm_->type();
+        if (isNumericType(t.basicType())) {
+            // The norm of a Scalar or Vector has the same dimension
+            // as the Scalar or Vector itself.
+            return expr_to_norm_->dimension();
+        } else {
+            // Taking the norm of a grid entity.
+            // Note: for now we always assume 3d for the
+            // purpose of dimensions of these types.
+            Dimension d;
+            switch (t.basicType()) {
+            case Vertex:
+                // 0-dimensional.
+                break;
+            case Edge:
+                d.setCoefficient(Length, 1);
+                break;
+            case Face:
+                d.setCoefficient(Length, 2);
+                break;
+            case Cell:
+                d.setCoefficient(Length, 3);
+                break;
+            default:
+                yyerror("internal compiler error in NormNode::dimension().");
+            }
+            // TODO: we use a dimensionless value here now, until
+            // dimension of function calls has been implemented.
+            d = Dimension();
+            return d;
+        }
+    }
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
@@ -268,16 +339,16 @@ public:
         visitor.postVisit(*this);
     }
 private:
-    Node* expr_to_norm_;
+    ExpressionNode* expr_to_norm_;
 };
 
 
 
 
-class UnaryNegationNode : public Node
+class UnaryNegationNode : public ExpressionNode
 {
 public:
-    UnaryNegationNode(Node* expr_to_negate) : expr_to_negate_(expr_to_negate) {}
+    UnaryNegationNode(ExpressionNode* expr_to_negate) : expr_to_negate_(expr_to_negate) {}
     virtual ~UnaryNegationNode()
     {
         delete expr_to_negate_;
@@ -286,6 +357,10 @@ public:
     {
         return expr_to_negate_->type();
     }
+    Dimension dimension() const
+    {
+        return expr_to_negate_->dimension();
+    }
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
@@ -293,16 +368,16 @@ public:
         visitor.postVisit(*this);
     }
 private:
-    Node* expr_to_negate_;
+    ExpressionNode* expr_to_negate_;
 };
 
 
 
 
-class OnNode : public Node
+class OnNode : public ExpressionNode
 {
 public:
-    OnNode(Node* left, Node* right, bool is_extend)
+    OnNode(ExpressionNode* left, ExpressionNode* right, bool is_extend)
         : left_(left), right_(right), is_extend_(is_extend)
     {
     }
@@ -311,7 +386,7 @@ public:
         delete left_;
         delete right_;
     }
-   EquelleType type() const
+    EquelleType type() const
     {
         return EquelleType(left_->type().basicType(), Collection, right_->type().gridMapping(), left_->type().subsetOf());
     }
@@ -323,6 +398,10 @@ public:
     {
         return is_extend_;
     }
+    Dimension dimension() const
+    {
+        return left_->dimension();
+    }
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
@@ -332,18 +411,18 @@ public:
         visitor.postVisit(*this);
     }
 private:
-    Node* left_;
-    Node* right_;
+    ExpressionNode* left_;
+    ExpressionNode* right_;
     bool is_extend_;
 };
 
 
 
 
-class TrinaryIfNode : public Node
+class TrinaryIfNode : public ExpressionNode
 {
 public:
-    TrinaryIfNode(Node* predicate, Node* iftrue, Node* iffalse)
+    TrinaryIfNode(ExpressionNode* predicate, ExpressionNode* iftrue, ExpressionNode* iffalse)
         : predicate_(predicate), iftrue_(iftrue), iffalse_(iffalse)
     {}
     virtual ~TrinaryIfNode()
@@ -356,6 +435,10 @@ public:
     {
         return iftrue_->type();
     }
+    Dimension dimension() const
+    {
+        return iftrue_->dimension(); // Should be identical to iffalse_->dimension().
+    }
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
@@ -367,9 +450,9 @@ public:
         visitor.postVisit(*this);
     }
 private:
-    Node* predicate_;
-    Node* iftrue_;
-    Node* iffalse_;
+    ExpressionNode* predicate_;
+    ExpressionNode* iftrue_;
+    ExpressionNode* iffalse_;
 };
 
 
@@ -411,7 +494,7 @@ private:
 class VarAssignNode : public Node
 {
 public:
-    VarAssignNode(std::string varname, Node* expr) : varname_(varname), expr_(expr)
+    VarAssignNode(std::string varname, ExpressionNode* expr) : varname_(varname), expr_(expr)
     {
     }
     virtual ~VarAssignNode()
@@ -434,13 +517,13 @@ public:
     }
 private:
     std::string varname_;
-    Node* expr_;
+    ExpressionNode* expr_;
 };
 
 
 
 
-class VarNode : public Node
+class VarNode : public ExpressionNode
 {
 public:
     VarNode(const std::string& varname) : varname_(varname)
@@ -455,6 +538,10 @@ public:
             et.setMutable(false);
         }
         return et;
+    }
+    Dimension dimension() const
+    {
+        return SymbolTable::variableDimension(varname_);
     }
     const std::string& name() const
     {
@@ -471,7 +558,7 @@ private:
 
 
 
-class FuncRefNode : public Node
+class FuncRefNode : public ExpressionNode
 {
 public:
     FuncRefNode(const std::string& funcname) : funcname_(funcname)
@@ -497,11 +584,15 @@ private:
 
 
 
-class JustAnIdentifierNode : public Node
+class JustAnIdentifierNode : public ExpressionNode
 {
 public:
     JustAnIdentifierNode(const std::string& id) : id_(id)
     {
+    }
+    EquelleType type() const
+    {
+        return EquelleType();
     }
     const std::string& name() const
     {
@@ -628,7 +719,7 @@ private:
 class FuncArgsNode : public Node
 {
 public:
-    FuncArgsNode(Node* expr = 0)
+    FuncArgsNode(ExpressionNode* expr = 0)
     {
         if (expr) {
             args_.push_back(expr);
@@ -640,11 +731,11 @@ public:
             delete arg;
         }
     }
-    void addArg(Node* expr)
+    void addArg(ExpressionNode* expr)
     {
         args_.push_back(expr);
     }
-    const std::vector<Node*>& arguments() const
+    const std::vector<ExpressionNode*>& arguments() const
     {
         return args_;
     }
@@ -670,7 +761,7 @@ public:
         visitor.postVisit(*this);
     }
 private:
-    std::vector<Node*> args_;
+    std::vector<ExpressionNode*> args_;
 };
 
 
@@ -679,8 +770,8 @@ private:
 class ReturnStatementNode : public Node
 {
 public:
-    ReturnStatementNode(Node* expr)
-        : expr_(expr)
+    ReturnStatementNode(ExpressionNode* expr)
+    : expr_(expr)
     {}
     virtual ~ReturnStatementNode()
     {
@@ -697,7 +788,7 @@ public:
         visitor.postVisit(*this);
     }
 private:
-    Node* expr_;
+    ExpressionNode* expr_;
 };
 
 
@@ -710,11 +801,11 @@ private:
  * u(i, j) = 5.0
  * computeResidual(u) = { ... }
  */
-class FuncCallLikeNode : public Node
+class FuncCallLikeNode : public ExpressionNode
 {
 public:
-	virtual const std::string& name() const = 0;
-	virtual const FuncArgsNode* args() const = 0;
+    virtual const std::string& name() const = 0;
+    virtual const FuncArgsNode* args() const = 0;
 };
 
 class FuncStartNode : public FuncCallLikeNode
@@ -734,7 +825,11 @@ public:
     }
     virtual const FuncArgsNode* args() const
     {
-    	return funcargs_;
+        return funcargs_;
+    }
+    EquelleType type() const
+    {
+        return EquelleType();
     }
     virtual void accept(ASTVisitorInterface& visitor)
     {
@@ -752,8 +847,8 @@ private:
 class StencilNode : public FuncCallLikeNode
 {
 public:
-	StencilNode(const std::string& varname,
-            FuncArgsNode* args)
+    StencilNode(const std::string& varname,
+                FuncArgsNode* args)
         : varname_(varname), args_(args)
     {}
 
@@ -764,14 +859,14 @@ public:
 
     EquelleType type() const
     {
-		// All stencils are at this time scalars
-		// We do not want mutability of a variable to be passed on to
-		// expressions involving that variable.
-		EquelleType et = SymbolTable::variableType(varname_);
-		if (et.isMutable()) {
-			et.setMutable(false);
-		}
-		return et;
+        // All stencils are at this time scalars
+        // We do not want mutability of a variable to be passed on to
+        // expressions involving that variable.
+        EquelleType et = SymbolTable::variableType(varname_);
+        if (et.isMutable()) {
+            et.setMutable(false);
+        }
+        return et;
     }
 
     virtual const std::string& name() const
@@ -781,7 +876,7 @@ public:
 
     virtual const FuncArgsNode* args() const
     {
-    	return args_;
+        return args_;
     }
 
     virtual void accept(ASTVisitorInterface& visitor)
@@ -799,10 +894,10 @@ private:
 class FuncCallNode : public FuncCallLikeNode
 {
 public:
-	FuncCallNode(const std::string& funcname,
-            FuncArgsNode* funcargs,
-            const int dynamic_subset_return = NotApplicable)
-    	: funcname_(funcname), funcargs_(funcargs),
+    FuncCallNode(const std::string& funcname,
+                 FuncArgsNode* funcargs,
+                 const int dynamic_subset_return = NotApplicable)
+        : funcname_(funcname), funcargs_(funcargs),
           dsr_(dynamic_subset_return)
     {}
 
@@ -813,23 +908,31 @@ public:
 
     EquelleType type() const
     {
-		EquelleType t = SymbolTable::getFunction(funcname_).returnType(funcargs_->argumentTypes());
-		if (dsr_ != NotApplicable) {
-			assert(t.isEntityCollection());
-			return EquelleType(t.basicType(), Collection, dsr_, t.subsetOf(), t.isMutable(), t.isDomain());
-		} else {
-			return t;
-		}
+        EquelleType t = SymbolTable::getFunction(funcname_).returnType(funcargs_->argumentTypes());
+        if (dsr_ != NotApplicable) {
+            assert(t.isEntityCollection());
+            return EquelleType(t.basicType(), Collection, dsr_, t.subsetOf(), t.isMutable(), t.isDomain());
+        } else {
+            return t;
+        }
+    }
+
+    Dimension dimension() const
+    {
+        // yyerror("FuncCallNode()::dimension() not implemented");
+        // return ExpressionNode::dimension();
+        // TODO: function calls are dimensionless for now, fix.
+        return Dimension();
     }
 
     const std::string& name() const
     {
-    	return funcname_;
+        return funcname_;
     }
 
     virtual const FuncArgsNode* args() const
     {
-    	return funcargs_;
+        return funcargs_;
     }
     FuncArgsNode& argumentsNode() const
     {
@@ -853,7 +956,7 @@ class FuncCallStatementNode : public Node
 {
 public:
     FuncCallStatementNode(FuncCallNode* func_call)
-    	: func_call_(func_call)
+    : func_call_(func_call)
     {}
 
     virtual ~FuncCallStatementNode()
@@ -863,7 +966,7 @@ public:
 
     EquelleType type() const
     {
-    	return func_call_->type();
+        return func_call_->type();
     }
 
     virtual void accept(ASTVisitorInterface& visitor)
@@ -931,11 +1034,11 @@ private:
 
 
 
-class ArrayNode : public Node
+class ArrayNode : public ExpressionNode
 {
 public:
     ArrayNode(FuncArgsNode* expr_list)
-        : expr_list_(expr_list)
+    : expr_list_(expr_list)
     {
         type_ = expr_list->arguments().front()->type();
         type_.setArraySize(expr_list->arguments().size());
@@ -947,6 +1050,13 @@ public:
     EquelleType type() const
     {
         return type_;
+    }
+    Dimension dimension() const
+    {
+        // yyerror("ArrayNode()::dimension() not implemented");
+        // return ExpressionNode::dimension();
+        // TODO: array creation ([x,y,...]) is dimensionless for now, fix.
+        return Dimension();
     }
     virtual void accept(ASTVisitorInterface& visitor)
     {
@@ -961,10 +1071,10 @@ private:
 
 
 
-class RandomAccessNode : public Node
+class RandomAccessNode : public ExpressionNode
 {
 public:
-    RandomAccessNode(Node* expr, const int index)
+    RandomAccessNode(ExpressionNode* expr, const int index)
         : expr_(expr), index_(index)
     {
     }
@@ -995,6 +1105,13 @@ public:
             return t;
         }
     }
+    Dimension dimension() const
+    {
+        // yyerror("RandomAccessNode()::dimension() not implemented");
+        // return ExpressionNode::dimension();
+        // TODO: array access (a[n]) is dimensionless for now, fix.
+        return Dimension();
+    }
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
@@ -1002,44 +1119,143 @@ public:
         visitor.postVisit(*this);
     }
 private:
-    Node* expr_;
+    ExpressionNode* expr_;
     int index_;
 };
 
 class StencilAssignmentNode : public Node
 {
 public:
-	StencilAssignmentNode(StencilNode* lhs, Node* rhs)
-		: lhs_(lhs), rhs_(rhs)
-	{}
+    StencilAssignmentNode(StencilNode* lhs, ExpressionNode* rhs)
+        : lhs_(lhs), rhs_(rhs)
+    {}
 
-	virtual ~StencilAssignmentNode() {
-		delete lhs_;
-		delete rhs_;
-	}
+    virtual ~StencilAssignmentNode() {
+        delete lhs_;
+        delete rhs_;
+    }
 
     EquelleType type() const
     {
-    	return rhs_->type();
+        return rhs_->type();
     }
 
     virtual void accept(ASTVisitorInterface& visitor)
     {
-    	visitor.visit(*this);
-    	lhs_->accept(visitor);
-    	visitor.midVisit(*this);
-    	rhs_->accept(visitor);
-    	visitor.postVisit(*this);
+        visitor.visit(*this);
+        lhs_->accept(visitor);
+        visitor.midVisit(*this);
+        rhs_->accept(visitor);
+        visitor.postVisit(*this);
     }
 
     const std::string& name() const {
-    	return lhs_->name();
+        return lhs_->name();
     }
 private:
     StencilNode* lhs_;
-	Node* rhs_;
+    ExpressionNode* rhs_;
 };
 
+class UnitNode : public Node
+{
+public:
+    UnitNode(const std::string& name)
+        : conv_factor_(-1e100)
+    {
+        UnitData ud = unitFromString(name);
+        if (ud.valid) {
+            dimension_ = ud.dimension;
+            conv_factor_ = ud.conv_factor;
+        } else {
+            yyerror("Unit name not recognised.");
+        }
+    }
+
+    UnitNode(const Dimension dimension_arg,
+             const double conversion_factor_SI)
+        : dimension_(dimension_arg),
+          conv_factor_(conversion_factor_SI)
+    {
+    }
+
+    Dimension dimension() const
+    {
+        return dimension_;
+    }
+
+    // The number you must multiply a quantity given in the
+    // current unit with to obtain an SI quantity.
+    // For example for Inch, the factor ie 0.0254.
+    double conversionFactorSI() const
+    {
+        return conv_factor_;
+    }
+
+    EquelleType type() const
+    {
+        return EquelleType();
+    }
+
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+    }
+
+private:
+    Dimension dimension_;
+    double conv_factor_;
+};
+
+class QuantityNode : public ExpressionNode
+{
+public:
+    QuantityNode(NumberNode* number_arg, UnitNode* unit_arg)
+        : number_(number_arg),
+          unit_(unit_arg)
+    {
+    }
+
+    ~QuantityNode()
+    {
+        delete number_;
+        delete unit_;
+    }
+
+    EquelleType type() const
+    {
+        return EquelleType(Scalar);
+    }
+
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        number_->accept(visitor);
+        if (unit_) {
+            unit_->accept(visitor);
+        }
+        visitor.postVisit(*this);
+    }
+
+    Dimension dimension() const
+    {
+        return unit_ ? unit_->dimension() : Dimension();
+    }
+
+    double conversionFactorSI() const
+    {
+        return unit_ ? unit_->conversionFactorSI() : 1.0;
+    }
+
+    double number() const
+    {
+        return number_->number();
+    }
+
+private:
+    NumberNode* number_;
+    UnitNode* unit_;
+};
 
 
 #endif // ASTNODES_HEADER_INCLUDED

@@ -59,7 +59,7 @@ void PrintCPUBackendASTVisitor::postVisit(SequenceNode&)
         for (const std::string& req : requirement_strings_) {
             std::cout << "    " << req;
         }
-        std::cout << 
+        std::cout <<
             "}\n";
     }
 }
@@ -68,6 +68,26 @@ void PrintCPUBackendASTVisitor::visit(NumberNode& node)
 {
     std::cout.precision(16);
     std::cout << "double(" << node.number() << ")";
+}
+
+void PrintCPUBackendASTVisitor::visit(QuantityNode& node)
+{
+    const double cf = node.conversionFactorSI();
+    if (cf != 1.0) {
+        std::cout.precision(16);
+        std::cout << "(" << cf << "*";
+    }
+}
+
+void PrintCPUBackendASTVisitor::postVisit(QuantityNode& node)
+{
+    if (node.conversionFactorSI() != 1.0) {
+        std::cout << ")";
+    }
+}
+
+void PrintCPUBackendASTVisitor::visit(UnitNode& node)
+{
 }
 
 void PrintCPUBackendASTVisitor::visit(StringNode& node)
@@ -248,12 +268,12 @@ void PrintCPUBackendASTVisitor::postVisit(VarDeclNode&)
 void PrintCPUBackendASTVisitor::visit(VarAssignNode& node)
 {
     std::cout << indent();
-	if (node.type() == StencilI || node.type() == StencilJ || node.type() == StencilK) {
-		//This goes into the stencil-lambda definition, and is only used during parsing.
-		std::cout << "// Note: ";
-	}
+    if (node.type() == StencilI || node.type() == StencilJ || node.type() == StencilK) {
+        //This goes into the stencil-lambda definition, and is only used during parsing.
+        std::cout << "// Note: ";
+    }
     if (!SymbolTable::variableType(node.name()).isMutable()) {
-    	std::cout << "const " << cppTypeString(node.type()) << " ";
+        std::cout << "const " << cppTypeString(node.type()) << " ";
     }
     std::cout << node.name() << " = ";
 }
@@ -379,46 +399,46 @@ void PrintCPUBackendASTVisitor::postVisit(ReturnStatementNode&)
 
 void PrintCPUBackendASTVisitor::visit(FuncCallNode& node)
 {
-	if (SymbolTable::isFunctionDeclared(node.name())) {
-		const std::string fname = node.name();
-		const char first = fname[0];
-		std::string cppname;
-		if (std::isupper(first)) {
-			bool is_stencil = false;
+    if (SymbolTable::isFunctionDeclared(node.name())) {
+        const std::string fname = node.name();
+        const char first = fname[0];
+        std::string cppname;
+        if (std::isupper(first)) {
+            bool is_stencil = false;
 
-			is_stencil = is_stencil | node.type().isStencil();
+            is_stencil = is_stencil | node.type().isStencil();
 
-			const std::vector<EquelleType>& types = node.args()->argumentTypes();
+            const std::vector<EquelleType>& types = node.args()->argumentTypes();
 
-			for (int i=0; i<types.size(); ++i) {
-				is_stencil = is_stencil | types[i].isStencil();
-			}
+            for (int i=0; i<types.size(); ++i) {
+                is_stencil = is_stencil | types[i].isStencil();
+            }
 
-			if (is_stencil) {
-				cppname += std::string("er_cart.");
-			}
-			else {
-				cppname += std::string("er.");
-			}
-			cppname += char(std::tolower(first)) + fname.substr(1);
-		} else {
-			cppname += fname;
-		}
-		// Special treatment for the NewtonSolveSystem() function, since it is unable to
-		// deduce its template parameter <int Num>.
-		if (fname == "NewtonSolveSystem") {
-			std::ostringstream extra;
-			extra << "<" << node.type().arraySize() << ">";
-			cppname += extra.str();
-		}
-		std::cout << cppname << '(';
-	}
-	else if (SymbolTable::isVariableDeclared(node.name()) && node.type().isStencil()) {
-	    std::cout << "grid.cellAt( " << node.name() << ", ";
-	}
-	else {
-		//Error here?
-	}
+            if (is_stencil) {
+                cppname += std::string("er_cart.");
+            }
+            else {
+                cppname += std::string("er.");
+            }
+            cppname += char(std::tolower(first)) + fname.substr(1);
+        } else {
+            cppname += fname;
+        }
+        // Special treatment for the NewtonSolveSystem() function, since it is unable to
+        // deduce its template parameter <int Num>.
+        if (fname == "NewtonSolveSystem") {
+            std::ostringstream extra;
+            extra << "<" << node.type().arraySize() << ">";
+            cppname += extra.str();
+        }
+        std::cout << cppname << '(';
+    }
+    else if (SymbolTable::isVariableDeclared(node.name()) && node.type().isStencil()) {
+        std::cout << "grid.cellAt( " << node.name() << ", ";
+    }
+    else {
+        //Error here?
+    }
 }
 
 void PrintCPUBackendASTVisitor::postVisit(FuncCallNode&)
@@ -527,7 +547,7 @@ std::string PrintCPUBackendASTVisitor::cppTypeString(const EquelleType& et) cons
         cppstring += "std::array<";
     }
     if (et.isStencil()) {
-    	cppstring += "Stencil";
+        cppstring += "Stencil";
     }
     if (et.isCollection()) {
         cppstring += "CollOf";
@@ -567,8 +587,8 @@ void PrintCPUBackendASTVisitor::midVisit(StencilAssignmentNode &node)
 
 void PrintCPUBackendASTVisitor::postVisit(StencilAssignmentNode &node)
 {
-	std::string gridMapping = SymbolTable::entitySetName(node.type().gridMapping());
-	gridMapping[0] = tolower(gridMapping[0]);
+    std::string gridMapping = SymbolTable::entitySetName(node.type().gridMapping());
+    gridMapping[0] = tolower(gridMapping[0]);
     indent_--;
     std::cout << ";" << std::endl;
     std::cout << indent() << "};" << std::endl;
@@ -579,7 +599,7 @@ void PrintCPUBackendASTVisitor::postVisit(StencilAssignmentNode &node)
 
 void PrintCPUBackendASTVisitor::visit(StencilNode& node)
 {
-	//FIXME If using half indices, should then use faceAt, not cellAt
+    //FIXME If using half indices, should then use faceAt, not cellAt
     std::cout << node.name() << ".grid.cellAt(" << node.name() << ", ";
 }
 
