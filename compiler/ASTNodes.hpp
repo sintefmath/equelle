@@ -37,7 +37,6 @@ public:
 };
 
 
-
 class SequenceNode : public Node
 {
 public:
@@ -136,6 +135,48 @@ public:
     }
 private:
     EquelleType et_;
+};
+
+
+
+
+class CollectionTypeNode : public TypeNode
+{
+public:
+    CollectionTypeNode(TypeNode* btype, ExpressionNode* gridmapping, ExpressionNode* subsetof)
+        : TypeNode(EquelleType()),
+          btype_(btype),
+          gridmapping_(gridmapping),
+          subsetof_(subsetof)
+    {
+    }
+    ~CollectionTypeNode()
+    {
+        delete btype_;
+        delete gridmapping_;
+        delete subsetof_;
+    }
+    EquelleType type() const
+    {
+        throw std::logic_error("CollectionTypeNode::type() -- not implemented.");
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        btype_->accept(visitor);
+        if (gridmapping_) {
+            gridmapping_->accept(visitor);
+        }
+        if (subsetof_) {
+            subsetof_->accept(visitor);
+        }
+        visitor.postVisit(*this);
+    }
+
+private:
+    TypeNode* btype_;
+    ExpressionNode* gridmapping_;
+    ExpressionNode* subsetof_;
 };
 
 
@@ -673,11 +714,16 @@ public:
     }
     virtual void accept(ASTVisitorInterface& visitor)
     {
+        visitor.visit(*this);
+        ftype_->accept(visitor);
+        visitor.postVisit(*this);
+#if 0
         SymbolTable::setCurrentFunction(funcname_);
         visitor.visit(*this);
         ftype_->accept(visitor);
         visitor.postVisit(*this);
         SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
+#endif
     }
 private:
     std::string funcname_;
@@ -706,7 +752,9 @@ public:
         funcstart_->accept(visitor);
         funcbody_->accept(visitor);
         visitor.postVisit(*this);
+#if 0
         SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
+#endif
     }
 private:
     Node* funcstart_;
@@ -833,7 +881,9 @@ public:
     }
     virtual void accept(ASTVisitorInterface& visitor)
     {
+#if 0
         SymbolTable::setCurrentFunction(funcname_);
+#endif
         visitor.visit(*this);
         funcargs_->accept(visitor);
         visitor.postVisit(*this);
@@ -1019,11 +1069,16 @@ public:
     }
     virtual void accept(ASTVisitorInterface& visitor)
     {
+        visitor.visit(*this);
+        loop_block_->accept(visitor);
+        visitor.postVisit(*this);
+#if 0
         SymbolTable::setCurrentFunction(loop_name_);
         visitor.visit(*this);
         loop_block_->accept(visitor);
         visitor.postVisit(*this);
         SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
+#endif
     }
 private:
     std::string loop_variable_;

@@ -12,6 +12,7 @@ class QuantityNode;
 class UnitNode;
 class StringNode;
 class TypeNode;
+class CollectionTypeNode;
 class FuncTypeNode;
 class BinaryOpNode;
 class ComparisonOpNode;
@@ -51,6 +52,8 @@ public:
     virtual void visit(UnitNode& node) {}
     virtual void visit(StringNode& node) = 0;
     virtual void visit(TypeNode& node) = 0;
+    virtual void visit(CollectionTypeNode& node) {}
+    virtual void postVisit(CollectionTypeNode& node) {}
     virtual void visit(FuncTypeNode& node) = 0;
     virtual void visit(BinaryOpNode& node) = 0;
     virtual void midVisit(BinaryOpNode& node) = 0;

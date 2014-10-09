@@ -118,6 +118,8 @@ VarDeclNode* handleDeclaration(const std::string& name, TypeNode* type)
 
 VarAssignNode* handleAssignment(const std::string& name, ExpressionNode* expr)
 {
+    return new VarAssignNode(name, expr);
+#if 0
     // If already declared...
     if (SymbolTable::isVariableDeclared(name)) {
         // Check if already assigned.
@@ -169,6 +171,7 @@ VarAssignNode* handleAssignment(const std::string& name, ExpressionNode* expr)
         SymbolTable::setVariableAssigned(name, true);
     }
     return new VarAssignNode(name, expr);
+#endif
 }
 
 
@@ -192,6 +195,8 @@ void handleFuncStartType()
 
 FuncCallLikeNode* handleFuncAssignmentStart(const std::string& name, FuncArgsNode* args)
 {
+    return new FuncStartNode(name, args);
+#if 0
     // We are dealing with a function
     if (SymbolTable::isFunctionDeclared(name)) {
         // Set the scope name for the following block (the function itself)
@@ -210,16 +215,20 @@ FuncCallLikeNode* handleFuncAssignmentStart(const std::string& name, FuncArgsNod
         SymbolTable::declareVariable(name, type);
         return handleStencilAccess(name, args);
     }
+#endif
 }
 
 
 FuncAssignNode* handleFuncAssignment(Node* funcstart, SequenceNode* fbody)
 {
+    return new FuncAssignNode(funcstart, fbody);
+#if 0
     // This is called after the block AST has been constructed,
     // so we should switch back to Main scope.
     // See also handleFuncAssignmentStart
     SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
     return new FuncAssignNode(funcstart, fbody);
+#endif
 }
 
 
@@ -241,8 +250,10 @@ Node* handleDeclarationAssign(const std::string& name, TypeNode* type, Expressio
 
 
 
-TypeNode* handleCollection(TypeNode* btype, ExpressionNode* gridmapping, ExpressionNode* subsetof)
+CollectionTypeNode* handleCollection(TypeNode* btype, ExpressionNode* gridmapping, ExpressionNode* subsetof)
 {
+    return new CollectionTypeNode(btype, gridmapping, subsetof);
+#if 0
     assert(gridmapping == nullptr || subsetof == nullptr);
     EquelleType bt = btype->type();
     if (!bt.isBasic()) {
@@ -271,6 +282,7 @@ TypeNode* handleCollection(TypeNode* btype, ExpressionNode* gridmapping, Express
     delete gridmapping;
     delete subsetof;
     return new TypeNode(EquelleType(bt.basicType(), Collection, gm, subset));
+#endif
 }
 
 TypeNode* handleStencilCollection(TypeNode* type_expr)
@@ -315,7 +327,10 @@ StencilNode* handleStencilAccess(const std::string& name, FuncArgsNode* args) {
     return new StencilNode(name, args);
 }
 
-FuncCallNode* handleFuncCall(const std::string& name, FuncArgsNode* args) {
+FuncCallNode* handleFuncCall(const std::string& name, FuncArgsNode* args)
+{
+    return new FuncCallNode(name, args);
+#if 0
     const Function& f = SymbolTable::getFunction(name);
     // Check function call arguments.
     const auto argtypes = args->argumentTypes();
@@ -336,8 +351,8 @@ FuncCallNode* handleFuncCall(const std::string& name, FuncArgsNode* args) {
             return new FuncCallNode(name, args, gm);
         }
     }
-
     return new FuncCallNode(name, args);
+#endif
 }
 
 FuncCallLikeNode* handleFuncCallLike(const std::string& name, FuncArgsNode* args)
@@ -369,6 +384,8 @@ FuncCallStatementNode* handleFuncCallStatement(FuncCallLikeNode* fcall_like)
 
 BinaryOpNode* handleBinaryOp(BinaryOp op, ExpressionNode* left, ExpressionNode* right)
 {
+    return new BinaryOpNode(op, left, right);
+#if 0
     EquelleType lt = left->type();
     EquelleType rt = right->type();
     if (!isNumericType(lt.basicType()) || !(isNumericType(rt.basicType()))) {
@@ -422,6 +439,7 @@ BinaryOpNode* handleBinaryOp(BinaryOp op, ExpressionNode* left, ExpressionNode* 
         yyerror("internal compiler error in handleBinaryOp().");
     }
     return new BinaryOpNode(op, left, right);
+#endif
 }
 
 
@@ -452,6 +470,8 @@ ComparisonOpNode* handleComparison(ComparisonOp op, ExpressionNode* left, Expres
 
 NormNode* handleNorm(ExpressionNode* expr_to_norm)
 {
+    return new NormNode(expr_to_norm);
+#if 0
     if (expr_to_norm->type().isArray()) {
         yyerror("cannot take norm of an Array.");
     }
@@ -462,12 +482,15 @@ NormNode* handleNorm(ExpressionNode* expr_to_norm)
         yyerror("can only take norm of Scalar, Vector, Cell, Face, Edge and Vertex types.");
         return new NormNode(expr_to_norm);
     }
+#endif
 }
 
 
 
 UnaryNegationNode* handleUnaryNegation(ExpressionNode* expr_to_negate)
 {
+    return new UnaryNegationNode(expr_to_negate);
+#if 0
     if (!isNumericType(expr_to_negate->type().basicType())) {
         yyerror("unary minus can only be applied to numeric types.");
     }
@@ -475,6 +498,7 @@ UnaryNegationNode* handleUnaryNegation(ExpressionNode* expr_to_negate)
         yyerror("unary minus cannot be applied to an Array.");
     }
     return new UnaryNegationNode(expr_to_negate);
+#endif
 }
 
 

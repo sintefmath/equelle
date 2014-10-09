@@ -42,7 +42,7 @@ ReturnStatementNode* handleReturnStatement(ExpressionNode* expr);
 
 Node* handleDeclarationAssign(const std::string& name, TypeNode* type, ExpressionNode* expr);
 
-TypeNode* handleCollection(TypeNode* btype, ExpressionNode* gridmapping, ExpressionNode* subsetof);
+CollectionTypeNode* handleCollection(TypeNode* btype, ExpressionNode* gridmapping, ExpressionNode* subsetof);
 
 TypeNode* handleStencilCollection(TypeNode* type);
 
