@@ -91,6 +91,10 @@ public:
 
     bool operator!=(const EquelleType& et) const;
 
+    /// Return true if 'et' is less specific than *this,
+    /// or the same.
+    bool canSubstituteFor(const EquelleType& et) const;
+
 private:
     BasicType basic_type_;
     CompositeType composite_;

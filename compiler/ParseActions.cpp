@@ -85,7 +85,7 @@ UnitNode* handleUnitPower(UnitNode* unit, const double num)
 
 ExpressionNode* handleIdentifier(const std::string& name)
 {
-    return new JustAnIdentifierNode(name);
+    return new VarNode(name);
 #if 0
     if (SymbolTable::isVariableDeclared(name)) {
         return new VarNode(name);

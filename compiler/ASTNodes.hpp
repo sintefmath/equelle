@@ -267,6 +267,14 @@ public:
     {
         return op_;
     }
+    const ExpressionNode* left() const
+    {
+        return left_;
+    }
+    const ExpressionNode* right() const
+    {
+        return right_;
+    }
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);

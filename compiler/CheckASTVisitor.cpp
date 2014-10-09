@@ -7,6 +7,7 @@
 #include "SymbolTable.hpp"
 #include <iostream>
 #include <stdexcept>
+#include <sstream>
 
 
 CheckASTVisitor::CheckASTVisitor()
@@ -66,8 +67,61 @@ void CheckASTVisitor::midVisit(BinaryOpNode&)
 {
 }
 
-void CheckASTVisitor::postVisit(BinaryOpNode&)
+void CheckASTVisitor::postVisit(BinaryOpNode& node)
 {
+    const EquelleType lt = node.left()->type();
+    const EquelleType rt = node.right()->type();
+    const BinaryOp op = node.op();
+    if (!isNumericType(lt.basicType()) || !(isNumericType(rt.basicType()))) {
+        error("arithmetic binary operators only apply to numeric types");
+    }
+    if (lt.isArray() || rt.isArray()) {
+        error("arithmetic binary operators cannot be applied to Array types");
+    }
+    if (lt.isCollection() && rt.isCollection()) {
+        if (lt.gridMapping() != rt.gridMapping()) {
+            error("arithmetic binary operators on Collections only acceptable "
+                    "if both sides are On the same set.");
+        }
+    }
+    switch (op) {
+    case Add:
+        // Intentional fall-through.
+    case Subtract:
+        if (lt != rt) {
+            if ((lt.basicType() == StencilI || lt.basicType() == StencilJ || lt.basicType() == StencilK)
+                && rt.basicType() == Scalar) {
+                //i,j,k OP n is OK
+            }
+            else if (lt.basicType() == Scalar &&
+                     (rt.basicType() == StencilI || rt.basicType() == StencilJ || rt.basicType() == StencilK)) {
+                //n OP i,j,k is OK
+            }
+            else if ((lt.isStencil() && rt.basicType() == Scalar)
+                     || (rt.isStencil() && lt.basicType() == Scalar)) {
+                //n OP u(i, j)  and  u(i, j) OP n is OK
+            }
+            else {
+                error("addition and subtraction only allowed between identical types.");
+            }
+        }
+        if (node.left()->dimension() != node.right()->dimension()) {
+            error("addition and subtraction only allowed when both sides have same dimension.");
+        }
+        break;
+    case Multiply:
+        if (lt.basicType() == Vector && rt.basicType() == Vector) {
+            error("cannot multiply two 'Vector' types.");
+        }
+        break;
+    case Divide:
+        if (rt.basicType() != Scalar) {
+            error("can only divide by 'Scalar' types");
+        }
+        break;
+    default:
+        error("internal compiler error in CheckASTVisitor::postVisit(BinaryOpNode&).");
+    }
 }
 
 void CheckASTVisitor::visit(ComparisonOpNode&)
@@ -142,7 +196,11 @@ void CheckASTVisitor::postVisit(VarDeclNode&)
 {
 }
 
-void CheckASTVisitor::visit(VarAssignNode& node)
+void CheckASTVisitor::visit(VarAssignNode&)
+{
+}
+
+void CheckASTVisitor::postVisit(VarAssignNode& node)
 {
     const std::string& name = node.name();
     const ExpressionNode* expr = node.rhs();
@@ -207,12 +265,17 @@ void CheckASTVisitor::visit(VarAssignNode& node)
     }
 }
 
-void CheckASTVisitor::postVisit(VarAssignNode&)
+void CheckASTVisitor::visit(VarNode& node)
 {
-}
-
-void CheckASTVisitor::visit(VarNode&)
-{
+    if (!SymbolTable::isVariableDeclared(node.name())) {
+        std::string err_msg = "using undeclared variable ";
+        err_msg += node.name();
+        error(err_msg);
+    } else if (!SymbolTable::isVariableAssigned(node.name())) {
+        std::string err_msg = "using unassigned variable ";
+        err_msg += node.name();
+        error(err_msg);
+    }
 }
 
 void CheckASTVisitor::visit(FuncRefNode&)
@@ -279,18 +342,30 @@ void CheckASTVisitor::postVisit(ReturnStatementNode&)
 {
 }
 
-void CheckASTVisitor::visit(FuncCallNode& node)
+void CheckASTVisitor::visit(FuncCallNode&)
+{
+}
+
+void CheckASTVisitor::postVisit(FuncCallNode& node)
 {
     const Function& f = SymbolTable::getFunction(node.name());
     // Check function call arguments.
-    const auto argtypes = node.args()->argumentTypes();
-    if (argtypes.size() != f.functionType().arguments().size()) {
+    const auto& argtypes = node.args()->argumentTypes();
+    const auto& fargs = f.functionType().arguments();
+    if (argtypes.size() != fargs.size()) {
         std::string err_msg = "wrong number of arguments when calling function ";
         err_msg += node.name();
         error(err_msg);
     }
     for (int arg = 0; arg < argtypes.size(); ++arg) {
-        // TODO: check function argument types.
+        if (!argtypes[arg].canSubstituteFor(fargs[arg].type())) {
+            std::ostringstream err;
+            err << "wrong argument type for argument " << arg << " named '"
+                << fargs[arg].name() << "' when calling function " << node.name()
+                << ", expected " << SymbolTable::equelleString(fargs[arg].type())
+                << " but got " << SymbolTable::equelleString(argtypes[arg]);
+            error(err.str());
+        }
     }
     // If the function returns a new dynamically created domain,
     // we must declare it (anonymously for now).
@@ -303,10 +378,6 @@ void CheckASTVisitor::visit(FuncCallNode& node)
             (void) gm; // TODO use this, but where?
         }
     }
-}
-
-void CheckASTVisitor::postVisit(FuncCallNode&)
-{
 }
 
 void CheckASTVisitor::visit(FuncCallStatementNode&)

@@ -290,6 +290,29 @@ bool EquelleType::operator!=(const EquelleType& et) const
     return !operator==(et);
 }
 
+bool EquelleType::canSubstituteFor(const EquelleType& et) const
+{
+    if (basic_type_ != et.basic_type_) {
+        return false;
+    }
+    if (composite_ != et.composite_) {
+        return false;
+    }
+    if (et.gridmapping_ != NotApplicable && gridmapping_ != et.gridmapping_) {
+        return false;
+    }
+    if (et.subset_of_ != NotApplicable && subset_of_ != et.subset_of_) {
+        return false;
+    }
+    if (array_size_ != et.array_size_) {
+        return false;
+    }
+    if (stencil_ != et.stencil_) {
+        return false;
+    }
+    return true;
+}
+
 bool isStencilType(const BasicType bt)
 {
     switch (bt) {
