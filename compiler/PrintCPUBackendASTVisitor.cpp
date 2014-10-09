@@ -293,8 +293,9 @@ void PrintCPUBackendASTVisitor::visit(FuncRefNode& node)
     std::cout << node.name();
 }
 
-void PrintCPUBackendASTVisitor::visit(JustAnIdentifierNode&)
+void PrintCPUBackendASTVisitor::visit(JustAnIdentifierNode& node)
 {
+    std::cout << node.name();
 }
 
 void PrintCPUBackendASTVisitor::visit(FuncArgsDeclNode&)

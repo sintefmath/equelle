@@ -124,59 +124,6 @@ VarDeclNode* handleDeclaration(const std::string& name, TypeNode* type)
 VarAssignNode* handleAssignment(const std::string& name, ExpressionNode* expr)
 {
     return new VarAssignNode(name, expr);
-#if 0
-    // If already declared...
-    if (SymbolTable::isVariableDeclared(name)) {
-        // Check if already assigned.
-        if (SymbolTable::isVariableAssigned(name) && !SymbolTable::variableType(name).isMutable()) {
-            std::string err_msg = "variable already assigned, cannot re-assign ";
-            err_msg += name;
-            yyerror(err_msg.c_str());
-            return nullptr;
-        }
-        // Check that declared type matches right hand side.
-        EquelleType lhs_type = SymbolTable::variableType(name);
-        EquelleType rhs_type = expr->type();
-        if (lhs_type != rhs_type) {
-            // Check for special case: variable declared to have type
-            // 'Collection Of <Entity> Subset Of <Some entityset>',
-            // actual setting its grid mapping is postponed until the entityset
-            // has been created by a function call.
-            // That means we have to set the actual grid mapping here.
-            if (lhs_type.gridMapping() == PostponedDefinition
-                && lhs_type.basicType() == rhs_type.basicType()
-                && lhs_type.isCollection() && rhs_type.isCollection()
-                && lhs_type.isStencil() == rhs_type.isStencil()
-                && rhs_type.isDomain()
-                && SymbolTable::isSubset(rhs_type.gridMapping(), lhs_type.subsetOf())) {
-                // OK, should make postponed definition of the variable.
-                SymbolTable::setVariableType(name, rhs_type);
-                SymbolTable::setVariableDimension(name, expr->dimension());
-                SymbolTable::setEntitySetName(rhs_type.gridMapping(), name);
-            } else {
-                std::string err_msg = "mismatch between type in assignment and declaration for ";
-                err_msg += name;
-                yyerror(err_msg.c_str());
-                return nullptr;
-            }
-        }
-    } else {
-        // Setting the gridmapping, as in the block above. Only this is
-        // the direct (no previous declaration) assignment scenario.
-        const int gm = expr->type().gridMapping();
-        if (gm != NotApplicable && SymbolTable::entitySetName(gm) == "AnonymousEntitySet") {
-            SymbolTable::setEntitySetName(gm, name);
-        }
-        SymbolTable::declareVariable(name, expr->type());
-        SymbolTable::setVariableDimension(name, expr->dimension());
-    }
-
-    // Set variable to assigned (unless mutable) and return.
-    if (!SymbolTable::variableType(name).isMutable()) {
-        SymbolTable::setVariableAssigned(name, true);
-    }
-    return new VarAssignNode(name, expr);
-#endif
 }
 
 
@@ -344,29 +291,6 @@ StencilNode* handleStencilAccess(const std::string& name, FuncArgsNode* args)
 FuncCallNode* handleFuncCall(const std::string& name, FuncArgsNode* args)
 {
     return new FuncCallNode(name, args);
-#if 0
-    const Function& f = SymbolTable::getFunction(name);
-    // Check function call arguments.
-    const auto argtypes = args->argumentTypes();
-    if (argtypes.size() != f.functionType().arguments().size()) {
-        std::string err_msg = "wrong number of arguments when calling function ";
-        err_msg += name;
-        yyerror(err_msg.c_str());
-    }
-    // At the moment, we do not check function argument types.
-    // If the function returns a new dynamically created domain,
-    // we must declare it (anonymously for now).
-    const EquelleType rtype = f.returnType(argtypes);
-    if (rtype.isDomain()) {
-        const int dynsubret = f.functionType().dynamicSubsetReturn(argtypes);
-        if (dynsubret != NotApplicable) {
-            // Create a new domain.
-            const int gm = SymbolTable::declareNewEntitySet("AnonymousEntitySet", dynsubret);
-            return new FuncCallNode(name, args, gm);
-        }
-    }
-    return new FuncCallNode(name, args);
-#endif
 }
 
 FuncCallLikeNode* handleFuncCallLike(const std::string& name, FuncArgsNode* args)

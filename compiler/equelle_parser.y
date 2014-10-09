@@ -21,6 +21,7 @@
 %token FACE
 %token EDGE
 %token VERTEX
+%token STRING
 %token FUNCTION
 %token AND
 %token OR
@@ -201,6 +202,7 @@ basic_type: SCALAR  { $$ = new TypeNode(EquelleType(Scalar)); }
           | FACE    { $$ = new TypeNode(EquelleType(Face)); }
           | EDGE    { $$ = new TypeNode(EquelleType(Edge)); }
           | VERTEX  { $$ = new TypeNode(EquelleType(Vertex)); }
+          | STRING  { $$ = new TypeNode(EquelleType(String)); }
           ;
 
 f_decl_args: f_decl_args ',' declaration { $$ = $1; $$->addArg($3); }

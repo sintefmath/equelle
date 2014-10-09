@@ -30,7 +30,7 @@ BUILTIN  {UCASE}{IDCHAR}*
 INT      {DIGIT}+
 FLOAT    {INT}[.]{INT}
 BLANKS   [\t ]+
-STRING   \"(\\.|[^\\"])*\"
+STRINGL  \"(\\.|[^\\"])*\"
 SINGLES  [$@:=()+\-*/^<>{},|?\[\]]
 ELLIPSIS [.][.][.]
 LINECONT {ELLIPSIS}[\t ]*\n
@@ -40,7 +40,7 @@ LINECONT {ELLIPSIS}[\t ]*\n
 
 %%
 
-{STRING}          { STORE; TOK(STRING_LITERAL); }
+{STRINGL}         { STORE; TOK(STRING_LITERAL); }
 Collection        { TOK(COLLECTION); }
 Stencil           { TOK(STENCIL); }
 Sequence          { TOK(SEQUENCE); }
@@ -56,6 +56,7 @@ Cell              { TOK(CELL); }
 Face              { TOK(FACE); }
 Edge              { TOK(EDGE); }
 Vertex            { TOK(VERTEX); }
+String            { TOK(STRING); }
 Function          { TOK(FUNCTION); }
 And               { TOK(AND); }
 Or                { TOK(OR); }

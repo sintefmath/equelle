@@ -7,6 +7,8 @@
 
 
 #include "ASTVisitorInterface.hpp"
+#include <string>
+
 
 class CheckASTVisitor : public ASTVisitorInterface
 {
@@ -77,6 +79,9 @@ public:
     void postVisit(StencilAssignmentNode& node);
     void visit(StencilNode& node);
     void postVisit(StencilNode& node);
+
+private:
+    void error(const std::string& err, const int line = -999);
 };
 
 

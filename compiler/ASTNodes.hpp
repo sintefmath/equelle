@@ -550,6 +550,10 @@ public:
     {
         return expr_->type();
     }
+    const ExpressionNode* rhs() const
+    {
+        return expr_;
+    }
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
