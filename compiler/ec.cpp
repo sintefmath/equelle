@@ -6,6 +6,7 @@ extern int yylex();
 extern int yyparse();
 
 #include "SymbolTable.hpp"
+#include "CheckASTVisitor.hpp"
 #include "PrintASTVisitor.hpp"
 #include "PrintEquelleASTVisitor.hpp"
 #include "PrintCPUBackendASTVisitor.hpp"
@@ -77,6 +78,10 @@ int main(int argc, char** argv)
 
 	//Parse equelle program
     yyparse();
+
+    // Check AST (and build symbol table)
+    CheckASTVisitor check;
+    SymbolTable::program()->accept(check);
 
     //Dump compiler internals
     std::string dump = "none";
