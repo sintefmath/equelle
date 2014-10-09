@@ -4,7 +4,6 @@
 
 #include "Common.hpp"
 #include "EquelleType.hpp"
-#include "SymbolTable.hpp"
 #include "ASTNodes.hpp"
 #include "ParseActions.hpp"
 #include "Dimension.hpp"
@@ -86,6 +85,8 @@ UnitNode* handleUnitPower(UnitNode* unit, const double num)
 
 ExpressionNode* handleIdentifier(const std::string& name)
 {
+    return new JustAnIdentifierNode(name);
+#if 0
     if (SymbolTable::isVariableDeclared(name)) {
         return new VarNode(name);
     } else {
@@ -103,15 +104,19 @@ ExpressionNode* handleIdentifier(const std::string& name)
             return new JustAnIdentifierNode(name);
         }
     }
+#endif
 }
 
 
 
 VarDeclNode* handleDeclaration(const std::string& name, TypeNode* type)
 {
+    return new VarDeclNode(name, type);
+#if 0
     EquelleType t = type->type();
     SymbolTable::declareVariable(name, t);
     return new VarDeclNode(name, type);
+#endif
 }
 
 
@@ -178,6 +183,9 @@ VarAssignNode* handleAssignment(const std::string& name, ExpressionNode* expr)
 
 Node* handleFuncDeclaration(const std::string& name, FuncTypeNode* ftype)
 {
+#if 0
+    return new FuncDeclNode(name, ftype);
+#endif
     SymbolTable::renameCurrentFunction(name);
     SymbolTable::retypeCurrentFunction(ftype->funcType());
     SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
@@ -188,8 +196,10 @@ Node* handleFuncDeclaration(const std::string& name, FuncTypeNode* ftype)
 
 void handleFuncStartType()
 {
+#if 0
     SymbolTable::declareFunction("TemporaryFunction");
     SymbolTable::setCurrentFunction("TemporaryFunction");
+#endif
 }
 
 
@@ -302,7 +312,10 @@ FuncTypeNode* handleFuncType(FuncArgsDeclNode* argtypes, TypeNode* rtype)
 
 
 
-StencilNode* handleStencilAccess(const std::string& name, FuncArgsNode* args) {
+StencilNode* handleStencilAccess(const std::string& name, FuncArgsNode* args)
+{
+    return new StencilNode(name, args);
+#if 0
     if (!SymbolTable::isVariableDeclared(name)) {
         std::string err_msg = "Could not find the stencil variable " + name;
         yyerror(err_msg.c_str());
@@ -325,6 +338,7 @@ StencilNode* handleStencilAccess(const std::string& name, FuncArgsNode* args) {
         }
     }
     return new StencilNode(name, args);
+#endif
 }
 
 FuncCallNode* handleFuncCall(const std::string& name, FuncArgsNode* args)
@@ -357,6 +371,8 @@ FuncCallNode* handleFuncCall(const std::string& name, FuncArgsNode* args)
 
 FuncCallLikeNode* handleFuncCallLike(const std::string& name, FuncArgsNode* args)
 {
+    return handleFuncCall(name, args);
+#if 0
     if (SymbolTable::isFunctionDeclared(name)) {
         return handleFuncCall(name, args);
     }
@@ -368,6 +384,7 @@ FuncCallLikeNode* handleFuncCallLike(const std::string& name, FuncArgsNode* args
         yyerror(err_msg.c_str());
         return nullptr;
     }
+#endif
 }
 
 FuncCallStatementNode* handleFuncCallStatement(FuncCallLikeNode* fcall_like)
@@ -446,6 +463,8 @@ BinaryOpNode* handleBinaryOp(BinaryOp op, ExpressionNode* left, ExpressionNode* 
 
 ComparisonOpNode* handleComparison(ComparisonOp op, ExpressionNode* left, ExpressionNode* right)
 {
+    return new ComparisonOpNode(op, left, right);
+#if 0
     EquelleType lt = left->type();
     EquelleType rt = right->type();
     if ((lt.basicType() != Scalar) || (rt.basicType() != Scalar)) {
@@ -464,6 +483,7 @@ ComparisonOpNode* handleComparison(ComparisonOp op, ExpressionNode* left, Expres
         yyerror("comparison operators only allowed when both sides have same dimension.");
     }
     return new ComparisonOpNode(op, left, right);
+#endif
 }
 
 
@@ -505,6 +525,8 @@ UnaryNegationNode* handleUnaryNegation(ExpressionNode* expr_to_negate)
 
 TrinaryIfNode* handleTrinaryIf(ExpressionNode* predicate, ExpressionNode* iftrue, ExpressionNode* iffalse)
 {
+    return new TrinaryIfNode(predicate, iftrue, iffalse);
+#if 0
     const EquelleType pt = predicate->type();
     const EquelleType tt = iftrue->type();
     const EquelleType ft = iffalse->type();
@@ -529,12 +551,15 @@ TrinaryIfNode* handleTrinaryIf(ExpressionNode* predicate, ExpressionNode* iftrue
                 "<iftrue> and <iffalse> must have the same dimension.");
     }
     return new TrinaryIfNode(predicate, iftrue, iffalse);
+#endif
 }
 
 
 
 OnNode* handleOn(ExpressionNode* left, ExpressionNode* right)
 {
+    return new OnNode(left, right, false);
+#if 0
     const EquelleType lt = left->type();
     const EquelleType rt = right->type();
     if (lt.isArray() || rt.isArray()) {
@@ -582,12 +607,15 @@ OnNode* handleOn(ExpressionNode* left, ExpressionNode* right)
         }
     }
     return new OnNode(left, right, false);
+#endif
 }
 
 
 
 OnNode* handleExtend(ExpressionNode* left, ExpressionNode* right)
 {
+    return new OnNode(left, right, true);
+#if 0
     const EquelleType lt = left->type();
     const EquelleType rt = right->type();
     if (lt.isArray() || rt.isArray()) {
@@ -620,6 +648,7 @@ OnNode* handleExtend(ExpressionNode* left, ExpressionNode* right)
         }
     }
     return new OnNode(left, right, true);
+#endif
 }
 
 
@@ -671,6 +700,8 @@ TypeNode* handleArrayType(const int array_size, TypeNode* type_expr)
 
 ArrayNode* handleArray(FuncArgsNode* expr_list)
 {
+    return new ArrayNode(expr_list);
+#if 0
     const auto& elems = expr_list->arguments();
     if (elems.empty()) {
         yyerror("cannot create an empty array.");
@@ -686,12 +717,15 @@ ArrayNode* handleArray(FuncArgsNode* expr_list)
         }
     }
     return new ArrayNode(expr_list);
+#endif
 }
 
 
 
 LoopNode* handleLoopStart(const std::string& loop_variable, const std::string& loop_set)
 {
+    return new LoopNode(loop_variable, loop_set);
+#if 0
     // Check that loop_set is a sequence, extract its type.
     EquelleType loop_set_type;
     if (SymbolTable::isVariableDeclared(loop_set)) {
@@ -725,6 +759,7 @@ LoopNode* handleLoopStart(const std::string& loop_variable, const std::string& l
     // Declare loop variable
     SymbolTable::declareVariable(loop_variable, loop_set_type.basicType());
     return ln;
+#endif
 }
 
 
@@ -732,14 +767,20 @@ LoopNode* handleLoopStart(const std::string& loop_variable, const std::string& l
 LoopNode* handleLoopStatement(LoopNode* loop_start, SequenceNode* loop_block)
 {
     loop_start->setBlock(loop_block);
+    return loop_start;
+#if 0
+    loop_start->setBlock(loop_block);
     SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
     return loop_start;
+#endif
 }
 
 
 
 RandomAccessNode* handleRandomAccess(ExpressionNode* expr, const int index)
 {
+    return new RandomAccessNode(expr, index);
+#if 0
     if (expr->type().isArray()) {
         if (index < 0 || index >= expr->type().arraySize()) {
             yyerror("index out of array bounds in '[<index>]' random access operator.");
@@ -752,6 +793,7 @@ RandomAccessNode* handleRandomAccess(ExpressionNode* expr, const int index)
         yyerror("cannot use '[<index>]' random access operator with anything other than a Vector or Array");
     }
     return new RandomAccessNode(expr, index);
+#endif
 }
 
 SequenceNode* handleStencilAssignment(FuncCallLikeNode* lhs, ExpressionNode* rhs)
@@ -764,6 +806,7 @@ SequenceNode* handleStencilAssignment(FuncCallLikeNode* lhs, ExpressionNode* rhs
         yyerror(err_msg.c_str());
     }
 
+#if 0
     // If the type is a collection of invalids (no pun intended)
     // we can safely set it to the type of the rhs
     EquelleType lhs_et = SymbolTable::variableType(stencil->name());
@@ -777,7 +820,7 @@ SequenceNode* handleStencilAssignment(FuncCallLikeNode* lhs, ExpressionNode* rhs
         TypeNode* lhs_type = new TypeNode(lhs_et);
         retval->pushNode(new VarDeclNode(stencil->name(), lhs_type));
     }
-
+#endif
     retval->pushNode(new StencilAssignmentNode(stencil, rhs));
     return retval;
 }
