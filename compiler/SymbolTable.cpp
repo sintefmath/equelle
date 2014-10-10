@@ -593,11 +593,11 @@ SymbolTable::SymbolTable()
                                          EquelleType(Cell, Collection, NotApplicable, AllCells),
                                          { InvalidIndex, 0, InvalidIndex}));
     functions_.emplace_back("IsEmpty",
-                            FunctionType({ Variable("entities", EquelleType()) },
+                            FunctionType({ Variable("entities", EquelleType(Invalid, Collection)) },
                                          EquelleType(Bool, Collection),
                                          { InvalidIndex, 0, InvalidIndex}));
     functions_.emplace_back("Centroid",
-                            FunctionType({ Variable("entities", EquelleType()) },
+                            FunctionType({ Variable("entities", EquelleType(Invalid, Collection)) },
                                          EquelleType(Vector, Collection),
                                          { InvalidIndex, 0, InvalidIndex}));
     functions_.emplace_back("Normal",
