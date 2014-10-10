@@ -292,15 +292,18 @@ bool EquelleType::operator!=(const EquelleType& et) const
 
 bool EquelleType::canSubstituteFor(const EquelleType& et) const
 {
-    if (basic_type_ != et.basic_type_) {
+    // Accept any basic type as substitute for 'Invalid'.
+    if (et.basic_type_ != Invalid && basic_type_ != et.basic_type_) {
         return false;
     }
     if (composite_ != et.composite_) {
         return false;
     }
+    // Accept any gridmapping as substitute for NotApplicable.
     if (et.gridmapping_ != NotApplicable && gridmapping_ != et.gridmapping_) {
         return false;
     }
+    // Accept any subset_of as substitute for NotApplicable.
     if (et.subset_of_ != NotApplicable && subset_of_ != et.subset_of_) {
         return false;
     }

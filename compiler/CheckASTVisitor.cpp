@@ -55,6 +55,32 @@ void CheckASTVisitor::visit(TypeNode&)
 {
 }
 
+void CheckASTVisitor::visit(CollectionTypeNode&)
+{
+}
+
+void CheckASTVisitor::postVisit(CollectionTypeNode& node)
+{
+    EquelleType bt = node.baseType()->type();
+    if (!bt.isBasic()) {
+        std::string errmsg = "attempting to declare a Collection Of <something other than a basic type>";
+        error(errmsg);
+    }
+    const ExpressionNode* gridmapping = node.gridMapping();
+    if (gridmapping) {
+        if (!gridmapping->type().isEntityCollection() || gridmapping->type().gridMapping() == NotApplicable) {
+            error("a Collection must be On a Collection of Cell, Face etc.");
+        }
+    }
+    const ExpressionNode* subsetof = node.subsetOf();
+    if (subsetof) {
+        // We are creating a new entity collection.
+        if (!subsetof->type().isEntityCollection() || subsetof->type().gridMapping() == NotApplicable) {
+            error("a Collection must be Subset Of a Collection of Cell, Face etc.");
+        }
+    }
+}
+
 void CheckASTVisitor::visit(FuncTypeNode&)
 {
 }
@@ -180,7 +206,11 @@ void CheckASTVisitor::postVisit(TrinaryIfNode&)
 {
 }
 
-void CheckASTVisitor::visit(VarDeclNode& node)
+void CheckASTVisitor::visit(VarDeclNode&)
+{
+}
+
+void CheckASTVisitor::postVisit(VarDeclNode& node)
 {
     if (SymbolTable::isVariableDeclared(node.name())
         || SymbolTable::isFunctionDeclared(node.name())) {
@@ -190,10 +220,6 @@ void CheckASTVisitor::visit(VarDeclNode& node)
         error(err);
     }
     SymbolTable::declareVariable(node.name(), node.type());
-}
-
-void CheckASTVisitor::postVisit(VarDeclNode&)
-{
 }
 
 void CheckASTVisitor::visit(VarAssignNode&)

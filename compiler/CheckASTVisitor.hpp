@@ -25,6 +25,8 @@ public:
     void visit(UnitNode& node);
     void visit(StringNode& node);
     void visit(TypeNode& node);
+    void visit(CollectionTypeNode& node);
+    void postVisit(CollectionTypeNode& node);
     void visit(FuncTypeNode& node);
     void visit(BinaryOpNode& node);
     void midVisit(BinaryOpNode& node);

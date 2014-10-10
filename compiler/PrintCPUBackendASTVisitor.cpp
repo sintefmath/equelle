@@ -32,7 +32,7 @@ void PrintCPUBackendASTVisitor::visit(SequenceNode&)
 {
     if (sequence_depth_ == 0) {
         // This is the root node of the program.
-        std::cout << cppStartString();
+        // std::cout << cppStartString();
         endl();
     }
     ++sequence_depth_;
@@ -253,10 +253,12 @@ void PrintCPUBackendASTVisitor::postVisit(TrinaryIfNode&)
 
 void PrintCPUBackendASTVisitor::visit(VarDeclNode& node)
 {
+    suppress();
 }
 
 void PrintCPUBackendASTVisitor::postVisit(VarDeclNode&)
 {
+    unsuppress();
 }
 
 void PrintCPUBackendASTVisitor::visit(VarAssignNode& node)

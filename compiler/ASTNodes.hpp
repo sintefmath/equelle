@@ -125,7 +125,7 @@ class TypeNode : public Node
 {
 public:
     TypeNode(const EquelleType et) : et_(et) {}
-    EquelleType type() const
+    virtual EquelleType type() const
     {
         return et_;
     }
@@ -149,6 +149,9 @@ public:
           gridmapping_(gridmapping),
           subsetof_(subsetof)
     {
+        // TODO. Check if this assert is what we want.
+        //       Is "Collection Of X On Y Subset Of Z" allowed?
+        assert(gridmapping == nullptr || subsetof == nullptr);
     }
     ~CollectionTypeNode()
     {
@@ -156,14 +159,36 @@ public:
         delete gridmapping_;
         delete subsetof_;
     }
+    const TypeNode* baseType() const
+    {
+        return btype_;
+    }
+    const ExpressionNode* gridMapping() const
+    {
+        return gridmapping_;
+    }
+    const ExpressionNode* subsetOf() const
+    {
+        return subsetof_;
+    }
     EquelleType type() const
     {
-        throw std::logic_error("CollectionTypeNode::type() -- not implemented.");
+        EquelleType bt = btype_->type();
+        int gm = NotApplicable;
+        if (gridmapping_) {
+            gm = gridmapping_->type().gridMapping();
+        }
+        int subset = NotApplicable;
+        if (subsetof_) {
+            gm = PostponedDefinition;
+            subset = subsetof_->type().gridMapping();
+        }
+        return EquelleType(bt.basicType(), Collection, gm, subset);
     }
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
-        btype_->accept(visitor);
+        // btype_->accept(visitor);
         if (gridmapping_) {
             gridmapping_->accept(visitor);
         }
