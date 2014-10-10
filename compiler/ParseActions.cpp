@@ -150,7 +150,7 @@ void handleFuncStartType()
 }
 
 
-FuncCallLikeNode* handleFuncAssignmentStart(const std::string& name, FuncArgsNode* args)
+FuncStartNode* handleFuncAssignmentStart(const std::string& name, FuncArgsNode* args)
 {
     return new FuncStartNode(name, args);
 #if 0
@@ -176,7 +176,7 @@ FuncCallLikeNode* handleFuncAssignmentStart(const std::string& name, FuncArgsNod
 }
 
 
-FuncAssignNode* handleFuncAssignment(Node* funcstart, SequenceNode* fbody)
+FuncAssignNode* handleFuncAssignment(FuncStartNode* funcstart, SequenceNode* fbody)
 {
     return new FuncAssignNode(funcstart, fbody);
 #if 0

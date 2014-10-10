@@ -359,14 +359,16 @@ void CheckASTVisitor::postVisit(FuncStartNode&)
 {
 }
 
-void CheckASTVisitor::visit(FuncAssignNode&)
+void CheckASTVisitor::visit(FuncAssignNode& node)
 {
-    // suppressChecking();
+    SymbolTable::setCurrentFunction(node.name());
+    // suppressChecking(); // necessary for template approach?
 }
 
 void CheckASTVisitor::postVisit(FuncAssignNode&)
 {
-    // unsuppressChecking();
+    SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
+    // unsuppressChecking(); // necessary for template approach?
 }
 
 void CheckASTVisitor::visit(FuncArgsNode&)

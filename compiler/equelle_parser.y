@@ -66,7 +66,7 @@
 %type <enode> quantity
 %type <unitnode> unit_expr
 %type <enode> array
-%type <fcalllike> f_assign_start
+%type <fsnode> f_assign_start
 %type <fcalllike> f_call_like
 %type <farg> f_call_args
 %type <seq> block
@@ -108,6 +108,7 @@
     VarDeclNode*                   vardecl;
     FuncTypeNode*                  ftype;
     FuncArgsNode*                  farg;
+    FuncStartNode*                 fsnode;
     FuncArgsDeclNode*              fargdecl;
     FuncCallLikeNode*              fcalllike;
     SequenceNode*                  seq;

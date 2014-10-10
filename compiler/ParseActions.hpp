@@ -34,9 +34,9 @@ Node* handleFuncDeclaration(const std::string& name, FuncTypeNode* ftype);
 
 void handleFuncStartType();
 
-FuncCallLikeNode* handleFuncAssignmentStart(const std::string& name, FuncArgsNode* args);
+FuncStartNode* handleFuncAssignmentStart(const std::string& name, FuncArgsNode* args);
 
-FuncAssignNode* handleFuncAssignment(Node* funcstart, SequenceNode* fbody);
+FuncAssignNode* handleFuncAssignment(FuncStartNode* funcstart, SequenceNode* fbody);
 
 ReturnStatementNode* handleReturnStatement(ExpressionNode* expr);
 

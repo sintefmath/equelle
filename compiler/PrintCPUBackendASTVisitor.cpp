@@ -390,22 +390,21 @@ void PrintCPUBackendASTVisitor::visit(FuncCallNode& node)
         const char first = fname[0];
         std::string cppname;
         if (std::isupper(first)) {
+#if 0
             bool is_stencil = false;
-
             is_stencil = is_stencil | node.type().isStencil();
-
             const std::vector<EquelleType>& types = node.args()->argumentTypes();
-
             for (int i=0; i<types.size(); ++i) {
                 is_stencil = is_stencil | types[i].isStencil();
             }
-
             if (is_stencil) {
                 cppname += std::string("er_cart.");
             }
             else {
                 cppname += std::string("er.");
             }
+#endif
+            cppname += std::string("er.");
             cppname += char(std::tolower(first)) + fname.substr(1);
         } else {
             cppname += fname;

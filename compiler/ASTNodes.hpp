@@ -778,36 +778,6 @@ private:
 
 
 
-class FuncAssignNode : public Node
-{
-public:
-    FuncAssignNode(Node* funcstart, Node* funcbody)
-        : funcstart_(funcstart), funcbody_(funcbody)
-    {
-    }
-    virtual ~FuncAssignNode()
-    {
-        delete funcstart_;
-        delete funcbody_;
-    }
-    virtual void accept(ASTVisitorInterface& visitor)
-    {
-        visitor.visit(*this);
-        funcstart_->accept(visitor);
-        funcbody_->accept(visitor);
-        visitor.postVisit(*this);
-#if 0
-        SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
-#endif
-    }
-private:
-    Node* funcstart_;
-    Node* funcbody_;
-};
-
-
-
-
 class FuncArgsNode : public Node
 {
 public:
@@ -936,6 +906,41 @@ private:
     std::string funcname_;
     FuncArgsNode* funcargs_;
 };
+
+
+
+class FuncAssignNode : public Node
+{
+public:
+    FuncAssignNode(FuncStartNode* funcstart, Node* funcbody)
+        : funcstart_(funcstart), funcbody_(funcbody)
+    {
+    }
+    virtual ~FuncAssignNode()
+    {
+        delete funcstart_;
+        delete funcbody_;
+    }
+    const std::string& name() const
+    {
+        return funcstart_->name();
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        funcstart_->accept(visitor);
+        funcbody_->accept(visitor);
+        visitor.postVisit(*this);
+#if 0
+        SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
+#endif
+    }
+private:
+    FuncStartNode* funcstart_;
+    Node* funcbody_;
+};
+
+
 
 
 class StencilNode : public FuncCallLikeNode
