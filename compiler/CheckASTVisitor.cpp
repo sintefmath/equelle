@@ -61,6 +61,9 @@ void CheckASTVisitor::visit(CollectionTypeNode&)
 
 void CheckASTVisitor::postVisit(CollectionTypeNode& node)
 {
+    if (isCheckingSuppressed()) {
+        return;
+    }
     EquelleType bt = node.baseType()->type();
     if (!bt.isBasic()) {
         std::string errmsg = "attempting to declare a Collection Of <something other than a basic type>";
@@ -95,6 +98,9 @@ void CheckASTVisitor::midVisit(BinaryOpNode&)
 
 void CheckASTVisitor::postVisit(BinaryOpNode& node)
 {
+    if (isCheckingSuppressed()) {
+        return;
+    }
     const EquelleType lt = node.left()->type();
     const EquelleType rt = node.right()->type();
     const BinaryOp op = node.op();
@@ -212,6 +218,9 @@ void CheckASTVisitor::visit(VarDeclNode&)
 
 void CheckASTVisitor::postVisit(VarDeclNode& node)
 {
+    if (isCheckingSuppressed()) {
+        return;
+    }
     if (SymbolTable::isVariableDeclared(node.name())
         || SymbolTable::isFunctionDeclared(node.name())) {
         std::string err = "cannot redeclare ";
@@ -228,6 +237,9 @@ void CheckASTVisitor::visit(VarAssignNode&)
 
 void CheckASTVisitor::postVisit(VarAssignNode& node)
 {
+    if (isCheckingSuppressed()) {
+        return;
+    }
     const std::string& name = node.name();
     const ExpressionNode* expr = node.rhs();
 
@@ -293,6 +305,9 @@ void CheckASTVisitor::postVisit(VarAssignNode& node)
 
 void CheckASTVisitor::visit(VarNode& node)
 {
+    if (isCheckingSuppressed()) {
+        return;
+    }
     if (!SymbolTable::isVariableDeclared(node.name())) {
         std::string err_msg = "using undeclared variable ";
         err_msg += node.name();
@@ -324,12 +339,16 @@ void CheckASTVisitor::postVisit(FuncArgsDeclNode&)
 {
 }
 
-void CheckASTVisitor::visit(FuncDeclNode&)
+void CheckASTVisitor::visit(FuncDeclNode& node)
 {
+    SymbolTable::declareFunction(node.name());
+    SymbolTable::setCurrentFunction(node.name());
 }
 
-void CheckASTVisitor::postVisit(FuncDeclNode&)
+void CheckASTVisitor::postVisit(FuncDeclNode& node)
 {
+    SymbolTable::retypeCurrentFunction(node.ftype()->funcType());
+    SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
 }
 
 void CheckASTVisitor::visit(FuncStartNode&)
@@ -342,10 +361,12 @@ void CheckASTVisitor::postVisit(FuncStartNode&)
 
 void CheckASTVisitor::visit(FuncAssignNode&)
 {
+    // suppressChecking();
 }
 
 void CheckASTVisitor::postVisit(FuncAssignNode&)
 {
+    // unsuppressChecking();
 }
 
 void CheckASTVisitor::visit(FuncArgsNode&)
@@ -374,6 +395,9 @@ void CheckASTVisitor::visit(FuncCallNode&)
 
 void CheckASTVisitor::postVisit(FuncCallNode& node)
 {
+    if (isCheckingSuppressed()) {
+        return;
+    }
     const Function& f = SymbolTable::getFunction(node.name());
     // Check function call arguments.
     const auto& argtypes = node.args()->argumentTypes();
@@ -461,4 +485,19 @@ void CheckASTVisitor::postVisit(StencilNode&)
 void CheckASTVisitor::error(const std::string& err, const int line)
 {
     std::cerr << "Parser error near line " << line << ": " << err << std::endl;
+}
+
+void CheckASTVisitor::suppressChecking()
+{
+    checking_suppressed_ = true;
+}
+
+void CheckASTVisitor::unsuppressChecking()
+{
+    checking_suppressed_ = false;
+}
+
+bool CheckASTVisitor::isCheckingSuppressed() const
+{
+    return checking_suppressed_;
 }

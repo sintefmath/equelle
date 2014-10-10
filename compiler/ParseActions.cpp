@@ -130,13 +130,13 @@ VarAssignNode* handleAssignment(const std::string& name, ExpressionNode* expr)
 
 Node* handleFuncDeclaration(const std::string& name, FuncTypeNode* ftype)
 {
-#if 0
     return new FuncDeclNode(name, ftype);
-#endif
+#if 0
     SymbolTable::renameCurrentFunction(name);
     SymbolTable::retypeCurrentFunction(ftype->funcType());
     SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
     return new FuncDeclNode(name, ftype);
+#endif
 }
 
 
@@ -210,36 +210,6 @@ Node* handleDeclarationAssign(const std::string& name, TypeNode* type, Expressio
 CollectionTypeNode* handleCollection(TypeNode* btype, ExpressionNode* gridmapping, ExpressionNode* subsetof)
 {
     return new CollectionTypeNode(btype, gridmapping, subsetof);
-#if 0
-    assert(gridmapping == nullptr || subsetof == nullptr);
-    EquelleType bt = btype->type();
-    if (!bt.isBasic()) {
-        std::string errmsg = "attempting to declare a Collection Of <nonsense>";
-        yyerror(errmsg.c_str());
-    }
-    int gm = NotApplicable;
-    if (gridmapping) {
-        if (!gridmapping->type().isEntityCollection() || gridmapping->type().gridMapping() == NotApplicable) {
-            yyerror("a Collection must be On a Collection of Cell, Face etc.");
-        } else {
-            gm = gridmapping->type().gridMapping();
-        }
-    }
-    int subset = NotApplicable;
-    if (subsetof) {
-        // We are creating a new entity collection.
-        if (!subsetof->type().isEntityCollection() || subsetof->type().gridMapping() == NotApplicable) {
-            yyerror("a Collection must be Subset Of a Collection of Cell, Face etc.");
-        } else {
-            gm = PostponedDefinition;
-            subset = subsetof->type().gridMapping();
-        }
-    }
-    delete btype;
-    delete gridmapping;
-    delete subsetof;
-    return new TypeNode(EquelleType(bt.basicType(), Collection, gm, subset));
-#endif
 }
 
 TypeNode* handleStencilCollection(TypeNode* type_expr)
@@ -254,7 +224,10 @@ TypeNode* handleStencilCollection(TypeNode* type_expr)
 
 FuncTypeNode* handleFuncType(FuncArgsDeclNode* argtypes, TypeNode* rtype)
 {
+    return new FuncTypeNode(argtypes, rtype);
+#if 0
     return new FuncTypeNode(FunctionType(argtypes->arguments(), rtype->type()));
+#endif
 }
 
 

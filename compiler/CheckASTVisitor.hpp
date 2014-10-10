@@ -83,7 +83,11 @@ public:
     void postVisit(StencilNode& node);
 
 private:
+    bool checking_suppressed_;
     void error(const std::string& err, const int line = -999);
+    void suppressChecking();
+    void unsuppressChecking();
+    bool isCheckingSuppressed() const;
 };
 
 

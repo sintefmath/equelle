@@ -207,25 +207,6 @@ private:
 
 
 
-class FuncTypeNode : public Node
-{
-public:
-    FuncTypeNode(const FunctionType ft) : ft_(ft) {}
-    FunctionType funcType() const
-    {
-        return ft_;
-    }
-    virtual void accept(ASTVisitorInterface& visitor)
-    {
-        visitor.visit(*this);
-    }
-private:
-    FunctionType ft_;
-};
-
-
-
-
 enum BinaryOp { Add, Subtract, Multiply, Divide };
 
 
@@ -636,6 +617,75 @@ private:
 
 
 
+class FuncArgsDeclNode : public Node
+{
+public:
+    FuncArgsDeclNode(VarDeclNode* vardecl = 0)
+    {
+        if (vardecl) {
+            decls_.push_back(vardecl);
+        }
+    }
+    virtual ~FuncArgsDeclNode()
+    {
+        for (auto decl : decls_) {
+            delete decl;
+        }
+    }
+    void addArg(VarDeclNode* vardecl)
+    {
+        decls_.push_back(vardecl);
+    }
+    std::vector<Variable> arguments() const
+    {
+        std::vector<Variable> args;
+        args.reserve(decls_.size());
+        for (auto vdn : decls_) {
+            args.push_back(Variable(vdn->name(), vdn->type(), true));
+        }
+        return args;
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        const size_t n = decls_.size();
+        for (size_t i = 0; i < n; ++i) {
+            decls_[i]->accept(visitor);
+            if (i < n - 1) {
+                visitor.midVisit(*this);
+            }
+        }
+        visitor.postVisit(*this);
+    }
+private:
+    std::vector<VarDeclNode*> decls_;
+};
+
+
+
+
+class FuncTypeNode : public Node
+{
+public:
+    FuncTypeNode(FuncArgsDeclNode* argtypes, TypeNode* rtype)
+        : argtypes_(argtypes), rtype_(rtype)
+    {
+    }
+    FunctionType funcType() const
+    {
+        return FunctionType(argtypes_->arguments(), rtype_->type());
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+    }
+private:
+    FuncArgsDeclNode* argtypes_;
+    TypeNode* rtype_;
+};
+
+
+
 class FuncRefNode : public ExpressionNode
 {
 public:
@@ -687,53 +737,6 @@ private:
 
 
 
-class FuncArgsDeclNode : public Node
-{
-public:
-    FuncArgsDeclNode(VarDeclNode* vardecl = 0)
-    {
-        if (vardecl) {
-            decls_.push_back(vardecl);
-        }
-    }
-    virtual ~FuncArgsDeclNode()
-    {
-        for (auto decl : decls_) {
-            delete decl;
-        }
-    }
-    void addArg(VarDeclNode* vardecl)
-    {
-        decls_.push_back(vardecl);
-    }
-    std::vector<Variable> arguments() const
-    {
-        std::vector<Variable> args;
-        args.reserve(decls_.size());
-        for (auto vdn : decls_) {
-            args.push_back(Variable(vdn->name(), vdn->type(), true));
-        }
-        return args;
-    }
-    virtual void accept(ASTVisitorInterface& visitor)
-    {
-        visitor.visit(*this);
-        const size_t n = decls_.size();
-        for (size_t i = 0; i < n; ++i) {
-            decls_[i]->accept(visitor);
-            if (i < n - 1) {
-                visitor.midVisit(*this);
-            }
-        }
-        visitor.postVisit(*this);
-    }
-private:
-    std::vector<VarDeclNode*> decls_;
-};
-
-
-
-
 class FuncDeclNode : public Node
 {
 public:
@@ -748,6 +751,10 @@ public:
     const std::string& name() const
     {
         return funcname_;
+    }
+    const FuncTypeNode* ftype() const
+    {
+        return ftype_;
     }
     virtual void accept(ASTVisitorInterface& visitor)
     {
