@@ -12,7 +12,7 @@
 
 
 PrintEquelleASTVisitor::PrintEquelleASTVisitor()
-    : indent_(0)
+    : suppressed_(false), indent_(0)
 {
 }
 
@@ -50,6 +50,17 @@ void PrintEquelleASTVisitor::visit(StringNode& node)
 void PrintEquelleASTVisitor::visit(TypeNode& node)
 {
     std::cout << SymbolTable::equelleString(node.type());
+}
+
+void PrintEquelleASTVisitor::visit(CollectionTypeNode& node)
+{
+    std::cout << SymbolTable::equelleString(node.type());
+    suppress();
+}
+
+void PrintEquelleASTVisitor::postVisit(CollectionTypeNode& node)
+{
+    unsuppress();
 }
 
 void PrintEquelleASTVisitor::visit(FuncTypeNode& node)
@@ -207,7 +218,9 @@ void PrintEquelleASTVisitor::postVisit(VarAssignNode&)
 
 void PrintEquelleASTVisitor::visit(VarNode& node)
 {
-    std::cout << node.name();
+    if (!suppressed_) {
+        std::cout << node.name();
+    }
 }
 
 void PrintEquelleASTVisitor::visit(FuncRefNode& node)
@@ -377,4 +390,14 @@ void PrintEquelleASTVisitor::endl() const
 std::string PrintEquelleASTVisitor::indent() const
 {
     return std::string(indent_*4, ' ');
+}
+
+void PrintEquelleASTVisitor::suppress()
+{
+    suppressed_ = true;
+}
+
+void PrintEquelleASTVisitor::unsuppress()
+{
+    suppressed_ = false;
 }

@@ -20,6 +20,8 @@ public:
     void visit(NumberNode& node);
     void visit(StringNode& node);
     void visit(TypeNode& node);
+    void visit(CollectionTypeNode& node);
+    void postVisit(CollectionTypeNode& node);
     void visit(FuncTypeNode& node);
     void visit(BinaryOpNode& node);
     void midVisit(BinaryOpNode& node);
@@ -76,9 +78,12 @@ public:
     void postVisit(StencilNode& node);
 
 private:
+    bool suppressed_;
     int indent_;
     void endl() const;
     std::string indent() const;
+    void suppress();
+    void unsuppress();
 };
 
 #endif // PRINTEQUELLEASTVISITOR_HEADER_INCLUDED
