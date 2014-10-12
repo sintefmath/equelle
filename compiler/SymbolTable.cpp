@@ -544,6 +544,11 @@ const std::string& SymbolTable::entitySetName(const int entity_set_index)
     return instance().findSet(entity_set_index)->name();
 }
 
+int SymbolTable::entitySetIndex(const std::string& entity_set_name)
+{
+    return instance().findSet(entity_set_name)->index();
+}
+
 BasicType SymbolTable::entitySetType(const int entity_set_index)
 {
     BasicType canonical = canonicalGridMappingEntity(entity_set_index);
@@ -820,4 +825,10 @@ std::vector<EntitySet>::const_iterator SymbolTable::findSet(const int index) con
 {
     return std::find_if(entitysets_.begin(), entitysets_.end(),
                         [&](const EntitySet& es) { return es.index() == index; });
+}
+
+std::vector<EntitySet>::const_iterator SymbolTable::findSet(const std::string& name) const
+{
+    return std::find_if(entitysets_.begin(), entitysets_.end(),
+                        [&](const EntitySet& es) { return es.name() == name; });
 }
