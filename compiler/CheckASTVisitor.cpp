@@ -106,14 +106,17 @@ void CheckASTVisitor::postVisit(BinaryOpNode& node)
     const BinaryOp op = node.op();
     if (!isNumericType(lt.basicType()) || !(isNumericType(rt.basicType()))) {
         error("arithmetic binary operators only apply to numeric types");
+        return;
     }
     if (lt.isArray() || rt.isArray()) {
         error("arithmetic binary operators cannot be applied to Array types");
+        return;
     }
     if (lt.isCollection() && rt.isCollection()) {
         if (lt.gridMapping() != rt.gridMapping()) {
             error("arithmetic binary operators on Collections only acceptable "
                     "if both sides are On the same set.");
+            return;
         }
     }
     switch (op) {
@@ -135,20 +138,24 @@ void CheckASTVisitor::postVisit(BinaryOpNode& node)
             }
             else {
                 error("addition and subtraction only allowed between identical types.");
+                return;
             }
         }
         if (node.left()->dimension() != node.right()->dimension()) {
             error("addition and subtraction only allowed when both sides have same dimension.");
+            return;
         }
         break;
     case Multiply:
         if (lt.basicType() == Vector && rt.basicType() == Vector) {
             error("cannot multiply two 'Vector' types.");
+            return;
         }
         break;
     case Divide:
         if (rt.basicType() != Scalar) {
             error("can only divide by 'Scalar' types");
+            return;
         }
         break;
     default:
