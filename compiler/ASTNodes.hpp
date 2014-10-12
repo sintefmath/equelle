@@ -1005,6 +1005,11 @@ public:
         delete funcargs_;
     }
 
+    void setDynamicSubsetReturn(const int dynamic_subset_return)
+    {
+        dsr_ = dynamic_subset_return;
+    }
+
     EquelleType type() const
     {
         EquelleType t = SymbolTable::getFunction(funcname_).returnType(funcargs_->argumentTypes());
