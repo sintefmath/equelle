@@ -427,7 +427,7 @@ void CheckASTVisitor::postVisit(FuncCallNode& node)
         if (dynsubret != NotApplicable) {
             // Create a new domain.
             const int gm = SymbolTable::declareNewEntitySet("AnonymousEntitySet", dynsubret);
-            (void) gm; // TODO use this, but where?
+            node.setDynamicSubsetReturn(gm);
         }
     }
 }
