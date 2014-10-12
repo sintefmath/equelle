@@ -306,12 +306,16 @@ void PrintEquelleASTVisitor::postVisit(ReturnStatementNode&)
 
 void PrintEquelleASTVisitor::visit(FuncCallNode& node)
 {
-    std::cout << node.name() << '(';
+    if (!suppressed_) {
+        std::cout << node.name() << '(';
+    }
 }
 
 void PrintEquelleASTVisitor::postVisit(FuncCallNode&)
 {
-    std::cout << ')';
+    if (!suppressed_) {
+        std::cout << ')';
+    }
 }
 
 void PrintEquelleASTVisitor::visit(FuncCallStatementNode&)

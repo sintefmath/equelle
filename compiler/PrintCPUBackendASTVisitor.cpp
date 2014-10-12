@@ -346,8 +346,9 @@ void PrintCPUBackendASTVisitor::postVisit(FuncStartNode& node)
     endl();
 }
 
-void PrintCPUBackendASTVisitor::visit(FuncAssignNode&)
+void PrintCPUBackendASTVisitor::visit(FuncAssignNode& node)
 {
+    SymbolTable::setCurrentFunction(node.name());
 }
 
 void PrintCPUBackendASTVisitor::postVisit(FuncAssignNode&)
@@ -355,6 +356,7 @@ void PrintCPUBackendASTVisitor::postVisit(FuncAssignNode&)
     --indent_;
     std::cout << indent() << "};";
     endl();
+    SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
 }
 
 void PrintCPUBackendASTVisitor::visit(FuncArgsNode&)
@@ -385,6 +387,9 @@ void PrintCPUBackendASTVisitor::postVisit(ReturnStatementNode&)
 
 void PrintCPUBackendASTVisitor::visit(FuncCallNode& node)
 {
+    if (suppressed_) {
+        return;
+    }
     if (SymbolTable::isFunctionDeclared(node.name())) {
         const std::string fname = node.name();
         const char first = fname[0];
@@ -421,6 +426,9 @@ void PrintCPUBackendASTVisitor::visit(FuncCallNode& node)
 
 void PrintCPUBackendASTVisitor::postVisit(FuncCallNode&)
 {
+    if (suppressed_) {
+        return;
+    }
     std::cout << ')';
 }
 
