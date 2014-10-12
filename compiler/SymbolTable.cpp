@@ -611,7 +611,7 @@ SymbolTable::SymbolTable()
                                          EquelleType(Scalar)));
     functions_.emplace_back("InputCollectionOfScalar",
                             FunctionType({ Variable("name", EquelleType(String)),
-                                           Variable("entities", EquelleType()) },
+                                           Variable("entities", EquelleType(Invalid, Collection, NotApplicable, NotApplicable, false, true)) },
                                          EquelleType(Scalar, Collection),
                                          { InvalidIndex, 1, InvalidIndex}));
     functions_.emplace_back("InputStencilCollectionOfScalar",
@@ -621,7 +621,7 @@ SymbolTable::SymbolTable()
                                          { InvalidIndex, 1, InvalidIndex}));
     functions_.emplace_back("InputDomainSubsetOf",
                             FunctionType({ Variable("name", EquelleType(String)),
-                                           Variable("entities", EquelleType()) },
+                                           Variable("entities", EquelleType(Invalid, Collection, NotApplicable, NotApplicable, false, true)) },
                                           EquelleType(Invalid, Collection, NotApplicable, NotApplicable, false, true),
                                          { 1, InvalidIndex, 1}));
     functions_.emplace_back("InputSequenceOfScalar",
