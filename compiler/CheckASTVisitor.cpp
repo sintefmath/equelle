@@ -204,8 +204,18 @@ void CheckASTVisitor::visit(NormNode&)
 {
 }
 
-void CheckASTVisitor::postVisit(NormNode&)
+void CheckASTVisitor::postVisit(NormNode& node)
 {
+    const ExpressionNode* expr = node.normedExpression();
+    if (expr->type().isArray()) {
+        error("cannot take norm of an Array.", node.location());
+        return;
+    }
+    const BasicType bt = expr->type().basicType();
+    const bool ok_type = isEntityType(bt) || bt == Scalar || bt == Vector;
+    if (!ok_type) {
+        error("can only take norm of Scalar, Vector, Cell, Face, Edge and Vertex types.", node.location());
+    }
 }
 
 void CheckASTVisitor::visit(UnaryNegationNode&)

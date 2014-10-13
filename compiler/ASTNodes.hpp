@@ -355,6 +355,10 @@ public:
     {
         delete expr_to_norm_;
     }
+    const ExpressionNode* normedExpression() const
+    {
+        return expr_to_norm_;
+    }
     EquelleType type() const
     {
         return EquelleType(Scalar,
@@ -387,7 +391,7 @@ public:
                 d.setCoefficient(Length, 3);
                 break;
             default:
-                yyerror("internal compiler error in NormNode::dimension().");
+                throw std::logic_error("internal compiler error in NormNode::dimension().");
             }
             // TODO: we use a dimensionless value here now, until
             // dimension of function calls has been implemented.

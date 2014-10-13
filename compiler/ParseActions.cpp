@@ -333,18 +333,6 @@ NormNode* handleNorm(ExpressionNode* expr_to_norm)
     NormNode* node = new NormNode(expr_to_norm);
     node->setLocation(FileLocation(yylineno));
     return node;
-#if 0
-    if (expr_to_norm->type().isArray()) {
-        yyerror("cannot take norm of an Array.");
-    }
-    const BasicType bt = expr_to_norm->type().basicType();
-    if (isEntityType(bt) || bt == Scalar || bt == Vector) {
-        return new NormNode(expr_to_norm);
-    } else {
-        yyerror("can only take norm of Scalar, Vector, Cell, Face, Edge and Vertex types.");
-        return new NormNode(expr_to_norm);
-    }
-#endif
 }
 
 
