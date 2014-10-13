@@ -112,11 +112,6 @@ ExpressionNode* handleIdentifier(const std::string& name)
 VarDeclNode* handleDeclaration(const std::string& name, TypeNode* type)
 {
     return new VarDeclNode(name, type);
-#if 0
-    EquelleType t = type->type();
-    SymbolTable::declareVariable(name, t);
-    return new VarDeclNode(name, type);
-#endif
 }
 
 
@@ -131,22 +126,12 @@ VarAssignNode* handleAssignment(const std::string& name, ExpressionNode* expr)
 Node* handleFuncDeclaration(const std::string& name, FuncTypeNode* ftype)
 {
     return new FuncDeclNode(name, ftype);
-#if 0
-    SymbolTable::renameCurrentFunction(name);
-    SymbolTable::retypeCurrentFunction(ftype->funcType());
-    SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
-    return new FuncDeclNode(name, ftype);
-#endif
 }
 
 
 
 void handleFuncStartType()
 {
-#if 0
-    SymbolTable::declareFunction("TemporaryFunction");
-    SymbolTable::setCurrentFunction("TemporaryFunction");
-#endif
 }
 
 
@@ -179,13 +164,6 @@ FuncStartNode* handleFuncAssignmentStart(const std::string& name, FuncArgsNode* 
 FuncAssignNode* handleFuncAssignment(FuncStartNode* funcstart, SequenceNode* fbody)
 {
     return new FuncAssignNode(funcstart, fbody);
-#if 0
-    // This is called after the block AST has been constructed,
-    // so we should switch back to Main scope.
-    // See also handleFuncAssignmentStart
-    SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
-    return new FuncAssignNode(funcstart, fbody);
-#endif
 }
 
 
@@ -225,9 +203,6 @@ TypeNode* handleStencilCollection(TypeNode* type_expr)
 FuncTypeNode* handleFuncType(FuncArgsDeclNode* argtypes, TypeNode* rtype)
 {
     return new FuncTypeNode(argtypes, rtype);
-#if 0
-    return new FuncTypeNode(FunctionType(argtypes->arguments(), rtype->type()));
-#endif
 }
 
 
@@ -299,61 +274,6 @@ FuncCallStatementNode* handleFuncCallStatement(FuncCallLikeNode* fcall_like)
 BinaryOpNode* handleBinaryOp(BinaryOp op, ExpressionNode* left, ExpressionNode* right)
 {
     return new BinaryOpNode(op, left, right);
-#if 0
-    EquelleType lt = left->type();
-    EquelleType rt = right->type();
-    if (!isNumericType(lt.basicType()) || !(isNumericType(rt.basicType()))) {
-        yyerror("arithmetic binary operators only apply to numeric types");
-    }
-    if (lt.isArray() || rt.isArray()) {
-        yyerror("arithmetic binary operators cannot be applied to Array types");
-    }
-    if (lt.isCollection() && rt.isCollection()) {
-        if (lt.gridMapping() != rt.gridMapping()) {
-            yyerror("arithmetic binary operators on Collections only acceptable "
-                    "if both sides are On the same set.");
-        }
-    }
-    switch (op) {
-    case Add:
-        // Intentional fall-through.
-    case Subtract:
-        if (lt != rt) {
-            if ((lt.basicType() == StencilI || lt.basicType() == StencilJ || lt.basicType() == StencilK)
-                && rt.basicType() == Scalar) {
-                //i,j,k OP n is OK
-            }
-            else if (lt.basicType() == Scalar &&
-                     (rt.basicType() == StencilI || rt.basicType() == StencilJ || rt.basicType() == StencilK)) {
-                //n OP i,j,k is OK
-            }
-            else if ((lt.isStencil() && rt.basicType() == Scalar)
-                     || (rt.isStencil() && lt.basicType() == Scalar)) {
-                //n OP u(i, j)  and  u(i, j) OP n is OK
-            }
-            else {
-                yyerror("addition and subtraction only allowed between identical types.");
-            }
-        }
-        if (left->dimension() != right->dimension()) {
-            yyerror("addition and subtraction only allowed when both sides have same dimension.");
-        }
-        break;
-    case Multiply:
-        if (lt.basicType() == Vector && rt.basicType() == Vector) {
-            yyerror("cannot multiply two 'Vector' types.");
-        }
-        break;
-    case Divide:
-        if (rt.basicType() != Scalar) {
-            yyerror("can only divide by 'Scalar' types");
-        }
-        break;
-    default:
-        yyerror("internal compiler error in handleBinaryOp().");
-    }
-    return new BinaryOpNode(op, left, right);
-#endif
 }
 
 
