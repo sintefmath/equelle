@@ -592,11 +592,18 @@ public:
     {
         // We do not want mutability of a variable to be passed on to
         // expressions involving that variable.
-        EquelleType et = SymbolTable::variableType(varname_);
-        if (et.isMutable()) {
-            et.setMutable(false);
+        if (SymbolTable::isVariableDeclared(varname_)) {
+            EquelleType et = SymbolTable::variableType(varname_);
+            if (et.isMutable()) {
+                et.setMutable(false);
+            }
+            return et;
+        } else if (SymbolTable::isFunctionDeclared(varname_)) {
+            // Function reference.
+            return EquelleType();
+        } else {
+            throw std::logic_error("Internal compiler error in VarNode::type().");
         }
-        return et;
     }
     Dimension dimension() const
     {
