@@ -304,7 +304,11 @@ void Function::setVariableAssigned(const std::string& name, const bool assigned)
         local_variables_.erase(lit);
         local_variables_.insert(copy);
     } else {
-        yyerror("internal compiler error in Function::setVariableAssigned()");
+        if (parent_scope_) {
+            return parent_scope_->setVariableAssigned(name, assigned);
+        } else {
+            yyerror("internal compiler error in Function::setVariableAssigned()");
+        }
     }
 }
 
@@ -319,7 +323,11 @@ void Function::setVariableType(const std::string& name, const EquelleType& type)
         local_variables_.erase(lit);
         local_variables_.insert(copy);
     } else {
-        yyerror("internal compiler error in Function::setVariableType()");
+        if (parent_scope_) {
+            return parent_scope_->setVariableType(name, type);
+        } else {
+            yyerror("internal compiler error in Function::setVariableType()");
+        }
     }
 }
 
@@ -334,7 +342,11 @@ void Function::setVariableDimension(const std::string& name, const Dimension& di
         local_variables_.erase(lit);
         local_variables_.insert(copy);
     } else {
-        yyerror("internal compiler error in Function::setVariableDimension()");
+        if (parent_scope_) {
+            return parent_scope_->setVariableDimension(name, dimension);
+        } else {
+            yyerror("internal compiler error in Function::setVariableDimension()");
+        }
     }
 }
 
@@ -363,7 +375,7 @@ EquelleType Function::returnType(const std::vector<EquelleType>& argtypes) const
     return type_.returnType(argtypes);
 }
 
-void Function::setParentScope(const Function* parent_scope)
+void Function::setParentScope(Function* parent_scope)
 {
     parent_scope_ = parent_scope;
 }

@@ -167,7 +167,7 @@ public:
 
     const std::string& parentScope() const;
 
-    void setParentScope(const Function* parent_scope);
+    void setParentScope(Function* parent_scope);
 
     void dump() const;
 
@@ -177,7 +177,7 @@ private:
     std::string name_;
     std::set<Variable> local_variables_;
     FunctionType type_;
-    const Function* parent_scope_;
+    Function* parent_scope_;
 };
 
 
