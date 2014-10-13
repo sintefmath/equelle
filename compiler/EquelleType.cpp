@@ -312,8 +312,15 @@ bool EquelleType::canSubstituteFor(const EquelleType& et) const
     if (et.subset_of_ != NotApplicable && subset_of_ != et.subset_of_) {
         return false;
     }
-    if (array_size_ != et.array_size_) {
-        return false;
+    // Accept any positive array size as substitute for SomeArray.
+    if (et.array_size_ == SomeArray) {
+        if (array_size_ <= 0) {
+            return false;
+        }
+    } else {
+        if (array_size_ != et.array_size_) {
+            return false;
+        }
     }
     if (stencil_ != et.stencil_) {
         return false;

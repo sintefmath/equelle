@@ -666,7 +666,7 @@ SymbolTable::SymbolTable()
                                 {InvalidIndex, 1, InvalidIndex}));
     functions_.emplace_back("NewtonSolveSystem",
                             FunctionType({ Variable("residual_function_array", EquelleType()),
-                                           Variable("u_guess_array", EquelleType(Scalar, Collection)) },
+                                           Variable("u_guess_array", EquelleType(Scalar, Collection, NotApplicable, NotApplicable, false, false, SomeArray)) },
                                 EquelleType(Scalar, Collection),
                                 {InvalidIndex, 1, InvalidIndex, 1}));
     functions_.emplace_back("Output",
