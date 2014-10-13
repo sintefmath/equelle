@@ -292,6 +292,11 @@ bool EquelleType::operator!=(const EquelleType& et) const
 
 bool EquelleType::canSubstituteFor(const EquelleType& et) const
 {
+    // Anything can substitute for a defaulted type.
+    if (et == EquelleType()) {
+        return true;
+    }
+
     // Accept any basic type as substitute for 'Invalid'.
     if (et.basic_type_ != Invalid && basic_type_ != et.basic_type_) {
         return false;
