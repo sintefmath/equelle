@@ -1149,8 +1149,6 @@ public:
     ArrayNode(FuncArgsNode* expr_list)
     : expr_list_(expr_list)
     {
-        type_ = expr_list->arguments().front()->type();
-        type_.setArraySize(expr_list->arguments().size());
     }
     virtual ~ArrayNode()
     {
@@ -1158,7 +1156,9 @@ public:
     }
     EquelleType type() const
     {
-        return type_;
+        EquelleType t = expr_list_->arguments().front()->type();
+        t.setArraySize(expr_list_->arguments().size());
+        return t;
     }
     Dimension dimension() const
     {
@@ -1175,7 +1175,6 @@ public:
     }
 private:
     FuncArgsNode* expr_list_;
-    EquelleType type_;
 };
 
 
