@@ -542,41 +542,6 @@ ArrayNode* handleArray(FuncArgsNode* expr_list)
 LoopNode* handleLoopStart(const std::string& loop_variable, const std::string& loop_set)
 {
     return new LoopNode(loop_variable, loop_set);
-#if 0
-    // Check that loop_set is a sequence, extract its type.
-    EquelleType loop_set_type;
-    if (SymbolTable::isVariableDeclared(loop_set)) {
-        loop_set_type = SymbolTable::variableType(loop_set);
-        if (!loop_set_type.isSequence()) {
-            std::string err_msg = "loop set must be a Sequence: ";
-            err_msg += loop_set;
-            yyerror(err_msg.c_str());
-        }
-        if (loop_set_type.isArray()) {
-            std::string err_msg = "loop set cannot be an Array: ";
-            err_msg += loop_set;
-            yyerror(err_msg.c_str());
-        }
-    } else {
-        std::string err_msg = "unknown variable used: ";
-        err_msg += loop_set;
-        yyerror(err_msg.c_str());
-    }
-    // Create LoopNode
-    LoopNode* ln = new LoopNode(loop_variable, loop_set);
-    // Create a name for the loop scope.
-    static int next_loop_index = 0;
-    std::ostringstream os;
-    os << "ForLoopWithIndex" << next_loop_index++;
-    // Set name in loop node, declare scope and
-    // set to current.
-    ln->setName(os.str());
-    SymbolTable::declareFunction(os.str());
-    SymbolTable::setCurrentFunction(os.str());
-    // Declare loop variable
-    SymbolTable::declareVariable(loop_variable, loop_set_type.basicType());
-    return ln;
-#endif
 }
 
 
@@ -585,11 +550,6 @@ LoopNode* handleLoopStatement(LoopNode* loop_start, SequenceNode* loop_block)
 {
     loop_start->setBlock(loop_block);
     return loop_start;
-#if 0
-    loop_start->setBlock(loop_block);
-    SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
-    return loop_start;
-#endif
 }
 
 

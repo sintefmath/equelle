@@ -11,6 +11,8 @@
 
 
 CheckASTVisitor::CheckASTVisitor()
+    : checking_suppressed_(false),
+      next_loop_index_(0)
 {
 }
 
@@ -304,15 +306,17 @@ void CheckASTVisitor::postVisit(VarAssignNode& node)
         SymbolTable::setVariableDimension(name, expr->dimension());
     }
 
-    // Set variable to assigned (unless mutable) and return.
-    if (!SymbolTable::variableType(name).isMutable()) {
-        SymbolTable::setVariableAssigned(name, true);
-    }
+    // Set variable to assigned.
+    SymbolTable::setVariableAssigned(name, true);
 }
 
 void CheckASTVisitor::visit(VarNode& node)
 {
     if (isCheckingSuppressed()) {
+        return;
+    }
+    if (SymbolTable::isFunctionDeclared(node.name())) {
+        // This is a function reference.
         return;
     }
     if (!SymbolTable::isVariableDeclared(node.name())) {
@@ -447,12 +451,46 @@ void CheckASTVisitor::postVisit(FuncCallStatementNode&)
 {
 }
 
-void CheckASTVisitor::visit(LoopNode&)
+void CheckASTVisitor::visit(LoopNode& node)
 {
+    // Check that loop_set is a sequence, extract its type.
+    const std::string& loop_set = node.loopSet();
+    EquelleType loop_set_type;
+    if (SymbolTable::isVariableDeclared(loop_set)) {
+        loop_set_type = SymbolTable::variableType(loop_set);
+        if (!loop_set_type.isSequence()) {
+            std::string err_msg = "loop set must be a Sequence: ";
+            err_msg += loop_set;
+            yyerror(err_msg.c_str());
+        }
+        if (loop_set_type.isArray()) {
+            std::string err_msg = "loop set cannot be an Array: ";
+            err_msg += loop_set;
+            yyerror(err_msg.c_str());
+        }
+    } else {
+        std::string err_msg = "unknown variable used for loop set: ";
+        err_msg += loop_set;
+        yyerror(err_msg.c_str());
+    }
+
+    // Create a name for the loop scope.
+    std::ostringstream os;
+    os << "ForLoopWithIndex" << next_loop_index_++;
+    // Set name in loop node, declare scope and
+    // set to current.
+    node.setName(os.str());
+
+    // Declare loop scope and variable.
+    SymbolTable::declareFunction(os.str());
+    SymbolTable::setCurrentFunction(os.str());
+    SymbolTable::declareVariable(node.loopVariable(), loop_set_type.basicType());
+    SymbolTable::setVariableAssigned(node.loopVariable(), true);
 }
 
 void CheckASTVisitor::postVisit(LoopNode&)
 {
+    SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
 }
 
 void CheckASTVisitor::visit(ArrayNode&)

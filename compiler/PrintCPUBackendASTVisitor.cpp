@@ -445,6 +445,7 @@ void PrintCPUBackendASTVisitor::postVisit(FuncCallStatementNode&)
 
 void PrintCPUBackendASTVisitor::visit(LoopNode& node)
 {
+    SymbolTable::setCurrentFunction(node.loopName());
     BasicType loopvartype = SymbolTable::variableType(node.loopSet()).basicType();
     std::cout << indent() << "for (const " << cppTypeString(loopvartype) << "& "
               << node.loopVariable() << " : " << node.loopSet() << ") {";
@@ -457,6 +458,7 @@ void PrintCPUBackendASTVisitor::postVisit(LoopNode&)
     --indent_;
     std::cout << indent() << "}";
     endl();
+    SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
 }
 
 void PrintCPUBackendASTVisitor::visit(ArrayNode&)

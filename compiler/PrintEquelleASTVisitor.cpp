@@ -330,6 +330,7 @@ void PrintEquelleASTVisitor::postVisit(FuncCallStatementNode&)
 
 void PrintEquelleASTVisitor::visit(LoopNode& node)
 {
+    SymbolTable::setCurrentFunction(node.loopName());
     std::cout << indent() << "For " << node.loopVariable() << " In " << node.loopSet() << " {";
     ++indent_;
     endl();
@@ -340,6 +341,7 @@ void PrintEquelleASTVisitor::postVisit(LoopNode&)
     --indent_;
     std::cout << indent() << "}";
     endl();
+    SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
 }
 
 void PrintEquelleASTVisitor::visit(ArrayNode&)

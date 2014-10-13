@@ -1126,13 +1126,6 @@ public:
         visitor.visit(*this);
         loop_block_->accept(visitor);
         visitor.postVisit(*this);
-#if 0
-        SymbolTable::setCurrentFunction(loop_name_);
-        visitor.visit(*this);
-        loop_block_->accept(visitor);
-        visitor.postVisit(*this);
-        SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
-#endif
     }
 private:
     std::string loop_variable_;

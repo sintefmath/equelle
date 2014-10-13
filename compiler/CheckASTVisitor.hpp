@@ -84,6 +84,7 @@ public:
 
 private:
     bool checking_suppressed_;
+    int next_loop_index_;
     void error(const std::string& err, const int line = -999);
     void suppressChecking();
     void unsuppressChecking();
