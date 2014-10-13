@@ -324,26 +324,6 @@ ComparisonOpNode* handleComparison(ComparisonOp op, ExpressionNode* left, Expres
     ComparisonOpNode* node = new ComparisonOpNode(op, left, right);
     node->setLocation(FileLocation(yylineno));
     return node;
-#if 0
-    EquelleType lt = left->type();
-    EquelleType rt = right->type();
-    if ((lt.basicType() != Scalar) || (rt.basicType() != Scalar)) {
-        yyerror("comparison operators can only be applied to scalars");
-    }
-    if (lt.isArray() || rt.isArray()) {
-        yyerror("comparison operators cannot be applied to Array types");
-    }
-    if (lt.isCollection() && rt.isCollection()) {
-        if (lt.gridMapping() != rt.gridMapping()) {
-            yyerror("comparison operators on Collections only acceptable "
-                    "if both sides are On the same set.");
-        }
-    }
-    if (left->dimension() != right->dimension()) {
-        yyerror("comparison operators only allowed when both sides have same dimension.");
-    }
-    return new ComparisonOpNode(op, left, right);
-#endif
 }
 
 

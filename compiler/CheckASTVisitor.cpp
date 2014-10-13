@@ -173,8 +173,31 @@ void CheckASTVisitor::midVisit(ComparisonOpNode&)
 {
 }
 
-void CheckASTVisitor::postVisit(ComparisonOpNode&)
+void CheckASTVisitor::postVisit(ComparisonOpNode& node)
 {
+    const ExpressionNode* left = node.left();
+    const ExpressionNode* right = node.right();
+    EquelleType lt = left->type();
+    EquelleType rt = right->type();
+    if ((lt.basicType() != Scalar) || (rt.basicType() != Scalar)) {
+        error("comparison operators can only be applied to scalars", node.location());
+        return;
+    }
+    if (lt.isArray() || rt.isArray()) {
+        error("comparison operators cannot be applied to Array types", node.location());
+        return;
+    }
+    if (lt.isCollection() && rt.isCollection()) {
+        if (lt.gridMapping() != rt.gridMapping()) {
+            error("comparison operators on Collections only acceptable "
+                  "if both sides are On the same set.", node.location());
+            return;
+        }
+    }
+    if (left->dimension() != right->dimension()) {
+        error("comparison operators only allowed when both sides have same dimension.", node.location());
+        return;
+    }
 }
 
 void CheckASTVisitor::visit(NormNode&)

@@ -318,6 +318,14 @@ public:
         EquelleType lt = left_->type();
         return EquelleType(Bool, lt.compositeType(), lt.gridMapping());
     }
+    const ExpressionNode* left() const
+    {
+        return left_;
+    }
+    const ExpressionNode* right() const
+    {
+        return right_;
+    }
     ComparisonOp op() const
     {
         return op_;
