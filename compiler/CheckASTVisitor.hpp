@@ -7,6 +7,7 @@
 
 
 #include "ASTVisitorInterface.hpp"
+#include "FileLocation.hpp"
 #include <string>
 
 
@@ -85,7 +86,7 @@ public:
 private:
     bool checking_suppressed_;
     int next_loop_index_;
-    void error(const std::string& err, const int line = -999);
+    void error(const std::string& err, const FileLocation loc = FileLocation());
     void suppressChecking();
     void unsuppressChecking();
     bool isCheckingSuppressed() const;

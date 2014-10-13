@@ -69,19 +69,19 @@ void CheckASTVisitor::postVisit(CollectionTypeNode& node)
     EquelleType bt = node.baseType()->type();
     if (!bt.isBasic()) {
         std::string errmsg = "attempting to declare a Collection Of <something other than a basic type>";
-        error(errmsg);
+        error(errmsg, node.location());
     }
     const ExpressionNode* gridmapping = node.gridMapping();
     if (gridmapping) {
         if (!gridmapping->type().isEntityCollection() || gridmapping->type().gridMapping() == NotApplicable) {
-            error("a Collection must be On a Collection of Cell, Face etc.");
+            error("a Collection must be On a Collection of Cell, Face etc.", node.location());
         }
     }
     const ExpressionNode* subsetof = node.subsetOf();
     if (subsetof) {
         // We are creating a new entity collection.
         if (!subsetof->type().isEntityCollection() || subsetof->type().gridMapping() == NotApplicable) {
-            error("a Collection must be Subset Of a Collection of Cell, Face etc.");
+            error("a Collection must be Subset Of a Collection of Cell, Face etc.", node.location());
         }
     }
 }
@@ -107,17 +107,17 @@ void CheckASTVisitor::postVisit(BinaryOpNode& node)
     const EquelleType rt = node.right()->type();
     const BinaryOp op = node.op();
     if (!isNumericType(lt.basicType()) || !(isNumericType(rt.basicType()))) {
-        error("arithmetic binary operators only apply to numeric types");
+        error("arithmetic binary operators only apply to numeric types", node.location());
         return;
     }
     if (lt.isArray() || rt.isArray()) {
-        error("arithmetic binary operators cannot be applied to Array types");
+        error("arithmetic binary operators cannot be applied to Array types", node.location());
         return;
     }
     if (lt.isCollection() && rt.isCollection()) {
         if (lt.gridMapping() != rt.gridMapping()) {
             error("arithmetic binary operators on Collections only acceptable "
-                    "if both sides are On the same set.");
+                    "if both sides are On the same set.", node.location());
             return;
         }
     }
@@ -139,29 +139,29 @@ void CheckASTVisitor::postVisit(BinaryOpNode& node)
                 //n OP u(i, j)  and  u(i, j) OP n is OK
             }
             else {
-                error("addition and subtraction only allowed between identical types.");
+                error("addition and subtraction only allowed between identical types.", node.location());
                 return;
             }
         }
         if (node.left()->dimension() != node.right()->dimension()) {
-            error("addition and subtraction only allowed when both sides have same dimension.");
+            error("addition and subtraction only allowed when both sides have same dimension.", node.location());
             return;
         }
         break;
     case Multiply:
         if (lt.basicType() == Vector && rt.basicType() == Vector) {
-            error("cannot multiply two 'Vector' types.");
+            error("cannot multiply two 'Vector' types.", node.location());
             return;
         }
         break;
     case Divide:
         if (rt.basicType() != Scalar) {
-            error("can only divide by 'Scalar' types");
+            error("can only divide by 'Scalar' types", node.location());
             return;
         }
         break;
     default:
-        error("internal compiler error in CheckASTVisitor::postVisit(BinaryOpNode&).");
+        error("internal compiler error in CheckASTVisitor::postVisit(BinaryOpNode&).", node.location());
     }
 }
 
@@ -235,7 +235,7 @@ void CheckASTVisitor::postVisit(VarDeclNode& node)
         std::string err = "cannot redeclare ";
         err += node.name();
         err += ": already declared.";
-        error(err);
+        error(err, node.location());
     }
     SymbolTable::declareVariable(node.name(), node.type());
 }
@@ -257,7 +257,7 @@ void CheckASTVisitor::postVisit(VarAssignNode& node)
         std::string err_msg = "cannot declare variable ";
         err_msg += name;
         err_msg += ": already declared as function.";
-        error(err_msg);
+        error(err_msg, node.location());
         return;
     }
     // If already declared...
@@ -266,7 +266,7 @@ void CheckASTVisitor::postVisit(VarAssignNode& node)
         if (SymbolTable::isVariableAssigned(name) && !SymbolTable::variableType(name).isMutable()) {
             std::string err_msg = "variable already assigned, cannot re-assign ";
             err_msg += name;
-            error(err_msg);
+            error(err_msg, node.location());
             return;
         }
         // Check that declared type matches right hand side.
@@ -291,7 +291,7 @@ void CheckASTVisitor::postVisit(VarAssignNode& node)
             } else {
                 std::string err_msg = "mismatch between type in assignment and declaration for ";
                 err_msg += name;
-                error(err_msg);
+                error(err_msg, node.location());
                 return;
             }
         }
@@ -322,11 +322,11 @@ void CheckASTVisitor::visit(VarNode& node)
     if (!SymbolTable::isVariableDeclared(node.name())) {
         std::string err_msg = "using undeclared variable ";
         err_msg += node.name();
-        error(err_msg);
+        error(err_msg, node.location());
     } else if (!SymbolTable::isVariableAssigned(node.name())) {
         std::string err_msg = "using unassigned variable ";
         err_msg += node.name();
-        error(err_msg);
+        error(err_msg, node.location());
     }
 }
 
@@ -418,7 +418,7 @@ void CheckASTVisitor::postVisit(FuncCallNode& node)
     if (argtypes.size() != fargs.size()) {
         std::string err_msg = "wrong number of arguments when calling function ";
         err_msg += node.name();
-        error(err_msg);
+        error(err_msg, node.location());
     }
     for (int arg = 0; arg < argtypes.size(); ++arg) {
         if (!argtypes[arg].canSubstituteFor(fargs[arg].type())) {
@@ -427,7 +427,7 @@ void CheckASTVisitor::postVisit(FuncCallNode& node)
                 << fargs[arg].name() << "' when calling function " << node.name()
                 << ", expected " << SymbolTable::equelleString(fargs[arg].type())
                 << " but got " << SymbolTable::equelleString(argtypes[arg]);
-            error(err.str());
+            error(err.str(), node.location());
         }
     }
     // If the function returns a new dynamically created domain,
@@ -461,17 +461,17 @@ void CheckASTVisitor::visit(LoopNode& node)
         if (!loop_set_type.isSequence()) {
             std::string err_msg = "loop set must be a Sequence: ";
             err_msg += loop_set;
-            yyerror(err_msg.c_str());
+            error(err_msg, node.location());
         }
         if (loop_set_type.isArray()) {
             std::string err_msg = "loop set cannot be an Array: ";
             err_msg += loop_set;
-            yyerror(err_msg.c_str());
+            error(err_msg, node.location());
         }
     } else {
         std::string err_msg = "unknown variable used for loop set: ";
         err_msg += loop_set;
-        yyerror(err_msg.c_str());
+        error(err_msg, node.location());
     }
 
     // Create a name for the loop scope.
@@ -529,9 +529,15 @@ void CheckASTVisitor::postVisit(StencilNode&)
 {
 }
 
-void CheckASTVisitor::error(const std::string& err, const int line)
+void CheckASTVisitor::error(const std::string& err, const FileLocation loc)
 {
-    std::cerr << "Parser error near line " << line << ": " << err << std::endl;
+    const int fl = loc.firstLine();
+    const int ll = loc.lastLine();
+    if (fl == ll) {
+        std::cerr << "Parser error near line " << fl << ": " << err << std::endl;
+    } else {
+        std::cerr << "Parser error near lines " << fl << '-' << ll << ": " << err << std::endl;
+    }
 }
 
 void CheckASTVisitor::suppressChecking()
