@@ -6,6 +6,7 @@
 #define NODEINTERFACE_HEADER_INCLUDED
 
 #include "EquelleType.hpp"
+#include "FileLocation.hpp"
 
 class ASTVisitorInterface;
 
@@ -14,6 +15,7 @@ class Node
 {
 public:
     Node()
+        : loc_(-1,-1)
     {}
     virtual ~Node()
     {}
@@ -21,11 +23,20 @@ public:
     {
         // Do nothing.
     }
+    FileLocation location() const
+    {
+        return loc_;
+    }
+    void setLocation(const FileLocation& loc)
+    {
+        loc_ = loc;
+    }
 private:
     // No copying.
     Node(const Node&);
     // No assignment.
     Node& operator=(const Node&);
+    FileLocation loc_;
 };
 
 

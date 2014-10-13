@@ -27,21 +27,27 @@ SequenceNode* handleProgram(SequenceNode* lineblocknode)
 
 NumberNode* handleNumber(const double num)
 {
-    return new NumberNode(num);
+    NumberNode* node = new NumberNode(num);
+    node->setLocation(FileLocation(yylineno));
+    return node;
 }
 
 
 
 QuantityNode* handleQuantity(NumberNode* number, UnitNode* unit)
 {
-    return new QuantityNode(number, unit);
+    QuantityNode* node = new QuantityNode(number, unit);
+    node->setLocation(FileLocation(yylineno));
+    return node;
 }
 
 
 
 UnitNode* handleUnit(const std::string& name)
 {
-    return new UnitNode(name);
+    UnitNode* node = new UnitNode(name);
+    node->setLocation(FileLocation(yylineno));
+    return node;
 }
 
 
@@ -64,7 +70,9 @@ UnitNode* handleUnitOp(BinaryOp op, UnitNode* left, UnitNode* right)
     }
     delete left;
     delete right;
-    return new UnitNode(d, c);
+    UnitNode* node = new UnitNode(d, c);
+    node->setLocation(FileLocation(yylineno));
+    return node;
 }
 
 
@@ -78,14 +86,18 @@ UnitNode* handleUnitPower(UnitNode* unit, const double num)
     const Dimension d = unit->dimension() * n;
     const double c = std::pow(unit->conversionFactorSI(), n);
     delete unit;
-    return new UnitNode(d, c);
+    UnitNode* node = new UnitNode(d, c);
+    node->setLocation(FileLocation(yylineno));
+    return node;
 }
 
 
 
 ExpressionNode* handleIdentifier(const std::string& name)
 {
-    return new VarNode(name);
+    VarNode* node = new VarNode(name);
+    node->setLocation(FileLocation(yylineno));
+    return node;
 #if 0
     if (SymbolTable::isVariableDeclared(name)) {
         return new VarNode(name);
@@ -111,21 +123,27 @@ ExpressionNode* handleIdentifier(const std::string& name)
 
 VarDeclNode* handleDeclaration(const std::string& name, TypeNode* type)
 {
-    return new VarDeclNode(name, type);
+    VarDeclNode* node = new VarDeclNode(name, type);
+    node->setLocation(FileLocation(yylineno));
+    return node;
 }
 
 
 
 VarAssignNode* handleAssignment(const std::string& name, ExpressionNode* expr)
 {
-    return new VarAssignNode(name, expr);
+    VarAssignNode* node = new VarAssignNode(name, expr);
+    node->setLocation(FileLocation(yylineno));
+    return node;
 }
 
 
 
 Node* handleFuncDeclaration(const std::string& name, FuncTypeNode* ftype)
 {
-    return new FuncDeclNode(name, ftype);
+    FuncDeclNode* node = new FuncDeclNode(name, ftype);
+    node->setLocation(FileLocation(yylineno));
+    return node;
 }
 
 
@@ -137,7 +155,9 @@ void handleFuncStartType()
 
 FuncStartNode* handleFuncAssignmentStart(const std::string& name, FuncArgsNode* args)
 {
-    return new FuncStartNode(name, args);
+    FuncStartNode* node = new FuncStartNode(name, args);
+    node->setLocation(FileLocation(yylineno));
+    return node;
 #if 0
     // We are dealing with a function
     if (SymbolTable::isFunctionDeclared(name)) {
@@ -163,14 +183,18 @@ FuncStartNode* handleFuncAssignmentStart(const std::string& name, FuncArgsNode* 
 
 FuncAssignNode* handleFuncAssignment(FuncStartNode* funcstart, SequenceNode* fbody)
 {
-    return new FuncAssignNode(funcstart, fbody);
+    FuncAssignNode* node = new FuncAssignNode(funcstart, fbody);
+    node->setLocation(FileLocation(yylineno));
+    return node;
 }
 
 
 
 ReturnStatementNode* handleReturnStatement(ExpressionNode* expr)
 {
-    return new ReturnStatementNode(expr);
+    ReturnStatementNode* node = new ReturnStatementNode(expr);
+    node->setLocation(FileLocation(yylineno));
+    return node;
 }
 
 
@@ -180,6 +204,7 @@ Node* handleDeclarationAssign(const std::string& name, TypeNode* type, Expressio
     SequenceNode* seq = new SequenceNode;
     seq->pushNode(handleDeclaration(name, type));
     seq->pushNode(handleAssignment(name, expr));
+    seq->setLocation(FileLocation(yylineno));
     return seq;
 }
 
@@ -187,29 +212,39 @@ Node* handleDeclarationAssign(const std::string& name, TypeNode* type, Expressio
 
 CollectionTypeNode* handleCollection(TypeNode* btype, ExpressionNode* gridmapping, ExpressionNode* subsetof)
 {
-    return new CollectionTypeNode(btype, gridmapping, subsetof);
+    CollectionTypeNode* node = new CollectionTypeNode(btype, gridmapping, subsetof);
+    node->setLocation(FileLocation(yylineno));
+    return node;
 }
+
+
 
 TypeNode* handleStencilCollection(TypeNode* type_expr)
 {
     EquelleType et = type_expr->type();
     et.setStencil(true);
     TypeNode* tn = new TypeNode(et);
+    tn->setLocation(type_expr->location());
     delete type_expr;
     return tn;
 }
 
 
+
 FuncTypeNode* handleFuncType(FuncArgsDeclNode* argtypes, TypeNode* rtype)
 {
-    return new FuncTypeNode(argtypes, rtype);
+    FuncTypeNode* node = new FuncTypeNode(argtypes, rtype);
+    node->setLocation(FileLocation(yylineno));
+    return node;
 }
 
 
 
 StencilNode* handleStencilAccess(const std::string& name, FuncArgsNode* args)
 {
-    return new StencilNode(name, args);
+    StencilNode* node = new StencilNode(name, args);
+    node->setLocation(FileLocation(yylineno));
+    return node;
 #if 0
     if (!SymbolTable::isVariableDeclared(name)) {
         std::string err_msg = "Could not find the stencil variable " + name;
@@ -238,7 +273,9 @@ StencilNode* handleStencilAccess(const std::string& name, FuncArgsNode* args)
 
 FuncCallNode* handleFuncCall(const std::string& name, FuncArgsNode* args)
 {
-    return new FuncCallNode(name, args);
+    FuncCallNode* node = new FuncCallNode(name, args);
+    node->setLocation(FileLocation(yylineno));
+    return node;
 }
 
 FuncCallLikeNode* handleFuncCallLike(const std::string& name, FuncArgsNode* args)
@@ -266,21 +303,27 @@ FuncCallStatementNode* handleFuncCallStatement(FuncCallLikeNode* fcall_like)
         std::string err_msg = "Internal error: The function \"" + fcall_like->name() + "\" does not appear to be properly defined";
         yyerror(err_msg.c_str());
     }
-    return new FuncCallStatementNode(fcall);
+    FuncCallStatementNode* node = new FuncCallStatementNode(fcall);
+    node->setLocation(FileLocation(yylineno));
+    return node;
 }
 
 
 
 BinaryOpNode* handleBinaryOp(BinaryOp op, ExpressionNode* left, ExpressionNode* right)
 {
-    return new BinaryOpNode(op, left, right);
+    BinaryOpNode* node = new BinaryOpNode(op, left, right);
+    node->setLocation(FileLocation(yylineno));
+    return node;
 }
 
 
 
 ComparisonOpNode* handleComparison(ComparisonOp op, ExpressionNode* left, ExpressionNode* right)
 {
-    return new ComparisonOpNode(op, left, right);
+    ComparisonOpNode* node = new ComparisonOpNode(op, left, right);
+    node->setLocation(FileLocation(yylineno));
+    return node;
 #if 0
     EquelleType lt = left->type();
     EquelleType rt = right->type();
@@ -307,7 +350,9 @@ ComparisonOpNode* handleComparison(ComparisonOp op, ExpressionNode* left, Expres
 
 NormNode* handleNorm(ExpressionNode* expr_to_norm)
 {
-    return new NormNode(expr_to_norm);
+    NormNode* node = new NormNode(expr_to_norm);
+    node->setLocation(FileLocation(yylineno));
+    return node;
 #if 0
     if (expr_to_norm->type().isArray()) {
         yyerror("cannot take norm of an Array.");
@@ -326,7 +371,9 @@ NormNode* handleNorm(ExpressionNode* expr_to_norm)
 
 UnaryNegationNode* handleUnaryNegation(ExpressionNode* expr_to_negate)
 {
-    return new UnaryNegationNode(expr_to_negate);
+    UnaryNegationNode* node = new UnaryNegationNode(expr_to_negate);
+    node->setLocation(FileLocation(yylineno));
+    return node;
 #if 0
     if (!isNumericType(expr_to_negate->type().basicType())) {
         yyerror("unary minus can only be applied to numeric types.");
@@ -342,7 +389,9 @@ UnaryNegationNode* handleUnaryNegation(ExpressionNode* expr_to_negate)
 
 TrinaryIfNode* handleTrinaryIf(ExpressionNode* predicate, ExpressionNode* iftrue, ExpressionNode* iffalse)
 {
-    return new TrinaryIfNode(predicate, iftrue, iffalse);
+    TrinaryIfNode* node = new TrinaryIfNode(predicate, iftrue, iffalse);
+    node->setLocation(FileLocation(yylineno));
+    return node;
 #if 0
     const EquelleType pt = predicate->type();
     const EquelleType tt = iftrue->type();
@@ -375,7 +424,9 @@ TrinaryIfNode* handleTrinaryIf(ExpressionNode* predicate, ExpressionNode* iftrue
 
 OnNode* handleOn(ExpressionNode* left, ExpressionNode* right)
 {
-    return new OnNode(left, right, false);
+    OnNode* node = new OnNode(left, right, false);
+    node->setLocation(FileLocation(yylineno));
+    return node;
 #if 0
     const EquelleType lt = left->type();
     const EquelleType rt = right->type();
@@ -431,7 +482,9 @@ OnNode* handleOn(ExpressionNode* left, ExpressionNode* right)
 
 OnNode* handleExtend(ExpressionNode* left, ExpressionNode* right)
 {
-    return new OnNode(left, right, true);
+    OnNode* node = new OnNode(left, right, true);
+    node->setLocation(FileLocation(yylineno));
+    return node;
 #if 0
     const EquelleType lt = left->type();
     const EquelleType rt = right->type();
@@ -472,7 +525,9 @@ OnNode* handleExtend(ExpressionNode* left, ExpressionNode* right)
 
 StringNode* handleString(const std::string& content)
 {
-    return new StringNode(content);
+    StringNode* node = new StringNode(content);
+    node->setLocation(FileLocation(yylineno));
+    return node;
 }
 
 
@@ -482,6 +537,7 @@ TypeNode* handleMutableType(TypeNode* type_expr)
     EquelleType et = type_expr->type();
     et.setMutable(true);
     TypeNode* tn = new TypeNode(et);
+    tn->setLocation(type_expr->location());
     delete type_expr;
     return tn;
 }
@@ -494,7 +550,9 @@ TypeNode* handleSequence(TypeNode* basic_type)
     if (!et.isBasic()) {
         yyerror("cannot create a Sequence of non-basic types.");
     }
-    return new TypeNode(EquelleType(et.basicType(), Sequence, et.gridMapping(), et.subsetOf()));
+    TypeNode* node = new TypeNode(EquelleType(et.basicType(), Sequence, et.gridMapping(), et.subsetOf()));
+    node->setLocation(FileLocation(yylineno));
+    return node;
 }
 
 
@@ -508,6 +566,7 @@ TypeNode* handleArrayType(const int array_size, TypeNode* type_expr)
     } else {
         et.setArraySize(array_size);
         TypeNode* tn = new TypeNode(et);
+        tn->setLocation(type_expr->location());
         delete type_expr;
         return tn;
     }
@@ -517,7 +576,9 @@ TypeNode* handleArrayType(const int array_size, TypeNode* type_expr)
 
 ArrayNode* handleArray(FuncArgsNode* expr_list)
 {
-    return new ArrayNode(expr_list);
+    ArrayNode* node = new ArrayNode(expr_list);
+    node->setLocation(FileLocation(yylineno));
+    return node;
 #if 0
     const auto& elems = expr_list->arguments();
     if (elems.empty()) {
@@ -541,7 +602,9 @@ ArrayNode* handleArray(FuncArgsNode* expr_list)
 
 LoopNode* handleLoopStart(const std::string& loop_variable, const std::string& loop_set)
 {
-    return new LoopNode(loop_variable, loop_set);
+    LoopNode* node = new LoopNode(loop_variable, loop_set);
+    node->setLocation(FileLocation(yylineno));
+    return node;
 }
 
 
@@ -556,7 +619,9 @@ LoopNode* handleLoopStatement(LoopNode* loop_start, SequenceNode* loop_block)
 
 RandomAccessNode* handleRandomAccess(ExpressionNode* expr, const int index)
 {
-    return new RandomAccessNode(expr, index);
+    RandomAccessNode* node = new RandomAccessNode(expr, index);
+    node->setLocation(FileLocation(yylineno));
+    return node;
 #if 0
     if (expr->type().isArray()) {
         if (index < 0 || index >= expr->type().arraySize()) {
@@ -573,9 +638,12 @@ RandomAccessNode* handleRandomAccess(ExpressionNode* expr, const int index)
 #endif
 }
 
+
+
 SequenceNode* handleStencilAssignment(FuncCallLikeNode* lhs, ExpressionNode* rhs)
 {
     SequenceNode* retval = new SequenceNode();
+    retval->setLocation(FileLocation(yylineno));
 
     StencilNode* stencil = dynamic_cast<StencilNode*>(lhs);
     if (stencil == nullptr) {
