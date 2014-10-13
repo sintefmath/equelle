@@ -23,6 +23,11 @@
 class FileLocation
 {
 public:
+    FileLocation()
+        : firstline_(-1),
+          lastline_(-1)
+    {
+    }
     explicit FileLocation(const int line)
         : firstline_(line),
           lastline_(line)

@@ -15,7 +15,6 @@ class Node
 {
 public:
     Node()
-        : loc_(-1,-1)
     {}
     virtual ~Node()
     {}
