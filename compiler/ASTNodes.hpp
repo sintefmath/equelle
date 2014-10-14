@@ -1186,6 +1186,10 @@ public:
     {
         delete expr_list_;
     }
+    const FuncArgsNode* expressionList()
+    {
+        return expr_list_;
+    }
     EquelleType type() const
     {
         EquelleType t = expr_list_->arguments().front()->type();
@@ -1229,6 +1233,10 @@ public:
     bool arrayAccess() const
     {
         return expr_->type().isArray();
+    }
+    const ExpressionNode* expressionToAccess() const
+    {
+        return expr_;
     }
     EquelleType type() const
     {

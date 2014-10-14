@@ -429,23 +429,6 @@ ArrayNode* handleArray(FuncArgsNode* expr_list)
     ArrayNode* node = new ArrayNode(expr_list);
     node->setLocation(FileLocation(yylineno));
     return node;
-#if 0
-    const auto& elems = expr_list->arguments();
-    if (elems.empty()) {
-        yyerror("cannot create an empty array.");
-    } else {
-        const EquelleType et = elems[0]->type();
-        if (et.isArray()) {
-            yyerror("an Array cannot contain another Array.");
-        }
-        for (const auto& elem : elems) {
-            if (elem->type() != et) {
-                yyerror("elements of an Array must all have the same type");
-            }
-        }
-    }
-    return new ArrayNode(expr_list);
-#endif
 }
 
 
@@ -472,20 +455,6 @@ RandomAccessNode* handleRandomAccess(ExpressionNode* expr, const int index)
     RandomAccessNode* node = new RandomAccessNode(expr, index);
     node->setLocation(FileLocation(yylineno));
     return node;
-#if 0
-    if (expr->type().isArray()) {
-        if (index < 0 || index >= expr->type().arraySize()) {
-            yyerror("index out of array bounds in '[<index>]' random access operator.");
-        }
-    } else if (expr->type().basicType() == Vector) {
-        if (index < 0 || index > 2) {
-            yyerror("cannot use '[<index>]' random access operator on a Vector with index < 0 or > 2");
-        }
-    } else {
-        yyerror("cannot use '[<index>]' random access operator with anything other than a Vector or Array");
-    }
-    return new RandomAccessNode(expr, index);
-#endif
 }
 
 

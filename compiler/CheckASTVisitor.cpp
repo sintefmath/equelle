@@ -648,16 +648,50 @@ void CheckASTVisitor::visit(ArrayNode&)
 {
 }
 
-void CheckASTVisitor::postVisit(ArrayNode&)
+void CheckASTVisitor::postVisit(ArrayNode& node)
 {
+    const FuncArgsNode* expr_list = node.expressionList();
+    const auto& elems = expr_list->arguments();
+    if (elems.empty()) {
+        error("cannot create an empty array.", node.location());
+        return;
+    } else {
+        const EquelleType et = elems[0]->type();
+        if (et.isArray()) {
+            error("an Array cannot contain another Array.", node.location());
+            return;
+        }
+        for (const auto& elem : elems) {
+            if (elem->type() != et) {
+                error("elements of an Array must all have the same type", node.location());
+                return;
+            }
+        }
+    }
 }
 
 void CheckASTVisitor::visit(RandomAccessNode&)
 {
 }
 
-void CheckASTVisitor::postVisit(RandomAccessNode&)
+void CheckASTVisitor::postVisit(RandomAccessNode& node)
 {
+    const ExpressionNode* expr = node.expressionToAccess();
+    const int index = node.index();
+    if (expr->type().isArray()) {
+        if (index < 0 || index >= expr->type().arraySize()) {
+            error("index out of array bounds in '[<index>]' random access operator.", node.location());
+            return;
+        }
+    } else if (expr->type().basicType() == Vector) {
+        if (index < 0 || index > 2) {
+            error("cannot use '[<index>]' random access operator on a Vector with index < 0 or > 2", node.location());
+            return;
+        }
+    } else {
+        error("cannot use '[<index>]' random access operator with anything other than a Vector or Array", node.location());
+        return;
+    }
 }
 
 void CheckASTVisitor::visit(StencilAssignmentNode&)
