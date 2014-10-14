@@ -351,32 +351,6 @@ TrinaryIfNode* handleTrinaryIf(ExpressionNode* predicate, ExpressionNode* iftrue
     TrinaryIfNode* node = new TrinaryIfNode(predicate, iftrue, iffalse);
     node->setLocation(FileLocation(yylineno));
     return node;
-#if 0
-    const EquelleType pt = predicate->type();
-    const EquelleType tt = iftrue->type();
-    const EquelleType ft = iffalse->type();
-    if (pt.isArray() || tt.isArray() || ft.isArray()) {
-        yyerror("in trinary if operator, no operands can be of Array type.");
-    }
-    if (pt.basicType() != Bool) {
-        yyerror("in trinary if '<predicate> ? <iftrue> : <iffalse>' "
-                "<predicate> must be a Bool type.");
-    }
-    if (tt != ft) {
-        yyerror("in trinary if '<predicate> ? <iftrue> : <iffalse>' "
-                "<iftrue> and <iffalse> must have the same type.");
-    }
-    if ((pt.isCollection() != tt.isCollection()) ||
-        (pt.gridMapping() != tt.gridMapping())) {
-        yyerror("in trinary if '<predicate> ? <iftrue> : <iffalse>' "
-                "all three expressions must be 'On' the same set.");
-    }
-    if (iftrue->dimension() != iffalse->dimension()) {
-        yyerror("in trinary if '<predicate> ? <iftrue> : <iffalse>' "
-                "<iftrue> and <iffalse> must have the same dimension.");
-    }
-    return new TrinaryIfNode(predicate, iftrue, iffalse);
-#endif
 }
 
 

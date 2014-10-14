@@ -502,6 +502,18 @@ public:
         delete iftrue_;
         delete iffalse_;
     }
+    const ExpressionNode* predicate() const
+    {
+        return predicate_;
+    }
+    const ExpressionNode* ifTrue() const
+    {
+        return iftrue_;
+    }
+    const ExpressionNode* ifFalse() const
+    {
+        return iffalse_;
+    }
     EquelleType type() const
     {
         return iftrue_->type();

@@ -227,6 +227,7 @@ void CheckASTVisitor::postVisit(UnaryNegationNode& node)
     const ExpressionNode* expr = node.negatedExpression();
     if (!isNumericType(expr->type().basicType())) {
         error("unary minus can only be applied to numeric types.", node.location());
+        return;
     }
     if (expr->type().isArray()) {
         error("unary minus cannot be applied to an Array.", node.location());
@@ -257,8 +258,36 @@ void CheckASTVisitor::colonVisit(TrinaryIfNode&)
 {
 }
 
-void CheckASTVisitor::postVisit(TrinaryIfNode&)
+void CheckASTVisitor::postVisit(TrinaryIfNode& node)
 {
+    const EquelleType pt = node.predicate()->type();
+    const EquelleType tt = node.ifTrue()->type();
+    const EquelleType ft = node.ifFalse()->type();
+    if (pt.isArray() || tt.isArray() || ft.isArray()) {
+        error("in trinary if operator, no operands can be of Array type.", node.location());
+        return;
+    }
+    if (pt.basicType() != Bool) {
+        error("in trinary if '<predicate> ? <iftrue> : <iffalse>' "
+                "<predicate> must be a Bool type.", node.location());
+        return;
+    }
+    if (tt != ft) {
+        error("in trinary if '<predicate> ? <iftrue> : <iffalse>' "
+                "<iftrue> and <iffalse> must have the same type.", node.location());
+        return;
+    }
+    if ((pt.isCollection() != tt.isCollection()) ||
+        (pt.gridMapping() != tt.gridMapping())) {
+        error("in trinary if '<predicate> ? <iftrue> : <iffalse>' "
+                "all three expressions must be 'On' the same set.", node.location());
+        return;
+    }
+    if (node.ifTrue()->dimension() != node.ifFalse()->dimension()) {
+        error("in trinary if '<predicate> ? <iftrue> : <iffalse>' "
+                "<iftrue> and <iffalse> must have the same dimension.", node.location());
+        return;
+    }
 }
 
 void CheckASTVisitor::visit(VarDeclNode&)
