@@ -210,6 +210,11 @@ CompositeType EquelleType::compositeType() const
     return composite_;
 }
 
+void EquelleType::setCompositeType(CompositeType ct)
+{
+    composite_ = ct;
+}
+
 bool EquelleType::isCollection() const
 {
     return composite_ == Collection;
@@ -288,6 +293,44 @@ bool EquelleType::operator==(const EquelleType& et) const
 bool EquelleType::operator!=(const EquelleType& et) const
 {
     return !operator==(et);
+}
+
+bool EquelleType::canSubstituteFor(const EquelleType& et) const
+{
+    // Anything can substitute for a defaulted type.
+    if (et == EquelleType()) {
+        return true;
+    }
+
+    // Accept any basic type as substitute for 'Invalid'.
+    if (et.basic_type_ != Invalid && basic_type_ != et.basic_type_) {
+        return false;
+    }
+    if (composite_ != et.composite_) {
+        return false;
+    }
+    // Accept any gridmapping as substitute for NotApplicable.
+    if (et.gridmapping_ != NotApplicable && gridmapping_ != et.gridmapping_) {
+        return false;
+    }
+    // Accept any subset_of as substitute for NotApplicable.
+    if (et.subset_of_ != NotApplicable && subset_of_ != et.subset_of_) {
+        return false;
+    }
+    // Accept any positive array size as substitute for SomeArray.
+    if (et.array_size_ == SomeArray) {
+        if (array_size_ <= 0) {
+            return false;
+        }
+    } else {
+        if (array_size_ != et.array_size_) {
+            return false;
+        }
+    }
+    if (stencil_ != et.stencil_) {
+        return false;
+    }
+    return true;
 }
 
 bool isStencilType(const BasicType bt)

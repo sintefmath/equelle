@@ -42,9 +42,8 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
 
     // ============= Generated code starts here ================
 
-    Scalar a;
-    a = double(8);
-    std::function<Scalar()> f = [&]() -> Scalar {
+    Scalar a = double(8);
+    auto f = [&]() -> Scalar {
         return (double(2) * a);
     };
     er.output("f before", f());

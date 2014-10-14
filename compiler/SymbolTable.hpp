@@ -167,7 +167,7 @@ public:
 
     const std::string& parentScope() const;
 
-    void setParentScope(const Function* parent_scope);
+    void setParentScope(Function* parent_scope);
 
     void dump() const;
 
@@ -177,7 +177,7 @@ private:
     std::string name_;
     std::set<Variable> local_variables_;
     FunctionType type_;
-    const Function* parent_scope_;
+    Function* parent_scope_;
 };
 
 
@@ -231,6 +231,8 @@ public:
 
     static const std::string& entitySetName(const int entity_set_index);
 
+    static int entitySetIndex(const std::string& entity_set_name);
+
     static BasicType entitySetType(const int entity_set_index);
 
     static void setEntitySetName(const int entity_set_index, const std::string& name);
@@ -263,6 +265,7 @@ private:
 
     std::vector<EntitySet>::iterator findSet(const int index);
     std::vector<EntitySet>::const_iterator findSet(const int index) const;
+    std::vector<EntitySet>::const_iterator findSet(const std::string& name) const;
 
     int next_entityset_index_;
     std::vector<EntitySet> entitysets_;

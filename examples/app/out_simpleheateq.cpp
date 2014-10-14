@@ -50,10 +50,10 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
     const CollOfCell first = er.firstCell(interior_faces);
     const CollOfCell second = er.secondCell(interior_faces);
     const CollOfScalar itrans = (k * (er.norm(interior_faces) / er.norm((er.centroid(first) - er.centroid(second)))));
-    std::function<CollOfScalar(const CollOfScalar&)> computeInteriorFlux = [&](const CollOfScalar& u) -> CollOfScalar {
+    auto computeInteriorFlux = [&](const CollOfScalar& u) -> CollOfScalar {
         return (-itrans * er.gradient(u));
     };
-    std::function<CollOfScalar(const CollOfScalar&)> computeResidual = [&](const CollOfScalar& u) -> CollOfScalar {
+    auto computeResidual = [&](const CollOfScalar& u) -> CollOfScalar {
         const CollOfScalar ifluxes = computeInteriorFlux(u);
         const CollOfScalar residual = ((u - u0) + ((dt / vol) * er.divergence(ifluxes)));
         return residual;

@@ -212,8 +212,8 @@ void PrintCPUBackendASTVisitor::midVisit(OnNode& node)
     // a : Collection Of Scalar On InteriorFaces()
     // a On AllFaces() ===> er.operatorOn(a, InteriorFaces(), AllFaces()).
     std::cout << ", ";
-    if (node.lefttype().isCollection()) {
-        const std::string esname = SymbolTable::entitySetName(node.lefttype().gridMapping());
+    if (node.leftType().isCollection()) {
+        const std::string esname = SymbolTable::entitySetName(node.leftType().gridMapping());
         // Now esname can be either a user-created named set or an Equelle built-in
         // function call such as AllCells(). If the second, we must transform to
         // proper call syntax for the C++ backend.
@@ -253,16 +253,12 @@ void PrintCPUBackendASTVisitor::postVisit(TrinaryIfNode&)
 
 void PrintCPUBackendASTVisitor::visit(VarDeclNode& node)
 {
-    if (node.type().isMutable()) {
-        std::cout << indent() << cppTypeString(node.type()) << " " << node.name() << ';';
-        endl();
-    }
-    // suppress();
+    suppress();
 }
 
 void PrintCPUBackendASTVisitor::postVisit(VarDeclNode&)
 {
-    // unsuppress();
+    unsuppress();
 }
 
 void PrintCPUBackendASTVisitor::visit(VarAssignNode& node)
@@ -274,6 +270,9 @@ void PrintCPUBackendASTVisitor::visit(VarAssignNode& node)
     }
     if (!SymbolTable::variableType(node.name()).isMutable()) {
         std::cout << "const " << cppTypeString(node.type()) << " ";
+    } else if (defined_mutables_.count(node.name()) == 0) {
+        std::cout << cppTypeString(node.type()) << " ";
+        defined_mutables_.insert(node.name());
     }
     std::cout << node.name() << " = ";
 }
@@ -327,23 +326,17 @@ void PrintCPUBackendASTVisitor::postVisit(FuncDeclNode&)
 
 void PrintCPUBackendASTVisitor::visit(FuncStartNode& node)
 {
-    // std::cout << indent() << "auto " << node.name() << " = [&](";
     const FunctionType& ft = SymbolTable::getFunction(node.name()).functionType();
     const size_t n = ft.arguments().size();
-    std::cout << indent() << "std::function<" << cppTypeString(ft.returnType()) << '(';
+    std::cout << indent() << "auto " << node.name() << " = [&](";
     for (int i = 0; i < n; ++i) {
-        std::cout << "const "
-                  << cppTypeString(ft.arguments()[i].type())
-                  << "&";
-        if (i < n - 1) {
-            std::cout << ", ";
-        }
-    }
-    std::cout << ")> " << node.name() << " = [&](";
-    for (int i = 0; i < n; ++i) {
+#if 0
+        std::cout << "const auto& " << ft.arguments()[i].name();
+#else
         std::cout << "const "
                   << cppTypeString(ft.arguments()[i].type())
                   << "& " << ft.arguments()[i].name();
+#endif
         if (i < n - 1) {
             std::cout << ", ";
         }
@@ -355,13 +348,18 @@ void PrintCPUBackendASTVisitor::visit(FuncStartNode& node)
 void PrintCPUBackendASTVisitor::postVisit(FuncStartNode& node)
 {
     unsuppress();
+#if 0
+    std::cout << ") {";
+#else
     const FunctionType& ft = SymbolTable::getFunction(node.name()).functionType();
     std::cout << ") -> " << cppTypeString(ft.returnType()) << " {";
+#endif
     endl();
 }
 
-void PrintCPUBackendASTVisitor::visit(FuncAssignNode&)
+void PrintCPUBackendASTVisitor::visit(FuncAssignNode& node)
 {
+    SymbolTable::setCurrentFunction(node.name());
 }
 
 void PrintCPUBackendASTVisitor::postVisit(FuncAssignNode&)
@@ -369,6 +367,7 @@ void PrintCPUBackendASTVisitor::postVisit(FuncAssignNode&)
     --indent_;
     std::cout << indent() << "};";
     endl();
+    SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
 }
 
 void PrintCPUBackendASTVisitor::visit(FuncArgsNode&)
@@ -399,37 +398,32 @@ void PrintCPUBackendASTVisitor::postVisit(ReturnStatementNode&)
 
 void PrintCPUBackendASTVisitor::visit(FuncCallNode& node)
 {
+    if (suppressed_) {
+        return;
+    }
     if (SymbolTable::isFunctionDeclared(node.name())) {
         const std::string fname = node.name();
         const char first = fname[0];
         std::string cppname;
         if (std::isupper(first)) {
+#if 0
             bool is_stencil = false;
-
             is_stencil = is_stencil | node.type().isStencil();
-
             const std::vector<EquelleType>& types = node.args()->argumentTypes();
-
             for (int i=0; i<types.size(); ++i) {
                 is_stencil = is_stencil | types[i].isStencil();
             }
-
             if (is_stencil) {
                 cppname += std::string("er_cart.");
             }
             else {
                 cppname += std::string("er.");
             }
+#endif
+            cppname += std::string("er.");
             cppname += char(std::tolower(first)) + fname.substr(1);
         } else {
             cppname += fname;
-        }
-        // Special treatment for the NewtonSolveSystem() function, since it is unable to
-        // deduce its template parameter <int Num>.
-        if (fname == "NewtonSolveSystem") {
-            std::ostringstream extra;
-            extra << "<" << node.type().arraySize() << ">";
-            cppname += extra.str();
         }
         std::cout << cppname << '(';
     }
@@ -443,6 +437,9 @@ void PrintCPUBackendASTVisitor::visit(FuncCallNode& node)
 
 void PrintCPUBackendASTVisitor::postVisit(FuncCallNode&)
 {
+    if (suppressed_) {
+        return;
+    }
     std::cout << ')';
 }
 
@@ -459,6 +456,7 @@ void PrintCPUBackendASTVisitor::postVisit(FuncCallStatementNode&)
 
 void PrintCPUBackendASTVisitor::visit(LoopNode& node)
 {
+    SymbolTable::setCurrentFunction(node.loopName());
     BasicType loopvartype = SymbolTable::variableType(node.loopSet()).basicType();
     std::cout << indent() << "for (const " << cppTypeString(loopvartype) << "& "
               << node.loopVariable() << " : " << node.loopSet() << ") {";
@@ -471,6 +469,7 @@ void PrintCPUBackendASTVisitor::postVisit(LoopNode&)
     --indent_;
     std::cout << indent() << "}";
     endl();
+    SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
 }
 
 void PrintCPUBackendASTVisitor::visit(ArrayNode&)
@@ -487,7 +486,10 @@ void PrintCPUBackendASTVisitor::postVisit(ArrayNode&)
 
 void PrintCPUBackendASTVisitor::visit(RandomAccessNode& node)
 {
-    if (!node.arrayAccess()) {
+    if (node.arrayAccess()) {
+        // This is Array access.
+        std::cout << "std::get<" << node.index() << ">(";
+    } else {
         // This is Vector access.
         std::cout << "CollOfScalar(";
     }
@@ -497,7 +499,7 @@ void PrintCPUBackendASTVisitor::postVisit(RandomAccessNode& node)
 {
     if (node.arrayAccess()) {
         // This is Array access.
-        std::cout << "[" << node.index() << "]";
+        std::cout << ")";
     } else {
         // This is Vector access.
         // Add a grid dimension requirement.
@@ -544,7 +546,18 @@ std::string PrintCPUBackendASTVisitor::cppTypeString(const EquelleType& et) cons
 {
     std::string cppstring;
     if (et.isArray()) {
-        cppstring += "std::array<";
+        cppstring += "std::tuple<";
+        EquelleType basic_et = et;
+        basic_et.setArraySize(NotAnArray);
+        std::string basiccppstring = cppTypeString(basic_et);
+        for (int elem = 0; elem < et.arraySize(); ++elem) {
+            cppstring += basiccppstring;
+            if (elem < et.arraySize() - 1) {
+                cppstring += ", ";
+            }
+        }
+        cppstring += ">";
+        return cppstring;
     }
     if (et.isStencil()) {
         cppstring += "Stencil";
@@ -555,9 +568,6 @@ std::string PrintCPUBackendASTVisitor::cppTypeString(const EquelleType& et) cons
         cppstring += "SeqOf";
     }
     cppstring += basicTypeString(et.basicType());
-    if (et.isArray()) {
-        cppstring += ", " + std::to_string(et.arraySize()) + ">";
-    }
     return cppstring;
 }
 

@@ -37,7 +37,6 @@ public:
 };
 
 
-
 class SequenceNode : public Node
 {
 public:
@@ -126,7 +125,7 @@ class TypeNode : public Node
 {
 public:
     TypeNode(const EquelleType et) : et_(et) {}
-    EquelleType type() const
+    virtual EquelleType type() const
     {
         return et_;
     }
@@ -141,22 +140,170 @@ private:
 
 
 
-class FuncTypeNode : public Node
+class CollectionTypeNode : public TypeNode
 {
 public:
-    FuncTypeNode(const FunctionType ft) : ft_(ft) {}
-    FunctionType funcType() const
+    CollectionTypeNode(TypeNode* btype, ExpressionNode* gridmapping, ExpressionNode* subsetof)
+        : TypeNode(EquelleType()),
+          btype_(btype),
+          gridmapping_(gridmapping),
+          subsetof_(subsetof)
     {
-        return ft_;
+        // TODO. Check if this assert is what we want.
+        //       Is "Collection Of X On Y Subset Of Z" allowed?
+        assert(gridmapping == nullptr || subsetof == nullptr);
+    }
+    ~CollectionTypeNode()
+    {
+        delete btype_;
+        delete gridmapping_;
+        delete subsetof_;
+    }
+    const TypeNode* baseType() const
+    {
+        return btype_;
+    }
+    const ExpressionNode* gridMapping() const
+    {
+        return gridmapping_;
+    }
+    const ExpressionNode* subsetOf() const
+    {
+        return subsetof_;
+    }
+    EquelleType type() const
+    {
+        EquelleType bt = btype_->type();
+        int gm = NotApplicable;
+        if (gridmapping_) {
+            gm = gridmapping_->type().gridMapping();
+        }
+        int subset = NotApplicable;
+        if (subsetof_) {
+            gm = PostponedDefinition;
+            subset = subsetof_->type().gridMapping();
+        }
+        return EquelleType(bt.basicType(), Collection, gm, subset);
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        // btype_->accept(visitor);
+        if (gridmapping_) {
+            gridmapping_->accept(visitor);
+        }
+        if (subsetof_) {
+            subsetof_->accept(visitor);
+        }
+        visitor.postVisit(*this);
+    }
+
+private:
+    TypeNode* btype_;
+    ExpressionNode* gridmapping_;
+    ExpressionNode* subsetof_;
+};
+
+
+
+class ArrayTypeNode : public TypeNode
+{
+public:
+    ArrayTypeNode(TypeNode* btype, const int array_size)
+        : TypeNode(EquelleType()),
+          btype_(btype),
+          array_size_(array_size)
+    {
+    }
+    ~ArrayTypeNode()
+    {
+        delete btype_;
+    }
+    const TypeNode* baseType() const
+    {
+        return btype_;
+    }
+    EquelleType type() const
+    {
+        EquelleType bt = btype_->type();
+        bt.setArraySize(array_size_);
+        return bt;
     }
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
     }
+
 private:
-    FunctionType ft_;
+    TypeNode* btype_;
+    int array_size_;
 };
 
+
+
+class SequenceTypeNode : public TypeNode
+{
+public:
+    explicit SequenceTypeNode(TypeNode* btype)
+        : TypeNode(EquelleType()),
+          btype_(btype)
+    {
+    }
+    ~SequenceTypeNode()
+    {
+        delete btype_;
+    }
+    const TypeNode* baseType() const
+    {
+        return btype_;
+    }
+    EquelleType type() const
+    {
+        EquelleType bt = btype_->type();
+        bt.setCompositeType(Sequence);
+        return bt;
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+    }
+
+private:
+    TypeNode* btype_;
+};
+
+
+
+class MutableTypeNode : public TypeNode
+{
+public:
+    explicit MutableTypeNode(TypeNode* btype)
+        : TypeNode(EquelleType()),
+          btype_(btype)
+    {
+    }
+    ~MutableTypeNode()
+    {
+        delete btype_;
+    }
+    const TypeNode* baseType() const
+    {
+        return btype_;
+    }
+    EquelleType type() const
+    {
+        EquelleType bt = btype_->type();
+        bt.setMutable(true);
+        return bt;
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+    }
+
+private:
+    TypeNode* btype_;
+};
 
 
 
@@ -226,6 +373,14 @@ public:
     {
         return op_;
     }
+    const ExpressionNode* left() const
+    {
+        return left_;
+    }
+    const ExpressionNode* right() const
+    {
+        return right_;
+    }
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
@@ -263,6 +418,14 @@ public:
         EquelleType lt = left_->type();
         return EquelleType(Bool, lt.compositeType(), lt.gridMapping());
     }
+    const ExpressionNode* left() const
+    {
+        return left_;
+    }
+    const ExpressionNode* right() const
+    {
+        return right_;
+    }
     ComparisonOp op() const
     {
         return op_;
@@ -291,6 +454,10 @@ public:
     virtual ~NormNode()
     {
         delete expr_to_norm_;
+    }
+    const ExpressionNode* normedExpression() const
+    {
+        return expr_to_norm_;
     }
     EquelleType type() const
     {
@@ -324,7 +491,7 @@ public:
                 d.setCoefficient(Length, 3);
                 break;
             default:
-                yyerror("internal compiler error in NormNode::dimension().");
+                throw std::logic_error("internal compiler error in NormNode::dimension().");
             }
             // TODO: we use a dimensionless value here now, until
             // dimension of function calls has been implemented.
@@ -352,6 +519,10 @@ public:
     virtual ~UnaryNegationNode()
     {
         delete expr_to_negate_;
+    }
+    const ExpressionNode* negatedExpression() const
+    {
+        return expr_to_negate_;
     }
     EquelleType type() const
     {
@@ -390,9 +561,13 @@ public:
     {
         return EquelleType(left_->type().basicType(), Collection, right_->type().gridMapping(), left_->type().subsetOf());
     }
-    EquelleType lefttype() const
+    EquelleType leftType() const
     {
         return left_->type();
+    }
+    EquelleType rightType() const
+    {
+        return right_->type();
     }
     bool isExtend() const
     {
@@ -430,6 +605,18 @@ public:
         delete predicate_;
         delete iftrue_;
         delete iffalse_;
+    }
+    const ExpressionNode* predicate() const
+    {
+        return predicate_;
+    }
+    const ExpressionNode* ifTrue() const
+    {
+        return iftrue_;
+    }
+    const ExpressionNode* ifFalse() const
+    {
+        return iffalse_;
     }
     EquelleType type() const
     {
@@ -509,6 +696,10 @@ public:
     {
         return expr_->type();
     }
+    const ExpressionNode* rhs() const
+    {
+        return expr_;
+    }
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
@@ -533,11 +724,18 @@ public:
     {
         // We do not want mutability of a variable to be passed on to
         // expressions involving that variable.
-        EquelleType et = SymbolTable::variableType(varname_);
-        if (et.isMutable()) {
-            et.setMutable(false);
+        if (SymbolTable::isVariableDeclared(varname_)) {
+            EquelleType et = SymbolTable::variableType(varname_);
+            if (et.isMutable()) {
+                et.setMutable(false);
+            }
+            return et;
+        } else if (SymbolTable::isFunctionDeclared(varname_)) {
+            // Function reference.
+            return EquelleType();
+        } else {
+            throw std::logic_error("Internal compiler error in VarNode::type().");
         }
-        return et;
     }
     Dimension dimension() const
     {
@@ -555,6 +753,75 @@ private:
     std::string varname_;
 };
 
+
+
+
+class FuncArgsDeclNode : public Node
+{
+public:
+    FuncArgsDeclNode(VarDeclNode* vardecl = 0)
+    {
+        if (vardecl) {
+            decls_.push_back(vardecl);
+        }
+    }
+    virtual ~FuncArgsDeclNode()
+    {
+        for (auto decl : decls_) {
+            delete decl;
+        }
+    }
+    void addArg(VarDeclNode* vardecl)
+    {
+        decls_.push_back(vardecl);
+    }
+    std::vector<Variable> arguments() const
+    {
+        std::vector<Variable> args;
+        args.reserve(decls_.size());
+        for (auto vdn : decls_) {
+            args.push_back(Variable(vdn->name(), vdn->type(), true));
+        }
+        return args;
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        const size_t n = decls_.size();
+        for (size_t i = 0; i < n; ++i) {
+            decls_[i]->accept(visitor);
+            if (i < n - 1) {
+                visitor.midVisit(*this);
+            }
+        }
+        visitor.postVisit(*this);
+    }
+private:
+    std::vector<VarDeclNode*> decls_;
+};
+
+
+
+
+class FuncTypeNode : public Node
+{
+public:
+    FuncTypeNode(FuncArgsDeclNode* argtypes, TypeNode* rtype)
+        : argtypes_(argtypes), rtype_(rtype)
+    {
+    }
+    FunctionType funcType() const
+    {
+        return FunctionType(argtypes_->arguments(), rtype_->type());
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+    }
+private:
+    FuncArgsDeclNode* argtypes_;
+    TypeNode* rtype_;
+};
 
 
 
@@ -609,53 +876,6 @@ private:
 
 
 
-class FuncArgsDeclNode : public Node
-{
-public:
-    FuncArgsDeclNode(VarDeclNode* vardecl = 0)
-    {
-        if (vardecl) {
-            decls_.push_back(vardecl);
-        }
-    }
-    virtual ~FuncArgsDeclNode()
-    {
-        for (auto decl : decls_) {
-            delete decl;
-        }
-    }
-    void addArg(VarDeclNode* vardecl)
-    {
-        decls_.push_back(vardecl);
-    }
-    std::vector<Variable> arguments() const
-    {
-        std::vector<Variable> args;
-        args.reserve(decls_.size());
-        for (auto vdn : decls_) {
-            args.push_back(Variable(vdn->name(), vdn->type(), true));
-        }
-        return args;
-    }
-    virtual void accept(ASTVisitorInterface& visitor)
-    {
-        visitor.visit(*this);
-        const size_t n = decls_.size();
-        for (size_t i = 0; i < n; ++i) {
-            decls_[i]->accept(visitor);
-            if (i < n - 1) {
-                visitor.midVisit(*this);
-            }
-        }
-        visitor.postVisit(*this);
-    }
-private:
-    std::vector<VarDeclNode*> decls_;
-};
-
-
-
-
 class FuncDeclNode : public Node
 {
 public:
@@ -671,47 +891,28 @@ public:
     {
         return funcname_;
     }
+    const FuncTypeNode* ftype() const
+    {
+        return ftype_;
+    }
     virtual void accept(ASTVisitorInterface& visitor)
     {
+        visitor.visit(*this);
+        ftype_->accept(visitor);
+        visitor.postVisit(*this);
+#if 0
         SymbolTable::setCurrentFunction(funcname_);
         visitor.visit(*this);
         ftype_->accept(visitor);
         visitor.postVisit(*this);
         SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
+#endif
     }
 private:
     std::string funcname_;
     FuncTypeNode* ftype_;
 };
 
-
-
-
-
-class FuncAssignNode : public Node
-{
-public:
-    FuncAssignNode(Node* funcstart, Node* funcbody)
-        : funcstart_(funcstart), funcbody_(funcbody)
-    {
-    }
-    virtual ~FuncAssignNode()
-    {
-        delete funcstart_;
-        delete funcbody_;
-    }
-    virtual void accept(ASTVisitorInterface& visitor)
-    {
-        visitor.visit(*this);
-        funcstart_->accept(visitor);
-        funcbody_->accept(visitor);
-        visitor.postVisit(*this);
-        SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
-    }
-private:
-    Node* funcstart_;
-    Node* funcbody_;
-};
 
 
 
@@ -833,7 +1034,9 @@ public:
     }
     virtual void accept(ASTVisitorInterface& visitor)
     {
+#if 0
         SymbolTable::setCurrentFunction(funcname_);
+#endif
         visitor.visit(*this);
         funcargs_->accept(visitor);
         visitor.postVisit(*this);
@@ -842,6 +1045,41 @@ private:
     std::string funcname_;
     FuncArgsNode* funcargs_;
 };
+
+
+
+class FuncAssignNode : public Node
+{
+public:
+    FuncAssignNode(FuncStartNode* funcstart, Node* funcbody)
+        : funcstart_(funcstart), funcbody_(funcbody)
+    {
+    }
+    virtual ~FuncAssignNode()
+    {
+        delete funcstart_;
+        delete funcbody_;
+    }
+    const std::string& name() const
+    {
+        return funcstart_->name();
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        funcstart_->accept(visitor);
+        funcbody_->accept(visitor);
+        visitor.postVisit(*this);
+#if 0
+        SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
+#endif
+    }
+private:
+    FuncStartNode* funcstart_;
+    Node* funcbody_;
+};
+
+
 
 
 class StencilNode : public FuncCallLikeNode
@@ -904,6 +1142,11 @@ public:
     virtual ~FuncCallNode()
     {
         delete funcargs_;
+    }
+
+    void setDynamicSubsetReturn(const int dynamic_subset_return)
+    {
+        dsr_ = dynamic_subset_return;
     }
 
     EquelleType type() const
@@ -1019,11 +1262,9 @@ public:
     }
     virtual void accept(ASTVisitorInterface& visitor)
     {
-        SymbolTable::setCurrentFunction(loop_name_);
         visitor.visit(*this);
         loop_block_->accept(visitor);
         visitor.postVisit(*this);
-        SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
     }
 private:
     std::string loop_variable_;
@@ -1040,16 +1281,20 @@ public:
     ArrayNode(FuncArgsNode* expr_list)
     : expr_list_(expr_list)
     {
-        type_ = expr_list->arguments().front()->type();
-        type_.setArraySize(expr_list->arguments().size());
     }
     virtual ~ArrayNode()
     {
         delete expr_list_;
     }
+    const FuncArgsNode* expressionList()
+    {
+        return expr_list_;
+    }
     EquelleType type() const
     {
-        return type_;
+        EquelleType t = expr_list_->arguments().front()->type();
+        t.setArraySize(expr_list_->arguments().size());
+        return t;
     }
     Dimension dimension() const
     {
@@ -1066,7 +1311,6 @@ public:
     }
 private:
     FuncArgsNode* expr_list_;
-    EquelleType type_;
 };
 
 
@@ -1089,6 +1333,10 @@ public:
     bool arrayAccess() const
     {
         return expr_->type().isArray();
+    }
+    const ExpressionNode* expressionToAccess() const
+    {
+        return expr_;
     }
     EquelleType type() const
     {

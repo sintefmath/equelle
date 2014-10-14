@@ -304,7 +304,11 @@ void Function::setVariableAssigned(const std::string& name, const bool assigned)
         local_variables_.erase(lit);
         local_variables_.insert(copy);
     } else {
-        yyerror("internal compiler error in Function::setVariableAssigned()");
+        if (parent_scope_) {
+            return parent_scope_->setVariableAssigned(name, assigned);
+        } else {
+            yyerror("internal compiler error in Function::setVariableAssigned()");
+        }
     }
 }
 
@@ -319,7 +323,11 @@ void Function::setVariableType(const std::string& name, const EquelleType& type)
         local_variables_.erase(lit);
         local_variables_.insert(copy);
     } else {
-        yyerror("internal compiler error in Function::setVariableType()");
+        if (parent_scope_) {
+            return parent_scope_->setVariableType(name, type);
+        } else {
+            yyerror("internal compiler error in Function::setVariableType()");
+        }
     }
 }
 
@@ -334,7 +342,11 @@ void Function::setVariableDimension(const std::string& name, const Dimension& di
         local_variables_.erase(lit);
         local_variables_.insert(copy);
     } else {
-        yyerror("internal compiler error in Function::setVariableDimension()");
+        if (parent_scope_) {
+            return parent_scope_->setVariableDimension(name, dimension);
+        } else {
+            yyerror("internal compiler error in Function::setVariableDimension()");
+        }
     }
 }
 
@@ -363,7 +375,7 @@ EquelleType Function::returnType(const std::vector<EquelleType>& argtypes) const
     return type_.returnType(argtypes);
 }
 
-void Function::setParentScope(const Function* parent_scope)
+void Function::setParentScope(Function* parent_scope)
 {
     parent_scope_ = parent_scope;
 }
@@ -544,6 +556,11 @@ const std::string& SymbolTable::entitySetName(const int entity_set_index)
     return instance().findSet(entity_set_index)->name();
 }
 
+int SymbolTable::entitySetIndex(const std::string& entity_set_name)
+{
+    return instance().findSet(entity_set_name)->index();
+}
+
 BasicType SymbolTable::entitySetType(const int entity_set_index)
 {
     BasicType canonical = canonicalGridMappingEntity(entity_set_index);
@@ -593,11 +610,11 @@ SymbolTable::SymbolTable()
                                          EquelleType(Cell, Collection, NotApplicable, AllCells),
                                          { InvalidIndex, 0, InvalidIndex}));
     functions_.emplace_back("IsEmpty",
-                            FunctionType({ Variable("entities", EquelleType()) },
+                            FunctionType({ Variable("entities", EquelleType(Invalid, Collection)) },
                                          EquelleType(Bool, Collection),
                                          { InvalidIndex, 0, InvalidIndex}));
     functions_.emplace_back("Centroid",
-                            FunctionType({ Variable("entities", EquelleType()) },
+                            FunctionType({ Variable("entities", EquelleType(Invalid, Collection)) },
                                          EquelleType(Vector, Collection),
                                          { InvalidIndex, 0, InvalidIndex}));
     functions_.emplace_back("Normal",
@@ -611,7 +628,7 @@ SymbolTable::SymbolTable()
                                          EquelleType(Scalar)));
     functions_.emplace_back("InputCollectionOfScalar",
                             FunctionType({ Variable("name", EquelleType(String)),
-                                           Variable("entities", EquelleType()) },
+                                           Variable("entities", EquelleType(Invalid, Collection, NotApplicable, NotApplicable, false, true)) },
                                          EquelleType(Scalar, Collection),
                                          { InvalidIndex, 1, InvalidIndex}));
     functions_.emplace_back("InputStencilCollectionOfScalar",
@@ -621,7 +638,7 @@ SymbolTable::SymbolTable()
                                          { InvalidIndex, 1, InvalidIndex}));
     functions_.emplace_back("InputDomainSubsetOf",
                             FunctionType({ Variable("name", EquelleType(String)),
-                                           Variable("entities", EquelleType()) },
+                                           Variable("entities", EquelleType(Invalid, Collection, NotApplicable, NotApplicable, false, true)) },
                                           EquelleType(Invalid, Collection, NotApplicable, NotApplicable, false, true),
                                          { 1, InvalidIndex, 1}));
     functions_.emplace_back("InputSequenceOfScalar",
@@ -649,7 +666,7 @@ SymbolTable::SymbolTable()
                                 {InvalidIndex, 1, InvalidIndex}));
     functions_.emplace_back("NewtonSolveSystem",
                             FunctionType({ Variable("residual_function_array", EquelleType()),
-                                           Variable("u_guess_array", EquelleType(Scalar, Collection)) },
+                                           Variable("u_guess_array", EquelleType(Scalar, Collection, NotApplicable, NotApplicable, false, false, SomeArray)) },
                                 EquelleType(Scalar, Collection),
                                 {InvalidIndex, 1, InvalidIndex, 1}));
     functions_.emplace_back("Output",
@@ -820,4 +837,10 @@ std::vector<EntitySet>::const_iterator SymbolTable::findSet(const int index) con
 {
     return std::find_if(entitysets_.begin(), entitysets_.end(),
                         [&](const EntitySet& es) { return es.index() == index; });
+}
+
+std::vector<EntitySet>::const_iterator SymbolTable::findSet(const std::string& name) const
+{
+    return std::find_if(entitysets_.begin(), entitysets_.end(),
+                        [&](const EntitySet& es) { return es.name() == name; });
 }

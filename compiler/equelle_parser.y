@@ -21,6 +21,7 @@
 %token FACE
 %token EDGE
 %token VERTEX
+%token STRING
 %token FUNCTION
 %token AND
 %token OR
@@ -65,7 +66,7 @@
 %type <enode> quantity
 %type <unitnode> unit_expr
 %type <enode> array
-%type <fcalllike> f_assign_start
+%type <fsnode> f_assign_start
 %type <fcalllike> f_call_like
 %type <farg> f_call_args
 %type <seq> block
@@ -107,6 +108,7 @@
     VarDeclNode*                   vardecl;
     FuncTypeNode*                  ftype;
     FuncArgsNode*                  farg;
+    FuncStartNode*                 fsnode;
     FuncArgsDeclNode*              fargdecl;
     FuncCallLikeNode*              fcalllike;
     SequenceNode*                  seq;
@@ -179,9 +181,9 @@ expr: quantity            { $$ = $1; }
     ;
 
 type_expr: basic_type                                  { $$ = $1; }
-		 | collection_of                               { $$ = $1; }
-		 | STENCIL collection_of                       { $$ = handleStencilCollection($2); }
-         | SEQUENCE OF basic_type                      { $$ = handleSequence($3); }
+         | collection_of                               { $$ = $1; }
+         | STENCIL collection_of                       { $$ = handleStencilCollection($2); }
+         | SEQUENCE OF basic_type                      { $$ = handleSequenceType($3); }
          | ARRAY OF INT type_expr                      { $$ = handleArrayType(intFromString(*($3)), $4); delete $3; }
          | MUTABLE type_expr                           { $$ = handleMutableType($2); }
          ;
@@ -201,6 +203,7 @@ basic_type: SCALAR  { $$ = new TypeNode(EquelleType(Scalar)); }
           | FACE    { $$ = new TypeNode(EquelleType(Face)); }
           | EDGE    { $$ = new TypeNode(EquelleType(Edge)); }
           | VERTEX  { $$ = new TypeNode(EquelleType(Vertex)); }
+          | STRING  { $$ = new TypeNode(EquelleType(String)); }
           ;
 
 f_decl_args: f_decl_args ',' declaration { $$ = $1; $$->addArg($3); }

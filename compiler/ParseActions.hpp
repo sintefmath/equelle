@@ -34,15 +34,15 @@ Node* handleFuncDeclaration(const std::string& name, FuncTypeNode* ftype);
 
 void handleFuncStartType();
 
-FuncCallLikeNode* handleFuncAssignmentStart(const std::string& name, FuncArgsNode* args);
+FuncStartNode* handleFuncAssignmentStart(const std::string& name, FuncArgsNode* args);
 
-FuncAssignNode* handleFuncAssignment(Node* funcstart, SequenceNode* fbody);
+FuncAssignNode* handleFuncAssignment(FuncStartNode* funcstart, SequenceNode* fbody);
 
 ReturnStatementNode* handleReturnStatement(ExpressionNode* expr);
 
 Node* handleDeclarationAssign(const std::string& name, TypeNode* type, ExpressionNode* expr);
 
-TypeNode* handleCollection(TypeNode* btype, ExpressionNode* gridmapping, ExpressionNode* subsetof);
+CollectionTypeNode* handleCollection(TypeNode* btype, ExpressionNode* gridmapping, ExpressionNode* subsetof);
 
 TypeNode* handleStencilCollection(TypeNode* type);
 
@@ -70,7 +70,7 @@ StringNode* handleString(const std::string& content);
 
 TypeNode* handleMutableType(TypeNode* type_expr);
 
-TypeNode* handleSequence(TypeNode* basic_type);
+TypeNode* handleSequenceType(TypeNode* basic_type);
 
 TypeNode* handleArrayType(const int array_size, TypeNode* type_expr);
 

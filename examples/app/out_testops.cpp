@@ -48,7 +48,7 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
     const CollOfScalar a1 = er.operatorOn((a + b), er.allCells(), er.interiorCells());
     const CollOfScalar b1 = er.operatorOn(b, er.allCells(), er.interiorCells());
     const CollOfScalar c = er.operatorExtend((a1 + b1), er.interiorCells(), er.allCells());
-    const std::array<CollOfScalar, 3> array = makeArray((a1 + b1), (a1 - b1), a1);
+    const std::tuple<CollOfScalar, CollOfScalar, CollOfScalar> array = makeArray((a1 + b1), (a1 - b1), a1);
     const String qww = "This is a string with \"quoted escapes\" and others \n\n\n such as newlines";
     er.output(qww, double(2));
 

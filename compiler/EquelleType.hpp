@@ -24,7 +24,7 @@ enum CanonicalEntitySet { InteriorCells = 0, BoundaryCells, AllCells,
 
 enum CompositeType { None, Collection, Sequence };
 
-enum { NotAnArray = -1 };
+enum { NotAnArray = -1, SomeArray = -2 };
 
 std::string basicTypeString(const BasicType bt);
 
@@ -63,6 +63,8 @@ public:
 
     CompositeType compositeType() const;
 
+    void setCompositeType(CompositeType ct);
+
     bool isCollection() const;
 
     bool isDomain() const;
@@ -90,6 +92,10 @@ public:
     bool operator==(const EquelleType& et) const;
 
     bool operator!=(const EquelleType& et) const;
+
+    /// Return true if 'et' is less specific than *this,
+    /// or the same.
+    bool canSubstituteFor(const EquelleType& et) const;
 
 private:
     BasicType basic_type_;

@@ -1,23 +1,29 @@
 /*
-  Copyright 2013 SINTEF ICT, Applied Mathematics.
+  Copyright 2014 SINTEF ICT, Applied Mathematics.
 */
 
-#ifndef PRINTEQUELLEASTVISITOR_HEADER_INCLUDED
-#define PRINTEQUELLEASTVISITOR_HEADER_INCLUDED
+#ifndef OPM_CHECKASTVISITOR_HEADER_INCLUDED
+#define OPM_CHECKASTVISITOR_HEADER_INCLUDED
+
 
 #include "ASTVisitorInterface.hpp"
+#include "FileLocation.hpp"
 #include <string>
 
-class PrintEquelleASTVisitor : public ASTVisitorInterface
+
+class CheckASTVisitor : public ASTVisitorInterface
 {
 public:
-    PrintEquelleASTVisitor();
-    ~PrintEquelleASTVisitor();
+    CheckASTVisitor();
+    virtual ~CheckASTVisitor();
 
     void visit(SequenceNode& node);
     void midVisit(SequenceNode& node);
     void postVisit(SequenceNode& node);
     void visit(NumberNode& node);
+    void visit(QuantityNode& node);
+    void postVisit(QuantityNode& node);
+    void visit(UnitNode& node);
     void visit(StringNode& node);
     void visit(TypeNode& node);
     void visit(CollectionTypeNode& node);
@@ -78,12 +84,13 @@ public:
     void postVisit(StencilNode& node);
 
 private:
-    bool suppressed_;
-    int indent_;
-    void endl() const;
-    std::string indent() const;
-    void suppress();
-    void unsuppress();
+    bool checking_suppressed_;
+    int next_loop_index_;
+    void error(const std::string& err, const FileLocation loc = FileLocation());
+    void suppressChecking();
+    void unsuppressChecking();
+    bool isCheckingSuppressed() const;
 };
 
-#endif // PRINTEQUELLEASTVISITOR_HEADER_INCLUDED
+
+#endif // OPM_CHECKASTVISITOR_HEADER_INCLUDED
