@@ -360,55 +360,6 @@ OnNode* handleOn(ExpressionNode* left, ExpressionNode* right)
     OnNode* node = new OnNode(left, right, false);
     node->setLocation(FileLocation(yylineno));
     return node;
-#if 0
-    const EquelleType lt = left->type();
-    const EquelleType rt = right->type();
-    if (lt.isArray() || rt.isArray()) {
-        yyerror("cannot use On operator with an Array.");
-    }
-    // Left side can be anything but a sequence.
-    if (lt.isSequence()) {
-        yyerror("cannot use On operator with a Sequence.");
-    }
-    // Right side must be an entity collection.
-    if (!rt.isEntityCollection()) {
-        yyerror("in a '<left> On <right>' expression "
-                "the expression <right> must be a Collection Of Cell, Face, Edge or Vertex.");
-    }
-    // Left side must be some collection.
-    if (!lt.isCollection()) {
-        yyerror("in a '<left> On <right>' expression "
-                "the expression <left> must be a Collection.");
-    } else {
-        // The domain (grid mapping) of the left side must contain
-        // the right hand side. Explanation by example:
-        //   x = AllCells()
-        //   y : Collection Of Scalar On x = |x|
-        // The above defines x and y, and the On part declares that there is a 1-1 mapping x -> y.
-        // We can even denote this mapping y(x).
-        //   z = InteriorFaces()
-        //   w : Collection Of Cell On z = FirstCell(z)
-        // Now w is On z, meaning that there is a 1-1 mapping z -> w, we denote it w(z)
-        // Finally, what does then the following mean?
-        //   yow = y On w
-        // Its meaning is intended to be a composition of mappings, that is
-        // there is now a 1-1 mapping z->yow defined by yow(z) = y(w(z)).
-        // This is only ok if the range of w(z) is contained in the domain of y(x), that is x.
-        // In our case that means that the entity collection on the right hand side must be contained
-        // in the domain of the left.
-        const int left_domain = lt.gridMapping();
-        const int right_collection = rt.subsetOf();
-        if (!SymbolTable::isSubset(right_collection, left_domain)) {
-            std::string err_msg;
-            err_msg += "in a '<left> On <right>' expression the expression <right> must "
-                "be a collection that is contained in the domain that <left> is On. ";
-            err_msg += "Collection on the left is On ";
-            err_msg += SymbolTable::entitySetName(left_domain);
-            yyerror(err_msg.c_str());
-        }
-    }
-    return new OnNode(left, right, false);
-#endif
 }
 
 
@@ -418,40 +369,6 @@ OnNode* handleExtend(ExpressionNode* left, ExpressionNode* right)
     OnNode* node = new OnNode(left, right, true);
     node->setLocation(FileLocation(yylineno));
     return node;
-#if 0
-    const EquelleType lt = left->type();
-    const EquelleType rt = right->type();
-    if (lt.isArray() || rt.isArray()) {
-        yyerror("cannot use Extend operator with an Array.");
-    }
-    // Left side can be anything but a sequence.
-    if (lt.isSequence()) {
-        yyerror("cannot use Extend operator with a Sequence.");
-    }
-    // Right side must be a domain.
-    if (!rt.isDomain()) {
-        yyerror("in a '<left> Extend <right>' expression "
-                "the expression <right> must be a Collection Of Cell, Face, Edge or Vertex, "
-                "that also is a domain (all unique, non-Empty elements).");
-    }
-    // If left side is a collection, its domain (grid mapping) must be
-    // a subset of the right hand side.
-    if (lt.isCollection()) {
-        const int left_domain = lt.gridMapping();
-        const int right_domain = lt.gridMapping();
-        if (!SymbolTable::isSubset(left_domain, right_domain)) {
-            std::string err_msg;
-            err_msg += "in a '<left> Extend <right>' expression the expression <right> must "
-                "be a domain that contains the domain that <left> is On. ";
-            err_msg += "Collection on the left is On ";
-            err_msg += SymbolTable::entitySetName(left_domain);
-            err_msg += " and Domain on the right is On ";
-            err_msg += SymbolTable::entitySetName(right_domain);
-            yyerror(err_msg.c_str());
-        }
-    }
-    return new OnNode(left, right, true);
-#endif
 }
 
 

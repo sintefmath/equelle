@@ -242,8 +242,90 @@ void CheckASTVisitor::midVisit(OnNode&)
 {
 }
 
-void CheckASTVisitor::postVisit(OnNode&)
+void CheckASTVisitor::postVisit(OnNode& node)
 {
+    const EquelleType lt = node.leftType();
+    const EquelleType rt = node.rightType();
+    // No side can be an array.
+    if (lt.isArray() || rt.isArray()) {
+        error("cannot use On or Extend operator with an Array.", node.location());
+        return;
+    }
+    // Left side can be anything but a sequence.
+    if (lt.isSequence()) {
+        error("cannot use On or Extend operator with a Sequence.", node.location());
+        return;
+    }
+    const bool extend = node.isExtend();
+    if (extend) {
+        // This is for the Extend operator.
+        // Right side must be a domain.
+        if (!rt.isDomain()) {
+            error("in a '<left> Extend <right>' expression "
+                  "the expression <right> must be a Collection Of Cell, Face, Edge or Vertex, "
+                  "that also is a domain (all unique, non-Empty elements).", node.location());
+            return;
+        }
+        // If left side is a collection, its domain (grid mapping) must be
+        // a subset of the right hand side.
+        if (lt.isCollection()) {
+            const int left_domain = lt.gridMapping();
+            const int right_domain = rt.gridMapping();
+            if (!SymbolTable::isSubset(left_domain, right_domain)) {
+                std::string err_msg;
+                err_msg += "in a '<left> Extend <right>' expression the expression <right> must "
+                    "be a domain that contains the domain that <left> is On. ";
+                err_msg += "Collection on the left is On ";
+                err_msg += SymbolTable::entitySetName(left_domain);
+                err_msg += " and Domain on the right is On ";
+                err_msg += SymbolTable::entitySetName(right_domain);
+                error(err_msg, node.location());
+                return;
+            }
+        }
+    } else {
+        // This is for the On operator.
+        // Right side must be an entity collection.
+        if (!rt.isEntityCollection()) {
+            error("in a '<left> On <right>' expression "
+                    "the expression <right> must be a Collection Of Cell, Face, Edge or Vertex.", node.location());
+            return;
+        }
+        // Left side must be some collection.
+        if (!lt.isCollection()) {
+            error("in a '<left> On <right>' expression "
+                    "the expression <left> must be a Collection.", node.location());
+            return;
+        } else {
+            // The domain (grid mapping) of the left side must contain
+            // the right hand side. Explanation by example:
+            //   x = AllCells()
+            //   y : Collection Of Scalar On x = |x|
+            // The above defines x and y, and the On part declares that there is a 1-1 mapping x -> y.
+            // We can even denote this mapping y(x).
+            //   z = InteriorFaces()
+            //   w : Collection Of Cell On z = FirstCell(z)
+            // Now w is On z, meaning that there is a 1-1 mapping z -> w, we denote it w(z)
+            // Finally, what does then the following mean?
+            //   yow = y On w
+            // Its meaning is intended to be a composition of mappings, that is
+            // there is now a 1-1 mapping z->yow defined by yow(z) = y(w(z)).
+            // This is only ok if the range of w(z) is contained in the domain of y(x), that is x.
+            // In our case that means that the entity collection on the right hand side must be contained
+            // in the domain of the left.
+            const int left_domain = lt.gridMapping();
+            const int right_collection = rt.subsetOf();
+            if (!SymbolTable::isSubset(right_collection, left_domain)) {
+                std::string err_msg;
+                err_msg += "in a '<left> On <right>' expression the expression <right> must "
+                    "be a collection that is contained in the domain that <left> is On. ";
+                err_msg += "Collection on the left is On ";
+                err_msg += SymbolTable::entitySetName(left_domain);
+                error(err_msg, node.location());
+                return;
+            }
+        }
+    }
 }
 
 void CheckASTVisitor::visit(TrinaryIfNode&)

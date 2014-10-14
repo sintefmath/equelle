@@ -212,8 +212,8 @@ void PrintCPUBackendASTVisitor::midVisit(OnNode& node)
     // a : Collection Of Scalar On InteriorFaces()
     // a On AllFaces() ===> er.operatorOn(a, InteriorFaces(), AllFaces()).
     std::cout << ", ";
-    if (node.lefttype().isCollection()) {
-        const std::string esname = SymbolTable::entitySetName(node.lefttype().gridMapping());
+    if (node.leftType().isCollection()) {
+        const std::string esname = SymbolTable::entitySetName(node.leftType().gridMapping());
         // Now esname can be either a user-created named set or an Equelle built-in
         // function call such as AllCells(). If the second, we must transform to
         // proper call syntax for the C++ backend.

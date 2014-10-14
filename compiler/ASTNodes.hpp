@@ -461,9 +461,13 @@ public:
     {
         return EquelleType(left_->type().basicType(), Collection, right_->type().gridMapping(), left_->type().subsetOf());
     }
-    EquelleType lefttype() const
+    EquelleType leftType() const
     {
         return left_->type();
+    }
+    EquelleType rightType() const
+    {
+        return right_->type();
     }
     bool isExtend() const
     {
