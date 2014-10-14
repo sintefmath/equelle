@@ -222,8 +222,15 @@ void CheckASTVisitor::visit(UnaryNegationNode&)
 {
 }
 
-void CheckASTVisitor::postVisit(UnaryNegationNode&)
+void CheckASTVisitor::postVisit(UnaryNegationNode& node)
 {
+    const ExpressionNode* expr = node.negatedExpression();
+    if (!isNumericType(expr->type().basicType())) {
+        error("unary minus can only be applied to numeric types.", node.location());
+    }
+    if (expr->type().isArray()) {
+        error("unary minus cannot be applied to an Array.", node.location());
+    }
 }
 
 void CheckASTVisitor::visit(OnNode&)

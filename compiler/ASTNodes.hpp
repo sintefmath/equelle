@@ -420,6 +420,10 @@ public:
     {
         delete expr_to_negate_;
     }
+    const ExpressionNode* negatedExpression() const
+    {
+        return expr_to_negate_;
+    }
     EquelleType type() const
     {
         return expr_to_negate_->type();

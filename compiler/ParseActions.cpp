@@ -342,15 +342,6 @@ UnaryNegationNode* handleUnaryNegation(ExpressionNode* expr_to_negate)
     UnaryNegationNode* node = new UnaryNegationNode(expr_to_negate);
     node->setLocation(FileLocation(yylineno));
     return node;
-#if 0
-    if (!isNumericType(expr_to_negate->type().basicType())) {
-        yyerror("unary minus can only be applied to numeric types.");
-    }
-    if (expr_to_negate->type().isArray()) {
-        yyerror("unary minus cannot be applied to an Array.");
-    }
-    return new UnaryNegationNode(expr_to_negate);
-#endif
 }
 
 
