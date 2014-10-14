@@ -70,7 +70,7 @@ StringNode* handleString(const std::string& content);
 
 TypeNode* handleMutableType(TypeNode* type_expr);
 
-TypeNode* handleSequence(TypeNode* basic_type);
+TypeNode* handleSequenceType(TypeNode* basic_type);
 
 TypeNode* handleArrayType(const int array_size, TypeNode* type_expr);
 

@@ -63,6 +63,8 @@ public:
 
     CompositeType compositeType() const;
 
+    void setCompositeType(CompositeType ct);
+
     bool isCollection() const;
 
     bool isDomain() const;

@@ -181,9 +181,9 @@ expr: quantity            { $$ = $1; }
     ;
 
 type_expr: basic_type                                  { $$ = $1; }
-		 | collection_of                               { $$ = $1; }
-		 | STENCIL collection_of                       { $$ = handleStencilCollection($2); }
-         | SEQUENCE OF basic_type                      { $$ = handleSequence($3); }
+         | collection_of                               { $$ = $1; }
+         | STENCIL collection_of                       { $$ = handleStencilCollection($2); }
+         | SEQUENCE OF basic_type                      { $$ = handleSequenceType($3); }
          | ARRAY OF INT type_expr                      { $$ = handleArrayType(intFromString(*($3)), $4); delete $3; }
          | MUTABLE type_expr                           { $$ = handleMutableType($2); }
          ;

@@ -206,6 +206,106 @@ private:
 
 
 
+class ArrayTypeNode : public TypeNode
+{
+public:
+    ArrayTypeNode(TypeNode* btype, const int array_size)
+        : TypeNode(EquelleType()),
+          btype_(btype),
+          array_size_(array_size)
+    {
+    }
+    ~ArrayTypeNode()
+    {
+        delete btype_;
+    }
+    const TypeNode* baseType() const
+    {
+        return btype_;
+    }
+    EquelleType type() const
+    {
+        EquelleType bt = btype_->type();
+        bt.setArraySize(array_size_);
+        return bt;
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+    }
+
+private:
+    TypeNode* btype_;
+    int array_size_;
+};
+
+
+
+class SequenceTypeNode : public TypeNode
+{
+public:
+    explicit SequenceTypeNode(TypeNode* btype)
+        : TypeNode(EquelleType()),
+          btype_(btype)
+    {
+    }
+    ~SequenceTypeNode()
+    {
+        delete btype_;
+    }
+    const TypeNode* baseType() const
+    {
+        return btype_;
+    }
+    EquelleType type() const
+    {
+        EquelleType bt = btype_->type();
+        bt.setCompositeType(Sequence);
+        return bt;
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+    }
+
+private:
+    TypeNode* btype_;
+};
+
+
+
+class MutableTypeNode : public TypeNode
+{
+public:
+    explicit MutableTypeNode(TypeNode* btype)
+        : TypeNode(EquelleType()),
+          btype_(btype)
+    {
+    }
+    ~MutableTypeNode()
+    {
+        delete btype_;
+    }
+    const TypeNode* baseType() const
+    {
+        return btype_;
+    }
+    EquelleType type() const
+    {
+        EquelleType bt = btype_->type();
+        bt.setMutable(true);
+        return bt;
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+    }
+
+private:
+    TypeNode* btype_;
+};
+
+
 
 enum BinaryOp { Add, Subtract, Multiply, Divide };
 

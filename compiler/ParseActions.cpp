@@ -384,31 +384,45 @@ StringNode* handleString(const std::string& content)
 
 TypeNode* handleMutableType(TypeNode* type_expr)
 {
+    MutableTypeNode* tn = new MutableTypeNode(type_expr);
+    tn->setLocation(FileLocation(yylineno));
+    return tn;
+#if 0
     EquelleType et = type_expr->type();
     et.setMutable(true);
     TypeNode* tn = new TypeNode(et);
     tn->setLocation(type_expr->location());
     delete type_expr;
     return tn;
+#endif
 }
 
 
 
-TypeNode* handleSequence(TypeNode* basic_type)
+TypeNode* handleSequenceType(TypeNode* type_expr)
 {
-    const EquelleType et = basic_type->type();
+    SequenceTypeNode* tn = new SequenceTypeNode(type_expr);
+    tn->setLocation(FileLocation(yylineno));
+    return tn;
+#if 0
+    const EquelleType et = type_expr->type();
     if (!et.isBasic()) {
         yyerror("cannot create a Sequence of non-basic types.");
     }
     TypeNode* node = new TypeNode(EquelleType(et.basicType(), Sequence, et.gridMapping(), et.subsetOf()));
     node->setLocation(FileLocation(yylineno));
     return node;
+#endif
 }
 
 
 
 TypeNode* handleArrayType(const int array_size, TypeNode* type_expr)
 {
+    ArrayTypeNode* tn = new ArrayTypeNode(type_expr, array_size);
+    tn->setLocation(FileLocation(yylineno));
+    return tn;
+#if 0
     EquelleType et = type_expr->type();
     if (et.isArray()) {
         yyerror("cannot create an Array of an Array.");
@@ -420,6 +434,7 @@ TypeNode* handleArrayType(const int array_size, TypeNode* type_expr)
         delete type_expr;
         return tn;
     }
+#endif
 }
 
 

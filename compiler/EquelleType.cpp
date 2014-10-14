@@ -210,6 +210,11 @@ CompositeType EquelleType::compositeType() const
     return composite_;
 }
 
+void EquelleType::setCompositeType(CompositeType ct)
+{
+    composite_ = ct;
+}
+
 bool EquelleType::isCollection() const
 {
     return composite_ == Collection;
