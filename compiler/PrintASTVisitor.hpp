@@ -21,7 +21,9 @@ public:
     void visit(NumberNode& node);
     void visit(QuantityNode& node);
     void postVisit(QuantityNode& node);
-    void visit(UnitNode& node);
+    void visit(BasicUnitNode& node);
+    void visit(BinaryOpUnitNode& node);
+    void visit(PowerUnitNode& node);
     void visit(StringNode& node);
     void visit(TypeNode& node);
     void visit(FuncTypeNode& node);

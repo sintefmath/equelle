@@ -45,8 +45,11 @@ void CheckASTVisitor::postVisit(QuantityNode&)
 {
 }
 
-void CheckASTVisitor::visit(UnitNode&)
+void CheckASTVisitor::postVisit(BinaryOpUnitNode& node)
 {
+    if (node.op() != Multiply && node.op() != Divide) {
+        error("units can only be manipulated with '*', '/' or '^'.", node.location());
+    }
 }
 
 void CheckASTVisitor::visit(StringNode&)

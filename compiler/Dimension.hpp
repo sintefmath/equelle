@@ -6,6 +6,8 @@
 #define DIMENSION_HEADER_INCLUDED
 
 #include <array>
+#include <string>
+#include <iostream>
 
 enum BaseDimension {
     Length,
@@ -68,12 +70,12 @@ public:
         return result;
     }
 
-    bool operator== (const Dimension& other)
+    bool operator== (const Dimension& other) const
     {
         return dim_ == other.dim_;
     }
 
-    bool operator!= (const Dimension& other)
+    bool operator!= (const Dimension& other) const
     {
         return !(*this == other);
     }
@@ -81,5 +83,77 @@ public:
 private:
     std::array<int,7> dim_;
 };
+
+
+// Needed for visit(UnitNode&).
+inline std::string dimString(BaseDimension bd)
+{
+    // switch (bd) {
+    // case Length:
+    //     return "Length";
+    // case Time:
+    //     return "Time";
+    // case Mass:
+    //     return "Mass";
+    // case Temperature:
+    //     return "Temperature";
+    // case ElectricCurrent:
+    //     return "ElectricCurrent";
+    // case QuantityOfSubstance:
+    //     return "QuantityOfSubstance";
+    // case LuminousIntensity:
+    //     return "LuminousIntensity";
+    // default:
+    //     throw std::logic_error("Error in dimString() -- unknown enum value.");
+    // }
+    switch (bd) {
+    case Length:
+        return "Meter";
+    case Time:
+        return "Second";
+    case Mass:
+        return "Kilogram";
+    case Temperature:
+        return "Kelvin";
+    case ElectricCurrent:
+        return "Ampere";
+    case QuantityOfSubstance:
+        return "Mole";
+    case LuminousIntensity:
+        return "Candela";
+    default:
+        throw std::logic_error("Error in dimString() -- unknown enum value.");
+    }
+}
+
+// Needed for visit(UnitNode&).
+inline std::ostream& operator<<(std::ostream& os, const Dimension& dim)
+{
+    if (dim == Dimension()) {
+        return os;
+    }
+    int count = 0;
+    os << "[";
+    for (int i = 0; i < 7; ++i) {
+        BaseDimension bd = static_cast<BaseDimension>(i);
+        const int coef = dim.coefficient(bd);
+        if (coef == 1) {
+            if (count) {
+                os << " * ";
+            }
+            os << dimString(bd);
+            ++count;
+        } else if (coef != 0) {
+            if (count) {
+                os << " * ";
+            }
+            os << dimString(bd) << "^" << coef;
+            ++count;
+        }
+    }
+    os << "]";
+    return os;
+}
+
 
 #endif // DIMENSION_HEADER_INCLUDED

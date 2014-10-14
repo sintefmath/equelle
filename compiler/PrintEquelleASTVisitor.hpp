@@ -18,6 +18,8 @@ public:
     void midVisit(SequenceNode& node);
     void postVisit(SequenceNode& node);
     void visit(NumberNode& node);
+    void visit(QuantityNode& node);
+    void postVisit(QuantityNode& node);
     void visit(StringNode& node);
     void visit(TypeNode& node);
     void visit(CollectionTypeNode& node);

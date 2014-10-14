@@ -15,6 +15,7 @@
 
 #include <vector>
 #include <cassert>
+#include <cmath>
 
 
 
@@ -1405,10 +1406,26 @@ private:
     ExpressionNode* rhs_;
 };
 
+
+
 class UnitNode : public Node
 {
 public:
-    UnitNode(const std::string& name)
+    // Dimension
+    virtual Dimension dimension() const = 0;
+
+    // The number you must multiply a quantity given in the
+    // current unit with to obtain an SI quantity.
+    // For example for Inch, the factor ie 0.0254.
+    virtual double conversionFactorSI() const = 0;
+
+};
+
+
+class BasicUnitNode : public UnitNode
+{
+public:
+    BasicUnitNode(const std::string& name)
         : conv_factor_(-1e100)
     {
         UnitData ud = unitFromString(name);
@@ -1416,12 +1433,14 @@ public:
             dimension_ = ud.dimension;
             conv_factor_ = ud.conv_factor;
         } else {
-            yyerror("Unit name not recognised.");
+            std::string err = "Unit name not recognised: ";
+            err += name;
+            throw std::runtime_error(err.c_str());
         }
     }
 
-    UnitNode(const Dimension dimension_arg,
-             const double conversion_factor_SI)
+    BasicUnitNode(const Dimension dimension_arg,
+                  const double conversion_factor_SI)
         : dimension_(dimension_arg),
           conv_factor_(conversion_factor_SI)
     {
@@ -1432,28 +1451,128 @@ public:
         return dimension_;
     }
 
-    // The number you must multiply a quantity given in the
-    // current unit with to obtain an SI quantity.
-    // For example for Inch, the factor ie 0.0254.
     double conversionFactorSI() const
     {
         return conv_factor_;
-    }
-
-    EquelleType type() const
-    {
-        return EquelleType();
     }
 
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
     }
-
 private:
     Dimension dimension_;
     double conv_factor_;
 };
+
+
+
+class BinaryOpUnitNode : public UnitNode
+{
+public:
+    BinaryOpUnitNode(BinaryOp op, UnitNode* left, UnitNode* right)
+        : op_(op),
+          left_(left),
+          right_(right)
+    {
+    }
+
+    ~BinaryOpUnitNode()
+    {
+        delete left_;
+        delete right_;
+    }
+
+    BinaryOp op() const
+    {
+        return op_;
+    }
+
+    Dimension dimension() const
+    {
+        switch (op_) {
+        case Multiply:
+            return left_->dimension() + right_->dimension();
+        case Divide:
+            return left_->dimension() - right_->dimension();
+        default:
+            throw std::logic_error("Units can only be manipulated with '*', '/' or '^'.");
+        }
+    }
+
+    double conversionFactorSI() const
+    {
+        switch (op_) {
+        case Multiply:
+            return left_->conversionFactorSI() * right_->conversionFactorSI();
+        case Divide:
+            return left_->conversionFactorSI() / right_->conversionFactorSI();
+        default:
+            throw std::logic_error("Units can only be manipulated with '*', '/' or '^'.");
+        }
+    }
+
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        left_->accept(visitor);
+        visitor.midVisit(*this);
+        right_->accept(visitor);
+        visitor.postVisit(*this);
+    }
+
+private:
+    BinaryOp op_;
+    UnitNode* left_;
+    UnitNode* right_;
+};
+
+
+
+
+class PowerUnitNode : public UnitNode
+{
+public:
+    PowerUnitNode(UnitNode* unit, int power)
+        : unit_(unit),
+          power_(power)
+    {
+    }
+
+    ~PowerUnitNode()
+    {
+        delete unit_;
+    }
+
+    int power() const
+    {
+        return power_;
+    }
+
+    Dimension dimension() const
+    {
+        return unit_->dimension() * power_;
+    }
+
+    double conversionFactorSI() const
+    {
+        return std::pow(unit_->conversionFactorSI(), power_);
+    }
+
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        unit_->accept(visitor);
+        visitor.postVisit(*this);
+    }
+
+private:
+    UnitNode* unit_;
+    int power_;
+};
+
+
+
 
 class QuantityNode : public ExpressionNode
 {

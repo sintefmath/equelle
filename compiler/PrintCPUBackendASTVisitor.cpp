@@ -86,10 +86,6 @@ void PrintCPUBackendASTVisitor::postVisit(QuantityNode& node)
     }
 }
 
-void PrintCPUBackendASTVisitor::visit(UnitNode& node)
-{
-}
-
 void PrintCPUBackendASTVisitor::visit(StringNode& node)
 {
     std::cout << node.content();

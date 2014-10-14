@@ -23,7 +23,7 @@ public:
     void visit(NumberNode& node);
     void visit(QuantityNode& node);
     void postVisit(QuantityNode& node);
-    void visit(UnitNode& node);
+    void postVisit(BinaryOpUnitNode& node);
     void visit(StringNode& node);
     void visit(TypeNode& node);
     void visit(CollectionTypeNode& node);
