@@ -47,7 +47,7 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
     const Scalar watervisc = er.inputScalarWithDefault("watervisc", double(0.0005));
     const Scalar oilvisc = er.inputScalarWithDefault("oilvisc", double(0.005));
     const CollOfScalar pv = (poro * er.norm(er.allCells()));
-    auto computeTrans = [&](const auto& permeability) {
+    auto computeTrans = [&](const CollOfScalar& permeability) -> CollOfScalar {
         const CollOfFace interior_faces = er.interiorFaces();
         const CollOfCell first = er.firstCell(interior_faces);
         const CollOfCell second = er.secondCell(interior_faces);
@@ -62,30 +62,30 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
         return trans;
     };
     const CollOfScalar trans = computeTrans(perm);
-    auto upwind = [&](const auto& flux, const auto& x) {
+    auto upwind = [&](const CollOfScalar& flux, const CollOfScalar& x) -> CollOfScalar {
         const CollOfScalar x1 = er.operatorOn(x, er.allCells(), er.firstCell(er.interiorFaces()));
         const CollOfScalar x2 = er.operatorOn(x, er.allCells(), er.secondCell(er.interiorFaces()));
         return er.trinaryIf((flux >= double(0)), x1, x2);
     };
-    auto computeTotalFlux = [&](const auto& pressure, const auto& total_mob) {
+    auto computeTotalFlux = [&](const CollOfScalar& pressure, const CollOfScalar& total_mob) -> CollOfScalar {
         const CollOfScalar ngradp = -er.gradient(pressure);
         const CollOfScalar face_total_mobility = upwind(ngradp, total_mob);
         return ((trans * face_total_mobility) * ngradp);
     };
-    auto computePressureResidual = [&](const auto& pressure, const auto& total_mob, const auto& source) {
+    auto computePressureResidual = [&](const CollOfScalar& pressure, const CollOfScalar& total_mob, const CollOfScalar& source) -> CollOfScalar {
         const CollOfScalar flux = computeTotalFlux(pressure, total_mob);
         return (er.divergence(flux) - source);
     };
-    auto computeWaterMob = [&](const auto& sw) {
+    auto computeWaterMob = [&](const CollOfScalar& sw) -> CollOfScalar {
         const CollOfScalar krw = sw;
         return (krw / watervisc);
     };
-    auto computeOilMob = [&](const auto& sw) {
+    auto computeOilMob = [&](const CollOfScalar& sw) -> CollOfScalar {
         const CollOfScalar so = (er.operatorExtend(double(1), er.allCells()) - sw);
         const CollOfScalar kro = so;
         return (kro / oilvisc);
     };
-    auto computeTransportResidual = [&](const auto& sw, const auto& sw0, const auto& flux, const auto& source, const auto& insource_sw, const auto& dt) {
+    auto computeTransportResidual = [&](const CollOfScalar& sw, const CollOfScalar& sw0, const CollOfScalar& flux, const CollOfScalar& source, const CollOfScalar& insource_sw, const Scalar& dt) -> CollOfScalar {
         const CollOfScalar insource = er.trinaryIf((source > double(0)), source, er.operatorExtend(double(0), er.allCells()));
         const CollOfScalar outsource = er.trinaryIf((source < double(0)), source, er.operatorExtend(double(0), er.allCells()));
         const CollOfScalar mw = computeWaterMob(sw);
@@ -107,16 +107,16 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
     er.output("pressure", p0);
     er.output("saturation", sw0);
     for (const Scalar& dt : timesteps) {
-        auto pressureResLocal = [&](const auto& p, const auto& sw) {
+        auto pressureResLocal = [&](const CollOfScalar& p, const CollOfScalar& sw) -> CollOfScalar {
             const CollOfScalar total_mobility = (computeWaterMob(sw) + computeOilMob(sw));
             return computePressureResidual(p, total_mobility, source);
         };
-        auto transportResLocal = [&](const auto& p, const auto& sw) {
+        auto transportResLocal = [&](const CollOfScalar& p, const CollOfScalar& sw) -> CollOfScalar {
             const CollOfScalar total_mobility = (computeWaterMob(sw) + computeOilMob(sw));
             const CollOfScalar flux = computeTotalFlux(p, total_mobility);
             return computeTransportResidual(sw, sw0, flux, source, insource_sw, dt);
         };
-        const auto newvals = er.newtonSolveSystem(makeArray(pressureResLocal, transportResLocal), makeArray(p0, er.operatorExtend(double(0.5), er.allCells())));
+        const std::tuple<CollOfScalar, CollOfScalar> newvals = er.newtonSolveSystem(makeArray(pressureResLocal, transportResLocal), makeArray(p0, er.operatorExtend(double(0.5), er.allCells())));
         p0 = std::get<0>(newvals);
         sw0 = std::get<1>(newvals);
         er.output("pressure", p0);

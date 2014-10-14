@@ -52,7 +52,7 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
     const CollOfScalar pv = (poro * er.norm(er.allCells()));
     const CollOfScalar cell_depths = CollOfScalar(er.centroid(er.allCells()).col(1));
     const CollOfScalar zdiff = er.gradient(cell_depths);
-    auto computeTransmissibilities = [&](const auto& permeability) {
+    auto computeTransmissibilities = [&](const CollOfScalar& permeability) -> CollOfScalar {
         const CollOfFace interior_faces = er.interiorFaces();
         const CollOfCell first = er.firstCell(interior_faces);
         const CollOfCell second = er.secondCell(interior_faces);
@@ -67,20 +67,20 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
         return trans;
     };
     const CollOfScalar trans = computeTransmissibilities(perm);
-    auto upwind = [&](const auto& flux, const auto& x) {
+    auto upwind = [&](const CollOfScalar& flux, const CollOfScalar& x) -> CollOfScalar {
         const CollOfScalar x1 = er.operatorOn(x, er.allCells(), er.firstCell(er.interiorFaces()));
         const CollOfScalar x2 = er.operatorOn(x, er.allCells(), er.secondCell(er.interiorFaces()));
         return er.trinaryIf((flux >= double(0)), x1, x2);
     };
-    auto computeWaterMob = [&](const auto& sw) {
+    auto computeWaterMob = [&](const CollOfScalar& sw) -> CollOfScalar {
         const CollOfScalar krw = sw;
         return (krw / watervisc);
     };
-    auto computeOilMob = [&](const auto& sw) {
+    auto computeOilMob = [&](const CollOfScalar& sw) -> CollOfScalar {
         const CollOfScalar kro = (er.operatorExtend(double(1), er.allCells()) - sw);
         return (kro / oilvisc);
     };
-    auto fluxWithGrav = [&](const auto& pressure, const auto& sw) {
+    auto fluxWithGrav = [&](const CollOfScalar& pressure, const CollOfScalar& sw) -> CollOfScalar {
         const CollOfScalar ngradp = -er.gradient(pressure);
         er.output("ngradp", ngradp);
         const CollOfScalar flux_w = (ngradp + ((gravity * waterdensity) * zdiff));
@@ -95,12 +95,12 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
         const CollOfScalar omega = (((face_mob_w * waterdensity) + (face_mob_o * oildensity)) / face_total_mobility);
         return ((trans * face_total_mobility) * (ngradp + ((gravity * omega) * zdiff)));
     };
-    auto computePressureResidual = [&](const auto& pressure, const auto& sw, const auto& source) {
+    auto computePressureResidual = [&](const CollOfScalar& pressure, const CollOfScalar& sw, const CollOfScalar& source) -> CollOfScalar {
         const CollOfScalar flux = fluxWithGrav(pressure, sw);
         er.output("fluxinres", flux);
         return (er.divergence(flux) - source);
     };
-    auto computeTransportResidual = [&](const auto& sw, const auto& sw0, const auto& flux, const auto& source, const auto& insource_sw, const auto& dt) {
+    auto computeTransportResidual = [&](const CollOfScalar& sw, const CollOfScalar& sw0, const CollOfScalar& flux, const CollOfScalar& source, const CollOfScalar& insource_sw, const Scalar& dt) -> CollOfScalar {
         const CollOfScalar insource = er.trinaryIf((source > double(0)), source, er.operatorExtend(double(0), er.allCells()));
         const CollOfScalar outsource = er.trinaryIf((source < double(0)), source, er.operatorExtend(double(0), er.allCells()));
         const CollOfScalar mw = computeWaterMob(sw);
@@ -122,12 +122,12 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
     er.output("pressure", p0);
     er.output("saturation", sw0);
     for (const Scalar& dt : timesteps) {
-        auto pressureResLocal = [&](const auto& pressure) {
+        auto pressureResLocal = [&](const CollOfScalar& pressure) -> CollOfScalar {
             return computePressureResidual(pressure, sw0, source);
         };
         const CollOfScalar p = er.newtonSolve(pressureResLocal, p0);
         const CollOfScalar flux = fluxWithGrav(p, sw0);
-        auto transportResLocal = [&](const auto& sw) {
+        auto transportResLocal = [&](const CollOfScalar& sw) -> CollOfScalar {
             return computeTransportResidual(sw, sw0, flux, source, insource_sw, dt);
         };
         const CollOfScalar sw = er.newtonSolve(transportResLocal, er.operatorExtend(double(0.5), er.allCells()));

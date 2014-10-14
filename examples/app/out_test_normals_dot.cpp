@@ -45,11 +45,11 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
     const CollOfVector n = er.normal(er.allFaces());
     const CollOfScalar n2 = er.dot(n, n);
     const CollOfScalar n0 = CollOfScalar(n.col(0));
-    const auto narray = makeArray(n0, (n0 + n2));
+    const std::tuple<CollOfScalar, CollOfScalar> narray = makeArray(n0, (n0 + n2));
     er.output("squared normals", n2);
     er.output("first component", n0);
     er.output("their sum", std::get<1>(narray));
-    auto getsecond = [&](const auto& a) {
+    auto getsecond = [&](const std::tuple<CollOfScalar, CollOfScalar>& a) -> CollOfScalar {
         return std::get<1>(a);
     };
     er.output("second element of array", getsecond(narray));

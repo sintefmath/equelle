@@ -44,7 +44,7 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
 
     const Scalar a = double(5);
     const Scalar b = double(6);
-    auto foo = [&](const auto& x, const auto& y) {
+    auto foo = [&](const Scalar& x, const Scalar& y) -> Scalar {
         return ((a * x) + (b * y));
     };
     const SeqOfScalar seq = er.inputSequenceOfScalar("seq");
@@ -52,8 +52,8 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
         const Scalar r = ((a + double(3)) + elem);
         const SeqOfScalar seq2 = er.inputSequenceOfScalar("seq2");
         for (const Scalar& e2 : seq2) {
-            auto foo3 = [&](const auto& y) {
-                auto three = [&]() {
+            auto foo3 = [&](const Scalar& y) -> Scalar {
+                auto three = [&]() -> Scalar {
                     return double(3);
                 };
                 return foo(three(), y);

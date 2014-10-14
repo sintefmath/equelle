@@ -47,7 +47,7 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
     const CollOfCell first = er.firstCell(ifaces);
     const CollOfCell second = er.secondCell(ifaces);
     const CollOfScalar itrans = (k * (er.norm(ifaces) / er.norm((er.centroid(first) - er.centroid(second)))));
-    auto computeInteriorFlux = [&](const auto& u) {
+    auto computeInteriorFlux = [&](const CollOfScalar& u) -> CollOfScalar {
         return (-itrans * er.gradient(u));
     };
     const CollOfFace dirichlet_boundary = er.inputDomainSubsetOf("dirichlet_boundary", er.boundaryFaces());
@@ -59,13 +59,13 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
     const CollOfCell dir_cells = er.operatorOn(bf_cells, er.boundaryFaces(), dirichlet_boundary);
     const CollOfScalar dir_sign = er.operatorOn(bf_sign, er.boundaryFaces(), dirichlet_boundary);
     const CollOfScalar dir_trans = er.operatorOn(btrans, er.boundaryFaces(), dirichlet_boundary);
-    auto computeBoundaryFlux = [&](const auto& u) {
+    auto computeBoundaryFlux = [&](const CollOfScalar& u) -> CollOfScalar {
         const CollOfScalar u_dirbdycells = er.operatorOn(u, er.allCells(), dir_cells);
         const CollOfScalar dir_fluxes = ((dir_trans * dir_sign) * (u_dirbdycells - dirichlet_val));
         return er.operatorExtend(dir_fluxes, dirichlet_boundary, er.boundaryFaces());
     };
     const CollOfScalar vol = er.norm(er.allCells());
-    auto computeResidual = [&](const auto& u, const auto& u0, const auto& dt) {
+    auto computeResidual = [&](const CollOfScalar& u, const CollOfScalar& u0, const Scalar& dt) -> CollOfScalar {
         const CollOfScalar ifluxes = computeInteriorFlux(u);
         const CollOfScalar bfluxes = computeBoundaryFlux(u);
         const CollOfScalar fluxes = (er.operatorExtend(ifluxes, er.interiorFaces(), er.allFaces()) + er.operatorExtend(bfluxes, er.boundaryFaces(), er.allFaces()));
@@ -76,7 +76,7 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
     const SeqOfScalar timesteps = er.inputSequenceOfScalar("timesteps");
     CollOfScalar u0 = u_initial;
     for (const Scalar& dt : timesteps) {
-        auto computeResidualLocal = [&](const auto& u) {
+        auto computeResidualLocal = [&](const CollOfScalar& u) -> CollOfScalar {
             return computeResidual(u, u0, dt);
         };
         const CollOfScalar u_guess = u0;
