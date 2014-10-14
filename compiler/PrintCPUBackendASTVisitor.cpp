@@ -546,7 +546,18 @@ std::string PrintCPUBackendASTVisitor::cppTypeString(const EquelleType& et) cons
 {
     std::string cppstring;
     if (et.isArray()) {
-        return "auto";
+        cppstring += "std::tuple<";
+        EquelleType basic_et = et;
+        basic_et.setArraySize(NotAnArray);
+        std::string basiccppstring = cppTypeString(basic_et);
+        for (int elem = 0; elem < et.arraySize(); ++elem) {
+            cppstring += basiccppstring;
+            if (elem < et.arraySize() - 1) {
+                cppstring += ", ";
+            }
+        }
+        cppstring += ">";
+        return cppstring;
     }
     if (et.isStencil()) {
         cppstring += "Stencil";
