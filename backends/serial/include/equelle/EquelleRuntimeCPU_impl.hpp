@@ -334,7 +334,7 @@ std::tuple<Colls...> EquelleRuntimeCPU::newtonSolveSystem(const std::tuple<ResFu
     for (int i = 0; i < Num; ++i) {
         temp[i] = subset(combined_u, ranges[i]);
     }
-    return temp;
+    return std::tuple<Colls...>(temp[0], temp[1]);
 }
 
 
