@@ -42,24 +42,24 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
 
     // ============= Generated code starts here ================
 
-    const Scalar k = er.inputScalarWithDefault("k", double(0.3));
-    const Scalar dt = er.inputScalarWithDefault("dt", double(0.5));
-    const CollOfScalar u0 = er.inputCollectionOfScalar("u0", er.allCells());
-    const CollOfScalar vol = er.norm(er.allCells());
-    const CollOfFace interior_faces = er.interiorFaces();
-    const CollOfCell first = er.firstCell(interior_faces);
-    const CollOfCell second = er.secondCell(interior_faces);
-    const CollOfScalar itrans = (k * (er.norm(interior_faces) / er.norm((er.centroid(first) - er.centroid(second)))));
-    auto computeInteriorFlux = [&](const CollOfScalar& u) -> CollOfScalar {
+    const auto k = er.inputScalarWithDefault("k", double(0.3));
+    const auto dt = er.inputScalarWithDefault("dt", double(0.5));
+    const auto u0 = er.inputCollectionOfScalar("u0", er.allCells());
+    const auto vol = er.norm(er.allCells());
+    const auto interior_faces = er.interiorFaces();
+    const auto first = er.firstCell(interior_faces);
+    const auto second = er.secondCell(interior_faces);
+    const auto itrans = (k * (er.norm(interior_faces) / er.norm((er.centroid(first) - er.centroid(second)))));
+    auto computeInteriorFlux = [&](const auto& u) {
         return (-itrans * er.gradient(u));
     };
-    auto computeResidual = [&](const CollOfScalar& u) -> CollOfScalar {
-        const CollOfScalar ifluxes = computeInteriorFlux(u);
-        const CollOfScalar residual = ((u - u0) + ((dt / vol) * er.divergence(ifluxes)));
+    auto computeResidual = [&](const auto& u) {
+        const auto ifluxes = computeInteriorFlux(u);
+        const auto residual = ((u - u0) + ((dt / vol) * er.divergence(ifluxes)));
         return residual;
     };
-    const CollOfScalar explicitu = (u0 - computeResidual(u0));
-    const CollOfScalar u = er.newtonSolve(computeResidual, u0);
+    const auto explicitu = (u0 - computeResidual(u0));
+    const auto u = er.newtonSolve(computeResidual, u0);
     er.output("explicitu", explicitu);
     er.output("u", u);
 

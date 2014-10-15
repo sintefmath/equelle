@@ -42,23 +42,23 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
 
     // ============= Generated code starts here ================
 
-    const CollOfVector n = er.normal(er.allFaces());
-    const CollOfScalar n2 = er.dot(n, n);
-    const CollOfScalar n0 = CollOfScalar(n.col(0));
-    const std::tuple<CollOfScalar, CollOfScalar> narray = makeArray(n0, (n0 + n2));
+    const auto n = er.normal(er.allFaces());
+    const auto n2 = er.dot(n, n);
+    const auto n0 = CollOfScalar(n.col(0));
+    const auto narray = makeArray(n0, (n0 + n2));
     er.output("squared normals", n2);
     er.output("first component", n0);
     er.output("their sum", std::get<1>(narray));
-    auto getsecond = [&](const std::tuple<CollOfScalar, CollOfScalar>& a) -> CollOfScalar {
+    auto getsecond = [&](const auto& a) {
         return std::get<1>(a);
     };
     er.output("second element of array", getsecond(narray));
     er.output("second element of a different, inline array", getsecond(makeArray(n0, ((double(2) * n0) + n2))));
     er.output("second element of the same, inline array, direct access", std::get<1>(makeArray(n0, ((double(2) * n0) + n2))));
-    const CollOfVector q1 = (n * double(3));
-    const CollOfVector q2 = (double(3) * n);
-    const CollOfVector q3 = (n2 * n);
-    const CollOfVector q4 = (n * n2);
+    const auto q1 = (n * double(3));
+    const auto q2 = (double(3) * n);
+    const auto q3 = (n2 * n);
+    const auto q4 = (n * n2);
     er.output("should be zero", er.norm((((q1 - q2) + q3) - q4)));
     er.output("should be all 1.5", er.sqrt((double(2.25) * n2)));
 

@@ -42,14 +42,14 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
 
     // ============= Generated code starts here ================
 
-    const CollOfScalar a = CollOfScalar(er.centroid(er.allCells()).col(0));
-    const CollOfScalar b = CollOfScalar(er.centroid(er.allCells()).col(1));
+    const auto a = CollOfScalar(er.centroid(er.allCells()).col(0));
+    const auto b = CollOfScalar(er.centroid(er.allCells()).col(1));
     er.output("hmmm", er.trinaryIf((a > er.operatorExtend(double(0), er.allCells())), (a + b), er.operatorExtend(double(0), er.allCells())));
-    const CollOfScalar a1 = er.operatorOn((a + b), er.allCells(), er.interiorCells());
-    const CollOfScalar b1 = er.operatorOn(b, er.allCells(), er.interiorCells());
-    const CollOfScalar c = er.operatorExtend((a1 + b1), er.interiorCells(), er.allCells());
-    const std::tuple<CollOfScalar, CollOfScalar, CollOfScalar> array = makeArray((a1 + b1), (a1 - b1), a1);
-    const String qww = "This is a string with \"quoted escapes\" and others \n\n\n such as newlines";
+    const auto a1 = er.operatorOn((a + b), er.allCells(), er.interiorCells());
+    const auto b1 = er.operatorOn(b, er.allCells(), er.interiorCells());
+    const auto c = er.operatorExtend((a1 + b1), er.interiorCells(), er.allCells());
+    const auto array = makeArray((a1 + b1), (a1 - b1), a1);
+    const auto qww = "This is a string with \"quoted escapes\" and others \n\n\n such as newlines";
     er.output(qww, double(2));
 
     // ============= Generated code ends here ================

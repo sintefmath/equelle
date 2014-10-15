@@ -42,40 +42,40 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
 
     // ============= Generated code starts here ================
 
-    const Scalar rsp = double(287.058);
-    const Scalar temp = double(290);
-    const Scalar perm = double(9.8692e-13);
-    const Scalar mobility = double(52500);
-    const CollOfScalar q = er.inputCollectionOfScalar("source", er.allCells());
-    const SeqOfScalar timesteps = er.inputSequenceOfScalar("timesteps");
-    const CollOfScalar p_initial = er.operatorExtend(double(3000000), er.allCells());
-    const CollOfFace intf = er.interiorFaces();
-    const CollOfCell f = er.firstCell(intf);
-    const CollOfCell s = er.secondCell(intf);
-    const CollOfScalar area = er.norm(intf);
-    const CollOfScalar vol = er.norm(er.allCells());
-    const CollOfVector d1 = (er.centroid(f) - er.centroid(intf));
-    const CollOfVector d2 = (er.centroid(s) - er.centroid(intf));
-    const CollOfScalar h1 = ((-area * perm) * (er.dot(er.normal(intf), d1) / er.dot(d1, d1)));
-    const CollOfScalar h2 = ((area * perm) * (er.dot(er.normal(intf), d2) / er.dot(d2, d2)));
-    const CollOfScalar trans = (double(1) / ((double(1) / h1) + (double(1) / h2)));
-    auto density = [&](const CollOfScalar& p) -> CollOfScalar {
+    const auto rsp = double(287.058);
+    const auto temp = double(290);
+    const auto perm = double(9.8692e-13);
+    const auto mobility = double(52500);
+    const auto q = er.inputCollectionOfScalar("source", er.allCells());
+    const auto timesteps = er.inputSequenceOfScalar("timesteps");
+    const auto p_initial = er.operatorExtend(double(3000000), er.allCells());
+    const auto intf = er.interiorFaces();
+    const auto f = er.firstCell(intf);
+    const auto s = er.secondCell(intf);
+    const auto area = er.norm(intf);
+    const auto vol = er.norm(er.allCells());
+    const auto d1 = (er.centroid(f) - er.centroid(intf));
+    const auto d2 = (er.centroid(s) - er.centroid(intf));
+    const auto h1 = ((-area * perm) * (er.dot(er.normal(intf), d1) / er.dot(d1, d1)));
+    const auto h2 = ((area * perm) * (er.dot(er.normal(intf), d2) / er.dot(d2, d2)));
+    const auto trans = (double(1) / ((double(1) / h1) + (double(1) / h2)));
+    auto density = [&](const auto& p) {
         return (p / (rsp * temp));
     };
-    auto residual = [&](const CollOfScalar& p, const CollOfScalar& p0, const Scalar& dt) -> CollOfScalar {
-        const CollOfScalar v = ((mobility * trans) * (er.operatorOn(p, er.allCells(), f) - er.operatorOn(p, er.allCells(), s)));
-        const CollOfScalar rho = density(p);
-        const CollOfScalar rho0 = density(p0);
-        const CollOfScalar rho_face = ((er.operatorOn(rho, er.allCells(), f) + er.operatorOn(rho, er.allCells(), s)) / double(2));
-        const CollOfScalar res = ((((vol / dt) * (rho - rho0)) + er.divergence((v * rho_face))) - q);
+    auto residual = [&](const auto& p, const auto& p0, const auto& dt) {
+        const auto v = ((mobility * trans) * (er.operatorOn(p, er.allCells(), f) - er.operatorOn(p, er.allCells(), s)));
+        const auto rho = density(p);
+        const auto rho0 = density(p0);
+        const auto rho_face = ((er.operatorOn(rho, er.allCells(), f) + er.operatorOn(rho, er.allCells(), s)) / double(2));
+        const auto res = ((((vol / dt) * (rho - rho0)) + er.divergence((v * rho_face))) - q);
         return res;
     };
-    CollOfScalar p0 = p_initial;
+    auto p0 = p_initial;
     for (const Scalar& dt : timesteps) {
-        auto locRes = [&](const CollOfScalar& p) -> CollOfScalar {
+        auto locRes = [&](const auto& p) {
             return residual(p, p0, dt);
         };
-        const CollOfScalar p = er.newtonSolve(locRes, p0);
+        const auto p = er.newtonSolve(locRes, p0);
         er.output("pressure", p);
         p0 = p;
     }

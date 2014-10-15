@@ -42,8 +42,8 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
 
     // ============= Generated code starts here ================
 
-    Scalar a = double(8);
-    auto f = [&]() -> Scalar {
+    auto a = double(8);
+    auto f = [&]() {
         return (double(2) * a);
     };
     er.output("f before", f());
