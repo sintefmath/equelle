@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 
 # We need C++11 features.
 if(NOT MSVC)
-	set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra ${CMAKE_CXX_FLAGS}")
+	set( CMAKE_CXX_FLAGS "-std=c++1y -Wall -Wextra ${CMAKE_CXX_FLAGS}")
 endif()
 
 find_package( Equelle REQUIRED )

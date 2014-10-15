@@ -11,7 +11,7 @@
 
 
 CheckASTVisitor::CheckASTVisitor()
-    : checking_suppressed_(false),
+    : checking_suppression_level_(0),
       next_loop_index_(0)
 {
 }
@@ -178,6 +178,9 @@ void CheckASTVisitor::midVisit(ComparisonOpNode&)
 
 void CheckASTVisitor::postVisit(ComparisonOpNode& node)
 {
+    if (isCheckingSuppressed()) {
+        return;
+    }
     const ExpressionNode* left = node.left();
     const ExpressionNode* right = node.right();
     EquelleType lt = left->type();
@@ -209,6 +212,9 @@ void CheckASTVisitor::visit(NormNode&)
 
 void CheckASTVisitor::postVisit(NormNode& node)
 {
+    if (isCheckingSuppressed()) {
+        return;
+    }
     const ExpressionNode* expr = node.normedExpression();
     if (expr->type().isArray()) {
         error("cannot take norm of an Array.", node.location());
@@ -227,6 +233,9 @@ void CheckASTVisitor::visit(UnaryNegationNode&)
 
 void CheckASTVisitor::postVisit(UnaryNegationNode& node)
 {
+    if (isCheckingSuppressed()) {
+        return;
+    }
     const ExpressionNode* expr = node.negatedExpression();
     if (!isNumericType(expr->type().basicType())) {
         error("unary minus can only be applied to numeric types.", node.location());
@@ -247,6 +256,9 @@ void CheckASTVisitor::midVisit(OnNode&)
 
 void CheckASTVisitor::postVisit(OnNode& node)
 {
+    if (isCheckingSuppressed()) {
+        return;
+    }
     const EquelleType lt = node.leftType();
     const EquelleType rt = node.rightType();
     // No side can be an array.
@@ -345,6 +357,9 @@ void CheckASTVisitor::colonVisit(TrinaryIfNode&)
 
 void CheckASTVisitor::postVisit(TrinaryIfNode& node)
 {
+    if (isCheckingSuppressed()) {
+        return;
+    }
     const EquelleType pt = node.predicate()->type();
     const EquelleType tt = node.ifTrue()->type();
     const EquelleType ft = node.ifFalse()->type();
@@ -381,9 +396,6 @@ void CheckASTVisitor::visit(VarDeclNode&)
 
 void CheckASTVisitor::postVisit(VarDeclNode& node)
 {
-    if (isCheckingSuppressed()) {
-        return;
-    }
     if (SymbolTable::isVariableDeclared(node.name())
         || SymbolTable::isFunctionDeclared(node.name())) {
         std::string err = "cannot redeclare ";
@@ -391,7 +403,11 @@ void CheckASTVisitor::postVisit(VarDeclNode& node)
         err += ": already declared.";
         error(err, node.location());
     }
-    SymbolTable::declareVariable(node.name(), node.type());
+    if (isCheckingSuppressed()) {
+        SymbolTable::declareVariable(node.name(), EquelleType());
+    } else {
+        SymbolTable::declareVariable(node.name(), node.type());
+    }
 }
 
 void CheckASTVisitor::visit(VarAssignNode&)
@@ -400,9 +416,6 @@ void CheckASTVisitor::visit(VarAssignNode&)
 
 void CheckASTVisitor::postVisit(VarAssignNode& node)
 {
-    if (isCheckingSuppressed()) {
-        return;
-    }
     const std::string& name = node.name();
     const ExpressionNode* expr = node.rhs();
 
@@ -414,6 +427,18 @@ void CheckASTVisitor::postVisit(VarAssignNode& node)
         error(err_msg, node.location());
         return;
     }
+
+    // The remainder of the checks depend on the type,
+    // but we do have to declare the variable if not
+    // already declared.
+    if (isCheckingSuppressed()) {
+        if (!SymbolTable::isVariableDeclared(name)) {
+            SymbolTable::declareVariable(name, EquelleType());
+            SymbolTable::setVariableAssigned(name, true);
+        }
+        return;
+    }
+
     // If already declared...
     if (SymbolTable::isVariableDeclared(name)) {
         // Check if already assigned.
@@ -526,14 +551,36 @@ void CheckASTVisitor::postVisit(FuncStartNode&)
 
 void CheckASTVisitor::visit(FuncAssignNode& node)
 {
-    SymbolTable::setCurrentFunction(node.name());
-    // suppressChecking(); // necessary for template approach?
+    const bool func_declared = SymbolTable::isFunctionDeclared(node.name());
+    if (!func_declared) {
+        // Get the function argument names (types will be Invalid).
+        std::vector<Variable> args;
+        auto argnodes = node.args()->arguments();
+        args.reserve(argnodes.size());
+        for (ExpressionNode* argnode : argnodes) {
+            const VarNode& arg = dynamic_cast<const VarNode&>(*argnode);
+            args.push_back(arg.name());
+        }
+        FunctionType ft(args, EquelleType());
+        // Declare and set type.
+        SymbolTable::declareFunction(node.name());
+        SymbolTable::setCurrentFunction(node.name());
+        SymbolTable::retypeCurrentFunction(ft);
+        // Suppression handling.
+        undecl_func_stack.push(node.name());
+        suppressChecking();
+    } else {
+        SymbolTable::setCurrentFunction(node.name());
+    }
 }
 
-void CheckASTVisitor::postVisit(FuncAssignNode&)
+void CheckASTVisitor::postVisit(FuncAssignNode& node)
 {
     SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
-    // unsuppressChecking(); // necessary for template approach?
+    if (undecl_func_stack.top() == node.name()) {
+        undecl_func_stack.pop();
+        unsuppressChecking();
+    }
 }
 
 void CheckASTVisitor::visit(FuncArgsNode&)
@@ -611,16 +658,18 @@ void CheckASTVisitor::visit(LoopNode& node)
     const std::string& loop_set = node.loopSet();
     EquelleType loop_set_type;
     if (SymbolTable::isVariableDeclared(loop_set)) {
-        loop_set_type = SymbolTable::variableType(loop_set);
-        if (!loop_set_type.isSequence()) {
-            std::string err_msg = "loop set must be a Sequence: ";
-            err_msg += loop_set;
-            error(err_msg, node.location());
-        }
-        if (loop_set_type.isArray()) {
-            std::string err_msg = "loop set cannot be an Array: ";
-            err_msg += loop_set;
-            error(err_msg, node.location());
+        if (!isCheckingSuppressed()) {
+            loop_set_type = SymbolTable::variableType(loop_set);
+            if (!loop_set_type.isSequence()) {
+                std::string err_msg = "loop set must be a Sequence: ";
+                err_msg += loop_set;
+                error(err_msg, node.location());
+            }
+            if (loop_set_type.isArray()) {
+                std::string err_msg = "loop set cannot be an Array: ";
+                err_msg += loop_set;
+                error(err_msg, node.location());
+            }
         }
     } else {
         std::string err_msg = "unknown variable used for loop set: ";
@@ -659,15 +708,17 @@ void CheckASTVisitor::postVisit(ArrayNode& node)
         error("cannot create an empty array.", node.location());
         return;
     } else {
-        const EquelleType et = elems[0]->type();
-        if (et.isArray()) {
-            error("an Array cannot contain another Array.", node.location());
-            return;
-        }
-        for (const auto& elem : elems) {
-            if (elem->type() != et) {
-                error("elements of an Array must all have the same type", node.location());
+        if (!isCheckingSuppressed()) {
+            const EquelleType et = elems[0]->type();
+            if (et.isArray()) {
+                error("an Array cannot contain another Array.", node.location());
                 return;
+            }
+            for (const auto& elem : elems) {
+                if (elem->type() != et) {
+                    error("elements of an Array must all have the same type", node.location());
+                    return;
+                }
             }
         }
     }
@@ -679,6 +730,10 @@ void CheckASTVisitor::visit(RandomAccessNode&)
 
 void CheckASTVisitor::postVisit(RandomAccessNode& node)
 {
+    if (isCheckingSuppressed()) {
+        return;
+    }
+
     const ExpressionNode* expr = node.expressionToAccess();
     const int index = node.index();
     if (expr->type().isArray()) {
@@ -730,15 +785,15 @@ void CheckASTVisitor::error(const std::string& err, const FileLocation loc)
 
 void CheckASTVisitor::suppressChecking()
 {
-    checking_suppressed_ = true;
+    ++checking_suppression_level_;
 }
 
 void CheckASTVisitor::unsuppressChecking()
 {
-    checking_suppressed_ = false;
+    --checking_suppression_level_;
 }
 
 bool CheckASTVisitor::isCheckingSuppressed() const
 {
-    return checking_suppressed_;
+    return checking_suppression_level_ > 0;
 }

@@ -9,6 +9,7 @@
 #include "ASTVisitorInterface.hpp"
 #include "FileLocation.hpp"
 #include <string>
+#include <stack>
 
 
 class CheckASTVisitor : public ASTVisitorInterface
@@ -84,9 +85,16 @@ public:
     void postVisit(StencilNode& node);
 
 private:
-    bool checking_suppressed_;
+    int checking_suppression_level_;
     int next_loop_index_;
+    std::stack<std::string> undecl_func_stack;
+
     void error(const std::string& err, const FileLocation loc = FileLocation());
+    // Note that the suppression works like a stack:
+    // each suppress call increases the supression level
+    // and each unsuppress call decreases it, so checking may
+    // not be unsuppressed by as single unsupress call, if more
+    // than one suppress call preceded it.
     void suppressChecking();
     void unsuppressChecking();
     bool isCheckingSuppressed() const;

@@ -1065,6 +1065,10 @@ public:
     {
         return funcstart_->name();
     }
+    const FuncArgsNode* args() const
+    {
+        return funcstart_->args();
+    }
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);

@@ -52,8 +52,9 @@ public:
                 const int array_size = NotAnArray,
                 const bool is_stencil = false);
 
-    bool isBasic() const;
+    bool isInvalid() const;
 
+    bool isBasic() const;
 
     bool isEntityCollection() const;
 
