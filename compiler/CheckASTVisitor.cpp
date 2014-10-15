@@ -577,7 +577,7 @@ void CheckASTVisitor::visit(FuncAssignNode& node)
 void CheckASTVisitor::postVisit(FuncAssignNode& node)
 {
     SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
-    if (undecl_func_stack.top() == node.name()) {
+    if (!undecl_func_stack.empty() && undecl_func_stack.top() == node.name()) {
         undecl_func_stack.pop();
         unsuppressChecking();
     }
