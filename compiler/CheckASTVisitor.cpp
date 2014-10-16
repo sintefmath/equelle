@@ -432,10 +432,10 @@ void CheckASTVisitor::postVisit(VarAssignNode& node)
     // but we do have to declare the variable if not
     // already declared.
     if (isCheckingSuppressed()) {
-        if (!SymbolTable::isVariableDeclared(name)) {
-            SymbolTable::declareVariable(name, EquelleType());
-            SymbolTable::setVariableAssigned(name, true);
-        }
+        // if (!SymbolTable::isVariableDeclared(name)) {
+        //     SymbolTable::declareVariable(name, EquelleType());
+        //     SymbolTable::setVariableAssigned(name, true);
+        // }
         return;
     }
 
@@ -553,6 +553,7 @@ void CheckASTVisitor::visit(FuncAssignNode& node)
 {
     const bool func_declared = SymbolTable::isFunctionDeclared(node.name());
     if (!func_declared) {
+        functemplates_[node.name()] = &node;
         // Get the function argument names (types will be Invalid).
         std::vector<Variable> args;
         auto argnodes = node.args()->arguments();
@@ -596,8 +597,12 @@ void CheckASTVisitor::visit(ReturnStatementNode&)
 {
 }
 
-void CheckASTVisitor::postVisit(ReturnStatementNode&)
+void CheckASTVisitor::postVisit(ReturnStatementNode& node)
 {
+    if (isCheckingSuppressed()) {
+        return;
+    }
+    instantiation_return_type_ = node.type();
 }
 
 void CheckASTVisitor::visit(FuncCallNode&)
@@ -627,6 +632,41 @@ void CheckASTVisitor::postVisit(FuncCallNode& node)
                 << " but got " << SymbolTable::equelleString(argtypes[arg]);
             error(err.str(), node.location());
         }
+    }
+    // Special treatment for function templates.
+    if (f.isTemplate()) {
+        // All the arguments types will be defaulted, so checking in
+        // this method is going to succeed automatically (if the
+        // correct number of arguments are given). However, we should
+        // at this point check that the instantiation makes sense.
+        const FunctionType original_ftype = f.functionType();
+        const std::string original_scope = SymbolTable::getCurrentFunction().name();
+        // Create the function type (except for the return type
+        // to be used for the instantiation.
+        const auto& args = node.args()->arguments();
+        std::vector<Variable> fargs = f.functionType().arguments();
+        assert(args.size() == fargs.size());
+        const int num_args = fargs.size();
+        for (int arg = 0; arg < num_args; ++arg) {
+            fargs[arg].setType(args[arg]->type());
+            fargs[arg].setAssigned(true);
+        }
+        FunctionType ft(fargs, EquelleType());
+        // Change scope, and verify instantiation by visiting the FuncAssignNode.
+        SymbolTable::setCurrentFunction(f.name());
+        SymbolTable::retypeCurrentFunction(ft);
+        FuncAssignNode* fanode = functemplates_[node.name()];
+        instantiation_location_stack_.push_back(node.location());
+        fanode->accept(*this);
+        instantiation_location_stack_.pop_back();
+        // Restore function template to its non-instantiated state.
+        SymbolTable::setCurrentFunction(f.name());
+        SymbolTable::retypeCurrentFunction(original_ftype);
+        SymbolTable::clearLocalVariablesOfCurrentFunction();
+        SymbolTable::setCurrentFunction(original_scope);
+        // Set the return type for this node. The member instantiation_return_type_
+        // is set in postVisit(ReturnStatementNode&).
+        node.setReturnType(instantiation_return_type_);
     }
     // If the function returns a new dynamically created domain,
     // we must declare it (anonymously for now).
@@ -769,14 +809,30 @@ void CheckASTVisitor::postVisit(StencilNode&)
 {
 }
 
+namespace {
+    std::ostream& operator<<(std::ostream& os, const FileLocation& loc)
+    {
+        const int fl = loc.firstLine();
+        const int ll = loc.lastLine();
+        if (fl == ll) {
+            os << "line " << fl;
+        } else {
+            os << "lines " << fl << '-' << ll;
+        }
+        return os;
+    }
+}
+
+
 void CheckASTVisitor::error(const std::string& err, const FileLocation loc)
 {
-    const int fl = loc.firstLine();
-    const int ll = loc.lastLine();
-    if (fl == ll) {
-        std::cerr << "Parser error near line " << fl << ": " << err << std::endl;
-    } else {
-        std::cerr << "Parser error near lines " << fl << '-' << ll << ": " << err << std::endl;
+    std::cerr << "Compile error near " << loc << ": " << err << std::endl;
+    if (!instantiation_location_stack_.empty()) {
+        auto rbeg = instantiation_location_stack_.rbegin();
+        auto rend = instantiation_location_stack_.rend();
+        for (auto it = rbeg; it != rend; ++it) {
+            std::cerr << "    ---> instantiated from " << *it << std::endl;
+        }
     }
 }
 

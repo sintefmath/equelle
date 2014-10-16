@@ -155,6 +155,8 @@ public:
 
     void setVariableDimension(const std::string& name, const Dimension& type);
 
+    void clearLocalVariables();
+
     const std::string& name() const;
 
     void setName(const std::string& name);
@@ -229,6 +231,8 @@ public:
     static void renameCurrentFunction(const std::string& name);
 
     static void retypeCurrentFunction(const FunctionType& ftype);
+
+    static void clearLocalVariablesOfCurrentFunction();
 
     /// Returns true if set1 is a (non-strict) subset of set2.
     static bool isSubset(const int set1, const int set2);

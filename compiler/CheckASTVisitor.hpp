@@ -8,8 +8,11 @@
 
 #include "ASTVisitorInterface.hpp"
 #include "FileLocation.hpp"
+#include "EquelleType.hpp"
 #include <string>
 #include <stack>
+#include <map>
+#include <vector>
 
 
 class CheckASTVisitor : public ASTVisitorInterface
@@ -88,6 +91,9 @@ private:
     int checking_suppression_level_;
     int next_loop_index_;
     std::stack<std::string> undecl_func_stack;
+    std::map<std::string, FuncAssignNode*> functemplates_;
+    EquelleType instantiation_return_type_;
+    std::vector<FileLocation> instantiation_location_stack_;
 
     void error(const std::string& err, const FileLocation loc = FileLocation());
     // Note that the suppression works like a stack:

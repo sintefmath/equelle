@@ -1154,8 +1154,16 @@ public:
         dsr_ = dynamic_subset_return;
     }
 
+    void setReturnType(const EquelleType& return_type)
+    {
+        return_type_ = return_type;
+    }
+
     EquelleType type() const
     {
+        if (!return_type_.isInvalid()) {
+            return return_type_;
+        }
         EquelleType t = SymbolTable::getFunction(funcname_).returnType(funcargs_->argumentTypes());
         if (dsr_ != NotApplicable) {
             assert(t.isEntityCollection());
@@ -1197,6 +1205,8 @@ private:
     std::string funcname_;
     FuncArgsNode* funcargs_;
     int dsr_;
+    // return_type_ is only set for template instantiation type calls.
+    EquelleType return_type_;
 };
 
 

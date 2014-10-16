@@ -350,6 +350,11 @@ void Function::setVariableDimension(const std::string& name, const Dimension& di
     }
 }
 
+void Function::clearLocalVariables()
+{
+    local_variables_.clear();
+}
+
 const std::string& Function::name() const
 {
     return name_;
@@ -526,6 +531,11 @@ void SymbolTable::renameCurrentFunction(const std::string& name)
 void SymbolTable::retypeCurrentFunction(const FunctionType& ftype)
 {
     instance().current_function_->setFunctionType(ftype);
+}
+
+void SymbolTable::clearLocalVariablesOfCurrentFunction()
+{
+    instance().current_function_->clearLocalVariables();
 }
 
 /// Returns true if set1 is a (non-strict) subset of set2.
