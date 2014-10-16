@@ -90,6 +90,7 @@ private:
     std::set<std::string> requirement_strings_;
     std::set<std::string> defined_mutables_;
     bool instantiating_;
+    int next_funcstart_inst_;
 
     void endl() const;
     std::string indent() const;

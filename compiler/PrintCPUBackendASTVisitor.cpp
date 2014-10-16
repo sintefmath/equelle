@@ -21,7 +21,8 @@ PrintCPUBackendASTVisitor::PrintCPUBackendASTVisitor()
     : suppressed_(false),
       indent_(1),
       sequence_depth_(0),
-      instantiating_(false)
+      instantiating_(false),
+      next_funcstart_inst_(-1)
 {
 }
 
@@ -266,7 +267,7 @@ void PrintCPUBackendASTVisitor::visit(VarAssignNode& node)
         std::cout << "// Note: ";
     }
     if (!SymbolTable::variableType(node.name()).isMutable()) {
-#if 0
+#if 1
         std::cout << "const auto ";
 #else
         std::cout << "const " << cppTypeString(node.type()) << " ";
@@ -329,9 +330,13 @@ void PrintCPUBackendASTVisitor::visit(FuncStartNode& node)
 {
     const FunctionType& ft = SymbolTable::getFunction(node.name()).functionType();
     const size_t n = ft.arguments().size();
-    std::cout << indent() << "auto " << node.name() << " = [&](";
+    std::cout << indent() << "auto " << node.name();
+    if (next_funcstart_inst_ != -1) {
+        std::cout << "_i" << next_funcstart_inst_ << "_";
+    }
+    std::cout << " = [&](";
     for (int i = 0; i < n; ++i) {
-#if 0
+#if 1
         std::cout << "const auto& " << ft.arguments()[i].name();
 #else
         std::cout << "const "
@@ -348,6 +353,7 @@ void PrintCPUBackendASTVisitor::visit(FuncStartNode& node)
 
 void PrintCPUBackendASTVisitor::postVisit(FuncStartNode& node)
 {
+    next_funcstart_inst_ = -1;
     unsuppress();
 #if 1
     std::cout << ") {";
@@ -374,11 +380,13 @@ void PrintCPUBackendASTVisitor::visit(FuncAssignNode& node)
         // visitor flow.
         for (int inst = 0; inst < num_inst - 1; ++inst) {
             f = SymbolTable::getFunctionInstantiation(insta[inst]);
+            next_funcstart_inst_ = insta[inst];
             SymbolTable::setCurrentFunction(node.name());
             node.accept(*this);
         }
         instantiating_ = false;
         f = SymbolTable::getFunctionInstantiation(insta.back());
+        next_funcstart_inst_ = insta.back();
     }
     SymbolTable::setCurrentFunction(node.name());
 }
@@ -445,6 +453,11 @@ void PrintCPUBackendASTVisitor::visit(FuncCallNode& node)
             cppname += char(std::tolower(first)) + fname.substr(1);
         } else {
             cppname += fname;
+        }
+        if (node.instantiationIndex() >= 0) {
+            cppname += "_i";
+            cppname += std::to_string(node.instantiationIndex());
+            cppname += "_";
         }
         std::cout << cppname << '(';
     }
