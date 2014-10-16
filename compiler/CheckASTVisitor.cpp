@@ -563,15 +563,12 @@ void CheckASTVisitor::visit(FuncAssignNode& node)
         }
         FunctionType ft(args, EquelleType());
         // Declare and set type.
-        SymbolTable::declareFunction(node.name());
-        SymbolTable::setCurrentFunction(node.name());
-        SymbolTable::retypeCurrentFunction(ft);
+        SymbolTable::declareFunction(node.name(), ft, true);
         // Suppression handling.
         undecl_func_stack.push(node.name());
         suppressChecking();
-    } else {
-        SymbolTable::setCurrentFunction(node.name());
     }
+    SymbolTable::setCurrentFunction(node.name());
 }
 
 void CheckASTVisitor::postVisit(FuncAssignNode& node)
