@@ -20,7 +20,8 @@ namespace
 PrintCPUBackendASTVisitor::PrintCPUBackendASTVisitor()
     : suppressed_(false),
       indent_(1),
-      sequence_depth_(0)
+      sequence_depth_(0),
+      instantiating_(false)
 {
 }
 
@@ -265,7 +266,11 @@ void PrintCPUBackendASTVisitor::visit(VarAssignNode& node)
         std::cout << "// Note: ";
     }
     if (!SymbolTable::variableType(node.name()).isMutable()) {
+#if 0
         std::cout << "const auto ";
+#else
+        std::cout << "const " << cppTypeString(node.type()) << " ";
+#endif
     } else if (defined_mutables_.count(node.name()) == 0) {
         std::cout << "auto ";
         defined_mutables_.insert(node.name());
@@ -326,7 +331,7 @@ void PrintCPUBackendASTVisitor::visit(FuncStartNode& node)
     const size_t n = ft.arguments().size();
     std::cout << indent() << "auto " << node.name() << " = [&](";
     for (int i = 0; i < n; ++i) {
-#if 1
+#if 0
         std::cout << "const auto& " << ft.arguments()[i].name();
 #else
         std::cout << "const "
@@ -355,10 +360,30 @@ void PrintCPUBackendASTVisitor::postVisit(FuncStartNode& node)
 
 void PrintCPUBackendASTVisitor::visit(FuncAssignNode& node)
 {
+    if (instantiating_) {
+        return;
+    }
+    Function& f = SymbolTable::getMutableFunction(node.name());
+    const auto insta = f.instantiations();
+    const int num_inst = insta.size();
+    if (num_inst > 0) {
+        assert(f.isTemplate());
+        instantiating_ = true;
+        // All but the last instantiation are done through
+        // accept() below, the last one follows the regular
+        // visitor flow.
+        for (int inst = 0; inst < num_inst - 1; ++inst) {
+            f = SymbolTable::getFunctionInstantiation(insta[inst]);
+            SymbolTable::setCurrentFunction(node.name());
+            node.accept(*this);
+        }
+        instantiating_ = false;
+        f = SymbolTable::getFunctionInstantiation(insta.back());
+    }
     SymbolTable::setCurrentFunction(node.name());
 }
 
-void PrintCPUBackendASTVisitor::postVisit(FuncAssignNode&)
+void PrintCPUBackendASTVisitor::postVisit(FuncAssignNode& node)
 {
     --indent_;
     std::cout << indent() << "};";

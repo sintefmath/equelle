@@ -1140,8 +1140,10 @@ public:
     FuncCallNode(const std::string& funcname,
                  FuncArgsNode* funcargs,
                  const int dynamic_subset_return = NotApplicable)
-        : funcname_(funcname), funcargs_(funcargs),
-          dsr_(dynamic_subset_return)
+        : funcname_(funcname),
+          funcargs_(funcargs),
+          dsr_(dynamic_subset_return),
+          instantiation_index_(-999)
     {}
 
     virtual ~FuncCallNode()
@@ -1157,6 +1159,16 @@ public:
     void setReturnType(const EquelleType& return_type)
     {
         return_type_ = return_type;
+    }
+
+    void setInstantiationIndex(const int instantiation_index)
+    {
+        instantiation_index_ = instantiation_index;
+    }
+
+    int instantiationIndex() const
+    {
+        return instantiation_index_;
     }
 
     EquelleType type() const
@@ -1207,6 +1219,7 @@ private:
     int dsr_;
     // return_type_ is only set for template instantiation type calls.
     EquelleType return_type_;
+    int instantiation_index_;
 };
 
 

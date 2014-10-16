@@ -175,9 +175,9 @@ public:
 
     bool isTemplate() const;
 
-    const std::vector<FunctionType>& instantiations() const;
+    void addInstantiation(const int index);
 
-    void addInstantiation(const FunctionType& ft);
+    const std::vector<int> instantiations() const;
 
     const std::string& parentScope() const;
 
@@ -192,7 +192,7 @@ private:
     std::set<Variable> local_variables_;
     FunctionType type_;
     bool is_template_;
-    std::vector<FunctionType> instantiations_;
+    std::vector<int> instantiation_indices_;
     Function* parent_scope_;
 };
 
@@ -207,6 +207,10 @@ public:
     static void declareFunction(const std::string& name);
 
     static void declareFunction(const std::string& name, const FunctionType& ftype, const bool is_template = false);
+
+    static int addFunctionInstantiation(const Function& func);
+
+    static const Function& getFunctionInstantiation(const int index);
 
     static int declareNewEntitySet(const std::string& name, const int subset_entity_index);
 
@@ -291,6 +295,7 @@ private:
     int next_entityset_index_;
     std::vector<EntitySet> entitysets_;
     std::list<Function> functions_;
+    std::vector<Function> function_instantiations_;
     std::list<Function>::iterator main_function_;
     std::list<Function>::iterator current_function_;
     Node* ast_root_;

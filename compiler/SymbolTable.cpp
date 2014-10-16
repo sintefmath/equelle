@@ -400,14 +400,14 @@ bool Function::isTemplate() const
     return is_template_;
 }
 
-const std::vector<FunctionType>& Function::instantiations() const
+void Function::addInstantiation(const int index)
 {
-    return instantiations_;
+    instantiation_indices_.push_back(index);
 }
 
-void Function::addInstantiation(const FunctionType& ft)
+const std::vector<int> Function::instantiations() const
 {
-    instantiations_.push_back(ft);
+    return instantiation_indices_;
 }
 
 void Function::setParentScope(Function* parent_scope)
@@ -469,6 +469,19 @@ void SymbolTable::declareFunction(const std::string& name)
 void SymbolTable::declareFunction(const std::string& name, const FunctionType& ftype, const bool is_template)
 {
     instance().declareFunctionImpl(name, ftype, is_template);
+}
+
+int SymbolTable::addFunctionInstantiation(const Function& func)
+{
+    int index = instance().function_instantiations_.size();
+    instance().function_instantiations_.push_back(func);
+    getMutableFunction(func.name()).addInstantiation(index);
+    return index;
+}
+
+const Function& SymbolTable::getFunctionInstantiation(const int index)
+{
+    return instance().function_instantiations_[index];
 }
 
 int SymbolTable::declareNewEntitySet(const std::string& name, const int subset_entity_index)

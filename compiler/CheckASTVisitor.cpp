@@ -660,6 +660,9 @@ void CheckASTVisitor::postVisit(FuncCallNode& node)
         instantiation_location_stack_.push_back(node.location());
         fanode->accept(*this);
         instantiation_location_stack_.pop_back();
+        // Store instantiated function state.
+        const int instantiation_index = SymbolTable::addFunctionInstantiation(SymbolTable::getFunction(f.name()));
+        node.setInstantiationIndex(instantiation_index);
         // Restore function template to its non-instantiated state.
         SymbolTable::setCurrentFunction(f.name());
         SymbolTable::retypeCurrentFunction(original_ftype);

@@ -89,6 +89,8 @@ private:
     int sequence_depth_;
     std::set<std::string> requirement_strings_;
     std::set<std::string> defined_mutables_;
+    bool instantiating_;
+
     void endl() const;
     std::string indent() const;
     void suppress();
