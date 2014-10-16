@@ -165,6 +165,14 @@ public:
 
     EquelleType returnType(const std::vector<EquelleType>& argtypes) const;
 
+    void setTemplate(const bool is_template);
+
+    bool isTemplate() const;
+
+    const std::vector<FunctionType>& instantiations() const;
+
+    void addInstantiation(const FunctionType& ft);
+
     const std::string& parentScope() const;
 
     void setParentScope(Function* parent_scope);
@@ -177,6 +185,8 @@ private:
     std::string name_;
     std::set<Variable> local_variables_;
     FunctionType type_;
+    bool is_template_;
+    std::vector<FunctionType> instantiations_;
     Function* parent_scope_;
 };
 
@@ -190,7 +200,7 @@ public:
 
     static void declareFunction(const std::string& name);
 
-    static void declareFunction(const std::string& name, const FunctionType& ftype);
+    static void declareFunction(const std::string& name, const FunctionType& ftype, const bool is_template = false);
 
     static int declareNewEntitySet(const std::string& name, const int subset_entity_index);
 
@@ -248,7 +258,7 @@ private:
 
     void declareEntitySet(const std::string& name, const int entity_index, const int subset_entity_index);
 
-    void declareFunctionImpl(const std::string& name, const FunctionType& ftype);
+    void declareFunctionImpl(const std::string& name, const FunctionType& ftype, const bool is_template);
 
     bool isFunctionDeclaredImpl(const std::string& name) const;
 

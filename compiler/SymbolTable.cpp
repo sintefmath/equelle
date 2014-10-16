@@ -375,6 +375,26 @@ EquelleType Function::returnType(const std::vector<EquelleType>& argtypes) const
     return type_.returnType(argtypes);
 }
 
+void Function::setTemplate(const bool is_template)
+{
+    is_template_ = is_template;
+}
+
+bool Function::isTemplate() const
+{
+    return is_template_;
+}
+
+const std::vector<FunctionType>& Function::instantiations() const
+{
+    return instantiations_;
+}
+
+void Function::addInstantiation(const FunctionType& ft)
+{
+    instantiations_.push_back(ft);
+}
+
 void Function::setParentScope(Function* parent_scope)
 {
     parent_scope_ = parent_scope;
@@ -428,12 +448,12 @@ void SymbolTable::declareVariable(const std::string& name, const EquelleType& ty
 
 void SymbolTable::declareFunction(const std::string& name)
 {
-    instance().declareFunctionImpl(name, FunctionType());
+    instance().declareFunctionImpl(name, FunctionType(), false);
 }
 
-void SymbolTable::declareFunction(const std::string& name, const FunctionType& ftype)
+void SymbolTable::declareFunction(const std::string& name, const FunctionType& ftype, const bool is_template)
 {
-    instance().declareFunctionImpl(name, ftype);
+    instance().declareFunctionImpl(name, ftype, is_template);
 }
 
 int SymbolTable::declareNewEntitySet(const std::string& name, const int subset_entity_index)
@@ -739,12 +759,13 @@ void SymbolTable::declareEntitySet(const std::string& name, const int entity_ind
     entitysets_.emplace_back(name, entity_index, subset_entity_index);
 }
 
-void SymbolTable::declareFunctionImpl(const std::string& name, const FunctionType& ftype)
+void SymbolTable::declareFunctionImpl(const std::string& name, const FunctionType& ftype, const bool is_template)
 {
     auto it = findFunction(name);
     if (it == functions_.end()) {
         functions_.emplace_back(name, ftype);
         functions_.back().setParentScope(&*current_function_);
+        functions_.back().setTemplate(is_template);
     } else {
         std::string errmsg = "function already declared: ";
         errmsg += name;
