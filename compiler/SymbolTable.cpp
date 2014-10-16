@@ -355,6 +355,16 @@ void Function::clearLocalVariables()
     local_variables_.clear();
 }
 
+const std::set<Variable>& Function::getLocalVariables() const
+{
+    return local_variables_;
+}
+
+void Function::setLocalVariables(const std::set<Variable>& locvars)
+{
+    local_variables_ = locvars;
+}
+
 const std::string& Function::name() const
 {
     return name_;
@@ -516,6 +526,11 @@ const Function& SymbolTable::getFunction(const std::string& name)
 const Function& SymbolTable::getCurrentFunction()
 {
     return *instance().current_function_;
+}
+
+Function& SymbolTable::getMutableFunction(const std::string& name)
+{
+    return instance().getMutableFunctionImpl(name);
 }
 
 void SymbolTable::setCurrentFunction(const std::string& name)
@@ -790,6 +805,19 @@ bool SymbolTable::isFunctionDeclaredImpl(const std::string& name) const
 }
 
 const Function& SymbolTable::getFunctionImpl(const std::string& name) const
+{
+    auto it = findFunction(name);
+    if (it == functions_.end()) {
+        std::string errmsg = "could not find function ";
+        errmsg += name;
+        yyerror(errmsg.c_str());
+        throw std::logic_error("Function not found.");
+    } else {
+        return *it;
+    }
+}
+
+Function& SymbolTable::getMutableFunctionImpl(const std::string& name)
 {
     auto it = findFunction(name);
     if (it == functions_.end()) {

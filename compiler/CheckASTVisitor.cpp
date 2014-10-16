@@ -640,6 +640,7 @@ void CheckASTVisitor::postVisit(FuncCallNode& node)
         // correct number of arguments are given). However, we should
         // at this point check that the instantiation makes sense.
         const FunctionType original_ftype = f.functionType();
+        const std::set<Variable> original_locvars = f.getLocalVariables();
         const std::string original_scope = SymbolTable::getCurrentFunction().name();
         // Create the function type (except for the return type
         // to be used for the instantiation.
@@ -662,7 +663,7 @@ void CheckASTVisitor::postVisit(FuncCallNode& node)
         // Restore function template to its non-instantiated state.
         SymbolTable::setCurrentFunction(f.name());
         SymbolTable::retypeCurrentFunction(original_ftype);
-        SymbolTable::clearLocalVariablesOfCurrentFunction();
+        SymbolTable::getMutableFunction(f.name()).setLocalVariables(original_locvars);
         SymbolTable::setCurrentFunction(original_scope);
         // Set the return type for this node. The member instantiation_return_type_
         // is set in postVisit(ReturnStatementNode&).

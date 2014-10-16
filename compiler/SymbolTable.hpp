@@ -157,6 +157,10 @@ public:
 
     void clearLocalVariables();
 
+    const std::set<Variable>& getLocalVariables() const;
+
+    void setLocalVariables(const std::set<Variable>& locvars);
+
     const std::string& name() const;
 
     void setName(const std::string& name);
@@ -224,6 +228,8 @@ public:
 
     static const Function& getFunction(const std::string& name);
 
+    static Function& getMutableFunction(const std::string& name);
+
     static const Function& getCurrentFunction();
 
     static void setCurrentFunction(const std::string& name);
@@ -269,6 +275,7 @@ private:
     void setCurrentFunctionImpl(const std::string& name);
 
     const Function& getFunctionImpl(const std::string& name) const;
+    Function& getMutableFunctionImpl(const std::string& name);
 
     bool isSubsetImpl(const int set1, const int set2) const;
 
