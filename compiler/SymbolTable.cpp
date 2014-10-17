@@ -150,6 +150,11 @@ EquelleType FunctionType::returnType(const std::vector<EquelleType>& argtypes) c
     }
 }
 
+void FunctionType::setReturnType(const EquelleType& et)
+{
+    return_type_ = et;
+}
+
 int FunctionType::dynamicSubsetReturn(const std::vector<EquelleType>& argtypes) const
 {
     if (dynamic_.active) {
@@ -388,6 +393,11 @@ void Function::setFunctionType(const FunctionType& ftype)
 EquelleType Function::returnType(const std::vector<EquelleType>& argtypes) const
 {
     return type_.returnType(argtypes);
+}
+
+void Function::setReturnType(const EquelleType& et)
+{
+    type_.setReturnType(et);
 }
 
 void Function::setTemplate(const bool is_template)

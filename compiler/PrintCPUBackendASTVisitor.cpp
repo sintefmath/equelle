@@ -267,7 +267,7 @@ void PrintCPUBackendASTVisitor::visit(VarAssignNode& node)
         std::cout << "// Note: ";
     }
     if (!SymbolTable::variableType(node.name()).isMutable()) {
-#if 1
+#if 0
         std::cout << "const auto ";
 #else
         std::cout << "const " << cppTypeString(node.type()) << " ";
@@ -336,7 +336,7 @@ void PrintCPUBackendASTVisitor::visit(FuncStartNode& node)
     }
     std::cout << " = [&](";
     for (int i = 0; i < n; ++i) {
-#if 1
+#if 0
         std::cout << "const auto& " << ft.arguments()[i].name();
 #else
         std::cout << "const "
@@ -355,7 +355,7 @@ void PrintCPUBackendASTVisitor::postVisit(FuncStartNode& node)
 {
     next_funcstart_inst_ = -1;
     unsuppress();
-#if 1
+#if 0
     std::cout << ") {";
 #else
     const FunctionType& ft = SymbolTable::getFunction(node.name()).functionType();

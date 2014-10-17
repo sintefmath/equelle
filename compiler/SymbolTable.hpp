@@ -117,6 +117,8 @@ public:
     /// This version of returnType() is necessary to handle dynamic return types.
     EquelleType returnType(const std::vector<EquelleType>& argtypes) const;
 
+    void setReturnType(const EquelleType& et);
+
     int dynamicSubsetReturn(const std::vector<EquelleType>& argtypes) const;
 
     const std::vector<Variable>& arguments() const;
@@ -170,6 +172,8 @@ public:
     void setFunctionType(const FunctionType& ftype);
 
     EquelleType returnType(const std::vector<EquelleType>& argtypes) const;
+
+    void setReturnType(const EquelleType& et);
 
     void setTemplate(const bool is_template);
 

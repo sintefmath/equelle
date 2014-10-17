@@ -660,16 +660,20 @@ void CheckASTVisitor::postVisit(FuncCallNode& node)
         instantiation_location_stack_.push_back(node.location());
         fanode->accept(*this);
         instantiation_location_stack_.pop_back();
-        // Store instantiated function state.
-        const int instantiation_index = SymbolTable::addFunctionInstantiation(SymbolTable::getFunction(f.name()));
+        // Store instantiated function state. The function has all but
+        // the return value in the correct state now.The member
+        // instantiation_return_type_ is set in the method
+        // postVisit(ReturnStatementNode&).
+        Function& fmut = SymbolTable::getMutableFunction(f.name());
+        fmut.setReturnType(instantiation_return_type_);
+        const int instantiation_index = SymbolTable::addFunctionInstantiation(fmut);
         node.setInstantiationIndex(instantiation_index);
         // Restore function template to its non-instantiated state.
         SymbolTable::setCurrentFunction(f.name());
         SymbolTable::retypeCurrentFunction(original_ftype);
         SymbolTable::getMutableFunction(f.name()).setLocalVariables(original_locvars);
         SymbolTable::setCurrentFunction(original_scope);
-        // Set the return type for this node. The member instantiation_return_type_
-        // is set in postVisit(ReturnStatementNode&).
+        // Set the return type for this node.
         node.setReturnType(instantiation_return_type_);
     }
     // If the function returns a new dynamically created domain,
