@@ -42,23 +42,23 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
 
     // ============= Generated code starts here ================
 
-    const auto a = double(5);
-    const auto b = double(6);
-    auto foo = [&](const auto& x, const auto& y) {
+    const Scalar a = double(5);
+    const Scalar b = double(6);
+    auto foo = [&](const Scalar& x, const Scalar& y) -> Scalar {
         return ((a * x) + (b * y));
     };
-    const auto seq = er.inputSequenceOfScalar("seq");
+    const SeqOfScalar seq = er.inputSequenceOfScalar("seq");
     for (const Scalar& elem : seq) {
-        const auto r = ((a + double(3)) + elem);
-        const auto seq2 = er.inputSequenceOfScalar("seq2");
+        const Scalar r = ((a + double(3)) + elem);
+        const SeqOfScalar seq2 = er.inputSequenceOfScalar("seq2");
         for (const Scalar& e2 : seq2) {
-            auto foo3 = [&](const auto& y) {
-                auto three = [&]() {
+            auto foo3 = [&](const Scalar& y) -> Scalar {
+                auto three = [&]() -> Scalar {
                     return double(3);
                 };
                 return foo(three(), y);
             };
-            const auto q = ((b + foo3(e2)) + r);
+            const Scalar q = ((b + foo3(e2)) + r);
             er.output("q", q);
         }
     }
