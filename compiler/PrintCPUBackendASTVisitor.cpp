@@ -289,6 +289,12 @@ void PrintCPUBackendASTVisitor::visit(VarNode& node)
 {
     if (!suppressed_) {
         std::cout << node.name();
+        if (SymbolTable::isFunctionDeclared(node.name())) {
+            if (SymbolTable::getFunction(node.name()).isTemplate()) {
+                assert(node.instantiationIndex() >= 0);
+                std::cout << "_i" << node.instantiationIndex() << "_";
+            }
+        }
     }
 }
 

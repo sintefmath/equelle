@@ -14,6 +14,8 @@
 #include <map>
 #include <vector>
 
+class Variable;
+
 
 class CheckASTVisitor : public ASTVisitorInterface
 {
@@ -94,6 +96,10 @@ private:
     std::map<std::string, FuncAssignNode*> functemplates_;
     EquelleType instantiation_return_type_;
     std::vector<FileLocation> instantiation_location_stack_;
+
+    int instantiate(const std::string& func_name,
+                    const std::vector<Variable>& fargs,
+                    const FileLocation& loc);
 
     void error(const std::string& err, const FileLocation loc = FileLocation());
     // Note that the suppression works like a stack:

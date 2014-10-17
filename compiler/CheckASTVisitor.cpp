@@ -605,9 +605,66 @@ void CheckASTVisitor::postVisit(ReturnStatementNode& node)
     instantiation_return_type_ = node.type();
 }
 
-void CheckASTVisitor::visit(FuncCallNode&)
+
+
+int CheckASTVisitor::instantiate(const std::string& func_name,
+                                 const std::vector<Variable>& fargs,
+                                 const FileLocation& loc)
 {
+    Function& fmut = SymbolTable::getMutableFunction(func_name);
+    const FunctionType original_ftype = fmut.functionType();
+    const std::set<Variable> original_locvars = fmut.getLocalVariables();
+    FunctionType ft(fargs, EquelleType());
+    // Change scope, and verify instantiation by visiting the FuncAssignNode.
+    SymbolTable::setCurrentFunction(func_name);
+    SymbolTable::retypeCurrentFunction(ft);
+    FuncAssignNode* fanode = functemplates_[func_name];
+    instantiation_location_stack_.push_back(loc);
+    fanode->accept(*this);
+    instantiation_location_stack_.pop_back();
+    // Store instantiated function state. The function has all but
+    // the return value in the correct state now.The member
+    // instantiation_return_type_ is set in the method
+    // postVisit(ReturnStatementNode&).
+    fmut.setReturnType(instantiation_return_type_);
+    const int instantiation_index = SymbolTable::addFunctionInstantiation(fmut);
+    // Restore function template to its non-instantiated state.
+    SymbolTable::setCurrentFunction(func_name);
+    SymbolTable::retypeCurrentFunction(original_ftype);
+    SymbolTable::getMutableFunction(func_name).setLocalVariables(original_locvars);
+    return instantiation_index;
 }
+
+
+
+void CheckASTVisitor::visit(FuncCallNode& node)
+{
+    // Special treatment of NewtonSolve().
+    if (node.name() == "NewtonSolve") {
+        if (isCheckingSuppressed()) {
+            error("cannot call NewtonSolve from inside a template function", node.location());
+            return;
+        }
+        const std::string original_scope = SymbolTable::getCurrentFunction().name();
+        const auto& argnodes = node.args()->arguments();
+        assert(argnodes.size() == 2);
+        VarNode& vn = dynamic_cast<VarNode&>(*argnodes[0]);
+        const std::string& func_name = vn.name();
+        const Function& f = SymbolTable::getFunction(func_name);
+        if (f.isTemplate()) {
+            // Must instantiate function.
+            std::vector<Variable> fargs = f.functionType().arguments();
+            assert(fargs.size() == 1);
+            fargs[0].setType(argnodes[1]->type());
+            fargs[0].setAssigned(true);
+            const int inst_index = instantiate(func_name, fargs, node.location());
+            vn.setInstantiationIndex(inst_index);
+        }
+        SymbolTable::setCurrentFunction(original_scope);
+    }
+}
+
+
 
 void CheckASTVisitor::postVisit(FuncCallNode& node)
 {
@@ -639,11 +696,8 @@ void CheckASTVisitor::postVisit(FuncCallNode& node)
         // this method is going to succeed automatically (if the
         // correct number of arguments are given). However, we should
         // at this point check that the instantiation makes sense.
-        const FunctionType original_ftype = f.functionType();
-        const std::set<Variable> original_locvars = f.getLocalVariables();
         const std::string original_scope = SymbolTable::getCurrentFunction().name();
-        // Create the function type (except for the return type
-        // to be used for the instantiation.
+        // Create the function arguments.
         const auto& args = node.args()->arguments();
         std::vector<Variable> fargs = f.functionType().arguments();
         assert(args.size() == fargs.size());
@@ -652,26 +706,8 @@ void CheckASTVisitor::postVisit(FuncCallNode& node)
             fargs[arg].setType(args[arg]->type());
             fargs[arg].setAssigned(true);
         }
-        FunctionType ft(fargs, EquelleType());
-        // Change scope, and verify instantiation by visiting the FuncAssignNode.
-        SymbolTable::setCurrentFunction(f.name());
-        SymbolTable::retypeCurrentFunction(ft);
-        FuncAssignNode* fanode = functemplates_[node.name()];
-        instantiation_location_stack_.push_back(node.location());
-        fanode->accept(*this);
-        instantiation_location_stack_.pop_back();
-        // Store instantiated function state. The function has all but
-        // the return value in the correct state now.The member
-        // instantiation_return_type_ is set in the method
-        // postVisit(ReturnStatementNode&).
-        Function& fmut = SymbolTable::getMutableFunction(f.name());
-        fmut.setReturnType(instantiation_return_type_);
-        const int instantiation_index = SymbolTable::addFunctionInstantiation(fmut);
+        const int instantiation_index = instantiate(node.name(), fargs, node.location());
         node.setInstantiationIndex(instantiation_index);
-        // Restore function template to its non-instantiated state.
-        SymbolTable::setCurrentFunction(f.name());
-        SymbolTable::retypeCurrentFunction(original_ftype);
-        SymbolTable::getMutableFunction(f.name()).setLocalVariables(original_locvars);
         SymbolTable::setCurrentFunction(original_scope);
         // Set the return type for this node.
         node.setReturnType(instantiation_return_type_);

@@ -718,7 +718,9 @@ private:
 class VarNode : public ExpressionNode
 {
 public:
-    VarNode(const std::string& varname) : varname_(varname)
+    VarNode(const std::string& varname)
+        : varname_(varname),
+          instantiation_index_(-1)
     {
     }
     EquelleType type() const
@@ -746,12 +748,21 @@ public:
     {
         return varname_;
     }
+    int instantiationIndex() const
+    {
+        return instantiation_index_;
+    }
+    void setInstantiationIndex(const int index)
+    {
+        instantiation_index_ = index;
+    }
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
     }
 private:
     std::string varname_;
+    int instantiation_index_;
 };
 
 
