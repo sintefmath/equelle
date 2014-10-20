@@ -117,9 +117,11 @@ FunctionType::FunctionType(const std::vector<Variable>& args,
 
 FunctionType::FunctionType(const std::vector<Variable>& args,
                            const EquelleType& return_type,
+                           const Dimension& return_dimension,
                            const DynamicReturnSpecification& dynamic)
     : arguments_(args),
       return_type_(return_type),
+      return_dimension_(return_dimension),
       dynamic_(dynamic)
 {
 }
@@ -153,6 +155,16 @@ EquelleType FunctionType::returnType(const std::vector<EquelleType>& argtypes) c
 void FunctionType::setReturnType(const EquelleType& et)
 {
     return_type_ = et;
+}
+
+const Dimension& FunctionType::returnDimension() const
+{
+    return return_dimension_;
+}
+
+void FunctionType::setReturnDimension(const Dimension& dim)
+{
+    return_dimension_ = dim;
 }
 
 int FunctionType::dynamicSubsetReturn(const std::vector<EquelleType>& argtypes) const
@@ -672,22 +684,27 @@ SymbolTable::SymbolTable()
     functions_.emplace_back("FirstCell",
                             FunctionType({ Variable("faces", EquelleType(Face, Collection)) },
                                          EquelleType(Cell, Collection, NotApplicable, AllCells),
+                                         Dimension(),
                                          { InvalidIndex, 0, InvalidIndex}));
     functions_.emplace_back("SecondCell",
                             FunctionType({ Variable("faces", EquelleType(Face, Collection)) },
                                          EquelleType(Cell, Collection, NotApplicable, AllCells),
+                                         Dimension(),
                                          { InvalidIndex, 0, InvalidIndex}));
     functions_.emplace_back("IsEmpty",
                             FunctionType({ Variable("entities", EquelleType(Invalid, Collection)) },
                                          EquelleType(Bool, Collection),
+                                         Dimension(),
                                          { InvalidIndex, 0, InvalidIndex}));
     functions_.emplace_back("Centroid",
                             FunctionType({ Variable("entities", EquelleType(Invalid, Collection)) },
                                          EquelleType(Vector, Collection),
+                                         DimensionConstant::length,
                                          { InvalidIndex, 0, InvalidIndex}));
     functions_.emplace_back("Normal",
                             FunctionType({ Variable("faces", EquelleType(Face, Collection)) },
                                          EquelleType(Vector, Collection),
+                                         DimensionConstant::length,
                                          { InvalidIndex, 0, InvalidIndex}));
     // 2. User input functions.
     functions_.emplace_back("InputScalarWithDefault",
@@ -698,16 +715,19 @@ SymbolTable::SymbolTable()
                             FunctionType({ Variable("name", EquelleType(String)),
                                            Variable("entities", EquelleType(Invalid, Collection, NotApplicable, NotApplicable, false, true)) },
                                          EquelleType(Scalar, Collection),
+                                         Dimension(),
                                          { InvalidIndex, 1, InvalidIndex}));
     functions_.emplace_back("InputStencilCollectionOfScalar",
                             FunctionType({ Variable("name", EquelleType(String)),
                                            Variable("entities", EquelleType(Invalid, None, NotApplicable, NotApplicable, false, false, NotAnArray, true)) },
                                          EquelleType(Scalar, Collection, NotApplicable, NotApplicable, false, false, NotAnArray, true),
+                                         Dimension(),
                                          { InvalidIndex, 1, InvalidIndex}));
     functions_.emplace_back("InputDomainSubsetOf",
                             FunctionType({ Variable("name", EquelleType(String)),
                                            Variable("entities", EquelleType(Invalid, Collection, NotApplicable, NotApplicable, false, true)) },
                                           EquelleType(Invalid, Collection, NotApplicable, NotApplicable, false, true),
+                                         Dimension(),
                                          { 1, InvalidIndex, 1}));
     functions_.emplace_back("InputSequenceOfScalar",
                             FunctionType({ Variable("name", EquelleType(String)) },
@@ -717,26 +737,33 @@ SymbolTable::SymbolTable()
     // 3. Discrete operators.
     functions_.emplace_back("Gradient",
                             FunctionType({ Variable("values", EquelleType(Scalar, Collection, AllCells)) },
-                                         EquelleType(Scalar, Collection, InteriorFaces)));
+                                         EquelleType(Scalar, Collection, InteriorFaces),
+                                         Dimension(),
+                                         { InvalidIndex, InvalidIndex, InvalidIndex, InvalidIndex, 0}));
     functions_.emplace_back("Divergence",
                             FunctionType({ Variable("values", EquelleType(Scalar, Collection)) },
-                                         EquelleType(Scalar, Collection, AllCells)));
+                                         EquelleType(Scalar, Collection, AllCells),
+                                         Dimension(),
+                                         { InvalidIndex, InvalidIndex, InvalidIndex, InvalidIndex, 0}));
     // 4. Other functions
     functions_.emplace_back("Dot",
                             FunctionType({ Variable("v1", EquelleType(Vector, Collection)),
                                            Variable("v2", EquelleType(Vector, Collection)) },
                                 EquelleType(Scalar, Collection),
-                                {InvalidIndex, 0, InvalidIndex}));
+                                Dimension(),
+                                {InvalidIndex, 0, InvalidIndex})); // dimension not handled properly
     functions_.emplace_back("NewtonSolve",
                             FunctionType({ Variable("residual_function", EquelleType()),
                                            Variable("u_guess", EquelleType(Scalar, Collection)) },
                                 EquelleType(Scalar, Collection),
-                                {InvalidIndex, 1, InvalidIndex}));
+                                Dimension(),
+                                {InvalidIndex, 1, InvalidIndex, InvalidIndex, 1}));
     functions_.emplace_back("NewtonSolveSystem",
                             FunctionType({ Variable("residual_function_array", EquelleType()),
                                            Variable("u_guess_array", EquelleType(Scalar, Collection, NotApplicable, NotApplicable, false, false, SomeArray)) },
                                 EquelleType(Scalar, Collection),
-                                {InvalidIndex, 1, InvalidIndex, 1}));
+                                Dimension(),
+                                {InvalidIndex, 1, InvalidIndex, 1, 1}));
     functions_.emplace_back("Output",
                             FunctionType({ Variable("tag", EquelleType(String)),
                                            Variable("data", EquelleType()) },
@@ -744,23 +771,30 @@ SymbolTable::SymbolTable()
     functions_.emplace_back("Sqrt",
                             FunctionType({ Variable("s", EquelleType(Scalar, Collection)) },
                                 EquelleType(Scalar, Collection),
-                                {InvalidIndex, 0, InvalidIndex}));
+                                Dimension(),
+                                {InvalidIndex, 0, InvalidIndex})); // dimension not handled properly
 
     functions_.emplace_back("MaxReduce",
                             FunctionType({ Variable("x", EquelleType(Scalar, Collection)) },
-                                         EquelleType(Scalar)));
+                                         EquelleType(Scalar),
+                                         Dimension(),
+                                         { InvalidIndex, InvalidIndex, InvalidIndex, InvalidIndex, 0}));
 
     functions_.emplace_back("MinReduce",
                             FunctionType({ Variable("x", EquelleType(Scalar, Collection)) },
-                                         EquelleType(Scalar)));
+                                         EquelleType(Scalar),
+                                         Dimension(),
+                                         { InvalidIndex, InvalidIndex, InvalidIndex, InvalidIndex, 0}));
 
     functions_.emplace_back("SumReduce",
                             FunctionType({ Variable("x", EquelleType(Scalar, Collection)) },
-                                         EquelleType(Scalar)));
+                                         EquelleType(Scalar),
+                                         Dimension(),
+                                         { InvalidIndex, InvalidIndex, InvalidIndex, InvalidIndex, 0}));
 
     functions_.emplace_back("ProdReduce",
                             FunctionType({ Variable("x", EquelleType(Scalar, Collection)) },
-                                         EquelleType(Scalar)));
+                                         EquelleType(Scalar))); // dimension not handled properly
 
     functions_.emplace_back("StencilI",
                             FunctionType( EquelleType( StencilI ) ) );

@@ -74,15 +74,17 @@ struct DynamicReturnSpecification
           arg_index_for_basic_type(InvalidIndex),
           arg_index_for_gridmapping(InvalidIndex),
           arg_index_for_subset(InvalidIndex),
-          arg_index_for_array_size(InvalidIndex)
+          arg_index_for_array_size(InvalidIndex),
+          arg_index_for_dimension(InvalidIndex)
     {
     }
-    DynamicReturnSpecification(const int bt_ix, const int gm_ix, const int ss_ix, const int ar_ix = InvalidIndex)
+    DynamicReturnSpecification(const int bt_ix, const int gm_ix, const int ss_ix, const int ar_ix = InvalidIndex, const int di_ix = InvalidIndex)
         : active(true),
           arg_index_for_basic_type(bt_ix),
           arg_index_for_gridmapping(gm_ix),
           arg_index_for_subset(ss_ix),
-          arg_index_for_array_size(ar_ix)
+          arg_index_for_array_size(ar_ix),
+          arg_index_for_dimension(di_ix)
     {
     }
     bool active;
@@ -90,6 +92,7 @@ struct DynamicReturnSpecification
     int arg_index_for_gridmapping;
     int arg_index_for_subset;
     int arg_index_for_array_size;
+    int arg_index_for_dimension;
 };
 
 
@@ -109,6 +112,7 @@ public:
 
     FunctionType(const std::vector<Variable>& args,
                  const EquelleType& return_type,
+                 const Dimension& return_dimension,
                  const DynamicReturnSpecification& dynamic);
 
     /// Only for function with non-dynamic return types.
@@ -117,7 +121,12 @@ public:
     /// This version of returnType() is necessary to handle dynamic return types.
     EquelleType returnType(const std::vector<EquelleType>& argtypes) const;
 
+    /// Explicit set the return type, for use when instantiating template functions.
     void setReturnType(const EquelleType& et);
+
+    const Dimension& returnDimension() const;
+
+    void setReturnDimension(const Dimension& dim);
 
     int dynamicSubsetReturn(const std::vector<EquelleType>& argtypes) const;
 
@@ -128,6 +137,7 @@ public:
 private:
     std::vector<Variable> arguments_;
     EquelleType return_type_;
+    Dimension return_dimension_;
     DynamicReturnSpecification dynamic_;
 };
 
