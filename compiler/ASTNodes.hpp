@@ -494,9 +494,6 @@ public:
             default:
                 throw std::logic_error("internal compiler error in NormNode::dimension().");
             }
-            // TODO: we use a dimensionless value here now, until
-            // dimension of function calls has been implemented.
-            d = Dimension();
             return d;
         }
     }
