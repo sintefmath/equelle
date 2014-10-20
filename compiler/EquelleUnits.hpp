@@ -51,12 +51,7 @@ inline UnitData operator*(const double factor, const UnitData& ud)
 
 inline std::map<std::string, UnitData> buildUnitMap()
 {
-    typedef std::array<int,7> DA;
-    // Useful dimension constants.
-    const Dimension length     (DA({{ 1, 0, 0, 0, 0, 0, 0 }}));
-    const Dimension time       (DA({{ 0, 1, 0, 0, 0, 0, 0 }}));
-    const Dimension mass       (DA({{ 0, 0, 1, 0, 0, 0, 0 }}));
-    const Dimension temperature(DA({{ 0, 0, 0, 1, 0, 0, 0 }}));
+    using namespace DimensionConstant;
 
     // Create unit map by repeated inserts.
     std::map<std::string, UnitData> u;
@@ -65,7 +60,7 @@ inline std::map<std::string, UnitData> buildUnitMap()
     u["Inch"] = UnitData(length, 0.0254);
     u["Feet"] = 12.0 * u["Inch"];
     // Time
-    u["Second"] =  UnitData(time, 1.0);
+    u["Second"] =  UnitData(DimensionConstant::time, 1.0); // Because time is also a function in the C library.
     u["Minute"] =  60.0 * u["Second"];
     u["Hour"] =  60.0 * u["Minute"];
     u["Day"] =  24.0 * u["Hour"];
@@ -73,6 +68,13 @@ inline std::map<std::string, UnitData> buildUnitMap()
     u["Kilogram"] = UnitData(mass, 1.0);
     // Temperature
     u["Kelvin"] = UnitData(temperature, 1.0);
+
+    // Derived units.
+    u["Newton"] = UnitData(force, 1.0);
+    u["Joule"] = UnitData(energy, 1.0);
+    u["Pascal"] = UnitData(pressure, 1.0);
+    u["Watt"] = UnitData(effect, 1.0);
+
     return u;
 }
 

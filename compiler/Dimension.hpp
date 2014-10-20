@@ -81,8 +81,28 @@ public:
     }
 
 private:
-    std::array<int,7> dim_;
+    typedef std::array<int,7> DA;
+    DA dim_;
 };
+
+
+namespace DimensionConstant
+{
+    // Basic dimension constants.
+    const Dimension length     {{{ 1, 0, 0, 0, 0, 0, 0 }}};
+    const Dimension time       {{{ 0, 1, 0, 0, 0, 0, 0 }}};
+    const Dimension mass       {{{ 0, 0, 1, 0, 0, 0, 0 }}};
+    const Dimension temperature{{{ 0, 0, 0, 1, 0, 0, 0 }}};
+
+    // Derived dimension constants.
+    const Dimension area = length * 2;
+    const Dimension velocity = length - time;
+    const Dimension acceleration = velocity - time;
+    const Dimension force = mass + acceleration;
+    const Dimension energy = force + length;
+    const Dimension pressure = force - area;
+    const Dimension effect = energy - time;
+} // namespace DimensionConstant
 
 
 // Needed for visit(UnitNode&).
