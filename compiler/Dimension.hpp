@@ -43,7 +43,7 @@ public:
         return dim_[index];
     }
 
-    Dimension operator+ (const Dimension& other)
+    Dimension operator+ (const Dimension& other) const
     {
         Dimension result(*this);
         for (int dd = 0; dd < 7; ++dd) {
@@ -52,7 +52,7 @@ public:
         return result;
     }
 
-    Dimension operator- (const Dimension& other)
+    Dimension operator- (const Dimension& other) const
     {
         Dimension result(*this);
         for (int dd = 0; dd < 7; ++dd) {
@@ -61,7 +61,7 @@ public:
         return result;
     }
 
-    Dimension operator* (const int power)
+    Dimension operator* (const int power) const
     {
         Dimension result(*this);
         for (int dd = 0; dd < 7; ++dd) {
