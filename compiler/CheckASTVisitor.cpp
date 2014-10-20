@@ -147,7 +147,11 @@ void CheckASTVisitor::postVisit(BinaryOpNode& node)
             }
         }
         if (node.left()->dimension() != node.right()->dimension()) {
-            error("addition and subtraction only allowed when both sides have same dimension.", node.location());
+            std::ostringstream os;
+            os << "addition and subtraction only allowed when both sides have same dimension\n"
+               << "   dimension on left = " << node.left()->dimension() << '\n'
+               << "   dimension on right = " << node.right()->dimension();
+            error(os.str(), node.location());
             return;
         }
         break;
