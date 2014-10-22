@@ -207,6 +207,8 @@ public:
 
     const std::vector<int>& instantiations() const;
 
+    void setInstantiations(const std::vector<int>& insta);
+
     const std::string& parentScope() const;
 
     void setParentScope(Function* parent_scope);

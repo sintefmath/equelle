@@ -291,8 +291,12 @@ void PrintCPUBackendASTVisitor::visit(VarNode& node)
         std::cout << node.name();
         if (SymbolTable::isFunctionDeclared(node.name())) {
             if (SymbolTable::getFunction(node.name()).isTemplate()) {
+                const int num_inst = SymbolTable::getFunction(node.name()).instantiations().size();
+                assert(num_inst > 0);
                 assert(node.instantiationIndex() >= 0);
-                std::cout << "_i" << node.instantiationIndex() << "_";
+                if (num_inst > 1) {
+                    std::cout << "_i" << node.instantiationIndex() << "_";
+                }
             }
         }
     }
@@ -337,7 +341,8 @@ void PrintCPUBackendASTVisitor::visit(FuncStartNode& node)
     const FunctionType& ft = SymbolTable::getFunction(node.name()).functionType();
     const size_t n = ft.arguments().size();
     std::cout << indent() << "auto " << node.name();
-    if (next_funcstart_inst_ != -1) {
+    const int num_inst = SymbolTable::getFunction(node.name()).instantiations().size();
+    if (next_funcstart_inst_ != -1 && num_inst > 1) {
         std::cout << "_i" << next_funcstart_inst_ << "_";
     }
     std::cout << " = [&](";
@@ -376,7 +381,7 @@ void PrintCPUBackendASTVisitor::visit(FuncAssignNode& node)
         return;
     }
     Function& f = SymbolTable::getMutableFunction(node.name());
-    const auto insta = f.instantiations();
+    const auto insta = f.instantiations(); // a copy: important for below
     const int num_inst = insta.size();
     if (num_inst > 0) {
         assert(f.isTemplate());
@@ -386,6 +391,7 @@ void PrintCPUBackendASTVisitor::visit(FuncAssignNode& node)
         // visitor flow.
         for (int inst = 0; inst < num_inst - 1; ++inst) {
             f = SymbolTable::getFunctionInstantiation(insta[inst]);
+            f.setInstantiations(insta); // here is where we need insta to be a true copy
             next_funcstart_inst_ = insta[inst];
             SymbolTable::setCurrentFunction(node.name());
             node.accept(*this);
@@ -460,7 +466,8 @@ void PrintCPUBackendASTVisitor::visit(FuncCallNode& node)
         } else {
             cppname += fname;
         }
-        if (node.instantiationIndex() >= 0) {
+        const int num_inst = SymbolTable::getFunction(node.name()).instantiations().size();
+        if (node.instantiationIndex() >= 0 && num_inst > 1) {
             cppname += "_i";
             cppname += std::to_string(node.instantiationIndex());
             cppname += "_";

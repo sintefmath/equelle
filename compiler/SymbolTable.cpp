@@ -448,6 +448,11 @@ const std::vector<int>& Function::instantiations() const
     return instantiation_indices_;
 }
 
+void Function::setInstantiations(const std::vector<int>& insta)
+{
+    instantiation_indices_ = insta;
+}
+
 void Function::setParentScope(Function* parent_scope)
 {
     parent_scope_ = parent_scope;
@@ -512,8 +517,8 @@ void SymbolTable::declareFunction(const std::string& name, const FunctionType& f
 int SymbolTable::addFunctionInstantiation(const Function& func)
 {
     int index = instance().function_instantiations_.size();
-    instance().function_instantiations_.push_back(func);
     getMutableFunction(func.name()).addInstantiation(index);
+    instance().function_instantiations_.push_back(func);
     return index;
 }
 
