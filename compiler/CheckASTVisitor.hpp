@@ -9,6 +9,7 @@
 #include "ASTVisitorInterface.hpp"
 #include "FileLocation.hpp"
 #include "EquelleType.hpp"
+#include "Dimension.hpp"
 #include <string>
 #include <stack>
 #include <map>
@@ -95,6 +96,7 @@ private:
     std::stack<std::string> undecl_func_stack;
     std::map<std::string, FuncAssignNode*> functemplates_;
     EquelleType instantiation_return_type_;
+    Dimension instantiation_return_dimension_;
     std::vector<FileLocation> instantiation_location_stack_;
 
     int instantiate(const std::string& func_name,

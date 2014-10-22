@@ -991,6 +991,10 @@ public:
     {
         return expr_->type();
     }
+    Dimension dimension() const
+    {
+        return expr_->dimension();
+    }
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
@@ -1195,10 +1199,12 @@ public:
 
     Dimension dimension() const
     {
-        // yyerror("FuncCallNode()::dimension() not implemented");
-        // return ExpressionNode::dimension();
-        // TODO: function calls are dimensionless for now, fix.
-        return Dimension();
+        return dimension_;
+    }
+
+    void setDimension(const Dimension& dim)
+    {
+        dimension_ = dim;
     }
 
     const std::string& name() const
@@ -1227,6 +1233,8 @@ private:
     int dsr_;
     // return_type_ is only set for template instantiation type calls.
     EquelleType return_type_;
+    // dimension_ should always be set by the checking visitor.
+    Dimension dimension_;
     int instantiation_index_;
 };
 

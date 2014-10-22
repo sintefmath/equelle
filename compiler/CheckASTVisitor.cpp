@@ -607,6 +607,7 @@ void CheckASTVisitor::postVisit(ReturnStatementNode& node)
         return;
     }
     instantiation_return_type_ = node.type();
+    instantiation_return_dimension_ = node.dimension();
 }
 
 
@@ -709,12 +710,14 @@ void CheckASTVisitor::postVisit(FuncCallNode& node)
         for (int arg = 0; arg < num_args; ++arg) {
             fargs[arg].setType(args[arg]->type());
             fargs[arg].setAssigned(true);
+            fargs[arg].setDimension(args[arg]->dimension());
         }
         const int instantiation_index = instantiate(node.name(), fargs, node.location());
         node.setInstantiationIndex(instantiation_index);
         SymbolTable::setCurrentFunction(original_scope);
         // Set the return type for this node.
         node.setReturnType(instantiation_return_type_);
+        node.setDimension(instantiation_return_dimension_);
     }
     // If the function returns a new dynamically created domain,
     // we must declare it (anonymously for now).
