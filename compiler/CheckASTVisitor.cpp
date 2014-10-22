@@ -535,7 +535,7 @@ void CheckASTVisitor::postVisit(FuncArgsDeclNode&)
 
 void CheckASTVisitor::visit(FuncDeclNode& node)
 {
-    SymbolTable::declareFunction(node.name());
+    SymbolTable::declareFunction(node.name(), FunctionType(), true);
     SymbolTable::setCurrentFunction(node.name());
 }
 
@@ -555,20 +555,23 @@ void CheckASTVisitor::postVisit(FuncStartNode&)
 
 void CheckASTVisitor::visit(FuncAssignNode& node)
 {
+    const bool template_created = functemplates_.find(node.name()) != functemplates_.end();
     const bool func_declared = SymbolTable::isFunctionDeclared(node.name());
-    if (!func_declared) {
+    if (!template_created) {
         functemplates_[node.name()] = &node;
-        // Get the function argument names (types will be Invalid).
-        std::vector<Variable> args;
-        auto argnodes = node.args()->arguments();
-        args.reserve(argnodes.size());
-        for (ExpressionNode* argnode : argnodes) {
-            const VarNode& arg = dynamic_cast<const VarNode&>(*argnode);
-            args.push_back(arg.name());
+        if (!func_declared) {
+            // Get the function argument names (types will be Invalid).
+            std::vector<Variable> args;
+            auto argnodes = node.args()->arguments();
+            args.reserve(argnodes.size());
+            for (ExpressionNode* argnode : argnodes) {
+                const VarNode& arg = dynamic_cast<const VarNode&>(*argnode);
+                args.push_back(arg.name());
+            }
+            FunctionType ft(args, EquelleType());
+            // Declare and set type.
+            SymbolTable::declareFunction(node.name(), ft, true);
         }
-        FunctionType ft(args, EquelleType());
-        // Declare and set type.
-        SymbolTable::declareFunction(node.name(), ft, true);
         // Suppression handling.
         undecl_func_stack.push(node.name());
         suppressChecking();
