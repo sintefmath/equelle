@@ -443,7 +443,7 @@ void Function::addInstantiation(const int index)
     instantiation_indices_.push_back(index);
 }
 
-const std::vector<int> Function::instantiations() const
+const std::vector<int>& Function::instantiations() const
 {
     return instantiation_indices_;
 }

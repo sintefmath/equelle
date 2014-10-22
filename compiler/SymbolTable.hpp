@@ -205,7 +205,7 @@ public:
 
     void addInstantiation(const int index);
 
-    const std::vector<int> instantiations() const;
+    const std::vector<int>& instantiations() const;
 
     const std::string& parentScope() const;
 
