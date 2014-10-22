@@ -1,0 +1,82 @@
+# Heat conduction with Diriclet boundary conditions.
+# Heat diffusion constant.
+k__ = InputScalarWithDefault("k", 0.3)
+k = k__ * 1 [Watt / (Meter*Kelvin)]
+
+# Volumetric heat capacity.
+# A reasonable physical value is 1.2e6-4.5e5 (http://en.wikipedia.org/wiki/Volumetric_heat_capacity)
+# However, we stick to 1 for now, to preserve experimental validation.
+cv__ = InputScalarWithDefault("cv", 1.0)
+cv = cv__ * 1 [Joule / (Kelvin * Meter^3)]
+
+# Compute interior transmissibilities.
+ifaces = InteriorFaces()     # Deduced type:  Collection Of Face (On itself)
+first = FirstCell(ifaces)    # Deduced type:  Collection Of Cell On ifaces
+second = SecondCell(ifaces)  # Deduced type:  Same as for 'first'.
+itrans = k * |ifaces| / |Centroid(first) - Centroid(second)|
+
+# Compute flux for interior faces.
+computeInteriorFlux(u) = {
+    -> -itrans * Gradient(u)
+}
+
+# Support for Dirichlet boundaries
+dirichlet_boundary = InputDomainSubsetOf("dirichlet_boundary", BoundaryFaces())
+dirichlet_val__ = InputCollectionOfScalar("dirichlet_val", dirichlet_boundary)
+dirichlet_val = dirichlet_val__ * 1 [Kelvin]
+
+# Compute boundary transmissibilities and orientations.
+bf = BoundaryFaces()
+bf_cells = IsEmpty(FirstCell(bf)) ? SecondCell(bf) : FirstCell(bf)
+bf_sign = IsEmpty(FirstCell(bf)) ? (-1 Extend bf) : (1 Extend bf)
+btrans = k * |bf| / |Centroid(bf) - Centroid(bf_cells)|
+
+# Compute flux for boundary faces.
+dir_cells = bf_cells On dirichlet_boundary
+dir_sign = bf_sign On dirichlet_boundary
+dir_trans = btrans On dirichlet_boundary
+computeBoundaryFlux(u) = {
+    # Compute flux at Dirichlet boundaries.
+    u_dirbdycells = u On dir_cells
+    dir_fluxes = dir_trans * dir_sign * (u_dirbdycells - dirichlet_val)
+    # Extending with zero away from Dirichlet boundaries,
+    # which means assuming no-flow elsewhere.
+    -> dir_fluxes Extend BoundaryFaces()
+}
+
+# Compute the residual for the heat equation.
+vol = |AllCells()|   # Deduced type:  Collection Of Scalar On AllCells()
+computeResidual(u, u0, dt) = {
+    ifluxes = computeInteriorFlux(u)
+    bfluxes = computeBoundaryFlux(u)
+    # Extend both ifluxes and bfluxes to AllFaces() and add to get all fluxes.
+    fluxes = (ifluxes Extend AllFaces()) + (bfluxes Extend AllFaces())
+    # Deduced type of 'residual': Collection Of Scalar On AllCells()
+    residual = u - u0 + (dt / (cv * vol)) * Divergence(fluxes)
+    -> residual
+}
+
+# u_initial is user input (u is the unknown, temperature here)
+u_initial__ = InputCollectionOfScalar("u_initial", AllCells())
+u_initial = u_initial__ * 1 [Kelvin]
+
+# Sequences are ordered, and not associated with the grid
+# as collections are.
+timesteps = InputSequenceOfScalar("timesteps")
+
+# u0 must be declared Mutable, because we will change it
+# in the For loop further down.
+u0 : Mutable Collection Of Scalar On AllCells()
+u0 = u_initial
+
+For dt__ In timesteps {
+    dt = dt__ * 1 [Second]
+    computeResidualLocal(u) = {
+        -> computeResidual(u, u0, dt)
+    }
+    u_guess = u0
+    u = NewtonSolve(computeResidualLocal, u_guess)
+    Output("u", u)
+    Output("maximum of u", MaxReduce(u))
+    u0 = u
+}
