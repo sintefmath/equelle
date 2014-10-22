@@ -142,7 +142,11 @@ void CheckASTVisitor::postVisit(BinaryOpNode& node)
                 //n OP u(i, j)  and  u(i, j) OP n is OK
             }
             else {
-                error("addition and subtraction only allowed between identical types.", node.location());
+                std::ostringstream os;
+                os << "addition and subtraction only allowed between identical types\n"
+                   << "   type on left = " << SymbolTable::equelleString(node.left()->type()) << '\n'
+                   << "   type on right = " << SymbolTable::equelleString(node.right()->type());
+                error(os.str(), node.location());
                 return;
             }
         }
@@ -432,14 +436,7 @@ void CheckASTVisitor::postVisit(VarAssignNode& node)
         return;
     }
 
-    // The remainder of the checks depend on the type,
-    // but we do have to declare the variable if not
-    // already declared.
     if (isCheckingSuppressed()) {
-        // if (!SymbolTable::isVariableDeclared(name)) {
-        //     SymbolTable::declareVariable(name, EquelleType());
-        //     SymbolTable::setVariableAssigned(name, true);
-        // }
         return;
     }
 
@@ -477,6 +474,9 @@ void CheckASTVisitor::postVisit(VarAssignNode& node)
                 error(err_msg, node.location());
                 return;
             }
+        } else {
+            // Dimension is never declared, so that must be set from here.
+            SymbolTable::setVariableDimension(name, expr->dimension());
         }
     } else {
         // Setting the gridmapping, as in the block above. Only this is
@@ -662,6 +662,7 @@ void CheckASTVisitor::visit(FuncCallNode& node)
             assert(fargs.size() == 1);
             fargs[0].setType(argnodes[1]->type());
             fargs[0].setAssigned(true);
+            fargs[0].setDimension(argnodes[1]->dimension());
             const int inst_index = instantiate(func_name, fargs, node.location());
             vn.setInstantiationIndex(inst_index);
         }
@@ -728,6 +729,54 @@ void CheckASTVisitor::postVisit(FuncCallNode& node)
             // Create a new domain.
             const int gm = SymbolTable::declareNewEntitySet("AnonymousEntitySet", dynsubret);
             node.setDynamicSubsetReturn(gm);
+        }
+    }
+    // Dimension must be handled here, unless we are a template
+    // (then it was handled already).
+    if (!f.isTemplate()) {
+        const auto& args = node.args()->arguments();
+        const bool is_builtin = std::isupper(f.name()[0]);
+        if (is_builtin) {
+            // First special treatment for particular functions.
+            if (f.name() == "Dot") {
+                assert(args.size() == 2);
+                node.setDimension(args[0]->dimension() + args[1]->dimension());
+            } else if (f.name() == "Sqrt") {
+                assert(args.size() == 1);
+                const Dimension argdim = args[0]->dimension();
+                Dimension result_dim;
+                auto isEven = [](int num) { return num % 2 == 0; };
+                for (int dd = 0; dd < 7; ++dd) {
+                    BaseDimension bd = static_cast<BaseDimension>(dd);
+                    if (isEven(argdim.coefficient(bd))) {
+                        result_dim.setCoefficient(bd, argdim.coefficient(bd)/2);
+                    } else {
+                        std::ostringstream err_msg;
+                        err_msg << "cannot call Sqrt(), argument must have even dimensions, dimension = "
+                                << argdim;
+                        error(err_msg.str(), node.location());
+                    }
+                }
+                node.setDimension(result_dim);
+            } else if (f.name() == "ProdReduce") {
+                assert(args.size() == 1);
+                const Dimension argdim = args[0]->dimension();
+                if (argdim != Dimension()) {
+                    std::ostringstream err_msg;
+                    err_msg << "cannot call ProdReduce(), must have dimensionless argument, dimension = "
+                            << argdim;
+                    error(err_msg.str(), node.location());
+                }
+                node.setDimension(Dimension());
+            } else {
+                std::vector<Dimension> argdims;
+                for (const auto& arg : args) {
+                    argdims.push_back(arg->dimension());
+                }
+                node.setDimension(f.functionType().returnDimension(argdims));
+            }
+        } else {
+            // Declared, not-templated user specified function.
         }
     }
 }

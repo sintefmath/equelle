@@ -87,6 +87,18 @@ struct DynamicReturnSpecification
           arg_index_for_dimension(di_ix)
     {
     }
+    bool activeType() const
+    {
+        return active &&
+            (arg_index_for_basic_type != InvalidIndex
+             || arg_index_for_gridmapping != InvalidIndex
+             || arg_index_for_subset != InvalidIndex
+             || arg_index_for_array_size != InvalidIndex);
+    }
+    bool activeDimension() const
+    {
+        return active && (arg_index_for_dimension != InvalidIndex);
+    }
     bool active;
     int arg_index_for_basic_type;
     int arg_index_for_gridmapping;
@@ -124,7 +136,9 @@ public:
     /// Explicit set the return type, for use when instantiating template functions.
     void setReturnType(const EquelleType& et);
 
-    const Dimension& returnDimension() const;
+    Dimension returnDimension(const std::vector<Dimension>& argdims) const;
+
+    Dimension returnDimension() const;
 
     void setReturnDimension(const Dimension& dim);
 

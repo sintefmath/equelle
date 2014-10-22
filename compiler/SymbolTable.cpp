@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <iostream>
+#include <cassert>
 
 
 
@@ -128,7 +129,7 @@ FunctionType::FunctionType(const std::vector<Variable>& args,
 
 EquelleType FunctionType::returnType() const
 {
-    if (dynamic_.active) {
+    if (dynamic_.activeType()) {
         throw std::logic_error("Should not call FunctionType::returnType() with no arguments "
                                "when the function has dynamic return type.");
     } else {
@@ -138,7 +139,8 @@ EquelleType FunctionType::returnType() const
 
 EquelleType FunctionType::returnType(const std::vector<EquelleType>& argtypes) const
 {
-    if (dynamic_.active) {
+    assert(argtypes.size() == arguments_.size());
+    if (dynamic_.activeType()) {
         const BasicType bt = dynamic_.arg_index_for_basic_type == InvalidIndex ?
             return_type_.basicType() : argtypes[dynamic_.arg_index_for_basic_type].basicType();
         const int gridmapping = dynamic_.arg_index_for_gridmapping == InvalidIndex ?
@@ -157,8 +159,22 @@ void FunctionType::setReturnType(const EquelleType& et)
     return_type_ = et;
 }
 
-const Dimension& FunctionType::returnDimension() const
+Dimension FunctionType::returnDimension(const std::vector<Dimension>& argdims) const
 {
+    assert(argdims.size() == arguments_.size());
+    if (dynamic_.activeDimension()) {
+        return argdims[dynamic_.arg_index_for_dimension];
+    } else {
+        return return_dimension_;
+    }
+}
+
+Dimension FunctionType::returnDimension() const
+{
+    if (dynamic_.activeDimension()) {
+        throw std::logic_error("Should not call FunctionType::returnDimension() with no arguments "
+                               "when the function has dynamic dimension.");
+    }
     return return_dimension_;
 }
 
@@ -169,7 +185,7 @@ void FunctionType::setReturnDimension(const Dimension& dim)
 
 int FunctionType::dynamicSubsetReturn(const std::vector<EquelleType>& argtypes) const
 {
-    if (dynamic_.active) {
+    if (dynamic_.activeType()) {
         const BasicType bt = dynamic_.arg_index_for_basic_type == InvalidIndex ?
             return_type_.basicType() : argtypes[dynamic_.arg_index_for_basic_type].basicType();
         const bool coll = return_type_.isCollection();

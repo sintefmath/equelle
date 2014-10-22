@@ -739,7 +739,14 @@ public:
     }
     Dimension dimension() const
     {
-        return SymbolTable::variableDimension(varname_);
+        if (SymbolTable::isVariableDeclared(varname_)) {
+            return SymbolTable::variableDimension(varname_);
+        } else if (SymbolTable::isFunctionDeclared(varname_)) {
+            // Function reference.
+            return Dimension();
+        } else {
+            throw std::logic_error("Internal compiler error in VarNode::dimension().");
+        }
     }
     const std::string& name() const
     {
