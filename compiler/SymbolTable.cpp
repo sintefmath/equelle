@@ -725,7 +725,7 @@ SymbolTable::SymbolTable()
     functions_.emplace_back("Normal",
                             FunctionType({ Variable("faces", EquelleType(Face, Collection)) },
                                          EquelleType(Vector, Collection),
-                                         DimensionConstant::length,
+                                         Dimension(),  // Normals are dimensionless, just directions.
                                          { InvalidIndex, 0, InvalidIndex}));
     // 2. User input functions.
     functions_.emplace_back("InputScalarWithDefault",
