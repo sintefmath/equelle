@@ -21,7 +21,7 @@ class Variable;
 class CheckASTVisitor : public ASTVisitorInterface
 {
 public:
-    CheckASTVisitor();
+    explicit CheckASTVisitor(const bool ignore_dimension = false);
     virtual ~CheckASTVisitor();
 
     void visit(SequenceNode& node);
@@ -93,6 +93,7 @@ public:
 private:
     int checking_suppression_level_;
     int next_loop_index_;
+    bool ignore_dimension_;
     std::stack<std::string> undecl_func_stack;
     std::map<std::string, FuncAssignNode*> functemplates_;
     EquelleType instantiation_return_type_;

@@ -80,7 +80,8 @@ int main(int argc, char** argv)
     yyparse();
 
     // Check AST (and build symbol table)
-    CheckASTVisitor check;
+    const bool ignore_dimensions = cli_vars.count("nondimensional");
+    CheckASTVisitor check(ignore_dimensions);
     SymbolTable::program()->accept(check);
 
     //Dump compiler internals

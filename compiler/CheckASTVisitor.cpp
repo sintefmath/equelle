@@ -10,9 +10,10 @@
 #include <sstream>
 
 
-CheckASTVisitor::CheckASTVisitor()
+CheckASTVisitor::CheckASTVisitor(const bool ignore_dimension)
     : checking_suppression_level_(0),
-      next_loop_index_(0)
+      next_loop_index_(0),
+      ignore_dimension_(ignore_dimension)
 {
 }
 
@@ -150,7 +151,7 @@ void CheckASTVisitor::postVisit(BinaryOpNode& node)
                 return;
             }
         }
-        if (node.left()->dimension() != node.right()->dimension()) {
+        if (!ignore_dimension_ && node.left()->dimension() != node.right()->dimension()) {
             std::ostringstream os;
             os << "addition and subtraction only allowed when both sides have same dimension\n"
                << "   dimension on left = " << node.left()->dimension() << '\n'
@@ -208,7 +209,7 @@ void CheckASTVisitor::postVisit(ComparisonOpNode& node)
             return;
         }
     }
-    if (left->dimension() != right->dimension()) {
+    if (!ignore_dimension_ && left->dimension() != right->dimension()) {
         error("comparison operators only allowed when both sides have same dimension.", node.location());
         return;
     }
@@ -391,7 +392,7 @@ void CheckASTVisitor::postVisit(TrinaryIfNode& node)
                 "all three expressions must be 'On' the same set.", node.location());
         return;
     }
-    if (node.ifTrue()->dimension() != node.ifFalse()->dimension()) {
+    if (!ignore_dimension_ && node.ifTrue()->dimension() != node.ifFalse()->dimension()) {
         error("in trinary if '<predicate> ? <iftrue> : <iffalse>' "
                 "<iftrue> and <iffalse> must have the same dimension.", node.location());
         return;
@@ -736,7 +737,7 @@ void CheckASTVisitor::postVisit(FuncCallNode& node)
     }
     // Dimension must be handled here, unless we are a template
     // (then it was handled already).
-    if (!f.isTemplate()) {
+    if (!ignore_dimension_ && !f.isTemplate()) {
         const auto& args = node.args()->arguments();
         const bool is_builtin = std::isupper(f.name()[0]);
         if (is_builtin) {
@@ -780,6 +781,10 @@ void CheckASTVisitor::postVisit(FuncCallNode& node)
             }
         } else {
             // Declared, not-templated user specified function.
+            // Currently all user-specified functions are treated as templates,
+            // so reaching this point should never happen.
+            throw std::logic_error("Compiler error in CheckASTVisitor::postVisit(FuncCallNode&). "
+                                   "There should be no user-specified non-template functions.");
         }
     }
 }
