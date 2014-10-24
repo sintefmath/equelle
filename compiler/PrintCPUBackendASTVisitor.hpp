@@ -84,18 +84,20 @@ public:
     virtual const char* cppEndString() const;
 
 private:
-    bool suppressed_;
+    int suppression_level_;
     int indent_;
     int sequence_depth_;
     std::set<std::string> requirement_strings_;
     std::set<std::string> defined_mutables_;
     bool instantiating_;
     int next_funcstart_inst_;
+    std::string skipping_function_;
 
     void endl() const;
     std::string indent() const;
     void suppress();
     void unsuppress();
+    bool isSuppressed() const;
     std::string cppTypeString(const EquelleType& et) const;
     void addRequirementString(const std::string& req);
 };
