@@ -648,7 +648,7 @@ int CheckASTVisitor::instantiate(const std::string& func_name,
 
 void CheckASTVisitor::visit(FuncCallNode& node)
 {
-    // Special treatment of NewtonSolve().
+    // Special treatment of NewtonSolve() and NewtonSolveSystem().
     if (node.name() == "NewtonSolve") {
         if (isCheckingSuppressed()) {
             error("cannot call NewtonSolve from inside a template function", node.location());
@@ -671,6 +671,38 @@ void CheckASTVisitor::visit(FuncCallNode& node)
             vn.setInstantiationIndex(inst_index);
         }
         SymbolTable::setCurrentFunction(original_scope);
+    } else if (node.name() == "NewtonSolveSystem") {
+        if (isCheckingSuppressed()) {
+            error("cannot call NewtonSolveSystem from inside a template function", node.location());
+            return;
+        }
+        const std::string original_scope = SymbolTable::getCurrentFunction().name();
+        const auto& argnodes = node.args()->arguments();
+        assert(argnodes.size() == 2);
+        ArrayNode& func_array = dynamic_cast<ArrayNode&>(*argnodes[0]);
+        ArrayNode& guess_array = dynamic_cast<ArrayNode&>(*argnodes[1]);
+        const auto& funcs = func_array.expressionList()->arguments();
+        assert(funcs.size() == 2);
+        const auto& guesses = guess_array.expressionList()->arguments();
+        assert(guesses.size() == 2);
+        for (ExpressionNode* fnode : funcs) {
+            VarNode& vn = dynamic_cast<VarNode&>(*fnode);
+            const std::string& func_name = vn.name();
+            const Function& f = SymbolTable::getFunction(func_name);
+            if (f.isTemplate()) {
+                // Must instantiate function.
+                std::vector<Variable> fargs = f.functionType().arguments();
+                assert(fargs.size() == 2);
+                for (int ia = 0; ia < 2; ++ia) {
+                    fargs[ia].setType(guesses[ia]->type());
+                    fargs[ia].setAssigned(true);
+                    fargs[ia].setDimension(guesses[ia]->dimension());
+                }
+                const int inst_index = instantiate(func_name, fargs, node.location());
+                vn.setInstantiationIndex(inst_index);
+                SymbolTable::setCurrentFunction(original_scope);
+            }
+        }
     }
 }
 
