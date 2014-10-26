@@ -108,7 +108,7 @@ save('initU_a.mat', 'initU', '-ascii')
 
 
 % Write timesteps ( prosjektet needs 2500 steps of 0.03
-timesteps = 100
+timesteps = 2500
 dt = 0.03
 %dt = 0.2
 

@@ -10,7 +10,7 @@ file(GLOB test_src "src/*.cpp")
 file(GLOB test_inc "include/equelle/*.hpp")
 
 include_directories( "include"
-    "../../backends/serial/include" "/usr/include/eigen3" "../include" )
+    "../../backends/serial/include" "/usr/include/eigen3" "../include" ${EQUELLE_EXTRA_INCLUDE_DIRS} )
 
 add_executable(cartesian_test ${test_src}
                               ${test_inc} )

@@ -9,10 +9,10 @@
 
 format compact;
 
-nx = 100;
-ny = 111;
-nz = 50;
-timesteps = 120
+nx = 200;
+ny = 100;
+nz = 100;
+timesteps = 20
 dt = 0.5;
 
 t = ones(1,timesteps).*dt;
@@ -66,4 +66,4 @@ num_Faces = (nx+1)*ny*nz + nx*(ny+1)*nz + nx*ny*(nz+1)
 
 size_dirvals = size(dirvalsList)
 size_indices = size(indices)
-nx_ny_nz = [nx ny nz]
+nx_ny_nz = 100;

@@ -19,7 +19,7 @@ t = ones(1,timesteps).*dt;
 save('timesteps.mat', 't', '-ascii')
 
 indices = zeros(1,2*ny*nz);
-ind = 2;
+ind = 2;  
 for i=1:ny*nz - 1
     indices(ind) = i*(nx + 1) -1;
     indices(ind+1) = i*(nx + 1);
