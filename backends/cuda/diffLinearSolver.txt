@@ -1,0 +1,208 @@
+diff --git a/backends/cuda/cuda_include/LinearSolver.hpp b/backends/cuda/cuda_include/LinearSolver.hpp
+index 8f599e3..b4c31e4 100644
+--- a/backends/cuda/cuda_include/LinearSolver.hpp
++++ b/backends/cuda/cuda_include/LinearSolver.hpp
+@@ -9,14 +9,16 @@
+ #include "CollOfScalar.hpp"
+ #include "equelleTypedefs.hpp"
+ 
++//#include <opm/core/linalg/LinearSolverFactory.hpp>
++
+ namespace equelleCUDA {
+ 
+ 
+     //! Enumerator for specifying available linear solvers
+-    enum EquelleSolver { CG, BiCGStab };
++    enum EquelleSolver { CG, BiCGStab, GMRes ,CPU };
+ 
+     //! Enumerator for specifying available preconditioners for linear solvers.
+-    enum EquellePrecond { NONE, DIAG };
++    enum EquellePrecond { NONE, DIAG , Ainv };
+ 
+ 
+     //! For finding implicit solutions
+@@ -60,6 +62,8 @@ namespace equelleCUDA {
+ 	CollOfScalar solve(const CudaMatrix& A,
+ 			   const CudaArray& b,
+ 			   const int verbose ) const;
++
++	EquelleSolver getSolver() const;
+ 	
+     private:
+ 	EquelleSolver solver_;
+@@ -67,9 +71,13 @@ namespace equelleCUDA {
+ 	double tol_;
+ 	int maxit_;
+ 
++	
++
+ 	void printLegalInput() const ;
+ 	void printLegalCombos() const ;
+ 
++	void printValuesToFile(const CudaMatrix& A) const;
++
+     }; // class LinearSolver
+ 
+ 
+diff --git a/backends/cuda/src/linearSolver.cu b/backends/cuda/src/linearSolver.cu
+index 9c4624e..d6a957e 100644
+--- a/backends/cuda/src/linearSolver.cu
++++ b/backends/cuda/src/linearSolver.cu
+@@ -14,7 +14,12 @@
+ #include <cusp/precond/diagonal.h>
+ #include <cusp/krylov/bicgstab.h>
+ #include <cusp/krylov/cg.h>
++#include <cusp/krylov/gmres.h>
++#include <cusp/precond/ainv.h>
+ 
++#include <iomanip>
++#include <fstream>
++#include <iterator>
+ 
+ 
+ using namespace equelleCUDA;
+@@ -35,6 +40,12 @@ LinearSolver::LinearSolver(std::string solver,
+     else if ( solver == "CG" ) {
+ 	solver_ = CG;
+     }
++    else if ( solver == "GMRes" ) {
++	solver_ = GMRes;
++    }
++    else if ( solver == "CPU" ) {
++	solver_ = CPU;
++    }
+     else {
+ 	printLegalInput();
+ 	OPM_THROW(std::runtime_error, "Illegal input " << solver << " for solver.");
+@@ -47,6 +58,9 @@ LinearSolver::LinearSolver(std::string solver,
+     else if ( precond == "none" ) {
+ 	precond_ = NONE;
+     }
++    else if ( precond == "Ainv" ) {
++	precond_ = Ainv;
++    }
+     else {
+ 	printLegalInput();
+ 	OPM_THROW(std::runtime_error, "Illegal input " << precond << " for preconditioner.");
+@@ -59,11 +73,14 @@ void LinearSolver::printLegalInput() const {
+     std::cout << "\n\nThe following are legal input for solver:\n";
+     std::cout << "\t - CG\n";
+     std::cout << "\t - BiCGStab\n";
++    std::cout << "\t - GMRes\n";
++    std::cout << "\t - CPU (using a linear solver implemented for the CPU)\n";
+     std::cout << "Example: solver=BiCGStab\n";
+     std::cout << "\n";
+     std::cout << "The following are legal input for preconditioner:\n";
+     std::cout << "\t - none\n";
+     std::cout << "\t - diagonal\n";
++    std::cout << "\t - Ainv\n";
+     std::cout << "Example: preconditioner=diagonal\n";
+     std::cout << "\n";
+ }
+@@ -75,6 +92,8 @@ void LinearSolver::printLegalCombos() const {
+     std::cout << "\tCG + diagonal\n";
+     std::cout << "\tBiCGStab + none\n";
+     std::cout << "\tBiCGStab + diagonal (default)\n";
++    std::cout << "\tBiCGStab + Ainv\n";
++    std::cout << "\tGMRes + none\n";
+     std::cout << "Example use in parameter file:\n";
+     std::cout << "\tsolver=CG\n";
+     std::cout << "\tpreconditioner=diagonal\n";
+@@ -84,6 +103,10 @@ LinearSolver::~LinearSolver() {
+     // Nothing to do here
+ }
+ 
++EquelleSolver LinearSolver::getSolver() const {
++    return solver_;
++}
++
+ 
+ // Solver:
+ CollOfScalar LinearSolver::solve(const CudaMatrix& A_cpy, 
+@@ -97,6 +120,8 @@ CollOfScalar LinearSolver::solve(const CudaMatrix& A_cpy,
+     CudaMatrix A = A_cpy;
+     CudaArray b = b_cpy; 
+ 
++    //printValuesToFile(A_cpy); // Remove this line!
++
+     // Declare the output.
+     CudaArray x(b.size());
+ 
+@@ -147,6 +172,10 @@ CollOfScalar LinearSolver::solve(const CudaMatrix& A_cpy,
+ 	// Solve the system
+ 	cusp::krylov::bicgstab(cusp_A, cusp_x, cusp_b, monitor, M);
+     }
++    else if ( solver_ == BiCGStab && precond_ == Ainv ) {
++	cusp::precond::scaled_bridson_ainv<double, cusp::device_memory> M(cusp_A, 0, -1, true, 2);
++	cusp::krylov::bicgstab(cusp_A, cusp_x, cusp_b, monitor, M);
++    }
+     else if ( solver_ == CG && precond_ == DIAG ) {
+ 	cusp::precond::diagonal<double, cusp::device_memory> M(cusp_A);
+ 	cusp::krylov::cg(cusp_A, cusp_x, cusp_b, monitor, M);
+@@ -157,6 +186,10 @@ CollOfScalar LinearSolver::solve(const CudaMatrix& A_cpy,
+     else if ( solver_ == CG && precond_ == NONE ) {
+ 	cusp::krylov::cg(cusp_A, cusp_x, cusp_b, monitor);
+     }
++    else if ( solver_ == GMRes && precond_ == NONE ) {
++	int restart = 10;
++	cusp::krylov::gmres(cusp_A, cusp_x, cusp_b, restart, monitor);
++    }
+     else {
+ 	printLegalCombos();
+ 	OPM_THROW(std::runtime_error, "The given combination of solver and preconditioner is not implemented");
+@@ -172,3 +205,54 @@ CollOfScalar LinearSolver::solve(const CudaMatrix& A_cpy,
+ 
+     return CollOfScalar(x);
+ }
++
++
++
++
++
++
++void LinearSolver::printValuesToFile(const CudaMatrix& A) const {
++
++    std::vector<double> hostVals(A.nnz(), 0.0);
++    cudaMemcpy( &hostVals[0], A.csrVal(), sizeof(double)*A.nnz(), 
++		cudaMemcpyDeviceToHost);
++
++    std::vector<int> hostRowPtr(A.rows() + 1, 0);
++    cudaMemcpy( &hostRowPtr[0], A.csrRowPtr(), sizeof(int)*(A.rows()+1),
++		cudaMemcpyDeviceToHost);
++
++    std::vector<int> hostColInd(A.nnz(), 0);
++    cudaMemcpy( &hostColInd[0], A.csrColInd(), sizeof(int)*A.nnz(),
++		cudaMemcpyDeviceToHost);
++
++    std::cout << "Matrix has " << A.nnz() << " number of nnz\n";
++    std::cout << "hostVals has " << hostVals.size() << " elements\n";
++    std::cout << "hostColInd has " << hostColInd.size() << " elements\n";
++
++    std::ofstream file("cuda_matrix_values.mat");
++    if (!file) {
++	OPM_THROW(std::runtime_error, "Failed to open cuda_matrix_values.mat");
++    }
++    file.precision(16);
++    for (int i = 0; i < A.nnz(); i++) {
++	file << hostVals[i] << "bah\n";
++	if (i > A.nnz()-10) {
++	    std::cout << i << "\n";
++	}
++    }
++    //std::copy(&hostVals[0], &hostVals[0] + A.nnz(), std::ostream_iterator<double>(file, "\n"));
++    
++    std::ofstream fileR("cuda_matrix_rowPtr.mat");
++    if ( !fileR ) {
++	OPM_THROW(std::runtime_error, "Failed to open cuda_matrix_rowPtr.mat");
++    }
++    std::copy(hostRowPtr.begin(), hostRowPtr.end(), std::ostream_iterator<int>(fileR, "\n"));
++	
++    std::ofstream fileC("cuda_matrix_colInd.mat");
++    if ( !fileR ) {
++	OPM_THROW(std::runtime_error, "Failed to open cuda_matrix_colInd.mat");
++    }
++    std::copy(hostColInd.begin(), hostColInd.end(), std::ostream_iterator<int>(fileC, "\n"));
++
++    OPM_THROW(std::runtime_error, "Finished printing matrix to file.\nExiting");
++}
+\ No newline at end of file

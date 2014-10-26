@@ -15,3 +15,4 @@ timesteps_from_file=true
 timesteps_filename=/home/havahol/sintefEquelle/equelle/examples/simulators/implicit_heateq/timesteps.mat
 output_to_file=true
 verbose=1
+solver=BiCGStab

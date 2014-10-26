@@ -16,6 +16,9 @@ nx	ny	nz	num_cells	num_faces	works?
 9	10	10	990			3269		no
 7	13	11	1001		3314		no
 
+After fixing the bugs:
+70	111	42	326340		994392		yes :)
+
 The cases that are too big gives unstable results between runs when using the CUDA backend. This is a further indication that we run out of memory.
 
 sizeof(double) -> 8bytes

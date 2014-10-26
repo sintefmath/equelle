@@ -5,8 +5,8 @@
 
 format compact;
 
-nx = 231;
-ny = 198;
+nx = 1500;
+ny = 1000;
 
 B = zeros(ny*2 +1,nx*2 + 1);
 
@@ -100,7 +100,7 @@ save('case_surf.mat', 'H', '-ascii')
 %save('initUCase_a.mat', 'initU', '-ascii')
 
 % Write timesteps ( prosjektet needs 2500 steps of 0.03
-timesteps = 10
+timesteps = 120;
 dt = 0.03
 %dt = 0.2
 

@@ -11,7 +11,7 @@ timesteps = InputSequenceOfScalar("timesteps")
 
 # u0 should be given initial values (in user input)
 u0 : Collection Of Scalar On AllCells()
-u0 = InputCollectionOfScalar("u0", AllCells())
+u0 = InputCollectionOfScalar("u_initial", AllCells())
 
 # Trying to add support for Dirichlet boundaries
 dirichlet_boundary : Collection Of Face Subset Of (BoundaryFaces())
@@ -67,11 +67,12 @@ For dt In timesteps
         # Extend both ifluxes and bfluxes to AllFaces() and add to get all fluxes.
         fluxes = (ifluxes Extend AllFaces()) + (bfluxes Extend AllFaces())
         # Deduced type: Collection Of Scalar On AllCells()
-        residual = u - u0 + (dt / vol) * Divergence(fluxes)
+        residual = (dt / vol) * Divergence(fluxes)
         -> residual
     }
     expU = expU - computeResidual(expU)
     Output("expU", expU)
+    Output("maximum of u", MaxReduce(expU))
 }
 
 Output("expU", expU)

@@ -15,5 +15,11 @@ target_link_libraries( swe ${EQUELLE_LIBRARIES}  )
 add_executable(serial_swe serial_swe.cpp)
 target_link_libraries( serial_swe ${EQUELLE_LIBRARIES} )
 
+add_executable( noOut noOut.cpp)
+target_link_libraries( noOut ${EQUELLE_LIBRARIES} )
+
+add_executable( timer timer.cpp)
+target_link_libraries( timer ${EQUELLE_LIBRARIES} )
+
 # If cmake can't find equelle package, run:
 # cmake -DEquelle_DIR=/home/havahol/sintefEquelle/build/

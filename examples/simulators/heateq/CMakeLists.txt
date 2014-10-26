@@ -18,5 +18,8 @@ target_link_libraries( serial_heateq ${EQUELLE_LIBRARIES} )
 add_executable( timer timer.cpp ) 
 target_link_libraries( timer ${EQUELLE_LIBRARIES} )
 
+add_executable( debug debug.cpp )
+target_link_libraries( debug ${EQUELLE_LIBRARIES} )
+
 # If cmake can't find equelle package, run:
 # cmake -DEquelle_DIR=/home/havahol/sintefEquelle/build/

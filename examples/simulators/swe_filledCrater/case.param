@@ -1,7 +1,7 @@
 grid_dim=2
-nx=231
+nx=1500
 dx=1
-ny=198
+ny=1000
 dy=1
 u_init_from_file=false
 u_init=0

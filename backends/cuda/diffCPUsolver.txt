@@ -1,0 +1,361 @@
+diff --git a/backends/cuda/cuda_include/LinearSolver.hpp b/backends/cuda/cuda_include/LinearSolver.hpp
+index 8f599e3..b4c31e4 100644
+--- a/backends/cuda/cuda_include/LinearSolver.hpp
++++ b/backends/cuda/cuda_include/LinearSolver.hpp
+@@ -9,14 +9,16 @@
+ #include "CollOfScalar.hpp"
+ #include "equelleTypedefs.hpp"
+ 
++//#include <opm/core/linalg/LinearSolverFactory.hpp>
++
+ namespace equelleCUDA {
+ 
+ 
+     //! Enumerator for specifying available linear solvers
+-    enum EquelleSolver { CG, BiCGStab };
++    enum EquelleSolver { CG, BiCGStab, GMRes ,CPU };
+ 
+     //! Enumerator for specifying available preconditioners for linear solvers.
+-    enum EquellePrecond { NONE, DIAG };
++    enum EquellePrecond { NONE, DIAG , Ainv };
+ 
+ 
+     //! For finding implicit solutions
+@@ -60,6 +62,8 @@ namespace equelleCUDA {
+ 	CollOfScalar solve(const CudaMatrix& A,
+ 			   const CudaArray& b,
+ 			   const int verbose ) const;
++
++	EquelleSolver getSolver() const;
+ 	
+     private:
+ 	EquelleSolver solver_;
+@@ -67,9 +71,13 @@ namespace equelleCUDA {
+ 	double tol_;
+ 	int maxit_;
+ 
++	
++
+ 	void printLegalInput() const ;
+ 	void printLegalCombos() const ;
+ 
++	void printValuesToFile(const CudaMatrix& A) const;
++
+     }; // class LinearSolver
+ 
+ 
+diff --git a/backends/cuda/include/EquelleRuntimeCUDA.hpp b/backends/cuda/include/EquelleRuntimeCUDA.hpp
+index 2c58d77..8045690 100644
+--- a/backends/cuda/include/EquelleRuntimeCUDA.hpp
++++ b/backends/cuda/include/EquelleRuntimeCUDA.hpp
+@@ -13,6 +13,7 @@
+ 
+ #include <opm/core/utility/parameters/ParameterGroup.hpp>
+ #include <opm/core/grid/GridManager.hpp>
++#include <opm/core/linalg/LinearSolverFactory.hpp>
+ #include <vector>
+ #include <string>
+ #include <map>
+@@ -196,6 +197,7 @@ private:
+     equelleCUDA::DeviceGrid dev_grid_;
+     mutable DeviceHelperOps devOps_;
+     LinearSolver solver_;
++    Opm::LinearSolverFactory serialSolver_;
+     bool output_to_file_;
+     int verbose_;
+     const Opm::parameter::ParameterGroup& param_;
+@@ -204,6 +206,7 @@ private:
+     int max_iter_;
+     double abs_res_tol_;
+ 
++    CollOfScalar serialSolveForUpdate(const CollOfScalar& residual) const;
+ 
+ };
+ 
+diff --git a/backends/cuda/include/EquelleRuntimeCUDA_impl.hpp b/backends/cuda/include/EquelleRuntimeCUDA_impl.hpp
+index 092825b..ff5e9f2 100644
+--- a/backends/cuda/include/EquelleRuntimeCUDA_impl.hpp
++++ b/backends/cuda/include/EquelleRuntimeCUDA_impl.hpp
+@@ -244,14 +244,21 @@ CollOfScalar EquelleRuntimeCUDA::newtonSolve(const ResidualFunctor& rescomp,
+                   << " (tol = " << abs_res_tol_ << ")" << std::endl;
+     }
+ 
++    CollOfScalar du;
++
+     // Execute newton loop until residual is small or we have used too many iterations.
+     while ( (twoNorm(residual) > abs_res_tol_) && (iter < max_iter_) ) {
+ 
+-        // Solve linear equations for du, apply update.
+-        const CollOfScalar du = solver_.solve(residual.derivative(),
+-					      residual.value(),
+-					      verbose_);
+-	
++	if ( solver_.getSolver() == CPU ) {
++	    du = serialSolveForUpdate(residual);
++	}
++	else {
++	    // Solve linear equations for du, apply update.
++	    du = solver_.solve(residual.derivative(),
++			       residual.value(),
++			       verbose_);
++	}	    
++
+ 	// du is a constant, hence, u is still a primary variable with an identity
+ 	// matrix as its derivative.
+ 	u = u - du;
+diff --git a/backends/cuda/src/EquelleRuntimeCUDA.cpp b/backends/cuda/src/EquelleRuntimeCUDA.cpp
+index 6913f41..c21dc43 100644
+--- a/backends/cuda/src/EquelleRuntimeCUDA.cpp
++++ b/backends/cuda/src/EquelleRuntimeCUDA.cpp
+@@ -13,6 +13,7 @@
+ 
+ #include <opm/core/utility/ErrorMacros.hpp>
+ #include <opm/core/utility/StopWatch.hpp>
++#include <opm/core/linalg/LinearSolverFactory.hpp>
+ #include <iomanip>
+ #include <fstream>
+ #include <iterator>
+@@ -70,6 +71,7 @@ EquelleRuntimeCUDA::EquelleRuntimeCUDA(const Opm::parameter::ParameterGroup& par
+ 	      param.getDefault<std::string>("preconditioner", "diagonal"),
+ 	      param.getDefault("solver_max_iter", 1000),
+ 	      param.getDefault("solver_tol", 1e-10)),
++      serialSolver_(param),
+       output_to_file_(param.getDefault("output_to_file", false)),
+       verbose_(param.getDefault("verbose", 0)),
+       param_(param),
+@@ -375,3 +377,25 @@ std::array<CollOfScalar, 4> equelleCUDA::makeArray( const CollOfScalar& t1,
+ {
+     return std::array<CollOfScalar, 4> {{t1, t2, t3, t4}};
+ }
++
++
++// Serial solver:
++CollOfScalar EquelleRuntimeCUDA::serialSolveForUpdate(const CollOfScalar& residual) const 
++{
++    // Want to solve A*x=b, where A is residual.der, b = residual.val
++
++    hostMat hostA = residual.derivative().toHost();
++    std::vector<double> hostb = residual.value().copyToHost();
++    std::vector<double> hostX(hostb.size(), 0.0);
++
++    Opm::LinearSolverInterface::LinearSolverReport rep
++	= serialSolver_.solve(hostA.rows, hostA.nnz,
++			      &hostA.rowPtr[0], &hostA.colInd[0], &hostA.vals[0],
++			      &hostb[0], &hostX[0]);
++    if (!rep.converged) {
++	OPM_THROW(std::runtime_error, "Serial linear solver failed to converge.");
++    }
++       
++    return CollOfScalar(hostX);
++}
++
+diff --git a/backends/cuda/src/cudaMatrix.cu b/backends/cuda/src/cudaMatrix.cu
+index c9127b2..28798f5 100644
+--- a/backends/cuda/src/cudaMatrix.cu
++++ b/backends/cuda/src/cudaMatrix.cu
+@@ -696,7 +696,7 @@ CudaMatrix equelleCUDA::cudaMatrixSum(const CudaMatrix& lhs,
+ 
+ CudaMatrix equelleCUDA::operator*(const CudaMatrix& lhs, const CudaMatrix& rhs) {
+ 
+-    std::cout << "-------MATRIX * MATRIX " << lhs.isTranspose() << " " << rhs.isTranspose() << "---------\n";
++    //std::cout << "-------MATRIX * MATRIX " << lhs.isTranspose() << " " << rhs.isTranspose() << "---------\n";
+     // If any of them are empty, we return an empty matrix.
+     // An empty matrix is interpreted as a correctly sized matrix of zeros.
+     // This lets us not worry about empty derivatives for autodiff.
+@@ -778,7 +778,7 @@ CudaMatrix equelleCUDA::operator*(const CudaMatrix& lhs, const CudaMatrix& rhs)
+ 
+ // Matrix * vector
+ CudaArray equelleCUDA::operator*(const CudaMatrix& mat, const CudaArray& vec) {
+-    std::cout << "-------MATRIX * VECTOR ---------\n";
++    //std::cout << "-------MATRIX * VECTOR ---------\n";
+ 
+      // Check that sizes match - Depend on transpose matrix or not.
+     int resultingVectorSize;
+diff --git a/backends/cuda/src/deviceHelperOps.cpp b/backends/cuda/src/deviceHelperOps.cpp
+index 7a246e5..300d944 100644
+--- a/backends/cuda/src/deviceHelperOps.cpp
++++ b/backends/cuda/src/deviceHelperOps.cpp
+@@ -80,7 +80,7 @@ void DeviceHelperOps::initFulldiv_() {
+ 
+ 
+ 
+-
++// Copied from Opm::HelperOps struct in the autodiff module.
+ void DeviceHelperOps::initHost_() {
+     
+     std::cout << "-----------------------------------------------------\n";
+diff --git a/backends/cuda/src/linearSolver.cu b/backends/cuda/src/linearSolver.cu
+index 9c4624e..d6a957e 100644
+--- a/backends/cuda/src/linearSolver.cu
++++ b/backends/cuda/src/linearSolver.cu
+@@ -14,7 +14,12 @@
+ #include <cusp/precond/diagonal.h>
+ #include <cusp/krylov/bicgstab.h>
+ #include <cusp/krylov/cg.h>
++#include <cusp/krylov/gmres.h>
++#include <cusp/precond/ainv.h>
+ 
++#include <iomanip>
++#include <fstream>
++#include <iterator>
+ 
+ 
+ using namespace equelleCUDA;
+@@ -35,6 +40,12 @@ LinearSolver::LinearSolver(std::string solver,
+     else if ( solver == "CG" ) {
+ 	solver_ = CG;
+     }
++    else if ( solver == "GMRes" ) {
++	solver_ = GMRes;
++    }
++    else if ( solver == "CPU" ) {
++	solver_ = CPU;
++    }
+     else {
+ 	printLegalInput();
+ 	OPM_THROW(std::runtime_error, "Illegal input " << solver << " for solver.");
+@@ -47,6 +58,9 @@ LinearSolver::LinearSolver(std::string solver,
+     else if ( precond == "none" ) {
+ 	precond_ = NONE;
+     }
++    else if ( precond == "Ainv" ) {
++	precond_ = Ainv;
++    }
+     else {
+ 	printLegalInput();
+ 	OPM_THROW(std::runtime_error, "Illegal input " << precond << " for preconditioner.");
+@@ -59,11 +73,14 @@ void LinearSolver::printLegalInput() const {
+     std::cout << "\n\nThe following are legal input for solver:\n";
+     std::cout << "\t - CG\n";
+     std::cout << "\t - BiCGStab\n";
++    std::cout << "\t - GMRes\n";
++    std::cout << "\t - CPU (using a linear solver implemented for the CPU)\n";
+     std::cout << "Example: solver=BiCGStab\n";
+     std::cout << "\n";
+     std::cout << "The following are legal input for preconditioner:\n";
+     std::cout << "\t - none\n";
+     std::cout << "\t - diagonal\n";
++    std::cout << "\t - Ainv\n";
+     std::cout << "Example: preconditioner=diagonal\n";
+     std::cout << "\n";
+ }
+@@ -75,6 +92,8 @@ void LinearSolver::printLegalCombos() const {
+     std::cout << "\tCG + diagonal\n";
+     std::cout << "\tBiCGStab + none\n";
+     std::cout << "\tBiCGStab + diagonal (default)\n";
++    std::cout << "\tBiCGStab + Ainv\n";
++    std::cout << "\tGMRes + none\n";
+     std::cout << "Example use in parameter file:\n";
+     std::cout << "\tsolver=CG\n";
+     std::cout << "\tpreconditioner=diagonal\n";
+@@ -84,6 +103,10 @@ LinearSolver::~LinearSolver() {
+     // Nothing to do here
+ }
+ 
++EquelleSolver LinearSolver::getSolver() const {
++    return solver_;
++}
++
+ 
+ // Solver:
+ CollOfScalar LinearSolver::solve(const CudaMatrix& A_cpy, 
+@@ -97,6 +120,8 @@ CollOfScalar LinearSolver::solve(const CudaMatrix& A_cpy,
+     CudaMatrix A = A_cpy;
+     CudaArray b = b_cpy; 
+ 
++    //printValuesToFile(A_cpy); // Remove this line!
++
+     // Declare the output.
+     CudaArray x(b.size());
+ 
+@@ -147,6 +172,10 @@ CollOfScalar LinearSolver::solve(const CudaMatrix& A_cpy,
+ 	// Solve the system
+ 	cusp::krylov::bicgstab(cusp_A, cusp_x, cusp_b, monitor, M);
+     }
++    else if ( solver_ == BiCGStab && precond_ == Ainv ) {
++	cusp::precond::scaled_bridson_ainv<double, cusp::device_memory> M(cusp_A, 0, -1, true, 2);
++	cusp::krylov::bicgstab(cusp_A, cusp_x, cusp_b, monitor, M);
++    }
+     else if ( solver_ == CG && precond_ == DIAG ) {
+ 	cusp::precond::diagonal<double, cusp::device_memory> M(cusp_A);
+ 	cusp::krylov::cg(cusp_A, cusp_x, cusp_b, monitor, M);
+@@ -157,6 +186,10 @@ CollOfScalar LinearSolver::solve(const CudaMatrix& A_cpy,
+     else if ( solver_ == CG && precond_ == NONE ) {
+ 	cusp::krylov::cg(cusp_A, cusp_x, cusp_b, monitor);
+     }
++    else if ( solver_ == GMRes && precond_ == NONE ) {
++	int restart = 10;
++	cusp::krylov::gmres(cusp_A, cusp_x, cusp_b, restart, monitor);
++    }
+     else {
+ 	printLegalCombos();
+ 	OPM_THROW(std::runtime_error, "The given combination of solver and preconditioner is not implemented");
+@@ -172,3 +205,54 @@ CollOfScalar LinearSolver::solve(const CudaMatrix& A_cpy,
+ 
+     return CollOfScalar(x);
+ }
++
++
++
++
++
++
++void LinearSolver::printValuesToFile(const CudaMatrix& A) const {
++
++    std::vector<double> hostVals(A.nnz(), 0.0);
++    cudaMemcpy( &hostVals[0], A.csrVal(), sizeof(double)*A.nnz(), 
++		cudaMemcpyDeviceToHost);
++
++    std::vector<int> hostRowPtr(A.rows() + 1, 0);
++    cudaMemcpy( &hostRowPtr[0], A.csrRowPtr(), sizeof(int)*(A.rows()+1),
++		cudaMemcpyDeviceToHost);
++
++    std::vector<int> hostColInd(A.nnz(), 0);
++    cudaMemcpy( &hostColInd[0], A.csrColInd(), sizeof(int)*A.nnz(),
++		cudaMemcpyDeviceToHost);
++
++    std::cout << "Matrix has " << A.nnz() << " number of nnz\n";
++    std::cout << "hostVals has " << hostVals.size() << " elements\n";
++    std::cout << "hostColInd has " << hostColInd.size() << " elements\n";
++
++    std::ofstream file("cuda_matrix_values.mat");
++    if (!file) {
++	OPM_THROW(std::runtime_error, "Failed to open cuda_matrix_values.mat");
++    }
++    file.precision(16);
++    for (int i = 0; i < A.nnz(); i++) {
++	file << hostVals[i] << "bah\n";
++	if (i > A.nnz()-10) {
++	    std::cout << i << "\n";
++	}
++    }
++    //std::copy(&hostVals[0], &hostVals[0] + A.nnz(), std::ostream_iterator<double>(file, "\n"));
++    
++    std::ofstream fileR("cuda_matrix_rowPtr.mat");
++    if ( !fileR ) {
++	OPM_THROW(std::runtime_error, "Failed to open cuda_matrix_rowPtr.mat");
++    }
++    std::copy(hostRowPtr.begin(), hostRowPtr.end(), std::ostream_iterator<int>(fileR, "\n"));
++	
++    std::ofstream fileC("cuda_matrix_colInd.mat");
++    if ( !fileR ) {
++	OPM_THROW(std::runtime_error, "Failed to open cuda_matrix_colInd.mat");
++    }
++    std::copy(hostColInd.begin(), hostColInd.end(), std::ostream_iterator<int>(fileC, "\n"));
++
++    OPM_THROW(std::runtime_error, "Finished printing matrix to file.\nExiting");
++}
+\ No newline at end of file
+diff --git a/backends/cuda/src/wrapEquelleRuntime.cu b/backends/cuda/src/wrapEquelleRuntime.cu
+index cada29c..e955320 100644
+--- a/backends/cuda/src/wrapEquelleRuntime.cu
++++ b/backends/cuda/src/wrapEquelleRuntime.cu
+@@ -191,7 +191,7 @@ __global__ void wrapEquelleRuntimeCUDA::gradientKernel( double* grad,
+     if ( i < size_out ) {
+ 	// Compute face index:
+ 	const int fi = int_faces[i];
+-	//grad[i] = second[int_face[i]] - first[int_face[i]]
++	//grad[i] = secondface[fi] - firstface[fi]
+ 	grad[i] = cell_vals[face_cells[fi*2 + 1]] - cell_vals[face_cells[fi*2]];
+     }
+ }

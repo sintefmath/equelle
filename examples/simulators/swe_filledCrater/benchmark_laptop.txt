@@ -1,0 +1,340 @@
+START MASSIVE TEST
+-------------------
+
+
+ 
+--------------------------------------------------
+Case 1 with cartesian 50 100
+--------------------------------------------------
+
+Number of cells: 5000
+Max value from swe 4.72556
+100 iterations took 5.84 seconds
+
+Number of cells: 5000
+Max value from swe 4.72556
+100 iterations took 5.92 seconds
+
+Number of cells: 5000
+Max value from swe 4.72556
+100 iterations took 5.88 seconds
+And serial:
+Omit serial
+ 
+--------------------------------------------------
+Case 2 with cartesian 100 100
+--------------------------------------------------
+
+Number of cells: 10000
+Max value from swe 2.5749
+100 iterations took 7.67 seconds
+
+Number of cells: 10000
+Max value from swe 2.5749
+100 iterations took 7.67 seconds
+
+Number of cells: 10000
+Max value from swe 2.5749
+100 iterations took 7.7 seconds
+And serial:
+Omit serial
+ 
+--------------------------------------------------
+Case 3 with cartesian 200 100
+--------------------------------------------------
+
+Number of cells: 20000
+Max value from swe 12.6636
+100 iterations took 14.31 seconds
+
+Number of cells: 20000
+Max value from swe 12.6636
+100 iterations took 14.37 seconds
+
+Number of cells: 20000
+Max value from swe 12.6636
+100 iterations took 14.27 seconds
+And serial:
+Omit serial
+ 
+--------------------------------------------------
+Case 4 with cartesian 300 100
+--------------------------------------------------
+
+Number of cells: 30000
+Max value from swe 12.8093
+100 iterations took 19.65 seconds
+
+Number of cells: 30000
+Max value from swe 12.8093
+100 iterations took 19.69 seconds
+
+Number of cells: 30000
+Max value from swe 12.8093
+100 iterations took 19.62 seconds
+And serial:
+Omit serial
+ 
+--------------------------------------------------
+Case 5 with cartesian 200 200
+--------------------------------------------------
+
+Number of cells: 40000
+Max value from swe 2.52212
+100 iterations took 29.74 seconds
+
+Number of cells: 40000
+Max value from swe 2.52212
+100 iterations took 29.7 seconds
+
+Number of cells: 40000
+Max value from swe 2.52212
+100 iterations took 29.78 seconds
+And serial:
+Omit serial
+ 
+--------------------------------------------------
+Case 6 with cartesian 200 250
+--------------------------------------------------
+
+Number of cells: 50000
+Max value from swe 9.41756
+100 iterations took 36.22 seconds
+
+Number of cells: 50000
+Max value from swe 9.41756
+100 iterations took 36.08 seconds
+
+Number of cells: 50000
+Max value from swe 9.41756
+100 iterations took 36.11 seconds
+And serial:
+Omit serial
+ 
+--------------------------------------------------
+Case 7 with cartesian 200 300
+--------------------------------------------------
+
+Number of cells: 60000
+Max value from swe 8.97107
+100 iterations took 41.07 seconds
+
+Number of cells: 60000
+Max value from swe 8.97107
+100 iterations took 40.89 seconds
+
+Number of cells: 60000
+Max value from swe 8.97107
+100 iterations took 40.93 seconds
+And serial:
+Omit serial
+ 
+--------------------------------------------------
+Case 8 with cartesian 200 400
+--------------------------------------------------
+
+Number of cells: 80000
+Max value from swe 7.76127
+100 iterations took 54.82 seconds
+
+Number of cells: 80000
+Max value from swe 7.76127
+100 iterations took 54.74 seconds
+
+Number of cells: 80000
+Max value from swe 7.76127
+100 iterations took 54.17 seconds
+And serial:
+Omit serial
+ 
+--------------------------------------------------
+Case 9 with cartesian 200 500
+--------------------------------------------------
+
+Number of cells: 100000
+Max value from swe 9.01924
+100 iterations took 64.55 seconds
+
+Number of cells: 100000
+Max value from swe 9.01924
+100 iterations took 64.31 seconds
+
+Number of cells: 100000
+Max value from swe 9.01924
+100 iterations took 64.63 seconds
+And serial:
+Omit serial
+ 
+--------------------------------------------------
+Case 10 with cartesian 300 400
+--------------------------------------------------
+
+Number of cells: 120000
+Max value from swe 10.739
+100 iterations took 74.45 seconds
+
+Number of cells: 120000
+Max value from swe 10.739
+100 iterations took 74.31 seconds
+
+Number of cells: 120000
+Max value from swe 10.739
+100 iterations took 74.85 seconds
+And serial:
+Omit serial
+ 
+--------------------------------------------------
+Case 11 with cartesian 500 300
+--------------------------------------------------
+
+Number of cells: 150000
+Max value from swe 12.296
+100 iterations took 88.65 seconds
+
+Number of cells: 150000
+Max value from swe 12.296
+100 iterations took 89.21 seconds
+
+Number of cells: 150000
+Max value from swe 12.296
+100 iterations took 88.7 seconds
+And serial:
+Omit serial
+ 
+--------------------------------------------------
+Case 12 with cartesian 600 300
+--------------------------------------------------
+
+Number of cells: 180000
+Max value from swe 6.61433
+100 iterations took 104.79 seconds
+
+Number of cells: 180000
+Max value from swe 6.61433
+100 iterations took 104.34 seconds
+
+Number of cells: 180000
+Max value from swe 6.61433
+100 iterations took 104.83 seconds
+And serial:
+Omit serial
+ 
+--------------------------------------------------
+Case 13 with cartesian 300 700
+--------------------------------------------------
+
+Number of cells: 210000
+Max value from swe 10.5866
+100 iterations took 119.9 seconds
+
+Number of cells: 210000
+Max value from swe 10.5866
+100 iterations took 119.96 seconds
+
+Number of cells: 210000
+Max value from swe 10.5866
+100 iterations took 121.01 seconds
+And serial:
+Omit serial
+ 
+--------------------------------------------------
+Case 14 with cartesian 500 500
+--------------------------------------------------
+
+Number of cells: 250000
+Max value from swe 2.50509
+100 iterations took 139.99 seconds
+
+Number of cells: 250000
+Max value from swe 2.50509
+100 iterations took 139.68 seconds
+
+Number of cells: 250000
+Max value from swe 2.50509
+100 iterations took 139.96 seconds
+And serial:
+Omit serial
+ 
+--------------------------------------------------
+Case 15 with cartesian 500 750
+--------------------------------------------------
+
+Number of cells: 375000
+Max value from swe 11.6287
+100 iterations took 201.77 seconds
+
+Number of cells: 375000
+Max value from swe 11.6287
+100 iterations took 202.17 seconds
+
+Number of cells: 375000
+Max value from swe 11.6287
+100 iterations took 201.62 seconds
+And serial:
+Omit serial
+ 
+--------------------------------------------------
+Case 16 with cartesian 500 1000
+--------------------------------------------------
+
+Number of cells: 500000
+Max value from swe 9.95011
+100 iterations took 265.12 seconds
+
+Number of cells: 500000
+Max value from swe 9.95011
+100 iterations took 264.93 seconds
+
+Number of cells: 500000
+Max value from swe 9.95011
+100 iterations took 265.24 seconds
+And serial:
+Omit serial
+ 
+--------------------------------------------------
+Case 17 with cartesian 1000 750
+--------------------------------------------------
+
+Number of cells: 750000
+Max value from swe 13.3063
+100 iterations took 387.98 seconds
+
+Number of cells: 750000
+Max value from swe 13.3063
+100 iterations took 388.8 seconds
+
+Number of cells: 750000
+Max value from swe 13.3063
+100 iterations took 389.16 seconds
+And serial:
+Omit serial
+ 
+--------------------------------------------------
+Case 18 with cartesian 1000 1000
+--------------------------------------------------
+
+Number of cells: 1000000
+Max value from swe 2.50213
+100 iterations took 513.07 seconds
+
+Number of cells: 1000000
+Max value from swe 2.50213
+100 iterations took 512.97 seconds
+
+Number of cells: 1000000
+Max value from swe 2.50213
+100 iterations took 515.24 seconds
+And serial:
+Omit serial
+ 
+--------------------------------------------------
+Case 19 with cartesian 1000 1250
+--------------------------------------------------
+And serial:
+Omit serial
+ 
+--------------------------------------------------
+Case 20 with cartesian 1500 1000
+--------------------------------------------------
+And serial:
+Omit serial
