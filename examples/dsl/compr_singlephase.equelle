@@ -1,19 +1,19 @@
 # Constants. Note: only lowercase initial letters!
 # Specific gas constant for dry air.
-rsp = 287.058
+rsp = 287.058 [Joule / (Kilogram * Kelvin)]
 # Assume constant temperature
-temp = 290
+temp = 290 [Kelvin]
 # perm = 1 Darcy (yes, we need scientific notation)
-perm = 0.00000000000098692
+perm = 0.00000000000098692 [Meter^2]
 # mobility = 1/viscosity (approx correct for dry air at 290 K)
-mobility = 52500
+mobility = 52500 [Meter * Second / Kilogram]
 
 # Input source terms and time steps.
-q = InputCollectionOfScalar("source", AllCells())
-timesteps = InputSequenceOfScalar("timesteps")
+q = InputCollectionOfScalar("source", AllCells()) * 1 [Kilogram/Second]
+timesteps = InputSequenceOfScalar("timesteps") * 1 [Second]
 
 # Initial pressure (3000000 Pa ~= 30 atm)
-p_initial = 3000000 Extend AllCells()
+p_initial = (3000000 [Pascal]) Extend AllCells()
 
 # Useful shortcuts/aliases
 intf = InteriorFaces()
