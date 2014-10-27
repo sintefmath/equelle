@@ -32,7 +32,6 @@ btrans = k * |bf| / |Centroid(bf) - Centroid(bf_cells)|
 dir_cells = bf_cells On dirichlet_boundary
 dir_sign = bf_sign On dirichlet_boundary
 dir_trans = btrans On dirichlet_boundary
-computeBoundaryFlux : Function(u : Collection Of Scalar On AllCells()) -> Collection Of Scalar On BoundaryFaces()
 computeBoundaryFlux(u) = {
     # Compute flux at Dirichlet boundaries.
     u_dirbdycells = u On dir_cells
