@@ -875,6 +875,11 @@ void CheckASTVisitor::visit(LoopNode& node)
         err_msg += loop_set;
         error(err_msg, node.location());
     }
+    if (SymbolTable::isVariableDeclared(node.loopVariable())) {
+        std::string err_msg = "already declared variable used for loop variable: ";
+        err_msg += node.loopVariable();
+        error(err_msg, node.location());
+    }
 
     // Create a name for the loop scope.
     std::ostringstream os;
@@ -888,6 +893,7 @@ void CheckASTVisitor::visit(LoopNode& node)
     SymbolTable::setCurrentFunction(os.str());
     SymbolTable::declareVariable(node.loopVariable(), loop_set_type.basicType());
     SymbolTable::setVariableAssigned(node.loopVariable(), true);
+    SymbolTable::setVariableDimension(node.loopVariable(), SymbolTable::variableDimension(loop_set));
 }
 
 void CheckASTVisitor::postVisit(LoopNode&)
