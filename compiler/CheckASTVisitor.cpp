@@ -151,6 +151,10 @@ void CheckASTVisitor::postVisit(BinaryOpNode& node)
                 return;
             }
         }
+        if (lt.isSequence() || rt.isSequence()) {
+            error("addition and subtraction not allowed with Sequences.", node.location());
+            return;
+        }
         if (!ignore_dimension_ && node.left()->dimension() != node.right()->dimension()) {
             std::ostringstream os;
             os << "addition and subtraction only allowed when both sides have same dimension\n"
@@ -165,11 +169,29 @@ void CheckASTVisitor::postVisit(BinaryOpNode& node)
             error("cannot multiply two 'Vector' types.", node.location());
             return;
         }
+        if (lt.isSequence()) {
+            if (lt.basicType() != Scalar || rt.basicType() != Scalar || rt.compositeType() != None) {
+                error("can only multiply Sequence Of Scalar with Scalar", node.location());
+                return;
+            }
+        }
+        if (rt.isSequence()) {
+            if (rt.basicType() != Scalar || lt.basicType() != Scalar || lt.compositeType() != None) {
+                error("can only multiply Sequence Of Scalar with Scalar", node.location());
+                return;
+            }
+        }
         break;
     case Divide:
         if (rt.basicType() != Scalar) {
             error("can only divide by 'Scalar' types", node.location());
             return;
+        }
+        if (lt.isSequence()) {
+            if (lt.basicType() != Scalar || rt.compositeType() != None) {
+                error("can only divide Sequence Of Scalar with Scalar", node.location());
+                return;
+            }
         }
         break;
     default:

@@ -327,10 +327,6 @@ public:
     {
         EquelleType lt = left_->type();
         EquelleType rt = right_->type();
-        if (lt.isSequence() || rt.isSequence()) {
-            yyerror("internal compiler error in BinaryOpNode::type(), sequences not allowed");
-            return EquelleType();
-        }
         switch (op_) {
         case Add:
             return lt; // should be identical to rt.
@@ -340,8 +336,10 @@ public:
             const bool isvec = lt.basicType() == Vector || rt.basicType() == Vector;
             const BasicType bt = isvec ? Vector : Scalar;
             const bool coll = lt.isCollection() || rt.isCollection();
+            const bool sequence = lt.isSequence() || rt.isSequence();
+            const CompositeType ct = coll ? Collection : (sequence ? Sequence : None);
             const int gm = lt.isCollection() ? lt.gridMapping() : rt.gridMapping();
-            return EquelleType(bt, coll ? Collection : None, gm);
+            return EquelleType(bt, ct, gm);
         }
         case Divide: {
             const BasicType bt = lt.basicType();
