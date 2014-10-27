@@ -46,8 +46,8 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
     const Scalar temp = double(290);
     const Scalar perm = double(9.8692e-13);
     const Scalar mobility = double(52500);
-    const CollOfScalar q = er.inputCollectionOfScalar("source", er.allCells());
-    const SeqOfScalar timesteps = er.inputSequenceOfScalar("timesteps");
+    const CollOfScalar q = (er.inputCollectionOfScalar("source", er.allCells()) * double(1));
+    const SeqOfScalar timesteps = (er.inputSequenceOfScalar("timesteps") * double(1));
     const CollOfScalar p_initial = er.operatorExtend(double(3000000), er.allCells());
     const CollOfFace intf = er.interiorFaces();
     const CollOfCell f = er.firstCell(intf);
@@ -59,13 +59,16 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
     const CollOfScalar h1 = ((-area * perm) * (er.dot(er.normal(intf), d1) / er.dot(d1, d1)));
     const CollOfScalar h2 = ((area * perm) * (er.dot(er.normal(intf), d2) / er.dot(d2, d2)));
     const CollOfScalar trans = (double(1) / ((double(1) / h1) + (double(1) / h2)));
-    auto density = [&](const CollOfScalar& p) -> CollOfScalar {
+    auto density_i0_ = [&](const CollOfScalar& p) -> CollOfScalar {
+        return (p / (rsp * temp));
+    };
+    auto density_i1_ = [&](const CollOfScalar& p) -> CollOfScalar {
         return (p / (rsp * temp));
     };
     auto residual = [&](const CollOfScalar& p, const CollOfScalar& p0, const Scalar& dt) -> CollOfScalar {
         const CollOfScalar v = ((mobility * trans) * (er.operatorOn(p, er.allCells(), f) - er.operatorOn(p, er.allCells(), s)));
-        const CollOfScalar rho = density(p);
-        const CollOfScalar rho0 = density(p0);
+        const CollOfScalar rho = density_i0_(p);
+        const CollOfScalar rho0 = density_i1_(p0);
         const CollOfScalar rho_face = ((er.operatorOn(rho, er.allCells(), f) + er.operatorOn(rho, er.allCells(), s)) / double(2));
         const CollOfScalar res = ((((vol / dt) * (rho - rho0)) + er.divergence((v * rho_face))) - q);
         return res;

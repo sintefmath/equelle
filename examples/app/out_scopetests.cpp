@@ -53,10 +53,7 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
         const SeqOfScalar seq2 = er.inputSequenceOfScalar("seq2");
         for (const Scalar& e2 : seq2) {
             auto foo3 = [&](const Scalar& y) -> Scalar {
-                auto three = [&]() -> Scalar {
-                    return double(3);
-                };
-                return foo(three(), y);
+                return foo(double(3), y);
             };
             const Scalar q = ((b + foo3(e2)) + r);
             er.output("q", q);
