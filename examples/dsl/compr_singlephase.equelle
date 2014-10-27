@@ -30,17 +30,11 @@ h2 =   area * perm * Dot(Normal(intf), d2) / Dot(d2, d2)
 trans = 1.0 / (1.0/h1 + 1.0/h2)
 
 # Function for computing density from pressure
-density : Function(p : Collection Of Scalar On AllCells()) ...
-                    -> Collection Of Scalar On AllCells()
 density(p) = {
     -> p / (rsp * temp)
 }
 
 # Residual equation
-residual : Function(p  : Collection Of Scalar On AllCells(), ...
-                    p0 : Collection Of Scalar On AllCells(), ...
-                    dt : Scalar) ...
-                      -> Collection Of Scalar On AllCells()
 residual(p, p0, dt) = {
     v = mobility * trans * ((p On f) - (p On s))
     rho = density(p)
@@ -59,8 +53,6 @@ p0 = p_initial
 For dt In timesteps {
     # Define local residual function that only takes the
     # primary variable as argument.
-    locRes : Function(p : Collection Of Scalar On AllCells()) ...
-                       -> Collection Of Scalar On AllCells()
     locRes(p) = {
         -> residual(p, p0, dt)
     }
