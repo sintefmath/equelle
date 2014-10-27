@@ -30,6 +30,9 @@ class YYInOwner {
 public:
 	YYInOwner(const std::string filename_) {
 		yyin = fopen(filename_.c_str(),"r");
+                if (!yyin) {
+                    throw std::runtime_error("Input file not found.");
+                }
 	}
 	~YYInOwner() {
 	    fclose(yyin);
