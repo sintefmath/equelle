@@ -53,7 +53,8 @@ void PrintCPUBackendASTVisitor::postVisit(SequenceNode&)
         // Emit ensureRequirements() function.
         std::cout <<
             "\n"
-            "void ensureRequirements(const equelle::EquelleRuntimeCPU& er)\n"
+            "void ensureRequirements(const " << namespaceNameString() <<
+	    "::" << classNameString() << "& er)\n"
             "{\n";
         if (requirement_strings_.empty()) {
             std::cout << "    (void)er;\n";
@@ -691,6 +692,15 @@ const char *PrintCPUBackendASTVisitor::cppEndString() const
     return ::impl_cppEndString();
 }
 
+const char *PrintCPUBackendASTVisitor::classNameString() const
+{
+    return "EquelleRuntimeCPU";
+}
+
+const char *PrintCPUBackendASTVisitor::namespaceNameString() const
+{
+    return "equelle";
+}
 
 void PrintCPUBackendASTVisitor::endl() const
 {
