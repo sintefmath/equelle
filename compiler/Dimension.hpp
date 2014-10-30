@@ -89,6 +89,7 @@ private:
 namespace DimensionConstant
 {
     // Basic dimension constants.
+    const Dimension nodim      {};
     const Dimension length     {{{ 1, 0, 0, 0, 0, 0, 0 }}};
     const Dimension time       {{{ 0, 1, 0, 0, 0, 0, 0 }}};
     const Dimension mass       {{{ 0, 0, 1, 0, 0, 0, 0 }}};
@@ -108,24 +109,6 @@ namespace DimensionConstant
 // Needed for visit(UnitNode&).
 inline std::string dimString(BaseDimension bd)
 {
-    // switch (bd) {
-    // case Length:
-    //     return "Length";
-    // case Time:
-    //     return "Time";
-    // case Mass:
-    //     return "Mass";
-    // case Temperature:
-    //     return "Temperature";
-    // case ElectricCurrent:
-    //     return "ElectricCurrent";
-    // case QuantityOfSubstance:
-    //     return "QuantityOfSubstance";
-    // case LuminousIntensity:
-    //     return "LuminousIntensity";
-    // default:
-    //     throw std::logic_error("Error in dimString() -- unknown enum value.");
-    // }
     switch (bd) {
     case Length:
         return "Meter";

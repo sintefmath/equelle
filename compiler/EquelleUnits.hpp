@@ -55,6 +55,19 @@ inline std::map<std::string, UnitData> buildUnitMap()
 
     // Create unit map by repeated inserts.
     std::map<std::string, UnitData> u;
+    // Prefixes
+    u["Pico"] = UnitData(nodim, 1e-12);
+    u["Nano"] = UnitData(nodim, 1e-9);
+    u["Micro"] = UnitData(nodim, 1e-6);
+    u["Milli"] = UnitData(nodim, 1e-3);
+    u["Centi"] = UnitData(nodim, 0.01);
+    u["Deci"] = UnitData(nodim, 0.1);
+    u["Deca"] = UnitData(nodim, 10);
+    u["Hecto"] = UnitData(nodim, 100);
+    u["Kilo"] = UnitData(nodim, 1e3);
+    u["Mega"] = UnitData(nodim, 1e6);
+    u["Giga"] = UnitData(nodim, 1e9);
+    u["Tera"] = UnitData(nodim, 1e12);
     // Length
     u["Meter"] = UnitData(length, 1.0);
     u["Inch"] = UnitData(length, 0.0254);
