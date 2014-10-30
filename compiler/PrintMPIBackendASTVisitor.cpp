@@ -83,3 +83,12 @@ const char *PrintMPIBackendASTVisitor::cppEndString() const
     return ::impl_cppEndString();
 }
 
+const char *PrintMPIBackendASTVisitor::classNameString() const
+{
+    return "RuntimeMPI";
+}
+
+const char *PrintMPIBackendASTVisitor::namespaceNameString() const
+{
+    return "equelle";
+}
