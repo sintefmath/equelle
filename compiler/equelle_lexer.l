@@ -19,6 +19,7 @@
 %}
 
 COMMENT  #.*
+FLOAT    [+-]?(0|[1-9][0-9]*)?\.?[0-9]+(e[+-]?(0|[1-9][0-9]*))?
 DIGIT    [0-9]
 LCASE    [a-z]
 UCASE    [A-Z]
@@ -28,7 +29,6 @@ IDCHAR   [0-9a-zA-Z_]
 ID       {LCASE}{IDCHAR}*
 BUILTIN  {UCASE}{IDCHAR}*
 INT      {DIGIT}+
-FLOAT    {INT}[.]{INT}
 BLANKS   [\t ]+
 STRINGL  \"(\\.|[^\\"])*\"
 SINGLES  [$@:=()+\-*/^<>{},|?\[\]]
