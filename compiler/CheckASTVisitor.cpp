@@ -232,7 +232,11 @@ void CheckASTVisitor::postVisit(ComparisonOpNode& node)
         }
     }
     if (!ignore_dimension_ && left->dimension() != right->dimension()) {
-        error("comparison operators only allowed when both sides have same dimension.", node.location());
+        std::ostringstream os;
+        os << "comparison operators only allowed when both sides have same dimension\n"
+           << "   dimension on left = " << left->dimension() << '\n'
+           << "   dimension on right = " << right->dimension();
+        error(os.str(), node.location());
         return;
     }
 }
@@ -415,8 +419,12 @@ void CheckASTVisitor::postVisit(TrinaryIfNode& node)
         return;
     }
     if (!ignore_dimension_ && node.ifTrue()->dimension() != node.ifFalse()->dimension()) {
-        error("in trinary if '<predicate> ? <iftrue> : <iffalse>' "
-                "<iftrue> and <iffalse> must have the same dimension.", node.location());
+        std::ostringstream os;
+        os << "in trinary if '<predicate> ? <iftrue> : <iffalse>' "
+            "<iftrue> and <iffalse> must have the same dimension.\n"
+           << "   dimension of <iftrue> = " << node.ifTrue()->dimension() << '\n'
+           << "   dimension of <iffalse> = " << node.ifFalse()->dimension();
+        error(os.str(), node.location());
         return;
     }
 }
