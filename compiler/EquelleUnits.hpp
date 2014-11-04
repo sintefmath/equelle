@@ -39,6 +39,10 @@ struct UnitData
     {
         return UnitData(dimension, conv_factor * factor);
     }
+    UnitData operator*(const UnitData& other) const
+    {
+        return UnitData(dimension + other.dimension, conv_factor * other.conv_factor);
+    }
     Dimension dimension;
     double conv_factor;
     bool valid;
@@ -88,6 +92,11 @@ inline std::map<std::string, UnitData> buildUnitMap()
     u["Pascal"] = UnitData(pressure, 1.0);
     u["Watt"] = UnitData(effect, 1.0);
 
+    // Other units
+    u["Bar"] = 100000 * u["Pascal"];
+    u["Atm"] = 101325 * u["Pascal"];
+    u["Darcy"] = UnitData(area, 1e-7 / 101325);
+    u["Poise"] = 0.1 * u["Pascal"] * u["Second"];
     return u;
 }
 
