@@ -598,7 +598,9 @@ int main(int argc, char** argv) {
     // 3)
     std::array<CollOfScalar, 3> cudaArray = makeArray(myColl11, myColl6, myColl7);
     //if ( CollOfScalar(myColl11.value()).useAutoDiff() ) { MY_THROW}
-    std::array<SerialCollOfScalar, 3> serialArray = equelle::makeArray(serial11, SerialCollOfScalar(myADB6), SerialCollOfScalar(myADB7));
+    std::tuple<SerialCollOfScalar, SerialCollOfScalar, SerialCollOfScalar> serialArrayTuple = equelle::makeArray(serial11, SerialCollOfScalar(myADB6), SerialCollOfScalar(myADB7));
+
+    std::array<SerialCollOfScalar, 3> serialArray = std::array<SerialCollOfScalar,3>{{std::get<0>(serialArrayTuple), std::get<1>(serialArrayTuple), std::get<2>(serialArrayTuple)}};
     if (compareER(cudaArray[0], serialArray[0], "cudaArray[0]")) {MY_THROW}
     if (compareER(cudaArray[1], serialArray[1], "cudaArray[1]")) {MY_THROW}
     if (compareER(cudaArray[2], serialArray[2], "cudaArray[2]")) {MY_THROW}
