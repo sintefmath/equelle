@@ -114,7 +114,7 @@ int collOfScalarTest(EquelleRuntimeCUDA* er) {
 	faces_sol[i] *= i*10;
     }
     int faces_size = 31;
-    if ( compare(faces, faces_sol, faces_size, "inputaCollectionOfScalar(faces)") ) {
+    if ( compare(faces, faces_sol, faces_size, "inputCollectionOfScalar(faces)") ) {
 	return 1;
     }
 
