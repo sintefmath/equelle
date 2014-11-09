@@ -82,7 +82,7 @@ if (Boost_FOUND)
 			${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
 			equelle_cuda
 			equelle_rt
-			opmcore boost_filesystem-mt boost_system-mt 
+			opmcore boost_filesystem boost_system 
 			tinyxml umfpack ${SUPERLU_LIB} dunecommon
 		)
 		if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test/${test_name}.param")
