@@ -83,6 +83,8 @@ public:
     // These are overriden by subclasses who only need to alter the surroundings of the generated code.
     virtual const char* cppStartString() const;
     virtual const char* cppEndString() const;
+    virtual const char* classNameString() const;
+    virtual const char* namespaceNameString() const;
 
 private:
     bool suppressed_;
