@@ -751,6 +751,7 @@ void CheckASTVisitor::postVisit(FuncCallNode& node)
         std::string err_msg = "wrong number of arguments when calling function ";
         err_msg += node.name();
         error(err_msg, node.location());
+        return;
     }
     for (int arg = 0; arg < argtypes.size(); ++arg) {
         if (!argtypes[arg].canSubstituteFor(fargs[arg].type())) {
@@ -760,6 +761,7 @@ void CheckASTVisitor::postVisit(FuncCallNode& node)
                 << ", expected " << SymbolTable::equelleString(fargs[arg].type())
                 << " but got " << SymbolTable::equelleString(argtypes[arg]);
             error(err.str(), node.location());
+            return;
         }
     }
     // Special treatment for function templates.
