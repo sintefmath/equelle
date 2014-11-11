@@ -251,7 +251,7 @@ void PrintASTVisitor::visit(LoopNode& node)
 
 void PrintASTVisitor::visit(ArrayNode& node)
 {
-    std::cout << indent() << "ArrayNode: array size = " << node.type().arraySize() << "\n";
+    std::cout << indent() << "ArrayNode: array size = " << node.expressionList()->arguments().size() << "\n";
     ++indent_;
 }
 
