@@ -592,11 +592,15 @@ int main(int argc, char** argv) {
 	SerialCollOfScalar serial_to_output = serialER.operatorExtend(sinput2_intc, serialER.interiorCells(), serialER.allCells());
 	if ( compareER(to_output, serial_to_output, "Extend in lambda function",0, ad)){MY_THROW}
 
-	return makeArray(cudaArrayIn[0], to_output, cudaArrayIn[2]);
+	std::tuple<CollOfScalar, CollOfScalar, CollOfScalar> tempOut = makeArray(cudaArrayIn[0], to_output, cudaArrayIn[2]);
+	return std::array<CollOfScalar, 3> {{ std::get<0>(tempOut), std::get<1>(tempOut), std::get<2>(tempOut) }};
     };
     
     // 3)
-    std::array<CollOfScalar, 3> cudaArray = makeArray(myColl11, myColl6, myColl7);
+    std::tuple<CollOfScalar, CollOfScalar, CollOfScalar> cudaArrayTuple = makeArray(myColl11, myColl6, myColl7);
+    std::array<CollOfScalar, 3> cudaArray = std::array<CollOfScalar, 3> {{std::get<0>(cudaArrayTuple),
+									  std::get<1>(cudaArrayTuple),
+									  std::get<2>(cudaArrayTuple) }};
     //if ( CollOfScalar(myColl11.value()).useAutoDiff() ) { MY_THROW}
     std::tuple<SerialCollOfScalar, SerialCollOfScalar, SerialCollOfScalar> serialArrayTuple = equelle::makeArray(serial11, SerialCollOfScalar(myADB6), SerialCollOfScalar(myADB7));
 
@@ -621,14 +625,18 @@ int main(int argc, char** argv) {
     
     // Call test_function with non-autodiff CollOfScalars
     // 3)
-    std::array<CollOfScalar, 3> cudaArrayS = makeArray(CollOfScalar(myColl11.value()), CollOfScalar(myColl6.value()), CollOfScalar(myColl7.value()));
+    std::tuple<CollOfScalar, CollOfScalar, CollOfScalar> cudaArraySTuple = makeArray(CollOfScalar(myColl11.value()), 
+										     CollOfScalar(myColl6.value()),
+										     CollOfScalar(myColl7.value()) );
+    std::array<CollOfScalar, 3> cudaArrayS = std::array<CollOfScalar, 3> {{ std::get<0>(cudaArraySTuple),
+									    std::get<1>(cudaArraySTuple),
+									    std::get<2>(cudaArraySTuple) }};
     if (compareER(cudaArrayS[0], serialArray[0], "cudaArray[0] noAD",0, true)) {MY_THROW}
     if (compareER(cudaArrayS[1], serialArray[1], "cudaArray[1] noAD",0, true)) {MY_THROW}
     if (compareER(cudaArrayS[2], serialArray[2], "cudaArray[2] noAD",0, true)) {MY_THROW}
     // 4)
     std::cout << "--------- TEST_FUNCTION without AD ---------\n";
-    std::array<CollOfScalar, 3> myOutputS = test_function(cudaArray, serialArray);
-    std::cout << "--------- TEST_FUNCTION without AD done ----\n";
+    std::array<CollOfScalar, 3> myOutputS = test_function(cudaArray, serialArray);    std::cout << "--------- TEST_FUNCTION without AD done ----\n";
     // 5)
     if (compareER(myOutputS[0], serialArray[0], "myOutput[0]")) {MY_THROW}
     // this one is changed
