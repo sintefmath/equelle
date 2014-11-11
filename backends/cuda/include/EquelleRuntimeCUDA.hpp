@@ -17,7 +17,7 @@
 #include <vector>
 #include <string>
 #include <map>
-#include <array>
+#include <tuple>
 
 
 // Including device code
@@ -40,19 +40,19 @@ namespace equelleCUDA {
 
     // Array Of {X} Collection Of Scalar:
     /// For 1 CollOfScalar
-    std::array<CollOfScalar, 1> makeArray( const CollOfScalar& t );
+    std::tuple<CollOfScalar> makeArray( const CollOfScalar& t);
     /// For 2 CollOfScalar
-    std::array<CollOfScalar, 2> makeArray( const CollOfScalar& t1, 
-					   const CollOfScalar& t2 );
+    std::tuple<CollOfScalar, CollOfScalar> makeArray(const CollOfScalar& t1,
+						     const CollOfScalar& t2);
     /// For 3 CollOfScalar
-    std::array<CollOfScalar, 3> makeArray( const CollOfScalar& t1,
-					   const CollOfScalar& t2,
-					   const CollOfScalar& t3 );
+    std::tuple<CollOfScalar, CollOfScalar, CollOfScalar> makeArray( const CollOfScalar& t1,
+								    const CollOfScalar& t2,
+								    const CollOfScalar& t3 );
     /// For 4 CollOfScalar
-    std::array<CollOfScalar, 4> makeArray( const CollOfScalar& t1,
-					   const CollOfScalar& t2,
-					   const CollOfScalar& t3,
-					   const CollOfScalar& t4 );
+    std::tuple<CollOfScalar, CollOfScalar, CollOfScalar, CollOfScalar> makeArray( const CollOfScalar& t1,
+										  const CollOfScalar& t2,
+										  const CollOfScalar& t3,
+										  const CollOfScalar& t4 );
     
 
 

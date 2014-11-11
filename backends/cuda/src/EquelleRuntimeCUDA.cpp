@@ -18,6 +18,7 @@
 #include <iterator>
 #include <stdexcept>
 #include <set>
+#include <tuple>
 
 using namespace equelleCUDA;
 using namespace wrapEquelleRuntimeCUDA;
@@ -372,28 +373,28 @@ CollOfScalar EquelleRuntimeCUDA::serialSolveForUpdate(const CollOfScalar& residu
 
 
 // Array Of {X} Collection Of Scalar
-std::array<CollOfScalar, 1> equelleCUDA::makeArray( const CollOfScalar& t ) 
+std::tuple<CollOfScalar> equelleCUDA::makeArray( const CollOfScalar& t ) 
 {
-    return std::array<CollOfScalar, 1> {{t}};
+    return std::tuple<CollOfScalar> {t};
 }
 
-std::array<CollOfScalar, 2> equelleCUDA::makeArray( const CollOfScalar& t1, 
-						    const CollOfScalar& t2 )
+std::tuple<CollOfScalar, CollOfScalar> equelleCUDA::makeArray( const CollOfScalar& t1, 
+							       const CollOfScalar& t2 )
 {
-    return std::array<CollOfScalar, 2> {{t1, t2}};
+    return std::tuple<CollOfScalar, CollOfScalar> {t1, t2};
 }
 
-std::array<CollOfScalar, 3> equelleCUDA::makeArray( const CollOfScalar& t1,
-						    const CollOfScalar& t2,
-						    const CollOfScalar& t3 )
+std::tuple<CollOfScalar, CollOfScalar, CollOfScalar> equelleCUDA::makeArray( const CollOfScalar& t1,
+							       const CollOfScalar& t2,
+							       const CollOfScalar& t3 )
 {
-    return std::array<CollOfScalar, 3> {{t1, t2, t3}};
+    return std::tuple<CollOfScalar, CollOfScalar, CollOfScalar> {t1, t2, t3};
 }
 
-std::array<CollOfScalar, 4> equelleCUDA::makeArray( const CollOfScalar& t1,
-						    const CollOfScalar& t2,
-						    const CollOfScalar& t3,
-						    const CollOfScalar& t4 )
+std::tuple<CollOfScalar, CollOfScalar, CollOfScalar, CollOfScalar> equelleCUDA::makeArray( const CollOfScalar& t1,
+											   const CollOfScalar& t2,
+											   const CollOfScalar& t3,
+											   const CollOfScalar& t4 )
 {
-    return std::array<CollOfScalar, 4> {{t1, t2, t3, t4}};
+    return std::tuple<CollOfScalar, CollOfScalar, CollOfScalar, CollOfScalar> {t1, t2, t3, t4};
 }
