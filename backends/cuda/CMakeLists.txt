@@ -100,7 +100,7 @@ set_target_properties( equelle_cuda PROPERTIES
 
 set(EQUELLE_LIBS_FOR_CONFIG ${EQUELLE_LIBS_FOR_CONFIG}
     equelle_cuda  opmautodiff opmcore dunecommon
-    umfpack tinyxml boost_filesystem-mt	boost_system-mt ${SUPERLU_LIB}
+    umfpack tinyxml boost_filesystem boost_system ${SUPERLU_LIB}
     ${EQUELLE_EXTRA_LIBS} ${CUDA_LIBRARIES} ${CUDA_cusparse_LIBRARY} 
     ${CUDA_cublas_LIBRARY}
     PARENT_SCOPE)
