@@ -17,11 +17,10 @@ update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.7 40 --slave /usr/
 update-alternatives --set gcc /usr/bin/gcc-4.7
 
 # Clone Equelle git repository, and build
-# TODO: Change to sintefmath repo!
 mkdir -p /equelle/src /equelle/build
 useradd -G users equelle
 chown equelle:users /equelle/src /equelle/build
-sudo -u equelle git clone https://github.com/jakhog/equelle.git /equelle/src
+sudo -u equelle git clone https://github.com/sintefmath/equelle.git /equelle/src
 cd /equelle/src
 sudo -u equelle git submodule update --init --recursive
 cd /equelle/build
