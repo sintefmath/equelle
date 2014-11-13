@@ -1347,9 +1347,7 @@ public:
     }
     Dimension dimension() const
     {
-        // yyerror("ArrayNode()::dimension() not implemented");
-        // return ExpressionNode::dimension();
-        // TODO: array creation ([x,y,...]) is dimensionless for now, fix.
+        throw std::logic_error("Internal compiler error in ArrayNode::dimension(). Meaningless to ask for array dimension since array elements may have different dimension.");
         return Dimension();
     }
     virtual void accept(ASTVisitorInterface& visitor)
@@ -1404,10 +1402,13 @@ public:
     }
     Dimension dimension() const
     {
-        // yyerror("RandomAccessNode()::dimension() not implemented");
-        // return ExpressionNode::dimension();
-        // TODO: array access (a[n]) is dimensionless for now, fix.
-        return Dimension();
+        if (expr_->type().isArray()) {
+            // Cannot ask arrays for dimension, since that may be heterogenous.
+            ArrayNode& arr = dynamic_cast<ArrayNode&>(*expr_);
+            return arr.expressionList()->arguments()[index_]->dimension();
+        } else {
+            return expr_->dimension();
+        }
     }
     virtual void accept(ASTVisitorInterface& visitor)
     {
