@@ -70,12 +70,26 @@ void Variable::setType(const EquelleType& type)
 
 const Dimension& Variable::dimension() const
 {
+    if (dimension_.size() != 1) {
+        throw std::logic_error("Internal compiler error in Variable::dimension()");
+    }
+    return dimension_[0];
+}
+
+const std::vector<Dimension>& Variable::arrayDimension() const
+{
     return dimension_;
 }
 
 void Variable::setDimension(const Dimension& dimension)
 {
-    dimension_ = dimension;
+    dimension_.resize(1);
+    dimension_[0] = dimension;
+}
+
+void Variable::setDimension(const std::vector<Dimension>& dimensions)
+{
+    dimension_ = dimensions;
 }
 
 bool Variable::assigned() const
@@ -105,14 +119,16 @@ FunctionType::FunctionType()
 /// Construct FunctionType taking no arguments.
 /// Equelle type: Function() -> returntype
 FunctionType::FunctionType(const EquelleType& return_type)
-    : return_type_(return_type)
+    : return_type_(return_type),
+      return_dimension_(1, Dimension())
 {
 }
 
 FunctionType::FunctionType(const std::vector<Variable>& args,
                            const EquelleType& return_type)
     : arguments_(args),
-      return_type_(return_type)
+      return_type_(return_type),
+      return_dimension_(1, Dimension())
 {
 }
 
@@ -122,7 +138,7 @@ FunctionType::FunctionType(const std::vector<Variable>& args,
                            const DynamicReturnSpecification& dynamic)
     : arguments_(args),
       return_type_(return_type),
-      return_dimension_(return_dimension),
+      return_dimension_(1, return_dimension),
       dynamic_(dynamic)
 {
 }
@@ -165,22 +181,30 @@ Dimension FunctionType::returnDimension(const std::vector<Dimension>& argdims) c
     if (dynamic_.activeDimension()) {
         return argdims[dynamic_.arg_index_for_dimension];
     } else {
+        return return_dimension_[0];
+    }
+}
+
+std::vector<Dimension> FunctionType::returnArrayDimension(const std::vector<std::vector<Dimension>>& argdims) const
+{
+    assert(argdims.size() == arguments_.size());
+    if (dynamic_.activeDimension()) {
+        return argdims[dynamic_.arg_index_for_dimension];
+    } else {
         return return_dimension_;
     }
 }
 
-Dimension FunctionType::returnDimension() const
-{
-    if (dynamic_.activeDimension()) {
-        throw std::logic_error("Should not call FunctionType::returnDimension() with no arguments "
-                               "when the function has dynamic dimension.");
-    }
-    return return_dimension_;
-}
 
 void FunctionType::setReturnDimension(const Dimension& dim)
 {
-    return_dimension_ = dim;
+    return_dimension_.resize(1);
+    return_dimension_[0] = dim;
+}
+
+void FunctionType::setReturnArrayDimension(const std::vector<Dimension>& dims)
+{
+    return_dimension_ = dims;
 }
 
 int FunctionType::dynamicSubsetReturn(const std::vector<EquelleType>& argtypes) const
@@ -293,6 +317,27 @@ Dimension Function::variableDimension(const std::string name) const
     }
 }
 
+const std::vector<Dimension>& Function::variableArrayDimension(const std::string name) const
+{
+
+    auto lit = local_variables_.find(Variable(name));
+    if (lit != local_variables_.end()) {
+        return lit->arrayDimension();
+    } else {
+        auto ait = std::find_if(type_.arguments().begin(), type_.arguments().end(),
+                                [&](const Variable& a) { return a.name() == name; });
+        if (ait != type_.arguments().end()) {
+            return ait->arrayDimension();
+        } else {
+            if (parent_scope_) {
+                return parent_scope_->variableArrayDimension(name);
+            } else {
+                throw std::logic_error("Internal compiler error in Function::variableDimension()");
+            }
+        }
+    }
+}
+
 bool Function::isVariableDeclared(const std::string& name) const
 {
     auto it = declared(name);
@@ -377,6 +422,25 @@ void Function::setVariableDimension(const std::string& name, const Dimension& di
     } else {
         if (parent_scope_) {
             return parent_scope_->setVariableDimension(name, dimension);
+        } else {
+            yyerror("internal compiler error in Function::setVariableDimension()");
+        }
+    }
+}
+
+void Function::setVariableDimension(const std::string& name, const std::vector<Dimension>& dimensions)
+{
+    auto lit = local_variables_.find(Variable(name));
+    if (lit != local_variables_.end()) {
+        // Set members are immutable, must
+        // copy, erase and reinsert.
+        Variable copy = *lit;
+        copy.setDimension(dimensions);
+        local_variables_.erase(lit);
+        local_variables_.insert(copy);
+    } else {
+        if (parent_scope_) {
+            return parent_scope_->setVariableDimension(name, dimensions);
         } else {
             yyerror("internal compiler error in Function::setVariableDimension()");
         }
@@ -564,9 +628,19 @@ Dimension SymbolTable::variableDimension(const std::string& name)
     return instance().current_function_->variableDimension(name);
 }
 
-void SymbolTable::setVariableDimension(const std::string& name, const Dimension& type)
+const std::vector<Dimension>& SymbolTable::variableArrayDimension(const std::string& name)
 {
-    instance().current_function_->setVariableDimension(name, type);
+    return instance().current_function_->variableArrayDimension(name);
+}
+
+void SymbolTable::setVariableDimension(const std::string& name, const Dimension& dimension)
+{
+    instance().current_function_->setVariableDimension(name, dimension);
+}
+
+void SymbolTable::setVariableDimension(const std::string& name, const std::vector<Dimension>& dimensions)
+{
+    instance().current_function_->setVariableDimension(name, dimensions);
 }
 
 bool SymbolTable::isFunctionDeclared(const std::string& name)

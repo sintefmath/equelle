@@ -35,6 +35,13 @@ public:
         d.setCoefficient(LuminousIntensity, -999);
         return d;
     }
+    // Only some nodes (ArrayNode, FuncCallNode, VarNode) may legally call this.
+    // Therefore it is somewhat of a hack to put it in this base class.
+    // Not returning a reference since result may need to be created on the fly.
+    virtual std::vector<Dimension> arrayDimension() const
+    {
+        throw std::logic_error("Internal compiler error: cannot call arrayDimension() on any ExpressionNode type.");
+    }
 };
 
 
@@ -746,6 +753,14 @@ public:
             throw std::logic_error("Internal compiler error in VarNode::dimension().");
         }
     }
+    std::vector<Dimension> arrayDimension() const
+    {
+        if (SymbolTable::isVariableDeclared(varname_)) {
+            return SymbolTable::variableArrayDimension(varname_);
+        } else {
+            throw std::logic_error("Internal compiler error in VarNode::arrayDimension().");
+        }
+    }
     const std::string& name() const
     {
         return varname_;
@@ -1000,6 +1015,10 @@ public:
     {
         return expr_->dimension();
     }
+    std::vector<Dimension> arrayDimension() const
+    {
+        return expr_->arrayDimension();
+    }
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
@@ -1204,12 +1223,23 @@ public:
 
     Dimension dimension() const
     {
+        if (type().isArray() || dimension_.size() != 1) {
+            throw std::logic_error("Internal compiler error in FuncCallNode::dimension().");
+        }
+        return dimension_[0];
+    }
+
+    std::vector<Dimension> arrayDimension() const
+    {
+        if (!type().isArray()) {
+            throw std::logic_error("Internal compiler error in FuncCallNode::dimension().");
+        }
         return dimension_;
     }
 
-    void setDimension(const Dimension& dim)
+    void setDimension(const std::vector<Dimension>& dims)
     {
-        dimension_ = dim;
+        dimension_ = dims;
     }
 
     const std::string& name() const
@@ -1239,7 +1269,7 @@ private:
     // return_type_ is only set for template instantiation type calls.
     EquelleType return_type_;
     // dimension_ should always be set by the checking visitor.
-    Dimension dimension_;
+    std::vector<Dimension> dimension_;
     int instantiation_index_;
 };
 
@@ -1350,6 +1380,15 @@ public:
         throw std::logic_error("Internal compiler error in ArrayNode::dimension(). Meaningless to ask for array dimension since array elements may have different dimension.");
         return Dimension();
     }
+    std::vector<Dimension> arrayDimension() const
+    {
+        const int size = expr_list_->arguments().size();
+        std::vector<Dimension> dims(size);
+        for (int elem = 0; elem < size; ++elem) {
+            dims[elem] = expr_list_->arguments()[elem]->dimension();
+        }
+        return dims;
+    }
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
@@ -1403,9 +1442,7 @@ public:
     Dimension dimension() const
     {
         if (expr_->type().isArray()) {
-            // Cannot ask arrays for dimension, since that may be heterogenous.
-            ArrayNode& arr = dynamic_cast<ArrayNode&>(*expr_);
-            return arr.expressionList()->arguments()[index_]->dimension();
+            return expr_->arrayDimension()[index_];
         } else {
             return expr_->dimension();
         }

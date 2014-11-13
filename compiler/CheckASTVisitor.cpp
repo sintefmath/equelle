@@ -497,7 +497,13 @@ void CheckASTVisitor::postVisit(VarAssignNode& node)
                 && SymbolTable::isSubset(rhs_type.gridMapping(), lhs_type.subsetOf())) {
                 // OK, should make postponed definition of the variable.
                 SymbolTable::setVariableType(name, rhs_type);
-                SymbolTable::setVariableDimension(name, expr->dimension());
+                if (!ignore_dimension_) {
+                    if (rhs_type.isArray()) {
+                        SymbolTable::setVariableDimension(name, expr->arrayDimension());
+                    } else {
+                        SymbolTable::setVariableDimension(name, expr->dimension());
+                    }
+                }
                 SymbolTable::setEntitySetName(rhs_type.gridMapping(), name);
             } else {
                 std::string err_msg = "mismatch between type in assignment and declaration for ";
@@ -507,7 +513,13 @@ void CheckASTVisitor::postVisit(VarAssignNode& node)
             }
         } else {
             // Dimension is never declared, so that must be set from here.
-            SymbolTable::setVariableDimension(name, expr->dimension());
+            if (!ignore_dimension_) {
+                if (SymbolTable::variableType(name).isArray()) {
+                    SymbolTable::setVariableDimension(name, expr->arrayDimension());
+                } else {
+                    SymbolTable::setVariableDimension(name, expr->dimension());
+                }
+            }
         }
     } else {
         // Setting the gridmapping, as in the block above. Only this is
@@ -517,7 +529,13 @@ void CheckASTVisitor::postVisit(VarAssignNode& node)
             SymbolTable::setEntitySetName(gm, name);
         }
         SymbolTable::declareVariable(name, expr->type());
-        SymbolTable::setVariableDimension(name, expr->dimension());
+        if (!ignore_dimension_) {
+            if (expr->type().isArray()) {
+                SymbolTable::setVariableDimension(name, expr->arrayDimension());
+            } else {
+                SymbolTable::setVariableDimension(name, expr->dimension());
+            }
+        }
     }
 
     // Set variable to assigned.
@@ -641,7 +659,13 @@ void CheckASTVisitor::postVisit(ReturnStatementNode& node)
         return;
     }
     instantiation_return_type_ = node.type();
-    instantiation_return_dimension_ = node.dimension();
+    if (!ignore_dimension_) {
+        if (node.type().isArray()) {
+            instantiation_return_dimension_ = node.arrayDimension();
+        } else {
+            instantiation_return_dimension_ = { node.dimension() };
+        }
+    }
 }
 
 
@@ -696,7 +720,9 @@ void CheckASTVisitor::visit(FuncCallNode& node)
             assert(fargs.size() == 1);
             fargs[0].setType(argnodes[1]->type());
             fargs[0].setAssigned(true);
-            fargs[0].setDimension(argnodes[1]->dimension());
+            if (!ignore_dimension_) {
+                fargs[0].setDimension(argnodes[1]->dimension());
+            }
             const int inst_index = instantiate(func_name, fargs, node.location());
             vn.setInstantiationIndex(inst_index);
         }
@@ -726,7 +752,9 @@ void CheckASTVisitor::visit(FuncCallNode& node)
                 for (int ia = 0; ia < 2; ++ia) {
                     fargs[ia].setType(guesses[ia]->type());
                     fargs[ia].setAssigned(true);
-                    fargs[ia].setDimension(guesses[ia]->dimension());
+                    if (!ignore_dimension_) {
+                        fargs[ia].setDimension(guesses[ia]->dimension());
+                    }
                 }
                 const int inst_index = instantiate(func_name, fargs, node.location());
                 vn.setInstantiationIndex(inst_index);
@@ -779,14 +807,22 @@ void CheckASTVisitor::postVisit(FuncCallNode& node)
         for (int arg = 0; arg < num_args; ++arg) {
             fargs[arg].setType(args[arg]->type());
             fargs[arg].setAssigned(true);
-            fargs[arg].setDimension(args[arg]->dimension());
+            if (!ignore_dimension_) {
+                if (args[arg]->type().isArray()) {
+                    fargs[arg].setDimension(args[arg]->arrayDimension());
+                } else {
+                    fargs[arg].setDimension(args[arg]->dimension());
+                }
+            }
         }
         const int instantiation_index = instantiate(node.name(), fargs, node.location());
         node.setInstantiationIndex(instantiation_index);
         SymbolTable::setCurrentFunction(original_scope);
         // Set the return type for this node.
         node.setReturnType(instantiation_return_type_);
-        node.setDimension(instantiation_return_dimension_);
+        if (!ignore_dimension_) {
+            node.setDimension(instantiation_return_dimension_);
+        }
     }
     // If the function returns a new dynamically created domain,
     // we must declare it (anonymously for now).
@@ -808,7 +844,7 @@ void CheckASTVisitor::postVisit(FuncCallNode& node)
             // First special treatment for particular functions.
             if (f.name() == "Dot") {
                 assert(args.size() == 2);
-                node.setDimension(args[0]->dimension() + args[1]->dimension());
+                node.setDimension({args[0]->dimension() + args[1]->dimension()});
             } else if (f.name() == "Sqrt") {
                 assert(args.size() == 1);
                 const Dimension argdim = args[0]->dimension();
@@ -825,7 +861,7 @@ void CheckASTVisitor::postVisit(FuncCallNode& node)
                         error(err_msg.str(), node.location());
                     }
                 }
-                node.setDimension(result_dim);
+                node.setDimension({result_dim});
             } else if (f.name() == "ProdReduce") {
                 assert(args.size() == 1);
                 const Dimension argdim = args[0]->dimension();
@@ -835,13 +871,25 @@ void CheckASTVisitor::postVisit(FuncCallNode& node)
                             << argdim;
                     error(err_msg.str(), node.location());
                 }
-                node.setDimension(Dimension());
+                node.setDimension({Dimension()});
             } else {
-                std::vector<Dimension> argdims;
-                for (const auto& arg : args) {
-                    argdims.push_back(arg->dimension());
+                if (f.functionType().returnType(argtypes).isArray()) {
+                    std::vector<std::vector<Dimension>> argdims;
+                    for (const auto& arg : args) {
+                        if (arg->type().isArray()) {
+                            argdims.push_back(arg->arrayDimension());
+                        } else {
+                            argdims.push_back({arg->dimension()});
+                        }
+                    }
+                    node.setDimension(f.functionType().returnArrayDimension(argdims));
+                } else {
+                    std::vector<Dimension> argdims;
+                    for (const auto& arg : args) {
+                        argdims.push_back(arg->dimension());
+                    }
+                    node.setDimension({f.functionType().returnDimension(argdims)});
                 }
-                node.setDimension(f.functionType().returnDimension(argdims));
             }
         } else {
             // Declared, not-templated user specified function.
@@ -903,7 +951,9 @@ void CheckASTVisitor::visit(LoopNode& node)
     SymbolTable::setCurrentFunction(os.str());
     SymbolTable::declareVariable(node.loopVariable(), loop_set_type.basicType());
     SymbolTable::setVariableAssigned(node.loopVariable(), true);
-    SymbolTable::setVariableDimension(node.loopVariable(), SymbolTable::variableDimension(loop_set));
+    if (!ignore_dimension_) {
+        SymbolTable::setVariableDimension(node.loopVariable(), SymbolTable::variableDimension(loop_set));
+    }
 }
 
 void CheckASTVisitor::postVisit(LoopNode&)

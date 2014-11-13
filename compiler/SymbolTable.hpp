@@ -52,12 +52,14 @@ public:
     bool assigned() const;
     void setAssigned(const bool assigned);
     const Dimension& dimension() const;
+    const std::vector<Dimension>& arrayDimension() const;
     void setDimension(const Dimension& dimension);
+    void setDimension(const std::vector<Dimension>& dimension);
     bool operator<(const Variable& v) const;
 private:
     std::string name_;
     EquelleType type_;
-    Dimension dimension_;
+    std::vector<Dimension> dimension_;
     bool assigned_;
 };
 
@@ -138,9 +140,11 @@ public:
 
     Dimension returnDimension(const std::vector<Dimension>& argdims) const;
 
-    Dimension returnDimension() const;
+    std::vector<Dimension> returnArrayDimension(const std::vector<std::vector<Dimension>>& argdims) const;
 
     void setReturnDimension(const Dimension& dim);
+
+    void setReturnArrayDimension(const std::vector<Dimension>& dims);
 
     int dynamicSubsetReturn(const std::vector<EquelleType>& argtypes) const;
 
@@ -151,7 +155,7 @@ public:
 private:
     std::vector<Variable> arguments_;
     EquelleType return_type_;
-    Dimension return_dimension_;
+    std::vector<Dimension> return_dimension_;
     DynamicReturnSpecification dynamic_;
 };
 
@@ -171,6 +175,8 @@ public:
 
     Dimension variableDimension(const std::string name) const;
 
+    const std::vector<Dimension>& variableArrayDimension(const std::string name) const;
+
     bool isVariableDeclared(const std::string& name) const;
 
     bool isVariableAssigned(const std::string& name) const;
@@ -179,7 +185,9 @@ public:
 
     void setVariableType(const std::string& name, const EquelleType& type);
 
-    void setVariableDimension(const std::string& name, const Dimension& type);
+    void setVariableDimension(const std::string& name, const Dimension& dimension);
+
+    void setVariableDimension(const std::string& name, const std::vector<Dimension>& dimensions);
 
     void clearLocalVariables();
 
@@ -256,7 +264,11 @@ public:
 
     static Dimension variableDimension(const std::string& name);
 
+    static const std::vector<Dimension>& variableArrayDimension(const std::string& name);
+
     static void setVariableDimension(const std::string& name, const Dimension& dimension);
+
+    static void setVariableDimension(const std::string& name, const std::vector<Dimension>& dimensions);
 
     static bool isFunctionDeclared(const std::string& name);
 
