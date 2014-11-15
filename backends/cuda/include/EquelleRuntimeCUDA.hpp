@@ -28,6 +28,7 @@
 #include "CollOfVector.hpp"
 #include "DeviceGrid.hpp"
 #include "equelleTypedefs.hpp"
+#include "SeqOfScalar.hpp"
 #include "CudaMatrix.hpp"
 #include "DeviceHelperOps.hpp"
 #include "LinearSolver.hpp"
