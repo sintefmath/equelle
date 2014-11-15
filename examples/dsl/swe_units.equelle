@@ -1,0 +1,452 @@
+# Implementation of the Shallow Water Equation
+# in 2D using a first order version of the
+# central upwind scheme presented by Kurganov and Levy
+
+#################################
+## Loading from parameter file.
+#################################
+
+# Initial conditions
+h_init : Collection Of Scalar On AllCells()
+h_init = InputCollectionOfScalar("h_init", AllCells()) * 1 [Meter]
+u_init : Collection Of Scalar On AllCells()
+u_init = InputCollectionOfScalar("u_init", AllCells()) * 1 [Meter/Second]
+v_init : Collection Of Scalar On AllCells()
+v_init = InputCollectionOfScalar("v_init", AllCells()) * 1 [Meter/Second]
+
+# Load bottom topography
+# Use the face values to approximate cell bottom.
+b_mid : Collection Of Scalar On AllCells()
+b_north : Collection Of Scalar On AllCells()
+b_south : Collection Of Scalar On AllCells()
+b_east : Collection Of Scalar On AllCells()
+b_west : Collection Of Scalar On AllCells()
+
+b_north = InputCollectionOfScalar("b_north", AllCells()) * 1 [Meter]
+b_south = InputCollectionOfScalar("b_south", AllCells()) * 1 [Meter]
+b_east = InputCollectionOfScalar("b_east", AllCells()) * 1 [Meter]
+b_west = InputCollectionOfScalar("b_west", AllCells()) * 1 [Meter]
+b_mid = (b_north + b_south + b_east + b_west)/4.0
+
+Output("bottom", b_mid)
+
+dx : Scalar
+dy : Scalar
+dx = InputScalarWithDefault("dx", 10) * 1 [Meter] 
+dy = InputScalarWithDefault("dy", 10) * 1 [Meter]
+
+# Timesteps
+timesteps : Sequence Of Scalar
+timesteps = InputSequenceOfScalar("timesteps") * 1 [Second]
+
+
+##############################
+# Global variables
+
+int_faces = InteriorFaces()
+bound = BoundaryFaces()
+
+vol = |AllCells()|
+area = |AllFaces()|
+
+# Gravitational constant
+gravity : Scalar 
+gravity = 9.81 * 1 [Meter / (Second^2) ]
+
+# Limit for what we regard as a dry state:
+dry : Scalar 
+dry = 0.05 * 1 [Meter]
+
+# Dummy water height
+dummy : Scalar
+dummy = 1000 * 1 [Meter]
+
+# Zero fluxes 
+zeroFlux : Array Of 3 Scalar
+zeroFlux = [ 0 * 1 [Meter^2/Second], 0 * 1 [Meter^3 / Second^2], 0 * 1 [Meter^3 / Second^2] ]
+
+# A zero eigenvalue:
+zeroEigen : Scalar
+zeroEigen = 0 * 1 [Meter/Second]
+
+# A true zero water depth:
+zeroWater : Scalar
+zeroWater = 0 * 1 [ Meter ]
+
+# Zero source term (only use the first one)
+zeroSource : Array Of 3 Scalar
+zeroSource = [ 0 * 1 [Meter / Second], 0 * 1 [Meter^2 / Second^2], 0 * 1 [Meter^2 / Second^2] ]
+
+# Variables for dry and dummy when looking at a and b variables
+ab_dry = 0.05 * 1 [Meter/Second]
+ab_dummy = 1000 * 1 [Meter / Second]
+
+###################################
+## Functions we need
+###################################
+
+## Functions for evaluating the flux terms
+## Implemented to take arrays as input and give arrays as output.
+
+## Since the program evaluates all expressions we have to avoid all
+## dividing by zero.
+## Use a dummy waterHeight of 1000 to recognise those cells
+## since H = 1000 will not occur in the simulations anyways
+## and give a easy to see simulation error in case of bugs.
+
+# f is the flux-function in x-direction
+#f : Function ( q : Array Of 3 Collection Of Scalar On int_faces, ...
+#               b : Collection Of Scalar On int_faces)...
+#               ->  Array Of 3 Collection Of Scalar On int_faces
+f ( q, b ) = 
+{   
+    rawWaterHeight = q[0] - b
+    waterHeight = rawWaterHeight > dry ? rawWaterHeight : dummy Extend int_faces
+    f0temp = q[1]
+    f1temp = (q[1]*q[1]/waterHeight) + 0.5*gravity*waterHeight*waterHeight
+    f2temp = (q[1]*q[2])/waterHeight
+    
+    # If rawWaterHeight is zero, we return [0 0 0]
+    f0 = rawWaterHeight > dry ? f0temp : zeroFlux[0] Extend int_faces
+    f1 = rawWaterHeight > dry ? f1temp : zeroFlux[1] Extend int_faces
+    f2 = rawWaterHeight > dry ? f2temp : zeroFlux[2] Extend int_faces
+    -> [f0, f1 , f2]
+}
+
+# g is the flux-function in y-direction
+g : Function ( q : Array Of 3 Collection Of Scalar On int_faces, ...
+               b : Collection Of Scalar On int_faces)...
+               ->  Array Of 3 Collection Of Scalar On int_faces
+g ( q, b ) =
+{
+    rawWaterHeight = q[0] - b
+    waterHeight = rawWaterHeight > dry ? rawWaterHeight : dummy Extend int_faces
+    g0temp = q[2]
+    g1temp = q[1]*q[2]/waterHeight
+    g2temp = (q[2]*q[2]/waterHeight) + 0.5*gravity*waterHeight*waterHeight
+
+    g0 = rawWaterHeight > dry ? g0temp : zeroFlux[0] Extend int_faces
+    g1 = rawWaterHeight > dry ? g1temp : zeroFlux[1] Extend int_faces
+    g2 = rawWaterHeight > dry ? g2temp : zeroFlux[2] Extend int_faces
+    -> [g0, g1, g2]
+}
+
+
+## Eigenvalues for the jacobian given q0, q1 and q2
+## Input are values for each interior face and bottom topography
+## They are found with First and Second and are thus on int_faces.
+## Returns a tupple with the two eigenvalues for each interior face
+## eig0 < eig1
+## The third eigenvalue is in between them and not used.
+
+## Need to take care so that we do take sqrt of negative values.
+## If the cell is dry, we set all eigenvalues to zero
+## Use waterHeight = 1000 to have legal calulations still
+##     even though we don't use them.
+
+eigenvalueF : Function( q : Array Of 3 Collection Of Scalar On int_faces, ...
+                        b : Collection Of Scalar On int_faces) ...
+                       ->  Array Of 2 Collection Of Scalar On int_faces
+eigenvalueF( q, b ) = 
+{
+    rawWaterHeight = q[0] - b
+    waterHeight = rawWaterHeight > dry ? rawWaterHeight : dummy Extend int_faces
+    eigF0temp = (q[1]/waterHeight) - Sqrt(gravity*waterHeight)
+    eigF1temp = (q[1]/waterHeight) + Sqrt(gravity*waterHeight)
+
+    eigF0 = rawWaterHeight > dry ? eigF0temp : zeroEigen Extend int_faces
+    eigF1 = rawWaterHeight > dry ? eigF1temp : zeroEigen Extend int_faces
+    -> [eigF0, eigF1]
+}
+
+eigenvalueG : Function( q : Array Of 3 Collection Of Scalar On int_faces, ...
+                        b : Collection Of Scalar On int_faces) ...
+                        ->  Array Of 2 Collection Of Scalar On int_faces
+eigenvalueG ( q, b ) =
+{
+    rawWaterHeight = q[0] - b
+    waterHeight = rawWaterHeight > dry ? rawWaterHeight : dummy Extend int_faces
+    eigG0temp = (q[2]/waterHeight) - Sqrt(gravity*waterHeight)
+    eigG1temp = (q[2]/waterHeight) + Sqrt(gravity*waterHeight)
+
+    eigG0 = rawWaterHeight > dry ? eigG0temp : zeroEigen Extend int_faces
+    eigG1 = rawWaterHeight > dry ? eigG1temp : zeroEigen Extend int_faces
+    -> [eigG0, eigG1]
+}
+
+
+## a_eval = [a_minus, a_plus] to get the upwind factor for F
+## Choose one of the eigenvalues for first and second, or give zero.
+## Return values are living on the faces
+## Input array q = [q0, q1, q2] from cells
+a_eval : Function ( q : Array Of 3 Collection Of Scalar On AllCells()) ...
+               ->  Array Of 2 Collection Of Scalar On int_faces
+a_eval ( q ) =
+{
+    qFirst = [q[0] On FirstCell(int_faces) , q[1] On FirstCell(int_faces), ...
+              q[2] On FirstCell(int_faces)]
+    qSecond = [q[0] On SecondCell(int_faces), q[1] On SecondCell(int_faces), ...
+               q[2] On SecondCell(int_faces)]
+
+    bFirst = b_mid On FirstCell(int_faces)
+    bSecond = b_mid On SecondCell(int_faces)
+    
+    eigsFirst = eigenvalueF(qFirst, bFirst)
+    eigsSecond = eigenvalueF(qSecond, bSecond)
+    
+    smallest = eigsFirst[0] < eigsSecond[0] ? eigsFirst[0] : eigsSecond[0]
+    aminus = smallest < zeroEigen ? smallest : (zeroEigen Extend int_faces)
+    
+    largest = eigsFirst[1] > eigsSecond[1] ? eigsFirst[1] : eigsSecond[1]
+    aplus = largest > zeroEigen ? largest : (zeroEigen Extend int_faces)
+   
+    -> [aminus, aplus]
+}
+
+## b_eval = [b_minus, b_plus] to get the upwind factor for G
+## Return values are living on the faces
+## Input array q = [q0, q1, q2] from cells
+b_eval : Function ( q : Array Of 3 Collection Of Scalar On AllCells()) ...
+                    ->  Array Of 2 Collection Of Scalar On int_faces
+b_eval ( q ) =
+{
+    qFirst = [q[0] On FirstCell(int_faces), q[1] On FirstCell(int_faces), ...
+              q[2] On FirstCell(int_faces)]
+    qSecond = [q[0] On SecondCell(int_faces), q[1] On SecondCell(int_faces), ...
+               q[2] On SecondCell(int_faces)]
+
+    bFirst = b_mid On FirstCell(int_faces)
+    bSecond = b_mid On SecondCell(int_faces)
+    
+    eigsFirst = eigenvalueG(qFirst, bFirst)
+    eigsSecond = eigenvalueG(qSecond, bSecond)
+    
+    smallest = eigsFirst[0] < eigsSecond[0] ? eigsFirst[0] : eigsSecond[0]
+    bminus = smallest < zeroEigen ? smallest : (zeroEigen Extend int_faces)
+    
+    largest = eigsFirst[1] > eigsSecond[1] ? eigsFirst[1] : eigsSecond[1]
+    bplus = largest > zeroEigen ? largest : (zeroEigen Extend int_faces)
+   
+    -> [bminus, bplus]
+}
+
+
+## Numerical flux functions, numF and numG
+## Use Array Of 3 on almost all variables
+## Input is the values at each cell
+## Output flux at int_faces
+numF : Function ( q : Array Of 3 Collection Of Scalar On AllCells()) ...
+                  ->  Array Of 3 Collection Of Scalar On int_faces
+numF ( q ) = 
+{
+    qFirst = [q[0] On FirstCell(int_faces), q[1] On FirstCell(int_faces),...
+              q[2] On FirstCell(int_faces)]
+    qSecond = [q[0] On SecondCell(int_faces), q[1] On SecondCell(int_faces),...
+               q[2] On SecondCell(int_faces)]
+    
+    bFirst = b_mid On FirstCell(int_faces)
+    bSecond = b_mid On SecondCell(int_faces)
+    
+    # a = [aminus, aplus] 
+    a = a_eval(q)
+    # Avoid dividing on zero
+    adiffRaw = a[1] - a[0]
+    adiff = adiffRaw*adiffRaw > ab_dry*ab_dry ? adiffRaw : ab_dummy Extend int_faces
+  
+    # flux functions from the equation
+    fFirst = f(qFirst, bFirst)
+    fSecond = f(qSecond, bSecond)
+    
+    aFactor = (a[1]*a[0])/(adiff)
+    firstPart0 = (a[1]*fFirst[0] - a[0]*fSecond[0]) / adiff
+    firstPart1 = (a[1]*fFirst[1] - a[0]*fSecond[1]) / adiff
+    firstPart2 = (a[1]*fFirst[2] - a[0]*fSecond[2]) / adiff
+    
+    intFluxF0temp = firstPart0 + aFactor*(qSecond[0] - qFirst[0])
+    intFluxF1temp = firstPart1 + aFactor*(qSecond[1] - qFirst[1])
+    intFluxF2temp = firstPart2 + aFactor*(qSecond[2] - qFirst[2]) 
+    
+    # Insert zero flux for dry faces
+    intFluxF0 = adiffRaw*adiffRaw > ab_dry*ab_dry ? intFluxF0temp : zeroFlux[0] Extend int_faces
+    intFluxF1 = adiffRaw*adiffRaw > ab_dry*ab_dry ? intFluxF1temp : zeroFlux[1] Extend int_faces
+    intFluxF2 = adiffRaw*adiffRaw > ab_dry*ab_dry ? intFluxF2temp : zeroFlux[2] Extend int_faces
+
+    -> [ intFluxF0, intFluxF1, intFluxF2]
+}
+
+
+numG : Function( q : Array Of 3 Collection Of Scalar On AllCells()) ...
+                 ->  Array Of 3 Collection Of Scalar On int_faces
+numG ( q ) =
+{
+    qFirst = [q[0] On FirstCell(int_faces), q[1] On FirstCell(int_faces),...
+              q[2] On FirstCell(int_faces)]
+    qSecond = [q[0] On SecondCell(int_faces), q[1] On SecondCell(int_faces),...
+               q[2] On SecondCell(int_faces)]
+
+    bFirst = b_mid On FirstCell(int_faces)
+    bSecond = b_mid On SecondCell(int_faces)
+
+    # b = [bminus, bplus]
+    b = b_eval(q)
+    # Avoid dividing on zero
+    bdiffRaw = b[1] - b[0]
+    bdiff = bdiffRaw*bdiffRaw > ab_dry*ab_dry ? bdiffRaw : ab_dummy Extend int_faces
+    
+    # flux functions from the equation
+    gFirst = g(qFirst, bFirst)
+    gSecond = g(qSecond, bSecond)
+    
+    bFactor = (b[1]*b[0])/bdiff
+    firstPart0 = (b[1]*gFirst[0] - b[0]*gSecond[0]) / bdiff
+    firstPart1 = (b[1]*gFirst[1] - b[0]*gSecond[1]) / bdiff
+    firstPart2 = (b[1]*gFirst[2] - b[0]*gSecond[2]) / bdiff
+    
+    intFluxG0temp = firstPart0 + bFactor*(qSecond[0] - qFirst[0])
+    intFluxG1temp = firstPart1 + bFactor*(qSecond[1] - qFirst[1])
+    intFluxG2temp = firstPart2 + bFactor*(qSecond[2] - qFirst[2])
+
+    # Insert zero flux for dry faces
+    intFluxG0 = bdiffRaw*bdiffRaw > ab_dry*ab_dry ? intFluxG0temp : zeroFlux[0] Extend int_faces
+    intFluxG1 = bdiffRaw*bdiffRaw > ab_dry*ab_dry ? intFluxG1temp : zeroFlux[1] Extend int_faces
+    intFluxG2 = bdiffRaw*bdiffRaw > ab_dry*ab_dry ? intFluxG2temp : zeroFlux[2] Extend int_faces
+
+    -> [ intFluxG0, intFluxG1, intFluxG2]
+}
+
+
+# Get all fluxes
+# Need to check the orientation of the face within this function
+# Input q in each cell
+# output flux over all faces.
+get_flux : Function ( q : Array Of 3 Collection Of Scalar On AllCells()) ...
+                      ->  Array Of 3 Collection Of Scalar On AllFaces()
+get_flux ( q ) =
+{
+    # Get orientation from the interior faces
+    # without altering any signs
+    int_orientation = Normal(int_faces)
+    pos_normal = [ Sqrt(int_orientation[0]*int_orientation[0]), ...
+                   Sqrt(int_orientation[1]*int_orientation[1])]
+
+    int_numF = numF(q)
+    int_numG = numG(q)
+    int_fluxes0 = pos_normal[0]*int_numF[0] + pos_normal[1]*int_numG[0]
+    int_fluxes1 = pos_normal[0]*int_numF[1] + pos_normal[1]*int_numG[1]
+    int_fluxes2 = pos_normal[0]*int_numF[2] + pos_normal[1]*int_numG[2]
+    intFlux = [int_fluxes0, int_fluxes1, int_fluxes2]
+
+    # Get orientation on boundary faces and set fluxes there.
+    # Remember that unit vectors are dimensionless
+    bound_orientation = Normal(bound)
+    bound_cells = IsEmpty(FirstCell(bound)) ? SecondCell(bound) : FirstCell(bound)
+    bound_q0 = q[0] On bound_cells
+    bound_b = b_mid On bound_cells
+    bound_height = bound_q0 - bound_b
+    bound_signX = bound_orientation[0] > 0 ? (1 Extend bound) : (-1 Extend bound)
+    bound_signY = bound_orientation[1] > 0 ? (1 Extend bound) : (-1 Extend bound)
+    b_fluxtemp = 0.5*gravity*bound_height*bound_height
+    b_flux = bound_height > dry ? b_fluxtemp : zeroFlux[2] Extend bound       # zeroFlux[1] == zeroFlux[2]
+
+    boundFlux0 = zeroFlux[0] Extend bound # No height goes out of the domain.
+    boundFlux1 = Sqrt((bound_orientation[0]*bound_orientation[0]))*b_flux * bound_signX
+    boundFlux2 = Sqrt((bound_orientation[1]*bound_orientation[1]))*b_flux * bound_signY
+    
+    boundFlux = [boundFlux0 , boundFlux1, boundFlux2]
+
+
+    allFluxes = [ ( (zeroFlux[0] Extend AllFaces()) + (boundFlux[0] Extend AllFaces()) +...
+                            (intFlux[0] Extend AllFaces()) ) * area ,...
+                  ( (zeroFlux[1] Extend AllFaces()) + (boundFlux[1] Extend AllFaces()) +...
+                            (intFlux[1] Extend AllFaces()) ) * area, ...
+                  ( (zeroFlux[2] Extend AllFaces()) + (boundFlux[2] Extend AllFaces()) +...
+                            (intFlux[2] Extend AllFaces()) ) * area]
+
+    -> allFluxes
+}
+
+# Evaluate the source term in each cell
+evalSourceTerm : Function ( q : Array Of 3 Collection Of Scalar On AllCells()) ...
+                            ->  Array Of 3 Collection Of Scalar On AllCells()
+evalSourceTerm( q ) = 
+{
+    bx = (b_east - b_west)/dx
+    by = (b_north - b_south)/dy
+
+    secondTerm_x = ( (q[0] - b_east) + (q[0] - b_west) )/2
+    secondTerm_y = ( (q[0] - b_north) + (q[0] - b_south) )/2
+
+    # Handle dry states in a safe manner.
+    # Define dimensionless factor:
+    dryTerm = q[0] - b_mid > dry ? 1 Extend AllCells() : 0 Extend AllCells()
+
+    -> [ (zeroSource[0] Extend AllCells()) , ...
+         -gravity * bx * secondTerm_x * dryTerm, ...
+         -gravity * by * secondTerm_y * dryTerm ]
+}
+
+######################################
+## RUNGE KUTTA SOLUTION OF THE ODE
+######################################
+## Input is prev solution q
+rungeKutta : Function ( q : Array Of 3 Collection Of Scalar On AllCells(), ...
+                       dt : Scalar ) ...
+                        ->  Array Of 3 Collection Of Scalar On AllCells()
+rungeKutta ( q, dt ) = 
+{
+    flux = get_flux( q )
+    source = evalSourceTerm( q )
+    
+    ## Dimension debugging:
+    unitVol = 1 * 1 [ Meter^3] Extend AllCells()
+    temp_vol = vol + unitVol 
+    unitSource = 1 * 1 [Meter/Second] Extend AllCells()
+    tmp_source = source[0] + unitSource
+    unitDiv = 1 * 1 [Meter] Extend AllCells()
+    
+
+    temp = Divergence(flux[0]) + vol*source[0]
+
+    # find q_star:
+    q_star0 = q[0] + (dt/vol)*( - Divergence(flux[0]) + vol*source[0] )
+    q_star1 = q[1] + (dt/vol)*( - Divergence(flux[1]) + vol*source[1] )
+    q_star2 = q[2] + (dt/vol)*( - Divergence(flux[2]) + vol*source[2] )
+
+    # find the flux for q_star:
+    flux_star = get_flux( [q_star0, q_star1, q_star2] )
+    source_star = evalSourceTerm( [q_star0, q_star1, q_star2] )
+    
+    # get the updated solution
+    newQ0 = 0.5*q[0] + 0.5*(q_star0 + ...
+              (dt/vol)*( - Divergence(flux_star[0]) + vol*source_star[0] ))
+    newQ1 = 0.5*q[1] + 0.5*(q_star1 + ...
+              (dt/vol)*( - Divergence(flux_star[1]) + vol*source_star[1] ))
+    newQ2 = 0.5*q[2] + 0.5*(q_star2 + ...
+              (dt/vol)*( - Divergence(flux_star[2]) + vol*source_star[2] ))
+
+    -> [newQ0, newQ1, newQ2]
+}
+
+##################################################
+##  TIMELOOP
+##################################################
+
+q0 : Array Of 3 Mutable Collection Of Scalar On AllCells()
+q0 = [h_init + b_mid, h_init * u_init, h_init * v_init]
+
+Output("q1", q0[0])
+Output("q2", q0[1])
+Output("q3", q0[2])
+
+For dt In timesteps
+{
+    q = rungeKutta( q0, dt)
+    Output("q1", q[0])
+    Output("q2", q[1])
+    Output("q3", q[2])
+    q0 = q
+}
+
+
+
+
