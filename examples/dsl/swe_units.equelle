@@ -29,6 +29,10 @@ b_west = InputCollectionOfScalar("b_west", AllCells()) * 1 [Meter]
 b_mid = (b_north + b_south + b_east + b_west)/4.0
 
 Output("bottom", b_mid)
+Output("b_north", b_north)
+Output("b_south", b_south)
+Output("b_east", b_east)
+Output("b_west", b_west)
 
 dx : Scalar
 dy : Scalar
