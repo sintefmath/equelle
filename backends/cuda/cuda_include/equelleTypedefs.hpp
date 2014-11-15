@@ -33,10 +33,6 @@ namespace equelleCUDA
     //! Collection of booleans as a thrust::device_vector<bool>
     typedef thrust::device_vector<Bool> CollOfBool;
     
-    //! Sequence Of Scalar
-    typedef std::vector<Scalar> SeqOfScalar;
-
-
 
     //! Grid and block sizes for kernels.
     /*!
