@@ -42,6 +42,25 @@ void PrintEquelleASTVisitor::visit(NumberNode& node)
     std::cout << node.number();
 }
 
+void PrintEquelleASTVisitor::visit(QuantityNode& node)
+{
+    const double cf = node.conversionFactorSI();
+    if (cf != 1.0) {
+        std::cout.precision(16);
+        std::cout << "(" << cf << " * ";
+    }
+}
+
+void PrintEquelleASTVisitor::postVisit(QuantityNode& node)
+{
+    if (node.dimension() != Dimension()) {
+        std::cout << ' ' << node.dimension();
+    }
+    if (node.conversionFactorSI() != 1.0) {
+        std::cout << ")";
+    }
+}
+
 void PrintEquelleASTVisitor::visit(StringNode& node)
 {
     std::cout << node.content();

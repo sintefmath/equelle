@@ -41,6 +41,24 @@ typedef std::string String;
 typedef Eigen::Array<bool, Eigen::Dynamic, 1> CollOfBool;
 typedef std::vector<Scalar> SeqOfScalar;
 
+// Binary ops for SeqOfScalar
+inline SeqOfScalar operator*(const SeqOfScalar& sos, Scalar s)
+{
+    SeqOfScalar res = sos;
+    for (Scalar& r : res) {
+        r *= s;
+    }
+    return res;
+}
+inline SeqOfScalar operator*(Scalar s, const SeqOfScalar& sos)
+{
+    return sos * s;
+}
+inline SeqOfScalar operator/(const SeqOfScalar& sos, Scalar s)
+{
+    return sos * (Scalar(1)/s);
+}
+
 /// The Collection Of Scalar type is based on Eigen and opm-autodiff.
 /// It uses inheritance to provide extra interfaces for ease of use,
 /// notably converting constructors.

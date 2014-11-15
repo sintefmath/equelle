@@ -30,6 +30,9 @@ class YYInOwner {
 public:
 	YYInOwner(const std::string filename_) {
 		yyin = fopen(filename_.c_str(),"r");
+                if (!yyin) {
+                    throw std::runtime_error("Input file not found.");
+                }
 	}
 	~YYInOwner() {
 	    fclose(yyin);
@@ -80,7 +83,8 @@ int main(int argc, char** argv)
     yyparse();
 
     // Check AST (and build symbol table)
-    CheckASTVisitor check;
+    const bool ignore_dimensions = cli_vars.count("nondimensional");
+    CheckASTVisitor check(ignore_dimensions);
     SymbolTable::program()->accept(check);
 
     //Dump compiler internals

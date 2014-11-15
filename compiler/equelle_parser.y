@@ -224,6 +224,7 @@ unit_expr: BUILTIN                  { $$ = handleUnit(*($1)); }
          | unit_expr '/' unit_expr  { $$ = handleUnitOp(Divide, $1, $3); }
          | unit_expr '*' unit_expr  { $$ = handleUnitOp(Multiply, $1, $3); }
          | unit_expr '^' INT        { $$ = handleUnitPower($1, numFromString(*($3))); }
+         | unit_expr '^' '-' INT    { $$ = handleUnitPower($1, -numFromString(*($4))); }
          ;
 
 array: '[' f_call_args ']'      { $$ = handleArray($2); }

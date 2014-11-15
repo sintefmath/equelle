@@ -50,16 +50,24 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
     const CollOfCell first = er.firstCell(interior_faces);
     const CollOfCell second = er.secondCell(interior_faces);
     const CollOfScalar itrans = (k * (er.norm(interior_faces) / er.norm((er.centroid(first) - er.centroid(second)))));
-    auto computeInteriorFlux = [&](const CollOfScalar& u) -> CollOfScalar {
+    auto computeInteriorFlux_i0_ = [&](const CollOfScalar& u) -> CollOfScalar {
         return (-itrans * er.gradient(u));
     };
-    auto computeResidual = [&](const CollOfScalar& u) -> CollOfScalar {
-        const CollOfScalar ifluxes = computeInteriorFlux(u);
+    auto computeInteriorFlux_i2_ = [&](const CollOfScalar& u) -> CollOfScalar {
+        return (-itrans * er.gradient(u));
+    };
+    auto computeResidual_i1_ = [&](const CollOfScalar& u) -> CollOfScalar {
+        const CollOfScalar ifluxes = computeInteriorFlux_i2_(u);
         const CollOfScalar residual = ((u - u0) + ((dt / vol) * er.divergence(ifluxes)));
         return residual;
     };
-    const CollOfScalar explicitu = (u0 - computeResidual(u0));
-    const CollOfScalar u = er.newtonSolve(computeResidual, u0);
+    auto computeResidual_i3_ = [&](const CollOfScalar& u) -> CollOfScalar {
+        const CollOfScalar ifluxes = computeInteriorFlux_i2_(u);
+        const CollOfScalar residual = ((u - u0) + ((dt / vol) * er.divergence(ifluxes)));
+        return residual;
+    };
+    const CollOfScalar explicitu = (u0 - computeResidual_i1_(u0));
+    const CollOfScalar u = er.newtonSolve(computeResidual_i3_, u0);
     er.output("explicitu", explicitu);
     er.output("u", u);
 
