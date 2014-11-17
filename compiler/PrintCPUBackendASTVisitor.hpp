@@ -14,6 +14,7 @@ class PrintCPUBackendASTVisitor : public ASTVisitorInterface
 {
 public:
     PrintCPUBackendASTVisitor();
+    PrintCPUBackendASTVisitor(const bool use_cartesian);
     virtual ~PrintCPUBackendASTVisitor();
 
     void visit(SequenceNode& node);
@@ -94,6 +95,7 @@ private:
     bool instantiating_;
     int next_funcstart_inst_;
     std::string skipping_function_;
+    bool use_cartesian_;
 
     void endl() const;
     std::string indent() const;

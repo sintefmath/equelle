@@ -27,7 +27,9 @@ public:
             ("input,i", boost::program_options::value<std::string>()->required(), "Input Equelle file to compile")
             ("backend", boost::program_options::value<std::string>()->default_value("cpu"), "Backend of compiler to use (ast, ast_equelle, cpu, cuda, mrst)")
             ("nondimensional", "Disable dimension checking")
+	    ("cartesian", "Use the Cartesian dialect of Equelle")
             ("dump", boost::program_options::value<std::string>()->default_value("none"), "Dump compiler internals (symboltable, io)");
+
     }
 
     void printOptions() {
