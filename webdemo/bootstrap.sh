@@ -10,17 +10,18 @@ apt-add-repository --yes ppa:nginx/stable
 apt-get update
 
 # Install required libraries for Equelle
-apt-get install -y git flex bison g++ make cmake libopm-autodiff libopm-core-dev libopm-autodiff-dev libeigen3-dev libboost1.48-all-dev openmpi-bin libopenmpi-dev gfortran
+apt-get install -y git flex bison g++ make cmake libopm-autodiff libopm-core-dev libopm-autodiff-dev libeigen3-dev libboost-all-dev openmpi-bin libopenmpi-dev gfortran
 apt-get -y install gcc-4.7 g++-4.7
 update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.6 60 --slave /usr/bin/g++ g++ /usr/bin/g++-4.6
 update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.7 40 --slave /usr/bin/g++ g++ /usr/bin/g++-4.7
 update-alternatives --set gcc /usr/bin/gcc-4.7
 
 # Clone Equelle git repository, and build
+# TODO: Change to sintefmath repository.
 mkdir -p /equelle/src /equelle/build
 useradd -G users equelle
 chown equelle:users /equelle/src /equelle/build
-sudo -u equelle git clone https://github.com/sintefmath/equelle.git /equelle/src
+sudo -u equelle git clone https://github.com/jakhog/equelle.git /equelle/src
 cd /equelle/src
 sudo -u equelle git submodule update --init --recursive
 cd /equelle/build
