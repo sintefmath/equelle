@@ -43,48 +43,33 @@ void PrintASTVisitor::visit(QuantityNode& node)
     ++indent_;
 }
 
-// Needed for visit(UnitNode&).
-std::string dimString(BaseDimension bd)
-{
-    switch (bd) {
-    case Length:
-        return "Length";
-    case Time:
-        return "Time";
-    case Mass:
-        return "Mass";
-    case Temperature:
-        return "Temperature";
-    case ElectricCurrent:
-        return "ElectricCurrent";
-    case QuantityOfSubstance:
-        return "QuantityOfSubstance";
-    case LuminousIntensity:
-        return "LuminousIntensity";
-    default:
-        throw std::logic_error("Error in dimString() -- unknown enum value.");
-    }
-}
-
-// Needed for visit(UnitNode&).
-std::ostream& operator<<(std::ostream& os, const Dimension& dim)
-{
-    for (int i = 0; i < 7; ++i) {
-        BaseDimension bd = static_cast<BaseDimension>(i);
-        const int coef = dim.coefficient(bd);
-        if (coef == 1) {
-            os << "[" << dimString(bd) << "] ";
-        } else if (coef != 0) {
-            os << "[" << dimString(bd) << "]^" << coef << " ";
-        }
-    }
-    return os;
-}
-
-void PrintASTVisitor::visit(UnitNode& node)
+void PrintASTVisitor::visit(BasicUnitNode& node)
 {
     std::cout.precision(15);
-    std::cout << indent() << "UnitNode: (factor = " << node.conversionFactorSI() << "), (dimension = " << node.dimension() << ")\n";
+    std::cout << indent() << "BasicUnitNode: (factor = " << node.conversionFactorSI() << "), (dimension = " << node.dimension() << ")\n";
+}
+
+void PrintASTVisitor::visit(BinaryOpUnitNode& node)
+{
+    char op = ' ';
+    switch (node.op()) {
+    case Multiply:
+        op = '*';
+        break;
+    case Divide:
+        op = '/';
+        break;
+    default:
+        break;
+    }
+    std::cout << indent() << "BinaryOpUnitNode: " << op << '\n';
+    ++indent_;
+}
+
+void PrintASTVisitor::visit(PowerUnitNode& node)
+{
+    std::cout << indent() << "PowerUnitNode: power = " << node.power() << '\n';
+    ++indent_;
 }
 
 void PrintASTVisitor::visit(StringNode& node)
@@ -266,7 +251,7 @@ void PrintASTVisitor::visit(LoopNode& node)
 
 void PrintASTVisitor::visit(ArrayNode& node)
 {
-    std::cout << indent() << "ArrayNode: array size = " << node.type().arraySize() << "\n";
+    std::cout << indent() << "ArrayNode: array size = " << node.expressionList()->arguments().size() << "\n";
     ++indent_;
 }
 

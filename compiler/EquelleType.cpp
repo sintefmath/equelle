@@ -182,6 +182,11 @@ EquelleType::EquelleType(const BasicType bt,
 {
 }
 
+bool EquelleType::isInvalid() const
+{
+    return basic_type_ == Invalid;
+}
+
 bool EquelleType::isBasic() const
 {
     return (basic_type_ != Invalid)

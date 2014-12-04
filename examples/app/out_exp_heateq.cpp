@@ -65,7 +65,7 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
         const CollOfScalar dir_fluxes = ((er.operatorOn(btrans, er.boundaryFaces(), dirichlet_boundary) * dir_sign) * (u_dirbdycells - dirichlet_val));
         return er.operatorExtend(dir_fluxes, dirichlet_boundary, er.boundaryFaces());
     };
-    CollOfScalar expU = u0;
+    auto expU = u0;
     for (const Scalar& dt : timesteps) {
         auto computeResidual = [&](const CollOfScalar& u) -> CollOfScalar {
             const CollOfScalar ifluxes = computeInteriorFlux(u);

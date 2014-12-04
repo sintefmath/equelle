@@ -13,11 +13,12 @@ For elem In seq {
     For e2 In seq2 {
         foo3 : Function(y : Scalar) -> Scalar
         foo3(y) = {
-            three : Function() -> Scalar
-            three() = {
-                -> 3
-            }
-            -> foo(three(), y)
+#            three : Function() -> Scalar
+#            three() = {
+#                -> 3
+#            }
+#            -> foo(three(), y)
+             -> foo(3, y)
         }
         q = b + foo3(e2) + r
         Output("q", q)

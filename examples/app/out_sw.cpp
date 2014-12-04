@@ -49,18 +49,6 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
     const CollOfScalar hv0 = er.inputCollectionOfScalar("hv0", er.allCells());
     const std::tuple<CollOfScalar, CollOfScalar, CollOfScalar> q0 = makeArray(h0, hu0, hv0);
     const std::tuple<CollOfScalar, CollOfScalar, CollOfScalar> q = q0;
-    auto fflux = [&](const std::tuple<CollOfScalar, CollOfScalar, CollOfScalar>& q) -> std::tuple<CollOfScalar, CollOfScalar, CollOfScalar> {
-        const CollOfScalar h = std::get<0>(q);
-        const CollOfScalar hu = std::get<1>(q);
-        const CollOfScalar hv = std::get<2>(q);
-        return makeArray(hu, ((hu * (hu / h)) + ((((double(1) / double(2)) * g) * h) * h)), (hu * (hv / h)));
-    };
-    auto gflux = [&](const std::tuple<CollOfScalar, CollOfScalar, CollOfScalar>& q) -> std::tuple<CollOfScalar, CollOfScalar, CollOfScalar> {
-        const CollOfScalar h = std::get<0>(q);
-        const CollOfScalar hu = std::get<1>(q);
-        const CollOfScalar hv = std::get<2>(q);
-        return makeArray(hu, (hu * (hv / h)), ((hv * (hv / h)) + ((((double(1) / double(2)) * g) * h) * h)));
-    };
     auto compute_flux = [&](const std::tuple<CollOfScalar, CollOfScalar, CollOfScalar>& ql, const std::tuple<CollOfScalar, CollOfScalar, CollOfScalar>& qr, const CollOfScalar& l, const CollOfVector& n) -> std::tuple<CollOfScalar, CollOfScalar, CollOfScalar, CollOfScalar> {
         const CollOfScalar hl = std::get<0>(ql);
         const CollOfScalar hul = std::get<1>(ql);

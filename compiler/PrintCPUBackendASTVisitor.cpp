@@ -18,9 +18,11 @@ namespace
 }
 
 PrintCPUBackendASTVisitor::PrintCPUBackendASTVisitor()
-    : suppressed_(false),
+    : suppression_level_(0),
       indent_(1),
-      sequence_depth_(0)
+      sequence_depth_(0),
+      instantiating_(false),
+      next_funcstart_inst_(-1)
 {
 }
 
@@ -66,12 +68,18 @@ void PrintCPUBackendASTVisitor::postVisit(SequenceNode&)
 
 void PrintCPUBackendASTVisitor::visit(NumberNode& node)
 {
+    if (isSuppressed()) {
+        return;
+    }
     std::cout.precision(16);
     std::cout << "double(" << node.number() << ")";
 }
 
 void PrintCPUBackendASTVisitor::visit(QuantityNode& node)
 {
+    if (isSuppressed()) {
+        return;
+    }
     const double cf = node.conversionFactorSI();
     if (cf != 1.0) {
         std::cout.precision(16);
@@ -81,17 +89,19 @@ void PrintCPUBackendASTVisitor::visit(QuantityNode& node)
 
 void PrintCPUBackendASTVisitor::postVisit(QuantityNode& node)
 {
+    if (isSuppressed()) {
+        return;
+    }
     if (node.conversionFactorSI() != 1.0) {
         std::cout << ")";
     }
 }
 
-void PrintCPUBackendASTVisitor::visit(UnitNode& node)
-{
-}
-
 void PrintCPUBackendASTVisitor::visit(StringNode& node)
 {
+    if (isSuppressed()) {
+        return;
+    }
     std::cout << node.content();
 }
 
@@ -107,11 +117,17 @@ void PrintCPUBackendASTVisitor::visit(FuncTypeNode&)
 
 void PrintCPUBackendASTVisitor::visit(BinaryOpNode&)
 {
+    if (isSuppressed()) {
+        return;
+    }
     std::cout << '(';
 }
 
 void PrintCPUBackendASTVisitor::midVisit(BinaryOpNode& node)
 {
+    if (isSuppressed()) {
+        return;
+    }
     char op = ' ';
     switch (node.op()) {
     case Add:
@@ -134,16 +150,25 @@ void PrintCPUBackendASTVisitor::midVisit(BinaryOpNode& node)
 
 void PrintCPUBackendASTVisitor::postVisit(BinaryOpNode&)
 {
+    if (isSuppressed()) {
+        return;
+    }
     std::cout << ')';
 }
 
 void PrintCPUBackendASTVisitor::visit(ComparisonOpNode&)
 {
+    if (isSuppressed()) {
+        return;
+    }
     std::cout << '(';
 }
 
 void PrintCPUBackendASTVisitor::midVisit(ComparisonOpNode& node)
 {
+    if (isSuppressed()) {
+        return;
+    }
     std::string op(" ");
     switch (node.op()) {
     case Less:
@@ -172,21 +197,33 @@ void PrintCPUBackendASTVisitor::midVisit(ComparisonOpNode& node)
 
 void PrintCPUBackendASTVisitor::postVisit(ComparisonOpNode&)
 {
+    if (isSuppressed()) {
+        return;
+    }
     std::cout << ')';
 }
 
 void PrintCPUBackendASTVisitor::visit(NormNode&)
 {
+    if (isSuppressed()) {
+        return;
+    }
     std::cout << "er.norm(";
 }
 
 void PrintCPUBackendASTVisitor::postVisit(NormNode&)
 {
+    if (isSuppressed()) {
+        return;
+    }
     std::cout << ')';
 }
 
 void PrintCPUBackendASTVisitor::visit(UnaryNegationNode&)
 {
+    if (isSuppressed()) {
+        return;
+    }
     std::cout << '-';
 }
 
@@ -196,6 +233,9 @@ void PrintCPUBackendASTVisitor::postVisit(UnaryNegationNode&)
 
 void PrintCPUBackendASTVisitor::visit(OnNode& node)
 {
+    if (isSuppressed()) {
+        return;
+    }
     if (node.isExtend()) {
         std::cout << "er.operatorExtend(";
     } else {
@@ -205,6 +245,9 @@ void PrintCPUBackendASTVisitor::visit(OnNode& node)
 
 void PrintCPUBackendASTVisitor::midVisit(OnNode& node)
 {
+    if (isSuppressed()) {
+        return;
+    }
     // Backend's operatorOn/operatorExtend has three arguments when the left argument
     // is a collection, not two. The middle argument (that we will
     // write in this method) should be the set that the first argument
@@ -228,26 +271,41 @@ void PrintCPUBackendASTVisitor::midVisit(OnNode& node)
 
 void PrintCPUBackendASTVisitor::postVisit(OnNode&)
 {
+    if (isSuppressed()) {
+        return;
+    }
     std::cout << ')';
 }
 
 void PrintCPUBackendASTVisitor::visit(TrinaryIfNode&)
 {
+    if (isSuppressed()) {
+        return;
+    }
     std::cout << "er.trinaryIf(";
 }
 
 void PrintCPUBackendASTVisitor::questionMarkVisit(TrinaryIfNode&)
 {
+    if (isSuppressed()) {
+        return;
+    }
     std::cout << ", ";
 }
 
 void PrintCPUBackendASTVisitor::colonVisit(TrinaryIfNode&)
 {
+    if (isSuppressed()) {
+        return;
+    }
     std::cout << ", ";
 }
 
 void PrintCPUBackendASTVisitor::postVisit(TrinaryIfNode&)
 {
+    if (isSuppressed()) {
+        return;
+    }
     std::cout << ')';
 }
 
@@ -263,15 +321,22 @@ void PrintCPUBackendASTVisitor::postVisit(VarDeclNode&)
 
 void PrintCPUBackendASTVisitor::visit(VarAssignNode& node)
 {
+    if (isSuppressed()) {
+        return;
+    }
     std::cout << indent();
     if (node.type() == StencilI || node.type() == StencilJ || node.type() == StencilK) {
         //This goes into the stencil-lambda definition, and is only used during parsing.
         std::cout << "// Note: ";
     }
     if (!SymbolTable::variableType(node.name()).isMutable()) {
+#if 0
+        std::cout << "const auto ";
+#else
         std::cout << "const " << cppTypeString(node.type()) << " ";
+#endif
     } else if (defined_mutables_.count(node.name()) == 0) {
-        std::cout << cppTypeString(node.type()) << " ";
+        std::cout << "auto ";
         defined_mutables_.insert(node.name());
     }
     std::cout << node.name() << " = ";
@@ -279,19 +344,36 @@ void PrintCPUBackendASTVisitor::visit(VarAssignNode& node)
 
 void PrintCPUBackendASTVisitor::postVisit(VarAssignNode&)
 {
+    if (isSuppressed()) {
+        return;
+    }
     std::cout << ';';
     endl();
 }
 
 void PrintCPUBackendASTVisitor::visit(VarNode& node)
 {
-    if (!suppressed_) {
-        std::cout << node.name();
+    if (isSuppressed()) {
+        return;
+    }
+    std::cout << node.name();
+    if (SymbolTable::isFunctionDeclared(node.name())) {
+        if (SymbolTable::getFunction(node.name()).isTemplate()) {
+            const int num_inst = SymbolTable::getFunction(node.name()).instantiations().size();
+            assert(num_inst > 0);
+            assert(node.instantiationIndex() >= 0);
+            if (num_inst > 1) {
+                std::cout << "_i" << node.instantiationIndex() << "_";
+            }
+        }
     }
 }
 
 void PrintCPUBackendASTVisitor::visit(FuncRefNode& node)
 {
+    if (isSuppressed()) {
+        return;
+    }
     std::cout << node.name();
 }
 
@@ -326,9 +408,18 @@ void PrintCPUBackendASTVisitor::postVisit(FuncDeclNode&)
 
 void PrintCPUBackendASTVisitor::visit(FuncStartNode& node)
 {
+    if (isSuppressed()) {
+        suppress();
+        return;
+    }
     const FunctionType& ft = SymbolTable::getFunction(node.name()).functionType();
     const size_t n = ft.arguments().size();
-    std::cout << indent() << "auto " << node.name() << " = [&](";
+    std::cout << indent() << "auto " << node.name();
+    const int num_inst = SymbolTable::getFunction(node.name()).instantiations().size();
+    if (next_funcstart_inst_ != -1 && num_inst > 1) {
+        std::cout << "_i" << next_funcstart_inst_ << "_";
+    }
+    std::cout << " = [&](";
     for (int i = 0; i < n; ++i) {
 #if 0
         std::cout << "const auto& " << ft.arguments()[i].name();
@@ -347,7 +438,11 @@ void PrintCPUBackendASTVisitor::visit(FuncStartNode& node)
 
 void PrintCPUBackendASTVisitor::postVisit(FuncStartNode& node)
 {
+    next_funcstart_inst_ = -1;
     unsuppress();
+    if (isSuppressed()) {
+        return;
+    }
 #if 0
     std::cout << ") {";
 #else
@@ -359,11 +454,49 @@ void PrintCPUBackendASTVisitor::postVisit(FuncStartNode& node)
 
 void PrintCPUBackendASTVisitor::visit(FuncAssignNode& node)
 {
+    if (isSuppressed()) {
+        return;
+    }
+    if (instantiating_) {
+        return;
+    }
+    Function& f = SymbolTable::getMutableFunction(node.name());
+    const auto insta = f.instantiations(); // a copy: important for below
+    const int num_inst = insta.size();
+    if (num_inst > 0) {
+        assert(f.isTemplate());
+        instantiating_ = true;
+        // All but the last instantiation are done through
+        // accept() below, the last one follows the regular
+        // visitor flow.
+        for (int inst = 0; inst < num_inst - 1; ++inst) {
+            f = SymbolTable::getFunctionInstantiation(insta[inst]);
+            f.setInstantiations(insta); // here is where we need insta to be a true copy
+            next_funcstart_inst_ = insta[inst];
+            SymbolTable::setCurrentFunction(node.name());
+            node.accept(*this);
+        }
+        instantiating_ = false;
+        f = SymbolTable::getFunctionInstantiation(insta.back());
+        next_funcstart_inst_ = insta.back();
+    } else {
+        skipping_function_ = node.name();
+        suppress();
+    }
     SymbolTable::setCurrentFunction(node.name());
 }
 
-void PrintCPUBackendASTVisitor::postVisit(FuncAssignNode&)
+void PrintCPUBackendASTVisitor::postVisit(FuncAssignNode& node)
 {
+    if (skipping_function_ == node.name()) {
+        skipping_function_ = "";
+        unsuppress();
+        SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
+        return;
+    }
+    if (isSuppressed()) {
+        return;
+    }
     --indent_;
     std::cout << indent() << "};";
     endl();
@@ -376,9 +509,10 @@ void PrintCPUBackendASTVisitor::visit(FuncArgsNode&)
 
 void PrintCPUBackendASTVisitor::midVisit(FuncArgsNode&)
 {
-    if (!suppressed_) {
-        std::cout << ", ";
+    if (isSuppressed()) {
+        return;
     }
+    std::cout << ", ";
 }
 
 void PrintCPUBackendASTVisitor::postVisit(FuncArgsNode&)
@@ -387,18 +521,24 @@ void PrintCPUBackendASTVisitor::postVisit(FuncArgsNode&)
 
 void PrintCPUBackendASTVisitor::visit(ReturnStatementNode&)
 {
+    if (isSuppressed()) {
+        return;
+    }
     std::cout << indent() << "return ";
 }
 
 void PrintCPUBackendASTVisitor::postVisit(ReturnStatementNode&)
 {
+    if (isSuppressed()) {
+        return;
+    }
     std::cout << ';';
     endl();
 }
 
 void PrintCPUBackendASTVisitor::visit(FuncCallNode& node)
 {
-    if (suppressed_) {
+    if (isSuppressed()) {
         return;
     }
     if (SymbolTable::isFunctionDeclared(node.name())) {
@@ -425,6 +565,12 @@ void PrintCPUBackendASTVisitor::visit(FuncCallNode& node)
         } else {
             cppname += fname;
         }
+        const int num_inst = SymbolTable::getFunction(node.name()).instantiations().size();
+        if (node.instantiationIndex() >= 0 && num_inst > 1) {
+            cppname += "_i";
+            cppname += std::to_string(node.instantiationIndex());
+            cppname += "_";
+        }
         std::cout << cppname << '(';
     }
     else if (SymbolTable::isVariableDeclared(node.name()) && node.type().isStencil()) {
@@ -437,7 +583,7 @@ void PrintCPUBackendASTVisitor::visit(FuncCallNode& node)
 
 void PrintCPUBackendASTVisitor::postVisit(FuncCallNode&)
 {
-    if (suppressed_) {
+    if (isSuppressed()) {
         return;
     }
     std::cout << ')';
@@ -445,17 +591,26 @@ void PrintCPUBackendASTVisitor::postVisit(FuncCallNode&)
 
 void PrintCPUBackendASTVisitor::visit(FuncCallStatementNode&)
 {
+    if (isSuppressed()) {
+        return;
+    }
     std::cout << indent();
 }
 
 void PrintCPUBackendASTVisitor::postVisit(FuncCallStatementNode&)
 {
+    if (isSuppressed()) {
+        return;
+    }
     std::cout << ';';
     endl();
 }
 
 void PrintCPUBackendASTVisitor::visit(LoopNode& node)
 {
+    if (isSuppressed()) {
+        return;
+    }
     SymbolTable::setCurrentFunction(node.loopName());
     BasicType loopvartype = SymbolTable::variableType(node.loopSet()).basicType();
     std::cout << indent() << "for (const " << cppTypeString(loopvartype) << "& "
@@ -466,6 +621,9 @@ void PrintCPUBackendASTVisitor::visit(LoopNode& node)
 
 void PrintCPUBackendASTVisitor::postVisit(LoopNode&)
 {
+    if (isSuppressed()) {
+        return;
+    }
     --indent_;
     std::cout << indent() << "}";
     endl();
@@ -474,18 +632,27 @@ void PrintCPUBackendASTVisitor::postVisit(LoopNode&)
 
 void PrintCPUBackendASTVisitor::visit(ArrayNode&)
 {
+    if (isSuppressed()) {
+        return;
+    }
     // std::cout << cppTypeString(node.type()) << "({{";
     std::cout << "makeArray(";
 }
 
 void PrintCPUBackendASTVisitor::postVisit(ArrayNode&)
 {
+    if (isSuppressed()) {
+        return;
+    }
     // std::cout << "}})";
     std::cout << ")";
 }
 
 void PrintCPUBackendASTVisitor::visit(RandomAccessNode& node)
 {
+    if (isSuppressed()) {
+        return;
+    }
     if (node.arrayAccess()) {
         // This is Array access.
         std::cout << "std::get<" << node.index() << ">(";
@@ -497,6 +664,9 @@ void PrintCPUBackendASTVisitor::visit(RandomAccessNode& node)
 
 void PrintCPUBackendASTVisitor::postVisit(RandomAccessNode& node)
 {
+    if (isSuppressed()) {
+        return;
+    }
     if (node.arrayAccess()) {
         // This is Array access.
         std::cout << ")";
@@ -534,12 +704,18 @@ std::string PrintCPUBackendASTVisitor::indent() const
 
 void PrintCPUBackendASTVisitor::suppress()
 {
-    suppressed_ = true;
+    ++suppression_level_;
 }
 
 void PrintCPUBackendASTVisitor::unsuppress()
 {
-    suppressed_ = false;
+    --suppression_level_;
+    assert(suppression_level_ >= 0);
+}
+
+bool PrintCPUBackendASTVisitor::isSuppressed() const
+{
+    return suppression_level_ > 0;
 }
 
 std::string PrintCPUBackendASTVisitor::cppTypeString(const EquelleType& et) const

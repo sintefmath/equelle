@@ -9,7 +9,9 @@
 class SequenceNode;
 class NumberNode;
 class QuantityNode;
-class UnitNode;
+class BasicUnitNode;
+class BinaryOpUnitNode;
+class PowerUnitNode;
 class StringNode;
 class TypeNode;
 class CollectionTypeNode;
@@ -49,7 +51,12 @@ public:
     virtual void visit(NumberNode& node) = 0;
     virtual void visit(QuantityNode& node) {}
     virtual void postVisit(QuantityNode& node) {}
-    virtual void visit(UnitNode& node) {}
+    virtual void visit(BasicUnitNode& node) {}
+    virtual void visit(BinaryOpUnitNode& node) {}
+    virtual void midVisit(BinaryOpUnitNode& node) {}
+    virtual void postVisit(BinaryOpUnitNode& node) {}
+    virtual void visit(PowerUnitNode& node) {}
+    virtual void postVisit(PowerUnitNode& node) {}
     virtual void visit(StringNode& node) = 0;
     virtual void visit(TypeNode& node) = 0;
     virtual void visit(CollectionTypeNode& node) {}

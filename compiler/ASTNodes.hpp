@@ -15,6 +15,7 @@
 
 #include <vector>
 #include <cassert>
+#include <cmath>
 
 
 
@@ -33,6 +34,13 @@ public:
         // To make errors stand out.
         d.setCoefficient(LuminousIntensity, -999);
         return d;
+    }
+    // Only some nodes (ArrayNode, FuncCallNode, VarNode) may legally call this.
+    // Therefore it is somewhat of a hack to put it in this base class.
+    // Not returning a reference since result may need to be created on the fly.
+    virtual std::vector<Dimension> arrayDimension() const
+    {
+        throw std::logic_error("Internal compiler error: cannot call arrayDimension() on any ExpressionNode type.");
     }
 };
 
@@ -326,10 +334,6 @@ public:
     {
         EquelleType lt = left_->type();
         EquelleType rt = right_->type();
-        if (lt.isSequence() || rt.isSequence()) {
-            yyerror("internal compiler error in BinaryOpNode::type(), sequences not allowed");
-            return EquelleType();
-        }
         switch (op_) {
         case Add:
             return lt; // should be identical to rt.
@@ -339,8 +343,10 @@ public:
             const bool isvec = lt.basicType() == Vector || rt.basicType() == Vector;
             const BasicType bt = isvec ? Vector : Scalar;
             const bool coll = lt.isCollection() || rt.isCollection();
+            const bool sequence = lt.isSequence() || rt.isSequence();
+            const CompositeType ct = coll ? Collection : (sequence ? Sequence : None);
             const int gm = lt.isCollection() ? lt.gridMapping() : rt.gridMapping();
-            return EquelleType(bt, coll ? Collection : None, gm);
+            return EquelleType(bt, ct, gm);
         }
         case Divide: {
             const BasicType bt = lt.basicType();
@@ -493,9 +499,6 @@ public:
             default:
                 throw std::logic_error("internal compiler error in NormNode::dimension().");
             }
-            // TODO: we use a dimensionless value here now, until
-            // dimension of function calls has been implemented.
-            d = Dimension();
             return d;
         }
     }
@@ -717,7 +720,9 @@ private:
 class VarNode : public ExpressionNode
 {
 public:
-    VarNode(const std::string& varname) : varname_(varname)
+    VarNode(const std::string& varname)
+        : varname_(varname),
+          instantiation_index_(-1)
     {
     }
     EquelleType type() const
@@ -739,11 +744,34 @@ public:
     }
     Dimension dimension() const
     {
-        return SymbolTable::variableDimension(varname_);
+        if (SymbolTable::isVariableDeclared(varname_)) {
+            return SymbolTable::variableDimension(varname_);
+        } else if (SymbolTable::isFunctionDeclared(varname_)) {
+            // Function reference.
+            return Dimension();
+        } else {
+            throw std::logic_error("Internal compiler error in VarNode::dimension().");
+        }
+    }
+    std::vector<Dimension> arrayDimension() const
+    {
+        if (SymbolTable::isVariableDeclared(varname_)) {
+            return SymbolTable::variableArrayDimension(varname_);
+        } else {
+            throw std::logic_error("Internal compiler error in VarNode::arrayDimension().");
+        }
     }
     const std::string& name() const
     {
         return varname_;
+    }
+    int instantiationIndex() const
+    {
+        return instantiation_index_;
+    }
+    void setInstantiationIndex(const int index)
+    {
+        instantiation_index_ = index;
     }
     virtual void accept(ASTVisitorInterface& visitor)
     {
@@ -751,6 +779,7 @@ public:
     }
 private:
     std::string varname_;
+    int instantiation_index_;
 };
 
 
@@ -982,6 +1011,14 @@ public:
     {
         return expr_->type();
     }
+    Dimension dimension() const
+    {
+        return expr_->dimension();
+    }
+    std::vector<Dimension> arrayDimension() const
+    {
+        return expr_->arrayDimension();
+    }
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
@@ -1064,6 +1101,10 @@ public:
     {
         return funcstart_->name();
     }
+    const FuncArgsNode* args() const
+    {
+        return funcstart_->args();
+    }
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
@@ -1135,8 +1176,10 @@ public:
     FuncCallNode(const std::string& funcname,
                  FuncArgsNode* funcargs,
                  const int dynamic_subset_return = NotApplicable)
-        : funcname_(funcname), funcargs_(funcargs),
-          dsr_(dynamic_subset_return)
+        : funcname_(funcname),
+          funcargs_(funcargs),
+          dsr_(dynamic_subset_return),
+          instantiation_index_(-999)
     {}
 
     virtual ~FuncCallNode()
@@ -1149,8 +1192,26 @@ public:
         dsr_ = dynamic_subset_return;
     }
 
+    void setReturnType(const EquelleType& return_type)
+    {
+        return_type_ = return_type;
+    }
+
+    void setInstantiationIndex(const int instantiation_index)
+    {
+        instantiation_index_ = instantiation_index;
+    }
+
+    int instantiationIndex() const
+    {
+        return instantiation_index_;
+    }
+
     EquelleType type() const
     {
+        if (!return_type_.isInvalid()) {
+            return return_type_;
+        }
         EquelleType t = SymbolTable::getFunction(funcname_).returnType(funcargs_->argumentTypes());
         if (dsr_ != NotApplicable) {
             assert(t.isEntityCollection());
@@ -1162,10 +1223,23 @@ public:
 
     Dimension dimension() const
     {
-        // yyerror("FuncCallNode()::dimension() not implemented");
-        // return ExpressionNode::dimension();
-        // TODO: function calls are dimensionless for now, fix.
-        return Dimension();
+        if (type().isArray() || dimension_.size() != 1) {
+            throw std::logic_error("Internal compiler error in FuncCallNode::dimension().");
+        }
+        return dimension_[0];
+    }
+
+    std::vector<Dimension> arrayDimension() const
+    {
+        if (!type().isArray()) {
+            throw std::logic_error("Internal compiler error in FuncCallNode::dimension().");
+        }
+        return dimension_;
+    }
+
+    void setDimension(const std::vector<Dimension>& dims)
+    {
+        dimension_ = dims;
     }
 
     const std::string& name() const
@@ -1192,6 +1266,11 @@ private:
     std::string funcname_;
     FuncArgsNode* funcargs_;
     int dsr_;
+    // return_type_ is only set for template instantiation type calls.
+    EquelleType return_type_;
+    // dimension_ should always be set by the checking visitor.
+    std::vector<Dimension> dimension_;
+    int instantiation_index_;
 };
 
 
@@ -1298,10 +1377,17 @@ public:
     }
     Dimension dimension() const
     {
-        // yyerror("ArrayNode()::dimension() not implemented");
-        // return ExpressionNode::dimension();
-        // TODO: array creation ([x,y,...]) is dimensionless for now, fix.
+        throw std::logic_error("Internal compiler error in ArrayNode::dimension(). Meaningless to ask for array dimension since array elements may have different dimension.");
         return Dimension();
+    }
+    std::vector<Dimension> arrayDimension() const
+    {
+        const int size = expr_list_->arguments().size();
+        std::vector<Dimension> dims(size);
+        for (int elem = 0; elem < size; ++elem) {
+            dims[elem] = expr_list_->arguments()[elem]->dimension();
+        }
+        return dims;
     }
     virtual void accept(ASTVisitorInterface& visitor)
     {
@@ -1355,10 +1441,11 @@ public:
     }
     Dimension dimension() const
     {
-        // yyerror("RandomAccessNode()::dimension() not implemented");
-        // return ExpressionNode::dimension();
-        // TODO: array access (a[n]) is dimensionless for now, fix.
-        return Dimension();
+        if (expr_->type().isArray()) {
+            return expr_->arrayDimension()[index_];
+        } else {
+            return expr_->dimension();
+        }
     }
     virtual void accept(ASTVisitorInterface& visitor)
     {
@@ -1405,10 +1492,26 @@ private:
     ExpressionNode* rhs_;
 };
 
+
+
 class UnitNode : public Node
 {
 public:
-    UnitNode(const std::string& name)
+    // Dimension
+    virtual Dimension dimension() const = 0;
+
+    // The number you must multiply a quantity given in the
+    // current unit with to obtain an SI quantity.
+    // For example for Inch, the factor ie 0.0254.
+    virtual double conversionFactorSI() const = 0;
+
+};
+
+
+class BasicUnitNode : public UnitNode
+{
+public:
+    BasicUnitNode(const std::string& name)
         : conv_factor_(-1e100)
     {
         UnitData ud = unitFromString(name);
@@ -1416,12 +1519,14 @@ public:
             dimension_ = ud.dimension;
             conv_factor_ = ud.conv_factor;
         } else {
-            yyerror("Unit name not recognised.");
+            std::string err = "Unit name not recognised: ";
+            err += name;
+            throw std::runtime_error(err.c_str());
         }
     }
 
-    UnitNode(const Dimension dimension_arg,
-             const double conversion_factor_SI)
+    BasicUnitNode(const Dimension dimension_arg,
+                  const double conversion_factor_SI)
         : dimension_(dimension_arg),
           conv_factor_(conversion_factor_SI)
     {
@@ -1432,28 +1537,128 @@ public:
         return dimension_;
     }
 
-    // The number you must multiply a quantity given in the
-    // current unit with to obtain an SI quantity.
-    // For example for Inch, the factor ie 0.0254.
     double conversionFactorSI() const
     {
         return conv_factor_;
-    }
-
-    EquelleType type() const
-    {
-        return EquelleType();
     }
 
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
     }
-
 private:
     Dimension dimension_;
     double conv_factor_;
 };
+
+
+
+class BinaryOpUnitNode : public UnitNode
+{
+public:
+    BinaryOpUnitNode(BinaryOp op, UnitNode* left, UnitNode* right)
+        : op_(op),
+          left_(left),
+          right_(right)
+    {
+    }
+
+    ~BinaryOpUnitNode()
+    {
+        delete left_;
+        delete right_;
+    }
+
+    BinaryOp op() const
+    {
+        return op_;
+    }
+
+    Dimension dimension() const
+    {
+        switch (op_) {
+        case Multiply:
+            return left_->dimension() + right_->dimension();
+        case Divide:
+            return left_->dimension() - right_->dimension();
+        default:
+            throw std::logic_error("Units can only be manipulated with '*', '/' or '^'.");
+        }
+    }
+
+    double conversionFactorSI() const
+    {
+        switch (op_) {
+        case Multiply:
+            return left_->conversionFactorSI() * right_->conversionFactorSI();
+        case Divide:
+            return left_->conversionFactorSI() / right_->conversionFactorSI();
+        default:
+            throw std::logic_error("Units can only be manipulated with '*', '/' or '^'.");
+        }
+    }
+
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        left_->accept(visitor);
+        visitor.midVisit(*this);
+        right_->accept(visitor);
+        visitor.postVisit(*this);
+    }
+
+private:
+    BinaryOp op_;
+    UnitNode* left_;
+    UnitNode* right_;
+};
+
+
+
+
+class PowerUnitNode : public UnitNode
+{
+public:
+    PowerUnitNode(UnitNode* unit, int power)
+        : unit_(unit),
+          power_(power)
+    {
+    }
+
+    ~PowerUnitNode()
+    {
+        delete unit_;
+    }
+
+    int power() const
+    {
+        return power_;
+    }
+
+    Dimension dimension() const
+    {
+        return unit_->dimension() * power_;
+    }
+
+    double conversionFactorSI() const
+    {
+        return std::pow(unit_->conversionFactorSI(), power_);
+    }
+
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        unit_->accept(visitor);
+        visitor.postVisit(*this);
+    }
+
+private:
+    UnitNode* unit_;
+    int power_;
+};
+
+
+
 
 class QuantityNode : public ExpressionNode
 {

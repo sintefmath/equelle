@@ -49,11 +49,14 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
     er.output("squared normals", n2);
     er.output("first component", n0);
     er.output("their sum", std::get<1>(narray));
-    auto getsecond = [&](const std::tuple<CollOfScalar, CollOfScalar>& a) -> CollOfScalar {
+    auto getsecond_i0_ = [&](const std::tuple<CollOfScalar, CollOfScalar>& a) -> CollOfScalar {
         return std::get<1>(a);
     };
-    er.output("second element of array", getsecond(narray));
-    er.output("second element of a different, inline array", getsecond(makeArray(n0, ((double(2) * n0) + n2))));
+    auto getsecond_i1_ = [&](const std::tuple<CollOfScalar, CollOfScalar>& a) -> CollOfScalar {
+        return std::get<1>(a);
+    };
+    er.output("second element of array", getsecond_i0_(narray));
+    er.output("second element of a different, inline array", getsecond_i1_(makeArray(n0, ((double(2) * n0) + n2))));
     er.output("second element of the same, inline array, direct access", std::get<1>(makeArray(n0, ((double(2) * n0) + n2))));
     const CollOfVector q1 = (n * double(3));
     const CollOfVector q2 = (double(3) * n);

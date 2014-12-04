@@ -45,7 +45,7 @@ QuantityNode* handleQuantity(NumberNode* number, UnitNode* unit)
 
 UnitNode* handleUnit(const std::string& name)
 {
-    UnitNode* node = new UnitNode(name);
+    UnitNode* node = new BasicUnitNode(name);
     node->setLocation(FileLocation(yylineno));
     return node;
 }
@@ -54,23 +54,7 @@ UnitNode* handleUnit(const std::string& name)
 
 UnitNode* handleUnitOp(BinaryOp op, UnitNode* left, UnitNode* right)
 {
-    Dimension d = left->dimension();
-    double c = left->conversionFactorSI();
-    switch (op) {
-    case Multiply:
-        d = d + right->dimension();
-        c = c * right->conversionFactorSI();
-        break;
-    case Divide:
-        d = d - right->dimension();
-        c = c / right->conversionFactorSI();
-        break;
-    default:
-        yyerror("Units can only be manipulated with '*', '/' or '^'.");
-    }
-    delete left;
-    delete right;
-    UnitNode* node = new UnitNode(d, c);
+    UnitNode* node = new BinaryOpUnitNode(op, left, right);
     node->setLocation(FileLocation(yylineno));
     return node;
 }
@@ -83,10 +67,7 @@ UnitNode* handleUnitPower(UnitNode* unit, const double num)
     if (n != num) {
         yyerror("Powers of units (to the right of '^') can only be integers.");
     }
-    const Dimension d = unit->dimension() * n;
-    const double c = std::pow(unit->conversionFactorSI(), n);
-    delete unit;
-    UnitNode* node = new UnitNode(d, c);
+    UnitNode* node = new PowerUnitNode(unit, n);
     node->setLocation(FileLocation(yylineno));
     return node;
 }

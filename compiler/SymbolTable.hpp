@@ -52,12 +52,14 @@ public:
     bool assigned() const;
     void setAssigned(const bool assigned);
     const Dimension& dimension() const;
+    const std::vector<Dimension>& arrayDimension() const;
     void setDimension(const Dimension& dimension);
+    void setDimension(const std::vector<Dimension>& dimension);
     bool operator<(const Variable& v) const;
 private:
     std::string name_;
     EquelleType type_;
-    Dimension dimension_;
+    std::vector<Dimension> dimension_;
     bool assigned_;
 };
 
@@ -74,22 +76,37 @@ struct DynamicReturnSpecification
           arg_index_for_basic_type(InvalidIndex),
           arg_index_for_gridmapping(InvalidIndex),
           arg_index_for_subset(InvalidIndex),
-          arg_index_for_array_size(InvalidIndex)
+          arg_index_for_array_size(InvalidIndex),
+          arg_index_for_dimension(InvalidIndex)
     {
     }
-    DynamicReturnSpecification(const int bt_ix, const int gm_ix, const int ss_ix, const int ar_ix = InvalidIndex)
+    DynamicReturnSpecification(const int bt_ix, const int gm_ix, const int ss_ix, const int ar_ix = InvalidIndex, const int di_ix = InvalidIndex)
         : active(true),
           arg_index_for_basic_type(bt_ix),
           arg_index_for_gridmapping(gm_ix),
           arg_index_for_subset(ss_ix),
-          arg_index_for_array_size(ar_ix)
+          arg_index_for_array_size(ar_ix),
+          arg_index_for_dimension(di_ix)
     {
+    }
+    bool activeType() const
+    {
+        return active &&
+            (arg_index_for_basic_type != InvalidIndex
+             || arg_index_for_gridmapping != InvalidIndex
+             || arg_index_for_subset != InvalidIndex
+             || arg_index_for_array_size != InvalidIndex);
+    }
+    bool activeDimension() const
+    {
+        return active && (arg_index_for_dimension != InvalidIndex);
     }
     bool active;
     int arg_index_for_basic_type;
     int arg_index_for_gridmapping;
     int arg_index_for_subset;
     int arg_index_for_array_size;
+    int arg_index_for_dimension;
 };
 
 
@@ -109,6 +126,7 @@ public:
 
     FunctionType(const std::vector<Variable>& args,
                  const EquelleType& return_type,
+                 const Dimension& return_dimension,
                  const DynamicReturnSpecification& dynamic);
 
     /// Only for function with non-dynamic return types.
@@ -116,6 +134,17 @@ public:
 
     /// This version of returnType() is necessary to handle dynamic return types.
     EquelleType returnType(const std::vector<EquelleType>& argtypes) const;
+
+    /// Explicit set the return type, for use when instantiating template functions.
+    void setReturnType(const EquelleType& et);
+
+    Dimension returnDimension(const std::vector<Dimension>& argdims) const;
+
+    std::vector<Dimension> returnArrayDimension(const std::vector<std::vector<Dimension>>& argdims) const;
+
+    void setReturnDimension(const Dimension& dim);
+
+    void setReturnArrayDimension(const std::vector<Dimension>& dims);
 
     int dynamicSubsetReturn(const std::vector<EquelleType>& argtypes) const;
 
@@ -126,6 +155,7 @@ public:
 private:
     std::vector<Variable> arguments_;
     EquelleType return_type_;
+    std::vector<Dimension> return_dimension_;
     DynamicReturnSpecification dynamic_;
 };
 
@@ -145,6 +175,8 @@ public:
 
     Dimension variableDimension(const std::string name) const;
 
+    const std::vector<Dimension>& variableArrayDimension(const std::string name) const;
+
     bool isVariableDeclared(const std::string& name) const;
 
     bool isVariableAssigned(const std::string& name) const;
@@ -153,7 +185,15 @@ public:
 
     void setVariableType(const std::string& name, const EquelleType& type);
 
-    void setVariableDimension(const std::string& name, const Dimension& type);
+    void setVariableDimension(const std::string& name, const Dimension& dimension);
+
+    void setVariableDimension(const std::string& name, const std::vector<Dimension>& dimensions);
+
+    void clearLocalVariables();
+
+    const std::set<Variable>& getLocalVariables() const;
+
+    void setLocalVariables(const std::set<Variable>& locvars);
 
     const std::string& name() const;
 
@@ -164,6 +204,18 @@ public:
     void setFunctionType(const FunctionType& ftype);
 
     EquelleType returnType(const std::vector<EquelleType>& argtypes) const;
+
+    void setReturnType(const EquelleType& et);
+
+    void setTemplate(const bool is_template);
+
+    bool isTemplate() const;
+
+    void addInstantiation(const int index);
+
+    const std::vector<int>& instantiations() const;
+
+    void setInstantiations(const std::vector<int>& insta);
 
     const std::string& parentScope() const;
 
@@ -177,6 +229,8 @@ private:
     std::string name_;
     std::set<Variable> local_variables_;
     FunctionType type_;
+    bool is_template_;
+    std::vector<int> instantiation_indices_;
     Function* parent_scope_;
 };
 
@@ -190,7 +244,11 @@ public:
 
     static void declareFunction(const std::string& name);
 
-    static void declareFunction(const std::string& name, const FunctionType& ftype);
+    static void declareFunction(const std::string& name, const FunctionType& ftype, const bool is_template = false);
+
+    static int addFunctionInstantiation(const Function& func);
+
+    static const Function& getFunctionInstantiation(const int index);
 
     static int declareNewEntitySet(const std::string& name, const int subset_entity_index);
 
@@ -206,11 +264,17 @@ public:
 
     static Dimension variableDimension(const std::string& name);
 
+    static const std::vector<Dimension>& variableArrayDimension(const std::string& name);
+
     static void setVariableDimension(const std::string& name, const Dimension& dimension);
+
+    static void setVariableDimension(const std::string& name, const std::vector<Dimension>& dimensions);
 
     static bool isFunctionDeclared(const std::string& name);
 
     static const Function& getFunction(const std::string& name);
+
+    static Function& getMutableFunction(const std::string& name);
 
     static const Function& getCurrentFunction();
 
@@ -219,6 +283,8 @@ public:
     static void renameCurrentFunction(const std::string& name);
 
     static void retypeCurrentFunction(const FunctionType& ftype);
+
+    static void clearLocalVariablesOfCurrentFunction();
 
     /// Returns true if set1 is a (non-strict) subset of set2.
     static bool isSubset(const int set1, const int set2);
@@ -248,13 +314,14 @@ private:
 
     void declareEntitySet(const std::string& name, const int entity_index, const int subset_entity_index);
 
-    void declareFunctionImpl(const std::string& name, const FunctionType& ftype);
+    void declareFunctionImpl(const std::string& name, const FunctionType& ftype, const bool is_template);
 
     bool isFunctionDeclaredImpl(const std::string& name) const;
 
     void setCurrentFunctionImpl(const std::string& name);
 
     const Function& getFunctionImpl(const std::string& name) const;
+    Function& getMutableFunctionImpl(const std::string& name);
 
     bool isSubsetImpl(const int set1, const int set2) const;
 
@@ -270,6 +337,7 @@ private:
     int next_entityset_index_;
     std::vector<EntitySet> entitysets_;
     std::list<Function> functions_;
+    std::vector<Function> function_instantiations_;
     std::list<Function>::iterator main_function_;
     std::list<Function>::iterator current_function_;
     Node* ast_root_;
