@@ -829,7 +829,7 @@ namespace
 "    // Create the Equelle runtime.\n"
 "    equelle::CartesianEquelleRuntime er_cart(param);\n"
 "    equelle::EquelleRuntimeCPU er(param);\n"
-"    equelleGeneratedCode(er, er_cart);\n"
+"    equelleGeneratedCode(er);\n"
 "    return 0;\n"
 "}\n"
 "#endif // EQUELLE_NO_MAIN\n"
