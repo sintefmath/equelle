@@ -126,7 +126,8 @@ int main(int argc, char** argv)
         else if (backend == "mrst") {
             PrintMRSTBackendASTVisitor v;
             SymbolTable::program()->accept(v);
-        } else if(backend == "MPI") {
+        }
+        else if(backend == "MPI") {
             PrintMPIBackendASTVisitor v;
             SymbolTable::program()->accept(v);
         }
@@ -135,5 +136,14 @@ int main(int argc, char** argv)
         }
     }
 
-    return 0;
+    //This assumes that the printing went well.
+    if (check.isValid())
+    {
+    	return 0;
+    }
+    else
+    {
+    	return -1;
+    }
+    }
 }
