@@ -49,7 +49,8 @@ var compileEquelle = function(source, conn, quit, handleAnother) {
                 handleAnother();
             })
             .error(function(err, stdout, stderr) {
-                quit(stderr);
+		        // Assuming that this is actual compilation errors
+		        conn.sendJSON({ status: 'compileerror', err: stderr});
             })
             .run();
 
