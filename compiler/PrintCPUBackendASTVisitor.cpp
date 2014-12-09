@@ -817,10 +817,8 @@ namespace
 "#include <array>\n"
 "\n"
 "#include \"equelle/EquelleRuntimeCPU.hpp\"\n"
-"#include \"equelle/CartesianGrid.hpp\"//Should be renamed EquelleCartesianRuntimeCPU\n"
 "\n"
 "void ensureRequirements(const equelle::EquelleRuntimeCPU& er);\n"
-"void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er, equelle::CartesianEquelleRuntime& er_cart);\n"
 "\n"
  "#ifndef EQUELLE_NO_MAIN\n"
 "int main(int argc, char** argv)\n"
@@ -836,11 +834,9 @@ namespace
 "}\n"
 "#endif // EQUELLE_NO_MAIN\n"
 "\n"
-"void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,\n"
-"                          equelle::CartesianEquelleRuntime& er_cart) {\n"
+"void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er) {\n"
 "    using namespace equelle;\n"
 "    ensureRequirements(er);\n"
-"    (void)er_cart; // To suppress compile warnings if not used below.\n"
 "\n"
 "    // ============= Generated code starts here ================\n";
     }

@@ -34,7 +34,7 @@ ln -snf /equelle/src/webdemo/srv /srv
 ln -snf /equelle/src/webdemo/scripts /scripts
 
 #Copy examples to examples dir
-sudo cp /equelle/src/examples/dsl/twophase_fully_implicit_conservation.equelle /srv/examples/3dwell/flow.equelle 
+sudo cp /equelle/src/examples/dsl/twophase.equelle /srv/examples/3dwell/flow.equelle 
 sudo cp /equelle/src/examples/dsl/heateq_timesteps.equelle /srv/examples/2dheateq/heateq.equelle 
 
 # Install web-server components
