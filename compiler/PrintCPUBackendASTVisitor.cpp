@@ -818,6 +818,7 @@ namespace
 "\n"
 "#include \"equelle/EquelleRuntimeCPU.hpp\"\n"
 "\n"
+"void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er);\n"
 "void ensureRequirements(const equelle::EquelleRuntimeCPU& er);\n"
 "\n"
  "#ifndef EQUELLE_NO_MAIN\n"
