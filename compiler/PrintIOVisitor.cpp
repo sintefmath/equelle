@@ -45,16 +45,18 @@ void PrintIOVisitor::visit(FuncCallNode& node)
         // Loop through declared and specified arguments to this function to figure out the tag and what will be written to file
         auto argumentDeclarations = SymbolTable::getFunction(node.name()).functionType().arguments();
         auto argumentExpressions = node.argumentsNode().arguments();
-        size_t arguments = argumentExpressions.size();
+        auto argumentTypes = node.argumentsNode().argumentTypes();
+        size_t arguments = argumentTypes.size();
         for ( size_t i = 0; i < arguments; ++i) {
             auto name = argumentDeclarations[i].name();
-            auto arg = argumentExpressions[i];
-            if (name == "tag" && arg->type() == EquelleType(String)) {
+            auto type = argumentTypes[i];
+            auto expr = argumentExpressions[i];
+            if (name == "tag" && type == EquelleType(String)) {
                 // This is the tag argument, and it is a simple string
-                auto& tag = dynamic_cast<StringNode&>(*arg);
+                auto& tag = dynamic_cast<StringNode&>(*expr);
                 std::cout << "Tag: " << tag.content() << '\n';
             } else if (name == "data") {
-                std::cout << "Type: " << SymbolTable::equelleString(arg->type()) << '\n';
+                std::cout << "Type: " << SymbolTable::equelleString(type) << '\n';
             }
         }
         // This does not return anything
@@ -85,10 +87,14 @@ void PrintIOVisitor::visit(JustAnIdentifierNode& node) {}
 void PrintIOVisitor::visit(FuncArgsDeclNode&) {}
 void PrintIOVisitor::visit(FuncDeclNode& node) {}
 void PrintIOVisitor::visit(FuncStartNode& node) {}
-void PrintIOVisitor::visit(FuncAssignNode&) {}
+void PrintIOVisitor::visit(FuncAssignNode &node) {
+    SymbolTable::setCurrentFunction(node.name());
+}
 void PrintIOVisitor::visit(ReturnStatementNode&) {}
 void PrintIOVisitor::visit(FuncCallStatementNode&) {}
-void PrintIOVisitor::visit(LoopNode& node) {}
+void PrintIOVisitor::visit(LoopNode& node) {
+    SymbolTable::setCurrentFunction(node.loopName());
+}
 void PrintIOVisitor::visit(ArrayNode& node) {}
 void PrintIOVisitor::visit(RandomAccessNode& node) {}
 void PrintIOVisitor::midVisit(SequenceNode&) {}
@@ -110,12 +116,16 @@ void PrintIOVisitor::midVisit(FuncArgsDeclNode&) {}
 void PrintIOVisitor::postVisit(FuncArgsDeclNode&) {}
 void PrintIOVisitor::postVisit(FuncDeclNode&) {}
 void PrintIOVisitor::postVisit(FuncStartNode&) {}
-void PrintIOVisitor::postVisit(FuncAssignNode&) {}
+void PrintIOVisitor::postVisit(FuncAssignNode&) {
+    SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
+}
 void PrintIOVisitor::midVisit(FuncArgsNode&) {}
 void PrintIOVisitor::postVisit(FuncArgsNode&) {}
 void PrintIOVisitor::postVisit(ReturnStatementNode&) {}
 void PrintIOVisitor::postVisit(FuncCallStatementNode&) {}
-void PrintIOVisitor::postVisit(LoopNode&) {}
+void PrintIOVisitor::postVisit(LoopNode&) {
+    SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
+}
 void PrintIOVisitor::postVisit(ArrayNode&) {}
 void PrintIOVisitor::postVisit(RandomAccessNode&) {}
 void PrintIOVisitor::visit(StencilAssignmentNode& node) {}

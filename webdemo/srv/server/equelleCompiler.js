@@ -10,14 +10,14 @@ var compileEquelle = function(source, conn, quit, handleAnother) {
     var tryAsync = helpers.tryAsync('Equelle compiler', quit);
 
     /* Compile the executable using the Equelle compiler */
-    var compiler = tryAsync(false, exec, config.equelle_compiler+' --nondimensional --input -')
+    var compiler = tryAsync(false, exec, config.equelle_compiler+' --nondimensional --input - --backend cpu')
     .complete(function(stdout) {
         // The compilation was successful, sign code with secret key
         tryAsync(helpers.signData, stdout)
         .complete(function(sign) {
 
             /* Parse inputs and outputs with compiler */
-            var parser = tryAsync(false, exec, config.equelle_compiler+' --nondimensional --input - --dump io')
+            var parser = tryAsync(false, exec, config.equelle_compiler+' --nondimensional --input - --backend io')
             .complete(function(iostdout) {
                 // Parse dump-lines
                 var inputs = [], outputs = [], current;
