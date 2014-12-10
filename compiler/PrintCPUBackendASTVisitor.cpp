@@ -827,7 +827,6 @@ namespace
 "    Opm::parameter::ParameterGroup param(argc, argv, false);\n"
 "\n"
 "    // Create the Equelle runtime.\n"
-"    equelle::CartesianEquelleRuntime er_cart(param);\n"
 "    equelle::EquelleRuntimeCPU er(param);\n"
 "    equelleGeneratedCode(er);\n"
 "    return 0;\n"
