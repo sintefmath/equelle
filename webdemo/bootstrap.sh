@@ -24,7 +24,7 @@ chown equelle:users /equelle/src /equelle/build
 sudo -u equelle git clone https://github.com/sintefmath/equelle.git /equelle/src
 cd /equelle/src
 #sudo -u equelle git reset --hard 659d849c0a59dd33146bf7118d299911787a1cc8 #Just after merge of Jakhog
-#sudo -u equelle git reset --hard dcf3c82b87c2cdc956027b64a3f3bb833b98c8c1
+sudo -u equelle git pull origin master
 sudo -u equelle git submodule update --init --recursive
 cd /equelle/build
 sudo -u equelle cmake /equelle/src
@@ -35,7 +35,7 @@ ln -snf /equelle/src/webdemo/scripts /scripts
 
 #Copy examples to examples dir
 sudo cp /equelle/src/examples/dsl/twophase.equelle /srv/examples/3dwell/flow.equelle 
-sudo cp /equelle/src/examples/dsl/heateq_timesteps.equelle /srv/examples/2dheateq/heateq.equelle 
+sudo cp /equelle/src/examples/dsl/heateq.equelle /srv/examples/2dheateq/heateq.equelle 
 
 # Install web-server components
 apt-get install -y nginx nodejs
