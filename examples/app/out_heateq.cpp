@@ -15,10 +15,9 @@
 #include <array>
 
 #include "equelle/EquelleRuntimeCPU.hpp"
-#include "equelle/CartesianGrid.hpp"//Should be renamed EquelleCartesianRuntimeCPU
 
+void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er);
 void ensureRequirements(const equelle::EquelleRuntimeCPU& er);
-void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er, equelle::CartesianEquelleRuntime& er_cart);
 
 #ifndef EQUELLE_NO_MAIN
 int main(int argc, char** argv)
@@ -27,70 +26,62 @@ int main(int argc, char** argv)
     Opm::parameter::ParameterGroup param(argc, argv, false);
 
     // Create the Equelle runtime.
-    equelle::CartesianEquelleRuntime er_cart(param);
     equelle::EquelleRuntimeCPU er(param);
-    equelleGeneratedCode(er, er_cart);
+    equelleGeneratedCode(er);
     return 0;
 }
 #endif // EQUELLE_NO_MAIN
 
-void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
-                          equelle::CartesianEquelleRuntime& er_cart) {
+void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er) {
     using namespace equelle;
     ensureRequirements(er);
-    (void)er_cart; // To suppress compile warnings if not used below.
 
     // ============= Generated code starts here ================
 
-    const Scalar k = er.inputScalarWithDefault("k", double(0.3));
-    const Scalar dt = er.inputScalarWithDefault("dt", double(0.5));
-    const CollOfScalar u0 = er.inputCollectionOfScalar("u0", er.allCells());
-    const CollOfFace dirichlet_boundary = er.inputDomainSubsetOf("dirichlet_boundary", er.boundaryFaces());
-    const CollOfScalar dirichlet_val = er.inputCollectionOfScalar("dirichlet_val", dirichlet_boundary);
-    const CollOfScalar vol = er.norm(er.allCells());
-    const CollOfFace interior_faces = er.interiorFaces();
-    const CollOfCell first = er.firstCell(interior_faces);
-    const CollOfCell second = er.secondCell(interior_faces);
-    const CollOfScalar itrans = (k * (er.norm(interior_faces) / er.norm((er.centroid(first) - er.centroid(second)))));
+    const Scalar k = (er.inputScalarWithDefault("k", double(2.85)) * double(1));
+    const Scalar cv = (er.inputScalarWithDefault("cv", double(2170000)) * double(1));
+    const CollOfFace ifaces = er.interiorFaces();
+    const CollOfCell first = er.firstCell(ifaces);
+    const CollOfCell second = er.secondCell(ifaces);
+    const CollOfScalar itrans = (k * (er.norm(ifaces) / er.norm((er.centroid(first) - er.centroid(second)))));
+    auto computeInteriorFlux = [&](const CollOfScalar& u) -> CollOfScalar {
+        return (-itrans * er.gradient(u));
+    };
+    const CollOfFace dir_boundary = er.inputDomainSubsetOf("dir_boundary", er.boundaryFaces());
+    const CollOfScalar dir_val = (er.inputCollectionOfScalar("dir_val", dir_boundary) * double(1));
     const CollOfFace bf = er.boundaryFaces();
     const CollOfCell bf_cells = er.trinaryIf(er.isEmpty(er.firstCell(bf)), er.secondCell(bf), er.firstCell(bf));
     const CollOfScalar bf_sign = er.trinaryIf(er.isEmpty(er.firstCell(bf)), er.operatorExtend(-double(1), bf), er.operatorExtend(double(1), bf));
     const CollOfScalar btrans = (k * (er.norm(bf) / er.norm((er.centroid(bf) - er.centroid(bf_cells)))));
-    const CollOfScalar dir_sign = er.operatorOn(bf_sign, er.boundaryFaces(), dirichlet_boundary);
-    auto computeInteriorFlux_i0_ = [&](const CollOfScalar& u) -> CollOfScalar {
-        return (-itrans * er.gradient(u));
+    const CollOfCell dir_cells = er.operatorOn(bf_cells, er.boundaryFaces(), dir_boundary);
+    const CollOfScalar dir_sign = er.operatorOn(bf_sign, er.boundaryFaces(), dir_boundary);
+    const CollOfScalar dir_trans = er.operatorOn(btrans, er.boundaryFaces(), dir_boundary);
+    auto computeBoundaryFlux = [&](const CollOfScalar& u) -> CollOfScalar {
+        const CollOfScalar u_dirbdycells = er.operatorOn(u, er.allCells(), dir_cells);
+        const CollOfScalar dir_fluxes = ((dir_trans * dir_sign) * (u_dirbdycells - dir_val));
+        return er.operatorExtend(dir_fluxes, dir_boundary, er.boundaryFaces());
     };
-    auto computeInteriorFlux_i3_ = [&](const CollOfScalar& u) -> CollOfScalar {
-        return (-itrans * er.gradient(u));
-    };
-    auto computeBoundaryFlux_i1_ = [&](const CollOfScalar& u) -> CollOfScalar {
-        const CollOfScalar u_dirbdycells = er.operatorOn(u, er.allCells(), er.operatorOn(bf_cells, er.boundaryFaces(), dirichlet_boundary));
-        const CollOfScalar dir_fluxes = ((er.operatorOn(btrans, er.boundaryFaces(), dirichlet_boundary) * dir_sign) * (u_dirbdycells - dirichlet_val));
-        return er.operatorExtend(dir_fluxes, dirichlet_boundary, er.boundaryFaces());
-    };
-    auto computeBoundaryFlux_i4_ = [&](const CollOfScalar& u) -> CollOfScalar {
-        const CollOfScalar u_dirbdycells = er.operatorOn(u, er.allCells(), er.operatorOn(bf_cells, er.boundaryFaces(), dirichlet_boundary));
-        const CollOfScalar dir_fluxes = ((er.operatorOn(btrans, er.boundaryFaces(), dirichlet_boundary) * dir_sign) * (u_dirbdycells - dirichlet_val));
-        return er.operatorExtend(dir_fluxes, dirichlet_boundary, er.boundaryFaces());
-    };
-    auto computeResidual_i2_ = [&](const CollOfScalar& u) -> CollOfScalar {
-        const CollOfScalar ifluxes = computeInteriorFlux_i3_(u);
-        const CollOfScalar bfluxes = computeBoundaryFlux_i4_(u);
+    const CollOfScalar vol = er.norm(er.allCells());
+    auto computeResidual = [&](const CollOfScalar& u, const CollOfScalar& u0, const Scalar& dt) -> CollOfScalar {
+        const CollOfScalar ifluxes = computeInteriorFlux(u);
+        const CollOfScalar bfluxes = computeBoundaryFlux(u);
         const CollOfScalar fluxes = (er.operatorExtend(ifluxes, er.interiorFaces(), er.allFaces()) + er.operatorExtend(bfluxes, er.boundaryFaces(), er.allFaces()));
-        const CollOfScalar residual = ((u - u0) + ((dt / vol) * er.divergence(fluxes)));
+        const CollOfScalar residual = ((u - u0) + ((dt / (cv * vol)) * er.divergence(fluxes)));
         return residual;
     };
-    auto computeResidual_i5_ = [&](const CollOfScalar& u) -> CollOfScalar {
-        const CollOfScalar ifluxes = computeInteriorFlux_i3_(u);
-        const CollOfScalar bfluxes = computeBoundaryFlux_i4_(u);
-        const CollOfScalar fluxes = (er.operatorExtend(ifluxes, er.interiorFaces(), er.allFaces()) + er.operatorExtend(bfluxes, er.boundaryFaces(), er.allFaces()));
-        const CollOfScalar residual = ((u - u0) + ((dt / vol) * er.divergence(fluxes)));
-        return residual;
-    };
-    const CollOfScalar explicitu = (u0 - computeResidual_i2_(u0));
-    const CollOfScalar u = er.newtonSolve(computeResidual_i5_, u0);
-    er.output("explicitu", explicitu);
-    er.output("u", u);
+    const CollOfScalar u_initial = (er.inputCollectionOfScalar("u_initial", er.allCells()) * double(1));
+    const SeqOfScalar timesteps = (er.inputSequenceOfScalar("timesteps") * double(1));
+    auto u0 = u_initial;
+    for (const Scalar& dt : timesteps) {
+        auto computeResidualLocal = [&](const CollOfScalar& u) -> CollOfScalar {
+            return computeResidual(u, u0, dt);
+        };
+        const CollOfScalar u_guess = u0;
+        const CollOfScalar u = er.newtonSolve(computeResidualLocal, u_guess);
+        er.output("u", u);
+        er.output("maximum of u", er.maxReduce(u));
+        u0 = u;
+    }
 
     // ============= Generated code ends here ================
 

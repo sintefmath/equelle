@@ -3,10 +3,11 @@
 rsp = 287.058 [Joule / (Kilogram * Kelvin)]
 # Assume constant temperature
 temp = 290 [Kelvin]
-# perm = 1 Darcy (yes, we need scientific notation)
-perm = 0.00000000000098692 [Meter^2]
-# mobility = 1/viscosity (approx correct for dry air at 290 K)
-mobility = 52500 [Meter * Second / Kilogram]
+# Permeability
+perm = 1 [Darcy]
+# Approximately correct for dry air at 290 K.
+viscosity = 18.27 [Micro * Pascal * Second]
+mobility = 1 / viscosity
 
 # Input source terms and time steps.
 q = InputCollectionOfScalar("source", AllCells()) * 1 [Kilogram/Second]

@@ -1,69 +1,85 @@
-# Heat conduction with no boundary conditions or source terms.
+# Heat conduction with Diriclet boundary conditions.
 
-# Physics that requires specification
-k : Scalar = InputScalarWithDefault("k", 0.3) # Heat diffusion constant.
+# This example is intended to show how a relatively simple
+# model can be implemented in Equelle. It shows how to use
+# units properly, how to write functions, and how to solve
+# implicit problems. It also shows how to implement general
+# Dirichlet type boundary conditions.
 
-# @afr: time step strategy assumed given outside.
-dt : Scalar = InputScalarWithDefault("dt", 0.5) # Time step length.
+# Heat diffusion constant.
+# Default value within range given for granite:
+#   http://en.wikipedia.org/wiki/List_of_thermal_conductivities
+k = InputScalarWithDefault("k", 2.85) * 1 [Watt / (Meter*Kelvin)]
 
-# u0 should be given initial values (in user input)
-u0 : Collection Of Scalar On AllCells()
-u0 = InputCollectionOfScalar("u0", AllCells())
-
-# Trying to add support for Dirichlet boundaries
-dirichlet_boundary : Collection Of Face Subset Of (BoundaryFaces())
-dirichlet_boundary = InputDomainSubsetOf("dirichlet_boundary", BoundaryFaces())
-dirichlet_val : Collection Of Scalar On dirichlet_boundary
-dirichlet_val = InputCollectionOfScalar("dirichlet_val", dirichlet_boundary)
+# Volumetric heat capacity.
+# Default value corresponds to granite:
+#   http://en.wikipedia.org/wiki/Volumetric_heat_capacity
+cv = InputScalarWithDefault("cv", 2.17e6) * 1 [Joule / (Kelvin * Meter^3)]
 
 # Compute interior transmissibilities.
-vol = |AllCells()|                                         # Deduced type:  Collection Of Scalar On AllCells()
-interior_faces = InteriorFaces()                           # Deduced type:  Collection Of Face
-first = FirstCell(interior_faces)                          # Deduced type:  Collection Of Cell On interior_faces
-							   # Equivalent to: Collection Of Cell On InteriorFaces()
-second = SecondCell(interior_faces)                        # Deduced type:  Same as for 'first'.
-itrans : Collection Of Scalar On interior_faces = k * |interior_faces| / |Centroid(first) - Centroid(second)| 
-
-# Compute boundary transmissibilities.
-bf = BoundaryFaces()
-bf_cells = IsEmpty(FirstCell(bf)) ? SecondCell(bf) : FirstCell(bf)
-bf_sign = IsEmpty(FirstCell(bf)) ? (-1 Extend bf) : (1 Extend bf)
-btrans = k * |bf| / |Centroid(bf) - Centroid(bf_cells)|
-
-# Compute quantities needed for boundary conditions.
-dir_sign = bf_sign On dirichlet_boundary
+ifaces = InteriorFaces()
+first = FirstCell(ifaces)
+second = SecondCell(ifaces)
+itrans = k * |ifaces| / |Centroid(first) - Centroid(second)|
 
 # Compute flux for interior faces.
-computeInteriorFlux : Function(u : Collection Of Scalar On AllCells()) -> Collection Of Scalar On InteriorFaces()
 computeInteriorFlux(u) = {
     -> -itrans * Gradient(u)
 }
 
+# Support for Dirichlet boundaries
+dir_boundary = InputDomainSubsetOf("dir_boundary", BoundaryFaces())
+dir_val = InputCollectionOfScalar("dir_val", dir_boundary) * 1 [Kelvin]
+
+# Compute boundary transmissibilities and orientations.
+bf = BoundaryFaces()
+bf_cells = IsEmpty(FirstCell(bf)) ? SecondCell(bf) : FirstCell(bf)
+bf_sign = IsEmpty(FirstCell(bf)) ? (-1 Extend bf) : (1 Extend bf)
+btrans = k * |bf| / |Centroid(bf) - Centroid(bf_cells)|
+dir_cells = bf_cells On dir_boundary
+dir_sign = bf_sign On dir_boundary
+dir_trans = btrans On dir_boundary
+
 # Compute flux for boundary faces.
-computeBoundaryFlux : Function(u : Collection Of Scalar On AllCells()) -> Collection Of Scalar On BoundaryFaces()
 computeBoundaryFlux(u) = {
     # Compute flux at Dirichlet boundaries.
-    u_dirbdycells = u On (bf_cells On dirichlet_boundary)
-    dir_fluxes = (btrans On dirichlet_boundary) * dir_sign * (u_dirbdycells - dirichlet_val)
-    # Extending with zero away from Dirichlet boundaries (i.e. assuming no-flow elsewhere).
+    u_dirbdycells = u On dir_cells
+    dir_fluxes = dir_trans * dir_sign * (u_dirbdycells - dir_val)
+    # Extending with zero away from Dirichlet boundaries,
+    # which means assuming no-flow elsewhere.
     -> dir_fluxes Extend BoundaryFaces()
 }
 
 # Compute the residual for the heat equation.
-computeResidual : Function(u : Collection Of Scalar On AllCells()) -> Collection Of Scalar On AllCells()
-computeResidual(u) = {
+vol = |AllCells()|
+computeResidual(u, u0, dt) = {
     ifluxes = computeInteriorFlux(u)
     bfluxes = computeBoundaryFlux(u)
     # Extend both ifluxes and bfluxes to AllFaces() and add to get all fluxes.
     fluxes = (ifluxes Extend AllFaces()) + (bfluxes Extend AllFaces())
-    # Deduced type: Collection Of Scalar On AllCells()
-    residual = u - u0 + (dt / vol) * Divergence(fluxes)
+    residual = u - u0 + (dt / (cv * vol)) * Divergence(fluxes)
     -> residual
 }
 
-# NewtonSolve takes a function (that should accept the primary variable as input) and the initial guess for the primary variable.
-explicitu = u0 - computeResidual(u0)
-u = NewtonSolve(computeResidual, u0)
+# u_initial is user input (u is the unknown, temperature here)
+u_initial = InputCollectionOfScalar("u_initial", AllCells()) * 1 [Kelvin]
 
-Output("explicitu", explicitu)
-Output("u", u)
+# Sequences are ordered, and not associated with the grid
+# as collections are.
+timesteps = InputSequenceOfScalar("timesteps") * 1 [Second]
+
+# u0 must be declared Mutable, because we will change it
+# in the For loop further down.
+u0 : Mutable Collection Of Scalar On AllCells()
+u0 = u_initial
+
+For dt In timesteps {
+    computeResidualLocal(u) = {
+        -> computeResidual(u, u0, dt)
+    }
+    u_guess = u0
+    u = NewtonSolve(computeResidualLocal, u_guess)
+    Output("u", u)
+    Output("maximum of u", MaxReduce(u))
+    u0 = u
+}

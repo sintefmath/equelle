@@ -1,6 +1,6 @@
 a = Centroid(AllCells())[0]
 b = Centroid(AllCells())[1]
-Output("hmmm", a > (0 Extend AllCells()) ? (a + b) : (0 Extend AllCells()))
+Output("hmmm", a > (0 [Meter] Extend AllCells()) ? (a + b) : (0 [Meter] Extend AllCells()))
 a1 = (a + b) On InteriorCells()
 b1 = b On InteriorCells()
 c = (a1 + b1) Extend AllCells()

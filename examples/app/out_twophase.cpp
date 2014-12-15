@@ -15,10 +15,9 @@
 #include <array>
 
 #include "equelle/EquelleRuntimeCPU.hpp"
-#include "equelle/CartesianGrid.hpp"//Should be renamed EquelleCartesianRuntimeCPU
 
+void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er);
 void ensureRequirements(const equelle::EquelleRuntimeCPU& er);
-void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er, equelle::CartesianEquelleRuntime& er_cart);
 
 #ifndef EQUELLE_NO_MAIN
 int main(int argc, char** argv)
@@ -27,25 +26,22 @@ int main(int argc, char** argv)
     Opm::parameter::ParameterGroup param(argc, argv, false);
 
     // Create the Equelle runtime.
-    equelle::CartesianEquelleRuntime er_cart(param);
     equelle::EquelleRuntimeCPU er(param);
-    equelleGeneratedCode(er, er_cart);
+    equelleGeneratedCode(er);
     return 0;
 }
 #endif // EQUELLE_NO_MAIN
 
-void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
-                          equelle::CartesianEquelleRuntime& er_cart) {
+void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er) {
     using namespace equelle;
     ensureRequirements(er);
-    (void)er_cart; // To suppress compile warnings if not used below.
 
     // ============= Generated code starts here ================
 
-    const CollOfScalar perm = er.inputCollectionOfScalar("perm", er.allCells());
+    const CollOfScalar perm = (er.inputCollectionOfScalar("perm", er.allCells()) * double(1));
     const CollOfScalar poro_in = er.inputCollectionOfScalar("poro", er.allCells());
-    const Scalar watervisc = er.inputScalarWithDefault("watervisc", double(0.0005));
-    const Scalar oilvisc = er.inputScalarWithDefault("oilvisc", double(0.005));
+    const Scalar watervisc = (er.inputScalarWithDefault("watervisc", double(0.0005)) * double(1));
+    const Scalar oilvisc = (er.inputScalarWithDefault("oilvisc", double(0.005)) * double(1));
     const CollOfScalar min_poro = er.operatorExtend(er.inputScalarWithDefault("min_poro", double(0.0001)), er.allCells());
     const CollOfScalar poro = er.trinaryIf((poro_in < min_poro), min_poro, poro_in);
     const CollOfScalar pv = (poro * er.norm(er.allCells()));
@@ -67,17 +63,20 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
     auto upwind_i3_ = [&](const CollOfScalar& flux, const CollOfScalar& x) -> CollOfScalar {
         const CollOfScalar x1 = er.operatorOn(x, er.allCells(), er.firstCell(er.interiorFaces()));
         const CollOfScalar x2 = er.operatorOn(x, er.allCells(), er.secondCell(er.interiorFaces()));
-        return er.trinaryIf((flux >= double(0)), x1, x2);
+        const CollOfScalar zero = (double(0) * flux);
+        return er.trinaryIf((flux >= zero), x1, x2);
     };
     auto upwind_i7_ = [&](const CollOfScalar& flux, const CollOfScalar& x) -> CollOfScalar {
         const CollOfScalar x1 = er.operatorOn(x, er.allCells(), er.firstCell(er.interiorFaces()));
         const CollOfScalar x2 = er.operatorOn(x, er.allCells(), er.secondCell(er.interiorFaces()));
-        return er.trinaryIf((flux >= double(0)), x1, x2);
+        const CollOfScalar zero = (double(0) * flux);
+        return er.trinaryIf((flux >= zero), x1, x2);
     };
     auto upwind_i11_ = [&](const CollOfScalar& flux, const CollOfScalar& x) -> CollOfScalar {
         const CollOfScalar x1 = er.operatorOn(x, er.allCells(), er.firstCell(er.interiorFaces()));
         const CollOfScalar x2 = er.operatorOn(x, er.allCells(), er.secondCell(er.interiorFaces()));
-        return er.trinaryIf((flux >= double(0)), x1, x2);
+        const CollOfScalar zero = (double(0) * flux);
+        return er.trinaryIf((flux >= zero), x1, x2);
     };
     auto computeTotalFlux_i4_ = [&](const CollOfScalar& pressure, const CollOfScalar& total_mobility) -> CollOfScalar {
         const CollOfScalar ngradp = -er.gradient(pressure);
@@ -110,8 +109,9 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
         return (kro / oilvisc);
     };
     auto computeTransportResidual = [&](const CollOfScalar& sw, const CollOfScalar& sw0, const CollOfScalar& flux, const CollOfScalar& source, const CollOfScalar& insource_sw, const Scalar& dt) -> CollOfScalar {
-        const CollOfScalar insource = er.trinaryIf((source > double(0)), source, er.operatorExtend(double(0), er.allCells()));
-        const CollOfScalar outsource = er.trinaryIf((source < double(0)), source, er.operatorExtend(double(0), er.allCells()));
+        const Scalar zero = double(0);
+        const CollOfScalar insource = er.trinaryIf((source > zero), source, er.operatorExtend(zero, er.allCells()));
+        const CollOfScalar outsource = er.trinaryIf((source < zero), source, er.operatorExtend(zero, er.allCells()));
         const CollOfScalar mw = computeWaterMob_i9_(sw);
         const CollOfScalar mo = computeOilMob_i10_(sw);
         const CollOfScalar fracflow = (mw / (mw + mo));
@@ -120,10 +120,10 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
         const CollOfScalar q = ((insource * insource_sw) + (outsource * fracflow));
         return ((sw - sw0) + ((dt / pv) * (er.divergence(water_flux) - q)));
     };
-    const SeqOfScalar timesteps = er.inputSequenceOfScalar("timesteps");
+    const SeqOfScalar timesteps = (er.inputSequenceOfScalar("timesteps") * double(1));
     const CollOfScalar sw_initial = er.inputCollectionOfScalar("sw_initial", er.allCells());
     const CollOfCell source_cells = er.inputDomainSubsetOf("source_cells", er.allCells());
-    const CollOfScalar source_values = er.inputCollectionOfScalar("source_values", source_cells);
+    const CollOfScalar source_values = (er.inputCollectionOfScalar("source_values", source_cells) * double(1));
     const CollOfScalar source = er.operatorExtend(source_values, source_cells, er.allCells());
     const CollOfScalar insource_sw = er.operatorExtend(double(1), er.allCells());
     auto sw0 = sw_initial;

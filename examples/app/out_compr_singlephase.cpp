@@ -15,10 +15,9 @@
 #include <array>
 
 #include "equelle/EquelleRuntimeCPU.hpp"
-#include "equelle/CartesianGrid.hpp"//Should be renamed EquelleCartesianRuntimeCPU
 
+void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er);
 void ensureRequirements(const equelle::EquelleRuntimeCPU& er);
-void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er, equelle::CartesianEquelleRuntime& er_cart);
 
 #ifndef EQUELLE_NO_MAIN
 int main(int argc, char** argv)
@@ -27,25 +26,23 @@ int main(int argc, char** argv)
     Opm::parameter::ParameterGroup param(argc, argv, false);
 
     // Create the Equelle runtime.
-    equelle::CartesianEquelleRuntime er_cart(param);
     equelle::EquelleRuntimeCPU er(param);
-    equelleGeneratedCode(er, er_cart);
+    equelleGeneratedCode(er);
     return 0;
 }
 #endif // EQUELLE_NO_MAIN
 
-void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er,
-                          equelle::CartesianEquelleRuntime& er_cart) {
+void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er) {
     using namespace equelle;
     ensureRequirements(er);
-    (void)er_cart; // To suppress compile warnings if not used below.
 
     // ============= Generated code starts here ================
 
     const Scalar rsp = double(287.058);
     const Scalar temp = double(290);
-    const Scalar perm = double(9.8692e-13);
-    const Scalar mobility = double(52500);
+    const Scalar perm = (9.869232667160128e-13*double(1));
+    const Scalar viscosity = (1e-06*double(18.27));
+    const Scalar mobility = (double(1) / viscosity);
     const CollOfScalar q = (er.inputCollectionOfScalar("source", er.allCells()) * double(1));
     const SeqOfScalar timesteps = (er.inputSequenceOfScalar("timesteps") * double(1));
     const CollOfScalar p_initial = er.operatorExtend(double(3000000), er.allCells());
