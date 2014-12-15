@@ -73,7 +73,7 @@ if (Boost_FOUND)
 		set( cuda_file_name "${CMAKE_CURRENT_SOURCE_DIR}/test/${test_name}.cu" )
 		set( cuda_h_file_name "${CMAKE_CURRENT_SOURCE_DIR}/test/${test_name}.h" )
 		CleanMessage("cuda_file_name: ${cuda_file_name} ")
-		CleanMessage("cuda_h_file_name: ${cuda_h_file_name} ")
+		CleanMessage("cuda_h_file_name: ${cuda_h_file_name} ")
 		CleanMessage("single_test: ${single_test} " )
 		cuda_add_library( ${cuda_name} ${cuda_file_name} ${cuda_h_file_name} )
 		add_executable( ${test_name} ${single_test})
@@ -86,13 +86,19 @@ if (Boost_FOUND)
 			tinyxml umfpack ${SUPERLU_LIB} dunecommon
 		)
 		if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test/${test_name}.param")
-			add_test( ${test_name} ${optirun_command} ./${test_name}
-			${CMAKE_CURRENT_SOURCE_DIR}/test/${test_name}.param)
+		  add_test( NAME ${test_name}
+		          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test/
+		          COMMAND ${optirun_command} 
+			  ${CMAKE_BINARY_DIR}/backends/cuda/${test_name} ${test_name}.param
+		          #${CMAKE_CURRENT_SOURCE_DIR}/test/${test_name}.param
+			)
 		else()
 			add_test( ${test_name} ${optirun_command} ./${test_name})
 		endif()
 	endforeach()
 endif(Boost_FOUND)
+CleanMessage("CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
+CleanMessage("CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_SOURCE_DIR}")
 
 set_target_properties( equelle_cuda PROPERTIES
   PUBLIC_HEADER "${cuda_cuda_inc} ${cuda_inc}")
