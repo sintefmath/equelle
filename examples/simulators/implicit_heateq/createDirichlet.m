@@ -13,7 +13,7 @@ nx = 19
 ny = 24
 nz = 20
 timesteps = 20
-dt = 4
+dt = 400
 
 t = ones(1,timesteps).*dt;
 save('timesteps.mat', 't', '-ascii')
