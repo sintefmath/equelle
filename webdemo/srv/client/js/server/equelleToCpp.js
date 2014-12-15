@@ -19,14 +19,30 @@
                 compiler._done();
                 // Parse error messages
                 var errors = [];
+		var m_line_no = 0;
                 _.each(msg.err.split('\n'), function(errmsg) {
                     var m = errmsg.match(/^(Parser|Lexer|Compile).*line (\d+):\s*(.*)$/);
+		    var mm = errmsg.match(/^.*dimension on.*$/);
+		    var mmm = errmsg.match(/^.*instantiated from line (\d+).*$/);
                     if (m) {
+			m_line_no = parseInt(m[2])-1;
                         errors.push({
-                            line: parseInt(m[2])-1,
+                            line: m_line_no,
                             text: errmsg
                         });
                     }
+		    else if (mm) {
+                        errors.push({
+                            line: m_line_no,
+                            text: errmsg
+                        });
+		    }
+		    else if (mmm) {
+                        errors.push({
+                            line: parseInt(mmm[1])-1,
+                            text: errmsg
+                        });
+		    }
                 });
                 compiler.trigger('compileerror', errors);
             } else {
