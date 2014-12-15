@@ -40,8 +40,9 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er) {
 
     const Scalar rsp = double(287.058);
     const Scalar temp = double(290);
-    const Scalar perm = double(9.8692e-13);
-    const Scalar mobility = double(52500);
+    const Scalar perm = (9.869232667160128e-13*double(1));
+    const Scalar viscosity = (1e-06*double(18.27));
+    const Scalar mobility = (double(1) / viscosity);
     const CollOfScalar q = (er.inputCollectionOfScalar("source", er.allCells()) * double(1));
     const SeqOfScalar timesteps = (er.inputSequenceOfScalar("timesteps") * double(1));
     const CollOfScalar p_initial = er.operatorExtend(double(3000000), er.allCells());
