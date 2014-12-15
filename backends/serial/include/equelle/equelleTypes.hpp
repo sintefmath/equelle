@@ -112,6 +112,30 @@ inline CollOfBool operator<(const CollOfScalar& x, const Scalar& s)
 }
 
 /// This operator is not provided by AutoDiffBlock, so we must add it here.
+inline CollOfBool operator<(const CollOfScalar& x, const CollOfScalar& y)
+{
+    return x.value() < y.value();
+}
+
+/// This operator is not provided by AutoDiffBlock, so we must add it here.
+inline CollOfBool operator<=(const Scalar& s, const CollOfScalar& x)
+{
+    return s <= x.value();
+}
+
+/// This operator is not provided by AutoDiffBlock, so we must add it here.
+inline CollOfBool operator<=(const CollOfScalar& x, const Scalar& s)
+{
+    return x.value() <= s;
+}
+
+/// This operator is not provided by AutoDiffBlock, so we must add it here.
+inline CollOfBool operator<=(const CollOfScalar& x, const CollOfScalar& y)
+{
+    return x.value() <= y.value();
+}
+
+/// This operator is not provided by AutoDiffBlock, so we must add it here.
 inline CollOfBool operator>(const Scalar& s, const CollOfScalar& x)
 {
     return s > x.value();
@@ -124,21 +148,39 @@ inline CollOfBool operator>(const CollOfScalar& x, const Scalar& s)
 }
 
 /// This operator is not provided by AutoDiffBlock, so we must add it here.
-inline CollOfBool operator<(const CollOfScalar& x, const CollOfScalar& y)
-{
-    return x.value() < y.value();
-}
-
-/// This operator is not provided by AutoDiffBlock, so we must add it here.
 inline CollOfBool operator>(const CollOfScalar& x, const CollOfScalar& y)
 {
     return x.value() > y.value();
 }
 
 /// This operator is not provided by AutoDiffBlock, so we must add it here.
+inline CollOfBool operator>=(const Scalar& s, const CollOfScalar& x)
+{
+    return s >= x.value();
+}
+
+/// This operator is not provided by AutoDiffBlock, so we must add it here.
 inline CollOfBool operator>=(const CollOfScalar& x, const Scalar& s)
 {
     return x.value() >= s;
+}
+
+/// This operator is not provided by AutoDiffBlock, so we must add it here.
+inline CollOfBool operator>=(const CollOfScalar& x, const CollOfScalar& y)
+{
+    return x.value() >= y.value();
+}
+
+/// This operator is not provided by AutoDiffBlock, so we must add it here.
+inline CollOfBool operator==(const Scalar& s, const CollOfScalar& x)
+{
+    return s == x.value();
+}
+
+/// This operator is not provided by AutoDiffBlock, so we must add it here.
+inline CollOfBool operator==(const CollOfScalar& x, const Scalar& s)
+{
+    return x.value() == s;
 }
 
 /// This operator is not provided by AutoDiffBlock, so we must add it here.
