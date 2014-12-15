@@ -20,7 +20,7 @@
                 // Parse error messages
                 var errors = [];
                 _.each(msg.err.split('\n'), function(errmsg) {
-                    var m = errmsg.match(/^(Parser|Lexer).*line (\d+):\s*(.*)$/);
+                    var m = errmsg.match(/^(Parser|Lexer|Compile).*line (\d+):\s*(.*)$/);
                     if (m) {
                         errors.push({
                             line: parseInt(m[2])-1,

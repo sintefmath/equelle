@@ -13,12 +13,18 @@
 CheckASTVisitor::CheckASTVisitor(const bool ignore_dimension)
     : checking_suppression_level_(0),
       next_loop_index_(0),
-      ignore_dimension_(ignore_dimension)
+      ignore_dimension_(ignore_dimension),
+      valid_(true)
 {
 }
 
 CheckASTVisitor::~CheckASTVisitor()
 {
+}
+
+bool CheckASTVisitor::isValid()
+{
+	return valid_;
 }
 
 
@@ -1062,6 +1068,8 @@ void CheckASTVisitor::error(const std::string& err, const FileLocation loc)
             std::cerr << "    ---> instantiated from " << *it << std::endl;
         }
     }
+
+    valid_ = false;
 }
 
 void CheckASTVisitor::suppressChecking()

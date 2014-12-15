@@ -87,23 +87,10 @@ int main(int argc, char** argv)
     CheckASTVisitor check(ignore_dimensions);
     SymbolTable::program()->accept(check);
 
-    //Dump compiler internals
-    std::string dump = "none";
-    if (cli_vars.count("dump")) {
-        dump = cli_vars["dump"].as<std::string>();
-    }
-
     // Dump the SymbolTable
-    if (dump == "symboltable") {
+    if (cli_vars["dump"].as<std::string>() == "symboltable") {
         SymbolTable::dump();
     }
-
-    // Dump program inputs and outputs
-    else if (dump == "io") {
-        PrintIOVisitor v;
-        SymbolTable::program()->accept(v);
-    }
-
     //Write output
     else {
         std::string backend = cli_vars["backend"].as<std::string>();
@@ -128,8 +115,13 @@ int main(int argc, char** argv)
         else if (backend == "mrst") {
             PrintMRSTBackendASTVisitor v;
             SymbolTable::program()->accept(v);
-        } else if(backend == "MPI") {
+        }
+        else if(backend == "MPI") {
             PrintMPIBackendASTVisitor v;
+            SymbolTable::program()->accept(v);
+        }
+        else if(backend == "io") {
+            PrintIOVisitor v;
             SymbolTable::program()->accept(v);
         }
         else {
@@ -137,5 +129,13 @@ int main(int argc, char** argv)
         }
     }
 
-    return 0;
+    //This assumes that the printing went well.
+    if (check.isValid())
+    {
+    	return 0;
+    }
+    else
+    {
+    	return -1;
+    }
 }

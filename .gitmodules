@@ -3,4 +3,4 @@
 	url = https://github.com/jakevdp/JSAnimation.git
 [submodule "webdemo/srv/XTK"]
 	path = webdemo/srv/XTK
-	url = https://github.com/sintefmath/X.git
+	url = https://github.com/sintefmath/X

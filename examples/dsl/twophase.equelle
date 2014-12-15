@@ -111,7 +111,10 @@ sw0 = sw_initial
 p0 : Mutable Collection Of Scalar On AllCells()
 p0 = 0.0 Extend AllCells()
 
+progress : Mutable Scalar = 0
+
 # Output initial solution
+Output("progress",progress)
 Output("pressure", p0)
 Output("saturation", sw0)
 
@@ -138,6 +141,7 @@ For dt In timesteps {
     sw0 = sw
 
     # Output new solution
+	Output("progress",progress)
     Output("pressure", p0)
     Output("flux", flux)
     Output("saturation", sw0)
