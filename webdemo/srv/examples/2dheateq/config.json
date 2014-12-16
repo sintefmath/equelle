@@ -4,11 +4,14 @@
     "description": "A simple two-dimensional heat equation",
     "image": "thumb.png",
     "inputfiles": [
-        { "file": "timesteps.mat", "tag": "timesteps", "compressed": false }
+        { "file": "timesteps.mat", "tag": "timesteps", "compressed": false },
+        { "file": "dir_boundary", "tag": "dir_boundary", "compressed": false },
+        { "file": "dir_val", "tag": "dir_val", "compressed": false },
+        { "file": "u_initial", "tag": "u_initial", "compressed": false }
     ],
     "grid": {
         "dimensions": 2,
-        "size": [10,10],
-        "cellSize": [0.1,0.1]
+        "size": [100,100],
+        "cellSize": [0.01,0.01]
     }
 }
