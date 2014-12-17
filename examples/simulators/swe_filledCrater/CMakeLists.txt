@@ -11,9 +11,9 @@ include_directories( ${EQUELLE_INCLUDE_DIRS} )
 
 file( GLOB cpp_files "./*.cpp")
 foreach ( file ${cpp_files} )
-  get_filename_component( ${prog} ${file} NAME_WE )
+  get_filename_component( prog ${file} NAME_WE )
   add_executable( ${prog} ${file} )
-  target_link_libraires( ${prog} ${EQUELLE_LIBRARIES} )
+  target_link_libraries( ${prog} ${EQUELLE_LIBRARIES} )
 endforeach()
 
 
