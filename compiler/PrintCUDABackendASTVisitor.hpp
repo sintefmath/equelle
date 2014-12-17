@@ -18,6 +18,7 @@ public:
     const char* cppEndString() const;
     const char* classNameString() const;
     const char* namespaceNameString() const;
+
 };
 
 #endif // PRINTCUDABACKENDASTVISITOR_HEADER_INCLUDED
