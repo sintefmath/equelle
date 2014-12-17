@@ -8,7 +8,7 @@ ENDIF()
 file( GLOB serial_src "src/*.cpp" )
 file( GLOB serial_inc "include/equelle/*.hpp" )
 
-set( SERIAL_INCLUDE_DIRS "/usr/include/eigen3" ${EQUELLE_EXTRA_INCLUDE_DIRS})
+set( SERIAL_INCLUDE_DIRS ${EQUELLE_EXTRA_INCLUDE_DIRS})
 
 
 include_directories( "include"
