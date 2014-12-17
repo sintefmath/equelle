@@ -14,7 +14,7 @@
     "grid": {
         "dimensions": 3,
         "size": [60,22,10],
-        "cellSize": [6.096,3.048,0.6096]
-    },
-	"abs_res_tol": 1e-6
+        "cellSize": [6.096,3.048,0.6096],
+		"abs_res_tol": 1e-6
+    }
 }
