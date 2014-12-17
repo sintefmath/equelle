@@ -131,6 +131,8 @@ var config = require('./config.js'),
                     var exConfig = JSON.parse(data);
                     // Add the grid settings to returned object
                     exampleReturn.grid = exConfig.grid;
+					//Add iteration epsilon.
+					exampleReturn.abs_res_tol = exConfig.abs_res_tol;
                     // Add the input-files
                     exampleReturn.inputfiles = _.map(exConfig.inputfiles, function(file) {
                         return {
