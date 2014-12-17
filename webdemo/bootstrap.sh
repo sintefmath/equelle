@@ -4,6 +4,10 @@
 # install everything needed
 if [ ! -f /equelle/bootstrapped ]; then
 
+	# Add software properties
+	apt-get update
+	apt-get install -y python-software-properties software-properties-common
+
 	# Add required repositories
 	apt-add-repository --yes ppa:opm/ppa
 	apt-add-repository --yes ppa:ubuntu-toolchain-r/test
@@ -15,8 +19,7 @@ if [ ! -f /equelle/bootstrapped ]; then
 	apt-get -y dist-upgrade
 
 	# Install required libraries
-	apt-get install -y python-software-properties software-properties-common \
-	git flex bison g++ make cmake \
+	apt-get install -y git flex bison g++ make cmake \
 	libopm-autodiff libopm-core-dev libopm-autodiff-dev libeigen3-dev \
 	libboost-all-dev openmpi-bin libopenmpi-dev gfortran \
 	gcc-4.7 g++-4.7
