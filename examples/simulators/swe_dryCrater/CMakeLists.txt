@@ -7,7 +7,7 @@ endif(CMAKE_BUILD_TYPE MATCHES "Debug")
 
 set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 
-include_directories( ${EQUELLE_INCLUDE_DIRS} "../../../backends/cuda/cuda_include" "../../../backends/cuda/include" "/usr/local/cuda-6.0/include" )
+include_directories( ${EQUELLE_INCLUDE_DIRS} )
 
 file( GLOB cpp_files "./*.cpp") 
 foreach ( file ${cpp_files} )
@@ -18,4 +18,6 @@ endforeach()
 
 
 # If cmake can't find equelle package, run:
-# cmake -DEquelle_DIR=/home/havahol/sintefEquelle/build/
+# cmake -DEquelle_DIR=<path to build directory>
+# for also building in Debug mode:
+# -DCMAKE_BUILD_TYPE=Debug
