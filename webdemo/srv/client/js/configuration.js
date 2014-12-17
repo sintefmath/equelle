@@ -30,7 +30,8 @@
                      dimensions: 2
                     ,size: [10, 10, 10]
                     ,cellSize: [1, 1, 1]
-                }
+                },
+				abs_res_tol: 1.0e-6
             }
     }})
 })();

@@ -14,6 +14,7 @@
     "grid": {
         "dimensions": 3,
         "size": [60,22,10],
-        "cellSize": [6.096,3.048,0.6096]
+        "cellSize": [6.096,3.048,0.6096],
+		"abs_res_tol": 1.0e-6
     }
 }

@@ -87,6 +87,7 @@
             copy.dimensions = parseInt(grid.dimensions || defaults.dimensions);
             copy.size = _.map(defaults.size, function(s,i) { return parseInt(grid.size[i] || s) });
             copy.cellSize = _.map(defaults.cellSize, function(s,i) { return parseFloat(grid.cellSize[i] || s) });
+			copy.abs_res_tol = parseFloat(grid.abs_res_tol || defaults.abs_res_tol);
 
             // Save copied and defaulted values
             localStorage.setItem(config.localStorageTags.grid, JSON.stringify(copy))
