@@ -13,6 +13,6 @@
         "dimensions": 2,
         "size": [100,100],
         "cellSize": [1.0,1.0]
-    }
+    },
 	"abs_res_tol": 1e-4
 }
