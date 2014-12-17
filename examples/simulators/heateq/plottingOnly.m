@@ -1,4 +1,9 @@
-% Assumes that time step k is stored in U(:,k)
+% Utility script for plotting chosen timesteps in one figure.
+% 
+% Grid dimensions and chosen timesteps should be hard-coded here.
+% 
+% Requres that time step k is stored in U(:,k) (produced by bigPostProc.m),
+% and also MRST (http://www.sintef.no/Projectweb/MRST/).
 
 G = cartGrid([19, 24, 20]);   
 

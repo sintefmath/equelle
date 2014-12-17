@@ -1,7 +1,34 @@
+% Post-processing the 3D heat equation, using MRST for plotting the result
+% For MRST, see: http://www.sintef.no/Projectweb/MRST/
+%
+% Argument:
+%     folder (optional): folder containing Equelle output files.
+%     default is this current folder.
+%
+% Usage with build as output-folder
+% For octave from terminal: $ octave postProc.m build
+% For octave from octave: :> outputDir = 'build'; postProc
+% For matlab from matlab: :> outputDir = 'build'; postProc
 
-cd /home/havahol/programs/matlab/mrst-2013b/
+
+cd <insert_local_path>/matlab/mrst-2013b/
 startup
-cd /home/havahol/sintefEquelle/equelle/examples/simulators/heateq
+cd <insert_equelle_local_folder>/examples/simulators/heateq
+
+
+isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
+
+if (isOctave)
+    arg_list = argv();
+    if (size(arg_list,1) > 0)
+        disp('Changing directory')
+        outputDir = arg_list{1};
+    end
+end
+
+if (exist('outputDir', 'var')) 
+    cd(outputDir);
+end
 
 % Create the grid:
 G = cartGrid([19, 24, 20]);   
