@@ -9,7 +9,6 @@ Run as follows:
 
 3. Generate simulator input, by running shore.m in MATLAB or Octave. For example:
 ```$ octave shore.m```
-
 This should generate a bottom topography formed as a crater on a slope, and a list of timesteps.
 It should also generate initial water state, where the body of water is placed in the uppermost corner of the domain with zero initial velocity. Feel free to do changes in this file, and specially the number of timesteps can easily be edited here.
 
