@@ -39,6 +39,7 @@
                 paramAdd('nx='+data.grid.size[0]);
                 paramAdd('dx='+data.grid.cellSize[0]);
             }
+            paramAdd('abs_res_tol='+data.abs_res_tol);
             // Input values
             _.each(data.singleScalars, function(input) {
                 if (input.value) {
