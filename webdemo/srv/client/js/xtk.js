@@ -5,23 +5,16 @@
         var scaled = new ArrayBuffer(nums.length);
         var view = new Uint8ClampedArray(scaled);
         /* Scale all numbers */
-        var same = true;
         if (max != min) {
             var fact = 254/(max-min);
             for (var i = nums.length; i--; ) {
                 // Decrementing loops are for some reason faster in JS
                 view[i] = Math.round((nums[i]-min)*fact)+1;
-                if (same && i < nums.length && view[i+1] != view[i]) same = false;
             }
         } else {
             for (var i = nums.length-1; i--; ) {
                 view[i] = 1;
             }
-        }
-        /* TODO: Hack, if all numbers are the same, the HSV colormap is not used, so change the first value just a bit */
-        if (same) {
-            if (view[0] > 0) view[0] = view[1]-1;
-            else view[0] = view[1]+1;
         }
         return scaled;
     };

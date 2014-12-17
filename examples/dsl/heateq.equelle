@@ -73,6 +73,10 @@ timesteps = InputSequenceOfScalar("timesteps") * 1 [Second]
 u0 : Mutable Collection Of Scalar On AllCells()
 u0 = u_initial
 
+# Output initial conditions
+Output("u", u0)
+Output("maximum of u", MaxReduce(u0))
+	
 For dt In timesteps {
     computeResidualLocal(u) = {
         -> computeResidual(u, u0, dt)

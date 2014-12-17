@@ -118,7 +118,6 @@ For dt In timesteps {
 
     # Output new solution
     Output("pressure", p0)
-    Output("flux", flux)
     Output("saturation", sw0)
 }
 
