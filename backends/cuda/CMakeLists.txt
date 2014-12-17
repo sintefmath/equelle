@@ -26,9 +26,11 @@ file( GLOB cuda_cuda_inc "cuda_include/*.hpp" )
 file( GLOB cuda_cuda_cuh "cuda_include/*.cuh" )
 file( GLOB cuda_test_src "test/*.cpp" )
 file( GLOB cuda_test_src_cu "test/*.cu" )
-set( SUPERLU_LIB          "superlu" CACHE PATH "" ) 	# havahol
+set( SUPERLU_LIB          "superlu" CACHE PATH "" )
 
-set( SERIAL_INCLUDE_DIRS "/usr/local/include/Eigen" "../serial/include" ${EQUELLE_EXTRA_INCLUDE_DIRS})
+set( SERIAL_INCLUDE_DIRS ${SERIAL_INCLUDE_DIRS}
+  "../serial/include" ${EQUELLE_EXTRA_INCLUDE_DIRS})
+#message( "SERIAL_INCLUDE_DIRS in CUDA: ${SERIAL_INCLUDE_DIRS}" )
 
 # Create function for printing text:
 # Use: CleanMessage("My message")
@@ -104,6 +106,14 @@ set_target_properties( equelle_cuda PROPERTIES
   PUBLIC_HEADER "${cuda_cuda_inc} ${cuda_inc}")
 
 
+# The following commands are for making find_package(Equelle) work
+# These CMake-variables must be exported into the parent scope (using the PARENT_SCOPE clause)!
+
+# CONF_INCLUDE_DIRS is used for building/linking against the build-tree (without make install)
+# Must be set up for the include-directory of the backend. ${PROJECT_SOURCE_DIR} is relative to the
+# "nearest" CMakeLists.txt containng a project.
+set(CONF_INCLUDE_DIRS "${CONF_INCLUDE_DIRS}" "${PROJECT_SOURCE_DIR}/include" "${PROJECT_SOURCE_DIR}/cuda_include" "${PROJECT_BINARY_DIR}" PARENT_SCOPE)
+
 set(EQUELLE_LIBS_FOR_CONFIG ${EQUELLE_LIBS_FOR_CONFIG}
     equelle_cuda  opmautodiff opmcore dunecommon
     umfpack tinyxml boost_filesystem boost_system ${SUPERLU_LIB}
@@ -112,11 +122,11 @@ set(EQUELLE_LIBS_FOR_CONFIG ${EQUELLE_LIBS_FOR_CONFIG}
     PARENT_SCOPE)
 
 set(EQUELLE_LIB_DIRS_FOR_CONFIG ${EQUELLE_LIB_DIRS_FOR_CONFIG}
-    ${EQUELLE_EXTRA_LIB_DIRS}
+    ${EQUELLE_EXTRA_LIB_DIRS} ${CUDA_LIBRARIES}
     PARENT_SCOPE)
 
 set(EQUELLE_INCLUDE_DIRS_FOR_CONFIG ${EQUELLE_INCLUDE_DIRS_FOR_CONFIG}
-    ${SERIAL_INCLUDE_DIRS}
+    ${SERIAL_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS}
     PARENT_SCOPE )
 
 install(TARGETS equelle_cuda
