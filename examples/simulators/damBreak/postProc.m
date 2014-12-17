@@ -1,6 +1,27 @@
+% Post-processing the shallow water equation based on the 1D dam break case
+%
+% Argument:
+%     folder (optional): folder containing Equelle output files.
+%     default is this current folder.
+
+
+
+
+arg_list = argv();
+if (size(arg_list,1) > 0)
+    disp('Changing directory')
+    cd(arg_list{1})
+end
+
 % find number of output files = number of timesteps
 files = dir('q1*.output');
 T = size(files, 1);
+
+if (T == 0) 
+    disp('No output files to process')
+    exit
+end
+
 
 % visualization speed up
 su = 1;
