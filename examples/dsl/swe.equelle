@@ -8,11 +8,11 @@
 
 # Initial conditions
 h_init : Collection Of Scalar On AllCells()
-h_init = InputCollectionOfScalar("h_init", AllCells())
+h_init = InputCollectionOfScalar("h_init", AllCells()) * 1 [Meter]
 u_init : Collection Of Scalar On AllCells()
-u_init = InputCollectionOfScalar("u_init", AllCells())
+u_init = InputCollectionOfScalar("u_init", AllCells()) * 1 [Meter/Second]
 v_init : Collection Of Scalar On AllCells()
-v_init = InputCollectionOfScalar("v_init", AllCells())
+v_init = InputCollectionOfScalar("v_init", AllCells()) * 1 [Meter/Second]
 
 # Load bottom topography
 # Use the face values to approximate cell bottom.
@@ -22,22 +22,26 @@ b_south : Collection Of Scalar On AllCells()
 b_east : Collection Of Scalar On AllCells()
 b_west : Collection Of Scalar On AllCells()
 
-b_north = InputCollectionOfScalar("b_north", AllCells())
-b_south = InputCollectionOfScalar("b_south", AllCells())
-b_east = InputCollectionOfScalar("b_east", AllCells())
-b_west = InputCollectionOfScalar("b_west", AllCells())
+b_north = InputCollectionOfScalar("b_north", AllCells()) * 1 [Meter]
+b_south = InputCollectionOfScalar("b_south", AllCells()) * 1 [Meter]
+b_east = InputCollectionOfScalar("b_east", AllCells()) * 1 [Meter]
+b_west = InputCollectionOfScalar("b_west", AllCells()) * 1 [Meter]
 b_mid = (b_north + b_south + b_east + b_west)/4.0
 
 Output("bottom", b_mid)
+Output("b_north", b_north)
+Output("b_south", b_south)
+Output("b_east", b_east)
+Output("b_west", b_west)
 
 dx : Scalar
 dy : Scalar
-dx = InputScalarWithDefault("dx", 10)
-dy = InputScalarWithDefault("dy", 10)
+dx = InputScalarWithDefault("dx", 10) * 1 [Meter] 
+dy = InputScalarWithDefault("dy", 10) * 1 [Meter]
 
 # Timesteps
 timesteps : Sequence Of Scalar
-timesteps = InputSequenceOfScalar("timesteps")
+timesteps = InputSequenceOfScalar("timesteps") * 1 [Second]
 
 
 ##############################
@@ -49,9 +53,37 @@ bound = BoundaryFaces()
 vol = |AllCells()|
 area = |AllFaces()|
 
-gravity : Scalar # Gravitational constant
-gravity = 9.81
+# Gravitational constant
+gravity : Scalar 
+gravity = 9.81 * 1 [Meter / (Second^2) ]
 
+# Limit for what we regard as a dry state:
+dry : Scalar 
+dry = 0.05 * 1 [Meter]
+
+# Dummy water height
+dummy : Scalar
+dummy = 1000 * 1 [Meter]
+
+# Zero fluxes 
+zeroFlux : Array Of 3 Scalar
+zeroFlux = [ 0 * 1 [Meter^2/Second], 0 * 1 [Meter^3 / Second^2], 0 * 1 [Meter^3 / Second^2] ]
+
+# A zero eigenvalue:
+zeroEigen : Scalar
+zeroEigen = 0 * 1 [Meter/Second]
+
+# A true zero water depth:
+zeroWater : Scalar
+zeroWater = 0 * 1 [ Meter ]
+
+# Zero source term (only use the first one)
+zeroSource : Array Of 3 Scalar
+zeroSource = [ 0 * 1 [Meter / Second], 0 * 1 [Meter^2 / Second^2], 0 * 1 [Meter^2 / Second^2] ]
+
+# Variables for dry and dummy when looking at a and b variables
+ab_dry = 0.05 * 1 [Meter/Second]
+ab_dummy = 1000 * 1 [Meter / Second]
 
 ###################################
 ## Functions we need
@@ -67,21 +99,21 @@ gravity = 9.81
 ## and give a easy to see simulation error in case of bugs.
 
 # f is the flux-function in x-direction
-f : Function ( q : Array Of 3 Collection Of Scalar On int_faces, ...
-               b : Collection Of Scalar On int_faces)...
-               ->  Array Of 3 Collection Of Scalar On int_faces
+#f : Function ( q : Array Of 3 Collection Of Scalar On int_faces, ...
+#               b : Collection Of Scalar On int_faces)...
+#               ->  Array Of 3 Collection Of Scalar On int_faces
 f ( q, b ) = 
 {   
     rawWaterHeight = q[0] - b
-    waterHeight = rawWaterHeight > 0.05 ? rawWaterHeight : 1000 Extend int_faces
+    waterHeight = rawWaterHeight > dry ? rawWaterHeight : dummy Extend int_faces
     f0temp = q[1]
     f1temp = (q[1]*q[1]/waterHeight) + 0.5*gravity*waterHeight*waterHeight
     f2temp = (q[1]*q[2])/waterHeight
     
     # If rawWaterHeight is zero, we return [0 0 0]
-    f0 = rawWaterHeight > 0.05 ? f0temp : 0 Extend int_faces
-    f1 = rawWaterHeight > 0.05 ? f1temp : 0 Extend int_faces
-    f2 = rawWaterHeight > 0.05 ? f2temp : 0 Extend int_faces
+    f0 = rawWaterHeight > dry ? f0temp : zeroFlux[0] Extend int_faces
+    f1 = rawWaterHeight > dry ? f1temp : zeroFlux[1] Extend int_faces
+    f2 = rawWaterHeight > dry ? f2temp : zeroFlux[2] Extend int_faces
     -> [f0, f1 , f2]
 }
 
@@ -92,14 +124,14 @@ g : Function ( q : Array Of 3 Collection Of Scalar On int_faces, ...
 g ( q, b ) =
 {
     rawWaterHeight = q[0] - b
-    waterHeight = rawWaterHeight > 0.05 ? rawWaterHeight : 1000 Extend int_faces
+    waterHeight = rawWaterHeight > dry ? rawWaterHeight : dummy Extend int_faces
     g0temp = q[2]
     g1temp = q[1]*q[2]/waterHeight
     g2temp = (q[2]*q[2]/waterHeight) + 0.5*gravity*waterHeight*waterHeight
 
-    g0 = rawWaterHeight > 0.05 ? g0temp : 0 Extend int_faces
-    g1 = rawWaterHeight > 0.05 ? g1temp : 0 Extend int_faces
-    g2 = rawWaterHeight > 0.05 ? g2temp : 0 Extend int_faces
+    g0 = rawWaterHeight > dry ? g0temp : zeroFlux[0] Extend int_faces
+    g1 = rawWaterHeight > dry ? g1temp : zeroFlux[1] Extend int_faces
+    g2 = rawWaterHeight > dry ? g2temp : zeroFlux[2] Extend int_faces
     -> [g0, g1, g2]
 }
 
@@ -122,12 +154,12 @@ eigenvalueF : Function( q : Array Of 3 Collection Of Scalar On int_faces, ...
 eigenvalueF( q, b ) = 
 {
     rawWaterHeight = q[0] - b
-    waterHeight = rawWaterHeight > 0.05 ? rawWaterHeight : 1000 Extend int_faces
+    waterHeight = rawWaterHeight > dry ? rawWaterHeight : dummy Extend int_faces
     eigF0temp = (q[1]/waterHeight) - Sqrt(gravity*waterHeight)
     eigF1temp = (q[1]/waterHeight) + Sqrt(gravity*waterHeight)
 
-    eigF0 = rawWaterHeight > 0.05 ? eigF0temp : 0 Extend int_faces
-    eigF1 = rawWaterHeight > 0.05 ? eigF1temp : 0 Extend int_faces
+    eigF0 = rawWaterHeight > dry ? eigF0temp : zeroEigen Extend int_faces
+    eigF1 = rawWaterHeight > dry ? eigF1temp : zeroEigen Extend int_faces
     -> [eigF0, eigF1]
 }
 
@@ -137,17 +169,18 @@ eigenvalueG : Function( q : Array Of 3 Collection Of Scalar On int_faces, ...
 eigenvalueG ( q, b ) =
 {
     rawWaterHeight = q[0] - b
-    waterHeight = rawWaterHeight > 0.05 ? rawWaterHeight : 1000 Extend int_faces
+    waterHeight = rawWaterHeight > dry ? rawWaterHeight : dummy Extend int_faces
     eigG0temp = (q[2]/waterHeight) - Sqrt(gravity*waterHeight)
     eigG1temp = (q[2]/waterHeight) + Sqrt(gravity*waterHeight)
 
-    eigG0 = rawWaterHeight > 0.05 ? eigG0temp : 0 Extend int_faces
-    eigG1 = rawWaterHeight > 0.05 ? eigG1temp : 0 Extend int_faces
+    eigG0 = rawWaterHeight > dry ? eigG0temp : zeroEigen Extend int_faces
+    eigG1 = rawWaterHeight > dry ? eigG1temp : zeroEigen Extend int_faces
     -> [eigG0, eigG1]
 }
 
 
 ## a_eval = [a_minus, a_plus] to get the upwind factor for F
+## Choose one of the eigenvalues for first and second, or give zero.
 ## Return values are living on the faces
 ## Input array q = [q0, q1, q2] from cells
 a_eval : Function ( q : Array Of 3 Collection Of Scalar On AllCells()) ...
@@ -166,10 +199,10 @@ a_eval ( q ) =
     eigsSecond = eigenvalueF(qSecond, bSecond)
     
     smallest = eigsFirst[0] < eigsSecond[0] ? eigsFirst[0] : eigsSecond[0]
-    aminus = smallest < 0 ? smallest : (0 Extend int_faces)
+    aminus = smallest < zeroEigen ? smallest : (zeroEigen Extend int_faces)
     
     largest = eigsFirst[1] > eigsSecond[1] ? eigsFirst[1] : eigsSecond[1]
-    aplus = largest > 0 ? largest : (0 Extend int_faces)
+    aplus = largest > zeroEigen ? largest : (zeroEigen Extend int_faces)
    
     -> [aminus, aplus]
 }
@@ -193,10 +226,10 @@ b_eval ( q ) =
     eigsSecond = eigenvalueG(qSecond, bSecond)
     
     smallest = eigsFirst[0] < eigsSecond[0] ? eigsFirst[0] : eigsSecond[0]
-    bminus = smallest < 0 ? smallest : (0 Extend int_faces)
+    bminus = smallest < zeroEigen ? smallest : (zeroEigen Extend int_faces)
     
     largest = eigsFirst[1] > eigsSecond[1] ? eigsFirst[1] : eigsSecond[1]
-    bplus = largest > 0 ? largest : (0 Extend int_faces)
+    bplus = largest > zeroEigen ? largest : (zeroEigen Extend int_faces)
    
     -> [bminus, bplus]
 }
@@ -222,7 +255,7 @@ numF ( q ) =
     a = a_eval(q)
     # Avoid dividing on zero
     adiffRaw = a[1] - a[0]
-    adiff = adiffRaw*adiffRaw > 0.05*0.05 ? adiffRaw : 1000 Extend int_faces
+    adiff = adiffRaw*adiffRaw > ab_dry*ab_dry ? adiffRaw : ab_dummy Extend int_faces
   
     # flux functions from the equation
     fFirst = f(qFirst, bFirst)
@@ -238,9 +271,9 @@ numF ( q ) =
     intFluxF2temp = firstPart2 + aFactor*(qSecond[2] - qFirst[2]) 
     
     # Insert zero flux for dry faces
-    intFluxF0 = adiffRaw*adiffRaw > 0.05*0.05 ? intFluxF0temp : 0 Extend int_faces
-    intFluxF1 = adiffRaw*adiffRaw > 0.05*0.05 ? intFluxF1temp : 0 Extend int_faces
-    intFluxF2 = adiffRaw*adiffRaw > 0.05*0.05 ? intFluxF2temp : 0 Extend int_faces
+    intFluxF0 = adiffRaw*adiffRaw > ab_dry*ab_dry ? intFluxF0temp : zeroFlux[0] Extend int_faces
+    intFluxF1 = adiffRaw*adiffRaw > ab_dry*ab_dry ? intFluxF1temp : zeroFlux[1] Extend int_faces
+    intFluxF2 = adiffRaw*adiffRaw > ab_dry*ab_dry ? intFluxF2temp : zeroFlux[2] Extend int_faces
 
     -> [ intFluxF0, intFluxF1, intFluxF2]
 }
@@ -262,7 +295,7 @@ numG ( q ) =
     b = b_eval(q)
     # Avoid dividing on zero
     bdiffRaw = b[1] - b[0]
-    bdiff = bdiffRaw*bdiffRaw > 0.05*0.05 ? bdiffRaw : 1000 Extend int_faces
+    bdiff = bdiffRaw*bdiffRaw > ab_dry*ab_dry ? bdiffRaw : ab_dummy Extend int_faces
     
     # flux functions from the equation
     gFirst = g(qFirst, bFirst)
@@ -278,9 +311,9 @@ numG ( q ) =
     intFluxG2temp = firstPart2 + bFactor*(qSecond[2] - qFirst[2])
 
     # Insert zero flux for dry faces
-    intFluxG0 = bdiffRaw*bdiffRaw > 0.05*0.05 ? intFluxG0temp : 0 Extend int_faces
-    intFluxG1 = bdiffRaw*bdiffRaw > 0.05*0.05 ? intFluxG1temp : 0 Extend int_faces
-    intFluxG2 = bdiffRaw*bdiffRaw > 0.05*0.05 ? intFluxG2temp : 0 Extend int_faces
+    intFluxG0 = bdiffRaw*bdiffRaw > ab_dry*ab_dry ? intFluxG0temp : zeroFlux[0] Extend int_faces
+    intFluxG1 = bdiffRaw*bdiffRaw > ab_dry*ab_dry ? intFluxG1temp : zeroFlux[1] Extend int_faces
+    intFluxG2 = bdiffRaw*bdiffRaw > ab_dry*ab_dry ? intFluxG2temp : zeroFlux[2] Extend int_faces
 
     -> [ intFluxG0, intFluxG1, intFluxG2]
 }
@@ -308,6 +341,7 @@ get_flux ( q ) =
     intFlux = [int_fluxes0, int_fluxes1, int_fluxes2]
 
     # Get orientation on boundary faces and set fluxes there.
+    # Remember that unit vectors are dimensionless
     bound_orientation = Normal(bound)
     bound_cells = IsEmpty(FirstCell(bound)) ? SecondCell(bound) : FirstCell(bound)
     bound_q0 = q[0] On bound_cells
@@ -316,20 +350,20 @@ get_flux ( q ) =
     bound_signX = bound_orientation[0] > 0 ? (1 Extend bound) : (-1 Extend bound)
     bound_signY = bound_orientation[1] > 0 ? (1 Extend bound) : (-1 Extend bound)
     b_fluxtemp = 0.5*gravity*bound_height*bound_height
-    b_flux = bound_height > 0.05 ? b_fluxtemp : 0 Extend bound       
+    b_flux = bound_height > dry ? b_fluxtemp : zeroFlux[2] Extend bound       # zeroFlux[1] == zeroFlux[2]
 
-    boundFlux0 = 0 Extend bound # No height goes out of the domain.
+    boundFlux0 = zeroFlux[0] Extend bound # No height goes out of the domain.
     boundFlux1 = Sqrt((bound_orientation[0]*bound_orientation[0]))*b_flux * bound_signX
     boundFlux2 = Sqrt((bound_orientation[1]*bound_orientation[1]))*b_flux * bound_signY
     
     boundFlux = [boundFlux0 , boundFlux1, boundFlux2]
 
 
-    allFluxes = [ ( (0 Extend AllFaces()) + (boundFlux[0] Extend AllFaces()) +...
+    allFluxes = [ ( (zeroFlux[0] Extend AllFaces()) + (boundFlux[0] Extend AllFaces()) +...
                             (intFlux[0] Extend AllFaces()) ) * area ,...
-                  ( (0 Extend AllFaces()) + (boundFlux[1] Extend AllFaces()) +...
+                  ( (zeroFlux[1] Extend AllFaces()) + (boundFlux[1] Extend AllFaces()) +...
                             (intFlux[1] Extend AllFaces()) ) * area, ...
-                  ( (0 Extend AllFaces()) + (boundFlux[2] Extend AllFaces()) +...
+                  ( (zeroFlux[2] Extend AllFaces()) + (boundFlux[2] Extend AllFaces()) +...
                             (intFlux[2] Extend AllFaces()) ) * area]
 
     -> allFluxes
@@ -347,9 +381,10 @@ evalSourceTerm( q ) =
     secondTerm_y = ( (q[0] - b_north) + (q[0] - b_south) )/2
 
     # Handle dry states in a safe manner.
-    dryTerm = q[0] - b_mid > 0.05 ? 1 Extend AllCells() : 0 Extend AllCells()
+    # Define dimensionless factor:
+    dryTerm = q[0] - b_mid > dry ? 1 Extend AllCells() : 0 Extend AllCells()
 
-    -> [ (0 Extend AllCells()) , ...
+    -> [ (zeroSource[0] Extend AllCells()) , ...
          -gravity * bx * secondTerm_x * dryTerm, ...
          -gravity * by * secondTerm_y * dryTerm ]
 }
@@ -366,6 +401,16 @@ rungeKutta ( q, dt ) =
     flux = get_flux( q )
     source = evalSourceTerm( q )
     
+    ## Dimension debugging:
+    unitVol = 1 * 1 [ Meter^3] Extend AllCells()
+    temp_vol = vol + unitVol 
+    unitSource = 1 * 1 [Meter/Second] Extend AllCells()
+    tmp_source = source[0] + unitSource
+    unitDiv = 1 * 1 [Meter] Extend AllCells()
+    
+
+    temp = Divergence(flux[0]) + vol*source[0]
+
     # find q_star:
     q_star0 = q[0] + (dt/vol)*( - Divergence(flux[0]) + vol*source[0] )
     q_star1 = q[1] + (dt/vol)*( - Divergence(flux[1]) + vol*source[1] )
