@@ -15,3 +15,5 @@ dirichlet_val_filename=../dir_val.mat
 timesteps_from_file=true
 timesteps_filename=../timesteps.mat
 output_to_file=true
+solver=CG
+preconditioner=diagonal
