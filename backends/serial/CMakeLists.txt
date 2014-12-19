@@ -1,6 +1,9 @@
 project(equelle_serial_backend)
 cmake_minimum_required( VERSION 2.8 )
 
+find_package(Eigen3 REQUIRED)
+
+
 if(NOT MSVC)
 	set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra -Wno-sign-compare" )
 ENDIF()
@@ -12,7 +15,8 @@ set( SERIAL_INCLUDE_DIRS ${EQUELLE_EXTRA_INCLUDE_DIRS})
 
 
 include_directories( "include"
-	${SERIAL_INCLUDE_DIRS} )
+	${SERIAL_INCLUDE_DIRS} 
+	${EIGEN3_INCLUDE_DIR})
 
 add_library( equelle_rt ${serial_src} ${serial_inc} )
 

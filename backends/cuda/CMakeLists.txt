@@ -1,10 +1,9 @@
 project(equelle_cuda_backend)
 cmake_minimum_required( VERSION 2.8 )
 
-find_package("CUDA" REQUIRED)
-
-# find boost for testing:
-find_package(Boost)
+find_package(CUDA REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(Boost REQUIRED COMPONENTS unit_test)
 
 
 set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra -Wno-sign-compare -Wno-unused-parameter" )
@@ -29,7 +28,7 @@ file( GLOB cuda_test_src_cu "test/*.cu" )
 set( SUPERLU_LIB          "superlu" CACHE PATH "" )
 
 set( SERIAL_INCLUDE_DIRS ${SERIAL_INCLUDE_DIRS}
-  "../serial/include" ${EQUELLE_EXTRA_INCLUDE_DIRS})
+  "../serial/include" ${EIGEN3_INCLUDE_DIR} ${EQUELLE_EXTRA_INCLUDE_DIRS})
 #message( "SERIAL_INCLUDE_DIRS in CUDA: ${SERIAL_INCLUDE_DIRS}" )
 
 # Create function for printing text:
