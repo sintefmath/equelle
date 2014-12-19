@@ -72,6 +72,8 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er) {
     const CollOfScalar u_initial = (er.inputCollectionOfScalar("u_initial", er.allCells()) * double(1));
     const SeqOfScalar timesteps = (er.inputSequenceOfScalar("timesteps") * double(1));
     auto u0 = u_initial;
+    er.output("u", u0);
+    er.output("maximum of u", er.maxReduce(u0));
     for (const Scalar& dt : timesteps) {
         auto computeResidualLocal = [&](const CollOfScalar& u) -> CollOfScalar {
             return computeResidual(u, u0, dt);

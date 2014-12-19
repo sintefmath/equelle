@@ -144,7 +144,6 @@ void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er) {
         p0 = p;
         sw0 = sw;
         er.output("pressure", p0);
-        er.output("flux", flux);
         er.output("saturation", sw0);
     }
 
