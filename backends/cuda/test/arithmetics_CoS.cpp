@@ -147,6 +147,21 @@ BOOST_AUTO_TEST_CASE( coll_scal_multiplication_test )
     compareVectors ( res.copyToHost(), lf);
 }
 
+BOOST_AUTO_TEST_CASE( SeqOfScalar_scal_multiplication_test )
+{
+    int size = 10000;
+    SeqOfScalar seq;
+    std::vector<double> seq_vec, lf;
+    double myDoub = 3.14;
+    for (int i = 0; i < size; ++i) {
+	seq.push_back( i*2.25 );
+	lf.push_back( i*2.25*myDoub );
+    }
+    //SeqOfScalar seq = seq_vec;
+    SeqOfScalar ans = seq * myDoub;
+    compareVectors ( ans, lf );
+}
+
 BOOST_AUTO_TEST_CASE( coll_scal_division_test )
 {
     int size = 10000;

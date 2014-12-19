@@ -14,6 +14,7 @@
 namespace
 {
     const char* impl_cppStartString();
+    const char* impl_cppCartesianStartString();
     const char* impl_cppEndString();
 }
 
@@ -22,7 +23,18 @@ PrintCPUBackendASTVisitor::PrintCPUBackendASTVisitor()
       indent_(1),
       sequence_depth_(0),
       instantiating_(false),
-      next_funcstart_inst_(-1)
+      next_funcstart_inst_(-1),
+      use_cartesian_(false)
+{
+}
+
+PrintCPUBackendASTVisitor::PrintCPUBackendASTVisitor(const bool use_cartesian)
+    : suppression_level_(0),
+      indent_(1),
+      sequence_depth_(0),
+      instantiating_(false),
+      next_funcstart_inst_(-1),
+      use_cartesian_(use_cartesian)
 {
 }
 
@@ -53,7 +65,8 @@ void PrintCPUBackendASTVisitor::postVisit(SequenceNode&)
         // Emit ensureRequirements() function.
         std::cout <<
             "\n"
-            "void ensureRequirements(const equelle::EquelleRuntimeCPU& er)\n"
+            "void ensureRequirements(const " << namespaceNameString() <<
+	    "::" << classNameString() << "& er)\n"
             "{\n";
         if (requirement_strings_.empty()) {
             std::cout << "    (void)er;\n";
@@ -681,16 +694,28 @@ void PrintCPUBackendASTVisitor::postVisit(RandomAccessNode& node)
     }
 }
 
-const char *PrintCPUBackendASTVisitor::cppStartString() const
+const char* PrintCPUBackendASTVisitor::cppStartString() const
 {
+    if ( use_cartesian_ ) {
+	return ::impl_cppCartesianStartString();
+    }
     return ::impl_cppStartString();
 }
 
-const char *PrintCPUBackendASTVisitor::cppEndString() const
+const char* PrintCPUBackendASTVisitor::cppEndString() const
 {
     return ::impl_cppEndString();
 }
 
+const char* PrintCPUBackendASTVisitor::classNameString() const
+{
+    return "EquelleRuntimeCPU";
+}
+
+const char* PrintCPUBackendASTVisitor::namespaceNameString() const
+{
+    return "equelle";
+}
 
 void PrintCPUBackendASTVisitor::endl() const
 {
@@ -797,6 +822,49 @@ void PrintCPUBackendASTVisitor::postVisit(StencilNode& node)
 
 namespace
 {
+    const char* impl_cppCartesianStartString() {
+ return
+"\n"
+"// This program was created by the Equelle compiler from SINTEF.\n"
+"\n"
+"#include <opm/core/utility/parameters/ParameterGroup.hpp>\n"
+"#include <opm/core/linalg/LinearSolverFactory.hpp>\n"
+"#include <opm/core/utility/ErrorMacros.hpp>\n"
+"#include <opm/autodiff/AutoDiffBlock.hpp>\n"
+"#include <opm/autodiff/AutoDiffHelpers.hpp>\n"
+"#include <opm/core/grid.h>\n"
+"#include <opm/core/grid/GridManager.hpp>\n"
+"#include <algorithm>\n"
+"#include <iterator>\n"
+"#include <iostream>\n"
+"#include <cmath>\n"
+"#include <array>\n"
+"\n"
+"#include \"equelle/EquelleRuntimeCPU.hpp\"\n"
+"\n"
+"void ensureRequirements(const equelle::EquelleRuntimeCPU& er);\n"
+"void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er);\n"
+"\n"
+ "#ifndef EQUELLE_NO_MAIN\n"
+"int main(int argc, char** argv)\n"
+"{\n"
+"    // Get user parameters.\n"
+"    Opm::parameter::ParameterGroup param(argc, argv, false);\n"
+"\n"
+"    // Create the Equelle runtime.\n"
+"    equelle::EquelleRuntimeCPU er(param);\n"
+"    equelleGeneratedCode(er);\n"
+"    return 0;\n"
+"}\n"
+"#endif // EQUELLE_NO_MAIN\n"
+"\n"
+"void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er) {\n"
+"    using namespace equelle;\n"
+"    ensureRequirements(er);\n"
+"\n"
+"    // ============= Generated code starts here ================\n";
+    }
+    
     const char* impl_cppStartString()
     {
         return

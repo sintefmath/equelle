@@ -14,6 +14,7 @@ class PrintCPUBackendASTVisitor : public ASTVisitorInterface
 {
 public:
     PrintCPUBackendASTVisitor();
+    explicit PrintCPUBackendASTVisitor(const bool use_cartesian);
     virtual ~PrintCPUBackendASTVisitor();
 
     void visit(SequenceNode& node);
@@ -82,6 +83,8 @@ public:
     // These are overriden by subclasses who only need to alter the surroundings of the generated code.
     virtual const char* cppStartString() const;
     virtual const char* cppEndString() const;
+    virtual const char* classNameString() const;
+    virtual const char* namespaceNameString() const;
 
 private:
     int suppression_level_;
@@ -92,6 +95,7 @@ private:
     bool instantiating_;
     int next_funcstart_inst_;
     std::string skipping_function_;
+    bool use_cartesian_;
 
     void endl() const;
     std::string indent() const;

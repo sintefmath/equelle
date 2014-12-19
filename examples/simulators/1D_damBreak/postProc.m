@@ -1,6 +1,37 @@
+% Post-processing the shallow water equation based on the 1D dam break case
+%
+% Argument:
+%     folder (optional): folder containing Equelle output files.
+%     default is this current folder.
+%
+% Usage with build as output-folder
+% For octave from terminal: $ octave postProc.m build
+% For octave from octave: :> outputDir = 'build'; postProc
+% For matlab from matlab: :> outputDir = 'build'; postProc
+
+
+isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
+
+if (isOctave)
+    arg_list = argv();
+    if (size(arg_list,1) > 0)
+        disp('Changing directory')
+        outputDir = arg_list{1};
+    end
+end
+
+if (exist('outputDir', 'var')) 
+    cd(outputDir);
+end
+    
 % find number of output files = number of timesteps
 files = dir('q1*.output');
 T = size(files, 1);
+
+if (T == 0) 
+    error('No output files to process')
+end
+
 
 % visualization speed up
 su = 1;

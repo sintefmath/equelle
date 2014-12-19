@@ -1,3 +1,8 @@
+% Utility script for plotting chosen timesteps in one figure.
+% 
+% Grid dimensions and chosen timesteps should be hard-coded here.
+% 
+% Requres that regular post processing already is done.
 
 
 lowering = 0.04

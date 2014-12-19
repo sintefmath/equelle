@@ -10,5 +10,7 @@ public:
 
     const char* cppStartString() const;
     const char* cppEndString() const;
+    const char* classNameString() const;
+    const char* namespaceNameString() const;
 };
 

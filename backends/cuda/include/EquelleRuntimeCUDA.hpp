@@ -17,7 +17,7 @@
 #include <vector>
 #include <string>
 #include <map>
-#include <array>
+#include <tuple>
 
 
 // Including device code
@@ -28,6 +28,7 @@
 #include "CollOfVector.hpp"
 #include "DeviceGrid.hpp"
 #include "equelleTypedefs.hpp"
+#include "SeqOfScalar.hpp"
 #include "CudaMatrix.hpp"
 #include "DeviceHelperOps.hpp"
 #include "LinearSolver.hpp"
@@ -40,19 +41,38 @@ namespace equelleCUDA {
 
     // Array Of {X} Collection Of Scalar:
     /// For 1 CollOfScalar
-    std::array<CollOfScalar, 1> makeArray( const CollOfScalar& t );
+    template <typename T>
+    std::tuple<T> makeArray( const T& t) 
+    {
+	return std::tuple<T> {t};
+    }
+
     /// For 2 CollOfScalar
-    std::array<CollOfScalar, 2> makeArray( const CollOfScalar& t1, 
-					   const CollOfScalar& t2 );
+    template <typename T>
+    std::tuple<T, T> makeArray(const T& t1,
+			       const T& t2) 
+    {
+	return std::tuple<T,T> {t1, t2};
+    }
+
     /// For 3 CollOfScalar
-    std::array<CollOfScalar, 3> makeArray( const CollOfScalar& t1,
-					   const CollOfScalar& t2,
-					   const CollOfScalar& t3 );
+    template <typename T>
+    std::tuple<T, T, T> makeArray( const T& t1,
+				   const T& t2,
+				   const T& t3 ) 
+    {
+	return std::tuple<T, T, T> {t1, t2, t3};
+    }
+
     /// For 4 CollOfScalar
-    std::array<CollOfScalar, 4> makeArray( const CollOfScalar& t1,
-					   const CollOfScalar& t2,
-					   const CollOfScalar& t3,
-					   const CollOfScalar& t4 );
+    template <typename T>
+    std::tuple<T,T,T,T> makeArray( const T& t1,
+				   const T& t2,
+				   const T& t3,
+				   const T& t4 ) 
+    {
+	return std::tuple<T,T,T,T> {t1, t2, t3, t4};
+    }
     
 
 

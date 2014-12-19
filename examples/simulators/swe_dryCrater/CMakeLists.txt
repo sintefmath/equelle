@@ -7,13 +7,17 @@ endif(CMAKE_BUILD_TYPE MATCHES "Debug")
 
 set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 
-include_directories( ${EQUELLE_INCLUDE_DIRS} "../../../backends/cuda/cuda_include" "../../../backends/cuda/include" "/usr/local/cuda-5.5/include" )
+include_directories( ${EQUELLE_INCLUDE_DIRS} )
 
-add_executable(swe swe.cpp)
-target_link_libraries( swe ${EQUELLE_LIBRARIES}  )
+file( GLOB cpp_files "./*.cpp") 
+foreach ( file ${cpp_files} )
+  get_filename_component( prog ${file} NAME_WE )
+  add_executable( ${prog} ${file} )
+  target_link_libraries( ${prog} ${EQUELLE_LIBRARIES} )
+endforeach()
 
-add_executable(serial_swe serial_swe.cpp)
-target_link_libraries( serial_swe ${EQUELLE_LIBRARIES} )
 
 # If cmake can't find equelle package, run:
-# cmake -DEquelle_DIR=/home/havahol/sintefEquelle/build/
+# cmake -DEquelle_DIR=<path to build directory>
+# for also building in Debug mode:
+# -DCMAKE_BUILD_TYPE=Debug

@@ -114,7 +114,7 @@ int collOfScalarTest(EquelleRuntimeCUDA* er) {
 	faces_sol[i] *= i*10;
     }
     int faces_size = 31;
-    if ( compare(faces, faces_sol, faces_size, "inputaCollectionOfScalar(faces)") ) {
+    if ( compare(faces, faces_sol, faces_size, "inputCollectionOfScalar(faces)") ) {
 	return 1;
     }
 
@@ -265,14 +265,14 @@ int collOfScalarTest(EquelleRuntimeCUDA* er) {
 
 
     // Make an array of collections:
-    std::array<CollOfScalar,3> myArray = makeArray(a_big, a_big_grad, div);
-    if ( compare( myArray[0], a_big_sol, 12, "myArray[0] (a_big)")) {
+    std::tuple<CollOfScalar, CollOfScalar, CollOfScalar> myArray = makeArray(a_big, a_big_grad, div);
+    if ( compare( std::get<0>(myArray), a_big_sol, 12, "myArray[0] (a_big)")) {
 	return 1;
     }
-    if ( compare( myArray[1], a_big_grad_sol, 17, "myArray[1] (a_big_grad)")) {
+    if ( compare( std::get<1>(myArray), a_big_grad_sol, 17, "myArray[1] (a_big_grad)")) {
 	return 1;
     }
-    if ( compare( myArray[2], div_sol, 12, "myArray[2] (div)") ) {
+    if ( compare( std::get<2>(myArray), div_sol, 12, "myArray[2] (div)") ) {
 	return 1;
     }
 
