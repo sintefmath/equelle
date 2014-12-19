@@ -4,6 +4,8 @@ cmake_minimum_required(VERSION 2.8)
 # For running "make test"
 enable_testing()
 
+find_package(Eigen3 REQUIRED)
+
 set(EQUELLE_MAJOR_VERSION 0)
 set(EQUELLE_MINOR_VERSION 1)
 set(EQUELLE_PATCH_VERSION 0)
@@ -71,17 +73,18 @@ export( TARGETS ${EQUELLE_TARGETS}
 
 export(PACKAGE equelle)
 
+
 # Create the EquelleConfig.cmake and EquelleConfigVersion files
 file(RELATIVE_PATH REL_INCLUDE_DIR "${INSTALL_CMAKE_DIR}"
    "${INSTALL_INCLUDE_DIR}")
 
 # ... for the build tree
-#set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}")
+set(CONF_INCLUDE_DIRS "${CONF_INCLUDE_DIRS}" "${EIGEN3_INCLUDE_DIR}")
 configure_file(EquelleConfig.cmake.in
   "${PROJECT_BINARY_DIR}/EquelleConfig.cmake" @ONLY)
 
 # ... for the install tree. 
-set(CONF_INCLUDE_DIRS "\${EQUELLE_CMAKE_DIR}/${REL_INCLUDE_DIR}/equelle")
+set(CONF_INCLUDE_DIRS "\${EQUELLE_CMAKE_DIR}/${REL_INCLUDE_DIR}/equelle" "${EIGEN3_INCLUDE_DIR}")
 configure_file(EquelleConfig.cmake.in
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/EquelleConfig.cmake" @ONLY)
 
