@@ -3,7 +3,7 @@ cmake_minimum_required( VERSION 2.8 )
 
 find_package(CUDA REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package(Boost REQUIRED COMPONENTS unit_test)
+find_package(Boost REQUIRED COMPONENTS unit_test_framework)
 
 
 set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra -Wno-sign-compare -Wno-unused-parameter" )
