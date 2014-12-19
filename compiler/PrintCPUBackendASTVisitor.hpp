@@ -14,7 +14,7 @@ class PrintCPUBackendASTVisitor : public ASTVisitorInterface
 {
 public:
     PrintCPUBackendASTVisitor();
-    PrintCPUBackendASTVisitor(const bool use_cartesian);
+    explicit PrintCPUBackendASTVisitor(const bool use_cartesian);
     virtual ~PrintCPUBackendASTVisitor();
 
     void visit(SequenceNode& node);

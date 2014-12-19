@@ -103,8 +103,8 @@ int main(int argc, char** argv)
             SymbolTable::program()->accept(v);
         }
         else if (backend == "cpu") {
-	    // Check if we use the Cartesian dialect
-	    const bool use_cartesian = cli_vars.count("cartesian");
+            // Check if we use the Cartesian dialect
+            const bool use_cartesian = cli_vars.count("cartesian");
             PrintCPUBackendASTVisitor v(use_cartesian);
             SymbolTable::program()->accept(v);
         }

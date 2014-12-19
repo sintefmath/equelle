@@ -694,7 +694,7 @@ void PrintCPUBackendASTVisitor::postVisit(RandomAccessNode& node)
     }
 }
 
-const char *PrintCPUBackendASTVisitor::cppStartString() const
+const char* PrintCPUBackendASTVisitor::cppStartString() const
 {
     if ( use_cartesian_ ) {
 	return ::impl_cppCartesianStartString();
@@ -702,17 +702,17 @@ const char *PrintCPUBackendASTVisitor::cppStartString() const
     return ::impl_cppStartString();
 }
 
-const char *PrintCPUBackendASTVisitor::cppEndString() const
+const char* PrintCPUBackendASTVisitor::cppEndString() const
 {
     return ::impl_cppEndString();
 }
 
-const char *PrintCPUBackendASTVisitor::classNameString() const
+const char* PrintCPUBackendASTVisitor::classNameString() const
 {
     return "EquelleRuntimeCPU";
 }
 
-const char *PrintCPUBackendASTVisitor::namespaceNameString() const
+const char* PrintCPUBackendASTVisitor::namespaceNameString() const
 {
     return "equelle";
 }
@@ -842,8 +842,8 @@ namespace
 "\n"
 "#include \"equelle/EquelleRuntimeCPU.hpp\"\n"
 "\n"
-"void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er);\n"
 "void ensureRequirements(const equelle::EquelleRuntimeCPU& er);\n"
+"void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er);\n"
 "\n"
  "#ifndef EQUELLE_NO_MAIN\n"
 "int main(int argc, char** argv)\n"
@@ -886,8 +886,8 @@ namespace
 "\n"
 "#include \"equelle/EquelleRuntimeCPU.hpp\"\n"
 "\n"
-"void ensureRequirements(const equelle::EquelleRuntimeCPU& er);\n"
 "void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er);\n"
+"void ensureRequirements(const equelle::EquelleRuntimeCPU& er);\n"
 "\n"
  "#ifndef EQUELLE_NO_MAIN\n"
 "int main(int argc, char** argv)\n"
