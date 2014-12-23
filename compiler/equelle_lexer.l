@@ -4,9 +4,9 @@
 */
 
 #include <iostream>
+#include "equelle_parser.hpp"
 
 #if RETURN_TOKENS
-#include "equelle_parser.hpp"
 #define TOKS(x) do { return x; } while(false)
 #define TOK(x) do { return x; } while(false)
 #define STORE do { yylval.str = new std::string(yytext); } while(false)
@@ -15,6 +15,11 @@
 #define TOK(x) do { TOKS(#x); } while(false)
 #define STORE do { std::cout << "\'" << yytext << "\'   "; } while(false)
 #endif
+
+bool increment_yylineno = false;
+
+#define INCIF do { if (increment_yylineno) ++yylineno; increment_yylineno = false; } while(false)
+#define NEWL do { --yylineno; increment_yylineno = true; } while(false)
 
 %}
 
@@ -40,50 +45,50 @@ LINECONT {ELLIPSIS}[\t ]*\n
 
 %%
 
-{STRINGL}         { STORE; TOK(STRING_LITERAL); }
-Collection        { TOK(COLLECTION); }
-Stencil           { TOK(STENCIL); }
-Sequence          { TOK(SEQUENCE); }
-Array             { TOK(ARRAY); }
-Of                { TOK(OF); }
-On                { TOK(ON); }
-Extend            { TOK(EXTEND); }
-Subset            { TOK(SUBSET); }
-Scalar            { TOK(SCALAR); }
-Vector            { TOK(VECTOR); }
-Bool              { TOK(BOOL); }
-Cell              { TOK(CELL); }
-Face              { TOK(FACE); }
-Edge              { TOK(EDGE); }
-Vertex            { TOK(VERTEX); }
-String            { TOK(STRING); }
-Function          { TOK(FUNCTION); }
-And               { TOK(AND); }
-Or                { TOK(OR); }
-Not               { TOK(NOT); }
-Xor               { TOK(XOR); }
-True              { TOK(TRUE); }
-False             { TOK(FALSE); }
-For               { TOK(FOR); }
-In                { TOK(IN); }
-Mutable           { TOK(MUTABLE); }
-{BUILTIN}         { STORE; TOK(BUILTIN); }
-{ID}              { STORE; TOK(ID); }
-{INT}             { STORE; TOK(INT); }
-{FLOAT}           { STORE; TOK(FLOAT); }
-{COMMENT}         { STORE; TOK(COMMENT); }
-"<="              { TOK(LEQ); }
-">="              { TOK(GEQ); }
-"=="              { TOK(EQ); }
-"!="              { TOK(NEQ); }
-"->"              { TOK(RET); }
-{SINGLES}         { TOKS(yytext[0]); }
-\n                { TOK(EOL); }
-{LINECONT}
-{BLANKS}
-{INT}{IDCHAR}+   { std::cerr << "Lexer error on line " << yylineno << ": this is not a number \'" << yytext << "\'" << std::endl; }
-{FLOAT}{IDCHAR}+ { std::cerr << "Lexer error on line " << yylineno << ": this is not a number \'" << yytext << "\'" << std::endl; }
-.                { std::cerr << "Lexer error on line " << yylineno << ": unexpected character \'" << yytext << "\'" << std::endl; }
+{STRINGL}         { INCIF; STORE; TOK(STRING_LITERAL); }
+Collection        { INCIF; TOK(COLLECTION); }
+Stencil           { INCIF; TOK(STENCIL); }
+Sequence          { INCIF; TOK(SEQUENCE); }
+Array             { INCIF; TOK(ARRAY); }
+Of                { INCIF; TOK(OF); }
+On                { INCIF; TOK(ON); }
+Extend            { INCIF; TOK(EXTEND); }
+Subset            { INCIF; TOK(SUBSET); }
+Scalar            { INCIF; TOK(SCALAR); }
+Vector            { INCIF; TOK(VECTOR); }
+Bool              { INCIF; TOK(BOOL); }
+Cell              { INCIF; TOK(CELL); }
+Face              { INCIF; TOK(FACE); }
+Edge              { INCIF; TOK(EDGE); }
+Vertex            { INCIF; TOK(VERTEX); }
+String            { INCIF; TOK(STRING); }
+Function          { INCIF; TOK(FUNCTION); }
+And               { INCIF; TOK(AND); }
+Or                { INCIF; TOK(OR); }
+Not               { INCIF; TOK(NOT); }
+Xor               { INCIF; TOK(XOR); }
+True              { INCIF; TOK(TRUE); }
+False             { INCIF; TOK(FALSE); }
+For               { INCIF; TOK(FOR); }
+In                { INCIF; TOK(IN); }
+Mutable           { INCIF; TOK(MUTABLE); }
+{BUILTIN}         { INCIF; STORE; TOK(BUILTIN); }
+{ID}              { INCIF; STORE; TOK(ID); }
+{INT}             { INCIF; STORE; TOK(INT); }
+{FLOAT}           { INCIF; STORE; TOK(FLOAT); }
+{COMMENT}         { INCIF; STORE; TOK(COMMENT); }
+"<="              { INCIF; TOK(LEQ); }
+">="              { INCIF; TOK(GEQ); }
+"=="              { INCIF; TOK(EQ); }
+"!="              { INCIF; TOK(NEQ); }
+"->"              { INCIF; TOK(RET); }
+{SINGLES}         { INCIF; TOKS(yytext[0]); }
+\n                { INCIF; NEWL; TOK(EOL); }
+{LINECONT}        { INCIF; }
+{BLANKS}          { INCIF; }
+{INT}{IDCHAR}+    { INCIF; std::cerr << "Lexer error on line " << yylineno << ": this is not a number \'" << yytext << "\'" << std::endl; }
+{FLOAT}{IDCHAR}+  { INCIF; std::cerr << "Lexer error on line " << yylineno << ": this is not a number \'" << yytext << "\'" << std::endl; }
+.                 { INCIF; std::cerr << "Lexer error on line " << yylineno << ": unexpected character \'" << yytext << "\'" << std::endl; }
 
 %%
 
