@@ -19,16 +19,23 @@
             var length = blob.size;
             /* If length is odd number of bytes, we need to pad with a byte at the end so that we don't loose the last one */
             if (length%2) blob = new Blob([blob, new ArrayBuffer(1)]);
+
+            // Function to enable storing binary files in localStorage
+            function _arrayBufferToBase64( buffer ) {
+                var binary = '';
+              	var bytes = new Uint8Array( buffer );
+		var len = bytes.byteLength;
+		    for (var i = 0; i < len; i++) {
+			binary += String.fromCharCode( bytes[ i ] );
+		    }
+		return window.btoa( binary );
+	    }
+
             /* Read the bytes into a 16 bit encoded string */
             fr.onloadend = function() { 
                 if (!fr.error) {
                     // Convert the bytes to a string
-                    var view = new Uint16Array(fr.result);
-                    var str = '';
-                    for (var i = 0; i < view.length; i += 1000) {
-                        // Split operation into chunks of 1000 to not exceed call stack size
-                        str += String.fromCharCode.apply(String, view.subarray(i,i+1000));
-                    }
+		    var str = _arrayBufferToBase64(fr.result);
                     // Save in localstorage
                     localStorage.setItem(key+'-contents', str);
                     localStorage.setItem(key+'-length', (compressed ? 'z' : '')+length);
@@ -74,7 +81,7 @@
 
         /* Read file contents from localStorage */
         var read = function(key) {
-            var str = localStorage.getItem(key+'-contents');
+            var str = window.atob(localStorage.getItem(key+'-contents'));
             var length = localStorage.getItem(key+'-length');
             var compressed = false;
             if (_.str.startsWith(length, 'z')) {
