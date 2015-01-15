@@ -13,31 +13,34 @@
             return outbuf;
         };
 
+	function _arrayBufferToBase64( buffer ) {
+	    var binary = '';
+	    var bytes = new Uint8Array( buffer );
+	    var len = bytes.byteLength;
+	    for (var i = 0; i < len; i++) {
+		binary += String.fromCharCode( bytes[ i ] );
+	    }
+	    return window.btoa( binary );
+	}
+
+	function _base64ToArrayBuffer(base64) {
+	    var binary_string =  window.atob(base64);
+	    var len = binary_string.length;
+	    var bytes = new Uint8Array( len );
+	    for (var i = 0; i < len; i++)        {
+		bytes[i] = binary_string.charCodeAt(i);
+	    }
+	    return bytes.buffer;
+	}
+
         /* Write file contents to localStorage */
         var writeRaw = function(key, blob, compressed, doneCB) {
             var fr = new FileReader();
             var length = blob.size;
-            /* If length is odd number of bytes, we need to pad with a byte at the end so that we don't loose the last one */
-            if (length%2) blob = new Blob([blob, new ArrayBuffer(1)]);
-
-            // Function to enable storing binary files in localStorage
-            function _arrayBufferToBase64( buffer ) {
-                var binary = '';
-              	var bytes = new Uint8Array( buffer );
-		var len = bytes.byteLength;
-		    for (var i = 0; i < len; i++) {
-			binary += String.fromCharCode( bytes[ i ] );
-		    }
-		return window.btoa( binary );
-	    }
-
-            /* Read the bytes into a 16 bit encoded string */
             fr.onloadend = function() { 
                 if (!fr.error) {
-                    // Convert the bytes to a string
-		    var str = _arrayBufferToBase64(fr.result);
                     // Save in localstorage
-                    localStorage.setItem(key+'-contents', str);
+                    localStorage.setItem(key+'-contents', _arrayBufferToBase64(fr.result));
                     localStorage.setItem(key+'-length', (compressed ? 'z' : '')+length);
                     if (doneCB) doneCB(null);
                 } else {
@@ -79,9 +82,10 @@
             }
         };
 
+
         /* Read file contents from localStorage */
         var read = function(key) {
-            var str = window.atob(localStorage.getItem(key+'-contents'));
+            var str = _base64ToArrayBuffer(localStorage.getItem(key+'-contents'));
             var length = localStorage.getItem(key+'-length');
             var compressed = false;
             if (_.str.startsWith(length, 'z')) {
@@ -90,15 +94,10 @@
             } else {
                 length = parseInt(length);
             }
-            /* Read all the bytes into a buffer */
-            var buf = new ArrayBuffer(str.length*2);
-            var bufView = new Uint16Array(buf);
-            for ( var i = 0; i < str.length; i++) { bufView[i] = str.charCodeAt(i) }
-            /* Create a new blob from the read data, skipping possible padding byte at end */
-            return {
-                 data: new Blob([buf.slice(0,length)])
-                ,compressed: compressed
-            };
+	    return {
+		data: new Blob([str])
+		,compressed: compressed
+	   };
         };
 
         /* Check localStorage for stored files */
