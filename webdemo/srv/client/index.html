@@ -102,7 +102,25 @@
     </head>
     <body style="height:100%">
         <div style="height:100%" id="equelle-kitchen-sink" class="container" ng-app="equelleKitchenSink">
-            <div ng-view></div>
+	<script>
+		// Detect localStorage support (original by Mathias Bynens
+		var storage;
+		var fail;
+		var uid;
+		try {
+		  uid = new Date;
+		  (storage = window.localStorage).setItem(uid, uid);
+		  fail = storage.getItem(uid) != uid;
+		  storage.removeItem(uid);
+		  fail && (storage = false);
+		} catch (exception) {}
+		if (!storage) {
+			document.write("LocalStorage not supported: Try viewing this page with <a href=\"https://www.mozilla.org/en-US/firefox/all/\">Firefox</a> or <a href=\"https://www.google.com/chrome/browser/desktop/index.html\">Chrome</a>");
+		}
+		else {
+			document.write("<div ng-view></div>");
+		}
+	</script>
         </div>
     </body>
 </html> 
