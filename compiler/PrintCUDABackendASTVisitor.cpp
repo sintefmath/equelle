@@ -6,13 +6,6 @@
 #include <iostream>
 #include <string>
 
-namespace
-{
-    const char* impl_cppStartString();
-    const char* impl_cppEndString();
-}
-
-
 
 PrintCUDABackendASTVisitor::PrintCUDABackendASTVisitor()
 {
