@@ -4,6 +4,8 @@
 
 #pragma once
 
+#define SILENCE_EXTERNAL_WARNINGS
+
 #include <opm/autodiff/AutoDiffHelpers.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <opm/core/grid/GridManager.hpp>
