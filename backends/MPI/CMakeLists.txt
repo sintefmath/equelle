@@ -1,7 +1,7 @@
 project(equelle_mpi_backend)
 cmake_minimum_required( VERSION 2.8 )
 
-set( CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++0x -Wall -Wextra -Wno-sign-compare" )
+#set( CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++0x -Wall -Wextra -Wno-sign-compare" )
 
 find_package( Zoltan REQUIRED )
 find_package( MPI REQUIRED )
