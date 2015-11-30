@@ -4,7 +4,7 @@
 
 
 #include "equelle/EquelleRuntimeCPU.hpp"
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/core/utility/StopWatch.hpp>
 #include <iomanip>
 #include <fstream>
@@ -396,7 +396,8 @@ Scalar EquelleRuntimeCPU::prodReduce(const CollOfScalar& x) const
 
 CollOfScalar EquelleRuntimeCPU::solveForUpdate(const CollOfScalar& residual) const
 {
-    Eigen::SparseMatrix<double, Eigen::RowMajor> matr = residual.derivative()[0];
+    Eigen::SparseMatrix<double, Eigen::RowMajor> matr;
+    residual.derivative()[0].toSparse(matr);
 
     CollOfScalar::V du = CollOfScalar::V::Zero(residual.size());
 

@@ -1,7 +1,7 @@
 project(zoltanintegration_test)
 cmake_minimum_required(VERSION 2.8)
 
-find_package(Boost REQUIRED COMPONENTS unit_test_framework)
+find_package(Boost REQUIRED COMPONENTS unit_test_framework system)
 add_definitions(-DBOOST_TEST_DYN_LINK)
 
 file(GLOB test_src "src/*.cpp")
@@ -26,11 +26,11 @@ target_link_libraries(RuntimeMPI_test equelle_mpi equelle_rt
     ${MPI_CXX_LIBRARIES}
     ${Boost_LIBRARIES}
     ${Zoltan_LIBRARIES}
-    opmautodiff opmcore dunecommon )
+    opmparser opmautodiff opmcore dunecommon )
 
 target_link_libraries(subgridvalidator equelle_mpi equelle_rt
     ${MPI_C_LIBRARIES}
     ${MPI_CXX_LIBRARIES}
     ${Boost_LIBRARIES}
     ${Zoltan_LIBRARIES}
-    opmautodiff opmcore dunecommon )
+    opmparser opmautodiff opmcore dunecommon )

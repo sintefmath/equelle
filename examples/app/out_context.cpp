@@ -1,19 +1,6 @@
 
 // This program was created by the Equelle compiler from SINTEF.
 
-#include <opm/core/utility/parameters/ParameterGroup.hpp>
-#include <opm/core/linalg/LinearSolverFactory.hpp>
-#include <opm/core/utility/ErrorMacros.hpp>
-#include <opm/autodiff/AutoDiffBlock.hpp>
-#include <opm/autodiff/AutoDiffHelpers.hpp>
-#include <opm/core/grid.h>
-#include <opm/core/grid/GridManager.hpp>
-#include <algorithm>
-#include <iterator>
-#include <iostream>
-#include <cmath>
-#include <array>
-
 #include "equelle/EquelleRuntimeCPU.hpp"
 
 void equelleGeneratedCode(equelle::EquelleRuntimeCPU& er);

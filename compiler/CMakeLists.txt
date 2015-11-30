@@ -18,7 +18,7 @@ bison_target( MyParser equelle_parser.y ${CMAKE_CURRENT_BINARY_DIR}/equelle_pars
 flex_target(MyScanner equelle_lexer.l ${CMAKE_CURRENT_BINARY_DIR}/equelle_lexer.cpp )
 add_flex_bison_dependency(MyScanner MyParser)
 
-include_directories( . ${CMAKE_CURRENT_BINARY_DIR} )
+include_directories( . ${CMAKE_CURRENT_BINARY_DIR}  ${Boost_INCLUDE_DIRS})
 
 file( GLOB EC_SOURCES "*.cpp" )
 file( GLOB to_remove el.cpp )

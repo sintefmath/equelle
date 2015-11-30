@@ -4,11 +4,21 @@
 
 #pragma once
 
-#include <opm/autodiff/AutoDiffHelpers.hpp>
+#define SILENCE_EXTERNAL_WARNINGS
+
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
+#include <opm/core/grid.h>
 #include <opm/core/grid/GridManager.hpp>
 #include <opm/core/linalg/LinearSolverFactory.hpp>
+#include <opm/autodiff/AutoDiffBlock.hpp>
+#include <opm/autodiff/AutoDiffHelpers.hpp>
 
+#include <algorithm>
+#include <iterator>
+#include <iostream>
+#include <cmath>
+#include <array>
 #include <vector>
 #include <string>
 #include <map>

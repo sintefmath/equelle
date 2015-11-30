@@ -1,5 +1,7 @@
 #pragma once
 
+#define SILENCE_EXTERNAL_WARNINGS
+
 #include <opm/autodiff/AutoDiffBlock.hpp>
 
 #include <vector>
@@ -200,9 +202,8 @@ inline CollOfScalar sqrt(const CollOfScalar& x)
     }
     const int num_blocks = xjac.size();
     std::vector<CollOfScalar::M> jac(num_blocks);
-    typedef Eigen::DiagonalMatrix<Scalar, Eigen::Dynamic> D;
     const auto sqrt_x = sqrt(x.value());
-    const D one_over_two_sqrt_x = (0.5/sqrt_x).matrix().asDiagonal();
+    const CollOfScalar::M one_over_two_sqrt_x((0.5/sqrt_x).matrix().asDiagonal());
     for (int block = 0; block < num_blocks; ++block) {
         jac[block] = one_over_two_sqrt_x * xjac[block];
     }

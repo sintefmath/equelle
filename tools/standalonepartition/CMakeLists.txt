@@ -1,10 +1,11 @@
 project(standalone_partition)
 cmake_minimum_required(VERSION 2.8)
 
+find_package(Boost REQUIRED COMPONENTS system)
 find_package( Zoltan REQUIRED )
 find_package( MPI REQUIRED )
 
-set( CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++0x -Wall -Wextra -Wno-sign-compare" )
+# set( CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++0x -Wall -Wextra -Wno-sign-compare" )
 # set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra -Wno-sign-compare" )
 
 include_directories(
@@ -18,6 +19,7 @@ target_link_libraries(standalone_partition
     equelle_mpi equelle_rt
     ${MPI_C_LIBRARIES}
     ${MPI_CXX_LIBRARIES}
+    ${Boost_LIBRARIES}
     ${Zoltan_LIBRARIES}
-    opmautodiff opmcore dunecommon
+    opmparser opmautodiff opmcore dunecommon
  )

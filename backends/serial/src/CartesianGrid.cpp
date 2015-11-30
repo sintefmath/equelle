@@ -7,6 +7,8 @@
 #include <fstream>
 #include <iostream>
 
+#define SILENCE_EXTERNAL_WARNINGS
+
 #include <opm/autodiff/AutoDiffHelpers.hpp>
 
 
