@@ -32,7 +32,7 @@ public:
      *              - ghost_width width of ghost boundary. (default 1)
      *              In addition how to read initial and boundary conditions can be specified.
      */
-	CartesianEquelleRuntime( const Opm::parameter::ParameterGroup& param );
+	CartesianEquelleRuntime( const Opm::ParameterGroup& param );
 
 	StencilCollOfScalar inputCellCollectionOfScalar( std::string name );
 	//CartesianCollOfFace inputFaceCollectionOfScalar( std::string name );
@@ -45,7 +45,7 @@ public:
     void output(std::string var_name_, const StencilCollOfScalar& var_);
 
 private:
-    const Opm::parameter::ParameterGroup param_;
+    const Opm::ParameterGroup param_;
 };
 
 /**

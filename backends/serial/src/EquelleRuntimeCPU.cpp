@@ -17,7 +17,7 @@
 
 namespace equelle {
 
-Opm::GridManager* createGridManager(const Opm::parameter::ParameterGroup& param)
+Opm::GridManager* createGridManager(const Opm::ParameterGroup& param)
 {
     if (param.has("grid_filename")) {
         return new Opm::GridManager(param.get<std::string>("grid_filename"));
@@ -51,7 +51,7 @@ Opm::GridManager* createGridManager(const Opm::parameter::ParameterGroup& param)
 
 
 
-EquelleRuntimeCPU::EquelleRuntimeCPU(const Opm::parameter::ParameterGroup& param)
+EquelleRuntimeCPU::EquelleRuntimeCPU(const Opm::ParameterGroup& param)
     : grid_manager_(equelle::createGridManager(param)),
       grid_(*(grid_manager_->c_grid())),
       ops_(grid_),
@@ -64,7 +64,7 @@ EquelleRuntimeCPU::EquelleRuntimeCPU(const Opm::parameter::ParameterGroup& param
 {
 }
 
-EquelleRuntimeCPU::EquelleRuntimeCPU(const UnstructuredGrid *grid, const Opm::parameter::ParameterGroup &param)
+EquelleRuntimeCPU::EquelleRuntimeCPU(const UnstructuredGrid *grid, const Opm::ParameterGroup &param)
     : grid_( *grid ),
       ops_(grid_),
       linsolver_(param),

@@ -36,8 +36,8 @@ class EquelleRuntimeCPU
 {
 public:
     /// Constructor.
-    EquelleRuntimeCPU( const Opm::parameter::ParameterGroup& param );
-    EquelleRuntimeCPU( const UnstructuredGrid* grid, const Opm::parameter::ParameterGroup& param );
+    EquelleRuntimeCPU( const Opm::ParameterGroup& param );
+    EquelleRuntimeCPU( const UnstructuredGrid* grid, const Opm::ParameterGroup& param );
 
     /** @name Topology
      * Topology and geometry related. */
@@ -152,7 +152,7 @@ private:
     Opm::LinearSolverFactory linsolver_;
     bool output_to_file_;
     int verbose_;
-    const Opm::parameter::ParameterGroup& param_;
+    const Opm::ParameterGroup& param_;
     std::map<std::string, int> outputcount_;
     // For newtonSolve().
     int max_iter_;
@@ -160,7 +160,7 @@ private:
 };
 
 
-Opm::GridManager* createGridManager(const Opm::parameter::ParameterGroup& param);
+Opm::GridManager* createGridManager(const Opm::ParameterGroup& param);
 
 
 } // namespace equelle
