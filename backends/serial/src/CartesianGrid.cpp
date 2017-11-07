@@ -20,7 +20,7 @@ equelle::CartesianGrid::CartesianGrid()
 
 }
 
-equelle::CartesianEquelleRuntime::CartesianEquelleRuntime(const Opm::parameter::ParameterGroup &param)
+equelle::CartesianEquelleRuntime::CartesianEquelleRuntime(const Opm::ParameterGroup &param)
     : param_( param )
 {
     int grid_dim = param.getDefault( "grid_dim", 2 );

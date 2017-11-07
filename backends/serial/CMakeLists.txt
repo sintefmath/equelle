@@ -5,7 +5,7 @@ find_package(Eigen3 REQUIRED)
 
 
 if(NOT MSVC)
-	set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra -Wno-sign-compare" )
+	set( CMAKE_CXX_FLAGS "-std=c++14 -Wall -Wextra -Wno-sign-compare" )
 ENDIF()
 
 file( GLOB serial_src "src/*.cpp" )
@@ -32,7 +32,7 @@ set_target_properties( equelle_rt PROPERTIES
 set(CONF_INCLUDE_DIRS "${CONF_INCLUDE_DIRS}" "${PROJECT_SOURCE_DIR}/include" "${PROJECT_BINARY_DIR}" PARENT_SCOPE)
 
 set(EQUELLE_LIBS_FOR_CONFIG ${EQUELLE_LIBS_FOR_CONFIG}
-    equelle_rt opmautodiff opmcore dunecommon
+    equelle_rt opmsimulators opmgrid opmcommon dunecommon
     ${EQUELLE_EXTRA_LIBS}
     PARENT_SCOPE)
 
