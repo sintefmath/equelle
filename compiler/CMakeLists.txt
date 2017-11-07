@@ -10,7 +10,7 @@ if(NOT MSVC)
 	set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra -Wno-sign-compare -Wno-unused-parameter -Wno-deprecated-register -Wno-unneeded-internal-declaration" )
 endif()
 
-find_package( BISON REQUIRED )
+find_package( BISON 3 REQUIRED )
 find_package( FLEX REQUIRED )
 find_package( Boost REQUIRED COMPONENTS program_options )
 
