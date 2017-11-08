@@ -256,6 +256,7 @@ std::string FunctionType::equelleString() const
 
 Function::Function(const std::string& name)
     : name_(name),
+      is_template_(false),
       parent_scope_(0)
 {
 }
@@ -263,6 +264,7 @@ Function::Function(const std::string& name)
 Function::Function(const std::string& name, const FunctionType& type)
     : name_(name),
       type_(type),
+      is_template_(false),
       parent_scope_(0)
 {
 }
