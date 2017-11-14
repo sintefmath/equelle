@@ -104,7 +104,7 @@ inline CollOfScalar operator/(const CollOfScalar& x, const Scalar& s)
 /// This operator is not provided by AutoDiffBlock, so we must add it here.
 inline CollOfBool operator<(const Scalar& s, const CollOfScalar& x)
 {
-    return s < x.value();
+    return x.value() > s;
 }
 
 /// This operator is not provided by AutoDiffBlock, so we must add it here.
@@ -122,7 +122,7 @@ inline CollOfBool operator<(const CollOfScalar& x, const CollOfScalar& y)
 /// This operator is not provided by AutoDiffBlock, so we must add it here.
 inline CollOfBool operator<=(const Scalar& s, const CollOfScalar& x)
 {
-    return s <= x.value();
+    return x.value() >= s;
 }
 
 /// This operator is not provided by AutoDiffBlock, so we must add it here.
@@ -140,7 +140,7 @@ inline CollOfBool operator<=(const CollOfScalar& x, const CollOfScalar& y)
 /// This operator is not provided by AutoDiffBlock, so we must add it here.
 inline CollOfBool operator>(const Scalar& s, const CollOfScalar& x)
 {
-    return s > x.value();
+    return x.value() < s;
 }
 
 /// This operator is not provided by AutoDiffBlock, so we must add it here.
@@ -158,7 +158,7 @@ inline CollOfBool operator>(const CollOfScalar& x, const CollOfScalar& y)
 /// This operator is not provided by AutoDiffBlock, so we must add it here.
 inline CollOfBool operator>=(const Scalar& s, const CollOfScalar& x)
 {
-    return s >= x.value();
+    return x.value() <= s;
 }
 
 /// This operator is not provided by AutoDiffBlock, so we must add it here.
@@ -176,7 +176,7 @@ inline CollOfBool operator>=(const CollOfScalar& x, const CollOfScalar& y)
 /// This operator is not provided by AutoDiffBlock, so we must add it here.
 inline CollOfBool operator==(const Scalar& s, const CollOfScalar& x)
 {
-    return s == x.value();
+    return x.value() == s;
 }
 
 /// This operator is not provided by AutoDiffBlock, so we must add it here.
