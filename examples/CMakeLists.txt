@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 
 # We need C++11 features.
 if(NOT MSVC)
-	set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra ${CMAKE_CXX_FLAGS}")
+	set( CMAKE_CXX_FLAGS "-std=c++14 -Wall -Wextra ${CMAKE_CXX_FLAGS}")
 endif()
 
 find_package( Equelle REQUIRED )
@@ -12,7 +12,7 @@ option(EQUELLE_BUILD_MPI "Build MPI backend and tools (requires MPI and Zoltan f
 
 link_directories(
   ${EQUELLE_LIB_DIRS}
-  ${EXTRA_LIBDIRS_FOR_EQUELLE}
+  ${EQUELLE_EXTRA_LIB_DIRS}
 )
 
 # --- Stuff for making non-source code show up in IDEs
@@ -31,7 +31,7 @@ file( GLOB DSL_sources "dsl/*.equelle" )
 file( GLOB cuda_files  "src/*.cu" )
 file( GLOB cuda_include "cuda_include/*.hpp" )
 
-include_directories( ${EQUELLE_INCLUDE_DIRS} )
+include_directories( ${EQUELLE_INCLUDE_DIRS} ${EQUELLE_EXTRA_INCLUDE_DIRS} )
 
 foreach( app ${app_sources} )
   get_filename_component( target ${app} NAME_WE )
@@ -42,7 +42,7 @@ foreach( app ${app_sources} )
 
   target_link_libraries( ${target}
     ${EQUELLE_LIBRARIES}
-    ${EXTRA_LIBS_FOR_EQUELLE}
+    ${EQUELLE_EXTRA_LIBS}
     opmcore
   )
 endforeach()
