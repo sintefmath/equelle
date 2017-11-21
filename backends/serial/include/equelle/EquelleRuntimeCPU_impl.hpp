@@ -50,7 +50,7 @@ namespace
         std::vector<int> indices(sub_sz);
         std::size_t sub_index = 0;
         for (std::size_t i = 0; i < super_sz; ++i) {
-            while (sub_indexed[sub_index].first == superset[i]) {
+            while ((sub_index < sub_sz) && (sub_indexed[sub_index].first == superset[i])) {
                 indices[sub_indexed[sub_index].second] = i;
                 ++sub_index;
             }
