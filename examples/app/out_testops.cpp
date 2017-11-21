@@ -10,7 +10,7 @@ void ensureRequirements(const equelle::EquelleRuntimeCPU& er);
 int main(int argc, char** argv)
 {
     // Get user parameters.
-    Opm::parameter::ParameterGroup param(argc, argv, false);
+    Opm::ParameterGroup param(argc, argv, false);
 
     // Create the Equelle runtime.
     equelle::EquelleRuntimeCPU er(param);
