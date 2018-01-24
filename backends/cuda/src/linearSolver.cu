@@ -1,13 +1,14 @@
 #include <iostream>
 #include <string>
 
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 
 #include "LinearSolver.hpp"
 #include "CudaMatrix.hpp"
 #include "CudaArray.hpp"
 #include "CollOfScalar.hpp"
 #include "equelleTypedefs.hpp"
+
 
 #include <cusp/array1d.h>
 #include <cusp/csr_matrix.h>
@@ -16,7 +17,6 @@
 #include <cusp/krylov/bicgstab.h>
 #include <cusp/krylov/cg.h>
 #include <cusp/krylov/gmres.h>
-
 
 
 using namespace equelleCUDA;

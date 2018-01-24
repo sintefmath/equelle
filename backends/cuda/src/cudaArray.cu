@@ -15,7 +15,7 @@
 #include <iostream>
 
 // For error exception macro:
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 
 #include "CudaArray.hpp"
 #include "DeviceGrid.hpp"

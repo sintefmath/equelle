@@ -5,7 +5,7 @@
 #include "DeviceHelperOps.hpp"
 #include "CudaMatrix.hpp"
 
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/core/grid.h>
 
 using namespace equelleCUDA;

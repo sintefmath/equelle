@@ -174,7 +174,7 @@ int main(int argc, char** argv) {
 	return 1;
     }
 
-    Opm::parameter::ParameterGroup param( argc, argv, false);
+    Opm::ParameterGroup param( argc, argv, false);
     EquelleRuntimeCUDA er(param);
 
     std::cout << "Creating an empty matrix:\n";

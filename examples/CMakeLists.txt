@@ -8,6 +8,9 @@ endif()
 
 find_package( Equelle REQUIRED )
 
+#include("../../releaseconf.cmake")
+
+
 option(EQUELLE_BUILD_MPI "Build MPI backend and tools (requires MPI and Zoltan from Trilinos)" OFF)
 
 link_directories(

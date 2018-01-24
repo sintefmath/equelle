@@ -93,7 +93,7 @@ class EquelleRuntimeCUDA
 {
 public:
     /// Constructor.
-    EquelleRuntimeCUDA(const Opm::parameter::ParameterGroup& param);
+    EquelleRuntimeCUDA(const Opm::ParameterGroup& param);
 
     /// Destructor:
     ~EquelleRuntimeCUDA();
@@ -322,7 +322,7 @@ private:
     Opm::LinearSolverFactory serialSolver_;
     bool output_to_file_;
     int verbose_;
-    const Opm::parameter::ParameterGroup& param_;
+    const Opm::ParameterGroup& param_;
     std::map<std::string, int> outputcount_;
     // For newtonSolve().
     int max_iter_;

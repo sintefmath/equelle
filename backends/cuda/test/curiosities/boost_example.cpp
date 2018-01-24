@@ -7,7 +7,7 @@ using namespace boost::unit_test;
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <opm/core/grid.h>
 #include <opm/core/grid/GridManager.hpp>
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 
 #include "EquelleRuntimeCUDA.hpp"
 

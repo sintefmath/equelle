@@ -27,18 +27,18 @@ namespace equelleCUDA {
     */
     struct hostMat
     {
-	//! Values
-	std::vector<double> vals;
-	//! Row pointers
-	std::vector<int> rowPtr;
-	//! Column indices
-	std::vector<int> colInd;
-	//! Number of nonzeros 
-	int nnz;
-	//! Number of rows
-	int rows;
-	//! Number of columns
-	int cols;
+		//! Values
+		std::vector<double> vals;
+		//! Row pointers
+		std::vector<int> rowPtr;
+		//! Column indices
+		std::vector<int> colInd;
+		//! Number of nonzeros 
+		int nnz;
+		//! Number of rows
+		int rows;
+		//! Number of columns
+		int cols;
     };
 
 } // namespace equelleCUDA

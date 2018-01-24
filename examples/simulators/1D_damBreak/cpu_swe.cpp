@@ -3,7 +3,7 @@
 
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <opm/core/linalg/LinearSolverFactory.hpp>
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/autodiff/AutoDiffBlock.hpp>
 #include <opm/autodiff/AutoDiffHelpers.hpp>
 #include <opm/core/grid.h>

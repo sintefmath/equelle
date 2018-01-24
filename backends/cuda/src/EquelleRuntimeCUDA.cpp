@@ -11,7 +11,7 @@
 #include "wrapEquelleRuntime.hpp"
 #include "LinearSolver.hpp"
 
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/core/utility/StopWatch.hpp>
 #include <iomanip>
 #include <fstream>
@@ -26,7 +26,7 @@ using namespace wrapEquelleRuntimeCUDA;
 
 namespace
 {
-    Opm::GridManager* createGridManager(const Opm::parameter::ParameterGroup& param)
+    Opm::GridManager* createGridManager(const Opm::ParameterGroup& param)
     {
         if (param.has("grid_filename")) {
         	// Unstructured grid
@@ -62,7 +62,7 @@ namespace
 
 
 
-EquelleRuntimeCUDA::EquelleRuntimeCUDA(const Opm::parameter::ParameterGroup& param)
+EquelleRuntimeCUDA::EquelleRuntimeCUDA(const Opm::ParameterGroup& param)
     : grid_manager_(createGridManager(param)),
       grid_(*(grid_manager_->c_grid())),
       dev_grid_(grid_),
@@ -248,7 +248,8 @@ CollOfScalar EquelleRuntimeCUDA::trinaryIf( const CollOfBool& predicate,
 }
 
 
-CollOfScalar EquelleRuntimeCUDA::gradient( const CollOfScalar& cell_scalarfield ) const {
+CollOfScalar EquelleRuntimeCUDA::gradient( const CollOfScalar& cell_scalarfield ) const
+{
     // This function is at the moment kept in order to be able to compare efficiency
     // against the new implementation, where we use the matrix from devOps_.
 
@@ -263,7 +264,8 @@ CollOfScalar EquelleRuntimeCUDA::gradient( const CollOfScalar& cell_scalarfield 
     			   devOps_);
 }
 
-CollOfScalar EquelleRuntimeCUDA::gradient_matrix( const CollOfScalar& cell_scalarfield ) const {
+CollOfScalar EquelleRuntimeCUDA::gradient_matrix( const CollOfScalar& cell_scalarfield ) const
+{
     if ( cell_scalarfield.size() != dev_grid_.number_of_cells() ) {
 	OPM_THROW(std::runtime_error, "Gradient need input defined on AllCells()");
     }
@@ -281,8 +283,7 @@ CollOfScalar EquelleRuntimeCUDA::divergence(const CollOfScalar& face_fluxes) con
 	return divergenceWrapper(allFluxes,
 				 dev_grid_,
 				 devOps_);
-    }
-    else {
+    } else {
 	// We are on allFaces already, so let's go!
 	return divergenceWrapper(face_fluxes,
 				 dev_grid_,
