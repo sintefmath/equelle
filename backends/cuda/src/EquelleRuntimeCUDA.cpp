@@ -134,6 +134,11 @@ CollOfScalar EquelleRuntimeCUDA::norm(const CollOfVector& vectors) const
     return vectors.norm();
 }
 
+CollOfScalar EquelleRuntimeCUDA::norm(const CollOfScalar& scalars) const
+{
+    return scalars.norm();
+}
+
 CollOfVector EquelleRuntimeCUDA::normal(const CollOfFace& faces) const
 {
     return dev_grid_.normal(faces);

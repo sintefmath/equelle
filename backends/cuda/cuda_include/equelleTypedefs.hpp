@@ -46,16 +46,16 @@ namespace equelleCUDA
     */
     struct kernelSetup 
     {
-	//! Block size
-	const dim3 block;
-	//! Grid size
-	const dim3 grid;
-	
-	//! Constructor for struct kernelSetup.
-	kernelSetup(int threads_needed) 
-	: block(equelleCUDA::MAX_THREADS),
-	  grid( (int)(( threads_needed + equelleCUDA::MAX_THREADS - 1)/equelleCUDA::MAX_THREADS) )
-	{}
+    //! Block size
+    const dim3 block;
+    //! Grid size
+    const dim3 grid;
+    
+    //! Constructor for struct kernelSetup.
+    kernelSetup(int threads_needed) 
+    : block(equelleCUDA::MAX_THREADS),
+      grid( (int)(( threads_needed + equelleCUDA::MAX_THREADS - 1)/equelleCUDA::MAX_THREADS) )
+    {}
     };
 
     //! Enumerator for specification of reduction operation.
