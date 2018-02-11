@@ -46,7 +46,7 @@ CudaMatrix::CudaMatrix()
 
 // Constructor from host values:
 CudaMatrix::CudaMatrix( const double* val, const int* rowPtr, const int* colInd,
-            const int nnz, const int rows, const int cols)
+                        const int nnz, const int rows, const int cols)
     : rows_(rows),
       cols_(cols),
       nnz_(nnz),

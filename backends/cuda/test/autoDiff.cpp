@@ -91,6 +91,21 @@ int compare( CollOfScalar coll, ADB adb, std::string msg, double tol, bool noAD)
     return 0;
 }
 
+void printCudaNonzeros(CollOfScalar coll) {
+
+    hostMat mat = coll.matrixToHost();
+
+    for(int i = 0; i < mat.vals.size(); i++){
+        std::cout << mat.vals[i] << "\t";
+        if ( i % 8 == 7) {
+            std::cout << "\n";
+        }
+    }
+    
+        
+}
+
+
 int matrixCompare( hostMat mat, ADB::M m_colMajor, std::string msg, double tol) {
     
     if (tol == 0.0) {
@@ -107,49 +122,11 @@ int matrixCompare( hostMat mat, ADB::M m_colMajor, std::string msg, double tol) 
     Eigen::SparseMatrix<Scalar, Eigen::RowMajor> m;
     m_colMajor.toSparse(m);
 
-    
-    
-    // Original code:
-    // Eigen::SparseMatrix<Scalar, Eigen::RowMajor> m(m_colMajor);
-    // Apparently direct construction 
-
-
-    // m er en Eigen Sparse-matrise.
-    // mat er en hostMat
-    // m_colMajor er en ADB::M, som er en Eigen sparsematrix
-    /*struct hostMat
-    {
-        //! Values
-        std::vector<double> vals;
-        //! Row pointers
-        std::vector<int> rowPtr;
-        //! Column indices
-        std::vector<int> colInd;
-        //! Number of nonzeros 
-        int nnz;
-        //! Number of rows
-        int rows;
-        //! Number of columns
-        int cols;
-    };*/
-
-
-
-
 
     if ( mat.nnz != m.nonZeros() ) {
         std::cout << "Error in " << msg << std::endl;
         std::cout << "Wrong number of nnz: " << mat.nnz;
         std::cout << " should be " << m.nonZeros() << "\n";
-
-        /*
-        std::cout << "Number of rows in hostmat" << mat.rows << std::endl;
-        std::cout << "Number of rows in ADB mat" << m.rows() << std::endl;
-
-        std::cout << "Number of cols in hostmat" << mat.cols << std::endl;
-        std::cout << "Number of cols in ADB mat" << m.cols() << std::endl;
-        */
-
 
         return 1;
     }
@@ -628,11 +605,10 @@ int main(int argc, char** argv) {
     CollOfCell intCell = er.interiorCells();
     
     // 2)
-    std::function<std::array<CollOfScalar, 3>(const std::array<CollOfScalar, 3>&, 
-                                              const std::array<SerialCollOfScalar, 3>&)> test_function = 
-                                              [&](const std::array<CollOfScalar, 3>& cudaArrayIn, 
-                                                  const std::array<SerialCollOfScalar,3>& serialArrayIn) 
-                                              -> std::array<CollOfScalar, 3>
+    auto test_function = 
+      [&](const std::array<CollOfScalar, 3>& cudaArrayIn, 
+          const std::array<SerialCollOfScalar,3>& serialArrayIn) 
+      -> std::array<CollOfScalar, 3>
     {
         bool ad = !cudaArrayIn[0].useAutoDiff();
         //bool ad = cudaArrayIn[0].useAutoDiff();
@@ -643,8 +619,12 @@ int main(int argc, char** argv) {
         if (compareER(cudaArrayIn[2], serialArrayIn[2], "cudaArrayIn[2]", 0, ad)) {MY_THROW}
 
         // 2.2)
-        CollOfScalar input1_intc = er.operatorOn(cudaArrayIn[0], er.allCells(), intCell);
-        SerialCollOfScalar sinput1_intc = serialER.operatorOn(serialArrayIn[0], serialER.allCells(), serialER.interiorCells());
+        CollOfScalar input1_intc = er.operatorOn(cudaArrayIn[0], 
+                                                 er.allCells(), 
+                                                 intCell);
+        SerialCollOfScalar sinput1_intc = serialER.operatorOn(serialArrayIn[0], 
+                                                              serialER.allCells(), 
+                                                              serialER.interiorCells());
         if ( compareER(input1_intc, sinput1_intc, "On interiorCells in lambda", 0, ad)){MY_THROW}
 
         double unchanged_midVal = (er.minReduce(input1_intc) + er.maxReduce(input1_intc))/2;
@@ -653,11 +633,14 @@ int main(int argc, char** argv) {
         if ( compareER(input2_intc, sinput2_intc, "trinary if in lambda", 0, ad)) {MY_THROW}
         
 
-        // compareER( CollOfScalar cuda, SerialCollOfScalar serial, std::string msg, double tol = 0.0, bool noAD = false) {
+        CollOfScalar to_output = er.operatorExtend(input2_intc, 
+                                                   er.interiorCells(), 
+                                                   er.allCells());
+        SerialCollOfScalar serial_to_output = serialER.operatorExtend(sinput2_intc, 
+                                                                      serialER.interiorCells(), 
+                                                                      serialER.allCells());
+        //countNonzeros(to_output, serial_to_output);
 
-
-        CollOfScalar to_output = er.operatorExtend(input2_intc, er.interiorCells(), er.allCells());
-        SerialCollOfScalar serial_to_output = serialER.operatorExtend(sinput2_intc, serialER.interiorCells(), serialER.allCells());
         if ( compareER(to_output, serial_to_output, "Extend in lambda function", 0, ad)){MY_THROW}
 
         std::tuple<CollOfScalar, CollOfScalar, CollOfScalar> tempOut = makeArray(cudaArrayIn[0], to_output, cudaArrayIn[2]);
@@ -667,8 +650,8 @@ int main(int argc, char** argv) {
     // 3)
     std::tuple<CollOfScalar, CollOfScalar, CollOfScalar> cudaArrayTuple = makeArray(myColl11, myColl6, myColl7);
     std::array<CollOfScalar, 3> cudaArray = std::array<CollOfScalar, 3> {{std::get<0>(cudaArrayTuple),
-                                      std::get<1>(cudaArrayTuple),
-                                      std::get<2>(cudaArrayTuple) }};
+                                                                          std::get<1>(cudaArrayTuple),
+                                                                          std::get<2>(cudaArrayTuple) }};
     //if ( CollOfScalar(myColl11.value()).useAutoDiff() ) { MY_THROW}
     std::tuple<SerialCollOfScalar, SerialCollOfScalar, SerialCollOfScalar> serialArrayTuple = equelle::makeArray(serial11, SerialCollOfScalar(myADB6), SerialCollOfScalar(myADB7));
 
@@ -711,7 +694,6 @@ int main(int argc, char** argv) {
     // if (compareER(myOutput[1], serialArray[1], "myOutput[1]")) {MY_THROW}
     if (compareER(myOutputS[2], serialArray[2], "myOutput[2] noAD")) {MY_THROW}
     if (compareER(myOutputS[1], recomp_fin, "myOutput[1] noAD",0, true)) {MY_THROW}
-    
 
     // Test what fails in the shallow water simulator:
     // q = h + b
