@@ -5,7 +5,7 @@
 
 #include "equelle/EquelleRuntimeCPU.hpp"
 #include <opm/common/ErrorMacros.hpp>
-#include <opm/core/utility/StopWatch.hpp>
+#include <opm/grid/utility/StopWatch.hpp>
 #include <iomanip>
 #include <fstream>
 #include <iterator>

@@ -7,9 +7,9 @@
 #define SILENCE_EXTERNAL_WARNINGS
 
 #include <opm/common/ErrorMacros.hpp>
-#include <opm/core/utility/parameters/ParameterGroup.hpp>
-#include <opm/core/grid.h>
-#include <opm/core/grid/GridManager.hpp>
+#include <opm/common/utility/parameters/ParameterGroup.hpp>
+#include <opm/grid/UnstructuredGrid.h>
+#include <opm/grid/GridManager.hpp>
 #include <opm/core/linalg/LinearSolverFactory.hpp>
 #include <opm/autodiff/AutoDiffBlock.hpp>
 #include <opm/autodiff/AutoDiffHelpers.hpp>

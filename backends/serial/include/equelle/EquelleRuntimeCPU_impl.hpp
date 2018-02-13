@@ -7,7 +7,7 @@
 #include <fstream>
 #include <iterator>
 #include <array>
-#include <opm/core/utility/StopWatch.hpp>
+#include <opm/grid/utility/StopWatch.hpp>
 #include <opm/autodiff/AutoDiffHelpers.hpp>
 
 namespace equelle {
