@@ -53,6 +53,7 @@ public:
     CollOfScalar norm(const CollOfFace& faces) const;
     CollOfScalar norm(const CollOfCell& cells) const;
     CollOfScalar norm(const CollOfVector& vectors) const;
+    CollOfScalar norm(const CollOfScalar& scalars) const;
     CollOfVector centroid(const CollOfFace& faces) const;
     CollOfVector centroid(const CollOfCell& cells) const;
     CollOfVector normal(const CollOfFace& faces) const;
