@@ -5,7 +5,7 @@
 
 #include "equelle/EquelleRuntimeCPU.hpp"
 #include <opm/common/ErrorMacros.hpp>
-#include <opm/core/utility/StopWatch.hpp>
+#include <opm/grid/utility/StopWatch.hpp>
 #include <iomanip>
 #include <fstream>
 #include <iterator>
@@ -235,6 +235,22 @@ CollOfScalar EquelleRuntimeCPU::norm(const CollOfVector& vectors) const
         norm2 += vectors.col(d) * vectors.col(d);
     }
     return sqrt(norm2);
+}
+
+
+CollOfScalar EquelleRuntimeCPU::norm(const CollOfScalar& scalars) const
+{
+    const CollOfScalar::V& v = scalars.value();
+    const int sz = v.size();
+    CollOfScalar::V factors(sz);
+    for (int i = 0; i < sz; ++i) {
+        if (v[i] >= 0.0) {
+            factors[i] = 1.0;
+        } else {
+            factors[i] = -1.0;
+        }
+    }
+    return factors * scalars;
 }
 
 

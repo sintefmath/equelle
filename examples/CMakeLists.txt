@@ -43,7 +43,6 @@ foreach( app ${app_sources} )
   target_link_libraries( ${target}
     ${EQUELLE_LIBRARIES}
     ${EQUELLE_EXTRA_LIBS}
-    opmcore
   )
 endforeach()
 

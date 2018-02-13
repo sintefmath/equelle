@@ -2,8 +2,8 @@
   Copyright 2013 SINTEF ICT, Applied Mathematics.
 */
 
-#include <opm/core/grid/GridManager.hpp>
-#include <opm/core/grid.h>
+#include <opm/grid/GridManager.hpp>
+#include <opm/grid/UnstructuredGrid.h>
 #include <iostream>
 
 int main(int /*argc*/, char** argv)
