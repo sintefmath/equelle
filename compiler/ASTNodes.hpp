@@ -42,6 +42,11 @@ public:
     {
         throw std::logic_error("Internal compiler error: cannot call arrayDimension() on any ExpressionNode type.");
     }
+
+    virtual void rewrite()
+    {
+        // std::cout << "In generic ExpressionNode rewrite" << std::endl;
+    }
 };
 
 
@@ -76,6 +81,13 @@ public:
     const std::vector<Node*>& nodes() {
         return nodes_;
     }
+    virtual void rewrite()
+    {
+        // std::cout << "In SequenceNode rewrite" << std::endl;
+        for(auto np : nodes_) {
+            np->rewrite();
+        }
+    }
 private:
     std::vector<Node*> nodes_;
 };
@@ -98,6 +110,10 @@ public:
     double number() const
     {
         return num_;
+    }
+    virtual void rewrite()
+    {
+        // std::cout << "In NumberNode rewrite. Number: " << num_ << std::endl;
     }
 private:
     double num_;
@@ -122,6 +138,10 @@ public:
     {
         return content_;
     }
+    virtual void rewrite()
+    {
+        // std::cout << "In StringNode rewrite. String: " << content_ << std::endl;
+    }
 private:
     std::string content_;
 };
@@ -140,6 +160,10 @@ public:
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
+    }
+    virtual void rewrite()
+    {
+        // std::cout << "In TypeNode rewrite. " << std::endl;
     }
 private:
     EquelleType et_;
@@ -205,6 +229,10 @@ public:
         }
         visitor.postVisit(*this);
     }
+    virtual void rewrite()
+    {
+        //std::cout << "In CollectionTypeNode rewrite. " << std::endl;
+    }
 
 private:
     TypeNode* btype_;
@@ -241,6 +269,12 @@ public:
     {
         visitor.visit(*this);
     }
+    virtual void rewrite()
+    {
+        // std::cout << "In ArrayTypeNode rewrite. " << std::endl;
+        btype_->rewrite();
+    }
+
 
 private:
     TypeNode* btype_;
@@ -275,6 +309,12 @@ public:
     {
         visitor.visit(*this);
     }
+    virtual void rewrite()
+    {
+        // std::cout << "In CollectionTypeNode rewrite. " << std::endl;
+        btype_->rewrite();
+    }
+
 
 private:
     TypeNode* btype_;
@@ -308,7 +348,11 @@ public:
     {
         visitor.visit(*this);
     }
-
+    virtual void rewrite()
+    {
+        // std::cout << "In MutableTypeNode rewrite. " << std::endl;
+        btype_->rewrite();
+    }
 private:
     TypeNode* btype_;
 };
@@ -395,13 +439,88 @@ public:
         right_->accept(visitor);
         visitor.postVisit(*this);
     }
+    virtual void rewrite()
+    {
+        std::cout << "In BinaryOpNode rewrite. " << std::endl;
+        left_->rewrite();
+        auto left = dynamic_cast<BinaryOpNode*>(left_);
+        if(left) {
+            switch (op_) {
+            case Add:
+                if(left->op() == Multiply){
+                    std::cout << "a * b + c" << std::endl;
+                }
+                break;
+            case Multiply:
+                if(left->op() == Add){
+                    std::cout << "a + b * c" << std::endl;
+                }
+                break;
+            case Subtract:
+                break;
+            case Divide:
+                break;
+            }
+        }
+
+        right_->rewrite();
+        auto right = dynamic_cast<BinaryOpNode*>(right_);
+        if(right) {
+            switch (op_) {
+            case Add:
+                if(right->op() == Multiply){
+                    std::cout << "a + b * c" << std::endl;
+                }
+                break;
+            case Multiply:
+                if(right->op() == Add){
+                    std::cout << "a * b + c" << std::endl;
+                }
+                break;
+            case Subtract:
+                break;
+            case Divide:
+                break;
+            }
+        }
+    }
 private:
     BinaryOp op_;
     ExpressionNode* left_;
     ExpressionNode* right_;
 };
 
-
+class MultiplyAddNode : public ExpressionNode
+{
+public:
+    MultiplyAddNode(ExpressionNode* a, ExpressionNode* b, ExpressionNode* c)
+        : a_(a), b_(b), c_(c)
+    {
+    }
+    virtual ~MultiplyAddNode()
+    {
+        delete a_;
+        delete b_;
+        delete c_;
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        a_->accept(visitor);
+        visitor.midVisit(*this);
+        c_->accept(visitor);
+        visitor.midVisit(*this);
+        b_->accept(visitor);
+        visitor.postVisit(*this);
+    }
+    virtual void rewrite()
+    {
+    }
+private:
+    ExpressionNode* a_;
+    ExpressionNode* b_;
+    ExpressionNode* c_;
+};
 
 
 enum ComparisonOp { Less, Greater, LessEqual, GreaterEqual, Equal, NotEqual };
@@ -443,6 +562,12 @@ public:
         visitor.midVisit(*this);
         right_->accept(visitor);
         visitor.postVisit(*this);
+    }
+    virtual void rewrite()
+    {
+        // std::cout << "In ComparisonOpNode rewrite. " << std::endl;
+        left_->rewrite();
+        right_->rewrite();
     }
 private:
     ComparisonOp op_;
@@ -508,6 +633,11 @@ public:
         expr_to_norm_->accept(visitor);
         visitor.postVisit(*this);
     }
+    virtual void rewrite()
+    {
+        std::cout << "In NormNode rewrite. " << std::endl;
+        expr_to_norm_->rewrite();
+    }
 private:
     ExpressionNode* expr_to_norm_;
 };
@@ -540,6 +670,11 @@ public:
         visitor.visit(*this);
         expr_to_negate_->accept(visitor);
         visitor.postVisit(*this);
+    }
+    virtual void rewrite()
+    {
+        std::cout << "In UnaryNegationNode rewrite. " << std::endl;
+        expr_to_negate_->rewrite();
     }
 private:
     ExpressionNode* expr_to_negate_;
@@ -587,6 +722,12 @@ public:
         visitor.midVisit(*this);
         right_->accept(visitor);
         visitor.postVisit(*this);
+    }
+    virtual void rewrite()
+    {
+        std::cout << "In OnNode rewrite. " << std::endl;
+        left_->rewrite();
+        right_->rewrite();
     }
 private:
     ExpressionNode* left_;
@@ -639,6 +780,13 @@ public:
         iffalse_->accept(visitor);
         visitor.postVisit(*this);
     }
+    virtual void rewrite()
+    {
+        std::cout << "In TrinaryIfNode rewrite. " << std::endl;
+        predicate_->rewrite();
+        iftrue_->rewrite();
+        iffalse_->rewrite();
+    }
 private:
     ExpressionNode* predicate_;
     ExpressionNode* iftrue_;
@@ -672,6 +820,11 @@ public:
         visitor.visit(*this);
         type_->accept(visitor);
         visitor.postVisit(*this);
+    }
+    virtual void rewrite()
+    {
+        std::cout << "In VarDeclNode rewrite. varname: " << varname_ << std::endl;
+        type_->rewrite();
     }
 private:
     std::string varname_;
@@ -708,6 +861,11 @@ public:
         visitor.visit(*this);
         expr_->accept(visitor);
         visitor.postVisit(*this);
+    }
+    virtual void rewrite()
+    {
+        std::cout << "In VarAssignNode rewrite. varname: " + varname_ + "" << std::endl;
+        expr_->rewrite();
     }
 private:
     std::string varname_;
@@ -825,6 +983,10 @@ public:
         }
         visitor.postVisit(*this);
     }
+    virtual void rewrite()
+    {
+        
+    }
 private:
     std::vector<VarDeclNode*> decls_;
 };
@@ -846,6 +1008,10 @@ public:
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
+    }
+    virtual void rewrite()
+    {
+        
     }
 private:
     FuncArgsDeclNode* argtypes_;
@@ -937,6 +1103,10 @@ public:
         SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
 #endif
     }
+    virtual void rewrite()
+    {
+        
+    }
 private:
     std::string funcname_;
     FuncTypeNode* ftype_;
@@ -990,6 +1160,10 @@ public:
         }
         visitor.postVisit(*this);
     }
+    virtual void rewrite()
+    {
+        
+    }
 private:
     std::vector<ExpressionNode*> args_;
 };
@@ -1024,6 +1198,10 @@ public:
         visitor.visit(*this);
         expr_->accept(visitor);
         visitor.postVisit(*this);
+    }
+    virtual void rewrite()
+    {
+        
     }
 private:
     ExpressionNode* expr_;
@@ -1078,6 +1256,10 @@ public:
         funcargs_->accept(visitor);
         visitor.postVisit(*this);
     }
+    virtual void rewrite()
+    {
+        
+    }
 private:
     std::string funcname_;
     FuncArgsNode* funcargs_;
@@ -1114,6 +1296,10 @@ public:
 #if 0
         SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
 #endif
+    }
+    virtual void rewrite()
+    {
+        
     }
 private:
     FuncStartNode* funcstart_;
@@ -1261,6 +1447,10 @@ public:
         funcargs_->accept(visitor);
         visitor.postVisit(*this);
     }
+    virtual void rewrite()
+    {
+
+    }
 
 private:
     std::string funcname_;
@@ -1297,7 +1487,10 @@ public:
         func_call_->accept(visitor);
         visitor.postVisit(*this);
     }
-
+    virtual void rewrite()
+    {
+        
+    }
 private:
     FuncCallNode* func_call_;
 };
@@ -1344,6 +1537,10 @@ public:
         visitor.visit(*this);
         loop_block_->accept(visitor);
         visitor.postVisit(*this);
+    }
+    virtual void rewrite()
+    {
+        
     }
 private:
     std::string loop_variable_;
@@ -1395,6 +1592,10 @@ public:
         expr_list_->accept(visitor);
         visitor.postVisit(*this);
     }
+    virtual void rewrite()
+    {
+
+    }
 private:
     FuncArgsNode* expr_list_;
 };
@@ -1426,7 +1627,7 @@ public:
     }
     EquelleType type() const
     {
-        // Either erpr_ must be an Array, or, if not,
+        // Either expr_ must be an Array, or, if not,
         // we must be a (Collection Of) Scalar,
         // since expr_ must be a (Collection Of) Vector.
         EquelleType t = expr_->type();
@@ -1487,6 +1688,10 @@ public:
     const std::string& name() const {
         return lhs_->name();
     }
+    virtual void rewrite()
+    {
+        
+    }
 private:
     StencilNode* lhs_;
     ExpressionNode* rhs_;
@@ -1504,6 +1709,10 @@ public:
     // current unit with to obtain an SI quantity.
     // For example for Inch, the factor ie 0.0254.
     virtual double conversionFactorSI() const = 0;
+    virtual void rewrite()
+    {
+
+    }
 
 };
 
@@ -1545,6 +1754,11 @@ public:
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
+    }
+
+    virtual void rewrite()
+    {
+
     }
 private:
     Dimension dimension_;
@@ -1650,6 +1864,11 @@ public:
         visitor.visit(*this);
         unit_->accept(visitor);
         visitor.postVisit(*this);
+    }
+
+    virtual void rewrite()
+    {
+        
     }
 
 private:

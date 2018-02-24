@@ -111,6 +111,18 @@ void PrintMRSTBackendASTVisitor::postVisit(BinaryOpNode&)
     std::cout << ')';
 }
 
+void PrintMRSTBackendASTVisitor::visit(MultiplyAddNode& node)
+{
+}
+
+void PrintMRSTBackendASTVisitor::midVisit(MultiplyAddNode& node)
+{
+}
+
+void PrintMRSTBackendASTVisitor::postVisit(MultiplyAddNode& node)
+{
+}
+
 void PrintMRSTBackendASTVisitor::visit(ComparisonOpNode&)
 {
     std::cout << '(';

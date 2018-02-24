@@ -205,6 +205,19 @@ void CheckASTVisitor::postVisit(BinaryOpNode& node)
     }
 }
 
+void CheckASTVisitor::visit(MultiplyAddNode& node)
+{
+}
+
+void CheckASTVisitor::midVisit(MultiplyAddNode& node)
+{
+}
+
+void CheckASTVisitor::postVisit(MultiplyAddNode& node)
+{
+}
+
+
 void CheckASTVisitor::visit(ComparisonOpNode&)
 {
 }

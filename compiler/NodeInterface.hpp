@@ -30,6 +30,15 @@ public:
     {
         loc_ = loc;
     }
+
+    /*virtual int numChildren() = 0;
+    virtual Node* getChild(const int index) = 0;
+    virtual void setChild(const int index, Node* child) = 0;
+    virtual Node* getParent() = 0;*/
+    virtual void rewrite()
+    {
+        
+    }
 private:
     // No copying.
     Node(const Node&);
