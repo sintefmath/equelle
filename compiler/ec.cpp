@@ -13,6 +13,7 @@
 #include "PrintIOVisitor.hpp"
 #include "ASTNodes.hpp"
 #include "CommandLineOptions.hpp"
+#include "ASTRewriter.hpp"
 
 #include <iostream>
 
@@ -106,7 +107,8 @@ int main(int argc, char** argv)
             SymbolTable::program()->accept(v);
         }
         else if (backend == "cuda") {
-            SymbolTable::program()->rewrite();
+            ASTRewriter rewriter();
+            rewriter.rewrite(SymbolTable::program());
             PrintCUDABackendASTVisitor v;
             SymbolTable::program()->accept(v);
         }

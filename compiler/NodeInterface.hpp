@@ -15,6 +15,7 @@ class Node
 {
 public:
     Node()
+      :parent_(nullptr)
     {}
     virtual ~Node()
     {}
@@ -31,15 +32,19 @@ public:
         loc_ = loc;
     }
 
-    /*virtual int numChildren() = 0;
+    virtual Node* getParent()
+    {
+        return parent_;
+    }
+    virtual void setParent(Node* parent)
+    {
+        parent_ = parent;
+    }
+    virtual int numChildren() = 0;
     virtual Node* getChild(const int index) = 0;
     virtual void setChild(const int index, Node* child) = 0;
-    virtual Node* getParent() = 0;*/
-    virtual void rewrite()
-    {
-        
-    }
 private:
+    Node* parent_;
     // No copying.
     Node(const Node&);
     // No assignment.

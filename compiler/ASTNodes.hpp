@@ -43,9 +43,17 @@ public:
         throw std::logic_error("Internal compiler error: cannot call arrayDimension() on any ExpressionNode type.");
     }
 
-    virtual void rewrite()
+    virtual int numChildren()
     {
-        // std::cout << "In generic ExpressionNode rewrite" << std::endl;
+        return 0;
+    }
+    virtual Node* getChild(const int index)
+    {
+        return nullptr;
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        std::cout << "Called setChild of node with no children" << std::endl;
     }
 };
 
@@ -81,12 +89,17 @@ public:
     const std::vector<Node*>& nodes() {
         return nodes_;
     }
-    virtual void rewrite()
+    virtual int numChildren()
     {
-        // std::cout << "In SequenceNode rewrite" << std::endl;
-        for(auto np : nodes_) {
-            np->rewrite();
-        }
+        return nodes_.size();
+    }
+    virtual Node* getChild(const int index)
+    {
+        return nodes_[index];
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        nodes_.at(index) = child;
     }
 private:
     std::vector<Node*> nodes_;
@@ -111,9 +124,14 @@ public:
     {
         return num_;
     }
-    virtual void rewrite()
+    virtual int numChildren() { return 0; }
+    virtual Node* getChild(const int index)
     {
-        // std::cout << "In NumberNode rewrite. Number: " << num_ << std::endl;
+        return nullptr;
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        throw std::logic_error("Internal compiler error: NumberNode has no children");
     }
 private:
     double num_;
@@ -138,9 +156,13 @@ public:
     {
         return content_;
     }
-    virtual void rewrite()
+    virtual int numChildren(){return 0; }
+    virtual Node* getChild(const int index)
     {
-        // std::cout << "In StringNode rewrite. String: " << content_ << std::endl;
+        return nullptr;
+    }
+    virtual void setChild(const int index, Node* child)
+    {
     }
 private:
     std::string content_;
@@ -161,9 +183,16 @@ public:
     {
         visitor.visit(*this);
     }
-    virtual void rewrite()
+    virtual int numChildren()
     {
-        // std::cout << "In TypeNode rewrite. " << std::endl;
+        return 0;
+    }
+    virtual Node* getChild(const int index)
+    {
+        return nullptr;
+    }
+    virtual void setChild(const int index, Node* child)
+    {
     }
 private:
     EquelleType et_;
@@ -229,9 +258,27 @@ public:
         }
         visitor.postVisit(*this);
     }
-    virtual void rewrite()
+    virtual int numChildren()
     {
-        //std::cout << "In CollectionTypeNode rewrite. " << std::endl;
+        return 3;
+    }
+    virtual Node* getChild(const int index)
+    {
+        switch (index) {
+            case 0 : return btype_;
+            case 1 : return gridmapping_;
+            case 2 : return subsetof_;
+            default: return nullptr;
+        }
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        switch (index) {
+            case 0 : btype_ = dynamic_cast<TypeNode*>(child); break;
+            case 1 : gridmapping_ = dynamic_cast<ExpressionNode*>(child); break;
+            case 2 : subsetof_ = dynamic_cast<ExpressionNode*>(child); break;
+            default: ;
+        }
     }
 
 private:
@@ -269,12 +316,22 @@ public:
     {
         visitor.visit(*this);
     }
-    virtual void rewrite()
+    virtual int numChildren()
     {
-        // std::cout << "In ArrayTypeNode rewrite. " << std::endl;
-        btype_->rewrite();
+        return 1;
     }
+    virtual Node* getChild(const int index)
+    {
+        if (index == 0)
+        {
+            return btype_;
+        }
+        return nullptr;
+    }
+    virtual void setChild(const int index, Node* child)
+    {
 
+    }
 
 private:
     TypeNode* btype_;
@@ -309,11 +366,6 @@ public:
     {
         visitor.visit(*this);
     }
-    virtual void rewrite()
-    {
-        // std::cout << "In CollectionTypeNode rewrite. " << std::endl;
-        btype_->rewrite();
-    }
 
 
 private:
@@ -347,11 +399,6 @@ public:
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
-    }
-    virtual void rewrite()
-    {
-        // std::cout << "In MutableTypeNode rewrite. " << std::endl;
-        btype_->rewrite();
     }
 private:
     TypeNode* btype_;
@@ -439,51 +486,6 @@ public:
         right_->accept(visitor);
         visitor.postVisit(*this);
     }
-    virtual void rewrite()
-    {
-        std::cout << "In BinaryOpNode rewrite. " << std::endl;
-        left_->rewrite();
-        auto left = dynamic_cast<BinaryOpNode*>(left_);
-        if(left) {
-            switch (op_) {
-            case Add:
-                if(left->op() == Multiply){
-                    std::cout << "a * b + c" << std::endl;
-                }
-                break;
-            case Multiply:
-                if(left->op() == Add){
-                    std::cout << "a + b * c" << std::endl;
-                }
-                break;
-            case Subtract:
-                break;
-            case Divide:
-                break;
-            }
-        }
-
-        right_->rewrite();
-        auto right = dynamic_cast<BinaryOpNode*>(right_);
-        if(right) {
-            switch (op_) {
-            case Add:
-                if(right->op() == Multiply){
-                    std::cout << "a + b * c" << std::endl;
-                }
-                break;
-            case Multiply:
-                if(right->op() == Add){
-                    std::cout << "a * b + c" << std::endl;
-                }
-                break;
-            case Subtract:
-                break;
-            case Divide:
-                break;
-            }
-        }
-    }
 private:
     BinaryOp op_;
     ExpressionNode* left_;
@@ -512,9 +514,6 @@ public:
         visitor.midVisit(*this);
         b_->accept(visitor);
         visitor.postVisit(*this);
-    }
-    virtual void rewrite()
-    {
     }
 private:
     ExpressionNode* a_;
@@ -562,12 +561,6 @@ public:
         visitor.midVisit(*this);
         right_->accept(visitor);
         visitor.postVisit(*this);
-    }
-    virtual void rewrite()
-    {
-        // std::cout << "In ComparisonOpNode rewrite. " << std::endl;
-        left_->rewrite();
-        right_->rewrite();
     }
 private:
     ComparisonOp op_;
@@ -633,11 +626,6 @@ public:
         expr_to_norm_->accept(visitor);
         visitor.postVisit(*this);
     }
-    virtual void rewrite()
-    {
-        std::cout << "In NormNode rewrite. " << std::endl;
-        expr_to_norm_->rewrite();
-    }
 private:
     ExpressionNode* expr_to_norm_;
 };
@@ -670,11 +658,6 @@ public:
         visitor.visit(*this);
         expr_to_negate_->accept(visitor);
         visitor.postVisit(*this);
-    }
-    virtual void rewrite()
-    {
-        std::cout << "In UnaryNegationNode rewrite. " << std::endl;
-        expr_to_negate_->rewrite();
     }
 private:
     ExpressionNode* expr_to_negate_;
@@ -722,12 +705,6 @@ public:
         visitor.midVisit(*this);
         right_->accept(visitor);
         visitor.postVisit(*this);
-    }
-    virtual void rewrite()
-    {
-        std::cout << "In OnNode rewrite. " << std::endl;
-        left_->rewrite();
-        right_->rewrite();
     }
 private:
     ExpressionNode* left_;
@@ -780,13 +757,6 @@ public:
         iffalse_->accept(visitor);
         visitor.postVisit(*this);
     }
-    virtual void rewrite()
-    {
-        std::cout << "In TrinaryIfNode rewrite. " << std::endl;
-        predicate_->rewrite();
-        iftrue_->rewrite();
-        iffalse_->rewrite();
-    }
 private:
     ExpressionNode* predicate_;
     ExpressionNode* iftrue_;
@@ -821,10 +791,21 @@ public:
         type_->accept(visitor);
         visitor.postVisit(*this);
     }
-    virtual void rewrite()
+    virtual int numChildren()
     {
-        std::cout << "In VarDeclNode rewrite. varname: " << varname_ << std::endl;
-        type_->rewrite();
+        return 1;
+    }
+    virtual Node* getChild(const int index)
+    {
+        if(index == 0){
+            return type_;
+        }
+        
+        return nullptr;
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        type_ = child;
     }
 private:
     std::string varname_;
@@ -862,10 +843,25 @@ public:
         expr_->accept(visitor);
         visitor.postVisit(*this);
     }
-    virtual void rewrite()
+    virtual int numChildren()
     {
-        std::cout << "In VarAssignNode rewrite. varname: " + varname_ + "" << std::endl;
-        expr_->rewrite();
+        return 1;
+    }
+    virtual Node* getChild(const int index)
+    {
+        if (index == 0){
+            return expr_;
+        }
+        return nullptr;
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        if (index == 0){
+            expr_ = child;
+        }else
+        {
+            throw std::out_of_range("Cannot set child at index " + index + ". Index out of range.");
+        }
     }
 private:
     std::string varname_;
@@ -935,6 +931,18 @@ public:
     {
         visitor.visit(*this);
     }
+    virtual int numChildren()
+    {
+        return 0;
+    }
+    virtual Node* getChild(const int index)
+    {
+        return nullptr;
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        throw std::logic_error("Cannot set child of type VarNode as it has no children.");
+    }
 private:
     std::string varname_;
     int instantiation_index_;
@@ -983,9 +991,17 @@ public:
         }
         visitor.postVisit(*this);
     }
-    virtual void rewrite()
+    virtual int numChildren()
     {
-        
+        return decls_.size();
+    }
+    virtual Node* getChild(const int index)
+    {
+        return decls_[index];
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        decls_[index] = child;
     }
 private:
     std::vector<VarDeclNode*> decls_;
@@ -1009,9 +1025,28 @@ public:
     {
         visitor.visit(*this);
     }
-    virtual void rewrite()
+    virtual int numChildren()
     {
-        
+        return 2;
+    }
+    virtual Node* getChild(const int index)
+    {
+        if ( index == 0 ) {
+            return argtypes_;
+        } else 
+        if ( index == 1 ) {
+            return rtype_;
+        } 
+        return nullptr
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        if ( index == 0 ) {
+            argtypes_ = child;
+        }else
+        if ( index == 1 ) {
+            rtype_ = child;
+        }
     }
 private:
     FuncArgsDeclNode* argtypes_;
@@ -1039,6 +1074,18 @@ public:
     {
         visitor.visit(*this);
     }
+    virtual int numChildren()
+    {
+        return 0;
+    }
+    virtual Node* getChild(const int index)
+    {
+        return nullptr;
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        throw std::logic_error("FuncRefNode has no children to set.");
+    }
 private:
     std::string funcname_;
 };
@@ -1063,6 +1110,18 @@ public:
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
+    }
+    virtual int numChildren()
+    {
+        return 0;
+    }
+    virtual Node* getChild(const int index)
+    {
+        return nullptr;
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        throw std::logic_error("JustAnIdentifierNode has no children to set.");
     }
 private:
     std::string id_;
@@ -1103,8 +1162,24 @@ public:
         SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
 #endif
     }
-    virtual void rewrite()
+    virtual int numChildren()
     {
+        return 1;
+    }
+    virtual Node* getChild(const int index)
+    {
+        if ( index == 0 ){
+            return ftype_;
+        }
+        return nullptr;
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        if ( index == 0 ){
+            ftype_ = child;
+        } else {
+            throw std::logic_error("FuncDeclNode has no child at index " + index);
+        }
         
     }
 private:
@@ -1160,9 +1235,17 @@ public:
         }
         visitor.postVisit(*this);
     }
-    virtual void rewrite()
+    virtual int numChildren()
     {
-        
+        return args_.size();
+    }
+    virtual Node* getChild(const int index)
+    {
+        return args_[index];
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        args_[index] = child;
     }
 private:
     std::vector<ExpressionNode*> args_;
@@ -1199,9 +1282,17 @@ public:
         expr_->accept(visitor);
         visitor.postVisit(*this);
     }
-    virtual void rewrite()
+    virtual int numChildren()
     {
-        
+        return args_.size();
+    }
+    virtual Node* getChild(const int index)
+    {
+        return args_[index];
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        args_[index] = child;
     }
 private:
     ExpressionNode* expr_;
@@ -1256,9 +1347,17 @@ public:
         funcargs_->accept(visitor);
         visitor.postVisit(*this);
     }
-    virtual void rewrite()
+    virtual int numChildren()
     {
-        
+        return args_.size();
+    }
+    virtual Node* getChild(const int index)
+    {
+        return args_[index];
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        args_[index] = child;
     }
 private:
     std::string funcname_;
@@ -1296,10 +1395,6 @@ public:
 #if 0
         SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
 #endif
-    }
-    virtual void rewrite()
-    {
-        
     }
 private:
     FuncStartNode* funcstart_;
@@ -1447,11 +1542,6 @@ public:
         funcargs_->accept(visitor);
         visitor.postVisit(*this);
     }
-    virtual void rewrite()
-    {
-
-    }
-
 private:
     std::string funcname_;
     FuncArgsNode* funcargs_;
@@ -1486,10 +1576,6 @@ public:
         visitor.visit(*this);
         func_call_->accept(visitor);
         visitor.postVisit(*this);
-    }
-    virtual void rewrite()
-    {
-        
     }
 private:
     FuncCallNode* func_call_;
@@ -1537,10 +1623,6 @@ public:
         visitor.visit(*this);
         loop_block_->accept(visitor);
         visitor.postVisit(*this);
-    }
-    virtual void rewrite()
-    {
-        
     }
 private:
     std::string loop_variable_;
@@ -1591,10 +1673,6 @@ public:
         visitor.visit(*this);
         expr_list_->accept(visitor);
         visitor.postVisit(*this);
-    }
-    virtual void rewrite()
-    {
-
     }
 private:
     FuncArgsNode* expr_list_;
@@ -1688,10 +1766,6 @@ public:
     const std::string& name() const {
         return lhs_->name();
     }
-    virtual void rewrite()
-    {
-        
-    }
 private:
     StencilNode* lhs_;
     ExpressionNode* rhs_;
@@ -1709,9 +1783,18 @@ public:
     // current unit with to obtain an SI quantity.
     // For example for Inch, the factor ie 0.0254.
     virtual double conversionFactorSI() const = 0;
-    virtual void rewrite()
+    
+    virtual int numChildren()
     {
-
+        return 0;
+    }
+    virtual Node* getChild(const int index)
+    {
+        return nullptr;
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        std::cout << "Called setChild of node with no children" << std::endl;
     }
 
 };
@@ -1754,11 +1837,6 @@ public:
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
-    }
-
-    virtual void rewrite()
-    {
-
     }
 private:
     Dimension dimension_;
@@ -1864,11 +1942,6 @@ public:
         visitor.visit(*this);
         unit_->accept(visitor);
         visitor.postVisit(*this);
-    }
-
-    virtual void rewrite()
-    {
-        
     }
 
 private:
