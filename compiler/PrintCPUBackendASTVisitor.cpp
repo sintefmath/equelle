@@ -182,7 +182,7 @@ void PrintCPUBackendASTVisitor::midVisit(MultiplyAddNode&)
     if (isSuppressed()) {
         return;
     }
-    std::cout << ', ';
+    std::cout << ", ";
 }
 
 void PrintCPUBackendASTVisitor::postVisit(MultiplyAddNode&)

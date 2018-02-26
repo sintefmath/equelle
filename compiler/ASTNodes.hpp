@@ -43,18 +43,9 @@ public:
         throw std::logic_error("Internal compiler error: cannot call arrayDimension() on any ExpressionNode type.");
     }
 
-    virtual int numChildren()
-    {
-        return 0;
-    }
-    virtual Node* getChild(const int index)
-    {
-        return nullptr;
-    }
-    virtual void setChild(const int index, Node* child)
-    {
-        std::cout << "Called setChild of node with no children" << std::endl;
-    }
+    virtual int numChildren() = 0;
+    virtual Node* getChild(const int index) = 0;
+    virtual void setChild(const int index, Node* child) = 0;
 };
 
 
@@ -99,7 +90,7 @@ public:
     }
     virtual void setChild(const int index, Node* child)
     {
-        nodes_.at(index) = child;
+        nodes_[index] = child;
     }
 private:
     std::vector<Node*> nodes_;
@@ -156,19 +147,18 @@ public:
     {
         return content_;
     }
-    virtual int numChildren(){return 0; }
+    virtual int numChildren(){ return 0; }
     virtual Node* getChild(const int index)
     {
         return nullptr;
     }
     virtual void setChild(const int index, Node* child)
     {
+        throw std::logic_error("Internal compiler error: StringNode has no children");
     }
 private:
     std::string content_;
 };
-
-
 
 
 class TypeNode : public Node
@@ -193,12 +183,11 @@ public:
     }
     virtual void setChild(const int index, Node* child)
     {
+        throw std::logic_error("Internal compiler error: StringNode has no children");
     }
 private:
     EquelleType et_;
 };
-
-
 
 
 class CollectionTypeNode : public TypeNode
@@ -277,7 +266,7 @@ public:
             case 0 : btype_ = dynamic_cast<TypeNode*>(child); break;
             case 1 : gridmapping_ = dynamic_cast<ExpressionNode*>(child); break;
             case 2 : subsetof_ = dynamic_cast<ExpressionNode*>(child); break;
-            default: ;
+            default: throw std::logic_error("Internal compiler error: no child at given index");
         }
     }
 
@@ -330,9 +319,8 @@ public:
     }
     virtual void setChild(const int index, Node* child)
     {
-
+        btype_ = dynamic_cast<TypeNode*>(child);
     }
-
 private:
     TypeNode* btype_;
     int array_size_;
@@ -366,8 +354,6 @@ public:
     {
         visitor.visit(*this);
     }
-
-
 private:
     TypeNode* btype_;
 };
@@ -486,12 +472,33 @@ public:
         right_->accept(visitor);
         visitor.postVisit(*this);
     }
+    virtual int numChildren()
+    {
+        return 2;
+    }
+    virtual Node* getChild(const int index)
+    {
+        switch (index) {
+            case 0 : return left_;
+            case 1 : return right_;
+            default: return nullptr;
+        }
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        switch (index) {
+            case 0 : left_ = dynamic_cast<ExpressionNode*>(child); break;
+            case 1 : right_ = dynamic_cast<ExpressionNode*>(child); break;
+            default: throw std::logic_error("Internal compiler error: no child at the given index.");
+        }
+    }
 private:
     BinaryOp op_;
     ExpressionNode* left_;
     ExpressionNode* right_;
 };
 
+// Class for the operation a + b * c
 class MultiplyAddNode : public ExpressionNode
 {
 public:
@@ -505,6 +512,30 @@ public:
         delete b_;
         delete c_;
     }
+    virtual EquelleType type() const
+    {
+        // Type of left side of addition
+        EquelleType at = a_->type();
+        // Types of left and right side of multiplication
+        EquelleType lt = b_->type();
+        EquelleType rt = c_->type();
+        
+        // type of a should be equal to type of b
+        const bool isvec = lt.basicType() == Vector || rt.basicType() == Vector;
+        const BasicType bt = isvec ? Vector : Scalar;
+        const bool coll = lt.isCollection() || rt.isCollection();
+        const bool sequence = lt.isSequence() || rt.isSequence();
+        const CompositeType ct = coll ? Collection : (sequence ? Sequence : None);
+        const int gm = lt.isCollection() ? lt.gridMapping() : rt.gridMapping();
+
+        auto multiplicationType = EquelleType(bt, ct, gm);
+        if ( at == multiplicationType ) {
+            return multiplicationType;
+        } else {
+            yyerror("internal compiler error in MultiplyAddNode::type().");
+            return EquelleType();
+        }
+    }
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
@@ -514,6 +545,28 @@ public:
         visitor.midVisit(*this);
         b_->accept(visitor);
         visitor.postVisit(*this);
+    }
+    virtual int numChildren()
+    {
+        return 3;
+    }
+    virtual Node* getChild(const int index)
+    {
+        switch (index) {
+            case 0 : return a_;
+            case 1 : return b_;
+            case 2 : return c_;
+            default: return nullptr;
+        }
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        switch (index) {
+            case 0 : a_ = dynamic_cast<ExpressionNode*>(child); break;
+            case 1 : b_ = dynamic_cast<ExpressionNode*>(child); break;
+            case 2 : c_ = dynamic_cast<ExpressionNode*>(child); break;
+            default: throw std::logic_error("Internal compiler error: no child at the given index.");
+        }
     }
 private:
     ExpressionNode* a_;
@@ -561,6 +614,26 @@ public:
         visitor.midVisit(*this);
         right_->accept(visitor);
         visitor.postVisit(*this);
+    }
+    virtual int numChildren()
+    {
+        return 2;
+    }
+    virtual Node* getChild(const int index)
+    {
+        switch (index) {
+            case 0 : return left_;
+            case 1 : return right_;
+            default: return nullptr;
+        }
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        switch (index) {
+            case 0 : left_ = dynamic_cast<ExpressionNode*>(child); break;
+            case 1 : right_ = dynamic_cast<ExpressionNode*>(child); break;
+            default: throw std::logic_error("Internal compiler error: no child at the given index.");
+        }
     }
 private:
     ComparisonOp op_;
@@ -626,6 +699,24 @@ public:
         expr_to_norm_->accept(visitor);
         visitor.postVisit(*this);
     }
+    virtual int numChildren()
+    {
+        return 1;
+    }
+    virtual Node* getChild(const int index)
+    {
+        switch (index) {
+            case 0 : return expr_to_norm_;
+            default: return nullptr;
+        }
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        switch (index) {
+            case 0 : expr_to_norm_ = dynamic_cast<ExpressionNode*>(child); break;
+            default: throw std::logic_error("Internal compiler error: no child at the given index.");
+        }
+    }
 private:
     ExpressionNode* expr_to_norm_;
 };
@@ -658,6 +749,24 @@ public:
         visitor.visit(*this);
         expr_to_negate_->accept(visitor);
         visitor.postVisit(*this);
+    }
+    virtual int numChildren()
+    {
+        return 1;
+    }
+    virtual Node* getChild(const int index)
+    {
+        switch (index) {
+            case 0 : return expr_to_negate_;
+            default: return nullptr;
+        }
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        switch (index) {
+            case 0 : expr_to_negate_ = dynamic_cast<ExpressionNode*>(child); break;
+            default: throw std::logic_error("Internal compiler error: no child at the given index.");
+        }
     }
 private:
     ExpressionNode* expr_to_negate_;
@@ -705,6 +814,26 @@ public:
         visitor.midVisit(*this);
         right_->accept(visitor);
         visitor.postVisit(*this);
+    }
+    virtual int numChildren()
+    {
+        return 2;
+    }
+    virtual Node* getChild(const int index)
+    {
+        switch (index) {
+            case 0 : return left_;
+            case 1 : return right_;
+            default: return nullptr;
+        }
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        switch (index) {
+            case 0 : left_ = dynamic_cast<ExpressionNode*>(child); break;
+            case 1 : right_ = dynamic_cast<ExpressionNode*>(child); break;
+            default: throw std::logic_error("Internal compiler error: no child at the given index.");
+        }
     }
 private:
     ExpressionNode* left_;
@@ -757,6 +886,28 @@ public:
         iffalse_->accept(visitor);
         visitor.postVisit(*this);
     }
+    virtual int numChildren()
+    {
+        return 3;
+    }
+    virtual Node* getChild(const int index)
+    {
+        switch (index) {
+            case 0 : return predicate_;
+            case 1 : return iftrue_;
+            case 2 : return iffalse_;
+            default: return nullptr;
+        }
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        switch (index) {
+            case 0 : predicate_ = dynamic_cast<ExpressionNode*>(child); break;
+            case 1 : iftrue_ = dynamic_cast<ExpressionNode*>(child); break;
+            case 2 : iffalse_ = dynamic_cast<ExpressionNode*>(child); break;
+            default: throw std::logic_error("Internal compiler error: no child at the given index.");
+        }
+    }
 private:
     ExpressionNode* predicate_;
     ExpressionNode* iftrue_;
@@ -805,7 +956,10 @@ public:
     }
     virtual void setChild(const int index, Node* child)
     {
-        type_ = child;
+        switch (index) {
+            case 0 : type_ = dynamic_cast<TypeNode*>(child); break;
+            default: throw std::logic_error("Internal compiler error: no child at the given index.");
+        }
     }
 private:
     std::string varname_;
@@ -857,10 +1011,10 @@ public:
     virtual void setChild(const int index, Node* child)
     {
         if (index == 0){
-            expr_ = child;
+            expr_ = dynamic_cast<ExpressionNode*>(child);
         }else
         {
-            throw std::out_of_range("Cannot set child at index " + index + ". Index out of range.");
+            throw std::out_of_range("Cannot set child of VarAssignNode. Index out of range.");
         }
     }
 private:
@@ -1001,7 +1155,7 @@ public:
     }
     virtual void setChild(const int index, Node* child)
     {
-        decls_[index] = child;
+        decls_[index] = dynamic_cast<VarDeclNode*>(child);
     }
 private:
     std::vector<VarDeclNode*> decls_;
@@ -1031,21 +1185,21 @@ public:
     }
     virtual Node* getChild(const int index)
     {
-        if ( index == 0 ) {
+        if ( index == 0 ) {
             return argtypes_;
         } else 
         if ( index == 1 ) {
             return rtype_;
         } 
-        return nullptr
+        return nullptr;
     }
     virtual void setChild(const int index, Node* child)
     {
-        if ( index == 0 ) {
-            argtypes_ = child;
+        if ( index == 0 ) {
+            argtypes_ = dynamic_cast<FuncArgsDeclNode*>(child);
         }else
         if ( index == 1 ) {
-            rtype_ = child;
+            rtype_ = dynamic_cast<TypeNode*>(child);
         }
     }
 private:
@@ -1176,7 +1330,7 @@ public:
     virtual void setChild(const int index, Node* child)
     {
         if ( index == 0 ){
-            ftype_ = child;
+            ftype_ = dynamic_cast<FuncTypeNode*>(child);
         } else {
             throw std::logic_error("FuncDeclNode has no child at index " + index);
         }
@@ -1245,7 +1399,7 @@ public:
     }
     virtual void setChild(const int index, Node* child)
     {
-        args_[index] = child;
+        args_[index] = dynamic_cast<ExpressionNode*>(child);
     }
 private:
     std::vector<ExpressionNode*> args_;
@@ -1284,15 +1438,15 @@ public:
     }
     virtual int numChildren()
     {
-        return args_.size();
+        return 1;
     }
     virtual Node* getChild(const int index)
     {
-        return args_[index];
+        return expr_;
     }
     virtual void setChild(const int index, Node* child)
     {
-        args_[index] = child;
+        expr_ = dynamic_cast<ExpressionNode*>(child);
     }
 private:
     ExpressionNode* expr_;
@@ -1349,15 +1503,15 @@ public:
     }
     virtual int numChildren()
     {
-        return args_.size();
+        return 1;
     }
     virtual Node* getChild(const int index)
     {
-        return args_[index];
+        return funcargs_;
     }
     virtual void setChild(const int index, Node* child)
     {
-        args_[index] = child;
+        funcargs_ = dynamic_cast<FuncArgsNode*>(child);
     }
 private:
     std::string funcname_;
@@ -1395,6 +1549,23 @@ public:
 #if 0
         SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
 #endif
+    }
+    virtual int numChildren()
+    {
+        return 2;
+    }
+    virtual Node* getChild(const int index)
+    {
+        return funcstart_;
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        if( index == 0 ) {
+            funcbody_ = dynamic_cast<FuncStartNode*>(child);
+        } else if ( index == 1 ) {
+            funcbody_ = child;
+        }
+        
     }
 private:
     FuncStartNode* funcstart_;
@@ -1445,7 +1616,21 @@ public:
         args_->accept(visitor);
         visitor.postVisit(*this);
     }
-
+    virtual int numChildren()
+    {
+        return 1;
+    }
+    virtual Node* getChild(const int index)
+    {
+        return args_;
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        if( index == 0 ) {
+            args_ = dynamic_cast<FuncArgsNode*>(child);
+        }
+        
+    }
 private:
     std::string varname_;
     FuncArgsNode* args_;
@@ -1542,6 +1727,24 @@ public:
         funcargs_->accept(visitor);
         visitor.postVisit(*this);
     }
+    virtual int numChildren()
+    {
+        return 1;
+    }
+    virtual Node* getChild(const int index)
+    {
+        switch (index) {
+            case 0 : return funcargs_;
+            default: return nullptr;
+        }
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        switch (index) {
+            case 0 : funcargs_ = dynamic_cast<FuncArgsNode*>(child); break;
+            default: throw std::logic_error("Internal compiler error: no child at the given index.");
+        }
+    }
 private:
     std::string funcname_;
     FuncArgsNode* funcargs_;
@@ -1576,6 +1779,20 @@ public:
         visitor.visit(*this);
         func_call_->accept(visitor);
         visitor.postVisit(*this);
+    }
+    virtual int numChildren()
+    {
+        return 1;
+    }
+    virtual Node* getChild(const int index)
+    {
+        return func_call_;
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        if( index == 0 ) {
+            func_call_ = dynamic_cast<FuncCallNode*>(child);
+        }
     }
 private:
     FuncCallNode* func_call_;
@@ -1623,6 +1840,20 @@ public:
         visitor.visit(*this);
         loop_block_->accept(visitor);
         visitor.postVisit(*this);
+    }
+    virtual int numChildren()
+    {
+        return 1;
+    }
+    virtual Node* getChild(const int index)
+    {
+        return loop_block_;
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        if( index == 0 ) {
+            loop_block_ = dynamic_cast<SequenceNode*>(child);
+        }
     }
 private:
     std::string loop_variable_;
@@ -1673,6 +1904,20 @@ public:
         visitor.visit(*this);
         expr_list_->accept(visitor);
         visitor.postVisit(*this);
+    }
+    virtual int numChildren()
+    {
+        return 1;
+    }
+    virtual Node* getChild(const int index)
+    {
+        return expr_list_;
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        if( index == 0 ) {
+            expr_list_ = dynamic_cast<FuncArgsNode*>(child);
+        }
     }
 private:
     FuncArgsNode* expr_list_;
@@ -1732,6 +1977,20 @@ public:
         expr_->accept(visitor);
         visitor.postVisit(*this);
     }
+    virtual int numChildren()
+    {
+        return 1;
+    }
+    virtual Node* getChild(const int index)
+    {
+        return expr_;
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        if( index == 0 ) {
+            expr_ = dynamic_cast<ExpressionNode*>(child);
+        }
+    }
 private:
     ExpressionNode* expr_;
     int index_;
@@ -1766,6 +2025,30 @@ public:
     const std::string& name() const {
         return lhs_->name();
     }
+
+    virtual int numChildren()
+    {
+        return 2;
+    }
+    virtual Node* getChild(const int index)
+    {
+        if ( index == 0 ) {
+            return lhs_;
+        } else 
+        if ( index == 1 ) {
+            return rhs_;
+        }
+        return nullptr;
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        if( index == 0 ) {
+            lhs_ = dynamic_cast<StencilNode*>(child);
+        } else
+        if ( index == 1 ) {
+            rhs_ = dynamic_cast<ExpressionNode*>(child);
+        }
+    }
 private:
     StencilNode* lhs_;
     ExpressionNode* rhs_;
@@ -1794,7 +2077,7 @@ public:
     }
     virtual void setChild(const int index, Node* child)
     {
-        std::cout << "Called setChild of node with no children" << std::endl;
+        //std::cout << "Called setChild of node with no children" << std::endl;
     }
 
 };
@@ -1898,7 +2181,32 @@ public:
         right_->accept(visitor);
         visitor.postVisit(*this);
     }
+    
+    virtual int numChildren()
+    {
+        return 2;
+    }
+    virtual Node* getChild(const int index)
+    {
 
+        if ( index == 0 ) {
+            return left_;
+        } else
+        if ( index == 1 ) {
+            return right_;
+        }
+        return nullptr;
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+
+        if ( index == 0 ) {
+            left_ = dynamic_cast<UnitNode*>(child);
+        } else
+        if ( index == 1 ) {
+            right_ = dynamic_cast<UnitNode*>(child);
+        }
+    }
 private:
     BinaryOp op_;
     UnitNode* left_;
@@ -1942,6 +2250,24 @@ public:
         visitor.visit(*this);
         unit_->accept(visitor);
         visitor.postVisit(*this);
+    }
+    virtual int numChildren()
+    {
+        return 1;
+    }
+    virtual Node* getChild(const int index)
+    {
+        if ( index == 0 ) {
+            return unit_;
+        }
+        return nullptr;
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+
+        if ( index == 0 ) {
+            unit_ = dynamic_cast<UnitNode*>(child);
+        }
     }
 
 private:
@@ -1995,6 +2321,30 @@ public:
     double number() const
     {
         return number_->number();
+    }
+
+    virtual int numChildren()
+    {
+        return 2;
+    }
+    virtual Node* getChild(const int index)
+    {
+        if ( index == 0 ) {
+            return number_;
+        }
+        if ( index == 1 ) {
+            return unit_;
+        }
+        return nullptr;
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        if ( index == 0) {
+            number_ = dynamic_cast<NumberNode*>(child);
+        }
+        if ( index == 1 ) {
+            unit_ = dynamic_cast<UnitNode*>(child);
+        }
     }
 
 private:

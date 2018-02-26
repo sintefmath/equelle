@@ -107,8 +107,8 @@ int main(int argc, char** argv)
             SymbolTable::program()->accept(v);
         }
         else if (backend == "cuda") {
-            ASTRewriter rewriter();
-            rewriter.rewrite(SymbolTable::program());
+            ASTRewriter rewriter;
+            rewriter.rewrite(SymbolTable::program(),0);
             PrintCUDABackendASTVisitor v;
             SymbolTable::program()->accept(v);
         }

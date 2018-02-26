@@ -1,6 +1,6 @@
 #ifndef ASTREWRITER_HEADER_INCLUDED
 #define ASTREWRITER_HEADER_INCLUDED
-
+/*
 class SequenceNode;
 class NumberNode;
 class QuantityNode;
@@ -36,7 +36,10 @@ class RandomAccessNode;
 class StencilAssignmentNode;
 class StencilNode;
 class MultiplyAddNode;
+*/
 
+#include "ASTNodes.hpp"
+class Node;
 
 class ASTRewriter
 {
@@ -49,7 +52,7 @@ public:
     {
     };
 
-    void rewrite(Node* root, const childIndex);
+    void rewrite(Node* root, const int childIndex);
 };
 
 #endif // ASTREWRITER_HEADER_INCLUDED
