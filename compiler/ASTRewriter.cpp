@@ -6,6 +6,7 @@
 
 void replaceNode(const int childIndex, Node* currentNode, Node* replacementNode)
 {
+
     currentNode->setChild(0,nullptr);
     currentNode->setChild(1,nullptr);
     currentNode->getParent()->setChild(childIndex,replacementNode);
@@ -16,12 +17,12 @@ void ASTRewriter::rewrite(Node* root, const int childIndex)
 {
     
 
-    // The rewriter traverses and modifies the subtree of the node root in a pre-order fashion.
+    // The rewriter traverses and modifies the subtree of the root node in a pre-order fashion.
     // This means that the algorithm first recurses to the bottom of the tree and modifies the
     // tree from the bottom and up.
     if(root == nullptr) { return; }
 
-    if(typeid(root) == typeid(SequenceNode*)) {
+    if(typeid(*root) == typeid(SequenceNode*)) {
         SequenceNode* current = dynamic_cast<SequenceNode*>(root);
         int i = 0;
         for( auto n : current->nodes() ){
@@ -30,13 +31,14 @@ void ASTRewriter::rewrite(Node* root, const int childIndex)
             i += i;
         }
     }else
-    if(typeid(root) == typeid(BinaryOpNode*)) {
+    if(typeid(*root).name() == typeid(BinaryOpNode).name()) {
         
         BinaryOpNode* current = dynamic_cast<BinaryOpNode*>(root);
+        current->getChild(0)->setParent(current);
+        current->getChild(1)->setParent(current);
         auto leftChild = dynamic_cast<BinaryOpNode*>(current->getChild(0));
         auto rightChild = dynamic_cast<BinaryOpNode*>(current->getChild(1));
-        leftChild->setParent(current);
-        rightChild->setParent(current);
+        
 
         rewrite(leftChild, 0);
         rewrite(rightChild, 1);
@@ -46,16 +48,16 @@ void ASTRewriter::rewrite(Node* root, const int childIndex)
             // a + b * c
             if ( rightChild != nullptr && rightChild->op() == Multiply ) {
                 auto replacementNode = 
-                        new MultiplyAddNode(leftChild, 
+                        new MultiplyAddNode(dynamic_cast<ExpressionNode*>(current->getChild(0)), 
                             dynamic_cast<ExpressionNode*>(rightChild->getChild(0)), 
                             dynamic_cast<ExpressionNode*>(rightChild->getChild(1)));
                 replaceNode(childIndex, current, replacementNode);
             }
             
             // a * b + c
-            if ( leftChild == nullptr && leftChild->op() == Multiply ) {
+            if ( leftChild != nullptr && leftChild->op() == Multiply ) {
                 auto replacementNode = 
-                        new MultiplyAddNode(rightChild,
+                        new MultiplyAddNode(dynamic_cast<ExpressionNode*>(current->getChild(1)),
                             dynamic_cast<ExpressionNode*>(leftChild->getChild(0)), 
                             dynamic_cast<ExpressionNode*>(leftChild->getChild(1)));
                 replaceNode(childIndex, current, replacementNode);
@@ -65,8 +67,10 @@ void ASTRewriter::rewrite(Node* root, const int childIndex)
     }else{   
         int numChildren = root->numChildren();
         for ( size_t i = 0; i < numChildren; i++ ) {
-            root->getChild(i)->setParent(root);
-            rewrite(root->getChild(i), i);
+            if ( root->getChild(i) != nullptr ){
+                root->getChild(i)->setParent(root);
+                rewrite(root->getChild(i), i);
+            }
         }
     }
 }
