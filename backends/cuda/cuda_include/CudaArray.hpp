@@ -44,7 +44,7 @@ namespace equelleCUDA {
     */
     class CudaArray
     {
-    public:
+public:
     //! Default constructor
     CudaArray();
     
@@ -126,7 +126,7 @@ namespace equelleCUDA {
 
     CudaArray abs() const;
 
-    private:
+private:
     int size_;
     double* dev_values_;
     
@@ -202,8 +202,8 @@ namespace equelleCUDA {
       \param[in] size Number of elements.
     */
     __global__ void multiplication_kernel(double* out, 
-                          const double* rhs, 
-                          const int size);
+                                          const double* rhs, 
+                                          const int size);
     
     //! CUDA kernel for the division operator
     /*! 
@@ -226,8 +226,8 @@ namespace equelleCUDA {
       \param[in] size Number of elements.
     */
     __global__ void scalMultColl_kernel(double* out, 
-                          const double scal, 
-                          const int size);
+                                        const double scal, 
+                                        const int size);
     
     //! CUDA kernel for division as Scalar/CudaArray
     /*!
@@ -238,8 +238,8 @@ namespace equelleCUDA {
       \param[in] size Number of elements.
     */
     __global__ void scalDivColl_kernel( double* out,
-                          const double scal,
-                          const int size);
+                                        const double scal,
+                                        const int size);
     
     //! CUDA kernel for greater than operation
     /*!
@@ -251,9 +251,9 @@ namespace equelleCUDA {
       \param[in] size Size of the arrays.
     */
     __global__ void comp_collGTcoll_kernel( bool* out,
-                        const double* lhs,
-                        const double* rhs,
-                        const int size);
+                                            const double* lhs,
+                                            const double* rhs,
+                                            const int size);
     
     //! CUDA kernel for greater than scalar operation
     /*!
@@ -266,9 +266,9 @@ namespace equelleCUDA {
       \param[in] size Size of the lhs array.
     */
     __global__ void comp_collGTscal_kernel( bool* out,
-                        const double* lhs,
-                        const double rhs,
-                        const int size);
+                                            const double* lhs,
+                                            const double rhs,
+                                            const int size);
 
     //! CUDA kernel for greater scalar greater than collection operation
     /*!
@@ -281,9 +281,9 @@ namespace equelleCUDA {
       \param[in] size Size of the rhs array.
     */
     __global__ void comp_scalGTcoll_kernel( bool* out,
-                        const double lhs,
-                        const double* rhs,
-                        const int size);
+                                            const double lhs,
+                                            const double* rhs,
+                                            const int size);
     
     //! CUDA kernel for greater than or equal operation
     /*!
@@ -295,9 +295,9 @@ namespace equelleCUDA {
       \param[in] size Size of the arrays
     */
     __global__ void comp_collGEcoll_kernel( bool* out,
-                        const double* lhs,
-                        const double* rhs,
-                        const int size);
+                                            const double* lhs,
+                                            const double* rhs,
+                                            const int size);
     
     //! CUDA kernel for greater than or equal scalar operation
     /*!
@@ -310,9 +310,9 @@ namespace equelleCUDA {
       \param[in] size Size of the lhs array.
     */
     __global__ void comp_collGEscal_kernel( bool* out,
-                        const double* lhs,
-                        const double rhs,
-                        const int size);
+                                            const double* lhs,
+                                            const double rhs,
+                                            const int size);
     
     //! CUDA kernel for scalar greater than or equal collection operation
     /*!
@@ -325,9 +325,9 @@ namespace equelleCUDA {
       \param[in] size Size of rhs.
     */
     __global__ void comp_scalGEcoll_kernel( bool* out,
-                        const double lhs,
-                        const double* rhs,
-                        const int size);
+                                            const double lhs,
+                                            const double* rhs,
+                                            const int size);
 
 
     //! CUDA kernel for collection equal collection operation
@@ -341,9 +341,9 @@ namespace equelleCUDA {
       \param[in] size Size of the collections.
     */
     __global__ void comp_collEQcoll_kernel( bool* out,
-                        const double* lhs,
-                        const double* rhs,
-                        const int size);
+                                            const double* lhs,
+                                            const double* rhs,
+                                            const int size);
     
     //! CUDA kernel for collection equal scalar operation
     /*!
@@ -356,9 +356,9 @@ namespace equelleCUDA {
       \param[in] size Size of the collections.
     */
     __global__ void comp_collEQscal_kernel( bool* out,
-                        const double* lhs,
-                        const double rhs,
-                        const int size);
+                                            const double* lhs,
+                                            const double rhs,
+                                            const int size);
 
 
     //! CUDA kernel for collection inequal collection operation
@@ -372,9 +372,9 @@ namespace equelleCUDA {
       \param[in] size Size of the collections.
     */
     __global__ void comp_collNEcoll_kernel( bool* out,
-                        const double* lhs,
-                        const double* rhs,
-                        const int size);
+                                            const double* lhs,
+                                            const double* rhs,
+                                            const int size);
     
     //! CUDA kernel for collection inequal scalar operation
     /*!
@@ -387,9 +387,9 @@ namespace equelleCUDA {
       \param[in] size Size of the collections.
     */
     __global__ void comp_collNEscal_kernel( bool* out,
-                        const double* lhs,
-                        const double rhs,
-                        const int size);
+                                            const double* lhs,
+                                            const double rhs,
+                                            const int size);
 
     } // namespace wrapCudaArray
     

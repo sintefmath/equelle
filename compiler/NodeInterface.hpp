@@ -31,12 +31,11 @@ public:
     {
         loc_ = loc;
     }
-
-    virtual Node* getParent()
+    Node* getParent()
     {
         return parent_;
     }
-    virtual void setParent(Node* parent)
+    void setParent(Node* parent)
     {
         parent_ = parent;
     }

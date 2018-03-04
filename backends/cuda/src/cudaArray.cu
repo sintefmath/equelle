@@ -92,12 +92,12 @@ CudaArray::CudaArray(const CudaArray& coll)
     //std::cout << __PRETTY_FUNCTION__ << std::endl;
 
     if (coll.dev_values_ != 0) {
-    cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
-    checkError_("cudaMalloc in CudaArray::CudaArray(const CudaArray&)"); 
+        cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
+        checkError_("cudaMalloc in CudaArray::CudaArray(const CudaArray&)"); 
 
-    cudaStatus_ = cudaMemcpy(dev_values_, coll.dev_values_, size_*sizeof(double),
-                 cudaMemcpyDeviceToDevice);
-    checkError_("cudaMemcpy in CudaArray::CudaArray(const CudaArray&)");
+        cudaStatus_ = cudaMemcpy(dev_values_, coll.dev_values_, size_*sizeof(double),
+                                 cudaMemcpyDeviceToDevice);
+        checkError_("cudaMemcpy in CudaArray::CudaArray(const CudaArray&)");
     }    
 }
 
@@ -127,7 +127,7 @@ CudaArray& CudaArray::operator= (const CudaArray& other) {
         checkError_("cudaFree(this->dev_values_) in CudaArray::operator=(const CudaArray&)");
         // Allocate new memory:
         cudaStatus_ = cudaMalloc((void**)&this->dev_values_,
-                     sizeof(double) * other.size_);
+                                  sizeof(double) * other.size_);
         checkError_("cudaMalloc(this->dev_values_) in CudaArray::operator=(const CudaArray&)");
         
         // Set variables depending on size_:
@@ -136,8 +136,8 @@ CudaArray& CudaArray::operator= (const CudaArray& other) {
 
     // Copy memory block from other to this:
     cudaStatus_ = cudaMemcpy( this->dev_values_, other.dev_values_,
-                  sizeof(double) * this->size_,
-                  cudaMemcpyDeviceToDevice);
+                              sizeof(double) * this->size_,
+                              cudaMemcpyDeviceToDevice);
     checkError_("cudaMemcpy(dev_values_) in CudaArray::operator=(const CudaArray&)");
     
     } // if this != &other
@@ -151,8 +151,8 @@ CudaArray& CudaArray::operator= (const CudaArray& other) {
 // Destructor:
 CudaArray::~CudaArray() {
     if (dev_values_ != 0) {
-    cudaStatus_ = cudaFree(dev_values_);
-    checkError_("cudaFree in CudaArray::~CudaArray");
+        cudaStatus_ = cudaFree(dev_values_);
+        checkError_("cudaFree in CudaArray::~CudaArray");
     }
 }
 
@@ -181,7 +181,7 @@ std::vector<double> CudaArray::copyToHost() const
     std::vector<double> host_vec(size_, 0);
 
     cudaStatus_ = cudaMemcpy( &host_vec[0], dev_values_, size_*sizeof(double),
-                 cudaMemcpyDeviceToHost);
+                              cudaMemcpyDeviceToHost);
     checkError_("cudaMemcpy in CudaArray::copyToHost");
     
     return host_vec;
@@ -197,7 +197,7 @@ int CudaArray::size() const
 
 void CudaArray::checkError_(const std::string& msg) const {
     if ( cudaStatus_ != cudaSuccess ) {
-    OPM_THROW(std::runtime_error, "\nCuda error\n\t" << msg << " - Error code: " << cudaGetErrorString(cudaStatus_));
+        OPM_THROW(std::runtime_error, "\nCuda error\n\t" << msg << " - Error code: " << cudaGetErrorString(cudaStatus_));
     }
 }
 
@@ -251,6 +251,7 @@ CudaArray equelleCUDA::operator/(const CudaArray& lhs, const CudaArray& rhs) {
 }
 
 CudaArray equelleCUDA::operator*(const Scalar lhs, const CudaArray& rhs) {
+
     CudaArray out = rhs;
     kernelSetup s = out.setup();
     scalMultColl_kernel<<<s.grid,s.block>>>(out.data(), lhs, out.size());
@@ -266,6 +267,7 @@ CudaArray equelleCUDA::operator/(const CudaArray& lhs, const Scalar rhs) {
 }
 
 CudaArray equelleCUDA::operator/(const Scalar lhs, const CudaArray& rhs) {
+
     CudaArray out = rhs;
     kernelSetup s = out.setup();
     scalDivColl_kernel<<<s.grid,s.block>>>(out.data(), lhs, out.size());
@@ -279,6 +281,7 @@ CudaArray equelleCUDA::operator-(const CudaArray& arg) {
 
 //  >
 CollOfBool equelleCUDA::operator>(const CudaArray& lhs, const CudaArray& rhs) {
+
     CollOfBool out(lhs.size());
     bool* out_ptr = thrust::raw_pointer_cast( &out[0] );
     kernelSetup s = lhs.setup();
@@ -287,6 +290,7 @@ CollOfBool equelleCUDA::operator>(const CudaArray& lhs, const CudaArray& rhs) {
 }
 
 CollOfBool equelleCUDA::operator>(const CudaArray& lhs, const Scalar rhs) {
+
     CollOfBool out(lhs.size());
     bool* out_ptr = thrust::raw_pointer_cast( &out[0] );
     kernelSetup s = lhs.setup();
@@ -295,6 +299,7 @@ CollOfBool equelleCUDA::operator>(const CudaArray& lhs, const Scalar rhs) {
 }
 
 CollOfBool equelleCUDA::operator>(const Scalar lhs, const CudaArray& rhs) {
+
     CollOfBool out(rhs.size());
     bool* out_ptr = thrust::raw_pointer_cast( &out[0] );
     kernelSetup s = rhs.setup();
@@ -412,16 +417,14 @@ CollOfBool equelleCUDA::operator!=(const Scalar lhs, const CudaArray& rhs) {
 
 
 
-__global__ void wrapCudaArray::abs_kernel(double* out, const double* in, const int size)
-{
+__global__ void wrapCudaArray::abs_kernel(double* out, const double* in, const int size) {
     const int i = myID();
     if ( i < size ) {
         out[i] = fabs(in[i]);
     }
 }
 
-__global__ void wrapCudaArray::setUniformDouble(double* data, const double val, const int size)
-{
+__global__ void wrapCudaArray::setUniformDouble(double* data, const double val, const int size) {
     const int i = myID();
     if ( i < size ) {
         data[i] = val;
@@ -458,27 +461,21 @@ __global__ void wrapCudaArray::division_kernel(double* out, const double* rhs, c
     }
 }
 
-__global__ void wrapCudaArray::scalMultColl_kernel(double* out, const double scal,
-                               const int size) {
+__global__ void wrapCudaArray::scalMultColl_kernel(double* out, const double scal, const int size) {
     const int index = myID();
     if ( index < size ) {
         out[index] = out[index]*scal;
     }
 }
 
-__global__ void wrapCudaArray::scalDivColl_kernel(double* out, const double scal,
-                             const int size) {
+__global__ void wrapCudaArray::scalDivColl_kernel(double* out, const double scal, const int size) {
     const int index = myID();
     if ( index < size ) {
         out[index] = scal/out[index];
     }
 }
                            
-__global__ void wrapCudaArray::comp_collGTcoll_kernel( bool* out,
-                              const double* lhs,
-                              const double* rhs,
-                              const int size)
-{
+__global__ void wrapCudaArray::comp_collGTcoll_kernel(bool* out, const double* lhs, const double* rhs, const int size) {
     const int index = myID();
     if ( index < size ) {
         out[index] = lhs[index] > rhs[index];
@@ -486,10 +483,9 @@ __global__ void wrapCudaArray::comp_collGTcoll_kernel( bool* out,
 }
 
 __global__ void wrapCudaArray::comp_collGTscal_kernel( bool* out,
-                              const double* lhs,
-                              const double rhs,
-                              const int size)
-{
+                                                       const double* lhs,
+                                                       const double rhs,
+                                                       const int size) {
     const int index = myID();
     if ( index < size ) {
         out[index] = lhs[index] > rhs;
@@ -497,10 +493,9 @@ __global__ void wrapCudaArray::comp_collGTscal_kernel( bool* out,
 }
 
 __global__ void wrapCudaArray::comp_scalGTcoll_kernel( bool* out,
-                              const double lhs,
-                              const double* rhs,
-                              const int size)
-{
+                                                       const double lhs,
+                                                       const double* rhs,
+                                                       const int size) {
     const int index = myID();
     if ( index < size ) {
         out[index] = lhs > rhs[index];
@@ -508,10 +503,9 @@ __global__ void wrapCudaArray::comp_scalGTcoll_kernel( bool* out,
 }
 
 __global__ void wrapCudaArray::comp_collGEcoll_kernel( bool* out,
-                              const double* lhs,
-                              const double* rhs,
-                              const int size)
-{
+                                                       const double* lhs,
+                                                       const double* rhs,
+                                                       const int size) {
     const int index = myID();
     if ( index < size ) {
         out[index] = lhs[index] >= rhs[index];
@@ -519,10 +513,9 @@ __global__ void wrapCudaArray::comp_collGEcoll_kernel( bool* out,
 }
 
 __global__ void wrapCudaArray::comp_collGEscal_kernel( bool* out,
-                              const double* lhs,
-                              const double rhs,
-                              const int size)
-{
+                                                       const double* lhs,
+                                                       const double rhs,
+                                                       const int size) {
     const int index = myID();
     if ( index < size ) {
         out[index] = lhs[index] >= rhs;
@@ -530,10 +523,9 @@ __global__ void wrapCudaArray::comp_collGEscal_kernel( bool* out,
 }
 
 __global__ void wrapCudaArray::comp_scalGEcoll_kernel( bool* out,
-                              const double lhs,
-                              const double* rhs,
-                              const int size) 
-{
+                                                       const double lhs,
+                                                       const double* rhs,
+                                                       const int size) {
     const int index = myID();
     if ( index < size ) {
         out[index] = lhs >= rhs[index];
@@ -542,10 +534,9 @@ __global__ void wrapCudaArray::comp_scalGEcoll_kernel( bool* out,
 
 
 __global__ void wrapCudaArray::comp_collEQcoll_kernel( bool* out,
-                              const double* lhs,
-                              const double* rhs,
-                              const int size)
-{
+                                                       const double* lhs,
+                                                       const double* rhs,
+                                                       const int size) {
     const int index = myID();
     if ( index < size ) {
         out[index] = ( lhs[index] == rhs[index] );
@@ -553,10 +544,9 @@ __global__ void wrapCudaArray::comp_collEQcoll_kernel( bool* out,
 }
                             
 __global__ void wrapCudaArray::comp_collEQscal_kernel( bool* out,
-                              const double* lhs,
-                              const double rhs,
-                              const int size)
-{
+                                                       const double* lhs,
+                                                       const double rhs,
+                                                       const int size) {
     const int index = myID();
     if ( index < size ) {
         out[index] = ( lhs[index] == rhs );
@@ -565,10 +555,9 @@ __global__ void wrapCudaArray::comp_collEQscal_kernel( bool* out,
                             
 
 __global__ void wrapCudaArray::comp_collNEcoll_kernel( bool* out,
-                              const double* lhs,
-                              const double* rhs,
-                              const int size)
-{
+                                                       const double* lhs,
+                                                       const double* rhs,
+                                                       const int size) {
     const int index = myID();
     if ( index < size ) {
         out[index] = ( lhs[index] != rhs[index] );
@@ -576,17 +565,25 @@ __global__ void wrapCudaArray::comp_collNEcoll_kernel( bool* out,
 }
                             
 __global__ void wrapCudaArray::comp_collNEscal_kernel( bool* out,
-                              const double* lhs,
-                              const double rhs,
-                              const int size)
-{
+                                                       const double* lhs,
+                                                       const double rhs,
+                                                       const int size) {
     const int index = myID();
     if ( index < size ) {
         out[index] = ( lhs[index] != rhs );
     }
 }
 
-
+/*__global__ void wrapCudaArray::multiply_add_kernel( bool* out,
+                                                    const double* a,
+                                                    const double* b,
+                                                    const double* c,
+                                                    const int size) {
+    const int index = myID();
+    if ( index < size ) {
+        out[index] = ( a[index] * b[index] + c[index] );
+    }
+}*/
 
 
 // Transforming CollOfBool

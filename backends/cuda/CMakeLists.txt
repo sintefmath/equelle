@@ -6,8 +6,7 @@ find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED COMPONENTS unit_test_framework)
 
 
-set( CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wextra -Wno-sign-compare -Wno-unused-parameter -fno-inline-functions -O0" )
-#set( CMAKE_CXX_FLAGS "-std=c++14 -Wall 	" )
+set( CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wextra -Wno-sign-compare -Wno-unused-parameter" )
 
 # Define 'EQUELLE_DEBUG' if we are in debug mode.
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
