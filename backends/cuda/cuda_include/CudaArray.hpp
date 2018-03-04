@@ -44,102 +44,102 @@ namespace equelleCUDA {
     */
     class CudaArray
     {
-    public:
-	//! Default constructor
-	CudaArray();
-	
-	//! Allocating constructor
-	/*! 
-	  Allocates device memory for the collection. Does not initialize the collection. 
-	  \param size number of scalars in the collection.
-	*/
-	explicit CudaArray(const int size);
-	
-	//! Constructor for uniform value
-	/*!
-	  Allocates device memory and initialize all elements to the same value.
-	  \param size Collection size
-	  \param value Value assigned to each of the elements in the collection.
-	*/
-	explicit CudaArray(const int size, const double value);
-	
-	//! Constructor from std::vector
-	/*! 
-	  Used for initialize CudaArray (via CollOfScalar) when using unit tests.
-	  Allocates memory and copy the vector stored on the host to the device.
-	  \param host_vec Vector with the scalar values stored in host memory
-	*/
-	explicit CudaArray(const std::vector<double>& host_vec);
-	
-	//! Copy constructor
-	/*!
-	  Allocates new device memory block, and makes a copy of the collection values.
-	  \param coll cudaArray to copy from.
-	*/
-	CudaArray(const CudaArray& coll);  
-	
+public:
+    //! Default constructor
+    CudaArray();
+    
+    //! Allocating constructor
+    /*! 
+      Allocates device memory for the collection. Does not initialize the collection. 
+      \param size number of scalars in the collection.
+    */
+    explicit CudaArray(const int size);
+    
+    //! Constructor for uniform value
+    /*!
+      Allocates device memory and initialize all elements to the same value.
+      \param size Collection size
+      \param value Value assigned to each of the elements in the collection.
+    */
+    explicit CudaArray(const int size, const double value);
+    
+    //! Constructor from std::vector
+    /*! 
+      Used for initialize CudaArray (via CollOfScalar) when using unit tests.
+      Allocates memory and copy the vector stored on the host to the device.
+      \param host_vec Vector with the scalar values stored in host memory
+    */
+    explicit CudaArray(const std::vector<double>& host_vec);
+    
+    //! Copy constructor
+    /*!
+      Allocates new device memory block, and makes a copy of the collection values.
+      \param coll cudaArray to copy from.
+    */
+    CudaArray(const CudaArray& coll);  
+    
 
-	//! Copy assignment operator
-	/*!
-	  Overload the assignment operator. Needed for the third line here:
-	  \code
-	  CudaArray a = "something"
-	  CudaArray b = "something"
-	  a = b;
-	  \endcode
-	  Copy the array from other to this.
-	*/
-	CudaArray& operator= (const CudaArray& other);
-
-
-
-	//! Destructor
-	/*!
-	  Frees device memory as the CudaArray goes out of scope.
-	*/
-	~CudaArray();
-	
-	/*! \return The size of the collection */
-	int size() const;
-	
-	/*! 
-	  \return A constant pointer to the device memory. 
-	  The memory block is constant as well.
-	*/
-	const double* data() const;
-	
-	/*! \return A pointer to the device memory. */
-	double* data();
-	
-	/*! \return A host vector containing the values of the collection */
-	std::vector<double> copyToHost() const;
-	
-	
-	//! For CUDA kernel calls.
-	/*!
-	  Returns a struct with the block and grid size needed to launch a
-	  kernel such that we get one thread for each element in the CudaArray.
-	  
-	  Assumes 1D setup of grids and blocks.
-	*/
-	kernelSetup setup() const;
+    //! Copy assignment operator
+    /*!
+      Overload the assignment operator. Needed for the third line here:
+      \code
+      CudaArray a = "something"
+      CudaArray b = "something"
+      a = b;
+      \endcode
+      Copy the array from other to this.
+    */
+    CudaArray& operator= (const CudaArray& other);
 
 
 
-    private:
-	int size_;
-	double* dev_values_;
-	
-	// Use 1D kernel grids for arithmetic operations
-	kernelSetup setup_;
-	
-	
-	
-	// Error handling
-	//! check_Error throws an OPM exception if cudaStatus_ != cudaSuccess
-	mutable cudaError_t cudaStatus_;
-	void checkError_(const std::string& msg) const;
-	
+    //! Destructor
+    /*!
+      Frees device memory as the CudaArray goes out of scope.
+    */
+    ~CudaArray();
+    
+    /*! \return The size of the collection */
+    int size() const;
+    
+    /*! 
+      \return A constant pointer to the device memory. 
+      The memory block is constant as well.
+    */
+    const double* data() const;
+    
+    /*! \return A pointer to the device memory. */
+    double* data();
+    
+    /*! \return A host vector containing the values of the collection */
+    std::vector<double> copyToHost() const;
+    
+    
+    //! For CUDA kernel calls.
+    /*!
+      Returns a struct with the block and grid size needed to launch a
+      kernel such that we get one thread for each element in the CudaArray.
+      
+      Assumes 1D setup of grids and blocks.
+    */
+    kernelSetup setup() const;
+
+    CudaArray abs() const;
+
+private:
+    int size_;
+    double* dev_values_;
+    
+    // Use 1D kernel grids for arithmetic operations
+    kernelSetup setup_;
+    
+    
+    
+    // Error handling
+    //! check_Error throws an OPM exception if cudaStatus_ != cudaSuccess
+    mutable cudaError_t cudaStatus_;
+    void checkError_(const std::string& msg) const;
+    
     
     }; // class CudaArray
 
@@ -148,244 +148,252 @@ namespace equelleCUDA {
 
     //! Functions closely related to the CudaArray class
     namespace wrapCudaArray {
-	
-	// ---------------- CUDA KERNELS ------------------- //
-	
+    
+    // ---------------- CUDA KERNELS ------------------- //
+    
+    //! CUDA Kernel to get absolute value of an array.
+    /*!
+      Sets the entries of out to the absolute values of the entries of in.
+      \param[out] out Array of output values
+      \param[in] in Array of values to get absolute values from.
+      \param[in] size The size of data array
+     */
+    __global__ void abs_kernel(double* out, const double* in, const int size);
 
-	//! Kernel for initializing to uniform values
-	/*!
-	  cudaMemset can only be used on 4 bytes values, and we therefore have
-	  to use this kernel to initialize to uniform values.
-	  \param[out] data The data array we want to initialize
-	  \param[in] val The value all elements of data should get
-	  \param[in] size The size of data array
-	 */
-	__global__ void setUniformDouble( double* data, const double val, const int size);
+    //! Kernel for initializing to uniform values
+    /*!
+      cudaMemset can only be used on 4 bytes values, and we therefore have
+      to use this kernel to initialize to uniform values.
+      \param[out] data The data array we want to initialize
+      \param[in] val The value all elements of data should get
+      \param[in] size The size of data array
+     */
+    __global__ void setUniformDouble( double* data, const double val, const int size);
 
-	//! CUDA kernel for the minus operator
-	/*!
-	  Performs elementwise operation for device arrays:
-	  \code{.cpp} out[i] = out[i] - rhs[i] \endcode
-	  \param[in,out] out Input is left hand side operand and is overwritten 
-	  by the result.
-	  \param[in] rhs right hand side operand.
-	  \param[in] size number of elements.
-	*/
-	__global__ void minus_kernel(double* out, const double* rhs, const int size);
-	
-	//! CUDA kernel for the plus operator
-	/*! 
-	  Performs elementwise operation for device arrays: 
-	  \code out[i] = out[i] + rhs[i] \endcode
-	  \param[in,out] out Input is left hand side operand and is overwritten 
-	  by the result.
-	  \param[in] rhs Right hand side operand.
-	  \param[in] size Number of elements.
-	*/
-	__global__ void plus_kernel(double* out, const double* rhs, const int size);
-	
-	//! CUDA kernel for the multiplication operator
-	/*! 
-	  Performs elementwise operation for device arrays: 
-	  \code out[i] = out[i] * rhs[i] \endcode
-	  \param[in,out] out Input is left hand side operand and is overwritten
-	  by the result.
-	  \param[in] rhs Right hand side operand.
-	  \param[in] size Number of elements.
-	*/
-	__global__ void multiplication_kernel(double* out, 
-					      const double* rhs, 
-					      const int size);
-	
-	//! CUDA kernel for the division operator
-	/*! 
-	  Performs elementwise operation for device arrays: 
-	  \code out[i] = out[i] / rhs[i] \endcode
-	  \param[in,out] out Input is left hand side operand and is overwritten
-	  by the result.
-	  \param[in] rhs Right hand side operand.
-	  \param[in] size Number of elements.
-	*/
-	__global__ void division_kernel(double* out, const double* rhs, const int size);
-	
-	//! CUDA kernel for multiplication with scalar and collection
-	/*!
-	  Multiply each element in out with the value scal.
-	  \code out[i] = out[i] * scal \endcode
-	  \param[in,out] out Input is the collection operand and is overwritten
-	  by the result.
-	  \param[in] scal Scalar value operand.
-	  \param[in] size Number of elements.
-	*/
-	__global__ void scalMultColl_kernel(double* out, 
-						  const double scal, 
-						  const int size);
-	
-	//! CUDA kernel for division as Scalar/CudaArray
-	/*!
-	  Set each element in out as 
-	  \code out[i] = scal/out[i] \endcode
-	  \param[in,out] out Input is the denominator and is overwritten by the result.
-	  \param[in] scal Scalar value numerator.
-	  \param[in] size Number of elements.
-	*/
-	__global__ void scalDivColl_kernel( double* out,
-						  const double scal,
-						  const int size);
-	
-	//! CUDA kernel for greater than operation
-	/*!
-	  Compare elements in lhs with elements in rhs and return a Collection of Booleans.
-	  \code out[i] = lhs[i] > rhs[i] \endcode
-	  \param[in,out] out The resulting collection of booleans
-	  \param[in] lhs Left hand side values
-	  \param[in] rhs Right hand side values
-	  \param[in] size Size of the arrays.
-	*/
-	__global__ void comp_collGTcoll_kernel( bool* out,
-						const double* lhs,
-						const double* rhs,
-						const int size);
-	
-	//! CUDA kernel for greater than scalar operation
-	/*!
-	  Compare elements in lhs with a single scalar rhs and return a 
-	  Collection of Booleans.
-	  \code out[i] = lhs[i] > rhs \endcode
-	  \param[out] out The resulting collection of booleans
-	  \param[in] lhs Left hand side collection of scalars
-	  \param[in] rhs Right hand side scalar
-	  \param[in] size Size of the lhs array.
-	*/
-	__global__ void comp_collGTscal_kernel( bool* out,
-						const double* lhs,
-						const double rhs,
-						const int size);
+    //! CUDA kernel for the minus operator
+    /*!
+      Performs elementwise operation for device arrays:
+      \code{.cpp} out[i] = out[i] - rhs[i] \endcode
+      \param[in,out] out Input is left hand side operand and is overwritten 
+      by the result.
+      \param[in] rhs right hand side operand.
+      \param[in] size number of elements.
+    */
+    __global__ void minus_kernel(double* out, const double* rhs, const int size);
+    
+    //! CUDA kernel for the plus operator
+    /*! 
+      Performs elementwise operation for device arrays: 
+      \code out[i] = out[i] + rhs[i] \endcode
+      \param[in,out] out Input is left hand side operand and is overwritten 
+      by the result.
+      \param[in] rhs Right hand side operand.
+      \param[in] size Number of elements.
+    */
+    __global__ void plus_kernel(double* out, const double* rhs, const int size);
+    
+    //! CUDA kernel for the multiplication operator
+    /*! 
+      Performs elementwise operation for device arrays: 
+      \code out[i] = out[i] * rhs[i] \endcode
+      \param[in,out] out Input is left hand side operand and is overwritten
+      by the result.
+      \param[in] rhs Right hand side operand.
+      \param[in] size Number of elements.
+    */
+    __global__ void multiplication_kernel(double* out, 
+                                          const double* rhs, 
+                                          const int size);
+    
+    //! CUDA kernel for the division operator
+    /*! 
+      Performs elementwise operation for device arrays: 
+      \code out[i] = out[i] / rhs[i] \endcode
+      \param[in,out] out Input is left hand side operand and is overwritten
+      by the result.
+      \param[in] rhs Right hand side operand.
+      \param[in] size Number of elements.
+    */
+    __global__ void division_kernel(double* out, const double* rhs, const int size);
+    
+    //! CUDA kernel for multiplication with scalar and collection
+    /*!
+      Multiply each element in out with the value scal.
+      \code out[i] = out[i] * scal \endcode
+      \param[in,out] out Input is the collection operand and is overwritten
+      by the result.
+      \param[in] scal Scalar value operand.
+      \param[in] size Number of elements.
+    */
+    __global__ void scalMultColl_kernel(double* out, 
+                                        const double scal, 
+                                        const int size);
+    
+    //! CUDA kernel for division as Scalar/CudaArray
+    /*!
+      Set each element in out as 
+      \code out[i] = scal/out[i] \endcode
+      \param[in,out] out Input is the denominator and is overwritten by the result.
+      \param[in] scal Scalar value numerator.
+      \param[in] size Number of elements.
+    */
+    __global__ void scalDivColl_kernel( double* out,
+                                        const double scal,
+                                        const int size);
+    
+    //! CUDA kernel for greater than operation
+    /*!
+      Compare elements in lhs with elements in rhs and return a Collection of Booleans.
+      \code out[i] = lhs[i] > rhs[i] \endcode
+      \param[in,out] out The resulting collection of booleans
+      \param[in] lhs Left hand side values
+      \param[in] rhs Right hand side values
+      \param[in] size Size of the arrays.
+    */
+    __global__ void comp_collGTcoll_kernel( bool* out,
+                                            const double* lhs,
+                                            const double* rhs,
+                                            const int size);
+    
+    //! CUDA kernel for greater than scalar operation
+    /*!
+      Compare elements in lhs with a single scalar rhs and return a 
+      Collection of Booleans.
+      \code out[i] = lhs[i] > rhs \endcode
+      \param[out] out The resulting collection of booleans
+      \param[in] lhs Left hand side collection of scalars
+      \param[in] rhs Right hand side scalar
+      \param[in] size Size of the lhs array.
+    */
+    __global__ void comp_collGTscal_kernel( bool* out,
+                                            const double* lhs,
+                                            const double rhs,
+                                            const int size);
 
-	//! CUDA kernel for greater scalar greater than collection operation
-	/*!
-	  Compare a single scalar lhs with elements in rhs and return a
-	  Collection of Booleans.
-	  \code out[i] = lhs > rhs[i] \endcode
-	  \param[out] out The resulting collection of booleans
-	  \param[in] lhs Left hand side scalar
-	  \param[in] rhs Right hand side collection of scalars
-	  \param[in] size Size of the rhs array.
-	*/
-	__global__ void comp_scalGTcoll_kernel( bool* out,
-						const double lhs,
-						const double* rhs,
-						const int size);
-	
-	//! CUDA kernel for greater than or equal operation
-	/*!
-	  Compare elements in lhs with elements in rhs and return a Collection Of Booleans.
-	  \code out[i] = lhs[i] >= rhs[i] \endcode
-	  \param[out] out The resulting collection of booleans
-	  \param[in] lhs Left hand side values
-	  \param[in] rhs Right hand side values
-	  \param[in] size Size of the arrays
-	*/
-	__global__ void comp_collGEcoll_kernel( bool* out,
-						const double* lhs,
-						const double* rhs,
-						const int size);
-	
-	//! CUDA kernel for greater than or equal scalar operation
-	/*!
-	  Compare elements in lhs with a single scalar rhs and return a 
-	  Collection of Booleans.
-	  \code out[i] = lhs[i] >= rhs \endcode
-	  \param[out] out The resulting collection of booleans
-	  \param[in] lhs Left hand side collection of scalars
-	  \param[in] rhs Right hand side scalar.
-	  \param[in] size Size of the lhs array.
-	*/
-	__global__ void comp_collGEscal_kernel( bool* out,
-						const double* lhs,
-						const double rhs,
-						const int size);
-	
-	//! CUDA kernel for scalar greater than or equal collection operation
-	/*!
-	  Compare scalar lhs with elements in rhs and return a 
-	  Collection Of Booleans.
-	  \code out[i] = lhs >= rhs[i] \endcode
-	  \param[out] out The resulting collection of booleans
-	  \param[in] lhs Left hand side scalar
-	  \param[in] rhs Right hand side collection of scalar
-	  \param[in] size Size of rhs.
-	*/
-	__global__ void comp_scalGEcoll_kernel( bool* out,
-						const double lhs,
-						const double* rhs,
-						const int size);
-
-
-	//! CUDA kernel for collection equal collection operation
-	/*!
-	  Compare elements in lhs with elements in rhs and return a
-	  Collection Of Booleans.
-	  \code out[i] = lhs[i] == rhs[i] \endcode
-	  \param[out] out The resulting collection of booleans
-	  \param[in] lhs Left hand side collection
-	  \param[in] rhs Right hand side collection
-	  \param[in] size Size of the collections.
-	*/
-	__global__ void comp_collEQcoll_kernel( bool* out,
-						const double* lhs,
-						const double* rhs,
-						const int size);
-	
-	//! CUDA kernel for collection equal scalar operation
-	/*!
-	  Compare elements in lhs with the scalar rhs and return a
-	  Collection Of Booleans.
-	  \code out[i] = lhs[i] == rhs \endcode
-	  \param[out] out The resulting collection of booleans
-	  \param[in] lhs Left hand side collection
-	  \param[in] rhs Right hand side scalar
-	  \param[in] size Size of the collections.
-	*/
-	__global__ void comp_collEQscal_kernel( bool* out,
-						const double* lhs,
-						const double rhs,
-						const int size);
+    //! CUDA kernel for greater scalar greater than collection operation
+    /*!
+      Compare a single scalar lhs with elements in rhs and return a
+      Collection of Booleans.
+      \code out[i] = lhs > rhs[i] \endcode
+      \param[out] out The resulting collection of booleans
+      \param[in] lhs Left hand side scalar
+      \param[in] rhs Right hand side collection of scalars
+      \param[in] size Size of the rhs array.
+    */
+    __global__ void comp_scalGTcoll_kernel( bool* out,
+                                            const double lhs,
+                                            const double* rhs,
+                                            const int size);
+    
+    //! CUDA kernel for greater than or equal operation
+    /*!
+      Compare elements in lhs with elements in rhs and return a Collection Of Booleans.
+      \code out[i] = lhs[i] >= rhs[i] \endcode
+      \param[out] out The resulting collection of booleans
+      \param[in] lhs Left hand side values
+      \param[in] rhs Right hand side values
+      \param[in] size Size of the arrays
+    */
+    __global__ void comp_collGEcoll_kernel( bool* out,
+                                            const double* lhs,
+                                            const double* rhs,
+                                            const int size);
+    
+    //! CUDA kernel for greater than or equal scalar operation
+    /*!
+      Compare elements in lhs with a single scalar rhs and return a 
+      Collection of Booleans.
+      \code out[i] = lhs[i] >= rhs \endcode
+      \param[out] out The resulting collection of booleans
+      \param[in] lhs Left hand side collection of scalars
+      \param[in] rhs Right hand side scalar.
+      \param[in] size Size of the lhs array.
+    */
+    __global__ void comp_collGEscal_kernel( bool* out,
+                                            const double* lhs,
+                                            const double rhs,
+                                            const int size);
+    
+    //! CUDA kernel for scalar greater than or equal collection operation
+    /*!
+      Compare scalar lhs with elements in rhs and return a 
+      Collection Of Booleans.
+      \code out[i] = lhs >= rhs[i] \endcode
+      \param[out] out The resulting collection of booleans
+      \param[in] lhs Left hand side scalar
+      \param[in] rhs Right hand side collection of scalar
+      \param[in] size Size of rhs.
+    */
+    __global__ void comp_scalGEcoll_kernel( bool* out,
+                                            const double lhs,
+                                            const double* rhs,
+                                            const int size);
 
 
-	//! CUDA kernel for collection inequal collection operation
-	/*!
-	  Compare elements in lhs with elements in rhs and return a
-	  Collection Of Booleans.
-	  \code out[i] = lhs[i] != rhs[i] \endcode
-	  \param[out] out The resulting collection of booleans
-	  \param[in] lhs Left hand side collection
-	  \param[in] rhs Right hand side collection
-	  \param[in] size Size of the collections.
-	*/
-	__global__ void comp_collNEcoll_kernel( bool* out,
-						const double* lhs,
-						const double* rhs,
-						const int size);
-	
-	//! CUDA kernel for collection inequal scalar operation
-	/*!
-	  Compare elements in lhs with the scalar rhs and return a
-	  Collection Of Booleans.
-	  \code out[i] = lhs[i] != rhs \endcode
-	  \param[out] out The resulting collection of booleans
-	  \param[in] lhs Left hand side collection
-	  \param[in] rhs Right hand side scalar
-	  \param[in] size Size of the collections.
-	*/
-	__global__ void comp_collNEscal_kernel( bool* out,
-						const double* lhs,
-						const double rhs,
-						const int size);
+    //! CUDA kernel for collection equal collection operation
+    /*!
+      Compare elements in lhs with elements in rhs and return a
+      Collection Of Booleans.
+      \code out[i] = lhs[i] == rhs[i] \endcode
+      \param[out] out The resulting collection of booleans
+      \param[in] lhs Left hand side collection
+      \param[in] rhs Right hand side collection
+      \param[in] size Size of the collections.
+    */
+    __global__ void comp_collEQcoll_kernel( bool* out,
+                                            const double* lhs,
+                                            const double* rhs,
+                                            const int size);
+    
+    //! CUDA kernel for collection equal scalar operation
+    /*!
+      Compare elements in lhs with the scalar rhs and return a
+      Collection Of Booleans.
+      \code out[i] = lhs[i] == rhs \endcode
+      \param[out] out The resulting collection of booleans
+      \param[in] lhs Left hand side collection
+      \param[in] rhs Right hand side scalar
+      \param[in] size Size of the collections.
+    */
+    __global__ void comp_collEQscal_kernel( bool* out,
+                                            const double* lhs,
+                                            const double rhs,
+                                            const int size);
+
+
+    //! CUDA kernel for collection inequal collection operation
+    /*!
+      Compare elements in lhs with elements in rhs and return a
+      Collection Of Booleans.
+      \code out[i] = lhs[i] != rhs[i] \endcode
+      \param[out] out The resulting collection of booleans
+      \param[in] lhs Left hand side collection
+      \param[in] rhs Right hand side collection
+      \param[in] size Size of the collections.
+    */
+    __global__ void comp_collNEcoll_kernel( bool* out,
+                                            const double* lhs,
+                                            const double* rhs,
+                                            const int size);
+    
+    //! CUDA kernel for collection inequal scalar operation
+    /*!
+      Compare elements in lhs with the scalar rhs and return a
+      Collection Of Booleans.
+      \code out[i] = lhs[i] != rhs \endcode
+      \param[out] out The resulting collection of booleans
+      \param[in] lhs Left hand side collection
+      \param[in] rhs Right hand side scalar
+      \param[in] size Size of the collections.
+    */
+    __global__ void comp_collNEscal_kernel( bool* out,
+                                            const double* lhs,
+                                            const double rhs,
+                                            const int size);
 
     } // namespace wrapCudaArray
-	
-	
+    
+    
     // -------------- Operation overloading ------------------- //
     
     // Overloading of operator -

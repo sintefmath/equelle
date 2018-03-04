@@ -109,6 +109,12 @@ CollOfScalar::~CollOfScalar()
 }
 
 
+// Norm
+CollOfScalar CollOfScalar::norm() const {
+    CollOfScalar out(this->val_.abs());
+    return out;
+}
+
 
 // Member functions that only have to return val_'s function:
 const double* CollOfScalar::data() const {

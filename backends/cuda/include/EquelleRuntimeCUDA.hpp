@@ -44,34 +44,34 @@ namespace equelleCUDA {
     template <typename T>
     std::tuple<T> makeArray( const T& t) 
     {
-	return std::tuple<T> {t};
+    return std::tuple<T> {t};
     }
 
     /// For 2 CollOfScalar
     template <typename T>
     std::tuple<T, T> makeArray(const T& t1,
-			       const T& t2) 
+                               const T& t2) 
     {
-	return std::tuple<T,T> {t1, t2};
+    return std::tuple<T,T> {t1, t2};
     }
 
     /// For 3 CollOfScalar
     template <typename T>
     std::tuple<T, T, T> makeArray( const T& t1,
-				   const T& t2,
-				   const T& t3 ) 
+                                   const T& t2,
+                                   const T& t3 ) 
     {
-	return std::tuple<T, T, T> {t1, t2, t3};
+    return std::tuple<T, T, T> {t1, t2, t3};
     }
 
     /// For 4 CollOfScalar
     template <typename T>
     std::tuple<T,T,T,T> makeArray( const T& t1,
-				   const T& t2,
-				   const T& t3,
-				   const T& t4 ) 
+                                   const T& t2,
+                                   const T& t3,
+                                   const T& t4 ) 
     {
-	return std::tuple<T,T,T,T> {t1, t2, t3, t4};
+    return std::tuple<T,T,T,T> {t1, t2, t3, t4};
     }
     
 
@@ -128,6 +128,7 @@ public:
     CollOfScalar norm(const CollOfIndices<codim>& set) const;
     /// 2-norm of a set of vectors
     CollOfScalar norm(const CollOfVector& vectors) const;
+    CollOfScalar norm(const CollOfScalar& scalars) const;
     /// Centroid positions of a set of cells/faces
     template <int codim>
     CollOfVector centroid(const CollOfIndices<codim>& set) const;
@@ -163,6 +164,9 @@ public:
       Computes the directional sum of values on all faces for every cell.
     */
     CollOfScalar divergence(const CollOfScalar& fluxes) const;  
+
+    CollOfScalar multiplyAdd(const CollOfScalar& a, const CollOfScalar& b, const CollOfScalar& c);
+
     /// Divergence using matrix-vector product
     /*!
       Slow evaluation of the divergence function where the matrix fro
@@ -184,8 +188,8 @@ public:
     /// Extend a subset to a set by inserting zeros
     template<int codim>
     CollOfScalar operatorExtend(const CollOfScalar& data_in,
-				const CollOfIndices<codim>& from_set,
-				const CollOfIndices<codim>& to_set) const;
+                                const CollOfIndices<codim>& from_set,
+                                const CollOfIndices<codim>& to_set) const;
     
     /// Extend a scalar to a uniform collection on the given set.
     template<int codim>
@@ -198,8 +202,8 @@ public:
     */
     template<int codim>
     CollOfScalar operatorOn(const CollOfScalar& data_in,
-			    const CollOfIndices<codim>& from_set,
-			    const CollOfIndices<codim>& to_set);
+                            const CollOfIndices<codim>& from_set,
+                            const CollOfIndices<codim>& to_set);
     
     // Implementation of the Equelle keyword On for CollOfIndices<>
     /// On operator
@@ -209,24 +213,24 @@ public:
     */
     template<int codim_data, int codim_set>
     CollOfIndices<codim_data> operatorOn( const CollOfIndices<codim_data>& in_data,
-					  const CollOfIndices<codim_set>& from_set,
-					  const CollOfIndices<codim_set>& to_set);
+                                          const CollOfIndices<codim_set>& from_set,
+                                          const CollOfIndices<codim_set>& to_set);
     
     /// Element-wise trinary if operator 
     /*!
       return_value[i] = predicate[i] ? iftrue[i] : iffalse[i]
     */
     CollOfScalar trinaryIf( const CollOfBool& predicate,
-			    const CollOfScalar& iftrue,
-			    const CollOfScalar& iffalse) const;
+                            const CollOfScalar& iftrue,
+                            const CollOfScalar& iffalse) const;
     //! Element-wise trinary if operator
     /*!
       return_value[i] = predicate[i] ? iftrue[i] : iffalse[i]
     */
     template <int codim>
     CollOfIndices<codim> trinaryIf( const CollOfBool& predicate,
-				    const CollOfIndices<codim>& iftrue,
-				    const CollOfIndices<codim>& iffalse) const;
+                                    const CollOfIndices<codim>& iftrue,
+                                    const CollOfIndices<codim>& iffalse) const;
     
     /// Reductions.
     /// Smallest value in a CollOfScalar
@@ -250,7 +254,7 @@ public:
      */
     template <class ResidualFunctor> 
     CollOfScalar newtonSolve(const ResidualFunctor& rescomp,
-			     const CollOfScalar& u_initialguess);
+                             const CollOfScalar& u_initialguess);
     
     //    template <int Num>
     //    std::array<CollOfScalarCPU, Num> newtonSolveSystem(const std::array<typename ResCompType<Num>::type, Num>& rescomp,
@@ -269,7 +273,7 @@ public:
     // ---------------------- Input -------------------------
     /// Get value name from parameter file or use default value
     Scalar inputScalarWithDefault(const String& name,
-				  const Scalar default_value);
+                                  const Scalar default_value);
     
     /// Reads a index list from file
     /*!
@@ -277,7 +281,7 @@ public:
     */
     template <int codim>
     CollOfIndices<codim> inputDomainSubsetOf( const String& name,
-					      CollOfIndices<codim> superset);
+                                              CollOfIndices<codim> superset);
     /// Reads a Collection Of Scalar from file named name
     /*!
       The scalars need to be sorted with respect to the index of the element
@@ -285,7 +289,7 @@ public:
     */
     template <int codim>
     CollOfScalar inputCollectionOfScalar(const String& name,
-						      const CollOfIndices<codim>& coll);
+                                         const CollOfIndices<codim>& coll);
     /// Reads a list of scalars to be stored on the CPU's memory.
     SeqOfScalar inputSequenceOfScalar(const String& name);
     

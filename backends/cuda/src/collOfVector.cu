@@ -49,7 +49,7 @@ CollOfVector& CollOfVector::operator= (const CollOfVector& other) {
 
     // Does not give sense to assign Vectors of different dimensions.
     if ( this->dim_ != other.dim_ ) {
-	OPM_THROW(std::runtime_error, "Trying to assign a vector with another vector of different dim. lhs.dim_ = " << this->dim_ << " and rhs.dim_ = " << other.dim_);
+        OPM_THROW(std::runtime_error, "Trying to assign a vector with another vector of different dim. lhs.dim_ = " << this->dim_ << " and rhs.dim_ = " << other.dim_);
     }
     this->elements_ = other.elements_;
     return *this;
@@ -91,10 +91,10 @@ CollOfScalar CollOfVector::dot(const CollOfVector& rhs) const {
     // One thread for each vector:
     kernelSetup s = vector_setup();
     dotKernel<<< s.grid, s.block >>>( out.data(),
-				      this->data(),
-				      rhs.data(),
-				      out.size(),
-				      this->dim());
+                                      this->data(),
+                                      rhs.data(),
+                                      out.size(),
+                                      this->dim());
     return out;
 }
 
@@ -114,7 +114,7 @@ int CollOfVector::dim() const {
 
 int CollOfVector::numVectors() const {
     if ( dim_ == 0 ) {
-	OPM_THROW(std::runtime_error, "Calling numVectors() on a CollOfVector of dimension 0\n --> Dividing by zero!");
+        OPM_THROW(std::runtime_error, "Calling numVectors() on a CollOfVector of dimension 0\n --> Dividing by zero!");
     }
     return elements_.size()/dim_;
 }
@@ -146,29 +146,29 @@ CollOfScalar CollOfVector::operator[](const int index) const {
 CollOfScalar CollOfVector::col(const int index) const {
     
     if ( index < 0 || index >= dim_) {
-	OPM_THROW(std::runtime_error, "Illigal dimension index " << index << " for a vector of dimension " << dim_);
+    OPM_THROW(std::runtime_error, "Illigal dimension index " << index << " for a vector of dimension " << dim_);
     }
     
     CollOfScalar out(numVectors());
     kernelSetup s = vector_setup();
     collOfVectorOperatorIndexKernel<<<s.grid,s.block>>>( out.data(),
-							 this->data(),
-							 out.size(),
-							 index,
-							 dim_);	
+                                                         this->data(),
+                                                         out.size(),
+                                                         index,
+                                                         dim_); 
     return out;
 }
 
 __global__ void wrapCollOfVector::collOfVectorOperatorIndexKernel( double* out,
-								   const double* vec,
-								   const int size_out,
-								   const int index,
-								   const int dim)
+                                                                   const double* vec,
+                                                                   const int size_out,
+                                                                   const int index,
+                                                                   const int dim)
 {
     // Index:
     const int i = myID();
     if ( i < size_out ) {
-	out[i] = vec[i*dim + index];
+        out[i] = vec[i*dim + index];
     }
 }
 
@@ -177,35 +177,35 @@ __global__ void wrapCollOfVector::collOfVectorOperatorIndexKernel( double* out,
 // --------- NORM KERNEL ---------------------
 
 __global__ void wrapCollOfVector::normKernel( double* out,
-					      const double* vectors,
-					      const int numVectors,
-					      const int dim)
+                                              const double* vectors,
+                                              const int numVectors,
+                                              const int dim)
 {
     const int index = myID();
     if ( index < numVectors ){
-	double norm = 0;
-	for ( int i = 0; i < dim; i++) {
-	    norm += vectors[index*dim + i]*vectors[index*dim + i];
-	}
-	out[index] = sqrt(norm);
+        double norm = 0;
+        for ( int i = 0; i < dim; i++) {
+            norm += vectors[index*dim + i]*vectors[index*dim + i];
+        }
+        out[index] = sqrt(norm);
     }
 }
 
 // --------- DOT KERNEL ---------------------------
 
 __global__ void wrapCollOfVector::dotKernel( double* out,
-					     const double* lhs,
-					     const double* rhs,
-					     const int numVectors,
-					     const int dim)
+                                             const double* lhs,
+                                             const double* rhs,
+                                             const int numVectors,
+                                             const int dim)
 {
     const int index = myID();
     if ( index < numVectors ) {
-	double dot = 0.0;
-	for ( int i = 0; i < dim; ++i ) {
-	    dot += lhs[index*dim + i] * rhs[index*dim + i];
-	}
-	out[index] = dot;
+        double dot = 0.0;
+        for ( int i = 0; i < dim; ++i ) {
+            dot += lhs[index*dim + i] * rhs[index*dim + i];
+        }
+        out[index] = dot;
     }
 }
 
@@ -246,9 +246,9 @@ CollOfVector equelleCUDA::operator*(const CollOfVector& vec, const CollOfScalar&
     CollOfVector out = vec;
     kernelSetup s = out.vector_setup();
     collvecMultCollscal_kernel<<<s.grid, s.block>>>( out.data(),
-						     scal.data(),
-						     out.numVectors(),
-						     out.dim());
+                                                     scal.data(),
+                                                     out.numVectors(),
+                                                     out.dim());
     return out;
 }
 
@@ -256,9 +256,9 @@ CollOfVector equelleCUDA::operator*(const CollOfScalar& scal, const CollOfVector
     CollOfVector out = vec;
     kernelSetup s = out.vector_setup();
     collvecMultCollscal_kernel<<<s.grid, s.block>>>( out.data(),
-						     scal.data(),
-						     out.numVectors(),
-						     out.dim());
+                                                     scal.data(),
+                                                     out.numVectors(),
+                                                     out.dim());
     return out;
 }
 
@@ -266,9 +266,9 @@ CollOfVector equelleCUDA::operator/(const CollOfVector& vec, const CollOfScalar&
     CollOfVector out = vec;
     kernelSetup s = out.vector_setup();
     collvecDivCollscal_kernel<<<s.grid, s.block>>>( out.data(),
-						    scal.data(),
-						    out.numVectors(),
-						    out.dim());
+                                                    scal.data(),
+                                                    out.numVectors(),
+                                                    out.dim());
     return out;
 }
 
@@ -280,28 +280,28 @@ CollOfVector equelleCUDA::operator/(const CollOfVector& vec, const Scalar scal) 
 
 // KERNELS
 __global__ void wrapCollOfVector::collvecMultCollscal_kernel( double* vector,
-							      const double* scal,
-							      const int numVectors,
-							      const int dim)
+                                                              const double* scal,
+                                                              const int numVectors,
+                                                              const int dim)
 {
     int vec = myID();
     if ( vec < numVectors ) {
-	for ( int i = 0; i < dim; ++i ) {
-	    vector[vec*dim + i] *= scal[vec];
-	}
+    for ( int i = 0; i < dim; ++i ) {
+        vector[vec*dim + i] *= scal[vec];
+    }
     }
 }
 
 __global__ void wrapCollOfVector::collvecDivCollscal_kernel( double* vector,
-							     const double* scal,
-							     const int numVectors,
-							     const int dim)
+                                                             const double* scal,
+                                                             const int numVectors,
+                                                             const int dim)
 {
     int vec = myID();
     if ( vec < numVectors ) {
-	for ( int i = 0; i < dim; i++ ) {
-	    vector[vec*dim + i] = vector[vec*dim + i] / scal[vec];
-	}
+    for ( int i = 0; i < dim; i++ ) {
+        vector[vec*dim + i] = vector[vec*dim + i] / scal[vec];
+    }
     }
 
 }

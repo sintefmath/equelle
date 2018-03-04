@@ -7,7 +7,6 @@ find_package(Boost REQUIRED COMPONENTS unit_test_framework)
 
 
 set( CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wextra -Wno-sign-compare -Wno-unused-parameter" )
-#set( CMAKE_CXX_FLAGS "-std=c++14 -Wall 	" )
 
 # Define 'EQUELLE_DEBUG' if we are in debug mode.
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
@@ -113,7 +112,7 @@ set_target_properties( equelle_cuda PROPERTIES
 set(CONF_INCLUDE_DIRS "${CONF_INCLUDE_DIRS}" "${PROJECT_SOURCE_DIR}/include" "${PROJECT_SOURCE_DIR}/cuda_include" "${PROJECT_BINARY_DIR}" PARENT_SCOPE)
 
 set(EQUELLE_LIBS_FOR_CONFIG ${EQUELLE_LIBS_FOR_CONFIG}
-    equelle_cuda  opmautodiff opmsimulators opmcore opmparser dunecommon
+    equelle_cuda  opmsimulators opmcore opmparser dunecommon
     umfpack tinyxml boost_filesystem boost_system ${SUPERLU_LIB}
     ${EQUELLE_EXTRA_LIBS} ${CUDA_LIBRARIES} ${CUDA_cusparse_LIBRARY} 
     ${CUDA_cublas_LIBRARY}

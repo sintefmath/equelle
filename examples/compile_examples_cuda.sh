@@ -1,0 +1,13 @@
+#!/bin/bash
+
+for i in $(ls dsl/*.equelle)
+do
+    echo "Compiling $i"
+    bn=$(basename $i .equelle)
+    nondim="twophase_fully_implicit twophase_fully_implicit_conservation twophase_grav"
+    if [[ $nondim =~ (^| )$bn($| ) ]]; then
+        ../../equelle-build-cuda/compiler/ec -i $i --nondimensional --backend=cuda > "app/out_$bn.cpp"
+    else
+        ../../equelle-build-cuda/compiler/ec -i $i --backend=cuda > "app/out_$bn.cpp"
+    fi
+done

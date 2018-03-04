@@ -119,6 +119,18 @@ void PrintEquelleASTVisitor::postVisit(BinaryOpNode&)
     std::cout << ')';
 }
 
+void PrintEquelleASTVisitor::visit(MultiplyAddNode& node)
+{
+}
+
+void PrintEquelleASTVisitor::midVisit(MultiplyAddNode& node)
+{
+}
+
+void PrintEquelleASTVisitor::postVisit(MultiplyAddNode& node)
+{
+}
+
 void PrintEquelleASTVisitor::visit(ComparisonOpNode&)
 {
     std::cout << '(';
