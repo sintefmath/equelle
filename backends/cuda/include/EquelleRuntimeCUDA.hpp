@@ -44,7 +44,7 @@ namespace equelleCUDA {
     template <typename T>
     std::tuple<T> makeArray( const T& t) 
     {
-    return std::tuple<T> {t};
+        return std::tuple<T> {t};
     }
 
     /// For 2 CollOfScalar
@@ -52,7 +52,7 @@ namespace equelleCUDA {
     std::tuple<T, T> makeArray(const T& t1,
                                const T& t2) 
     {
-    return std::tuple<T,T> {t1, t2};
+        return std::tuple<T,T> {t1, t2};
     }
 
     /// For 3 CollOfScalar
@@ -61,7 +61,7 @@ namespace equelleCUDA {
                                    const T& t2,
                                    const T& t3 ) 
     {
-    return std::tuple<T, T, T> {t1, t2, t3};
+        return std::tuple<T, T, T> {t1, t2, t3};
     }
 
     /// For 4 CollOfScalar
@@ -71,7 +71,7 @@ namespace equelleCUDA {
                                    const T& t3,
                                    const T& t4 ) 
     {
-    return std::tuple<T,T,T,T> {t1, t2, t3, t4};
+        return std::tuple<T,T,T,T> {t1, t2, t3, t4};
     }
     
 
@@ -165,7 +165,8 @@ public:
     */
     CollOfScalar divergence(const CollOfScalar& fluxes) const;  
 
-    CollOfScalar multiplyAdd(const CollOfScalar& a, const CollOfScalar& b, const CollOfScalar& c);
+    template <typename T, typename U, typename V>
+    V multiplyAdd(const T& a, const U& b, const V& c);
 
     /// Divergence using matrix-vector product
     /*!
