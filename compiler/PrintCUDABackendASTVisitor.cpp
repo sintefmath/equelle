@@ -21,10 +21,12 @@ const char *PrintCUDABackendASTVisitor::cppStartString() const
 "\n"
 "// This program was created by the Equelle compiler from SINTEF.\n"
 "\n"
-"#include <opm/core/utility/parameters/ParameterGroup.hpp>\n"
+
+"#include <opm/common/utility/parameters/ParameterGroup.hpp>\n"
 "#include <opm/common/ErrorMacros.hpp>\n"
-"#include <opm/core/grid.h>\n"
-"#include <opm/core/grid/GridManager.hpp>\n"
+"#include <opm/grid/UnstructuredGrid.h>\n"
+"#include <opm/grid/GridManager.hpp>\n"
+
 "#include <algorithm>\n"
 "#include <iterator>\n"
 "#include <iostream>\n"
