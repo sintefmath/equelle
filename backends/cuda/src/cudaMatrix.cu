@@ -168,7 +168,7 @@ CudaMatrix::CudaMatrix(const CollOfScalar& coll)
 }
 
 
-// Constructor for creating a diagonal matrcit from a CudaArray
+// Constructor for creating a diagonal matrice from a CudaArray
 CudaMatrix::CudaMatrix(const CudaArray& array)
     : rows_(array.size()),
       cols_(rows_),
@@ -266,25 +266,25 @@ CudaMatrix::CudaMatrix(const CudaMatrix& mat)
 {
     // Copy arrays if they exist:
     if ( mat.csrVal_ != 0 ) {
-    cudaStatus_ = cudaMalloc( (void**)&csrVal_, nnz_*sizeof(double));
-    checkError_("cudaMalloc(csrVal_) in CudaMatrix copy constructor");
-    cudaStatus_ = cudaMemcpy( csrVal_, mat.csrVal_, nnz_*sizeof(double),
-                              cudaMemcpyDeviceToDevice);
-    checkError_("cudaMemcpy(csrVal_) in CudaMatrix copy constructor");
+        cudaStatus_ = cudaMalloc( (void**)&csrVal_, nnz_*sizeof(double));
+        checkError_("cudaMalloc(csrVal_) in CudaMatrix copy constructor");
+        cudaStatus_ = cudaMemcpy( csrVal_, mat.csrVal_, nnz_*sizeof(double),
+                                  cudaMemcpyDeviceToDevice);
+        checkError_("cudaMemcpy(csrVal_) in CudaMatrix copy constructor");
     }
     if ( mat.csrRowPtr_ != 0 ) {
-    cudaStatus_ = cudaMalloc( (void**)&csrRowPtr_, (rows_+1)*sizeof(int));
-    checkError_("cudaMalloc(csrRowPtr_) in CudaMatrix copy constructor");
-    cudaStatus_ = cudaMemcpy( csrRowPtr_, mat.csrRowPtr_, (rows_+1)*sizeof(int),
-                              cudaMemcpyDeviceToDevice);
-    checkError_("cudaMemcpy(csrRowPtr_) in CudaMatrix copy constructor");
+        cudaStatus_ = cudaMalloc( (void**)&csrRowPtr_, (rows_+1)*sizeof(int));
+        checkError_("cudaMalloc(csrRowPtr_) in CudaMatrix copy constructor");
+        cudaStatus_ = cudaMemcpy( csrRowPtr_, mat.csrRowPtr_, (rows_+1)*sizeof(int),
+                                  cudaMemcpyDeviceToDevice);
+        checkError_("cudaMemcpy(csrRowPtr_) in CudaMatrix copy constructor");
     }
     if ( mat.csrColInd_ != 0 ) {
-    cudaStatus_ = cudaMalloc( (void**)&csrColInd_, nnz_*sizeof(int));
-    checkError_("cudaMalloc(csrColInd_) in CudaMalloc copy constructor");
-    cudaStatus_ = cudaMemcpy( csrColInd_, mat.csrColInd_, nnz_*sizeof(int),
-                              cudaMemcpyDeviceToDevice);
-    checkError_("cudaMemcpy(csrColInd_) in CudaMatrix copy constructor");
+        cudaStatus_ = cudaMalloc( (void**)&csrColInd_, nnz_*sizeof(int));
+        checkError_("cudaMalloc(csrColInd_) in CudaMalloc copy constructor");
+        cudaStatus_ = cudaMemcpy( csrColInd_, mat.csrColInd_, nnz_*sizeof(int),
+                                  cudaMemcpyDeviceToDevice);
+        checkError_("cudaMemcpy(csrColInd_) in CudaMatrix copy constructor");
     }
     
     createGeneralDescription_("CudaMatrix copy constructor");

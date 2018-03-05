@@ -197,6 +197,12 @@ CollOfIndices<codim> EquelleRuntimeCUDA::trinaryIf( const CollOfBool& predicate,
 }
 
 
+// MULTIPLY ADD
+template <typename T, typename U, typename V>
+V EquelleRuntimeCUDA::multiplyAdd(const T& a, const U& b, const V& c)
+{
+    return a * b + c;
+}
 
 
 // CENTRIOD

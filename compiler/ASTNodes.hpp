@@ -44,7 +44,7 @@ public:
     // Not returning a reference since result may need to be created on the fly.
     virtual std::vector<Dimension> arrayDimension() const
     {
-        throw std::logic_error("cannot call arrayDimension() on any ExpressionNode type.");
+        throw std::logic_error("Internal compiler error: cannot call arrayDimension() on any ExpressionNode type.");
     }
 };
 
@@ -1613,10 +1613,12 @@ public:
     }
     virtual Node* getChild(const int index)
     {
-        if (index == 0){
-            return funcstart_;
+        switch (index) {
+            case 0 : return funcstart_;
+            case 1 : return funcbody_;
+            default: throw compilerError("FuncAssignNode::getChild()", "Index out of range.");
         }
-        throw compilerError("FuncAssignNode::getChild()", "Index out of range.");
+        
     }
     virtual void setChild(const int index, Node* child)
     {

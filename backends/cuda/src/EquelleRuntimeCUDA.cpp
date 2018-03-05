@@ -296,10 +296,6 @@ CollOfScalar EquelleRuntimeCUDA::divergence(const CollOfScalar& face_fluxes) con
     }
 }
 
-CollOfScalar EquelleRuntimeCUDA::multiplyAdd(const CollOfScalar& a, const CollOfScalar& b, const CollOfScalar& c)
-{
-    return a * b + c;
-}
 
 CollOfScalar EquelleRuntimeCUDA::divergence_matrix(const CollOfScalar& face_fluxes) const 
 {
