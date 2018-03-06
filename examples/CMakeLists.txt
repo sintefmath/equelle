@@ -1,12 +1,15 @@
 project( Equelle_examples )
 cmake_minimum_required(VERSION 2.8)
 
-# We need C++11 features.
+# We need C++14 features.
 if(NOT MSVC)
 	set( CMAKE_CXX_FLAGS "-std=c++14 -Wall -Wextra ${CMAKE_CXX_FLAGS}")
 endif()
 
 find_package( Equelle REQUIRED )
+
+include("../../releaseconf.cmake")
+
 
 option(EQUELLE_BUILD_MPI "Build MPI backend and tools (requires MPI and Zoltan from Trilinos)" OFF)
 

@@ -37,30 +37,30 @@ equelleCUDA::CollOfScalar EquelleRuntimeCUDA::inputCollectionOfScalar( const Str
 {
     std::cout << "Copy from file " << name << std::endl;
     // Copy the reading part from the CPU back-end
-    const int size = coll.size();
+    const size_t size = coll.size();
     const bool from_file = param_.getDefault(name + "_from_file", false);
     if ( from_file ) {
-	const String filename = param_.get<String>(name + "_filename");
-	std::ifstream is (filename.c_str());
-	if (!is) {
-	    OPM_THROW(std::runtime_error, "Could not find file " << filename);
-	}
-	std::istream_iterator<double> begin(is);
-	std::istream_iterator<double> end;
-	std::vector<double> data(begin, end);
-	//CollOfScalar out(data);
-	//out.setValuesFromFile(begin, end);
-	if ( data.size() != size) {
-	    OPM_THROW(std::runtime_error, "Unexpected size of input data for " << name << " in file " << filename); 
-	}
-	return equelleCUDA::CollOfScalar(data);
+        const String filename = param_.get<String>(name + "_filename");
+        std::ifstream is (filename.c_str());
+        if (!is) {
+            OPM_THROW(std::runtime_error, "Could not find file " << filename);
+        }
+        std::istream_iterator<double> begin(is);
+        std::istream_iterator<double> end;
+        std::vector<double> data(begin, end);
+        //CollOfScalar out(data);
+        //out.setValuesFromFile(begin, end);
+        if ( data.size() != size) {
+            OPM_THROW(std::runtime_error, "Unexpected size of input data for " << name << " in file " << filename); 
+        }
+        return equelleCUDA::CollOfScalar(data);
     }
     else {
-	// There is a number in the parameter file
-	//CollOfScalar out(size);
-	//out.setValuesUniform(param_.get<double>(name));
-	//out.setValuesUniform(param_.get<double>(name), size);
-	return equelleCUDA::CollOfScalar(size, param_.get<double>(name));
+        // There is a number in the parameter file
+        //CollOfScalar out(size);
+        //out.setValuesUniform(param_.get<double>(name));
+        //out.setValuesUniform(param_.get<double>(name), size);
+        return equelleCUDA::CollOfScalar(size, param_.get<double>(name));
     }
 }
 
@@ -72,14 +72,14 @@ equelleCUDA::CollOfIndices<codim> EquelleRuntimeCUDA::inputDomainSubsetOf(const 
     const String filename = param_.get<String>(name + "_filename");
     std::ifstream is(filename.c_str());
     if (!is) {
-	OPM_THROW(std::runtime_error, "Could not find file " << filename);
+        OPM_THROW(std::runtime_error, "Could not find file " << filename);
     }
     std::istream_iterator<int> beg(is);
     std::istream_iterator<int> end;
     
     std::vector<int> std_vec(beg, end);
     if (!is_sorted(std_vec.begin(), std_vec.end()) ) {
-	OPM_THROW(std::runtime_error, "Input set " << name << " was not sorted in ascending order");
+        OPM_THROW(std::runtime_error, "Input set " << name << " was not sorted in ascending order");
     }
     
     thrust::host_vector<int> host(std_vec.begin(), std_vec.end());
@@ -111,14 +111,14 @@ equelleCUDA::CollOfIndices<codim> EquelleRuntimeCUDA::inputDomainSubsetOf(const 
 
 template <int codim>
 CollOfScalar EquelleRuntimeCUDA::operatorExtend(const CollOfScalar& data_in,
-						const CollOfIndices<codim>& from_set,
-						const CollOfIndices<codim>& to_set) const {
+                                                const CollOfIndices<codim>& from_set,
+                                                const CollOfIndices<codim>& to_set) const {
     
     if (data_in.size() != from_set.size() ) {
-	OPM_THROW(std::runtime_error, "data_in (size " << data_in.size() << ") and from_set (size " << from_set.size() << ") have to be of the same size in Extend function."); 
+        OPM_THROW(std::runtime_error, "data_in (size " << data_in.size() << ") and from_set (size " << from_set.size() << ") have to be of the same size in Extend function."); 
     }
     if (from_set.size() > to_set.size() ) {
-	OPM_THROW(std::runtime_error, "From_set (size " << from_set.size() << ") has to be a subset of to_set (size " << to_set.size() << ")");
+        OPM_THROW(std::runtime_error, "From_set (size " << from_set.size() << ") has to be a subset of to_set (size " << to_set.size() << ")");
     }
     
     return dev_grid_.operatorExtend(data_in, from_set, to_set);
@@ -126,21 +126,21 @@ CollOfScalar EquelleRuntimeCUDA::operatorExtend(const CollOfScalar& data_in,
 
 template <int codim>
 CollOfScalar EquelleRuntimeCUDA::operatorExtend(const Scalar& data,
-						const CollOfIndices<codim>& set) {
+                        const CollOfIndices<codim>& set) {
     return CollOfScalar(set.size(), data);
 }
 
 
 template <int codim>
 CollOfScalar EquelleRuntimeCUDA::operatorOn(const CollOfScalar& data_in,
-					    const CollOfIndices<codim>& from_set,
-					    const CollOfIndices<codim>& to_set) {
+                                            const CollOfIndices<codim>& from_set,
+                                            const CollOfIndices<codim>& to_set) {
 
     if ( data_in.size() != from_set.size()) {
-	OPM_THROW(std::logic_error, "data_in (size " << data_in.size() << ") and from_set (size " << from_set.size() << ") have to be of the same size in On function for CollOfScalar.");
+        OPM_THROW(std::logic_error, "data_in (size " << data_in.size() << ") and from_set (size " << from_set.size() << ") have to be of the same size in On function for CollOfScalar.");
     }
     //if ( to_set.size() > from_set.size() ) {
-    //	OPM_THROW(std::runtime_error, "To_set (size " << to_set.size() << ") has to be a subset of from_set (size " << from_set.size() << ")");
+    //  OPM_THROW(std::runtime_error, "To_set (size " << to_set.size() << ") has to be a subset of from_set (size " << from_set.size() << ")");
     //}
 
     return dev_grid_.operatorOn(data_in, from_set, to_set);
@@ -150,10 +150,10 @@ CollOfScalar EquelleRuntimeCUDA::operatorOn(const CollOfScalar& data_in,
 
 template<int codim_data, int codim_set>
 CollOfIndices<codim_data> EquelleRuntimeCUDA::operatorOn( const CollOfIndices<codim_data>& data_in,
-							  const CollOfIndices<codim_set>& from_set,
-							  const CollOfIndices<codim_set>& to_set) {
+                                                          const CollOfIndices<codim_set>& from_set,
+                                                          const CollOfIndices<codim_set>& to_set) {
     if ( data_in.size() != from_set.size() ) {
-	OPM_THROW(std::logic_error, "data_in(size " << data_in.size() << ") and from_set (size " << from_set.size() << ") have to be of the same size in On function for CollOfIndices.");
+        OPM_THROW(std::logic_error, "data_in(size " << data_in.size() << ") and from_set (size " << from_set.size() << ") have to be of the same size in On function for CollOfIndices.");
     }
     return CollOfIndices<codim_data>(dev_grid_.operatorOn(data_in, from_set, to_set) );
 }
@@ -171,13 +171,13 @@ CollOfBool EquelleRuntimeCUDA::isEmpty(const CollOfIndices<codim>& set) const {
 template <int codim>
 CollOfScalar EquelleRuntimeCUDA::norm(const CollOfIndices<codim>& set) const {
     if (codim == 0) { // cells
-	return dev_grid_.norm_of_cells(set.device_vector(), set.isFull());
+        return dev_grid_.norm_of_cells(set.device_vector(), set.isFull());
     }
     else if (codim == 1) { // faces
-	return dev_grid_.norm_of_faces(set.device_vector(), set.isFull());
+        return dev_grid_.norm_of_faces(set.device_vector(), set.isFull());
     }
     else {
-	OPM_THROW(std::runtime_error, "Norm of a Collection of Indices with codim " << codim << " is not supported.");
+        OPM_THROW(std::runtime_error, "Norm of a Collection of Indices with codim " << codim << " is not supported.");
     }
 }
 
@@ -185,18 +185,24 @@ CollOfScalar EquelleRuntimeCUDA::norm(const CollOfIndices<codim>& set) const {
 // TRINARY IF 
 template<int codim>
 CollOfIndices<codim> EquelleRuntimeCUDA::trinaryIf( const CollOfBool& predicate,
-						    const CollOfIndices<codim>& iftrue,
-						    const CollOfIndices<codim>& iffalse) const
+                                                    const CollOfIndices<codim>& iftrue,
+                                                    const CollOfIndices<codim>& iffalse) const
 {
     if ( predicate.size() != iftrue.size() || predicate.size() != iffalse.size() ) {
-	OPM_THROW(std::runtime_error, "The sets are not of the same size");
+        OPM_THROW(std::runtime_error, "The sets are not of the same size");
     }
     return CollOfIndices<codim>(wrapEquelleRuntimeCUDA::trinaryIfWrapper(predicate,
-									 iftrue.device_vector(),
-									 iffalse.device_vector()));
+                                     iftrue.device_vector(),
+                                     iffalse.device_vector()));
 }
 
 
+// MULTIPLY ADD
+template <typename T, typename U, typename V>
+V EquelleRuntimeCUDA::multiplyAdd(const T& a, const U& b, const V& c)
+{
+    return a * b + c;
+}
 
 
 // CENTRIOD
@@ -204,7 +210,7 @@ template <int codim>
 CollOfVector EquelleRuntimeCUDA::centroid( const CollOfIndices<codim>& set) const 
 {
     if ( codim != 0 && codim != 1) {
-	OPM_THROW(std::runtime_error, "Codim template parameter " << codim << " in EquelleRuntimeCUDA::centroid");
+        OPM_THROW(std::runtime_error, "Codim template parameter " << codim << " in EquelleRuntimeCUDA::centroid");
     }
     return dev_grid_.centroid(set.device_vector(), set.isFull(), codim);
 }
@@ -215,7 +221,7 @@ CollOfVector EquelleRuntimeCUDA::centroid( const CollOfIndices<codim>& set) cons
 
 template <class ResidualFunctor>
 CollOfScalar EquelleRuntimeCUDA::newtonSolve(const ResidualFunctor& rescomp,
-                                            const CollOfScalar& u_initialguess)
+                                             const CollOfScalar& u_initialguess)
 {
     Opm::time::StopWatch clock;
     clock.start();
@@ -240,7 +246,7 @@ CollOfScalar EquelleRuntimeCUDA::newtonSolve(const ResidualFunctor& rescomp,
     // Debugging output not specified in Equelle.
     if (verbose_ > 1) {
         std::cout << "    newtonSolve: iter = " << iter << " (max = " << max_iter_
-		  << "), norm(residual) = " << twoNorm(residual)
+          << "), norm(residual) = " << twoNorm(residual)
                   << " (tol = " << abs_res_tol_ << ")" << std::endl;
     }
 
@@ -248,20 +254,20 @@ CollOfScalar EquelleRuntimeCUDA::newtonSolve(const ResidualFunctor& rescomp,
 
     // Execute newton loop until residual is small or we have used too many iterations.
     while ( (twoNorm(residual) > abs_res_tol_) && (iter < max_iter_) ) {
-	
-	if ( solver_.getSolver() == CPU ) {
-	    du = serialSolveForUpdate(residual);
-	}
-	else {
-	    // Solve linear equations for du, apply update.
-	    du = solver_.solve(residual.derivative(),
-			       residual.value(),
-			       verbose_);
-	}
+    
+    if ( solver_.getSolver() == CPU ) {
+        du = serialSolveForUpdate(residual);
+    }
+    else {
+        // Solve linear equations for du, apply update.
+        du = solver_.solve(residual.derivative(),
+                   residual.value(),
+                   verbose_);
+    }
 
-	// du is a constant, hence, u is still a primary variable with an identity
-	// matrix as its derivative.
-	u = u - du;
+    // du is a constant, hence, u is still a primary variable with an identity
+    // matrix as its derivative.
+    u = u - du;
 
         // Recompute residual.
         residual = rescomp(u);
@@ -279,7 +285,7 @@ CollOfScalar EquelleRuntimeCUDA::newtonSolve(const ResidualFunctor& rescomp,
         // Debugging output not specified in Equelle.
         if (verbose_ > 1) {
             std::cout << "    newtonSolve: iter = " << iter << " (max = " << max_iter_
-		      << "), norm(residual) = " << twoNorm(residual)
+              << "), norm(residual) = " << twoNorm(residual)
                       << " (tol = " << abs_res_tol_ << ")" << std::endl;
         }
 

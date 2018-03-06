@@ -11,7 +11,7 @@
 #include "wrapEquelleRuntime.hpp"
 #include "LinearSolver.hpp"
 
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/core/utility/StopWatch.hpp>
 #include <iomanip>
 #include <fstream>
@@ -26,10 +26,10 @@ using namespace wrapEquelleRuntimeCUDA;
 
 namespace
 {
-    Opm::GridManager* createGridManager(const Opm::parameter::ParameterGroup& param)
+    Opm::GridManager* createGridManager(const Opm::ParameterGroup& param)
     {
         if (param.has("grid_filename")) {
-        	// Unstructured grid
+            // Unstructured grid
             return new Opm::GridManager(param.get<std::string>("grid_filename"));
         }
         // Otherwise: Cartesian grid
@@ -62,21 +62,21 @@ namespace
 
 
 
-EquelleRuntimeCUDA::EquelleRuntimeCUDA(const Opm::parameter::ParameterGroup& param)
+EquelleRuntimeCUDA::EquelleRuntimeCUDA(const Opm::ParameterGroup& param)
     : grid_manager_(createGridManager(param)),
       grid_(*(grid_manager_->c_grid())),
       dev_grid_(grid_),
       devOps_(grid_),
       solver_(param.getDefault<std::string>("solver", "BiCGStab"),
-	      param.getDefault<std::string>("preconditioner", "diagonal"),
-	      param.getDefault("solver_max_iter", 1000),
-	      param.getDefault("solver_tol", 1e-8)),
-      serialSolver_(param),
-      output_to_file_(param.getDefault("output_to_file", false)),
-      verbose_(param.getDefault("verbose", 0)),
-      param_(param),
-      max_iter_(param.getDefault("max_iter", 10)),
-      abs_res_tol_(param.getDefault("abs_res_tol", 1e-6))
+              param.getDefault<std::string>("preconditioner", "diagonal"),
+              param.getDefault("solver_max_iter", 1000),
+              param.getDefault("solver_tol", 1e-8)),
+              serialSolver_(param),
+              output_to_file_(param.getDefault("output_to_file", false)),
+              verbose_(param.getDefault("verbose", 0)),
+              param_(param),
+              max_iter_(param.getDefault("max_iter", 10)),
+              abs_res_tol_(param.getDefault("abs_res_tol", 1e-6))
 {
     wrapEquelleRuntimeCUDA::init_cusparse();
 }
@@ -134,13 +134,18 @@ CollOfScalar EquelleRuntimeCUDA::norm(const CollOfVector& vectors) const
     return vectors.norm();
 }
 
+CollOfScalar EquelleRuntimeCUDA::norm(const CollOfScalar& scalars) const
+{
+    return scalars.norm();
+}
+
 CollOfVector EquelleRuntimeCUDA::normal(const CollOfFace& faces) const
 {
     return dev_grid_.normal(faces);
 }
 
 CollOfScalar EquelleRuntimeCUDA::dot( const CollOfVector& v1,
-				      const CollOfVector& v2 ) const 
+                                      const CollOfVector& v2 ) const 
 {
     return v1.dot(v2);
 }
@@ -186,7 +191,7 @@ void EquelleRuntimeCUDA::ensureGridDimensionMin(const int minimum_grid_dimension
 
 // HAVAHOL: added function for doing testing
 UnstructuredGrid EquelleRuntimeCUDA::getGrid() const {
-	return grid_;
+    return grid_;
 }
 
 
@@ -198,74 +203,76 @@ void EquelleRuntimeCUDA::output(const String& tag, const CollOfScalar& coll)
     std::vector<double> host = coll.copyToHost();
     
     if (output_to_file_) {
-	// std::map<std::string, int> outputcount_;
-	// set file name to tag-0000X.output
-	int count = -1;
-	auto it = outputcount_.find(tag);
-	if ( it == outputcount_.end()) {
-	    count = 0;
-	    outputcount_[tag] = 1; // should contain the count to be used next time for same tag.
-	} else {
-	    count = outputcount_[tag];
-	    ++outputcount_[tag];
-	}
-	std::ostringstream fname;
-	fname << tag << "-" << std::setw(5) << std::setfill('0') << count << ".output";
-	std::ofstream file(fname.str().c_str());
-	if( !file ) {
-	    OPM_THROW(std::runtime_error, "Failed to open " << fname.str());
-	}
-	file.precision(16);
-	std::copy(host.data(), host.data() + host.size(),
-		  std::ostream_iterator<double>(file, "\n"));
+    // std::map<std::string, int> outputcount_;
+    // set file name to tag-0000X.output
+    int count = -1;
+    auto it = outputcount_.find(tag);
+    if ( it == outputcount_.end()) {
+        count = 0;
+        outputcount_[tag] = 1; // should contain the count to be used next time for same tag.
     } else {
-	std::cout << "\n";
-	std::cout << "Values in " << tag << std::endl;
-	for(int i = 0; i < coll.size(); ++i) {
-	    std::cout << host[i] << "  ";
-	}
-	std::cout << std::endl;
+        count = outputcount_[tag];
+        ++outputcount_[tag];
+    }
+    std::ostringstream fname;
+    fname << tag << "-" << std::setw(5) << std::setfill('0') << count << ".output";
+    std::ofstream file(fname.str().c_str());
+    if( !file ) {
+        OPM_THROW(std::runtime_error, "Failed to open " << fname.str());
+    }
+    file.precision(16);
+    std::copy(host.data(), host.data() + host.size(),
+          std::ostream_iterator<double>(file, "\n"));
+    } else {
+    std::cout << "\n";
+    std::cout << "Values in " << tag << std::endl;
+    for(int i = 0; i < coll.size(); ++i) {
+        std::cout << host[i] << "  ";
+    }
+    std::cout << std::endl;
     }
 }
 
 
 Scalar EquelleRuntimeCUDA::inputScalarWithDefault(const String& name,
-						  const Scalar default_value) {
+                          const Scalar default_value) {
     return param_.getDefault(name, default_value);
 }
 
 
 
 CollOfScalar EquelleRuntimeCUDA::trinaryIf( const CollOfBool& predicate,
-					    const CollOfScalar& iftrue,
-					    const CollOfScalar& iffalse) const {
+                                            const CollOfScalar& iftrue,
+                                            const CollOfScalar& iffalse) const {
     // First, we need same size of all input
     if (iftrue.size() != iffalse.size() || iftrue.size() != predicate.size()) {
-	OPM_THROW(std::runtime_error, "Collections are not of the same size");
+    OPM_THROW(std::runtime_error, "Collections are not of the same size");
     }
     // Call a wrapper which calls a kernel
     return trinaryIfWrapper(predicate, iftrue, iffalse);
 }
 
 
-CollOfScalar EquelleRuntimeCUDA::gradient( const CollOfScalar& cell_scalarfield ) const {
+CollOfScalar EquelleRuntimeCUDA::gradient( const CollOfScalar& cell_scalarfield ) const
+{
     // This function is at the moment kept in order to be able to compare efficiency
     // against the new implementation, where we use the matrix from devOps_.
 
     // First, need cell_scalarfield to be defined on all cells:
     if ( cell_scalarfield.size() != dev_grid_.number_of_cells() ) {
-	OPM_THROW(std::runtime_error, "Gradient need input defined on AllCells()");
+    OPM_THROW(std::runtime_error, "Gradient needs input defined on AllCells()");
     }
     
     return gradientWrapper(cell_scalarfield,
-    			   dev_grid_.interiorFaces(),
-    			   dev_grid_.face_cells(),
-    			   devOps_);
+                   dev_grid_.interiorFaces(),
+                   dev_grid_.face_cells(),
+                   devOps_);
 }
 
-CollOfScalar EquelleRuntimeCUDA::gradient_matrix( const CollOfScalar& cell_scalarfield ) const {
+CollOfScalar EquelleRuntimeCUDA::gradient_matrix( const CollOfScalar& cell_scalarfield ) const
+{
     if ( cell_scalarfield.size() != dev_grid_.number_of_cells() ) {
-	OPM_THROW(std::runtime_error, "Gradient need input defined on AllCells()");
+        OPM_THROW(std::runtime_error, "Gradient needs input defined on AllCells()");
     }
     return devOps_.grad() * cell_scalarfield;
 }
@@ -275,35 +282,36 @@ CollOfScalar EquelleRuntimeCUDA::divergence(const CollOfScalar& face_fluxes) con
     // If the size is not the same as the number of faces, then the input is
     // given as interiorFaces. Then it has to be extended to AllFaces.
     if ( face_fluxes.size() != dev_grid_.number_of_faces() ) {
-	CollOfFace int_faces = interiorFaces();
-	// Extend to AllFaces():
-	CollOfScalar allFluxes = operatorExtend(face_fluxes, int_faces, allFaces());
-	return divergenceWrapper(allFluxes,
-				 dev_grid_,
-				 devOps_);
-    }
-    else {
-	// We are on allFaces already, so let's go!
-	return divergenceWrapper(face_fluxes,
-				 dev_grid_,
-				 devOps_); 
+        CollOfFace int_faces = interiorFaces();
+        // Extend to AllFaces():
+        CollOfScalar allFluxes = operatorExtend(face_fluxes, int_faces, allFaces());
+        return divergenceWrapper(allFluxes,
+                                 dev_grid_,
+                                 devOps_);
+    } else {
+        // We are on allFaces already, so let's go!
+        return divergenceWrapper(face_fluxes,
+                                 dev_grid_,
+                                 devOps_); 
     }
 }
 
-CollOfScalar EquelleRuntimeCUDA::divergence_matrix(const CollOfScalar& face_fluxes) const {
+
+CollOfScalar EquelleRuntimeCUDA::divergence_matrix(const CollOfScalar& face_fluxes) const 
+{
     
     // The input need to be defined on allFaces() or interiorFaces()
     if ( face_fluxes.size() != dev_grid_.number_of_faces() &&
-	 face_fluxes.size() != devOps_.num_int_faces() ) {
-	OPM_THROW(std::runtime_error, "Input for divergence has to be on AllFaces or on InteriorFaces()");
+         face_fluxes.size() != devOps_.num_int_faces() ) {
+        OPM_THROW(std::runtime_error, "Input for divergence has to be on AllFaces or on InteriorFaces()");
     }
     
     if ( face_fluxes.size() == dev_grid_.number_of_faces() ) {
-	// All faces
-	return devOps_.fulldiv() * face_fluxes;
+        // All faces
+        return devOps_.fulldiv() * face_fluxes;
     }
     else { // on internal faces
-	return devOps_.div() * face_fluxes;
+        return devOps_.div() * face_fluxes;
     }
 }
 
@@ -359,11 +367,11 @@ CollOfScalar EquelleRuntimeCUDA::serialSolveForUpdate(const CollOfScalar& residu
     std::vector<double> hostX(hostb.size(), 0.0);
 
     Opm::LinearSolverInterface::LinearSolverReport rep
-	= serialSolver_.solve(hostA.rows, hostA.nnz,
-			      &hostA.rowPtr[0], &hostA.colInd[0], &hostA.vals[0],
-			      &hostb[0], &hostX[0]);
+    = serialSolver_.solve(hostA.rows, hostA.nnz,
+                  &hostA.rowPtr[0], &hostA.colInd[0], &hostA.vals[0],
+                  &hostb[0], &hostX[0]);
     if (!rep.converged) {
-	OPM_THROW(std::runtime_error, "Serial linear solver failed to converge.");
+    OPM_THROW(std::runtime_error, "Serial linear solver failed to converge.");
     }
        
     return CollOfScalar(hostX);

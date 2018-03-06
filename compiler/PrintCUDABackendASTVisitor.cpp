@@ -21,10 +21,12 @@ const char *PrintCUDABackendASTVisitor::cppStartString() const
 "\n"
 "// This program was created by the Equelle compiler from SINTEF.\n"
 "\n"
+
 "#include <opm/common/utility/parameters/ParameterGroup.hpp>\n"
 "#include <opm/common/ErrorMacros.hpp>\n"
 "#include <opm/grid/UnstructuredGrid.h>\n"
 "#include <opm/grid/GridManager.hpp>\n"
+
 "#include <algorithm>\n"
 "#include <iterator>\n"
 "#include <iostream>\n"
@@ -40,7 +42,7 @@ const char *PrintCUDABackendASTVisitor::cppStartString() const
 "int main(int argc, char** argv)\n"
 "{\n"
 "    // Get user parameters.\n"
-"    Opm::parameter::ParameterGroup param(argc, argv, false);\n"
+"    Opm::ParameterGroup param(argc, argv, false);\n"
 "\n"
 "    // Create the Equelle runtime.\n"
 "    equelleCUDA::EquelleRuntimeCUDA er(param);\n"

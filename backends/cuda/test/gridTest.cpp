@@ -21,7 +21,7 @@
 #include <opm/core/grid.h>
 #include <opm/core/grid/GridManager.hpp>
 
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 
 #include "EquelleRuntimeCUDA.hpp"
 
@@ -50,7 +50,7 @@ int main( int argc, char** argv )
     int ret = 1;
     try {
 	// Get user parameters
-	Opm::parameter::ParameterGroup param( argc, argv, false);
+	Opm::ParameterGroup param( argc, argv, false );
 
 	// Create the Equelle runtime
 	EquelleRuntimeCUDA er(param);
@@ -58,10 +58,10 @@ int main( int argc, char** argv )
 	
 	// Get the device grid so that we can play around with it!
 	DeviceGrid dg(er.getGrid());
-    
+
+
 	int a = 1;
 	int b = 1;
-	//framework::master_test_suite().add( BOOST_REQUIRE( a == b ), 0);
 	
 	equal_test_function(a, b);
 	
@@ -82,8 +82,6 @@ int main( int argc, char** argv )
     }
     return ret;
 }
-
-
 
 
 int runtime_test( const EquelleRuntimeCUDA& er) {
@@ -116,6 +114,7 @@ int runtime_test( const EquelleRuntimeCUDA& er) {
 			    "Runtime.interiorFaces()") ) {
 	return 1;
     }
+    
 
     // Test boundaryCells()
     int bnd_cells[] =  {0,1,2,3,4,7,8,9,10,11};

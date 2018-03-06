@@ -10,7 +10,7 @@ namespace
 "\n"
 "#include <opm/core/utility/parameters/ParameterGroup.hpp>\n"
 "#include <opm/core/linalg/LinearSolverFactory.hpp>\n"
-"#include <opm/core/utility/ErrorMacros.hpp>\n"
+"#include <opm/common/ErrorMacros.hpp>\n"
 "#include <opm/autodiff/AutoDiffBlock.hpp>\n"
 "#include <opm/autodiff/AutoDiffHelpers.hpp>\n"
 "#include <opm/core/grid.h>\n"

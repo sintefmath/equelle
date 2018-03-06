@@ -26,6 +26,9 @@ public:
     void visit(BinaryOpNode& node);
     void midVisit(BinaryOpNode& node);
     void postVisit(BinaryOpNode& node);
+    void visit(MultiplyAddNode& node);
+    void midVisit(MultiplyAddNode& node);
+    void postVisit(MultiplyAddNode& node);
     void visit(ComparisonOpNode& node);
     void midVisit(ComparisonOpNode& node);
     void postVisit(ComparisonOpNode& node);

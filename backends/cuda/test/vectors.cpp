@@ -11,7 +11,7 @@
 
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <opm/core/grid/GridManager.hpp>
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 
 #include "EquelleRuntimeCUDA.hpp"
 #include "CollOfVector.hpp"
@@ -30,7 +30,7 @@ double compNorm(double a, double b, double c);
 
 
 int main( int argc, char** argv) {
-    Opm::parameter::ParameterGroup param( argc, argv, false);
+    Opm::ParameterGroup param( argc, argv, false);
     EquelleRuntimeCUDA er(param);
     
     if ( vector_test(&er) ) {

@@ -19,8 +19,12 @@
 
 
 
-// ------ Abstract syntax tree classes ------
+static std::logic_error compilerError(std::string place, std::string msg)
+{
+    return std::logic_error("Internal compiler error in " + place + ": " + msg);
+}
 
+// ------ Abstract syntax tree classes ------
 
 
 /// Base class for expression nodes.
@@ -76,6 +80,22 @@ public:
     const std::vector<Node*>& nodes() {
         return nodes_;
     }
+    virtual int numChildren()
+    {
+        return nodes_.size();
+    }
+    virtual Node* getChild(const int index)
+    {
+        return nodes_[index];
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        if (index < nodes_.size() && index >= 0) {
+            nodes_[index] = child;
+        } else {
+            throw compilerError("SequenceNode::setChild()", "Index out of range.");
+        }
+    }
 private:
     std::vector<Node*> nodes_;
 };
@@ -98,6 +118,15 @@ public:
     double number() const
     {
         return num_;
+    }
+    virtual int numChildren() { return 0; }
+    virtual Node* getChild(const int index)
+    {
+        throw compilerError("NumberNode::getChild()", "NumberNode has no children.");
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        throw compilerError("NumberNode::setChild()", "NumberNode has no children.");
     }
 private:
     double num_;
@@ -122,11 +151,18 @@ public:
     {
         return content_;
     }
+    virtual int numChildren(){ return 0; }
+    virtual Node* getChild(const int index)
+    {
+        throw compilerError("StringNode::getChild()", "StringNode has no children.");
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        throw compilerError("StringNode::setChild()", "StringNode has no children.");
+    }
 private:
     std::string content_;
 };
-
-
 
 
 class TypeNode : public Node
@@ -141,11 +177,21 @@ public:
     {
         visitor.visit(*this);
     }
+    virtual int numChildren()
+    {
+        return 0;
+    }
+    virtual Node* getChild(const int index)
+    {
+        throw compilerError("TypeNode::getChild()", "TypeNode has no children.");
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        throw compilerError("TypeNode::setChild()", "TypeNode has no children.");
+    }
 private:
     EquelleType et_;
 };
-
-
 
 
 class CollectionTypeNode : public TypeNode
@@ -205,6 +251,28 @@ public:
         }
         visitor.postVisit(*this);
     }
+    virtual int numChildren()
+    {
+        return 3;
+    }
+    virtual Node* getChild(const int index)
+    {
+        switch (index) {
+            case 0 : return btype_;
+            case 1 : return gridmapping_;
+            case 2 : return subsetof_;
+            default: throw compilerError("CollectionTypeNode::getChild()", "Index is out of range.");
+        }
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        switch (index) {
+            case 0 : btype_ = dynamic_cast<TypeNode*>(child); break;
+            case 1 : gridmapping_ = dynamic_cast<ExpressionNode*>(child); break;
+            case 2 : subsetof_ = dynamic_cast<ExpressionNode*>(child); break;
+            default: throw compilerError("CollectionTypeNode::setChild()", "Index is out of range.");
+        }
+    }
 
 private:
     TypeNode* btype_;
@@ -241,7 +309,27 @@ public:
     {
         visitor.visit(*this);
     }
-
+    virtual int numChildren()
+    {
+        return 1;
+    }
+    virtual Node* getChild(const int index)
+    {
+        if (index == 0) {
+            return btype_;
+        } else {
+            throw compilerError("ArrayTypeNode::getChild()", "Index is out of range.");
+        }
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        if (index == 0) {
+            btype_ = dynamic_cast<TypeNode*>(child);
+        } else {
+            throw compilerError("ArrayTypeNode::setChild()", "Index is out of range.");
+        }
+        
+    }
 private:
     TypeNode* btype_;
     int array_size_;
@@ -275,7 +363,23 @@ public:
     {
         visitor.visit(*this);
     }
-
+    virtual Node* getChild(const int index)
+    {
+        if (index == 0) {
+            return btype_;
+        } else {
+            throw compilerError("SequenceTypeNode::getChild()", "Index is out of range.");
+        }
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        if (index == 0) {
+            btype_ = dynamic_cast<TypeNode*>(child);
+        } else {
+            throw compilerError("SequenceTypeNode::setChild()", "Index is out of range.");
+        }
+        
+    }
 private:
     TypeNode* btype_;
 };
@@ -308,7 +412,23 @@ public:
     {
         visitor.visit(*this);
     }
-
+    virtual Node* getChild(const int index)
+    {
+        if (index == 0) {
+            return btype_;
+        } else {
+            throw compilerError("MutableTypeNode::getChild()", "Index is out of range.");
+        }
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        if (index == 0) {
+            btype_ = dynamic_cast<TypeNode*>(child);
+        } else {
+            throw compilerError("MutableTypeNode::setChild()", "Index is out of range.");
+        }
+        
+    }
 private:
     TypeNode* btype_;
 };
@@ -395,13 +515,104 @@ public:
         right_->accept(visitor);
         visitor.postVisit(*this);
     }
+    virtual int numChildren()
+    {
+        return 2;
+    }
+    virtual Node* getChild(const int index)
+    {
+        switch (index) {
+            case 0 : return left_;
+            case 1 : return right_;
+            default: throw compilerError("BinaryOpNode::getChild()", "Index is out of range.");
+        }
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        switch (index) {
+            case 0 : left_ = dynamic_cast<ExpressionNode*>(child); break;
+            case 1 : right_ = dynamic_cast<ExpressionNode*>(child); break;
+            default: throw compilerError("BinaryOpNode::setChild()", "Index is out of range.");
+        }
+    }
 private:
     BinaryOp op_;
     ExpressionNode* left_;
     ExpressionNode* right_;
 };
 
+// Class for the operation a + b * c
+class MultiplyAddNode : public ExpressionNode
+{
+public:
+    MultiplyAddNode(ExpressionNode* a, ExpressionNode* b, ExpressionNode* c)
+        : a_(a), b_(b), c_(c)
+    {
+    }
+    virtual ~MultiplyAddNode()
+    {
+        delete a_;
+        delete b_;
+        delete c_;
+    }
+    virtual EquelleType type() const
+    {
 
+        // Type of left and right side of multiplication
+        EquelleType lt = a_->type();
+        EquelleType rt = b_->type();
+
+        // This test is taken from BinaryOpNode::type()
+        const bool isvec = lt.basicType() == Vector || rt.basicType() == Vector;
+        const BasicType bt = isvec ? Vector : Scalar;
+        const bool coll = lt.isCollection() || rt.isCollection();
+        const bool sequence = lt.isSequence() || rt.isSequence();
+        const CompositeType ct = coll ? Collection : (sequence ? Sequence : None);
+        const int gm = lt.isCollection() ? lt.gridMapping() : rt.gridMapping();
+
+        auto multiplicationType = EquelleType(bt, ct, gm);
+
+        // We return the type of a * b since c should have the same type
+        return multiplicationType;
+    }
+    virtual void accept(ASTVisitorInterface& visitor)
+    {
+        visitor.visit(*this);
+        a_->accept(visitor);
+        visitor.midVisit(*this);
+        b_->accept(visitor);
+        visitor.midVisit(*this);
+        c_->accept(visitor);
+        visitor.postVisit(*this);
+    }
+    virtual int numChildren()
+    {
+        return 3;
+    }
+    virtual Node* getChild(const int index)
+    {
+        switch (index) {
+            case 0 : return a_;
+            case 1 : return b_;
+            case 2 : return c_;
+            default: throw compilerError("MultiplyAddNode::getChild()", "Index out of range.");;
+        }
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        ExpressionNode* exprchild = dynamic_cast<ExpressionNode*>(child);
+        switch (index) {
+            case 0 : a_ = exprchild; break;
+            case 1 : b_ = exprchild; break;
+            case 2 : c_ = exprchild; break;
+            default: throw compilerError("MultiplyAddNode::setChild()", "Index is out of range.");
+        }
+    }
+private:
+    ExpressionNode* a_;
+    ExpressionNode* b_;
+    ExpressionNode* c_;
+};
 
 
 enum ComparisonOp { Less, Greater, LessEqual, GreaterEqual, Equal, NotEqual };
@@ -443,6 +654,27 @@ public:
         visitor.midVisit(*this);
         right_->accept(visitor);
         visitor.postVisit(*this);
+    }
+    virtual int numChildren()
+    {
+        return 2;
+    }
+    virtual Node* getChild(const int index)
+    {
+        switch (index) {
+            case 0 : return left_;
+            case 1 : return right_;
+            default: throw compilerError("ComparisonOpNode::getChild()", "Index is out of range.");
+        }
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        ExpressionNode* exprchild = dynamic_cast<ExpressionNode*>(child);
+        switch (index) {
+            case 0 : left_ = exprchild; break;
+            case 1 : right_ = exprchild; break;
+            default: throw compilerError("ComparisonOpNode::setChild()", "Index is out of range.");
+        }
     }
 private:
     ComparisonOp op_;
@@ -508,6 +740,25 @@ public:
         expr_to_norm_->accept(visitor);
         visitor.postVisit(*this);
     }
+    virtual int numChildren()
+    {
+        return 1;
+    }
+    virtual Node* getChild(const int index)
+    {
+        if (index == 0) {
+            return expr_to_norm_;
+        }
+        throw compilerError("NormNode::getChild()", "Index is out of range.");
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        ExpressionNode* exprchild = dynamic_cast<ExpressionNode*>(child);
+        if (index == 0) {
+            expr_to_norm_ = exprchild;
+        }
+        throw compilerError("NormNode::setChild()", "Index is out of range.");
+    }
 private:
     ExpressionNode* expr_to_norm_;
 };
@@ -540,6 +791,25 @@ public:
         visitor.visit(*this);
         expr_to_negate_->accept(visitor);
         visitor.postVisit(*this);
+    }
+    virtual int numChildren()
+    {
+        return 1;
+    }
+    virtual Node* getChild(const int index)
+    {
+        if (index == 0){
+            return expr_to_negate_;
+        }
+        throw compilerError("UnaryNegationNode::getChild()", "Index is out of range.");
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        
+        if (index == 0){
+            expr_to_negate_ = dynamic_cast<ExpressionNode*>(child);
+        }        
+        throw compilerError("UnaryNegationNode::setChild()", "Index is out of range.");
     }
 private:
     ExpressionNode* expr_to_negate_;
@@ -587,6 +857,27 @@ public:
         visitor.midVisit(*this);
         right_->accept(visitor);
         visitor.postVisit(*this);
+    }
+    virtual int numChildren()
+    {
+        return 2;
+    }
+    virtual Node* getChild(const int index)
+    {
+        switch (index) {
+            case 0 : return left_;
+            case 1 : return right_;
+            default: throw compilerError("OnNode::getChild()", "Index out of range.");
+        }
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        ExpressionNode* exprchild = dynamic_cast<ExpressionNode*>(child);
+        switch (index) {
+            case 0 : left_ = exprchild; break;
+            case 1 : right_ = exprchild; break;
+            default: throw compilerError("OnNode::setChild()", "Index out of range.");
+        }
     }
 private:
     ExpressionNode* left_;
@@ -639,6 +930,28 @@ public:
         iffalse_->accept(visitor);
         visitor.postVisit(*this);
     }
+    virtual int numChildren()
+    {
+        return 3;
+    }
+    virtual Node* getChild(const int index)
+    {
+        switch (index) {
+            case 0 : return predicate_;
+            case 1 : return iftrue_;
+            case 2 : return iffalse_;
+            default: throw compilerError("TrinaryIfNode::getChild()", "Index is out of range.");
+        }
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        switch (index) {
+            case 0 : predicate_ = dynamic_cast<ExpressionNode*>(child); break;
+            case 1 : iftrue_ = dynamic_cast<ExpressionNode*>(child); break;
+            case 2 : iffalse_ = dynamic_cast<ExpressionNode*>(child); break;
+            default: throw compilerError("TrinaryIfNode::setChild()", "Index out of range.");
+        }
+    }
 private:
     ExpressionNode* predicate_;
     ExpressionNode* iftrue_;
@@ -672,6 +985,24 @@ public:
         visitor.visit(*this);
         type_->accept(visitor);
         visitor.postVisit(*this);
+    }
+    virtual int numChildren()
+    {
+        return 1;
+    }
+    virtual Node* getChild(const int index)
+    {
+        if(index == 0){
+            return type_;
+        }
+        throw compilerError("VarDeclNode::getChild()", "Index is out of range.");
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        switch (index) {
+            case 0 : type_ = dynamic_cast<TypeNode*>(child); break;
+            default: throw compilerError("VarDeclNode::setChild()", "Index is out of range.");
+        }
     }
 private:
     std::string varname_;
@@ -708,6 +1039,26 @@ public:
         visitor.visit(*this);
         expr_->accept(visitor);
         visitor.postVisit(*this);
+    }
+    virtual int numChildren()
+    {
+        return 1;
+    }
+    virtual Node* getChild(const int index)
+    {
+        if (index == 0){
+            return expr_;
+        }
+        throw compilerError("VarAssignNode::getChild()", "Index is out of range.");
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        if (index == 0){
+            expr_ = dynamic_cast<ExpressionNode*>(child);
+        }else
+        {
+            throw compilerError("VarAssignNode::setChild()", "Index is out of range.");
+        }
     }
 private:
     std::string varname_;
@@ -777,6 +1128,18 @@ public:
     {
         visitor.visit(*this);
     }
+    virtual int numChildren()
+    {
+        return 0;
+    }
+    virtual Node* getChild(const int index)
+    {
+        throw compilerError("VarNode::getChild()", "VarNode has no children.");
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        throw compilerError("VarNode::setChild()", "VarNode has no children.");
+    }
 private:
     std::string varname_;
     int instantiation_index_;
@@ -825,6 +1188,18 @@ public:
         }
         visitor.postVisit(*this);
     }
+    virtual int numChildren()
+    {
+        return decls_.size();
+    }
+    virtual Node* getChild(const int index)
+    {
+        return decls_[index];
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        decls_[index] = dynamic_cast<VarDeclNode*>(child);
+    }
 private:
     std::vector<VarDeclNode*> decls_;
 };
@@ -846,6 +1221,30 @@ public:
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
+    }
+    virtual int numChildren()
+    {
+        return 2;
+    }
+    virtual Node* getChild(const int index)
+    {
+        if ( index == 0 ) {
+            return argtypes_;
+        } else 
+        if ( index == 1 ) {
+            return rtype_;
+        } 
+        throw compilerError("FuncTypeNode::getChild()", "Index is out of range.");
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        if ( index == 0 ) {
+            argtypes_ = dynamic_cast<FuncArgsDeclNode*>(child);
+        }else
+        if ( index == 1 ) {
+            rtype_ = dynamic_cast<TypeNode*>(child);
+        }
+        throw compilerError("FuncTypeNode::setChild()", "Index is out of range.");
     }
 private:
     FuncArgsDeclNode* argtypes_;
@@ -873,6 +1272,18 @@ public:
     {
         visitor.visit(*this);
     }
+    virtual int numChildren()
+    {
+        return 0;
+    }
+    virtual Node* getChild(const int index)
+    {
+        throw compilerError("FuncRefNode::getChild()", "FuncRefNode has no children.");
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        throw compilerError("FuncRefNode::setChild()", "FuncRefNode has no children.");
+    }
 private:
     std::string funcname_;
 };
@@ -897,6 +1308,18 @@ public:
     virtual void accept(ASTVisitorInterface& visitor)
     {
         visitor.visit(*this);
+    }
+    virtual int numChildren()
+    {
+        return 0;
+    }
+    virtual Node* getChild(const int index)
+    {
+        throw compilerError("JustAnIdentifierNode::getChild()", "JustAnIdentifierNode has no children.");
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        throw compilerError("JustAnIdentifierNode::setChild()", "JustAnIdentifierNode has no children.");
     }
 private:
     std::string id_;
@@ -936,6 +1359,26 @@ public:
         visitor.postVisit(*this);
         SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
 #endif
+    }
+    virtual int numChildren()
+    {
+        return 1;
+    }
+    virtual Node* getChild(const int index)
+    {
+        if ( index == 0 ){
+            return ftype_;
+        }
+        throw compilerError("FuncDeclNode::getChild()", "Index out of range.");
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        if ( index == 0 ){
+            ftype_ = dynamic_cast<FuncTypeNode*>(child);
+        } else {
+            throw compilerError("FuncDeclNode::setChild()", "Index out of range.");
+        }
+        
     }
 private:
     std::string funcname_;
@@ -990,6 +1433,18 @@ public:
         }
         visitor.postVisit(*this);
     }
+    virtual int numChildren()
+    {
+        return args_.size();
+    }
+    virtual Node* getChild(const int index)
+    {
+        return args_[index];
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        args_[index] = dynamic_cast<ExpressionNode*>(child);
+    }
 private:
     std::vector<ExpressionNode*> args_;
 };
@@ -1024,6 +1479,24 @@ public:
         visitor.visit(*this);
         expr_->accept(visitor);
         visitor.postVisit(*this);
+    }
+    virtual int numChildren()
+    {
+        return 1;
+    }
+    virtual Node* getChild(const int index)
+    {
+        if (index == 0){
+            return expr_;
+        }
+        throw compilerError("ReturnStatementNode::getChild()", "Index out of range.");
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        if (index == 0){
+            expr_ = dynamic_cast<ExpressionNode*>(child);
+        }
+        throw compilerError("ReturnStatementNode::setChild()", "Index out of range.");
     }
 private:
     ExpressionNode* expr_;
@@ -1078,6 +1551,25 @@ public:
         funcargs_->accept(visitor);
         visitor.postVisit(*this);
     }
+    virtual int numChildren()
+    {
+        return 1;
+    }
+    virtual Node* getChild(const int index)
+    {
+        if (index == 0){
+            return funcargs_;
+        }
+        throw compilerError("FuncStartNode::getChild()", "Index out of range.");
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        if (index == 0){
+            funcargs_ = dynamic_cast<FuncArgsNode*>(child);
+        }
+        throw compilerError("FuncStartNode::setChild()", "Index out of range.");
+        
+    }
 private:
     std::string funcname_;
     FuncArgsNode* funcargs_;
@@ -1114,6 +1606,27 @@ public:
 #if 0
         SymbolTable::setCurrentFunction(SymbolTable::getCurrentFunction().parentScope());
 #endif
+    }
+    virtual int numChildren()
+    {
+        return 2;
+    }
+    virtual Node* getChild(const int index)
+    {
+        switch (index) {
+            case 0 : return funcstart_;
+            case 1 : return funcbody_;
+            default: throw compilerError("FuncAssignNode::getChild()", "Index out of range.");
+        }
+        
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        switch (index) {
+            case 0 : funcbody_ = dynamic_cast<FuncStartNode*>(child); break;
+            case 1 : funcbody_ = child; break;
+            default: throw compilerError("FuncAssignNode::setChild()", "Index out of range.");
+        }       
     }
 private:
     FuncStartNode* funcstart_;
@@ -1164,7 +1677,24 @@ public:
         args_->accept(visitor);
         visitor.postVisit(*this);
     }
-
+    virtual int numChildren()
+    {
+        return 1;
+    }
+    virtual Node* getChild(const int index)
+    {
+        if (index == 0){
+            return args_;
+        }
+        throw compilerError("StencilNode::getChild()", "Index out of range.");
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        if( index == 0 ) {
+            args_ = dynamic_cast<FuncArgsNode*>(child);
+        }
+        throw compilerError("StencilNode::setChild()", "Index out of range.");
+    }
 private:
     std::string varname_;
     FuncArgsNode* args_;
@@ -1261,7 +1791,24 @@ public:
         funcargs_->accept(visitor);
         visitor.postVisit(*this);
     }
-
+    virtual int numChildren()
+    {
+        return 1;
+    }
+    virtual Node* getChild(const int index)
+    {
+        switch (index) {
+            case 0 : return funcargs_;
+            default: throw compilerError("FuncCallNode::getChild()", "Index out of range.");
+        }
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        switch (index) {
+            case 0 : funcargs_ = dynamic_cast<FuncArgsNode*>(child); break;
+            default: throw compilerError("FuncCallNode::setChild()", "Index out of range.");
+        }
+    }
 private:
     std::string funcname_;
     FuncArgsNode* funcargs_;
@@ -1297,7 +1844,24 @@ public:
         func_call_->accept(visitor);
         visitor.postVisit(*this);
     }
-
+    virtual int numChildren()
+    {
+        return 1;
+    }
+    virtual Node* getChild(const int index)
+    {
+        if (index == 0) {
+            return func_call_;
+        }
+        throw compilerError("FuncCallStatementNode::getChild()", "Index out of range.");
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        if( index == 0 ) {
+            func_call_ = dynamic_cast<FuncCallNode*>(child);
+        }
+        throw compilerError("FuncCallStatementNode::setChild()", "Index out of range.");
+    }
 private:
     FuncCallNode* func_call_;
 };
@@ -1345,6 +1909,24 @@ public:
         loop_block_->accept(visitor);
         visitor.postVisit(*this);
     }
+    virtual int numChildren()
+    {
+        return 1;
+    }
+    virtual Node* getChild(const int index)
+    {
+        if (index == 0) {
+            return loop_block_;
+        }
+        throw compilerError("LoopNode::getChild()", "Index out of range.");
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        if( index == 0 ) {
+            loop_block_ = dynamic_cast<SequenceNode*>(child);
+        }
+        throw compilerError("LoopNode::setChild()", "Index out of range.");
+    }
 private:
     std::string loop_variable_;
     std::string loop_set_;
@@ -1377,7 +1959,7 @@ public:
     }
     Dimension dimension() const
     {
-        throw std::logic_error("Internal compiler error in ArrayNode::dimension(). Meaningless to ask for array dimension since array elements may have different dimension.");
+        throw compilerError("ArrayNode::dimension()", "Meaningless to ask for array dimension since array elements may have different dimension.");
         return Dimension();
     }
     std::vector<Dimension> arrayDimension() const
@@ -1394,6 +1976,25 @@ public:
         visitor.visit(*this);
         expr_list_->accept(visitor);
         visitor.postVisit(*this);
+    }
+    virtual int numChildren()
+    {
+        return 1;
+    }
+    virtual Node* getChild(const int index)
+    {
+        if (index == 0){
+            return expr_list_;
+        }
+        throw compilerError("ArrayNode::getChild()", "Index out of range.");
+
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        if( index == 0 ) {
+            expr_list_ = dynamic_cast<FuncArgsNode*>(child);
+        }
+        throw compilerError("ArrayNode::setChild()", "Index out of range.");
     }
 private:
     FuncArgsNode* expr_list_;
@@ -1426,7 +2027,7 @@ public:
     }
     EquelleType type() const
     {
-        // Either erpr_ must be an Array, or, if not,
+        // Either expr_ must be an Array, or, if not,
         // we must be a (Collection Of) Scalar,
         // since expr_ must be a (Collection Of) Vector.
         EquelleType t = expr_->type();
@@ -1452,6 +2053,24 @@ public:
         visitor.visit(*this);
         expr_->accept(visitor);
         visitor.postVisit(*this);
+    }
+    virtual int numChildren()
+    {
+        return 1;
+    }
+    virtual Node* getChild(const int index)
+    {
+        if (index == 0) {
+            return expr_;
+        }
+        throw compilerError("RandomAccessNode::getChild()", "Index out of range.");
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        if (index == 0) {
+            expr_ = dynamic_cast<ExpressionNode*>(child);
+        }
+        throw compilerError("RandomAccessNode::setChild()", "Index out of range.");
     }
 private:
     ExpressionNode* expr_;
@@ -1487,6 +2106,27 @@ public:
     const std::string& name() const {
         return lhs_->name();
     }
+
+    virtual int numChildren()
+    {
+        return 2;
+    }
+    virtual Node* getChild(const int index)
+    {
+        switch (index) {
+            case 0 : return lhs_;
+            case 1 : return rhs_;
+            default: throw compilerError("StencilAssignmentNode::getChild()", "Index out of range.");
+        }
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        switch (index) {
+            case 0 : lhs_ = dynamic_cast<StencilNode*>(child); break;
+            case 1 : rhs_ = dynamic_cast<ExpressionNode*>(child); break;
+            default: throw compilerError("StencilAssignmentNode::setChild()", "Index out of range.");
+        }
+    }
 private:
     StencilNode* lhs_;
     ExpressionNode* rhs_;
@@ -1504,6 +2144,19 @@ public:
     // current unit with to obtain an SI quantity.
     // For example for Inch, the factor ie 0.0254.
     virtual double conversionFactorSI() const = 0;
+    
+    virtual int numChildren()
+    {
+        return 0;
+    }
+    virtual Node* getChild(const int index)
+    {
+        throw compilerError("UnitNode::getChild()", "UnitNode has no children.");
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        throw compilerError("UnitNode::setChild()", "UnitNode has no children.");
+    }
 
 };
 
@@ -1606,7 +2259,29 @@ public:
         right_->accept(visitor);
         visitor.postVisit(*this);
     }
-
+    
+    virtual int numChildren()
+    {
+        return 2;
+    }
+    virtual Node* getChild(const int index)
+    {
+        switch (index) {
+            case 0 : return left_;
+            case 1 : return right_;
+            default: throw compilerError("BinaryOpUnitNode::getChild()","Index out of range.");
+        }
+        return left_;
+        return right_;
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        switch (index) {
+            case 0 : left_ = dynamic_cast<UnitNode*>(child); break;
+            case 1 : right_ = dynamic_cast<UnitNode*>(child); break;
+            default: throw compilerError("BinaryOpUnitNode::setChild()","Index out of range.");
+        }
+    }
 private:
     BinaryOp op_;
     UnitNode* left_;
@@ -1650,6 +2325,26 @@ public:
         visitor.visit(*this);
         unit_->accept(visitor);
         visitor.postVisit(*this);
+    }
+    virtual int numChildren()
+    {
+        return 1;
+    }
+    virtual Node* getChild(const int index)
+    {
+        if ( index == 0 ) {
+            return unit_;
+        }
+        throw compilerError("PowerUnitNode::getChild()","Index out of range.");
+        
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        if ( index == 0 ) {
+            unit_ = dynamic_cast<UnitNode*>(child);
+            return;
+        }
+        throw compilerError("PowerUnitNode::getChild()","Index out of range.");
     }
 
 private:
@@ -1703,6 +2398,28 @@ public:
     double number() const
     {
         return number_->number();
+    }
+
+    virtual int numChildren()
+    {
+        return 2;
+    }
+    virtual Node* getChild(const int index)
+    {
+        switch (index) {
+            case 0 : return number_;
+            case 1 : return unit_;
+            default: throw compilerError("QuantityUnitNode::getChild()","Index out of range.");
+        }
+        
+    }
+    virtual void setChild(const int index, Node* child)
+    {
+        switch(index) {
+            case 0: number_ = dynamic_cast<NumberNode*>(child); break;
+            case 1: unit_ = dynamic_cast<UnitNode*>(child); break;
+            default: throw compilerError("QuantityUnitNode::setChild()","Index out of range.");
+        }
     }
 
 private:
