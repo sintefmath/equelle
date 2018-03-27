@@ -3,12 +3,12 @@
 #define EQUELLE_DEVICEHELPEROPS_HEADER_INCLUDED
 
 
-#include <opm/core/grid/GridManager.hpp>
+#include <opm/grid/GridManager.hpp>
+#include <opm/grid/UnstructuredGrid.h>
 
 #include <Eigen/Sparse>
 #include <Eigen/Eigen>
 #include <iostream>
-#include <opm/core/grid.h>
 
 #include "CudaMatrix.hpp"
 

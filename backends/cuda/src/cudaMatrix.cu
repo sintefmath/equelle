@@ -5,7 +5,7 @@
 #include <thrust/device_vector.h>
 #include <thrust/detail/raw_pointer_cast.h>
 
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 
 #include <vector>
 #include <iostream>

@@ -5,8 +5,8 @@
 #include "DeviceHelperOps.hpp"
 #include "CudaMatrix.hpp"
 
-#include <opm/core/utility/ErrorMacros.hpp>
-#include <opm/core/grid.h>
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/grid/UnstructuredGrid.h>
 
 using namespace equelleCUDA;
 

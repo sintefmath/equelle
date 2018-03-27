@@ -10,7 +10,7 @@
 #include <iterator>
 #include <string>
 #include <vector>
-#include <opm/core/utility/StopWatch.hpp>
+#include <opm/grid/utility/StopWatch.hpp>
 #include <opm/autodiff/AutoDiffHelpers.hpp>
 
 #include "EquelleRuntimeCUDA.hpp"

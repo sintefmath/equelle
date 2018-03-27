@@ -10,7 +10,7 @@
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 
 using namespace equelleCUDA;
 

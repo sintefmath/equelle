@@ -5,7 +5,7 @@
 
 #include <opm/autodiff/AutoDiffHelpers.hpp>
 #include <opm/autodiff/AutoDiffBlock.hpp>
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 
 #include "EquelleRuntimeCUDA.hpp"
 #include "CudaArray.hpp"
@@ -103,7 +103,8 @@ int matrixCompare( hostMat mat, ADB::M m_colMajor, std::string msg, double tol) 
     // ADB::M uses column major format!
     // Cannot compare arrays in column major format with arrays in
     // row major formats!
-    Eigen::SparseMatrix<Scalar, Eigen::RowMajor> m(m_colMajor);
+    Eigen::SparseMatrix<Scalar, Eigen::RowMajor> m;
+    m_colMajor.toSparse(m);
 
     if ( mat.nnz != m.nonZeros() ) {
 	std::cout << "Error in " << msg;
@@ -208,11 +209,14 @@ int compareScalars( double cuda, double serial, std::string msg, double tol) {
 
 // Printing function:
 void printNonzeros(ADB adb) {
-    for (int i = 0; i < adb.derivative()[0].nonZeros(); i++) {
-	std::cout << adb.derivative()[0].valuePtr()[i] << "\t";
-	if ( i % 8 == 7) {
-	    std::cout << "\n";
-	}
+    Eigen::SparseMatrix<Scalar, Eigen::RowMajor> m;
+    adb.derivative()[0].toSparse(m);
+
+    for (int i = 0; i < m.nonZeros(); i++) {
+        std::cout << m.valuePtr()[i] << "\t";
+        if ( i % 8 == 7) {
+            std::cout << "\n";
+        }
     }
 }
 
@@ -232,7 +236,7 @@ int main(int argc, char** argv) {
 	return 1;
     }
 
-    Opm::parameter::ParameterGroup param( argc, argv, false);
+    Opm::ParameterGroup param( argc, argv, false);
     EquelleRuntimeCUDA er(param);
     equelle::EquelleRuntimeCPU serialER(param);
 
@@ -270,9 +274,12 @@ int main(int argc, char** argv) {
     }
     ADB myScalADB = ADB::constant(const_v, blocksize);
 
+    Eigen::SparseMatrix<Scalar, Eigen::RowMajor> m;
+    myADB.derivative()[0].toSparse(m);
+
     // Init a CollOfScalar:
     CudaArray init_array(init_vec);
-    CudaMatrix init_matrix(myADB.derivative()[0]);
+    CudaMatrix init_matrix(m);
     CollOfScalar myColl(init_array, init_matrix);
     CollOfScalar myScal(const_vec);
 
@@ -384,7 +391,9 @@ int main(int argc, char** argv) {
     // Check diagonal matrix * matrix
     typedef Eigen::DiagonalMatrix<Scalar, Eigen::Dynamic> D;
     D diag_test = myADB2.value().matrix().asDiagonal();
-    ADB::M diagMatrix = diag_test * myADB5.derivative()[0];
+    Eigen::SparseMatrix<Scalar, Eigen::RowMajor> m5;
+    myADB5.derivative()[0].toSparse(m5);
+    ADB::M diagMatrix(diag_test * m5);
     CudaMatrix cuda_diag_test(myColl2);
     CudaMatrix cuda_diagMatrix = cuda_diag_test * myColl5.derivative();
     if ( matrixCompare( cuda_diagMatrix.toHost(), diagMatrix, "diagMatrix * matrix")) {return 1; }
@@ -405,11 +414,8 @@ int main(int argc, char** argv) {
     myADB7 = myADB7 * myScalADB;
     if ( compare( myColl7, myADB7, "AD * nonAD") ) {return 1; }
 
-    //printNonzeros(myADB7);
-
-
     // Division: /
-    
+
     // Check AD / AD:
     CollOfScalar myColl8 = myColl7 / myColl6;
     ADB myADB8 = myADB7 / myADB6;

@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 
 #include "CollOfScalar.hpp"
 #include "CudaArray.hpp"

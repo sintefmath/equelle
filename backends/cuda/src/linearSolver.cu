@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 
 #include "LinearSolver.hpp"
 #include "CudaMatrix.hpp"

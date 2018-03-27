@@ -11,8 +11,8 @@
 #include "wrapEquelleRuntime.hpp"
 #include "LinearSolver.hpp"
 
-#include <opm/core/utility/ErrorMacros.hpp>
-#include <opm/core/utility/StopWatch.hpp>
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/grid/utility/StopWatch.hpp>
 #include <iomanip>
 #include <fstream>
 #include <iterator>
@@ -26,7 +26,7 @@ using namespace wrapEquelleRuntimeCUDA;
 
 namespace
 {
-    Opm::GridManager* createGridManager(const Opm::parameter::ParameterGroup& param)
+    Opm::GridManager* createGridManager(const Opm::ParameterGroup& param)
     {
         if (param.has("grid_filename")) {
         	// Unstructured grid
@@ -62,7 +62,7 @@ namespace
 
 
 
-EquelleRuntimeCUDA::EquelleRuntimeCUDA(const Opm::parameter::ParameterGroup& param)
+EquelleRuntimeCUDA::EquelleRuntimeCUDA(const Opm::ParameterGroup& param)
     : grid_manager_(createGridManager(param)),
       grid_(*(grid_manager_->c_grid())),
       dev_grid_(grid_),

@@ -11,7 +11,7 @@
 #include <iostream>
 #include <limits>
 
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 
 #include "wrapEquelleRuntime.hpp"
 #include "CollOfScalar.hpp"

@@ -6,14 +6,11 @@
 #define EQUELLERUNTIMECUDA_HEADER_INCLUDED
 
 
-//#include <opm/autodiff/AutoDiffBlock.hpp>
 #include <opm/autodiff/AutoDiffHelpers.hpp>
 #include <opm/core/linalg/LinearSolverFactory.hpp>
+#include <opm/common/utility/parameters/ParameterGroup.hpp>
+#include <opm/grid/GridManager.hpp>
 
-//#include <Eigen/Eigen>
-
-#include <opm/core/utility/parameters/ParameterGroup.hpp>
-#include <opm/core/grid/GridManager.hpp>
 #include <vector>
 #include <string>
 #include <map>
@@ -93,7 +90,7 @@ class EquelleRuntimeCUDA
 {
 public:
     /// Constructor.
-    EquelleRuntimeCUDA(const Opm::parameter::ParameterGroup& param);
+    EquelleRuntimeCUDA(const Opm::ParameterGroup& param);
 
     /// Destructor:
     ~EquelleRuntimeCUDA();
@@ -322,7 +319,7 @@ private:
     Opm::LinearSolverFactory serialSolver_;
     bool output_to_file_;
     int verbose_;
-    const Opm::parameter::ParameterGroup& param_;
+    const Opm::ParameterGroup& param_;
     std::map<std::string, int> outputcount_;
     // For newtonSolve().
     int max_iter_;
