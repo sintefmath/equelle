@@ -17,11 +17,11 @@
 #include "gridTest.h"
 
 // Include everything that the equelle runtime need
-#include <opm/core/utility/parameters/ParameterGroup.hpp>
-#include <opm/core/grid.h>
-#include <opm/core/grid/GridManager.hpp>
+#include <opm/common/utility/parameters/ParameterGroup.hpp>
+#include <opm/grid/UnstructuredGrid.h>
+#include <opm/grid/GridManager.hpp>
 
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 
 #include "EquelleRuntimeCUDA.hpp"
 
@@ -50,7 +50,7 @@ int main( int argc, char** argv )
     int ret = 1;
     try {
 	// Get user parameters
-	Opm::parameter::ParameterGroup param( argc, argv, false);
+	Opm::ParameterGroup param( argc, argv, false);
 
 	// Create the Equelle runtime
 	EquelleRuntimeCUDA er(param);

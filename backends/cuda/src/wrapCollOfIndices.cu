@@ -10,7 +10,7 @@
 #include <thrust/unique.h>
 #include <thrust/for_each.h>
 
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 
 #include "wrapCollOfIndices.hpp"
 #include "equelleTypedefs.hpp"

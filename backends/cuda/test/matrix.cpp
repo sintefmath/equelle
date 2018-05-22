@@ -1,5 +1,5 @@
-#include <opm/core/grid/GridManager.hpp>
-#include <opm/core/utility/parameters/ParameterGroup.hpp>
+#include <opm/grid/GridManager.hpp>
+#include <opm/common/utility/parameters/ParameterGroup.hpp>
 
 #include <iostream>
 #include <vector>
@@ -174,7 +174,7 @@ int main(int argc, char** argv) {
 	return 1;
     }
 
-    Opm::parameter::ParameterGroup param( argc, argv, false);
+    Opm::ParameterGroup param( argc, argv, false);
     EquelleRuntimeCUDA er(param);
 
     std::cout << "Creating an empty matrix:\n";

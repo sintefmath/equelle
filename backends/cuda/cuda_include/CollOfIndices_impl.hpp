@@ -10,9 +10,9 @@
 #include <vector>
 
 // For error exception macro:
-#include <opm/core/utility/ErrorMacros.hpp>
-#include <opm/core/grid/GridManager.hpp>
-#include <opm/core/grid.h>
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/grid/GridManager.hpp>
+#include <opm/grid/UnstructuredGrid.h>
 
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>

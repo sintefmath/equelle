@@ -10,7 +10,7 @@
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
 
-#include <opm/core/grid/GridManager.hpp>
+#include <opm/grid/GridManager.hpp>
 
 #include "CollOfScalar.hpp"
 #include "CollOfIndices.hpp"
