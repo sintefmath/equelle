@@ -81,7 +81,7 @@ if (Boost_FOUND)
 			${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
 			equelle_cuda
 			equelle_rt
-			opmsimulators opmgrid opmparser opmcommon
+			opmsimulators opmgrid opmcommon
 			boost_filesystem boost_system boost_regex
 			tinyxml ecl umfpack ${SUPERLU_LIB} dunecommon
 		)
