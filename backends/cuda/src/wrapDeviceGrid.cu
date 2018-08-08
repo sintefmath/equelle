@@ -22,42 +22,38 @@ using namespace equelleCUDA;
 // --------------------------------------------
 
 CollOfScalar wrapDeviceGrid::extendToFull( const CollOfScalar& in_data,
-					   const thrust::device_vector<int>& from_set,
-					   const int full_size) {
- 
-    
-    // setup how many threads/blocks we need:
-    kernelSetup s(full_size);
-    
-    // create a vector of size number_of_faces_:
-    //thrust::device_vector<double> out(full_size);
+                       const thrust::device_vector<int>& from_set,
+                       const int full_size)
+{
+    // Create a vector of size number_of_faces_:
     CudaArray val(full_size);
-    //double* out_ptr = thrust::raw_pointer_cast( &out[0] );
-    const int* from_ptr = thrust::raw_pointer_cast( &from_set[0]);
-    //wrapDeviceGrid::extendToFullKernel<<<grid,block>>>( out.data(),
-    //							from_ptr,
-    //							from_set.size(),
-    //							in_data.data(),
-    //							full_size);
-    wrapDeviceGrid::extendToFullKernel_step1<<<s.grid, s.block>>>( val.data(),
-								   full_size );
-    wrapDeviceGrid::extendToFullKernel_step2<<<s.grid, s.block>>>( val.data(),
-								   from_ptr,
-								   from_set.size(),
-								   in_data.data());
-      
+    // Extend values
+    thrust::fill(thrust::device, val.data(), val.data()+full_size, 0.0);
+    thrust::scatter(thrust::device, in_data.data(), in_data.data()+in_data.size(), from_set.begin(), val.data());
     if (in_data.useAutoDiff() ) {
-	CudaMatrix extendMatrix = CudaMatrix(from_set, full_size).transpose();
-	return CollOfScalar(val, extendMatrix * in_data.derivative());
+        // Set up output matrix der
+        CudaMatrix tempMat(in_data.derivative()); // Move the rvalue from derivative() into a temp object
+        CudaMatrix der(full_size, tempMat.cols(), tempMat.nnz());
+
+        // Copy csrColInd, csrVal and fill csrRowPtr with zeroes
+        thrust::copy(thrust::device, tempMat.csrColInd(), tempMat.csrColInd()+tempMat.nnz(), der.csrColInd());
+        thrust::copy(thrust::device, tempMat.csrVal(), tempMat.csrVal()+tempMat.nnz(), der.csrVal());
+        thrust::fill(thrust::device,der.csrRowPtr(),der.csrRowPtr()+der.rows()+1, 0.0);
+        cudaDeviceSynchronize();
+
+        // Map values in set being extended to the new domain
+        thrust::scatter(thrust::device, tempMat.csrRowPtr()+1, tempMat.csrRowPtr()+tempMat.rows()+1, from_set.begin(), der.csrRowPtr()+1);
+        cudaDeviceSynchronize();
+
+        // Fill in the gaps of the rowPtr
+        // {0, 0, 2, 0, 0, 4, 0, 5} becomes 
+        // {0, 0, 2, 2, 2, 4, 4, 5}
+        thrust::maximum<int> binary_op;
+        thrust::inclusive_scan(thrust::device, der.csrRowPtr(), der.csrRowPtr()+der.rows()+1, der.csrRowPtr(), binary_op);
+        cudaDeviceSynchronize();
+        return CollOfScalar(val, der);
     }
-    else { // no AutoDiff 
-	return CollOfScalar(val);
-    }
-    
-    
-    // Create the transpose of the restrict matrix
-    //CudaMatrix extendMatrix = CudaMatrix(from_set, full_size).transpose();
-    //return extendMatrix * in_data;
+    return CollOfScalar(val);
 }
 
 CollOfScalar wrapDeviceGrid::extendToSubset( const CollOfScalar& inData,
