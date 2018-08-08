@@ -32,7 +32,7 @@ CollOfScalar wrapDeviceGrid::extendToFull( const CollOfScalar& in_data,
     thrust::scatter(thrust::device, in_data.data(), in_data.data()+in_data.size(), from_set.begin(), val.data());
     if (in_data.useAutoDiff() ) {
         // Set up output matrix der
-        CudaMatrix tempMat(in_data.derivative()); // Move the rvalue from derivative() into a temp object
+        CudaMatrix tempMat(in_data.derivative());
         CudaMatrix der(full_size, tempMat.cols(), tempMat.nnz());
 
         // Copy csrColInd, csrVal and fill csrRowPtr with zeroes
