@@ -114,6 +114,15 @@ namespace equelleCUDA {
 	*/
 	explicit CudaMatrix( const int size);
 
+  //! Constructs a matrix of size rows*cols with nnz non-zero elements.
+  /*!
+    The constructor allocates memory, but does not initialize it.
+    Perhaps it is better to pass pointers for the column index, row pointer
+    and csr values as well.
+  */
+  explicit CudaMatrix( const int rows, const int cols, const int nnz);
+
+
 	//! Constructor creating a diagonal matrix from a CollOfScalar
 	/*!
 	  Allocates memory for a diagonal matrix, and insert the CollOfScalar 

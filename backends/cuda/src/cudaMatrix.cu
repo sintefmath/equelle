@@ -142,7 +142,25 @@ CudaMatrix::CudaMatrix(const int size)
     createGeneralDescription_("CudaMatrix identity matrix constructor");
 }
 
+// Constructs a matrix of size rows*cols with nnz non-zero elements.
+// The constructor allocates memory, but does not initialize it.
+CudaMatrix::CudaMatrix(const int rows, const int cols, const int nnz)
+    : rows_(rows),
+      cols_(cols),
+      nnz_(nnz),
+      csrVal_(0),
+      csrRowPtr_(0),
+      csrColInd_(0),
+      sparseStatus_(CUSPARSE_STATUS_SUCCESS),
+      cudaStatus_(cudaSuccess),
+      description_(0),
+      operation_(CUSPARSE_OPERATION_NON_TRANSPOSE),
+      diagonal_(false)
+{
+    allocateMemory("CudaMatrix(rows, cols, nnz)");
 
+    createGeneralDescription_("CudaMatrix(rows, cols, nnz)");
+}
 
 // Constructor for creating a diagonal matrix from the value of a CollOfScalar
 CudaMatrix::CudaMatrix(const CollOfScalar& coll)
