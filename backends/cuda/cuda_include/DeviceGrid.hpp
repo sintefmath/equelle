@@ -614,8 +614,14 @@ namespace equelleCUDA
 				       const int num_vectors,
 				       const int dimensions);
 
+    
+	__global__ void normalizeAllFaceNormals( double* normals, 
+                                             const double* face_areas_,
+                                             const int num_vectors,
+                                             const int dimensions);
 
     } // namespace wrapDeviceGrid
+
 
 
 } // namespace equelleCUDA
