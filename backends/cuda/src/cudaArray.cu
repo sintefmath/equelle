@@ -37,13 +37,14 @@ CudaArray::CudaArray()
 }
 
 
-// Allocating memory without initialization
+// Allocate and initialize to zero
 CudaArray::CudaArray(const int size) 
     : size_(size),
       dev_values_(0),
       setup_(size_)
 {
     cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
+    setUniformDouble<<<setup_.grid, setup_.block>>>( dev_values_, 0.0, size_);
     checkError_("cudaMalloc in CudaArray::CudaArray(int)");
 }
 
