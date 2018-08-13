@@ -177,7 +177,7 @@ DeviceGrid::DeviceGrid( const UnstructuredGrid& grid)
 			      cudaMemcpyHostToDevice );
     checkError_("cudaMemcpy(face_normals_) in DeviceGrid::DeviceGrid(UnstructuredGrid&)");
 
-
+    // Normalize the face normals. They are scaled relative to the area of the faces.
     kernelSetup s(number_of_faces_);
     normalizeAllFaceNormals<<<s.grid,s.block>>>(face_normals_, face_areas_, number_of_faces_, dimensions_);
     cudaDeviceSynchronize();
@@ -279,6 +279,7 @@ DeviceGrid::DeviceGrid(const DeviceGrid& grid)
 			      cudaMemcpyDeviceToDevice);
     checkError_("cudaMemcpy(face_normals_) in DeviceGrid::DeviceGrid(const DeviceGrid&)");
 
+    // Normalize the face normals. They are scaled relative to the area of the faces.
     kernelSetup s(number_of_faces_);
     normalizeAllFaceNormals<<<s.grid,s.block>>>(face_normals_, face_areas_, number_of_faces_, dimensions_);
     cudaDeviceSynchronize();
