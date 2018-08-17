@@ -50,7 +50,7 @@ namespace equelleCUDA {
 	
 	//! Allocating constructor
 	/*! 
-	  Allocates device memory for the collection. Does not initialize the collection. 
+	  Allocates device memory for the collection and initialize to zero.
 	  \param size number of scalars in the collection.
 	*/
 	explicit CudaArray(const int size);

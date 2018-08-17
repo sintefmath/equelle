@@ -155,7 +155,7 @@ CollOfScalar LinearSolver::solve(const CudaMatrix& A_cpy,
 		       cusp_A_csrRowPtr, cusp_A_csrColInd, cusp_A_csrVal );
 
     // Create a monitor
-    cusp::default_monitor<double> monitor(cusp_b, maxit_, tol_);
+    cusp::monitor<double> monitor(cusp_b, maxit_, tol_);
 
     // Solve according to solver and preconditioner:
     if ( solver_ == BiCGStab && precond_ == DIAG ) {
