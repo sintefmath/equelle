@@ -38,10 +38,27 @@ CudaMatrix CusparseManager::matrixMultiply(const CudaMatrix& lhs, const CudaMatr
     return instance().gemm(lhs, rhs);
 }
 
+
 CudaMatrix CusparseManager::matrixMultiply2(const CudaMatrix& lhs, const CudaMatrix& rhs)
 {
     double alpha = 1.0;
     return instance().gemm2(lhs, rhs, CudaMatrix(), &alpha, NULL);
+}
+
+
+CudaMatrix CusparseManager::matrixAddition(const CudaMatrix& lhs, const CudaMatrix& rhs)
+{
+    double alpha = 1.0;
+    double beta = 1.0;
+    return instance().geam(lhs, rhs, &alpha, &beta);
+}
+
+
+CudaMatrix CusparseManager::matrixSubtraction(const CudaMatrix& lhs, const CudaMatrix& rhs)
+{
+    double alpha = 1.0;
+    double beta = -1.0;
+    return instance().geam(lhs, rhs, &alpha, &beta);
 }
 
 
@@ -147,5 +164,49 @@ CudaMatrix CusparseManager::gemm2(const CudaMatrix& A, const CudaMatrix& B, cons
                                       out.description_, out.csrVal_, out.csrRowPtr_, out.csrColInd_,
                                       gemm2Info_, buffer_);
     out.checkError_("cusparseDcsrgemm2() in CusparseManager::gemm2()");
+    return out;
+}
+
+
+CudaMatrix CusparseManager::geam(const CudaMatrix& lhs, const CudaMatrix& rhs, const double* alpha, const double* beta)
+{
+    // Declare output matrix and set its dimensions.
+    CudaMatrix out;
+    out.rows_ = lhs.rows_;
+    out.cols_ = lhs.cols_;
+
+    // Allocate row pointer array.
+    out.cudaStatus_ = cudaMalloc( (void**)&out.csrRowPtr_, (out.rows_+1)*sizeof(int));
+    out.checkError_("cudaMalloc(out.csrRowPtr_) in CusparseManager::geam()");
+
+    // Find the resulting non-zero pattern
+    out.sparseStatus_ = cusparseXcsrgeamNnz( cusparseHandle_, out.rows_, out.cols_,
+                         lhs.description_, lhs.nnz_,
+                         lhs.csrRowPtr_, lhs.csrColInd_,
+                         rhs.description_, rhs.nnz_,
+                         rhs.csrRowPtr_, rhs.csrColInd_,
+                         out.description_, out.csrRowPtr_,
+                         &out.nnz_);
+    out.checkError_("cusparseXcsrgeamNnz() in CusparseManager::geam()");
+
+    // Allocate value array and column index array.
+    out.cudaStatus_ = cudaMalloc( (void**)&out.csrVal_, out.nnz_*sizeof(double));
+    out.checkError_("cudaMalloc(out.csrVal_) in CusparseManager::geam()");
+    out.cudaStatus_ = cudaMalloc( (void**)&out.csrColInd_, out.nnz_*sizeof(int));
+    out.checkError_("cudaMalloc(out.csrColInd_) in CusparseManager::geam()");
+
+    // Perform the geam operation
+    // out = alpha * lhs + beta * rhs
+    out.sparseStatus_ = cusparseDcsrgeam(cusparseHandle_, out.rows_, out.cols_,
+                     alpha,
+                     lhs.description_, lhs.nnz_,
+                     lhs.csrVal_, lhs.csrRowPtr_, lhs.csrColInd_,
+                     beta,
+                     rhs.description_, rhs.nnz_,
+                     rhs.csrVal_, rhs.csrRowPtr_, rhs.csrColInd_,
+                     out.description_,
+                     out.csrVal_, out.csrRowPtr_, out.csrColInd_);
+    out.checkError_("cusparseDcsrgeam() in CusparseManager::geam()");
+
     return out;
 }

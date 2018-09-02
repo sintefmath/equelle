@@ -14,6 +14,9 @@ class CusparseManager
 public:
     static CudaMatrix matrixMultiply(const CudaMatrix& lhs, const CudaMatrix& rhs);
     static CudaMatrix matrixMultiply2(const CudaMatrix& lhs, const CudaMatrix& rhs);
+    static CudaMatrix matrixAddition(const CudaMatrix& lhs, const CudaMatrix& rhs);
+    static CudaMatrix matrixSubtraction(const CudaMatrix& lhs, const CudaMatrix& rhs);
+
 private:
     CusparseManager();
     ~CusparseManager();
@@ -21,6 +24,7 @@ private:
     static CusparseManager& instance();
     CudaMatrix gemm(const CudaMatrix& lhs, const CudaMatrix& rhs);
     CudaMatrix gemm2(const CudaMatrix& A, const CudaMatrix& B, const CudaMatrix& C, const double* alpha, const double* beta);
+    CudaMatrix geam(const CudaMatrix& lhs, const CudaMatrix& rhs, const double* alpha, const double* beta);
 
     // cuSPARSE  and CUDA variables
     cusparseHandle_t cusparseHandle_;
