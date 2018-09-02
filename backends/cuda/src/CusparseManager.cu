@@ -17,7 +17,7 @@ CusparseManager::CusparseManager()
 CusparseManager::~CusparseManager()
 {
     //std::cout << "CusparseManager destroyed." << std::endl;
-    if (buffer_ == NULL) {
+    if (buffer_ != NULL) {
         cudaFree(buffer_);
     }
     cusparseDestroy(cusparseHandle_);
