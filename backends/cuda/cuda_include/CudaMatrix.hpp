@@ -219,6 +219,7 @@ namespace equelleCUDA {
 	friend CudaMatrix operator*(const CudaMatrix& lhs, const Scalar rhs);
 	friend CudaMatrix operator*(const Scalar lhs, const CudaMatrix& rhs);
 	friend CudaMatrix operator-(const CudaMatrix& arg);
+	friend class CusparseManager;
 
     private:
 	int rows_;
