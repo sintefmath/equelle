@@ -209,11 +209,6 @@ namespace equelleCUDA {
 
 	friend CudaMatrix operator+(const CudaMatrix& lhs, const CudaMatrix& rhs);
 	friend CudaMatrix operator-(const CudaMatrix& lhs, const CudaMatrix& rhs);
-	// C = A + beta*B
-	friend CudaMatrix cudaMatrixSum(const CudaMatrix& lhs,
-					const CudaMatrix& rhs,
-					const double beta);
-	
 	friend CudaMatrix operator*(const CudaMatrix& lhs, const CudaMatrix& rhs);
 	friend CudaArray operator*(const CudaMatrix& mat, const CudaArray& vec);
 	friend CudaMatrix operator*(const CudaMatrix& lhs, const Scalar rhs);
@@ -257,41 +252,17 @@ namespace equelleCUDA {
     
     //! Matrix + Matrix operator
     /*!
-      Makes a call to cudaMatrixSum with beta = 1.0.
-
       Matrices are allowed to be empty, and will then be interpreted as 
       correctly sized matrices filled with zeros.
-      
-      \sa cudaMatrixSum
     */
     CudaMatrix operator+(const CudaMatrix& lhs, const CudaMatrix& rhs);
 
     //! Matrix-  Matrix operator
     /*!
-      Makes a call to cudaMatrixSum with beta = -1.0.
-
       Matrices are allowed to be empty, and will then be interpreted as
       correctly sized matrices filled with zeros.
-      \sa cudaMatrixSum
      */
     CudaMatrix operator-(const CudaMatrix& lhs, const CudaMatrix& rhs);
-
-    //! Summation of two sparse matrices.
-    /*!
-      Performs a sparse matrix + sparse matrix operation of the form 
-      \code lhs + beta*rhs \endcode
-      where beta is a constant. We use beta = 1.0 for addition and beta = -1.0 for
-      subtraction.
-
-      In order to add the two matrices we do a two step use of the cusparse library.\n
-      1) Find the number of non-zeros for each row of the resulting matrix.\n
-      2) Allocate memory for result and add matrices.
-
-      Matrices cannot be empty.
-    */
-    CudaMatrix cudaMatrixSum( const CudaMatrix& lhs,
-			      const CudaMatrix& rhs,
-			      const double beta);
 
     //! Matrix * Matrix operator
     /*!
