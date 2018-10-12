@@ -8,6 +8,7 @@
 #include "equelleTypedefs.hpp"
 #include "CudaArray.hpp"
 #include "CudaMatrix.hpp"
+#include "wrapDeviceGrid.hpp"
 
 
 namespace equelleCUDA {
@@ -375,6 +376,9 @@ namespace equelleCUDA {
 	friend CollOfBool operator!=(const Scalar lhs, const CollOfScalar& rhs);
 
 
+	friend CollOfScalar wrapDeviceGrid::extendToFull( const CollOfScalar& in_data,
+                       const thrust::device_vector<int>& from_set,
+                       const int full_size);
 
 	// ----------- Boolean operations as friends end ---------------
 	
