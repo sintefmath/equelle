@@ -124,8 +124,11 @@ CudaArray& CudaArray::operator= (const CudaArray& other) {
 
 	    // If different size: Is this even allowed?
 	    // Free memory:
-	    cudaStatus_ = cudaFree(this->dev_values_);
-	    checkError_("cudaFree(this->dev_values_) in CudaArray::operator=(const CudaArray&)");
+        if (this->dev_values_) {
+            cudaStatus_ = cudaFree(this->dev_values_);
+            checkError_("cudaFree(this->dev_values_) in CudaArray::operator=(const CudaArray&)");
+        }
+	    
 	    // Allocate new memory:
 	    cudaStatus_ = cudaMalloc((void**)&this->dev_values_,
 				     sizeof(double) * other.size_);
