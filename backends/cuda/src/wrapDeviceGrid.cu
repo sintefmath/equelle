@@ -32,17 +32,15 @@ CollOfScalar wrapDeviceGrid::extendToFull( const CollOfScalar& in_data,
     thrust::scatter(thrust::device, in_data.data(), in_data.data()+in_data.size(), from_set.begin(), val.data());
     if (in_data.useAutoDiff() ) {
         // Set up output matrix der
-        CudaMatrix tempMat(in_data.derivative());
-        CudaMatrix der(full_size, tempMat.cols(), tempMat.nnz());
+        CudaMatrix der(full_size, in_data.der_.cols(), in_data.der_.nnz());
 
         // Copy csrColInd, csrVal and fill csrRowPtr with zeroes
-        thrust::copy(thrust::device, tempMat.csrColInd(), tempMat.csrColInd()+tempMat.nnz(), der.csrColInd());
-        thrust::copy(thrust::device, tempMat.csrVal(), tempMat.csrVal()+tempMat.nnz(), der.csrVal());
+        thrust::copy(thrust::device, in_data.der_.csrColInd(), in_data.der_.csrColInd()+in_data.der_.nnz(), der.csrColInd());
+        thrust::copy(thrust::device, in_data.der_.csrVal(), in_data.der_.csrVal()+in_data.der_.nnz(), der.csrVal());
         thrust::fill(thrust::device,der.csrRowPtr(),der.csrRowPtr()+der.rows()+1, 0.0);
         cudaDeviceSynchronize();
-
         // Map values in set being extended to the new domain
-        thrust::scatter(thrust::device, tempMat.csrRowPtr()+1, tempMat.csrRowPtr()+tempMat.rows()+1, from_set.begin(), der.csrRowPtr()+1);
+        thrust::scatter(thrust::device, in_data.der_.csrRowPtr()+1, in_data.der_.csrRowPtr()+in_data.der_.rows()+1, from_set.begin(), der.csrRowPtr()+1);
         cudaDeviceSynchronize();
 
         // Fill in the gaps of the rowPtr
