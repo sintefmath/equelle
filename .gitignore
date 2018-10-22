@@ -36,5 +36,4 @@ compiler/equelle_parser.output
 *.log
 *.synctex.gz
 *.toc
-doc/EquelleReference.pdf
 /build
