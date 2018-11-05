@@ -555,7 +555,7 @@ CollOfScalar DeviceGrid::norm_of_cells(const thrust::device_vector<int>& cells,
 	const int* cells_ptr = thrust::raw_pointer_cast( &cells[0] );
 	normKernel<<<s.grid, s.block>>>( out.data(), cells_ptr, cells.size(),
 					 cell_volumes_);
-	return out;
+	return CollOfScalar(std::move(out));
     }
 }
 
@@ -567,7 +567,7 @@ CollOfScalar DeviceGrid::norm_of_faces(const thrust::device_vector<int>& faces,
 				 sizeof(double)*number_of_faces_,
 				 cudaMemcpyDeviceToDevice);
 	checkError_("cudaMemcpy in DeviceGrid::norm_of_cells");
-	return out;
+	return CollOfScalar(std::move(out));
     }
     else {
 	CollOfScalar out(faces.size());
@@ -575,7 +575,7 @@ CollOfScalar DeviceGrid::norm_of_faces(const thrust::device_vector<int>& faces,
 	const int* faces_ptr = thrust::raw_pointer_cast( &faces[0] );
 	normKernel<<<s.grid, s.block>>>( out.data(), faces_ptr, faces.size(),
 					 face_areas_);
-	return out;
+	return CollOfScalar(std::move(out));
     }
 }
 

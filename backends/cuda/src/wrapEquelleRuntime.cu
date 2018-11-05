@@ -65,7 +65,7 @@ CollOfScalar wrapEquelleRuntimeCUDA::trinaryIfWrapper( const CollOfBool& predica
 	CudaMatrix diagBool(predicate);
 	CudaMatrix der = diagBool*iftrue.derivative() + (CudaMatrix(predicate.size()) - diagBool)*iffalse.derivative();
 	
-	return CollOfScalar(val, der);
+	return CollOfScalar(std::move(val), std::move(der));
     }
     else { // No AutoDiff
 	CollOfScalar out(iftrue.size());
@@ -76,7 +76,7 @@ CollOfScalar wrapEquelleRuntimeCUDA::trinaryIfWrapper( const CollOfBool& predica
 					     iftrue.data(),
 					     iffalse.data(),
 					     iftrue.size());
-	return out;
+	return CollOfScalar(std::move(out));
     }
 }
 
@@ -163,7 +163,7 @@ CollOfScalar wrapEquelleRuntimeCUDA::gradientWrapper( const CollOfScalar& cell_s
 					     face_cells,
 					     val.size());
 	CudaMatrix der = ops.grad() * cell_scalarfield.derivative();
-	return CollOfScalar(val, der);
+	return CollOfScalar(std::move(val), std::move(der));
     }
     else {
 	CollOfScalar out(int_faces.size());
@@ -174,7 +174,7 @@ CollOfScalar wrapEquelleRuntimeCUDA::gradientWrapper( const CollOfScalar& cell_s
 					     face_cells,
 					     out.size());
 	
-	return out;
+	return CollOfScalar(std::move(out));
     }
 }
 
@@ -214,7 +214,7 @@ CollOfScalar wrapEquelleRuntimeCUDA::divergenceWrapper( const CollOfScalar& flux
 					       dev_grid.number_of_cells(),
 					       dev_grid.number_of_faces() );
 	CudaMatrix der = ops.fulldiv() * fluxes.derivative();
-	return CollOfScalar(val, der);	
+	return CollOfScalar(std::move(val), std::move(der));	
     }
 
     // output is of size number_of_cells:
@@ -229,7 +229,7 @@ CollOfScalar wrapEquelleRuntimeCUDA::divergenceWrapper( const CollOfScalar& flux
 					   dev_grid.number_of_cells(),
 					   dev_grid.number_of_faces() );
 
-    return out;
+    return CollOfScalar(std::move(out));
 }
 
 
@@ -271,9 +271,9 @@ CollOfScalar wrapEquelleRuntimeCUDA::sqrtWrapper( const CollOfScalar& x) {
 	// sqrt(x)' = 1/(2*sqrt(x)) * x'
 	CudaMatrix diag(1/(2*val));
 	CudaMatrix der = diag * x.derivative();
-	return CollOfScalar(val, der);
+	return CollOfScalar(std::move(val), std::move(der));
     }
-    return CollOfScalar(val);
+    return CollOfScalar(std::move(val));
 }
 
 

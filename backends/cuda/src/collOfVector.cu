@@ -77,7 +77,7 @@ CollOfScalar CollOfVector::norm() const {
     // One thread for each vector:
     kernelSetup s = vector_setup();
     normKernel<<< s.grid, s.block >>>(out.data(), data(), numVectors(), dim());
-    return out;
+    return CollOfScalar(std::move(out));
 }
 
 
@@ -91,7 +91,7 @@ CollOfScalar CollOfVector::dot(const CollOfVector& rhs) const {
 				      rhs.data(),
 				      out.size(),
 				      this->dim());
-    return out;
+    return CollOfScalar(std::move(out));
 }
 
 
@@ -152,7 +152,7 @@ CollOfScalar CollOfVector::col(const int index) const {
 							 out.size(),
 							 index,
 							 dim_);	
-    return out;
+    return CollOfScalar(std::move(out));
 }
 
 __global__ void wrapCollOfVector::collOfVectorOperatorIndexKernel( double* out,
