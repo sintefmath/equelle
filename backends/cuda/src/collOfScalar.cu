@@ -48,6 +48,13 @@ CollOfScalar::CollOfScalar(const CudaArray& val)
     // Intentionally left emtpy
 }
 
+CollOfScalar::CollOfScalar(CudaArray&& val)
+    : val_(std::move(val)),
+      der_(),
+      autodiff_(false)
+{
+}
+
 CollOfScalar::CollOfScalar(const std::vector<double>& host_vec)
     : val_(host_vec),
       der_(),
@@ -79,6 +86,33 @@ CollOfScalar::CollOfScalar(const CudaArray& val, const CudaMatrix& der)
     // Intentionally left empty
 }
 
+// Move constructor from CudaArray and CudaMatrix.
+// Both val and der are moved.
+CollOfScalar::CollOfScalar(CudaArray&& val, CudaMatrix&& der) noexcept
+    : val_(std::move(val)),
+      der_(std::move(der)),
+      autodiff_(true)
+{
+}
+
+// Move constructor from CudaArray and CudaMatrix
+// Only der is moved. val is copied.
+CollOfScalar::CollOfScalar(const CudaArray& val, CudaMatrix&& der)
+    : val_(val),
+      der_(std::move(der)),
+      autodiff_(true)
+{
+}
+
+
+// Move constructor from CudaArray and CudaMatrix
+// Only der is moved. val is copied.
+CollOfScalar::CollOfScalar(CudaArray&& val, const CudaMatrix& der)
+    : val_(std::move(val)),
+      der_(der),
+      autodiff_(true)
+{
+}
 
 // Copy constructor
 CollOfScalar::CollOfScalar(const CollOfScalar& coll)
@@ -87,6 +121,14 @@ CollOfScalar::CollOfScalar(const CollOfScalar& coll)
       autodiff_(coll.autodiff_)
 {
     // Intentionally left emtpy
+}
+
+// Move constructor
+CollOfScalar::CollOfScalar(CollOfScalar&& coll)
+    : val_(std::move(coll.val_)),
+      der_(std::move(coll.der_)),
+      autodiff_(coll.autodiff_) 
+{
 }
 
 // Assignment copy operator
@@ -102,7 +144,18 @@ CollOfScalar& CollOfScalar::operator= (const CollOfScalar& other)
     }
     return *this;
 }
-   
+
+// Move assignment operator
+CollOfScalar& CollOfScalar::operator=(CollOfScalar&& other)
+{
+    val_ = std::move(other.val_);
+    autodiff_ = other.autodiff_;
+    if ( autodiff_ ) {
+        der_ = std::move(other.der_);
+    }
+    return *this;
+}
+
 CollOfScalar::~CollOfScalar()
 {
     // Intentionally left blank as val_ knows how to delete itself.
