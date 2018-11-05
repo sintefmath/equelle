@@ -541,7 +541,7 @@ hostMat CudaMatrix::toHost() const {
 CudaMatrix CudaMatrix::transpose() const {
     CudaMatrix out = *this;
     out.operation_ = CUSPARSE_OPERATION_TRANSPOSE;
-    return out;
+    return CudaMatrix(std::move(out));
 }
 
 
@@ -740,7 +740,7 @@ CudaMatrix equelleCUDA::operator*(const Scalar lhs, const CudaMatrix& rhs) {
     wrapCudaArray::scalMultColl_kernel<<<s.grid, s.block>>>(out.csrVal_,
                   lhs,
                   out.nnz_);
-    return out;
+    return CudaMatrix(std::move(out));
 }
 
 CudaMatrix equelleCUDA::operator-(const CudaMatrix& arg) {
@@ -763,7 +763,7 @@ CudaMatrix CudaMatrix::diagonalMultiply(const CudaMatrix& rhs) const {
                out.csrRowPtr_,
                this->csrVal_,
                this->rows_);
-    return out;
+    return CudaMatrix(std::move(out));
 }
 
 // KERNELS -------------------------------------------------
