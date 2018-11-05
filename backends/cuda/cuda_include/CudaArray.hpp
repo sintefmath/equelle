@@ -78,6 +78,8 @@ namespace equelleCUDA {
 	*/
 	CudaArray(const CudaArray& coll);  
 	
+	// Move constructor
+	CudaArray(CudaArray&& coll);
 
 	//! Copy assignment operator
 	/*!
@@ -91,7 +93,8 @@ namespace equelleCUDA {
 	*/
 	CudaArray& operator= (const CudaArray& other);
 
-
+	// Move assignment
+	CudaArray& operator= (CudaArray&& other);
 
 	//! Destructor
 	/*!
