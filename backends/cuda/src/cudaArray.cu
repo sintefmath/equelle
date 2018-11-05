@@ -233,7 +233,7 @@ CudaArray equelleCUDA::operator-(const CudaArray& lhs, const CudaArray& rhs) {
     CudaArray out = lhs;
     kernelSetup s = out.setup();
     minus_kernel <<<s.grid, s.block>>>(out.data(), rhs.data(), out.size());
-    return out;
+    return CudaArray(std::move(out));
 }
 
 CudaArray equelleCUDA::operator+(const CudaArray& lhs, const CudaArray& rhs) {
@@ -241,7 +241,7 @@ CudaArray equelleCUDA::operator+(const CudaArray& lhs, const CudaArray& rhs) {
     CudaArray out = lhs;
     kernelSetup s = out.setup();
     plus_kernel <<<s.grid, s.block>>>(out.data(), rhs.data(), out.size());
-    return out;
+    return CudaArray(std::move(out));
 }
 
 CudaArray equelleCUDA::operator*(const CudaArray& lhs, const CudaArray& rhs) {
@@ -249,7 +249,7 @@ CudaArray equelleCUDA::operator*(const CudaArray& lhs, const CudaArray& rhs) {
     CudaArray out = lhs;
     kernelSetup s = out.setup();
     multiplication_kernel <<<s.grid, s.block>>>(out.data(), rhs.data(), out.size());
-    return out;
+    return CudaArray(std::move(out));
 }
 
 CudaArray equelleCUDA::operator/(const CudaArray& lhs, const CudaArray& rhs) {
@@ -257,14 +257,14 @@ CudaArray equelleCUDA::operator/(const CudaArray& lhs, const CudaArray& rhs) {
     CudaArray out = lhs;
     kernelSetup s = out.setup();
     division_kernel <<<s.grid, s.block>>>(out.data(), rhs.data(), out.size());
-    return out;
+    return CudaArray(std::move(out));
 }
 
 CudaArray equelleCUDA::operator*(const Scalar lhs, const CudaArray& rhs) {
     CudaArray out = rhs;
     kernelSetup s = out.setup();
     scalMultColl_kernel<<<s.grid,s.block>>>(out.data(), lhs, out.size());
-    return out;
+    return CudaArray(std::move(out));
 }
 
 CudaArray equelleCUDA::operator*(const CudaArray& lhs, const Scalar rhs) {
@@ -279,7 +279,7 @@ CudaArray equelleCUDA::operator/(const Scalar lhs, const CudaArray& rhs) {
     CudaArray out = rhs;
     kernelSetup s = out.setup();
     scalDivColl_kernel<<<s.grid,s.block>>>(out.data(), lhs, out.size());
-    return out;
+    return CudaArray(std::move(out));
 }
 
 CudaArray equelleCUDA::operator-(const CudaArray& arg) {

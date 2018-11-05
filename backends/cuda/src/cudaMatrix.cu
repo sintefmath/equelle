@@ -678,7 +678,7 @@ CudaArray equelleCUDA::operator*(const CudaMatrix& mat, const CudaArray& vec) {
           vec.data(), &beta,
           out.data());
     mat.checkError_("cusparseDcsrmv() in operator*(CudaMatrix, CudaArray)");
-    return out;
+    return CudaArray(std::move(out));
 }
 
 
