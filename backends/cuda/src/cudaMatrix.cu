@@ -188,6 +188,24 @@ CudaMatrix::CudaMatrix(const CollOfScalar& coll)
     createGeneralDescription_("CudaMatrix diagonal matrix constructor");
 }
 
+// Move constructor
+CudaMatrix::CudaMatrix(CudaMatrix&& mat)
+    : rows_(mat.rows_),
+      cols_(mat.cols_),
+      nnz_(mat.nnz_),
+      csrVal_(0),
+      csrRowPtr_(0),
+      csrColInd_(0),
+      sparseStatus_(CUSPARSE_STATUS_SUCCESS),
+      cudaStatus_(cudaSuccess),
+      description_(0),
+      operation_(mat.operation_),
+      diagonal_(mat.diagonal_)
+{
+    swap(mat);
+    createGeneralDescription_("CudaMatrix move constructor");
+}
+
 // Constructor for creating a diagonal matrcit from a CudaArray
 CudaMatrix::CudaMatrix(const CudaArray& array)
     : rows_(array.size()),
@@ -400,6 +418,29 @@ CudaMatrix& CudaMatrix::operator= (const CudaMatrix& other) {
     return *this;
 }
 
+
+// Move assignment operator
+CudaMatrix& CudaMatrix::operator=(CudaMatrix&& other)
+{
+    swap(other);
+    return *this;
+}
+
+
+// Swap function used for move semantics
+void CudaMatrix::swap(CudaMatrix& other) noexcept
+{
+
+    std::swap(nnz_, other.nnz_);
+    std::swap(csrVal_, other.csrVal_);
+    std::swap(csrColInd_, other.csrColInd_);
+    std::swap(rows_, other.rows_);
+    std::swap(csrRowPtr_, other.csrRowPtr_);
+    std::swap(cols_, other.cols_);
+    
+    operation_ = other.operation_;
+    diagonal_ = other.diagonal_;
+}
 
 
 // Destructor
