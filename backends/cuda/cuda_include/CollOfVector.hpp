@@ -160,8 +160,6 @@ namespace equelleCUDA {
     private:
 	CudaArray elements_;
 	const int dim_;
-	//kernelSetup element_setup_; // Find this one as elements_.getKernelSetup()
-	kernelSetup vector_setup_;
 
 	// size_ from CollOfScalar is actually size_ * dim
 	// block() and grid() will therefore be evaluated as one thread per double

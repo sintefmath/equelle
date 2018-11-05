@@ -19,8 +19,7 @@ using namespace wrapCollOfVector;
 
 CollOfVector::CollOfVector() 
     : elements_(),
-      dim_(1),
-      vector_setup_(0)
+      dim_(1)
 {
     // intentionally left blank
 }
@@ -29,16 +28,14 @@ CollOfVector::CollOfVector()
 
 CollOfVector::CollOfVector(const int size, const int dim)
     : elements_(size*dim), 
-      dim_(dim),
-      vector_setup_(size)
+      dim_(dim)
 {
     // intentionally left blank
 }
 
 CollOfVector::CollOfVector(const std::vector<double>& host, const int dim)
     : elements_(host), 
-      dim_(dim),
-      vector_setup_(host.size()/dim)
+      dim_(dim)
 {
     // intentionally left blank
 }
@@ -58,8 +55,7 @@ CollOfVector& CollOfVector::operator= (const CollOfVector& other) {
 // Copy-constructor
 CollOfVector::CollOfVector(const CollOfVector& coll)
     : elements_(coll.elements_), 
-      dim_(coll.dim_),
-      vector_setup_(coll.numVectors())
+      dim_(coll.dim_)
 {
     // intentionally left blank
 }
@@ -124,7 +120,7 @@ int CollOfVector::numElements() const {
 }
 
 kernelSetup CollOfVector::vector_setup() const {
-    return vector_setup_;
+    return kernelSetup(numVectors());
 }
 
 kernelSetup CollOfVector::element_setup() const {
