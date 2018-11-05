@@ -30,8 +30,7 @@ using namespace wrapCudaArray;
 
 CudaArray::CudaArray() 
     : size_(0), 
-      dev_values_(0),
-      setup_(0)
+      dev_values_(0)
 {
     // Intentionally left blank
 }
@@ -40,18 +39,17 @@ CudaArray::CudaArray()
 // Allocate and initialize to zero
 CudaArray::CudaArray(const int size) 
     : size_(size),
-      dev_values_(0),
-      setup_(size_)
+      dev_values_(0)
 {
     cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
-    setUniformDouble<<<setup_.grid, setup_.block>>>( dev_values_, 0.0, size_);
+    kernelSetup s = setup();
+    setUniformDouble<<<s.grid, s.block>>>( dev_values_, 0.0, size_);
     checkError_("cudaMalloc in CudaArray::CudaArray(int)");
 }
 
 CudaArray::CudaArray(const int size, const double value) 
     : size_(size),
-      dev_values_(0),
-      setup_(size_)
+      dev_values_(0)
 {
     // Can not use cudaMemset as it sets float values on a given
     // number of bytes.
@@ -60,20 +58,18 @@ CudaArray::CudaArray(const int size, const double value)
 
     cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
     checkError_("cudaMalloc in CudaArray::CudaArray(int, double)");
-     
-    setUniformDouble<<<setup_.grid, setup_.block>>>( dev_values_, value, size_);
+    kernelSetup s = setup();
+    setUniformDouble<<<s.grid, s.block>>>( dev_values_, value, size_);
     //cudaStatus_ = cudaMemcpy(dev_values_, &host_vec[0], size_*sizeof(double),
     //				    cudaMemcpyHostToDevice);
     //checkError_("cudaMemcpy in CudaArray::CudaArray(int, double)");
-
 } 
 
 
 // Constructor from vector, in order to do testing
 CudaArray::CudaArray(const std::vector<double>& host_vec)
     : size_(host_vec.size()),
-      dev_values_(0),
-      setup_(size_)
+      dev_values_(0)
 {
     cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
     checkError_("cudaMalloc in CudaArray::CudaArray(std::vector<double>)");
@@ -87,8 +83,7 @@ CudaArray::CudaArray(const std::vector<double>& host_vec)
 // Copy constructor
 CudaArray::CudaArray(const CudaArray& coll) 
     : size_(coll.size_), 
-      dev_values_(0),
-      setup_(size_)
+      dev_values_(0)
 {
     //std::cout << __PRETTY_FUNCTION__ << std::endl;
 
@@ -175,7 +170,7 @@ double* CudaArray::data() {
 
 
 kernelSetup CudaArray::setup() const {
-    return setup_;
+    return kernelSetup(size_);
 }
 
 // Assumes that values are already allocated on host
