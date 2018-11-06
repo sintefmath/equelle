@@ -224,7 +224,10 @@ namespace equelleCUDA {
 	  \sa scalMultColl_kernel
 	*/
 	friend CollOfScalar operator*(const Scalar lhs, const CollOfScalar& rhs);
-	
+
+	// Move division
+	friend CollOfScalar operator/(const Scalar lhs, CollOfScalar&& rhs);
+
 	/*! 
 	  Since multiplication is commutative, this implementation simply return
 	  rhs *  lhs
