@@ -435,7 +435,9 @@ namespace equelleCUDA {
       \sa division_kernel.
     */
     CudaArray operator/(const CudaArray& lhs, const CudaArray& rhs);
-    
+
+    // Move division operator
+    CudaArray operator/(CudaArray&& lhs, CudaArray&& rhs);
 
     // Multiplication:  Scalar * Collection Of Scalars
     /*!
@@ -473,6 +475,8 @@ namespace equelleCUDA {
      */
     CudaArray operator/(const Scalar lhs, const CudaArray& rhs);
 
+    // Move division operator
+    CudaArray operator/(const Scalar lhs, CudaArray&& rhs);
     
     /*!
       Unary minus
