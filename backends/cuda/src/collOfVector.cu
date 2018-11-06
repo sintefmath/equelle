@@ -52,6 +52,15 @@ CollOfVector& CollOfVector::operator= (const CollOfVector& other) {
     return *this;
 }
 
+// Move assignment operator
+CollOfVector& CollOfVector::operator=(CollOfVector&& other) {
+    if ( this->dim_ != other.dim_ ) {
+        OPM_THROW(std::runtime_error, "Trying to assign a vector with another vector of different dim. lhs.dim_ = " << this->dim_ << " and rhs.dim_ = " << other.dim_);
+    }
+    this->elements_ = std::move(other.elements_);
+    return *this;
+}
+
 // Copy-constructor
 CollOfVector::CollOfVector(const CollOfVector& coll)
     : elements_(coll.elements_), 
@@ -60,7 +69,12 @@ CollOfVector::CollOfVector(const CollOfVector& coll)
     // intentionally left blank
 }
   
-
+// Move constructor
+CollOfVector::CollOfVector(CollOfVector&& coll)
+    : elements_(std::move(coll.elements_)), 
+      dim_(coll.dim_)
+{
+}
 
 // Destructor
 CollOfVector::~CollOfVector()

@@ -67,12 +67,18 @@ namespace equelleCUDA {
 	*/
 	CollOfVector(const CollOfVector& coll);
 
+	// Move constructor
+	CollOfVector(CollOfVector&& coll);
+
 	//! Copy assignment operator
 	/*!
 	  Overload the assignment operator to ensure correct behaviour when 
 	  we assign a CollOfVector to a CollOfVector that is already initialized.
 	*/
 	CollOfVector& operator= (const CollOfVector& other);
+
+	// Move assignment operator
+	CollOfVector& operator=(CollOfVector&& other);
 
 	//! Destructor
 	/*!
