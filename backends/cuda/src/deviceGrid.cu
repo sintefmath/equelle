@@ -547,7 +547,7 @@ CollOfScalar DeviceGrid::norm_of_cells(const thrust::device_vector<int>& cells,
 				  sizeof(double)*number_of_cells_,
 				  cudaMemcpyDeviceToDevice);
 	checkError_("cudaMemcpy in DeviceGrid::norm_of_cells");
-	return out;
+	return CollOfScalar(std::move(out));
     }
     else {
 	CollOfScalar out(cells.size());
