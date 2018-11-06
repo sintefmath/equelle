@@ -96,6 +96,12 @@ namespace equelleCUDA {
 	// Move assignment
 	CudaArray& operator= (CudaArray&& other);
 
+	// Compound assignment for multiplication with Scalar
+	CudaArray& operator*=(const Scalar rhs);
+
+	// Compound assignment for multiplication with CudaArray
+	CudaArray& operator*=(const CudaArray& rhs);
+
 	//! Destructor
 	/*!
 	  Frees device memory as the CudaArray goes out of scope.
