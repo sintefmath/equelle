@@ -592,7 +592,7 @@ CollOfVector DeviceGrid::centroid(const thrust::device_vector<int>& indices,
 				     sizeof(double)*dimensions_*number_of_cells_,
 				     cudaMemcpyDeviceToDevice);
 	    checkError_("cudaMemcpy in DeviceGrid::centroid(..) -> full -> codim=0");
-	    return out;
+	    return CollOfVector(std::move(out));
 	}
 	else { // All faces
 	    CollOfVector out(number_of_faces_, dimensions_);
@@ -600,7 +600,7 @@ CollOfVector DeviceGrid::centroid(const thrust::device_vector<int>& indices,
 				     sizeof(double)*dimensions_*number_of_faces_,
 				     cudaMemcpyDeviceToDevice);
 	    checkError_("cudaMemcpy in DeviceGrid::centroids(..) -> full -> codim=1");
-	    return out;
+	    return CollOfVector(std::move(out));
 	}
     }
     else {
@@ -622,7 +622,7 @@ CollOfVector DeviceGrid::centroid(const thrust::device_vector<int>& indices,
 					     all_centroids,
 					     out.numVectors(),
 					     dimensions_);
-	return out;
+	return CollOfVector(std::move(out));
     }
 }
 
@@ -650,7 +650,7 @@ CollOfVector DeviceGrid::normal( const CollOfFace& faces) const {
 					       out.numVectors(),
 					       dimensions_);
     }
-    return out;
+    return CollOfVector(std::move(out));
 }
 
 

@@ -226,7 +226,7 @@ CollOfVector equelleCUDA::operator+(const CollOfVector& lhs, const CollOfVector&
     CollOfVector out = lhs;
     kernelSetup s = out.element_setup();
     wrapCudaArray::plus_kernel<<<s.grid, s.block>>>(out.data(), rhs.data(), out.numElements());
-    return out;
+    return CollOfVector(std::move(out));
 }
 
 
@@ -234,7 +234,7 @@ CollOfVector equelleCUDA::operator-(const CollOfVector& lhs, const CollOfVector&
     CollOfVector out = lhs;
     kernelSetup s = out.element_setup();
     wrapCudaArray::minus_kernel<<<s.grid, s.block>>>(out.data(), rhs.data(), out.numElements());
-    return out;
+    return CollOfVector(std::move(out));
 }
 
 CollOfVector equelleCUDA::operator-(const CollOfVector& arg) {
@@ -245,7 +245,7 @@ CollOfVector equelleCUDA::operator*(const Scalar lhs, const CollOfVector& rhs) {
     CollOfVector out = rhs;
     kernelSetup s = out.element_setup();
     wrapCudaArray::scalMultColl_kernel<<<s.grid, s.block>>>(out.data(), lhs, out.numElements());
-    return out;
+    return CollOfVector(std::move(out));
 }
 
 CollOfVector equelleCUDA::operator*(const CollOfVector& lhs, const Scalar rhs) {
@@ -259,7 +259,7 @@ CollOfVector equelleCUDA::operator*(const CollOfVector& vec, const CollOfScalar&
 						     scal.data(),
 						     out.numVectors(),
 						     out.dim());
-    return out;
+    return CollOfVector(std::move(out));
 }
 
 CollOfVector equelleCUDA::operator*(const CollOfScalar& scal, const CollOfVector& vec) {
@@ -269,7 +269,7 @@ CollOfVector equelleCUDA::operator*(const CollOfScalar& scal, const CollOfVector
 						     scal.data(),
 						     out.numVectors(),
 						     out.dim());
-    return out;
+    return CollOfVector(std::move(out));
 }
 
 CollOfVector equelleCUDA::operator/(const CollOfVector& vec, const CollOfScalar& scal) {
@@ -279,7 +279,7 @@ CollOfVector equelleCUDA::operator/(const CollOfVector& vec, const CollOfScalar&
 						    scal.data(),
 						    out.numVectors(),
 						    out.dim());
-    return out;
+    return CollOfVector(std::move(out));
 }
 
 CollOfVector equelleCUDA::operator/(const CollOfVector& vec, const Scalar scal) {
