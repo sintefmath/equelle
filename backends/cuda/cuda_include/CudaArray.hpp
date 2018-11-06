@@ -102,6 +102,9 @@ namespace equelleCUDA {
 	// Compound assignment for multiplication with CudaArray
 	CudaArray& operator*=(const CudaArray& rhs);
 
+	// Compound assignment for division with CudaArray
+	CudaArray& operator/=(const CudaArray& rhs);
+
 	//! Destructor
 	/*!
 	  Frees device memory as the CudaArray goes out of scope.
