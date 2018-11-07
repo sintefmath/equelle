@@ -296,7 +296,7 @@ CollOfScalar EquelleRuntimeCUDA::newtonSolve(const ResidualFunctor& rescomp,
         std::cout << "Newton solver took: " << clock.secsSinceLast() << " seconds." << std::endl;
     }
 
-    return CollOfScalar(u.value());
+    return CollOfScalar(std::move(u.value()));
 }
 
 //CollOfScalar EquelleRuntimeCUDA::solveForUpdate(const CollOfScalar& residual) const {

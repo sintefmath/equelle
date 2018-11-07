@@ -79,7 +79,10 @@ namespace equelleCUDA {
 	  as the input arrays are not zero.
 	*/
 	CudaMatrix(const CudaMatrix& mat);
-	
+
+	// Move constructor
+	CudaMatrix(CudaMatrix&& mat);
+
 	//! Constructor for testing using host arrays
 	/*!
 	  This constructor takes pointers to host memory as input, allocates the same 
@@ -164,7 +167,13 @@ namespace equelleCUDA {
 	  Does also perform checks for matching array sizes and self assignment.
 	*/
 	CudaMatrix& operator= (const CudaMatrix& other);
-	
+
+
+	// Move assignment operator
+	CudaMatrix& operator=(CudaMatrix&& other);
+
+	// Swap function used for move semantics
+	void swap(CudaMatrix& other) noexcept;
        
 	//! Destructor
 	/*!

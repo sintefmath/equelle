@@ -78,6 +78,8 @@ namespace equelleCUDA {
 	*/
 	CudaArray(const CudaArray& coll);  
 	
+	// Move constructor
+	CudaArray(CudaArray&& coll);
 
 	//! Copy assignment operator
 	/*!
@@ -91,7 +93,8 @@ namespace equelleCUDA {
 	*/
 	CudaArray& operator= (const CudaArray& other);
 
-
+	// Move assignment
+	CudaArray& operator= (CudaArray&& other);
 
 	//! Destructor
 	/*!
@@ -129,10 +132,6 @@ namespace equelleCUDA {
     private:
 	int size_;
 	double* dev_values_;
-	
-	// Use 1D kernel grids for arithmetic operations
-	kernelSetup setup_;
-	
 	
 	
 	// Error handling

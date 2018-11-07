@@ -30,8 +30,7 @@ using namespace wrapCudaArray;
 
 CudaArray::CudaArray() 
     : size_(0), 
-      dev_values_(0),
-      setup_(0)
+      dev_values_(0)
 {
     // Intentionally left blank
 }
@@ -40,18 +39,17 @@ CudaArray::CudaArray()
 // Allocate and initialize to zero
 CudaArray::CudaArray(const int size) 
     : size_(size),
-      dev_values_(0),
-      setup_(size_)
+      dev_values_(0)
 {
     cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
-    setUniformDouble<<<setup_.grid, setup_.block>>>( dev_values_, 0.0, size_);
+    kernelSetup s = setup();
+    setUniformDouble<<<s.grid, s.block>>>( dev_values_, 0.0, size_);
     checkError_("cudaMalloc in CudaArray::CudaArray(int)");
 }
 
 CudaArray::CudaArray(const int size, const double value) 
     : size_(size),
-      dev_values_(0),
-      setup_(size_)
+      dev_values_(0)
 {
     // Can not use cudaMemset as it sets float values on a given
     // number of bytes.
@@ -60,20 +58,18 @@ CudaArray::CudaArray(const int size, const double value)
 
     cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
     checkError_("cudaMalloc in CudaArray::CudaArray(int, double)");
-     
-    setUniformDouble<<<setup_.grid, setup_.block>>>( dev_values_, value, size_);
+    kernelSetup s = setup();
+    setUniformDouble<<<s.grid, s.block>>>( dev_values_, value, size_);
     //cudaStatus_ = cudaMemcpy(dev_values_, &host_vec[0], size_*sizeof(double),
     //				    cudaMemcpyHostToDevice);
     //checkError_("cudaMemcpy in CudaArray::CudaArray(int, double)");
-
 } 
 
 
 // Constructor from vector, in order to do testing
 CudaArray::CudaArray(const std::vector<double>& host_vec)
     : size_(host_vec.size()),
-      dev_values_(0),
-      setup_(size_)
+      dev_values_(0)
 {
     cudaStatus_ = cudaMalloc( (void**)&dev_values_, size_*sizeof(double));
     checkError_("cudaMalloc in CudaArray::CudaArray(std::vector<double>)");
@@ -87,8 +83,7 @@ CudaArray::CudaArray(const std::vector<double>& host_vec)
 // Copy constructor
 CudaArray::CudaArray(const CudaArray& coll) 
     : size_(coll.size_), 
-      dev_values_(0),
-      setup_(size_)
+      dev_values_(0)
 {
     //std::cout << __PRETTY_FUNCTION__ << std::endl;
 
@@ -100,6 +95,15 @@ CudaArray::CudaArray(const CudaArray& coll)
 				 cudaMemcpyDeviceToDevice);
 	checkError_("cudaMemcpy in CudaArray::CudaArray(const CudaArray&)");
     }    
+}
+
+
+// Move constructor
+CudaArray::CudaArray(CudaArray&& coll) 
+    : size_(coll.size_),
+      dev_values_(coll.dev_values_)
+{
+    coll.dev_values_ = 0;
 }
 
 
@@ -124,8 +128,11 @@ CudaArray& CudaArray::operator= (const CudaArray& other) {
 
 	    // If different size: Is this even allowed?
 	    // Free memory:
-	    cudaStatus_ = cudaFree(this->dev_values_);
-	    checkError_("cudaFree(this->dev_values_) in CudaArray::operator=(const CudaArray&)");
+        if (this->dev_values_) {
+            cudaStatus_ = cudaFree(this->dev_values_);
+            checkError_("cudaFree(this->dev_values_) in CudaArray::operator=(const CudaArray&)");
+        }
+	    
 	    // Allocate new memory:
 	    cudaStatus_ = cudaMalloc((void**)&this->dev_values_,
 				     sizeof(double) * other.size_);
@@ -147,6 +154,14 @@ CudaArray& CudaArray::operator= (const CudaArray& other) {
 
 } // Assignment copy operator!
 
+
+// Move assignment
+CudaArray& CudaArray::operator= (CudaArray&& other)
+{
+    size_ = other.size_;
+    std::swap(dev_values_, other.dev_values_);
+    return *this;
+}
 
 
 // Destructor:
@@ -172,7 +187,7 @@ double* CudaArray::data() {
 
 
 kernelSetup CudaArray::setup() const {
-    return setup_;
+    return kernelSetup(size_);
 }
 
 // Assumes that values are already allocated on host
@@ -218,7 +233,7 @@ CudaArray equelleCUDA::operator-(const CudaArray& lhs, const CudaArray& rhs) {
     CudaArray out = lhs;
     kernelSetup s = out.setup();
     minus_kernel <<<s.grid, s.block>>>(out.data(), rhs.data(), out.size());
-    return out;
+    return CudaArray(std::move(out));
 }
 
 CudaArray equelleCUDA::operator+(const CudaArray& lhs, const CudaArray& rhs) {
@@ -226,7 +241,7 @@ CudaArray equelleCUDA::operator+(const CudaArray& lhs, const CudaArray& rhs) {
     CudaArray out = lhs;
     kernelSetup s = out.setup();
     plus_kernel <<<s.grid, s.block>>>(out.data(), rhs.data(), out.size());
-    return out;
+    return CudaArray(std::move(out));
 }
 
 CudaArray equelleCUDA::operator*(const CudaArray& lhs, const CudaArray& rhs) {
@@ -234,7 +249,7 @@ CudaArray equelleCUDA::operator*(const CudaArray& lhs, const CudaArray& rhs) {
     CudaArray out = lhs;
     kernelSetup s = out.setup();
     multiplication_kernel <<<s.grid, s.block>>>(out.data(), rhs.data(), out.size());
-    return out;
+    return CudaArray(std::move(out));
 }
 
 CudaArray equelleCUDA::operator/(const CudaArray& lhs, const CudaArray& rhs) {
@@ -242,14 +257,14 @@ CudaArray equelleCUDA::operator/(const CudaArray& lhs, const CudaArray& rhs) {
     CudaArray out = lhs;
     kernelSetup s = out.setup();
     division_kernel <<<s.grid, s.block>>>(out.data(), rhs.data(), out.size());
-    return out;
+    return CudaArray(std::move(out));
 }
 
 CudaArray equelleCUDA::operator*(const Scalar lhs, const CudaArray& rhs) {
     CudaArray out = rhs;
     kernelSetup s = out.setup();
     scalMultColl_kernel<<<s.grid,s.block>>>(out.data(), lhs, out.size());
-    return out;
+    return CudaArray(std::move(out));
 }
 
 CudaArray equelleCUDA::operator*(const CudaArray& lhs, const Scalar rhs) {
@@ -264,7 +279,7 @@ CudaArray equelleCUDA::operator/(const Scalar lhs, const CudaArray& rhs) {
     CudaArray out = rhs;
     kernelSetup s = out.setup();
     scalDivColl_kernel<<<s.grid,s.block>>>(out.data(), lhs, out.size());
-    return out;
+    return CudaArray(std::move(out));
 }
 
 CudaArray equelleCUDA::operator-(const CudaArray& arg) {

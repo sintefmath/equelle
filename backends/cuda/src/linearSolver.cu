@@ -198,5 +198,5 @@ CollOfScalar LinearSolver::solve(const CudaMatrix& A_cpy,
 	std::cout << "\n";
     }
 
-    return CollOfScalar(x);
+    return CollOfScalar(std::move(x));
 }

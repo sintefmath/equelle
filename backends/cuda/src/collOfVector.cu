@@ -19,8 +19,7 @@ using namespace wrapCollOfVector;
 
 CollOfVector::CollOfVector() 
     : elements_(),
-      dim_(1),
-      vector_setup_(0)
+      dim_(1)
 {
     // intentionally left blank
 }
@@ -29,16 +28,14 @@ CollOfVector::CollOfVector()
 
 CollOfVector::CollOfVector(const int size, const int dim)
     : elements_(size*dim), 
-      dim_(dim),
-      vector_setup_(size)
+      dim_(dim)
 {
     // intentionally left blank
 }
 
 CollOfVector::CollOfVector(const std::vector<double>& host, const int dim)
     : elements_(host), 
-      dim_(dim),
-      vector_setup_(host.size()/dim)
+      dim_(dim)
 {
     // intentionally left blank
 }
@@ -55,16 +52,29 @@ CollOfVector& CollOfVector::operator= (const CollOfVector& other) {
     return *this;
 }
 
+// Move assignment operator
+CollOfVector& CollOfVector::operator=(CollOfVector&& other) {
+    if ( this->dim_ != other.dim_ ) {
+        OPM_THROW(std::runtime_error, "Trying to assign a vector with another vector of different dim. lhs.dim_ = " << this->dim_ << " and rhs.dim_ = " << other.dim_);
+    }
+    this->elements_ = std::move(other.elements_);
+    return *this;
+}
+
 // Copy-constructor
 CollOfVector::CollOfVector(const CollOfVector& coll)
     : elements_(coll.elements_), 
-      dim_(coll.dim_),
-      vector_setup_(coll.numVectors())
+      dim_(coll.dim_)
 {
     // intentionally left blank
 }
   
-
+// Move constructor
+CollOfVector::CollOfVector(CollOfVector&& coll)
+    : elements_(std::move(coll.elements_)), 
+      dim_(coll.dim_)
+{
+}
 
 // Destructor
 CollOfVector::~CollOfVector()
@@ -81,7 +91,7 @@ CollOfScalar CollOfVector::norm() const {
     // One thread for each vector:
     kernelSetup s = vector_setup();
     normKernel<<< s.grid, s.block >>>(out.data(), data(), numVectors(), dim());
-    return out;
+    return CollOfScalar(std::move(out));
 }
 
 
@@ -95,7 +105,7 @@ CollOfScalar CollOfVector::dot(const CollOfVector& rhs) const {
 				      rhs.data(),
 				      out.size(),
 				      this->dim());
-    return out;
+    return CollOfScalar(std::move(out));
 }
 
 
@@ -124,7 +134,7 @@ int CollOfVector::numElements() const {
 }
 
 kernelSetup CollOfVector::vector_setup() const {
-    return vector_setup_;
+    return kernelSetup(numVectors());
 }
 
 kernelSetup CollOfVector::element_setup() const {
@@ -156,7 +166,7 @@ CollOfScalar CollOfVector::col(const int index) const {
 							 out.size(),
 							 index,
 							 dim_);	
-    return out;
+    return CollOfScalar(std::move(out));
 }
 
 __global__ void wrapCollOfVector::collOfVectorOperatorIndexKernel( double* out,
@@ -216,7 +226,7 @@ CollOfVector equelleCUDA::operator+(const CollOfVector& lhs, const CollOfVector&
     CollOfVector out = lhs;
     kernelSetup s = out.element_setup();
     wrapCudaArray::plus_kernel<<<s.grid, s.block>>>(out.data(), rhs.data(), out.numElements());
-    return out;
+    return CollOfVector(std::move(out));
 }
 
 
@@ -224,7 +234,7 @@ CollOfVector equelleCUDA::operator-(const CollOfVector& lhs, const CollOfVector&
     CollOfVector out = lhs;
     kernelSetup s = out.element_setup();
     wrapCudaArray::minus_kernel<<<s.grid, s.block>>>(out.data(), rhs.data(), out.numElements());
-    return out;
+    return CollOfVector(std::move(out));
 }
 
 CollOfVector equelleCUDA::operator-(const CollOfVector& arg) {
@@ -235,7 +245,7 @@ CollOfVector equelleCUDA::operator*(const Scalar lhs, const CollOfVector& rhs) {
     CollOfVector out = rhs;
     kernelSetup s = out.element_setup();
     wrapCudaArray::scalMultColl_kernel<<<s.grid, s.block>>>(out.data(), lhs, out.numElements());
-    return out;
+    return CollOfVector(std::move(out));
 }
 
 CollOfVector equelleCUDA::operator*(const CollOfVector& lhs, const Scalar rhs) {
@@ -249,7 +259,7 @@ CollOfVector equelleCUDA::operator*(const CollOfVector& vec, const CollOfScalar&
 						     scal.data(),
 						     out.numVectors(),
 						     out.dim());
-    return out;
+    return CollOfVector(std::move(out));
 }
 
 CollOfVector equelleCUDA::operator*(const CollOfScalar& scal, const CollOfVector& vec) {
@@ -259,7 +269,7 @@ CollOfVector equelleCUDA::operator*(const CollOfScalar& scal, const CollOfVector
 						     scal.data(),
 						     out.numVectors(),
 						     out.dim());
-    return out;
+    return CollOfVector(std::move(out));
 }
 
 CollOfVector equelleCUDA::operator/(const CollOfVector& vec, const CollOfScalar& scal) {
@@ -269,7 +279,7 @@ CollOfVector equelleCUDA::operator/(const CollOfVector& vec, const CollOfScalar&
 						    scal.data(),
 						    out.numVectors(),
 						    out.dim());
-    return out;
+    return CollOfVector(std::move(out));
 }
 
 CollOfVector equelleCUDA::operator/(const CollOfVector& vec, const Scalar scal) {

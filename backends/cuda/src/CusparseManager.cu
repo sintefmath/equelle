@@ -103,7 +103,7 @@ CudaMatrix CusparseManager::gemm(const CudaMatrix& lhs, const CudaMatrix& rhs)
                      out.csrVal_, out.csrRowPtr_, out.csrColInd_);
     out.checkError_("cusparseDcsrgemm() in CusparseManager::gemm()");
     
-    return out;
+    return CudaMatrix(std::move(out));
 }
 
 
@@ -164,7 +164,7 @@ CudaMatrix CusparseManager::gemm2(const CudaMatrix& A, const CudaMatrix& B, cons
                                       out.description_, out.csrVal_, out.csrRowPtr_, out.csrColInd_,
                                       gemm2Info_, buffer_);
     out.checkError_("cusparseDcsrgemm2() in CusparseManager::gemm2()");
-    return out;
+    return CudaMatrix(std::move(out));
 }
 
 
@@ -208,5 +208,5 @@ CudaMatrix CusparseManager::geam(const CudaMatrix& lhs, const CudaMatrix& rhs, c
                      out.csrVal_, out.csrRowPtr_, out.csrColInd_);
     out.checkError_("cusparseDcsrgeam() in CusparseManager::geam()");
 
-    return out;
+    return CudaMatrix(std::move(out));
 }

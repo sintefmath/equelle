@@ -46,6 +46,9 @@ namespace equelleCUDA {
 	*/
 	explicit CollOfScalar(const CudaArray& val);
 
+	// Move constructor which moves CudaArray into val_
+	explicit CollOfScalar(CudaArray&& val);
+
 	//! Constructor for creating a primary variable
 	/*!
 	  Input should be a non-autodiff CollOfScalar, and will be copied to
@@ -63,6 +66,18 @@ namespace equelleCUDA {
 	*/
 	explicit CollOfScalar(const CudaArray& val, const CudaMatrix& der);
 
+	// Move constructor from CudaArray and CudaMatrix.
+	// Both val and der are moved.
+	CollOfScalar(CudaArray&& val, CudaMatrix&& der) noexcept;
+
+	// Move constructor from CudaArray and CudaMatrix
+	// Only der is moved. val is copied.
+	CollOfScalar(const CudaArray& val, CudaMatrix&& der);
+
+	// Move constructor from CudaArray and CudaMatrix
+	// Only der is moved. val is copied.
+	CollOfScalar(CudaArray&& val, const CudaMatrix& der);
+
 	//! Constructor from std::vector
 	/*! 
 	  Used for initialize CollOfScalar when using unit tests.
@@ -78,6 +93,8 @@ namespace equelleCUDA {
 	*/
 	CollOfScalar(const CollOfScalar& coll);  
 	
+	// Move constructor
+	CollOfScalar(CollOfScalar&& coll);
 
 	//! Copy assignment operator
 	/*!
@@ -91,7 +108,8 @@ namespace equelleCUDA {
 	*/
 	CollOfScalar& operator= (const CollOfScalar& other);
 
-
+	// Move assignment operator
+	CollOfScalar& operator=(CollOfScalar&& other);
 
 	//! Destructor
 	/*!

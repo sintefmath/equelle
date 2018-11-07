@@ -67,12 +67,18 @@ namespace equelleCUDA {
 	*/
 	CollOfVector(const CollOfVector& coll);
 
+	// Move constructor
+	CollOfVector(CollOfVector&& coll);
+
 	//! Copy assignment operator
 	/*!
 	  Overload the assignment operator to ensure correct behaviour when 
 	  we assign a CollOfVector to a CollOfVector that is already initialized.
 	*/
 	CollOfVector& operator= (const CollOfVector& other);
+
+	// Move assignment operator
+	CollOfVector& operator=(CollOfVector&& other);
 
 	//! Destructor
 	/*!
@@ -160,8 +166,6 @@ namespace equelleCUDA {
     private:
 	CudaArray elements_;
 	const int dim_;
-	//kernelSetup element_setup_; // Find this one as elements_.getKernelSetup()
-	kernelSetup vector_setup_;
 
 	// size_ from CollOfScalar is actually size_ * dim
 	// block() and grid() will therefore be evaluated as one thread per double
