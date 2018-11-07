@@ -13,6 +13,7 @@
 #include "PrintIOVisitor.hpp"
 #include "ASTNodes.hpp"
 #include "CommandLineOptions.hpp"
+#include "ASTRewriter.hpp"
 
 #include <iostream>
 
@@ -25,58 +26,58 @@ extern FILE * yyin;
  */
 class YYInOwner {
 public:
-	YYInOwner(const std::string filename_) {
-		yyin = fopen(filename_.c_str(),"r");
+    YYInOwner(const std::string filename_) {
+        yyin = fopen(filename_.c_str(),"r");
                 if (!yyin) {
                     throw std::runtime_error("Input file not found.");
                 }
-	}
-	~YYInOwner() {
-	    fclose(yyin);
-	    yyin = NULL;
-	}
+    }
+    ~YYInOwner() {
+        fclose(yyin);
+        yyin = NULL;
+    }
 };
 
 
 int main(int argc, char** argv)
 {
-	CommandLineOptions options;
-	boost::program_options::variables_map cli_vars;
-	boost::shared_ptr<YYInOwner> yyin_owner;
+    CommandLineOptions options;
+    boost::program_options::variables_map cli_vars;
+    boost::shared_ptr<YYInOwner> yyin_owner;
 
-	//Parse commandline
-	try {
-		cli_vars = options.parse(argc, argv);
+    //Parse commandline
+    try {
+        cli_vars = options.parse(argc, argv);
 
-		if (cli_vars.count("help")) {
-			std::cout << "Usage: ./eq <options>" << std::endl;
-			std::cout << "The following options are supported:" << std::endl;
-			options.printOptions();
-			return -1;
-		}
-		if (cli_vars.count("verbose")) {
-			options.printVars(cli_vars);
-		}
-	}
-	catch (const std::exception& e) {
-		std::cerr << "Usage: ./eq <options>" << std::endl;
-		std::cerr << "The following options are supported:" << std::endl;
-		options.printOptions();
-		std::cerr << std::endl;
+        if (cli_vars.count("help")) {
+            std::cout << "Usage: ./eq <options>" << std::endl;
+            std::cout << "The following options are supported:" << std::endl;
+            options.printOptions();
+            return -1;
+        }
+        if (cli_vars.count("verbose")) {
+            options.printVars(cli_vars);
+        }
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Usage: ./eq <options>" << std::endl;
+        std::cerr << "The following options are supported:" << std::endl;
+        options.printOptions();
+        std::cerr << std::endl;
         std::cerr << "Error parsing options: ";
         std::cerr << e.what() << std::endl;
-		return -1;
-	}
+        return -1;
+    }
 
-	//Get input file
-	if (cli_vars.count("input")) {
-		std::string infile = cli_vars["input"].as<std::string>();
-		if (infile != "-") { //"-" signifies use stdin
-			yyin_owner.reset(new YYInOwner(infile));
-		}
-	}
+    //Get input file
+    if (cli_vars.count("input")) {
+        std::string infile = cli_vars["input"].as<std::string>();
+        if (infile != "-") { //"-" signifies use stdin
+            yyin_owner.reset(new YYInOwner(infile));
+        }
+    }
 
-	//Parse equelle program
+    //Parse equelle program
     yyparse();
 
     // Check AST (and build symbol table)
@@ -109,6 +110,12 @@ int main(int argc, char** argv)
             PrintCUDABackendASTVisitor v;
             SymbolTable::program()->accept(v);
         }
+        else if (backend == "cuda-ast-rewrite") {
+            ASTRewriter rewriter;
+            rewriter.rewrite(SymbolTable::program(),0);
+            PrintCUDABackendASTVisitor v;
+            SymbolTable::program()->accept(v);
+        }
         else if (backend == "mrst") {
             PrintMRSTBackendASTVisitor v;
             SymbolTable::program()->accept(v);
@@ -129,10 +136,10 @@ int main(int argc, char** argv)
     //This assumes that the printing went well.
     if (check.isValid())
     {
-    	return 0;
+        return 0;
     }
     else
     {
-    	return -1;
+        return -1;
     }
 }
