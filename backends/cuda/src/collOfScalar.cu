@@ -166,6 +166,18 @@ CollOfScalar& CollOfScalar::operator*=(const Scalar lhs)
     return *this;
 }
 
+CollOfScalar& CollOfScalar::operator*=(const CollOfScalar& rhs) {
+    if ( autodiff_ || rhs.autodiff_ ) {
+        // (u*v)' = u'*v + v'*u = diag(v)*u' + diag(u)*v'
+        // where u = lhs and v = rhs
+
+        der_ = der_.diagonalMultiply(rhs.val_) + rhs.der_.diagonalMultiply(val_);
+        autodiff_ = true;
+    }
+    val_ *= rhs.val_;
+    return *this;
+}
+
 CollOfScalar::~CollOfScalar()
 {
     // Intentionally left blank as val_ knows how to delete itself.
@@ -301,6 +313,17 @@ CollOfScalar equelleCUDA::operator*(const CollOfScalar& lhs, const CollOfScalar&
 	return CollOfScalar(std::move(val), std::move(der));
     }
     return CollOfScalar(std::move(val));
+}
+
+CollOfScalar equelleCUDA::operator*(CollOfScalar&& lhs, CollOfScalar&& rhs) {
+    if (lhs.autodiff_) {
+        lhs *= rhs;
+        return CollOfScalar(std::move(lhs));
+    }
+    else {
+        rhs *= lhs;
+        return CollOfScalar(std::move(rhs));
+    }
 }
 
 CollOfScalar equelleCUDA::operator/(const CollOfScalar& lhs, const CollOfScalar& rhs) {

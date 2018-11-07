@@ -111,7 +111,9 @@ namespace equelleCUDA {
 	// Move assignment operator
 	CollOfScalar& operator=(CollOfScalar&& other);
 
+	// Move compound operators
 	CollOfScalar& operator*=(const Scalar lhs);
+	CollOfScalar& operator*=(const CollOfScalar& rhs);
 
 	//! Destructor
 	/*!
@@ -203,6 +205,9 @@ namespace equelleCUDA {
 	  \sa multiplication_kernel.
 	*/
 	friend CollOfScalar operator*(const CollOfScalar& lhs, const CollOfScalar& rhs);
+
+	// Move multiplication
+	friend CollOfScalar operator*(CollOfScalar&& lhs, CollOfScalar&& rhs);
 
 	// Overloading of operator /
 	/*!
