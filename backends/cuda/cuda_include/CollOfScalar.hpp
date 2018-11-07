@@ -111,6 +111,8 @@ namespace equelleCUDA {
 	// Move assignment operator
 	CollOfScalar& operator=(CollOfScalar&& other);
 
+	CollOfScalar& operator*=(const Scalar lhs);
+
 	//! Destructor
 	/*!
 	  Frees device memory as the CollOfScalar goes out of scope.

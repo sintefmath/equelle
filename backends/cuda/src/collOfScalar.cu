@@ -156,12 +156,20 @@ CollOfScalar& CollOfScalar::operator=(CollOfScalar&& other)
     return *this;
 }
 
+// Move compound operator for multiplication
+CollOfScalar& CollOfScalar::operator*=(const Scalar lhs)
+{
+    val_ *= lhs;
+    if ( autodiff_ ) {
+        der_ *= lhs;
+    }
+    return *this;
+}
+
 CollOfScalar::~CollOfScalar()
 {
     // Intentionally left blank as val_ knows how to delete itself.
 }
-
-
 
 // Member functions that only have to return val_'s function:
 const double* CollOfScalar::data() const {

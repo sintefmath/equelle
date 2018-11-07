@@ -172,6 +172,8 @@ namespace equelleCUDA {
 	// Move assignment operator
 	CudaMatrix& operator=(CudaMatrix&& other);
 
+	CudaMatrix& operator*=(const Scalar lhs);
+
 	// Swap function used for move semantics
 	void swap(CudaMatrix& other) noexcept;
        

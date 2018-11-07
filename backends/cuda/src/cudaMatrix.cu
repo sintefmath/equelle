@@ -426,6 +426,16 @@ CudaMatrix& CudaMatrix::operator=(CudaMatrix&& other)
     return *this;
 }
 
+CudaMatrix& CudaMatrix::operator*=(const Scalar lhs) {
+    if ( csrVal_ == 0 ) {
+        OPM_THROW(std::runtime_error, "Calling CudaMatrix *= Scalar with empty matrix...");
+    }
+    kernelSetup s(nnz_);
+    wrapCudaArray::scalMultColl_kernel<<<s.grid, s.block>>>(csrVal_,
+                  lhs,
+                  nnz_);
+    return *this;
+}
 
 // Swap function used for move semantics
 void CudaMatrix::swap(CudaMatrix& other) noexcept
