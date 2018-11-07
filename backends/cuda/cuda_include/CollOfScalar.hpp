@@ -238,6 +238,7 @@ namespace equelleCUDA {
 	  \return lhs * rhs
 	*/
 	friend CollOfScalar operator*(const CollOfScalar& lhs, const Scalar rhs);
+	friend CollOfScalar operator*(const Scalar lhs, CollOfScalar&& rhs);
 
 	/*!
 	  Implemented as (1/rhs)*lhs in order to reuse kernel
