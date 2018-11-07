@@ -40,6 +40,8 @@ class ArrayNode;
 class RandomAccessNode;
 class StencilAssignmentNode;
 class StencilNode;
+class MultiplyAddNode;
+class MultiplyDivideNode;
 
 
 class ASTVisitorInterface
@@ -55,6 +57,12 @@ public:
     virtual void visit(BinaryOpUnitNode& node) {}
     virtual void midVisit(BinaryOpUnitNode& node) {}
     virtual void postVisit(BinaryOpUnitNode& node) {}
+    virtual void visit(MultiplyAddNode& node) = 0;
+    virtual void midVisit(MultiplyAddNode& node) = 0;
+    virtual void postVisit(MultiplyAddNode& node) = 0;
+    virtual void visit(MultiplyDivideNode& node) = 0;
+    virtual void midVisit(MultiplyDivideNode& node) = 0;
+    virtual void postVisit(MultiplyDivideNode& node) = 0;
     virtual void visit(PowerUnitNode& node) {}
     virtual void postVisit(PowerUnitNode& node) {}
     virtual void visit(StringNode& node) = 0;

@@ -24,7 +24,7 @@ CheckASTVisitor::~CheckASTVisitor()
 
 bool CheckASTVisitor::isValid()
 {
-	return valid_;
+    return valid_;
 }
 
 
@@ -203,6 +203,30 @@ void CheckASTVisitor::postVisit(BinaryOpNode& node)
     default:
         error("internal compiler error in CheckASTVisitor::postVisit(BinaryOpNode&).", node.location());
     }
+}
+
+void CheckASTVisitor::visit(MultiplyAddNode& node)
+{
+}
+
+void CheckASTVisitor::midVisit(MultiplyAddNode& node)
+{
+}
+
+void CheckASTVisitor::postVisit(MultiplyAddNode& node)
+{
+}
+
+void CheckASTVisitor::visit(MultiplyDivideNode& node)
+{
+}
+
+void CheckASTVisitor::midVisit(MultiplyDivideNode& node)
+{
+}
+
+void CheckASTVisitor::postVisit(MultiplyDivideNode& node)
+{
 }
 
 void CheckASTVisitor::visit(ComparisonOpNode&)

@@ -21,8 +21,6 @@ PrintASTVisitor::~PrintASTVisitor()
 
 
 
-
-
 void PrintASTVisitor::visit(SequenceNode&)
 {
     if (indent_ == 0) {
@@ -109,6 +107,14 @@ void PrintASTVisitor::visit(BinaryOpNode& node)
     std::cout << indent() << "BinaryOpNode: " << op << '\n';
 
     ++indent_;
+}
+
+void PrintASTVisitor::visit(MultiplyAddNode& node)
+{
+}
+
+void PrintASTVisitor::visit(MultiplyDivideNode& node)
+{
 }
 
 void PrintASTVisitor::visit(ComparisonOpNode& node)
@@ -286,6 +292,22 @@ void PrintASTVisitor::midVisit(BinaryOpNode&)
 void PrintASTVisitor::postVisit(BinaryOpNode&)
 {
     --indent_;
+}
+
+void PrintASTVisitor::midVisit(MultiplyAddNode& node)
+{
+}
+
+void PrintASTVisitor::postVisit(MultiplyAddNode& node)
+{
+}
+
+void PrintASTVisitor::midVisit(MultiplyDivideNode& node)
+{
+}
+
+void PrintASTVisitor::postVisit(MultiplyDivideNode& node)
+{
 }
 
 void PrintASTVisitor::midVisit(ComparisonOpNode&)

@@ -66,7 +66,7 @@ void PrintCPUBackendASTVisitor::postVisit(SequenceNode&)
         std::cout <<
             "\n"
             "void ensureRequirements(const " << namespaceNameString() <<
-	    "::" << classNameString() << "& er)\n"
+        "::" << classNameString() << "& er)\n"
             "{\n";
         if (requirement_strings_.empty()) {
             std::cout << "    (void)er;\n";
@@ -169,6 +169,53 @@ void PrintCPUBackendASTVisitor::postVisit(BinaryOpNode&)
     std::cout << ')';
 }
 
+void PrintCPUBackendASTVisitor::visit(MultiplyAddNode&)
+{
+    if (isSuppressed()) {
+        return;
+    }
+    std::cout << "er.multiplyAdd(";
+}
+
+void PrintCPUBackendASTVisitor::midVisit(MultiplyAddNode&)
+{
+    if (isSuppressed()) {
+        return;
+    }
+    std::cout << ", ";
+}
+
+void PrintCPUBackendASTVisitor::postVisit(MultiplyAddNode&)
+{
+    if (isSuppressed()) {
+        return;
+    }
+    std::cout << ')';
+}
+
+void PrintCPUBackendASTVisitor::visit(MultiplyDivideNode& node)
+{
+    if (isSuppressed()) {
+        return;
+    }
+    std::cout << "er.multiplyDivide(";
+}
+
+void PrintCPUBackendASTVisitor::midVisit(MultiplyDivideNode& node)
+{
+    if (isSuppressed()) {
+        return;
+    }
+    std::cout << ", ";
+}
+
+void PrintCPUBackendASTVisitor::postVisit(MultiplyDivideNode& node)
+{
+    if (isSuppressed()) {
+        return;
+    }
+    std::cout << ')';
+}
 void PrintCPUBackendASTVisitor::visit(ComparisonOpNode&)
 {
     if (isSuppressed()) {
@@ -697,7 +744,7 @@ void PrintCPUBackendASTVisitor::postVisit(RandomAccessNode& node)
 const char* PrintCPUBackendASTVisitor::cppStartString() const
 {
     if ( use_cartesian_ ) {
-	return ::impl_cppCartesianStartString();
+    return ::impl_cppCartesianStartString();
     }
     return ::impl_cppStartString();
 }
