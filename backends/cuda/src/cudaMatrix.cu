@@ -426,6 +426,16 @@ CudaMatrix& CudaMatrix::operator=(CudaMatrix&& other)
     return *this;
 }
 
+CudaMatrix& CudaMatrix::operator*=(const Scalar lhs) {
+    if ( csrVal_ == 0 ) {
+        OPM_THROW(std::runtime_error, "Calling CudaMatrix *= Scalar with empty matrix...");
+    }
+    kernelSetup s(nnz_);
+    wrapCudaArray::scalMultColl_kernel<<<s.grid, s.block>>>(csrVal_,
+                  lhs,
+                  nnz_);
+    return *this;
+}
 
 // Swap function used for move semantics
 void CudaMatrix::swap(CudaMatrix& other) noexcept
@@ -763,6 +773,29 @@ CudaMatrix CudaMatrix::diagonalMultiply(const CudaMatrix& rhs) const {
                out.csrRowPtr_,
                this->csrVal_,
                this->rows_);
+    return CudaMatrix(std::move(out));
+}
+
+// Diagonal multiply
+// To avoid confusion: lhs represents a diagonal matrix which is being multiplied from the left.
+// lhs*this
+CudaMatrix CudaMatrix::diagonalMultiply(const CudaArray& lhs_diag_mat) const
+{
+    if(this->isEmpty()){
+      return CudaMatrix();
+    }
+    // Make sure we do not call this function if this is not diagonal
+    if ( this->diagonal_ ) {
+        OPM_THROW(std::runtime_error, "Error in CudaMatrix::diagonalMultiply(const CudaArray& rhs)\n\tCaller matrix cannot be diagonal!");
+    }
+
+    CudaMatrix out = *this;
+    // this is a square matrix
+    kernelSetup s(this->rows_);
+    wrapCudaMatrix::diagMult_kernel<<<s.grid, s.block>>>(out.csrVal_,
+                             out.csrRowPtr_,
+                             lhs_diag_mat.data(),
+                             this->rows_);
     return CudaMatrix(std::move(out));
 }
 

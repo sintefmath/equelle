@@ -96,6 +96,15 @@ namespace equelleCUDA {
 	// Move assignment
 	CudaArray& operator= (CudaArray&& other);
 
+	// Compound assignment for multiplication with Scalar
+	CudaArray& operator*=(const Scalar rhs);
+
+	// Compound assignment for multiplication with CudaArray
+	CudaArray& operator*=(const CudaArray& rhs);
+
+	// Compound assignment for division with CudaArray
+	CudaArray& operator/=(const CudaArray& rhs);
+
 	//! Destructor
 	/*!
 	  Frees device memory as the CudaArray goes out of scope.
@@ -426,7 +435,9 @@ namespace equelleCUDA {
       \sa division_kernel.
     */
     CudaArray operator/(const CudaArray& lhs, const CudaArray& rhs);
-    
+
+    // Move division operator
+    CudaArray operator/(CudaArray&& lhs, CudaArray&& rhs);
 
     // Multiplication:  Scalar * Collection Of Scalars
     /*!
@@ -464,6 +475,8 @@ namespace equelleCUDA {
      */
     CudaArray operator/(const Scalar lhs, const CudaArray& rhs);
 
+    // Move division operator
+    CudaArray operator/(const Scalar lhs, CudaArray&& rhs);
     
     /*!
       Unary minus

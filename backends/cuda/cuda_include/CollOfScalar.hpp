@@ -111,6 +111,10 @@ namespace equelleCUDA {
 	// Move assignment operator
 	CollOfScalar& operator=(CollOfScalar&& other);
 
+	// Move compound operators
+	CollOfScalar& operator*=(const Scalar lhs);
+	CollOfScalar& operator*=(const CollOfScalar& rhs);
+
 	//! Destructor
 	/*!
 	  Frees device memory as the CollOfScalar goes out of scope.
@@ -202,6 +206,9 @@ namespace equelleCUDA {
 	*/
 	friend CollOfScalar operator*(const CollOfScalar& lhs, const CollOfScalar& rhs);
 
+	// Move multiplication
+	friend CollOfScalar operator*(CollOfScalar&& lhs, CollOfScalar&& rhs);
+
 	// Overloading of operator /
 	/*!
 	  Wrapper for the CUDA kernel which performs the operation.
@@ -212,6 +219,8 @@ namespace equelleCUDA {
 	*/
 	friend CollOfScalar operator/(const CollOfScalar& lhs, const CollOfScalar& rhs);
 	
+	// Move division operator
+	friend CollOfScalar operator/(CollOfScalar&& lhs, CollOfScalar&& rhs);
 	
 	// Multiplication:  Scalar * Collection Of Scalars
 	/*!
@@ -222,7 +231,10 @@ namespace equelleCUDA {
 	  \sa scalMultColl_kernel
 	*/
 	friend CollOfScalar operator*(const Scalar lhs, const CollOfScalar& rhs);
-	
+
+	// Move division
+	friend CollOfScalar operator/(const Scalar lhs, CollOfScalar&& rhs);
+
 	/*! 
 	  Since multiplication is commutative, this implementation simply return
 	  rhs *  lhs
@@ -231,6 +243,7 @@ namespace equelleCUDA {
 	  \return lhs * rhs
 	*/
 	friend CollOfScalar operator*(const CollOfScalar& lhs, const Scalar rhs);
+	friend CollOfScalar operator*(const Scalar lhs, CollOfScalar&& rhs);
 
 	/*!
 	  Implemented as (1/rhs)*lhs in order to reuse kernel

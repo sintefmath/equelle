@@ -172,6 +172,8 @@ namespace equelleCUDA {
 	// Move assignment operator
 	CudaMatrix& operator=(CudaMatrix&& other);
 
+	CudaMatrix& operator*=(const Scalar lhs);
+
 	// Swap function used for move semantics
 	void swap(CudaMatrix& other) noexcept;
        
@@ -216,6 +218,10 @@ namespace equelleCUDA {
 	*/
 	CudaMatrix transpose() const;
 
+	// Diagonal multiply where lhs_diag_mat represents a diagonal matrix
+	CudaMatrix diagonalMultiply(const CudaArray& lhs_diag_mat) const;
+
+
 	friend CudaMatrix operator+(const CudaMatrix& lhs, const CudaMatrix& rhs);
 	friend CudaMatrix operator-(const CudaMatrix& lhs, const CudaMatrix& rhs);
 	friend CudaMatrix operator*(const CudaMatrix& lhs, const CudaMatrix& rhs);
@@ -255,7 +261,9 @@ namespace equelleCUDA {
 	bool isTranspose() const;
 
 	CudaMatrix diagonalMultiply(const CudaMatrix& rhs) const;
-	
+
+
+
     }; // class CudaMatrix
     
     

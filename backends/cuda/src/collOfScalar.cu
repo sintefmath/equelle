@@ -156,12 +156,32 @@ CollOfScalar& CollOfScalar::operator=(CollOfScalar&& other)
     return *this;
 }
 
+// Move compound operator for multiplication
+CollOfScalar& CollOfScalar::operator*=(const Scalar lhs)
+{
+    val_ *= lhs;
+    if ( autodiff_ ) {
+        der_ *= lhs;
+    }
+    return *this;
+}
+
+CollOfScalar& CollOfScalar::operator*=(const CollOfScalar& rhs) {
+    if ( autodiff_ || rhs.autodiff_ ) {
+        // (u*v)' = u'*v + v'*u = diag(v)*u' + diag(u)*v'
+        // where u = lhs and v = rhs
+
+        der_ = der_.diagonalMultiply(rhs.val_) + rhs.der_.diagonalMultiply(val_);
+        autodiff_ = true;
+    }
+    val_ *= rhs.val_;
+    return *this;
+}
+
 CollOfScalar::~CollOfScalar()
 {
     // Intentionally left blank as val_ knows how to delete itself.
 }
-
-
 
 // Member functions that only have to return val_'s function:
 const double* CollOfScalar::data() const {
@@ -295,18 +315,53 @@ CollOfScalar equelleCUDA::operator*(const CollOfScalar& lhs, const CollOfScalar&
     return CollOfScalar(std::move(val));
 }
 
+CollOfScalar equelleCUDA::operator*(CollOfScalar&& lhs, CollOfScalar&& rhs) {
+    if (lhs.autodiff_) {
+        lhs *= rhs;
+        return CollOfScalar(std::move(lhs));
+    }
+    else {
+        rhs *= lhs;
+        return CollOfScalar(std::move(rhs));
+    }
+}
+
 CollOfScalar equelleCUDA::operator/(const CollOfScalar& lhs, const CollOfScalar& rhs) {
     CudaArray val = lhs.val_ / rhs.val_;
     if ( lhs.autodiff_ || rhs.autodiff_ ) {
 	// (u/v)' = (u'*v - v'*u)/(v^2)
 	// where u = lhs and v = rhs
-	CudaMatrix diag_u(lhs.val_); // D1 
+	CudaMatrix diag_u(lhs.val_); // D1
 	CudaMatrix diag_v(rhs.val_); // D2
 	CudaMatrix inv_v_squared( 1.0/(rhs.val_ * rhs.val_));
 	CudaMatrix der = inv_v_squared*( diag_v*lhs.der_ - diag_u*rhs.der_);
 	return CollOfScalar(std::move(val), std::move(der));
     }
     return CollOfScalar(std::move(val));
+}
+
+CollOfScalar equelleCUDA::operator/(CollOfScalar&& lhs, CollOfScalar&& rhs) {
+    if ( lhs.autodiff_ || rhs.autodiff_ ) {
+        // (u/v)' = (u'*v - v'*u)/(v^2)
+        // where u = lhs and v = rhs
+        CudaMatrix diag_u(lhs.val_); // D1
+        CudaMatrix diag_v(rhs.val_); // D2
+        CudaMatrix inv_v_squared( 1.0/(rhs.val_ * rhs.val_));
+        lhs.der_ = inv_v_squared*( diag_v*lhs.der_ - diag_u*rhs.der_);
+    }
+    lhs.val_ /= rhs.val_;
+    return CollOfScalar(std::move(lhs));
+}
+
+CollOfScalar equelleCUDA::operator/(const Scalar lhs, CollOfScalar&& rhs) {
+    if ( rhs.autodiff_ ) {
+        // (a/u)' = - (a/u^2)*u'
+        // where a = lhs and u = rhs
+        CudaMatrix diag_u_squared(lhs/(rhs.val_ * rhs.val_));
+        rhs.der_ = -diag_u_squared*rhs.der_;
+    }
+    rhs.val_ = lhs / std::move(rhs.val_);
+    return CollOfScalar(std::move(rhs));
 }
 
 CollOfScalar equelleCUDA::operator*(const Scalar lhs, const CollOfScalar& rhs) {
@@ -320,6 +375,11 @@ CollOfScalar equelleCUDA::operator*(const Scalar lhs, const CollOfScalar& rhs) {
 
 CollOfScalar equelleCUDA::operator*(const CollOfScalar& lhs, const Scalar rhs) {
     return ( rhs * lhs);
+}
+
+CollOfScalar equelleCUDA::operator*(const Scalar lhs, CollOfScalar&& rhs) {
+    rhs *= lhs;
+    return CollOfScalar(std::move(rhs));
 }
 
 CollOfScalar equelleCUDA::operator/(const CollOfScalar& lhs, const Scalar rhs) {

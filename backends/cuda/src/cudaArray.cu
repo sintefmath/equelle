@@ -163,6 +163,26 @@ CudaArray& CudaArray::operator= (CudaArray&& other)
     return *this;
 }
 
+// Compound assignment for multiplication with Scalar
+CudaArray& CudaArray::operator*=(const Scalar rhs) {
+    kernelSetup s = setup();
+    scalMultColl_kernel<<<s.grid,s.block>>>(dev_values_, rhs, size_);
+    return *this;
+}
+
+
+// Compound assignment for multiplication with CudaArray
+CudaArray& CudaArray::operator*=(const CudaArray& rhs) {
+    kernelSetup s = setup();
+    multiplication_kernel<<<s.grid,s.block>>>(dev_values_, rhs.dev_values_, size_);
+    return *this;
+}
+
+CudaArray& CudaArray::operator/=(const CudaArray& rhs) {
+    kernelSetup s = this->setup();
+    division_kernel <<<s.grid, s.block>>>(dev_values_, rhs.data(), size_);
+    return *this;
+}
 
 // Destructor:
 CudaArray::~CudaArray() {
@@ -253,11 +273,16 @@ CudaArray equelleCUDA::operator*(const CudaArray& lhs, const CudaArray& rhs) {
 }
 
 CudaArray equelleCUDA::operator/(const CudaArray& lhs, const CudaArray& rhs) {
-
     CudaArray out = lhs;
     kernelSetup s = out.setup();
     division_kernel <<<s.grid, s.block>>>(out.data(), rhs.data(), out.size());
     return CudaArray(std::move(out));
+}
+
+CudaArray equelleCUDA::operator/(CudaArray&& lhs, CudaArray&& rhs) {
+    kernelSetup s = lhs.setup();
+    division_kernel <<<s.grid, s.block>>>(lhs.data(), rhs.data(), lhs.size());
+    return CudaArray(std::move(lhs));
 }
 
 CudaArray equelleCUDA::operator*(const Scalar lhs, const CudaArray& rhs) {
@@ -281,6 +306,13 @@ CudaArray equelleCUDA::operator/(const Scalar lhs, const CudaArray& rhs) {
     scalDivColl_kernel<<<s.grid,s.block>>>(out.data(), lhs, out.size());
     return CudaArray(std::move(out));
 }
+
+CudaArray equelleCUDA::operator/(const Scalar lhs, CudaArray&& rhs) {
+    kernelSetup s = rhs.setup();
+    scalDivColl_kernel<<<s.grid,s.block>>>(rhs.data(), lhs, rhs.size());
+    return CudaArray(std::move(rhs));
+}
+
 
 CudaArray equelleCUDA::operator-(const CudaArray& arg) {
     return -1.0*arg;

@@ -237,6 +237,12 @@ CollOfVector equelleCUDA::operator-(const CollOfVector& lhs, const CollOfVector&
     return CollOfVector(std::move(out));
 }
 
+CollOfVector equelleCUDA::operator-(CollOfVector&& lhs, CollOfVector&& rhs) {
+    kernelSetup s = lhs.element_setup();
+    wrapCudaArray::minus_kernel<<<s.grid, s.block>>>(lhs.data(), rhs.data(), lhs.numElements());
+    return CollOfVector(std::move(lhs));
+}
+
 CollOfVector equelleCUDA::operator-(const CollOfVector& arg) {
     return (-1.0)*arg;
 }

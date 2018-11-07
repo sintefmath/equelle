@@ -245,6 +245,9 @@ namespace equelleCUDA {
     */
     CollOfVector operator-(const CollOfVector& lhs, const CollOfVector& rhs);
 
+    // Move subtraction
+    CollOfVector operator-(CollOfVector&& lhs, CollOfVector&& rhs);
+
     /*!
       Overloaded operator unary minus for Collection of Vectors. Elementwise negation
       of all values stored in the collection.
